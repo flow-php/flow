@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 372
+ * Total functions: 543
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -33,6 +33,114 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\add_row_index(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:startFrom" + "}" + ")"),
         boost: 10
     },        {
+        label: "agg",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">agg</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$args</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$distinct</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an aggregate function call (COUNT, SUM, AVG, etc.).<br>@param string $name Aggregate function name<br>@param list<Expression> $args Function arguments<br>@param bool $distinct Use DISTINCT modifier
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\agg(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:args" + "}" + ", " + "$" + "{" + "3:distinct" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "agg_avg",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">agg_avg</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$distinct</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create AVG aggregate.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\agg_avg(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:distinct" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "agg_count",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">agg_count</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$distinct</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create COUNT(*) aggregate.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\agg_count(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:distinct" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "agg_max",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">agg_max</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create MAX aggregate.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\agg_max(" + "$" + "{" + "1:expr" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "agg_min",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">agg_min</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create MIN aggregate.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\agg_min(" + "$" + "{" + "1:expr" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "agg_sum",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">agg_sum</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$distinct</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AggregateCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create SUM aggregate.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\agg_sum(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:distinct" + "}" + ")"),
+        boost: 10
+    },        {
         label: "all",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -46,6 +154,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\all(" + "$" + "{" + "1:functions" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "all_sub_selects",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">all_sub_selects</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ComparisonOperator</span> <span class=\"fn-param\">$operator</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SelectFinalStep</span> <span class=\"fn-param\">$subquery</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">All</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ALL condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\all_sub_selects(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:subquery" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "alter",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">alter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AlterFactory</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a factory for building ALTER statements.<br>Provides a unified entry point for all ALTER operations:<br>- alter()->table() - ALTER TABLE<br>- alter()->index() - ALTER INDEX<br>- alter()->view() - ALTER VIEW<br>- alter()->materializedView() - ALTER MATERIALIZED VIEW<br>- alter()->sequence() - ALTER SEQUENCE<br>- alter()->schema() - ALTER SCHEMA<br>- alter()->role() - ALTER ROLE<br>- alter()->function() - ALTER FUNCTION<br>- alter()->procedure() - ALTER PROCEDURE<br>- alter()->trigger() - ALTER TRIGGER<br>- alter()->extension() - ALTER EXTENSION<br>- alter()->enumType() - ALTER TYPE (enum)<br>- alter()->domain() - ALTER DOMAIN<br>Rename operations are also under alter():<br>- alter()->index(\'old\')->renameTo(\'new\')<br>- alter()->view(\'old\')->renameTo(\'new\')<br>- alter()->schema(\'old\')->renameTo(\'new\')<br>- alter()->role(\'old\')->renameTo(\'new\')<br>- alter()->trigger(\'old\')->on(\'table\')->renameTo(\'new\')<br>Example: alter()->table(\'users\')->addColumn(col_def(\'email\', sql_type_text()))<br>Example: alter()->sequence(\'user_id_seq\')->restart(1000)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\alter()"),
         boost: 10
     },        {
         label: "analyze",
@@ -63,6 +207,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\analyze()"),
         boost: 10
     },        {
+        label: "analyze",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">analyze</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AnalyzeFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ANALYZE builder.<br>Example: analyze()->table(\'users\')<br>Produces: ANALYZE users
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\analyze()"),
+        boost: 10
+    },        {
         label: "any",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -76,6 +238,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\any(" + "$" + "{" + "1:values" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "any_sub_select",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">any_sub_select</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ComparisonOperator</span> <span class=\"fn-param\">$operator</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SelectFinalStep</span> <span class=\"fn-param\">$subquery</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Any</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ANY condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\any_sub_select(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:subquery" + "}" + ")"),
         boost: 10
     },        {
         label: "append",
@@ -94,6 +274,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\append()"),
+        boost: 10
+    },        {
+        label: "array_contained_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">array_contained_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an array is contained by condition (<@).<br>Example: array_contained_by(col(\'tags\'), raw_expr(\"ARRAY[\'sale\', \'featured\', \'new\']\"))<br>Produces: tags <@ ARRAY[\'sale\', \'featured\', \'new\']
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\array_contained_by(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "array_contains",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">array_contains</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an array contains condition (@>).<br>Example: array_contains(col(\'tags\'), raw_expr(\"ARRAY[\'sale\']\"))<br>Produces: tags @> ARRAY[\'sale\']
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\array_contains(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "array_exists",
@@ -130,6 +346,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\array_expand(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:expand" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "array_expr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">array_expr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an array expression.<br>@param list<Expression> $elements Array elements
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\array_expr(" + "$" + "{" + "1:elements" + "}" + ")"),
         boost: 10
     },        {
         label: "array_get",
@@ -246,6 +480,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\array_merge_collection(" + "$" + "{" + "1:array" + "}" + ")"),
         boost: 10
     },        {
+        label: "array_overlap",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">array_overlap</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an array overlap condition (&&).<br>Example: array_overlap(col(\'tags\'), raw_expr(\"ARRAY[\'sale\', \'featured\']\"))<br>Produces: tags && ARRAY[\'sale\', \'featured\']
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\array_overlap(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
         label: "array_reverse",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -349,6 +601,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\array_unpack(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:skip_keys" + "}" + ", " + "$" + "{" + "3:entry_prefix" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "asc",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">asc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NullsPosition</span> <span class=\"fn-param\">$nulls</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\NullsPosition::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OrderByItem</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ORDER BY item with ASC direction.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\asc(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:nulls" + "}" + ")"),
         boost: 10
     },        {
         label: "average",
@@ -588,6 +858,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\batch_size(" + "$" + "{" + "1:size" + "}" + ")"),
         boost: 10
     },        {
+        label: "begin",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">begin</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BeginOptionsStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a BEGIN transaction builder.<br>Example: begin()->isolationLevel(IsolationLevel::SERIALIZABLE)->readOnly()<br>Produces: BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\begin()"),
+        boost: 10
+    },        {
         label: "between",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -601,6 +889,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\between(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:lower_bound" + "}" + ", " + "$" + "{" + "3:upper_bound" + "}" + ", " + "$" + "{" + "4:boundary" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "between",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">between</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$low</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$high</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$not</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Between</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a BETWEEN condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\between(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:low" + "}" + ", " + "$" + "{" + "3:high" + "}" + ", " + "$" + "{" + "4:not" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "binary_expr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">binary_expr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$operator</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BinaryExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a binary expression (left op right).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\binary_expr(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:right" + "}" + ")"),
         boost: 10
     },        {
         label: "boolean_entry",
@@ -675,6 +999,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\call(" + "$" + "{" + "1:callable" + "}" + ", " + "$" + "{" + "2:parameters" + "}" + ", " + "$" + "{" + "3:return_type" + "}" + ")"),
         boost: 10
     },        {
+        label: "call",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">call</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$procedure</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CallFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Creates a CALL statement builder for invoking a procedure.<br>Example: call(\'update_stats\')->with(123)<br>Produces: CALL update_stats(123)<br>Example: call(\'process_data\')->with(\'test\', 42, true)<br>Produces: CALL process_data(\'test\', 42, true)<br>@param string $procedure The name of the procedure to call<br>@return CallFinalStep Builder for call statement options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\call(" + "$" + "{" + "1:procedure" + "}" + ")"),
+        boost: 10
+    },        {
         label: "capitalize",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -688,6 +1030,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\capitalize(" + "$" + "{" + "1:value" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "case_when",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">case_when</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$whenClauses</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$elseResult</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$operand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CaseExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CASE expression.<br>@param non-empty-list<WhenClause> $whenClauses WHEN clauses<br>@param null|Expression $elseResult ELSE result (optional)<br>@param null|Expression $operand CASE operand for simple CASE (optional)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\case_when(" + "$" + "{" + "1:whenClauses" + "}" + ", " + "$" + "{" + "2:elseResult" + "}" + ", " + "$" + "{" + "3:operand" + "}" + ")"),
         boost: 10
     },        {
         label: "cast",
@@ -708,6 +1068,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\cast(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
         boost: 10
     },        {
+        label: "cast",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cast</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TypeCast</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a type cast expression.<br>@param Expression $expr Expression to cast<br>@param string $type Target type name (can include schema like \"pg_catalog.int4\")
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\cast(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "check_constraint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">check_constraint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$expression</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CheckConstraint</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CHECK constraint.<br>@param string $expression SQL expression that must evaluate to true
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\check_constraint(" + "$" + "{" + "1:expression" + "}" + ")"),
+        boost: 10
+    },        {
         label: "chunks_from",
         type: "function",
         detail: "flow\u002Ddsl\u002Dextractors",
@@ -726,6 +1122,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\chunks_from(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:chunk_size" + "}" + ")"),
         boost: 10
     },        {
+        label: "cluster",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cluster</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ClusterFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CLUSTER builder.<br>Example: cluster()->table(\'users\')->using(\'idx_users_pkey\')<br>Produces: CLUSTER users USING idx_users_pkey
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\cluster()"),
+        boost: 10
+    },        {
         label: "coalesce",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -739,6 +1153,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\coalesce(" + "$" + "{" + "1:values" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "coalesce",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">coalesce</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expressions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Coalesce</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a COALESCE expression.<br>@param Expression ...$expressions Expressions to coalesce
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\coalesce(" + "$" + "{" + "1:expressions" + "}" + ")"),
         boost: 10
     },        {
         label: "col",
@@ -757,6 +1189,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\col(" + "$" + "{" + "1:entry" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "col",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">col</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$table</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Column</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a column reference expression.<br>Can be used in two modes:<br>- Parse mode: col(\'users.id\') or col(\'schema.table.column\') - parses dot-separated string<br>- Explicit mode: col(\'id\', \'users\') or col(\'id\', \'users\', \'schema\') - separate arguments<br>When $table or $schema is provided, $column must be a plain column name (no dots).<br>@param string $column Column name, or dot-separated path like \"table.column\" or \"schema.table.column\"<br>@param null|string $table Table name (optional, triggers explicit mode)<br>@param null|string $schema Schema name (optional, requires $table)<br>@throws InvalidExpressionException when $schema is provided without $table, or when $column contains dots in explicit mode
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\col(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "collect",
@@ -789,6 +1239,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\collect_unique(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
+        label: "column",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DataType</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ColumnDefinition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a column definition for CREATE TABLE.<br>@param string $name Column name<br>@param DataType $type Column data type
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\column(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
+        boost: 10
+    },        {
         label: "combine",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -805,6 +1273,60 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\combine(" + "$" + "{" + "1:keys" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "comment",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">comment</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">CommentTarget</span> <span class=\"fn-param\">$target</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CommentFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a COMMENT ON builder.<br>Example: comment(CommentTarget::TABLE, \'users\')->is(\'User accounts table\')<br>Produces: COMMENT ON TABLE users IS \'User accounts table\'<br>@param CommentTarget $target Target type (TABLE, COLUMN, INDEX, etc.)<br>@param string $name Target name (use \'table.column\' for COLUMN targets)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\comment(" + "$" + "{" + "1:target" + "}" + ", " + "$" + "{" + "2:name" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "commit",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">commit</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CommitOptionsStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a COMMIT transaction builder.<br>Example: commit()->andChain()<br>Produces: COMMIT AND CHAIN
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\commit()"),
+        boost: 10
+    },        {
+        label: "commit_prepared",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">commit_prepared</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$transactionId</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PreparedTransactionFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a COMMIT PREPARED builder.<br>Example: commit_prepared(\'my_transaction\')<br>Produces: COMMIT PREPARED \'my_transaction\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\commit_prepared(" + "$" + "{" + "1:transactionId" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_all",
@@ -957,6 +1479,60 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\concat_ws(" + "$" + "{" + "1:separator" + "}" + ", " + "$" + "{" + "2:functions" + "}" + ")"),
         boost: 10
     },        {
+        label: "cond_and",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cond_and</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$conditions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AndCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Combine conditions with AND.<br>@param Condition ...$conditions Conditions to combine
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_and(" + "$" + "{" + "1:conditions" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "cond_not",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cond_not</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NotCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Negate a condition with NOT.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_not(" + "$" + "{" + "1:condition" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "cond_or",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cond_or</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$conditions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OrCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Combine conditions with OR.<br>@param Condition ...$conditions Conditions to combine
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_or(" + "$" + "{" + "1:conditions" + "}" + ")"),
+        boost: 10
+    },        {
         label: "config",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -985,6 +1561,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\config_builder()"),
+        boost: 10
+    },        {
+        label: "conflict_columns",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">conflict_columns</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConflictTarget</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a conflict target for ON CONFLICT (columns).<br>@param list<string> $columns Columns that define uniqueness
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\conflict_columns(" + "$" + "{" + "1:columns" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "conflict_constraint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">conflict_constraint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConflictTarget</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a conflict target for ON CONFLICT ON CONSTRAINT.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\conflict_constraint(" + "$" + "{" + "1:name" + "}" + ")"),
         boost: 10
     },        {
         label: "constraint_sorted_by",
@@ -1017,6 +1629,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\constraint_unique(" + "$" + "{" + "1:reference" + "}" + ", " + "$" + "{" + "2:references" + "}" + ")"),
         boost: 10
     },        {
+        label: "copy",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">copy</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CopyFactory</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a new COPY query builder for data import/export.<br>Usage:<br>  copy()->from(\'users\')->file(\'/tmp/users.csv\')->format(CopyFormat::CSV)<br>  copy()->to(\'users\')->file(\'/tmp/users.csv\')->format(CopyFormat::CSV)<br>  copy()->toQuery(select(...))->file(\'/tmp/data.csv\')
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\copy()"),
+        boost: 10
+    },        {
         label: "count",
         type: "function",
         detail: "flow\u002Ddsl\u002Daggregating\u002Dfunctions",
@@ -1030,6 +1660,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\count(" + "$" + "{" + "1:function" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "create",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">create</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CreateFactory</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a factory for building CREATE statements.<br>Provides a unified entry point for all CREATE operations:<br>- create()->table() - CREATE TABLE<br>- create()->tableAs() - CREATE TABLE AS<br>- create()->index() - CREATE INDEX<br>- create()->view() - CREATE VIEW<br>- create()->materializedView() - CREATE MATERIALIZED VIEW<br>- create()->sequence() - CREATE SEQUENCE<br>- create()->schema() - CREATE SCHEMA<br>- create()->role() - CREATE ROLE<br>- create()->function() - CREATE FUNCTION<br>- create()->procedure() - CREATE PROCEDURE<br>- create()->trigger() - CREATE TRIGGER<br>- create()->rule() - CREATE RULE<br>- create()->extension() - CREATE EXTENSION<br>- create()->compositeType() - CREATE TYPE (composite)<br>- create()->enumType() - CREATE TYPE (enum)<br>- create()->rangeType() - CREATE TYPE (range)<br>- create()->domain() - CREATE DOMAIN<br>Example: create()->table(\'users\')->columns(col_def(\'id\', sql_type_serial()))<br>Example: create()->index(\'idx_email\')->on(\'users\')->columns(\'email\')
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\create()"),
         boost: 10
     },        {
         label: "csv_detect_separator",
@@ -1048,6 +1696,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\csv_detect_separator(" + "$" + "{" + "1:stream" + "}" + ", " + "$" + "{" + "2:lines" + "}" + ", " + "$" + "{" + "3:fallback" + "}" + ", " + "$" + "{" + "4:options" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "cte",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cte</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SelectFinalStep</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columnNames</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">CTEMaterialization</span> <span class=\"fn-param\">$materialization</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\CTEMaterialization::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$recursive</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CTE</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CTE (Common Table Expression).<br>@param string $name CTE name<br>@param SelectFinalStep $query CTE query<br>@param array<string> $columnNames Column aliases (optional)<br>@param CTEMaterialization $materialization Materialization hint
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\cte(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:columnNames" + "}" + ", " + "$" + "{" + "4:materialization" + "}" + ", " + "$" + "{" + "5:recursive" + "}" + ")"),
         boost: 10
     },        {
         label: "data_frame",
@@ -1314,6 +1980,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\delay_linear(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:increment" + "}" + ")"),
         boost: 10
     },        {
+        label: "delete",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">delete</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DeleteFromStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a new DELETE query builder.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\delete()"),
+        boost: 10
+    },        {
         label: "dense_rank",
         type: "function",
         detail: "flow\u002Ddsl\u002Dwindow\u002Dfunctions",
@@ -1344,6 +2028,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\dens_rank()"),
         boost: 10
     },        {
+        label: "derived",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">derived</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SelectFinalStep</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$alias</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DerivedTable</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a derived table (subquery in FROM clause).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\derived(" + "$" + "{" + "1:query" + "}" + ", " + "$" + "{" + "2:alias" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "desc",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">desc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NullsPosition</span> <span class=\"fn-param\">$nulls</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\NullsPosition::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OrderByItem</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ORDER BY item with DESC direction.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\desc(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:nulls" + "}" + ")"),
+        boost: 10
+    },        {
         label: "df",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -1360,6 +2080,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\df(" + "$" + "{" + "1:config" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "discard",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">discard</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DiscardType</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DiscardFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a DISCARD builder.<br>Example: discard(DiscardType::ALL)<br>Produces: DISCARD ALL<br>@param DiscardType $type Type of resources to discard (ALL, PLANS, SEQUENCES, TEMP)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\discard(" + "$" + "{" + "1:type" + "}" + ")"),
         boost: 10
     },        {
         label: "dom_element_to_string",
@@ -1395,6 +2133,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Types\\DSL\\dom_element_to_string(" + "$" + "{" + "1:element" + "}" + ", " + "$" + "{" + "2:format_output" + "}" + ", " + "$" + "{" + "3:preserver_white_space" + "}" + ")"),
         boost: 10
     },        {
+        label: "do_block",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">do_block</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$code</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DoFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Creates a DO statement builder for executing an anonymous code block.<br>Example: do_block(\'BEGIN RAISE NOTICE $$Hello World$$; END;\')<br>Produces: DO $$ BEGIN RAISE NOTICE $$Hello World$$; END; $$ LANGUAGE plpgsql<br>Example: do_block(\'SELECT 1\')->language(\'sql\')<br>Produces: DO $$ SELECT 1 $$ LANGUAGE sql<br>@param string $code The anonymous code block to execute<br>@return DoFinalStep Builder for DO statement options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\do_block(" + "$" + "{" + "1:code" + "}" + ")"),
+        boost: 10
+    },        {
         label: "drop",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtransformers",
@@ -1408,6 +2164,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\drop(" + "$" + "{" + "1:entries" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "drop",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">drop</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DropFactory</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a factory for building DROP statements.<br>Provides a unified entry point for all DROP operations:<br>- drop()->table() - DROP TABLE<br>- drop()->index() - DROP INDEX<br>- drop()->view() - DROP VIEW<br>- drop()->materializedView() - DROP MATERIALIZED VIEW<br>- drop()->sequence() - DROP SEQUENCE<br>- drop()->schema() - DROP SCHEMA<br>- drop()->role() - DROP ROLE<br>- drop()->function() - DROP FUNCTION<br>- drop()->procedure() - DROP PROCEDURE<br>- drop()->trigger() - DROP TRIGGER<br>- drop()->rule() - DROP RULE<br>- drop()->extension() - DROP EXTENSION<br>- drop()->type() - DROP TYPE<br>- drop()->domain() - DROP DOMAIN<br>- drop()->owned() - DROP OWNED<br>Example: drop()->table(\'users\', \'orders\')->ifExists()->cascade()<br>Example: drop()->index(\'idx_email\')->ifExists()
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\drop()"),
+        boost: 10
+    },        {
+        label: "drop_owned",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">drop_owned</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$roles</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DropOwnedFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a DROP OWNED builder.<br>Example: drop_owned(\'role1\')<br>Produces: DROP OWNED BY role1<br>Example: drop_owned(\'role1\', \'role2\')->cascade()<br>Produces: DROP OWNED BY role1, role2 CASCADE<br>@param string ...$roles The roles whose owned objects should be dropped<br>@return DropOwnedFinalStep Builder for drop owned options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\drop_owned(" + "$" + "{" + "1:roles" + "}" + ")"),
         boost: 10
     },        {
         label: "duration_microseconds",
@@ -1572,6 +2364,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\enum_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
+        label: "eq",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">eq</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an equality comparison (column = value).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\eq(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
         label: "equal",
         type: "function",
         detail: "flow\u002Ddsl\u002Dcomparisons",
@@ -1689,6 +2499,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\exists(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
+        label: "exists",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exists</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SelectFinalStep</span> <span class=\"fn-param\">$subquery</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Exists</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an EXISTS condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exists(" + "$" + "{" + "1:subquery" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "explain",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExplainFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an EXPLAIN builder for a query.<br>Example: explain(select()->from(\'users\'))<br>Produces: EXPLAIN SELECT * FROM users<br>@param DeleteBuilder|InsertBuilder|SelectFinalStep|UpdateBuilder $query Query to explain
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\explain(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
         label: "files",
         type: "function",
         detail: "flow\u002Ddsl\u002Dextractors",
@@ -1783,6 +2629,150 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\flow_context(" + "$" + "{" + "1:config" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "foreign_key",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">foreign_key</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$referenceTable</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$referenceColumns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ForeignKeyConstraint</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a FOREIGN KEY constraint.<br>@param list<string> $columns Local columns<br>@param string $referenceTable Referenced table<br>@param list<string> $referenceColumns Referenced columns (defaults to same as $columns if empty)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\foreign_key(" + "$" + "{" + "1:columns" + "}" + ", " + "$" + "{" + "2:referenceTable" + "}" + ", " + "$" + "{" + "3:referenceColumns" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "for_share",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">for_share</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$tables</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LockingClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a FOR SHARE locking clause.<br>@param list<string> $tables Tables to lock (empty for all)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\for_share(" + "$" + "{" + "1:tables" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "for_update",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">for_update</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$tables</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LockingClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a FOR UPDATE locking clause.<br>@param list<string> $tables Tables to lock (empty for all)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\for_update(" + "$" + "{" + "1:tables" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "frame_current_row",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">frame_current_row</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a frame bound for CURRENT ROW.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\frame_current_row()"),
+        boost: 10
+    },        {
+        label: "frame_following",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">frame_following</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$offset</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a frame bound for N FOLLOWING.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\frame_following(" + "$" + "{" + "1:offset" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "frame_preceding",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">frame_preceding</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$offset</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a frame bound for N PRECEDING.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\frame_preceding(" + "$" + "{" + "1:offset" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "frame_unbounded_following",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">frame_unbounded_following</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a frame bound for UNBOUNDED FOLLOWING.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\frame_unbounded_following()"),
+        boost: 10
+    },        {
+        label: "frame_unbounded_preceding",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">frame_unbounded_preceding</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FrameBound</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a frame bound for UNBOUNDED PRECEDING.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\frame_unbounded_preceding()"),
         boost: 10
     },        {
         label: "from_all",
@@ -2304,6 +3294,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\fstab(" + "$" + "{" + "1:filesystems" + "}" + ")"),
         boost: 10
     },        {
+        label: "func",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">func</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$args</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FunctionCall</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a function call expression.<br>@param string $name Function name (can include schema like \"pg_catalog.now\")<br>@param list<Expression> $args Function arguments
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\func(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:args" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "func_arg",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">func_arg</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataType</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FunctionArgument</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Creates a new function argument for use in function/procedure definitions.<br>Example: func_arg(sql_type_integer())<br>Example: func_arg(sql_type_text())->named(\'username\')<br>Example: func_arg(sql_type_integer())->named(\'count\')->default(\'0\')<br>Example: func_arg(sql_type_text())->out()<br>@param DataType $type The PostgreSQL data type for the argument<br>@return FunctionArgument Builder for function argument options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\func_arg(" + "$" + "{" + "1:type" + "}" + ")"),
+        boost: 10
+    },        {
         label: "generate_random_int",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -2370,6 +3396,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Types\\DSL\\get_type(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
+        label: "grant",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">grant</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">TablePrivilege|string</span> <span class=\"fn-param\">$privileges</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GrantOnStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a GRANT privileges builder.<br>Example: grant(TablePrivilege::SELECT)->onTable(\'users\')->to(\'app_user\')<br>Produces: GRANT SELECT ON users TO app_user<br>Example: grant(TablePrivilege::ALL)->onAllTablesInSchema(\'public\')->to(\'admin\')<br>Produces: GRANT ALL ON ALL TABLES IN SCHEMA public TO admin<br>@param string|TablePrivilege ...$privileges The privileges to grant<br>@return GrantOnStep Builder for grant options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\grant(" + "$" + "{" + "1:privileges" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "grant_role",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">grant_role</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$roles</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GrantRoleToStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a GRANT role builder.<br>Example: grant_role(\'admin\')->to(\'user1\')<br>Produces: GRANT admin TO user1<br>Example: grant_role(\'admin\', \'developer\')->to(\'user1\')->withAdminOption()<br>Produces: GRANT admin, developer TO user1 WITH ADMIN OPTION<br>@param string ...$roles The roles to grant<br>@return GrantRoleToStep Builder for grant role options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\grant_role(" + "$" + "{" + "1:roles" + "}" + ")"),
+        boost: 10
+    },        {
         label: "greatest",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -2383,6 +3445,60 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\greatest(" + "$" + "{" + "1:values" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "greatest",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">greatest</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expressions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Greatest</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a GREATEST expression.<br>@param Expression ...$expressions Expressions to compare
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\greatest(" + "$" + "{" + "1:expressions" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "gt",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">gt</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a greater-than comparison (column > value).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\gt(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "gte",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">gte</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a greater-than-or-equal comparison (column >= value).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\gte(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "hash",
@@ -2535,6 +3651,168 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\ignore_error_handler()"),
         boost: 10
     },        {
+        label: "index_col",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_col</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexColumn</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an index column specification.<br>Use chainable methods: ->asc(), ->desc(), ->nullsFirst(), ->nullsLast(), ->opclass(), ->collate()<br>Example: index_col(\'email\')->desc()->nullsLast()<br>@param string $name The column name
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_col(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "index_expr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_expr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expression</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexColumn</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an index column specification from an expression.<br>Use chainable methods: ->asc(), ->desc(), ->nullsFirst(), ->nullsLast(), ->opclass(), ->collate()<br>Example: index_expr(fn_call(\'lower\', col(\'email\')))->desc()<br>@param Expression $expression The expression to index
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_expr(" + "$" + "{" + "1:expression" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "index_method_brin",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_method_brin</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexMethod</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get the BRIN index method.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_brin()"),
+        boost: 10
+    },        {
+        label: "index_method_btree",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_method_btree</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexMethod</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get the BTREE index method.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_btree()"),
+        boost: 10
+    },        {
+        label: "index_method_gin",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_method_gin</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexMethod</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get the GIN index method.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_gin()"),
+        boost: 10
+    },        {
+        label: "index_method_gist",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_method_gist</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexMethod</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get the GIST index method.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_gist()"),
+        boost: 10
+    },        {
+        label: "index_method_hash",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_method_hash</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexMethod</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get the HASH index method.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_hash()"),
+        boost: 10
+    },        {
+        label: "index_method_spgist",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">index_method_spgist</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IndexMethod</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get the SPGIST index method.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\index_method_spgist()"),
+        boost: 10
+    },        {
+        label: "insert",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">insert</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">InsertIntoStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a new INSERT query builder.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\insert()"),
+        boost: 10
+    },        {
         label: "integer_entry",
         type: "function",
         detail: "flow\u002Ddsl\u002Dentries",
@@ -2607,6 +3885,60 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\int_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
+        label: "is_distinct_from",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">is_distinct_from</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$not</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IsDistinctFrom</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an IS DISTINCT FROM condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\is_distinct_from(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ", " + "$" + "{" + "3:not" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "is_in",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">is_in</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$values</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">In</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an IN condition.<br>@param Expression $expr Expression to check<br>@param list<Expression> $values List of values
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\is_in(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "is_null",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">is_null</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$not</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IsNull</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an IS NULL condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\is_null(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:not" + "}" + ")"),
+        boost: 10
+    },        {
         label: "is_type",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -2658,6 +3990,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\join_on(" + "$" + "{" + "1:comparisons" + "}" + ", " + "$" + "{" + "2:join_prefix" + "}" + ")"),
         boost: 10
     },        {
+        label: "json_contained_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_contained_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSONB is contained by condition (<@).<br>Example: json_contained_by(col(\'metadata\'), literal_json(\'{\"category\": \"electronics\", \"price\": 100}\'))<br>Produces: metadata <@ \'{\"category\": \"electronics\", \"price\": 100}\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_contained_by(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_contains",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_contains</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSONB contains condition (@>).<br>Example: json_contains(col(\'metadata\'), literal_json(\'{\"category\": \"electronics\"}\'))<br>Produces: metadata @> \'{\"category\": \"electronics\"}\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_contains(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
         label: "json_entry",
         type: "function",
         detail: "flow\u002Ddsl\u002Dentries",
@@ -2676,6 +4044,96 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\json_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
+        label: "json_exists",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_exists</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$key</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSONB key exists condition (?).<br>Example: json_exists(col(\'metadata\'), literal_string(\'category\'))<br>Produces: metadata ? \'category\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_exists(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:key" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_exists_all",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_exists_all</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSONB all keys exist condition (?&).<br>Example: json_exists_all(col(\'metadata\'), raw_expr(\"array[\'category\', \'name\']\"))<br>Produces: metadata ?& array[\'category\', \'name\']
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_exists_all(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_exists_any",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_exists_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSONB any key exists condition (?|).<br>Example: json_exists_any(col(\'metadata\'), raw_expr(\"array[\'category\', \'name\']\"))<br>Produces: metadata ?| array[\'category\', \'name\']
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_exists_any(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_get",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_get</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$key</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BinaryExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSON field access expression (->).<br>Returns JSON.<br>Example: json_get(col(\'metadata\'), literal_string(\'category\'))<br>Produces: metadata -> \'category\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_get(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:key" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_get_text",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_get_text</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$key</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BinaryExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSON field access expression (->>).<br>Returns text.<br>Example: json_get_text(col(\'metadata\'), literal_string(\'name\'))<br>Produces: metadata ->> \'name\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_get_text(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:key" + "}" + ")"),
+        boost: 10
+    },        {
         label: "json_object_entry",
         type: "function",
         detail: "flow\u002Ddsl\u002Dentries",
@@ -2692,6 +4150,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\json_object_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_path",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_path</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BinaryExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSON path access expression (#>).<br>Returns JSON.<br>Example: json_path(col(\'metadata\'), literal_string(\'{category,name}\'))<br>Produces: metadata #> \'{category,name}\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_path(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "json_path_text",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">json_path_text</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BinaryExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSON path access expression (#>>).<br>Returns text.<br>Example: json_path_text(col(\'metadata\'), literal_string(\'{category,name}\'))<br>Produces: metadata #>> \'{category,name}\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\json_path_text(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
         boost: 10
     },        {
         label: "json_schema",
@@ -2727,6 +4221,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\last(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
+        label: "lateral",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">lateral</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">TableReference</span> <span class=\"fn-param\">$reference</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Lateral</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a LATERAL subquery.<br>@param TableReference $reference The subquery or table function reference
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\lateral(" + "$" + "{" + "1:reference" + "}" + ")"),
+        boost: 10
+    },        {
         label: "least",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -2740,6 +4252,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\least(" + "$" + "{" + "1:values" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "least",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">least</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expressions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Least</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a LEAST expression.<br>@param Expression ...$expressions Expressions to compare
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\least(" + "$" + "{" + "1:expressions" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "like",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">like</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$caseInsensitive</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Like</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a LIKE condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\like(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:pattern" + "}" + ", " + "$" + "{" + "3:caseInsensitive" + "}" + ")"),
         boost: 10
     },        {
         label: "limit",
@@ -2838,6 +4386,60 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\lit(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
+        label: "literal",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">literal</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string|int|float|bool|null</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Literal</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a literal value for use in queries.<br>Automatically detects the type and creates the appropriate literal:<br>- literal(\'hello\') creates a string literal<br>- literal(42) creates an integer literal<br>- literal(3.14) creates a float literal<br>- literal(true) creates a boolean literal<br>- literal(null) creates a NULL literal
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\literal(" + "$" + "{" + "1:value" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "lock_for",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">lock_for</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LockStrength</span> <span class=\"fn-param\">$strength</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$tables</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LockWaitPolicy</span> <span class=\"fn-param\">$waitPolicy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\LockWaitPolicy::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LockingClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a locking clause (FOR UPDATE, FOR SHARE, etc.).<br>@param LockStrength $strength Lock strength<br>@param list<string> $tables Tables to lock (empty for all)<br>@param LockWaitPolicy $waitPolicy Wait policy
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\lock_for(" + "$" + "{" + "1:strength" + "}" + ", " + "$" + "{" + "2:tables" + "}" + ", " + "$" + "{" + "3:waitPolicy" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "lock_table",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">lock_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$tables</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LockFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a LOCK TABLE builder.<br>Example: lock_table(\'users\', \'orders\')->accessExclusive()<br>Produces: LOCK TABLE users, orders IN ACCESS EXCLUSIVE MODE
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\lock_table(" + "$" + "{" + "1:tables" + "}" + ")"),
+        boost: 10
+    },        {
         label: "lower",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -2851,6 +4453,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\lower(" + "$" + "{" + "1:value" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "lt",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">lt</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a less-than comparison (column < value).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\lt(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "lte",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">lte</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a less-than-or-equal comparison (column <= value).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\lte(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "map_entry",
@@ -2991,6 +4629,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\memory_filesystem()"),
         boost: 10
     },        {
+        label: "merge",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">merge</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$table</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$alias</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MergeUsingStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a new MERGE query builder.<br>@param string $table Target table name<br>@param null|string $alias Optional table alias
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\merge(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:alias" + "}" + ")"),
+        boost: 10
+    },        {
         label: "min",
         type: "function",
         detail: "flow\u002Ddsl\u002Daggregating\u002Dfunctions",
@@ -3039,6 +4695,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\native_local_filesystem()"),
         boost: 10
     },        {
+        label: "neq",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">neq</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$left</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$right</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a not-equal comparison (column != value).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\neq(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },        {
         label: "not",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -3054,6 +4728,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\not(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
+        label: "not_regex_imatch",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">not_regex_imatch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a POSIX regex not match condition (!~*).<br>Case-insensitive.<br>Example: not_regex_imatch(col(\'email\'), literal_string(\'.*@spam\\\\.com\'))<br>Produces: email !~* \'.*@spam\\.com\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\not_regex_imatch(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:pattern" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "not_regex_match",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">not_regex_match</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a POSIX regex not match condition (!~).<br>Case-sensitive.<br>Example: not_regex_match(col(\'email\'), literal_string(\'.*@spam\\\\.com\'))<br>Produces: email !~ \'.*@spam\\.com\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\not_regex_match(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:pattern" + "}" + ")"),
+        boost: 10
+    },        {
         label: "now",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -3067,6 +4777,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\now(" + "$" + "{" + "1:time_zone" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "nullif",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">nullif</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr1</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr2</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NullIf</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a NULLIF expression.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\nullif(" + "$" + "{" + "1:expr1" + "}" + ", " + "$" + "{" + "2:expr2" + "}" + ")"),
         boost: 10
     },        {
         label: "null_entry",
@@ -3120,6 +4848,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\number_format(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:decimals" + "}" + ", " + "$" + "{" + "3:decimal_separator" + "}" + ", " + "$" + "{" + "4:thousands_separator" + "}" + ")"),
         boost: 10
     },        {
+        label: "on_conflict_nothing",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">on_conflict_nothing</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ConflictTarget</span> <span class=\"fn-param\">$target</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OnConflictClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ON CONFLICT DO NOTHING clause.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\on_conflict_nothing(" + "$" + "{" + "1:target" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "on_conflict_update",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">on_conflict_update</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ConflictTarget</span> <span class=\"fn-param\">$target</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$updates</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OnConflictClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ON CONFLICT DO UPDATE clause.<br>@param ConflictTarget $target Conflict target (columns or constraint)<br>@param array<string, Expression> $updates Column updates
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\on_conflict_update(" + "$" + "{" + "1:target" + "}" + ", " + "$" + "{" + "2:updates" + "}" + ")"),
+        boost: 10
+    },        {
         label: "optional",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -3133,6 +4897,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\optional(" + "$" + "{" + "1:function" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "order_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">order_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortDirection</span> <span class=\"fn-param\">$direction</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\SortDirection::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">NullsPosition</span> <span class=\"fn-param\">$nulls</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\NullsPosition::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OrderByItem</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ORDER BY item.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\order_by(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:direction" + "}" + ", " + "$" + "{" + "3:nulls" + "}" + ")"),
         boost: 10
     },        {
         label: "overwrite",
@@ -3196,6 +4978,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\pagination_key_set(" + "$" + "{" + "1:keys" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "param",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">param</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$position</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Parameter</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a positional parameter ($1, $2, etc.).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\param(" + "$" + "{" + "1:position" + "}" + ")"),
         boost: 10
     },        {
         label: "partition",
@@ -3300,396 +5100,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\path_stdout(" + "$" + "{" + "1:options" + "}" + ")"),
         boost: 10
     },        {
-        label: "pg_count_modifier",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_count_modifier</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CountModifier</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a CountModifier that transforms a SELECT query into a COUNT query.<br>The original query is wrapped in: SELECT COUNT(*) FROM (...) AS _count_subq<br>ORDER BY and LIMIT/OFFSET are removed from the inner query.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_count_modifier()"),
-        boost: 10
-    },        {
-        label: "pg_deparse",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_deparse</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DeparseOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Convert a ParsedQuery AST back to SQL string.<br>When called without options, returns the SQL as a simple string.<br>When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).<br>@throws \\RuntimeException if deparsing fails
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_deparse(" + "$" + "{" + "1:query" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_deparse_options",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_deparse_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DeparseOptions</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create DeparseOptions for configuring SQL formatting.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_deparse_options()"),
-        boost: 10
-    },        {
-        label: "pg_fingerprint",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_fingerprint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Returns a fingerprint of the given SQL query.<br>Literal values are normalized so they won\'t affect the fingerprint.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_fingerprint(" + "$" + "{" + "1:sql" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_format",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_format</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DeparseOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Parse and format SQL query with pretty printing.<br>This is a convenience function that parses SQL and returns it formatted.<br>@param string $sql The SQL query to format<br>@param null|DeparseOptions $options Formatting options (defaults to pretty-print enabled)<br>@throws \\RuntimeException if parsing or deparsing fails
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_format(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_keyset_column",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_keyset_column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PgQuery\\AST\\Transformers\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetColumn</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a KeysetColumn for keyset pagination.<br>@param string $column Column name (can include table alias like \"u.id\")<br>@param SortOrder $order Sort order (ASC or DESC)
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_keyset_column(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_keyset_pagination",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_keyset_pagination</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetPaginationModifier</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a KeysetPaginationModifier for cursor-based pagination.<br>Keyset pagination is more efficient than OFFSET for large datasets because it uses<br>indexed WHERE conditions instead of scanning and skipping rows.<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns to use for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Cursor values from the last row of previous page (null for first page)
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_keyset_pagination(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:cursor" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_keyset_pagination_config",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_keyset_pagination_config</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetPaginationConfig</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a KeysetPaginationConfig for cursor-based pagination.<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns to use for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Cursor values from the last row of previous page (null for first page)
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_keyset_pagination_config(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:cursor" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_normalize",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_normalize</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Normalize SQL query by replacing literal values and named parameters with positional parameters.<br>WHERE id = :id will be changed into WHERE id = $1<br>WHERE id = 1 will be changed into WHERE id = $1.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_normalize(" + "$" + "{" + "1:sql" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_normalize_utility",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_normalize_utility</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).<br>This handles DDL statements differently from pg_normalize() which is optimized for DML.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_normalize_utility(" + "$" + "{" + "1:sql" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_pagination",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_pagination</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PaginationModifier</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a PaginationModifier for offset-based pagination.<br>Applies LIMIT and OFFSET to the query. OFFSET without ORDER BY will throw an exception.<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_pagination(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:offset" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_pagination_config",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_pagination_config</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PaginationConfig</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a PaginationConfig for offset-based pagination.<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_pagination_config(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:offset" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_parse",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_parse</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParsedQuery</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_parse(" + "$" + "{" + "1:sql" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_parser",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_parser</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Parser</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_parser()"),
-        boost: 10
-    },        {
-        label: "pg_query_columns",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_query_columns</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Columns</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Extract columns from a parsed SQL query.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_query_columns(" + "$" + "{" + "1:query" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_query_functions",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_query_functions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Functions</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Extract functions from a parsed SQL query.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_query_functions(" + "$" + "{" + "1:query" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_query_tables",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_query_tables</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Tables</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Extract tables from a parsed SQL query.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_query_tables(" + "$" + "{" + "1:query" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_split",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_split</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">array</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Split string with multiple SQL statements into array of individual statements.<br>@return array<string>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_split(" + "$" + "{" + "1:sql" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_summary",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_summary</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$truncateLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Generate a summary of parsed queries in protobuf format.<br>Useful for query monitoring and logging without full AST overhead.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_summary(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:truncateLimit" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_to_count_query",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_to_count_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Transform a SQL query into a COUNT query for pagination.<br>Wraps the query in: SELECT COUNT(*) FROM (...) AS _count_subq<br>Removes ORDER BY and LIMIT/OFFSET from the inner query.<br>@param string $sql The SQL query to transform<br>@return string The COUNT query
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_to_count_query(" + "$" + "{" + "1:sql" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_to_keyset_query",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_to_keyset_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Transform a SQL query into a keyset (cursor-based) paginated query.<br>More efficient than OFFSET for large datasets - uses indexed WHERE conditions.<br>@param string $sql The SQL query to paginate (must have ORDER BY)<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Values from last row of previous page (null for first page)<br>@return string The paginated SQL query
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_to_keyset_query(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ", " + "$" + "{" + "3:columns" + "}" + ", " + "$" + "{" + "4:cursor" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "pg_to_paginated_query",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pg_to_paginated_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Transform a SQL query into a paginated query with LIMIT and OFFSET.<br>@param string $sql The SQL query to paginate<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)<br>@return string The paginated SQL query
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_to_paginated_query(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ", " + "$" + "{" + "3:offset" + "}" + ")"),
-        boost: 10
-    },        {
         label: "pie_chart",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3739,6 +5149,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\postgresql_update_options(" + "$" + "{" + "1:primary_key_columns" + "}" + ", " + "$" + "{" + "2:update_columns" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "prepare_transaction",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">prepare_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$transactionId</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PreparedTransactionFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PREPARE TRANSACTION builder.<br>Example: prepare_transaction(\'my_transaction\')<br>Produces: PREPARE TRANSACTION \'my_transaction\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\prepare_transaction(" + "$" + "{" + "1:transactionId" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "primary_key",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">primary_key</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PrimaryKeyConstraint</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PRIMARY KEY constraint.<br>@param string ...$columns Columns that form the primary key
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\primary_key(" + "$" + "{" + "1:columns" + "}" + ")"),
         boost: 10
     },        {
         label: "print_rows",
@@ -3819,6 +5265,60 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\rank()"),
         boost: 10
     },        {
+        label: "raw_cond",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">raw_cond</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RawCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a raw SQL condition (use with caution).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\raw_cond(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "raw_expr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">raw_expr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RawExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a raw SQL expression (use with caution).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\raw_expr(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "reassign_owned",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">reassign_owned</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$roles</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReassignOwnedToStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a REASSIGN OWNED builder.<br>Example: reassign_owned(\'old_role\')->to(\'new_role\')<br>Produces: REASSIGN OWNED BY old_role TO new_role<br>@param string ...$roles The roles whose owned objects should be reassigned<br>@return ReassignOwnedToStep Builder for reassign owned options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\reassign_owned(" + "$" + "{" + "1:roles" + "}" + ")"),
+        boost: 10
+    },        {
         label: "ref",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -3834,6 +5334,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\ref(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
+        label: "refresh_materialized_view",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">refresh_materialized_view</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RefreshMatViewOptionsStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a REFRESH MATERIALIZED VIEW builder.<br>Example: refresh_materialized_view(\'user_stats\')<br>Produces: REFRESH MATERIALIZED VIEW user_stats<br>Example: refresh_materialized_view(\'user_stats\')->concurrently()->withData()<br>Produces: REFRESH MATERIALIZED VIEW CONCURRENTLY user_stats WITH DATA<br>@param string $name View name (may include schema as \"schema.view\")<br>@param null|string $schema Schema name (optional, overrides parsed schema)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\refresh_materialized_view(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
+        boost: 10
+    },        {
         label: "refs",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -3847,6 +5365,96 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\refs(" + "$" + "{" + "1:entries" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "ref_action_cascade",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">ref_action_cascade</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReferentialAction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get a CASCADE referential action.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ref_action_cascade()"),
+        boost: 10
+    },        {
+        label: "ref_action_no_action",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">ref_action_no_action</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReferentialAction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get a NO ACTION referential action.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ref_action_no_action()"),
+        boost: 10
+    },        {
+        label: "ref_action_restrict",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">ref_action_restrict</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReferentialAction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get a RESTRICT referential action.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ref_action_restrict()"),
+        boost: 10
+    },        {
+        label: "ref_action_set_default",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">ref_action_set_default</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReferentialAction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get a SET DEFAULT referential action.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ref_action_set_default()"),
+        boost: 10
+    },        {
+        label: "ref_action_set_null",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">ref_action_set_null</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReferentialAction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Get a SET NULL referential action.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ref_action_set_null()"),
         boost: 10
     },        {
         label: "regex",
@@ -3879,6 +5487,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\regex_all(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
         boost: 10
     },        {
+        label: "regex_imatch",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">regex_imatch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a POSIX regex match condition (~*).<br>Case-insensitive.<br>Example: regex_imatch(col(\'email\'), literal_string(\'.*@gmail\\\\.com\'))<br>Produces: email ~* \'.*@gmail\\.com\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\regex_imatch(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:pattern" + "}" + ")"),
+        boost: 10
+    },        {
         label: "regex_match",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -3892,6 +5518,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\regex_match(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "regex_match",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">regex_match</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a POSIX regex match condition (~).<br>Case-sensitive.<br>Example: regex_match(col(\'email\'), literal_string(\'.*@gmail\\\\.com\'))<br>Produces: email ~ \'.*@gmail\\.com\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\regex_match(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:pattern" + "}" + ")"),
         boost: 10
     },        {
         label: "regex_match_all",
@@ -3922,6 +5566,96 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\regex_replace(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:replacement" + "}" + ", " + "$" + "{" + "3:subject" + "}" + ", " + "$" + "{" + "4:limit" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "reindex_database",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">reindex_database</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReindexFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Start building a REINDEX DATABASE statement.<br>Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()<br>Example: reindex_database(\'mydb\')->concurrently()<br>@param string $name The database name
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\reindex_database(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "reindex_index",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">reindex_index</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReindexFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Start building a REINDEX INDEX statement.<br>Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()<br>Example: reindex_index(\'idx_users_email\')->concurrently()<br>@param string $name The index name (may include schema: schema.index)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\reindex_index(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "reindex_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">reindex_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReindexFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Start building a REINDEX SCHEMA statement.<br>Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()<br>Example: reindex_schema(\'public\')->concurrently()<br>@param string $name The schema name
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\reindex_schema(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "reindex_table",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dschema",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">reindex_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReindexFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Start building a REINDEX TABLE statement.<br>Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()<br>Example: reindex_table(\'users\')->concurrently()<br>@param string $name The table name (may include schema: schema.table)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\reindex_table(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "release_savepoint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">release_savepoint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SavepointFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Release a SAVEPOINT.<br>Example: release_savepoint(\'my_savepoint\')<br>Produces: RELEASE my_savepoint
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\release_savepoint(" + "$" + "{" + "1:name" + "}" + ")"),
         boost: 10
     },        {
         label: "rename_replace",
@@ -3957,6 +5691,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\rename_style(" + "$" + "{" + "1:style" + "}" + ")"),
         boost: 10
     },        {
+        label: "reset_role",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">reset_role</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ResetRoleFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a RESET ROLE builder.<br>Example: reset_role()<br>Produces: RESET ROLE<br>@return ResetRoleFinalStep Builder for reset role
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\reset_role()"),
+        boost: 10
+    },        {
         label: "retry_any_throwable",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3988,6 +5740,114 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\retry_on_exception_types(" + "$" + "{" + "1:exception_types" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "returning",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">returning</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expressions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReturningClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a RETURNING clause.<br>@param Expression ...$expressions Expressions to return
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\returning(" + "$" + "{" + "1:expressions" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "returning_all",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">returning_all</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ReturningClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a RETURNING * clause.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\returning_all()"),
+        boost: 10
+    },        {
+        label: "revoke",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">revoke</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">TablePrivilege|string</span> <span class=\"fn-param\">$privileges</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RevokeOnStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a REVOKE privileges builder.<br>Example: revoke(TablePrivilege::SELECT)->onTable(\'users\')->from(\'app_user\')<br>Produces: REVOKE SELECT ON users FROM app_user<br>Example: revoke(TablePrivilege::ALL)->onTable(\'users\')->from(\'app_user\')->cascade()<br>Produces: REVOKE ALL ON users FROM app_user CASCADE<br>@param string|TablePrivilege ...$privileges The privileges to revoke<br>@return RevokeOnStep Builder for revoke options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\revoke(" + "$" + "{" + "1:privileges" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "revoke_role",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">revoke_role</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$roles</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RevokeRoleFromStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a REVOKE role builder.<br>Example: revoke_role(\'admin\')->from(\'user1\')<br>Produces: REVOKE admin FROM user1<br>Example: revoke_role(\'admin\')->from(\'user1\')->cascade()<br>Produces: REVOKE admin FROM user1 CASCADE<br>@param string ...$roles The roles to revoke<br>@return RevokeRoleFromStep Builder for revoke role options
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\revoke_role(" + "$" + "{" + "1:roles" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "rollback",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">rollback</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RollbackOptionsStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a ROLLBACK transaction builder.<br>Example: rollback()->toSavepoint(\'my_savepoint\')<br>Produces: ROLLBACK TO SAVEPOINT my_savepoint
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\rollback()"),
+        boost: 10
+    },        {
+        label: "rollback_prepared",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">rollback_prepared</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$transactionId</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PreparedTransactionFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a ROLLBACK PREPARED builder.<br>Example: rollback_prepared(\'my_transaction\')<br>Produces: ROLLBACK PREPARED \'my_transaction\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\rollback_prepared(" + "$" + "{" + "1:transactionId" + "}" + ")"),
         boost: 10
     },        {
         label: "round",
@@ -4056,6 +5916,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\rows_partitioned(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:partitions" + "}" + ")"),
         boost: 10
     },        {
+        label: "row_expr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">row_expr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RowExpression</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a row expression.<br>@param list<Expression> $elements Row elements
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\row_expr(" + "$" + "{" + "1:elements" + "}" + ")"),
+        boost: 10
+    },        {
         label: "row_number",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -4084,6 +5962,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\sanitize(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:placeholder" + "}" + ", " + "$" + "{" + "3:skipCharacters" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "savepoint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">savepoint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SavepointFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SAVEPOINT.<br>Example: savepoint(\'my_savepoint\')<br>Produces: SAVEPOINT my_savepoint
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\savepoint(" + "$" + "{" + "1:name" + "}" + ")"),
         boost: 10
     },        {
         label: "save_mode_append",
@@ -4362,6 +6258,96 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\select(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
+        label: "select",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">select</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expressions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SelectBuilder</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a new SELECT query builder.<br>@param Expression ...$expressions Columns to select. If empty, returns SelectSelectStep.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\select(" + "$" + "{" + "1:expressions" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "set_role",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">set_role</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$role</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SetRoleFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SET ROLE builder.<br>Example: set_role(\'admin\')<br>Produces: SET ROLE admin<br>@param string $role The role to set<br>@return SetRoleFinalStep Builder for set role
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\set_role(" + "$" + "{" + "1:role" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "set_session_transaction",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">set_session_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SetTransactionOptionsStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SET SESSION CHARACTERISTICS AS TRANSACTION builder.<br>Example: set_session_transaction()->isolationLevel(IsolationLevel::SERIALIZABLE)<br>Produces: SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\set_session_transaction()"),
+        boost: 10
+    },        {
+        label: "set_transaction",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">set_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SetTransactionOptionsStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SET TRANSACTION builder.<br>Example: set_transaction()->isolationLevel(IsolationLevel::SERIALIZABLE)->readOnly()<br>Produces: SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\set_transaction()"),
+        boost: 10
+    },        {
+        label: "similar_to",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">similar_to</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SimilarTo</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SIMILAR TO condition.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\similar_to(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:pattern" + "}" + ")"),
+        boost: 10
+    },        {
         label: "size",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -4438,6 +6424,828 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\sqlite_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:conflict_columns" + "}" + ", " + "$" + "{" + "3:update_columns" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_deparse",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_deparse</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DeparseOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Convert a ParsedQuery AST back to SQL string.<br>When called without options, returns the SQL as a simple string.<br>When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).<br>@throws \\RuntimeException if deparsing fails
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_deparse(" + "$" + "{" + "1:query" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_deparse_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_deparse_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DeparseOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create DeparseOptions for configuring SQL formatting.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_deparse_options()"),
+        boost: 10
+    },        {
+        label: "sql_fingerprint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_fingerprint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Returns a fingerprint of the given SQL query.<br>Literal values are normalized so they won\'t affect the fingerprint.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_fingerprint(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_format",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_format</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DeparseOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Parse and format SQL query with pretty printing.<br>This is a convenience function that parses SQL and returns it formatted.<br>@param string $sql The SQL query to format<br>@param null|DeparseOptions $options Formatting options (defaults to pretty-print enabled)<br>@throws \\RuntimeException if parsing or deparsing fails
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_format(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_keyset_column",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_keyset_column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\AST\\Transformers\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetColumn</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a KeysetColumn for keyset pagination.<br>@param string $column Column name (can include table alias like \"u.id\")<br>@param SortOrder $order Sort order (ASC or DESC)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_keyset_column(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_normalize",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_normalize</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Normalize SQL query by replacing literal values and named parameters with positional parameters.<br>WHERE id = :id will be changed into WHERE id = $1<br>WHERE id = 1 will be changed into WHERE id = $1.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_normalize(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_normalize_utility",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_normalize_utility</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).<br>This handles DDL statements differently from pg_normalize() which is optimized for DML.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_normalize_utility(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_parse",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_parse</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParsedQuery</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_parse(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_parser",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_parser</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Parser</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_parser()"),
+        boost: 10
+    },        {
+        label: "sql_query_columns",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_query_columns</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Columns</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Extract columns from a parsed SQL query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_query_columns(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_query_functions",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_query_functions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Functions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Extract functions from a parsed SQL query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_query_functions(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_query_tables",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_query_tables</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Tables</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Extract tables from a parsed SQL query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_query_tables(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_split",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_split</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">array</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Split string with multiple SQL statements into array of individual statements.<br>@return array<string>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_split(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_summary",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_summary</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$truncateLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Generate a summary of parsed queries in protobuf format.<br>Useful for query monitoring and logging without full AST overhead.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_summary(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:truncateLimit" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_to_count_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_to_count_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Transform a SQL query into a COUNT query for pagination.<br>Wraps the query in: SELECT COUNT(*) FROM (...) AS _count_subq<br>Removes ORDER BY and LIMIT/OFFSET from the inner query.<br>@param string $sql The SQL query to transform<br>@return string The COUNT query
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_to_count_query(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_to_keyset_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_to_keyset_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Transform a SQL query into a keyset (cursor-based) paginated query.<br>More efficient than OFFSET for large datasets - uses indexed WHERE conditions.<br>@param string $sql The SQL query to paginate (must have ORDER BY)<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Values from last row of previous page (null for first page)<br>@return string The paginated SQL query
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_to_keyset_query(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ", " + "$" + "{" + "3:columns" + "}" + ", " + "$" + "{" + "4:cursor" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_to_paginated_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_to_paginated_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Transform a SQL query into a paginated query with LIMIT and OFFSET.<br>@param string $sql The SQL query to paginate<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)<br>@return string The paginated SQL query
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_to_paginated_query(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ", " + "$" + "{" + "3:offset" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_to_query_builder",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_to_query_builder</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SelectBuilder|InsertBuilder|UpdateBuilder|DeleteBuilder</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Parse SQL and convert to a QueryBuilder for modification.<br>Only works for single-statement queries. For multiple statements,<br>use pg_split() to parse statements individually.<br>@throws \\InvalidArgumentException if query contains multiple statements or unsupported statement type
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_to_query_builder(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_array",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_array</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataType</span> <span class=\"fn-param\">$elementType</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an ARRAY data type.<br>@param DataType $elementType The type of array elements
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_array(" + "$" + "{" + "1:elementType" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_bigint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_bigint</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a BIGINT data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_bigint()"),
+        boost: 10
+    },        {
+        label: "sql_type_bigserial",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_bigserial</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a BIGSERIAL (auto-incrementing bigint) data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_bigserial()"),
+        boost: 10
+    },        {
+        label: "sql_type_boolean",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_boolean</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a BOOLEAN data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_boolean()"),
+        boost: 10
+    },        {
+        label: "sql_type_bytea",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_bytea</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a BYTEA data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_bytea()"),
+        boost: 10
+    },        {
+        label: "sql_type_char",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_char</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$length</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CHAR data type.<br>@param int $length Fixed character length
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_char(" + "$" + "{" + "1:length" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_cidr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_cidr</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CIDR data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_cidr()"),
+        boost: 10
+    },        {
+        label: "sql_type_date",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_date</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a DATE data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_date()"),
+        boost: 10
+    },        {
+        label: "sql_type_decimal",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_decimal</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$precision</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$scale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a DECIMAL data type (alias for NUMERIC).<br>@param null|int $precision Total number of digits<br>@param null|int $scale Number of digits after decimal point
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_decimal(" + "$" + "{" + "1:precision" + "}" + ", " + "$" + "{" + "2:scale" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_double",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_double</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a DOUBLE PRECISION data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_double()"),
+        boost: 10
+    },        {
+        label: "sql_type_inet",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_inet</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an INET data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_inet()"),
+        boost: 10
+    },        {
+        label: "sql_type_integer",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_integer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an INTEGER data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_integer()"),
+        boost: 10
+    },        {
+        label: "sql_type_interval",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_interval</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an INTERVAL data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_interval()"),
+        boost: 10
+    },        {
+        label: "sql_type_json",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_json</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSON data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_json()"),
+        boost: 10
+    },        {
+        label: "sql_type_jsonb",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_jsonb</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a JSONB data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_jsonb()"),
+        boost: 10
+    },        {
+        label: "sql_type_macaddr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_macaddr</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a MACADDR data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_macaddr()"),
+        boost: 10
+    },        {
+        label: "sql_type_numeric",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_numeric</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$precision</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$scale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a NUMERIC data type.<br>@param null|int $precision Total number of digits<br>@param null|int $scale Number of digits after decimal point
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_numeric(" + "$" + "{" + "1:precision" + "}" + ", " + "$" + "{" + "2:scale" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_real",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_real</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a REAL data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_real()"),
+        boost: 10
+    },        {
+        label: "sql_type_serial",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_serial</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SERIAL (auto-incrementing integer) data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_serial()"),
+        boost: 10
+    },        {
+        label: "sql_type_smallint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_smallint</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SMALLINT data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_smallint()"),
+        boost: 10
+    },        {
+        label: "sql_type_smallserial",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_smallserial</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SMALLSERIAL (auto-incrementing smallint) data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_smallserial()"),
+        boost: 10
+    },        {
+        label: "sql_type_text",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_text</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TEXT data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_text()"),
+        boost: 10
+    },        {
+        label: "sql_type_time",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_time</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$precision</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TIME data type.<br>@param null|int $precision Fractional seconds precision
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_time(" + "$" + "{" + "1:precision" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_timestamp",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_timestamp</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$precision</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TIMESTAMP data type.<br>@param null|int $precision Fractional seconds precision
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_timestamp(" + "$" + "{" + "1:precision" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_timestamptz",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_timestamptz</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$precision</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TIMESTAMP WITH TIME ZONE data type.<br>@param null|int $precision Fractional seconds precision
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_timestamptz(" + "$" + "{" + "1:precision" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "sql_type_uuid",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_uuid</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a UUID data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_uuid()"),
+        boost: 10
+    },        {
+        label: "sql_type_varchar",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sql_type_varchar</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$length</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a VARCHAR data type.<br>@param int $length Maximum character length
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sql_type_varchar(" + "$" + "{" + "1:length" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "star",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">star</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$table</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Star</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SELECT * expression.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\star(" + "$" + "{" + "1:table" + "}" + ")"),
         boost: 10
     },        {
         label: "stdout_filesystem",
@@ -4632,6 +7440,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\str_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
+        label: "sub_select",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sub_select</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SelectFinalStep</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Subquery</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a subquery expression.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\sub_select(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
         label: "sum",
         type: "function",
         detail: "flow\u002Ddsl\u002Daggregating\u002Dfunctions",
@@ -4645,6 +7471,42 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\sum(" + "$" + "{" + "1:ref" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "table",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Table</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a table reference.<br>Supports dot notation for schema-qualified names: \"public.users\" or explicit schema parameter.<br>Double-quoted identifiers preserve dots: \'\"my.table\"\' creates a single identifier.<br>@param string $name Table name (may include schema as \"schema.table\")<br>@param null|string $schema Schema name (optional, overrides parsed schema)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\table(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "table_func",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">table_func</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">FunctionCall</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$withOrdinality</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TableFunction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a table function reference.<br>@param FunctionCall $function The table-valued function<br>@param bool $withOrdinality Whether to add WITH ORDINALITY
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\table_func(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:withOrdinality" + "}" + ")"),
         boost: 10
     },        {
         label: "table_schema_to_flow_schema",
@@ -4663,6 +7525,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\table_schema_to_flow_schema(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:types_map" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "text_search_match",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">text_search_match</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$document</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OperatorCondition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a full-text search match condition (@@).<br>Example: text_search_match(col(\'document\'), raw_expr(\"to_tsquery(\'english\', \'hello & world\')\"))<br>Produces: document @@ to_tsquery(\'english\', \'hello & world\')
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\text_search_match(" + "$" + "{" + "1:document" + "}" + ", " + "$" + "{" + "2:query" + "}" + ")"),
         boost: 10
     },        {
         label: "throw_error_handler",
@@ -5253,6 +8133,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\XML\\to_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:root_element_name" + "}" + ", " + "$" + "{" + "3:row_element_name" + "}" + ", " + "$" + "{" + "4:attribute_prefix" + "}" + ", " + "$" + "{" + "5:date_time_format" + "}" + ", " + "$" + "{" + "6:xml_writer" + "}" + ")"),
         boost: 10
     },        {
+        label: "transaction_snapshot",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">transaction_snapshot</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$snapshotId</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SetTransactionFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SET TRANSACTION SNAPSHOT builder.<br>Example: transaction_snapshot(\'00000003-0000001A-1\')<br>Produces: SET TRANSACTION SNAPSHOT \'00000003-0000001A-1\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\transaction_snapshot(" + "$" + "{" + "1:snapshotId" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "truncate_table",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">truncate_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$tables</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TruncateFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TRUNCATE TABLE builder.<br>@param string ...$tables Table names to truncate
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\truncate_table(" + "$" + "{" + "1:tables" + "}" + ")"),
+        boost: 10
+    },        {
         label: "types",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -5287,6 +8203,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\type_array()"),
+        boost: 10
+    },        {
+        label: "type_attr",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">type_attr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DataType</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TypeAttribute</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Creates a type attribute for composite types.<br>Example: type_attr(\'name\', sql_type_text())<br>Produces: name text<br>Example: type_attr(\'description\', sql_type_text())->collate(\'en_US\')<br>Produces: description text COLLATE \"en_US\"<br>@param string $name The attribute name<br>@param DataType $type The attribute type<br>@return TypeAttribute Type attribute value object
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\type_attr(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
         boost: 10
     },        {
         label: "type_boolean",
@@ -6024,6 +8958,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\ulid(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
+        label: "unique_constraint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">unique_constraint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UniqueConstraint</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a UNIQUE constraint.<br>@param string ...$columns Columns that must be unique together
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\unique_constraint(" + "$" + "{" + "1:columns" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "update",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">update</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UpdateTableStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a new UPDATE query builder.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\update()"),
+        boost: 10
+    },        {
         label: "upper",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -6105,6 +9075,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\uuid_v7(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
+        label: "vacuum",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">vacuum</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VacuumFinalStep</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a VACUUM builder.<br>Example: vacuum()->table(\'users\')<br>Produces: VACUUM users
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\vacuum()"),
+        boost: 10
+    },        {
         label: "when",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -6120,6 +9108,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\when(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:then" + "}" + ", " + "$" + "{" + "3:else" + "}" + ")"),
         boost: 10
     },        {
+        label: "when",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">when</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$result</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WhenClause</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a WHEN clause for CASE expression.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\when(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:result" + "}" + ")"),
+        boost: 10
+    },        {
         label: "window",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -6133,6 +9139,78 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\window()"),
+        boost: 10
+    },        {
+        label: "window_def",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">window_def</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$partitionBy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$orderBy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">WindowFrame</span> <span class=\"fn-param\">$frame</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WindowDefinition</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a window definition for WINDOW clause.<br>@param string $name Window name<br>@param list<Expression> $partitionBy PARTITION BY expressions<br>@param list<OrderBy|OrderByItem> $orderBy ORDER BY items<br>@param null|WindowFrame $frame Window frame specification
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\window_def(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:partitionBy" + "}" + ", " + "$" + "{" + "3:orderBy" + "}" + ", " + "$" + "{" + "4:frame" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "window_frame",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">window_frame</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">FrameMode</span> <span class=\"fn-param\">$mode</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FrameBound</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FrameBound</span> <span class=\"fn-param\">$end</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FrameExclusion</span> <span class=\"fn-param\">$exclusion</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PostgreSql\\QueryBuilder\\Clause\\FrameExclusion::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WindowFrame</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a window frame specification.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\window_frame(" + "$" + "{" + "1:mode" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:end" + "}" + ", " + "$" + "{" + "4:exclusion" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "window_func",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">window_func</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$args</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$partitionBy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$orderBy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WindowFunction</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a window function.<br>@param string $name Function name<br>@param list<Expression> $args Function arguments<br>@param list<Expression> $partitionBy PARTITION BY expressions<br>@param list<OrderBy|OrderByItem> $orderBy ORDER BY items
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\window_func(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:args" + "}" + ", " + "$" + "{" + "3:partitionBy" + "}" + ", " + "$" + "{" + "4:orderBy" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "with",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">CTE</span> <span class=\"fn-param\">$ctes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WithBuilder</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a WITH clause builder for CTEs.<br>Example: with(cte(\'users\', $subquery))->select(star())->from(table(\'users\'))<br>Example: with(cte(\'a\', $q1), cte(\'b\', $q2))->recursive()->select(...)->from(table(\'a\'))
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\with(" + "$" + "{" + "1:ctes" + "}" + ")"),
         boost: 10
     },        {
         label: "with_entry",

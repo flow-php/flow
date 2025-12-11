@@ -76,7 +76,6 @@ use \Rector\Transform\ValueObject\StaticCallToFuncCall;
 use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnotationToAttributeRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
-use Rector\CodingStyle\Rector\FunctionLike\FunctionLikeToFirstClassCallableRector;
 use Flow\Filesystem\Path;
 use Flow\ETL\Window;
 use Flow\ETL\Function\RowNumber;
@@ -84,6 +83,7 @@ use Flow\ETL\Function\Min;
 use Flow\ETL\Function\Max;
 use Flow\ETL\Function\Sum;
 use Flow\ETL\Function\Average;
+use Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -219,7 +219,7 @@ return RectorConfig::configure()
         RemoveParentCallWithoutParentRector::class,
         RemoveExtraParametersRector::class,
         FunctionFirstClassCallableRector::class,
-        FunctionLikeToFirstClassCallableRector::class,
+        ArrowFunctionDelegatingCallToFirstClassCallableRector::class
     ])
     ->withCache(__DIR__ . '/var/rector/tests')
     ->withSkipPath(__DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift')

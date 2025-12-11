@@ -442,8 +442,7 @@
             "./tools/rector/vendor/bin/rector -c ./rector.tests.php"
         ],
         "build:phar": [
-            "composer update --working-dir=./src/cli",
-            "tools/box/vendor/bin/box compile --config ./src/cli/box.json",
+            "bin/build-phar.sh",
             "cp ./build/flow.phar ./web/landing/assets/wasm/tools/flow.phar"
         ],
         "build:wasm": [
