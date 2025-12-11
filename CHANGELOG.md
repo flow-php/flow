@@ -22,6 +22,9 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2065](https://github.com/flow-php/flow/pull/2065) - **update cli composer.json while building phar to use local repositories** - [@norberttech](https://github.com/norberttech)
+- [#2065](https://github.com/flow-php/flow/pull/2065) - **updated dependncies** - [@norberttech](https://github.com/norberttech)
+- [#2065](https://github.com/flow-php/flow/pull/2065) - **updated manifest.json** - [@norberttech](https://github.com/norberttech)
 - [#2062](https://github.com/flow-php/flow/pull/2062) - **renamed flow-php/pg-query into flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
 - [d70698](https://github.com/flow-php/flow/commit/d70698e0b463ef9f2e8e391e9752828ed8019ec1) - **chore: added documentation for building wasm** - [@norberttech](https://github.com/norberttech)
 - [#2040](https://github.com/flow-php/flow/pull/2040) - **cast thrift encoded values to ints to preven issues with 32 systems** - [@norberttech](https://github.com/norberttech)
