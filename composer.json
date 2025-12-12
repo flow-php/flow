@@ -452,7 +452,7 @@
             "@build:phar"
         ],
         "build:docker": [
-            "docker buildx build -t flow-php/flow:latest . --progress=plain --load"
+            "docker build -f Dockerfile.base -t ghcr.io/flow-php/flow-base:8.5-alpine ."
         ],
         "build:docs": [
             "bin/docs.php dsl:dump web/landing/resources/dsl.json",
