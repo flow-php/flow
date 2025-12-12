@@ -4,7 +4,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require-dev": {
-    "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+    "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
     "carthage-software/mago": "dev-main"
   },
   "config": {
