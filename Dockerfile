@@ -15,15 +15,21 @@ RUN apk update && apk add --no-cache \
     postgresql-dev \
     sqlite-dev \
     libpq \
+    curl \
+    build-base \
+    autoconf \
+    automake \
+    libtool \
+    protobuf-dev \
+    protobuf-c-dev \
  && docker-php-ext-install bcmath gmp pdo_mysql pdo_pgsql pdo_sqlite \
- && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git /tmp/php-ext-snappy \
- && cd /tmp/php-ext-snappy \
- && phpize \
- && ./configure \
- && make \
- && make install \
- && docker-php-ext-enable snappy \
- && rm -rf /tmp/php-ext-snappy
+ && curl -L https://github.com/php/pie/releases/latest/download/pie.phar -o /usr/local/bin/pie \
+ && chmod +x /usr/local/bin/pie \
+ && php /usr/local/bin/pie install kjdev/brotli \
+ && php /usr/local/bin/pie install kjdev/lz4 \
+ && php /usr/local/bin/pie install kjdev/snappy \
+ && php /usr/local/bin/pie install kjdev/zstd \
+ && php /usr/local/bin/pie install flow-php/pg-query-ext:1.x-dev
 
 # Stage 2: Final Image
 FROM ${FLOW_BASE_IMAGE} AS flow
