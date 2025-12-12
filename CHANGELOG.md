@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-11
+## [Unreleased] - 2025-12-12
 
 ### Added
+- [#1906](https://github.com/flow-php/flow/pull/1906) - **support for php 8.5** - [@norberttech](https://github.com/norberttech)
 - [#2062](https://github.com/flow-php/flow/pull/2062) - **flow-php/postgresql - Query Builder that covers most of the Postgres SQL syntax** - [@norberttech](https://github.com/norberttech)
 - [#2050](https://github.com/flow-php/flow/pull/2050) - **modification of PG Query AST tree during travers** - [@norberttech](https://github.com/norberttech)
 - [#2050](https://github.com/flow-php/flow/pull/2050) - **count / paginate / key set - modifiers with DSL** - [@norberttech](https://github.com/norberttech)
