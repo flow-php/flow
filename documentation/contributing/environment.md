@@ -92,13 +92,31 @@ composer build:phar
 
 ## Building Docker Image
 
-In order to build docker image and load it to local registry please use:
+The Docker setup uses a two-layer approach for faster builds:
+
+1. **Base image** (`Dockerfile.base`) - Contains PHP and all extensions, built weekly in CI
+2. **Main image** (`Dockerfile`) - Copies the PHAR into the base image
+
+### Using Pre-built Base Image (Recommended)
+
+Build the main image using the pre-built base from the registry:
 
 ```shell
+composer build:phar
 docker buildx build -t flow-php/flow:latest . --progress=plain --load
 ```
 
-Usage:
+### Building Base Image Locally
+
+If you need to build the base image locally (e.g., testing extension changes):
+
+```shell
+docker buildx build -f Dockerfile.base -t ghcr.io/flow-php/flow-base:8.3-alpine . --progress=plain --load
+composer build:phar
+docker buildx build -t flow-php/flow:latest . --progress=plain --load
+```
+
+### Usage
 
 ```shell
 docker run -v $(pwd):/flow-workspace -it flow-php/flow:latest --version

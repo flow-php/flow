@@ -1,0 +1,37 @@
+# Base image with all PHP extensions pre-compiled for Flow PHP
+# This image is built weekly and cached in the registry
+# Used by Dockerfile to avoid recompiling extensions on every build
+ARG FLOW_PHP_VERSION=8.3
+ARG FLOW_BASE_IMAGE_TAG_SUFFIX=cli-alpine3.22
+
+FROM php:${FLOW_PHP_VERSION}-${FLOW_BASE_IMAGE_TAG_SUFFIX}
+
+# Pin PIE version for reproducible builds
+ARG PIE_VERSION=1.3.1
+
+# Install dependencies and PHP extensions in a single layer
+RUN apk update && apk add --no-cache \
+    $PHPIZE_DEPS \
+    gmp-dev \
+    git \
+    mariadb-dev \
+    postgresql-dev \
+    sqlite-dev \
+    libpq \
+    curl \
+    build-base \
+    autoconf \
+    automake \
+    libtool \
+    protobuf-dev \
+    protobuf-c-dev \
+ && docker-php-ext-install bcmath gmp pdo_mysql pdo_pgsql pdo_sqlite \
+ && curl -L "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" -o /usr/local/bin/pie \
+ && chmod +x /usr/local/bin/pie \
+ && php /usr/local/bin/pie install kjdev/brotli \
+ && php /usr/local/bin/pie install kjdev/lz4 \
+ && php /usr/local/bin/pie install kjdev/snappy \
+ && php /usr/local/bin/pie install kjdev/zstd \
+ && php /usr/local/bin/pie install flow-php/pg-query-ext:1.x-dev \
+ && apk del $PHPIZE_DEPS build-base autoconf automake libtool git \
+ && rm -rf /var/cache/apk/* /tmp/*

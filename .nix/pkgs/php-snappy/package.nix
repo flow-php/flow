@@ -8,7 +8,7 @@ php.buildPecl {
     owner = "kjdev";
     repo = "php-ext-snappy";
     tag = "0.2.3";
-    hash = "sha256-PAKdIcpJKH6d74EulYQepP4XbQvccrj1nEuir47vro4=";
+    hash = "sha256-W3TJ/bJz1LEPXq8m8YWAYX/2IZoJEpvqzasBiN61hK0=";
     fetchSubmodules = true;
   };
 

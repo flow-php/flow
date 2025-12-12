@@ -71,11 +71,11 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            FLOW_PHP_VERSION=${{ matrix.php-version }}
           tags: |
             ghcr.io/flow-php/flow:latest
           target: flow
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: "Prepare artifact name"
         if: ${{ github.event_name == 'push' }}
