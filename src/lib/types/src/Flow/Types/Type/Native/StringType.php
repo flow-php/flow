@@ -76,8 +76,7 @@ final readonly class StringType implements Type
                 return (string) $value;
             }
 
-            if (\is_object($value) && method_exists($value, '__toString')) {
-                /** @var \Stringable $value */
+            if ((\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable) {
                 return (string) $value;
             }
 

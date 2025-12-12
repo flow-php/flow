@@ -49,6 +49,7 @@ final readonly class MapType implements Type
             'value' => type_map(type_string(), type_mixed()),
         ])->assert($data);
 
+        /** @var Type<integer|string> $keyType */
         $keyType = type_from_array($data['key']);
         $valueType = type_from_array($data['value']);
 

@@ -67,8 +67,7 @@ final class NonEmptyStringType implements Type
                 return $this->assert((string) $value);
             }
 
-            if (\is_object($value) && method_exists($value, '__toString')) {
-                /** @var \Stringable $value */
+            if ((\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable) {
                 return $this->assert((string) $value);
             }
 
