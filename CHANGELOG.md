@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-12
+## [Unreleased] - 2025-12-13
 
 ### Added
+- [#2074](https://github.com/flow-php/flow/pull/2074) - **Json value to flow-php/types** - [@norberttech](https://github.com/norberttech)
 - [#1906](https://github.com/flow-php/flow/pull/1906) - **support for php 8.5** - [@norberttech](https://github.com/norberttech)
 - [#2062](https://github.com/flow-php/flow/pull/2062) - **flow-php/postgresql - Query Builder that covers most of the Postgres SQL syntax** - [@norberttech](https://github.com/norberttech)
 - [#2050](https://github.com/flow-php/flow/pull/2050) - **modification of PG Query AST tree during travers** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +24,8 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2074](https://github.com/flow-php/flow/pull/2074) - **changed TypeJson from Type{string} into Type{Json}** - [@norberttech](https://github.com/norberttech)
+- [#2074](https://github.com/flow-php/flow/pull/2074) - **JsonEntry now holds value as Json** - [@norberttech](https://github.com/norberttech)
 - [ca8d0e](https://github.com/flow-php/flow/commit/ca8d0e9ee26e29f8550a82b7621c237b01346fdc) - **chore: add 8.5 to flow-php/pg-query-ext** - [@norberttech](https://github.com/norberttech)
 - [#2065](https://github.com/flow-php/flow/pull/2065) - **update cli composer.json while building phar to use local repositories** - [@norberttech](https://github.com/norberttech)
 - [#2065](https://github.com/flow-php/flow/pull/2065) - **updated dependncies** - [@norberttech](https://github.com/norberttech)
