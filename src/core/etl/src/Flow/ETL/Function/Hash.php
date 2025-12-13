@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
+use Flow\Types\Value\Json;
 
 final class Hash extends ScalarFunctionChain
 {
@@ -18,6 +19,10 @@ final class Hash extends ScalarFunctionChain
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $value = (new Parameter($this->value))->eval($row, $context);
+
+        if ($value instanceof Json) {
+            $value = $value->toArray();
+        }
 
         return match ($value) {
             null => null,

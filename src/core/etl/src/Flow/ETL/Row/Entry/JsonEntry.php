@@ -5,57 +5,54 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\Types\DSL\{type_equals, type_json, type_optional};
-use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
+use Flow\Types\Value\Json;
 
 /**
- * @implements Entry<?array<mixed>>
+ * @implements Entry<?Json>
  */
 final class JsonEntry implements Entry
 {
     use EntryRef;
 
+    private readonly ?Json $json;
+
     private Metadata $metadata;
 
-    private bool $object = false;
-
     /**
-     * @var Type<string>
+     * @var Type<Json>
      */
     private readonly Type $type;
 
     /**
-     * @var null|array<array-key, mixed>
-     */
-    private readonly ?array $value;
-
-    /**
-     * @param null|array<array-key, mixed>|string $value
+     * @param null|array<array-key, mixed>|Json|string $value
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        array|string|null $value,
+        array|string|Json|null $value,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (\is_string($value)) {
-            $this->object = \str_starts_with($value, '{') && \str_ends_with($value, '}');
-
+        if ($value instanceof Json) {
+            $this->json = $value;
+        } elseif (\is_string($value)) {
             try {
-                $this->value = (array) \json_decode($value, true, flags: \JSON_THROW_ON_ERROR);
-            } catch (\JsonException $e) {
+                $this->json = new Json($value);
+            } catch (\Throwable $e) {
                 throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
             }
+        } elseif (\is_array($value)) {
+            $this->json = Json::fromArray($value);
         } else {
-            $this->value = $value;
+            $this->json = null;
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
@@ -67,7 +64,7 @@ final class JsonEntry implements Entry
      *
      * @throws InvalidArgumentException
      *
-     * @return Entry<?array<mixed>>
+     * @return Entry<?Json>
      */
     public static function object(string $name, ?array $value, ?Metadata $metadata = null) : Entry
     {
@@ -79,10 +76,11 @@ final class JsonEntry implements Entry
             }
         }
 
-        $entry = new self($name, $value, $metadata);
-        $entry->object = true;
+        if ($value === null) {
+            return new self($name, null, $metadata);
+        }
 
-        return $entry;
+        return new self($name, Json::fromArray($value, asObject: true), $metadata);
     }
 
     public function __toString() : string
@@ -91,21 +89,16 @@ final class JsonEntry implements Entry
     }
 
     /**
-     * @return Definition<string>
-     *
-     * @phpstan-ignore-next-line
+     * @return Definition<Json>
      */
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new Definition($this->name, $this->type, $this->json === null, $this->metadata);
     }
 
     public function duplicate() : Entry
     {
-        $entry = new self($this->name, $this->value, $this->metadata);
-        $entry->object = $this->object;
-
-        return $entry;
+        return new self($this->name, $this->json, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool
@@ -119,32 +112,35 @@ final class JsonEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        $entryValue = $entry instanceof self ? $entry->value : $entry->value();
-        $thisValue = $this->value;
-
-        if ($entryValue === null && $thisValue !== null) {
+        if (!$entry instanceof self) {
             return false;
         }
 
-        if ($entryValue !== null && $thisValue === null) {
+        if (!$this->is($entry->name())) {
             return false;
         }
 
-        if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name())
-                && $entry instanceof self
-                && type_equals($this->type, $entry->type);
+        if (!type_equals($this->type, $entry->type)) {
+            return false;
         }
 
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
+        $thisJson = $this->json;
+        $entryJson = $entry->json;
+
+        if ($thisJson === null && $entryJson === null) {
+            return true;
+        }
+
+        if ($thisJson === null || $entryJson === null) {
+            return false;
+        }
+
+        return $thisJson->isEqual($entryJson);
     }
 
     public function map(callable $mapper) : Entry
     {
-        $mappedValue = new self($this->name, $mapper($this->value()));
-        $mappedValue->object = $this->object;
-
-        return $mappedValue;
+        return new self($this->name, $mapper($this->json), $this->metadata);
     }
 
     public function name() : string
@@ -154,42 +150,33 @@ final class JsonEntry implements Entry
 
     public function rename(string $name) : Entry
     {
-        $entry = new self($name, $this->value);
-        $entry->object = $this->object;
-
-        return $entry;
+        return new self($name, $this->json, $this->metadata);
     }
 
     public function toString() : string
     {
-        if ($this->value === null) {
+        if ($this->json === null) {
             return '';
         }
 
-        if (!\count($this->value) && $this->object) {
-            return '{}';
-        }
-
-        return \json_encode($this->value, \JSON_THROW_ON_ERROR);
+        return $this->json->toString();
     }
 
     /**
-     * @return Type<string>
-     *
-     * @phpstan-ignore-next-line
+     * @return Type<Json>
      */
     public function type() : Type
     {
         return $this->type;
     }
 
-    public function value() : ?array
+    public function value() : ?Json
     {
-        return $this->value;
+        return $this->json;
     }
 
     public function withValue(mixed $value) : Entry
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->cast($value), $this->metadata);
     }
 }

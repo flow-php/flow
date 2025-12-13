@@ -29,7 +29,7 @@ final readonly class EntryNormalizer
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
             EnumEntry::class => $entry->value()?->name,
-            JsonEntry::class => $this->normalizeJsonValue($entry->value()),
+            JsonEntry::class => $this->normalizeJsonValue($entry->value()?->toArray()),
             ListEntry::class,
             MapEntry::class,
             StructureEntry::class,

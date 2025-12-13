@@ -7,6 +7,7 @@ namespace Flow\Types\Type;
 use function Flow\Types\DSL\{get_type, type_float};
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
+use Flow\Types\Value\Json;
 
 final readonly class AutoCaster
 {
@@ -14,6 +15,10 @@ final readonly class AutoCaster
     {
         if (\is_string($value)) {
             return $this->castToString($value);
+        }
+
+        if ($value instanceof Json) {
+            return $this->castArray($value->toArray());
         }
 
         if (\is_array($value)) {

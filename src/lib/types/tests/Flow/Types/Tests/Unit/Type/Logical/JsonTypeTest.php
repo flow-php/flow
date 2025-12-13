@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_from_array, type_json};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Value\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -13,18 +14,13 @@ final class JsonTypeTest extends TestCase
 {
     public static function assert_data_provider() : \Generator
     {
-        yield 'valid JSON array' => [
-            'value' => '[1, 2]',
+        yield 'valid Json instance' => [
+            'value' => new Json('{"foo": "bar"}'),
             'exceptionClass' => null,
         ];
 
-        yield 'valid JSON object' => [
+        yield 'invalid string (even valid JSON string)' => [
             'value' => '{"foo": "bar"}',
-            'exceptionClass' => null,
-        ];
-
-        yield 'invalid string' => [
-            'value' => 'string',
             'exceptionClass' => InvalidTypeException::class,
         ];
 
@@ -61,31 +57,37 @@ final class JsonTypeTest extends TestCase
 
     public static function cast_data_provider() : \Generator
     {
-        yield 'array to JSON' => [
+        yield 'array to Json' => [
             'value' => ['items' => ['item' => 1]],
             'expected' => '{"items":{"item":1}}',
             'exceptionClass' => null,
         ];
 
-        yield 'DateTimeImmutable to JSON' => [
+        yield 'DateTimeImmutable to Json' => [
             'value' => new \DateTimeImmutable('2021-01-01 00:00:00 UTC'),
             'expected' => '{"date":"2021-01-01 00:00:00.000000","timezone_type":3,"timezone":"UTC"}',
             'exceptionClass' => null,
         ];
 
-        yield 'JSON string to JSON' => [
+        yield 'JSON string to Json' => [
             'value' => '{"items":{"item":1}}',
             'expected' => '{"items":{"item":1}}',
             'exceptionClass' => null,
         ];
 
-        yield 'integer to JSON' => [
+        yield 'Json instance to Json' => [
+            'value' => new Json('{"foo":"bar"}'),
+            'expected' => '{"foo":"bar"}',
+            'exceptionClass' => null,
+        ];
+
+        yield 'integer to Json' => [
             'value' => 1,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
 
-        yield 'non-JSON string to JSON' => [
+        yield 'non-JSON string to Json' => [
             'value' => 'string',
             'expected' => null,
             'exceptionClass' => CastingException::class,
@@ -94,9 +96,14 @@ final class JsonTypeTest extends TestCase
 
     public static function is_valid_data_provider() : \Generator
     {
-        yield 'valid JSON object' => [
-            'value' => '{"foo": "bar"}',
+        yield 'valid Json instance' => [
+            'value' => new Json('{"foo": "bar"}'),
             'expected' => true,
+        ];
+
+        yield 'invalid JSON string (strings are not valid anymore)' => [
+            'value' => '{"foo": "bar"}',
+            'expected' => false,
         ];
 
         yield 'invalid incomplete JSON' => [
@@ -108,6 +115,11 @@ final class JsonTypeTest extends TestCase
             'value' => '2',
             'expected' => false,
         ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'expected' => false,
+        ];
     }
 
     #[DataProvider('assert_data_provider')]
@@ -117,7 +129,7 @@ final class JsonTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_json()->assert($value);
         } else {
-            self::assertIsString(type_json()->assert($value));
+            self::assertInstanceOf(Json::class, type_json()->assert($value));
         }
     }
 
@@ -128,7 +140,9 @@ final class JsonTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_json()->cast($value);
         } else {
-            self::assertSame($expected, type_json()->cast($value));
+            $result = type_json()->cast($value);
+            self::assertInstanceOf(Json::class, $result);
+            self::assertSame($expected, $result->toString());
         }
     }
 

@@ -22,7 +22,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
 use Flow\Types\Type\TypeDetector;
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{Json, Uuid};
 use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +37,7 @@ final class TypeDetectorTest extends TestCase
         ];
 
         yield 'json' => [
-            '{"one": "one", "two": "two", "three": "three"}',
+            new Json('{"one": "one", "two": "two", "three": "three"}'),
             JsonType::class,
             'json',
         ];

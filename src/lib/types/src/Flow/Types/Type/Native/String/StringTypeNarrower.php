@@ -19,7 +19,7 @@ use function Flow\Types\DSL\{type_boolean,
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\TypeNarrower;
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{Json, Uuid};
 
 final class StringTypeNarrower implements TypeNarrower
 {
@@ -191,7 +191,7 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isJson(string $value) : bool
     {
-        return type_json()->isValid($value);
+        return Json::isValid($value);
     }
 
     /**

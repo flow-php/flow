@@ -11,6 +11,7 @@ use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+use Flow\Types\Value\Json;
 use UnitEnum;
 
 final readonly class Parameter
@@ -48,6 +49,10 @@ final readonly class Parameter
     public function asArray(Row $row, FlowContext $context) : ?array
     {
         $result = $this->eval($row, $context);
+
+        if ($result instanceof Json) {
+            return $result->toArray();
+        }
 
         return \is_array($result) ? $result : null;
     }

@@ -8,6 +8,7 @@ use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -59,8 +60,9 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         self::assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));
         self::assertSame(73_495_297, $body['id'], \json_encode($body, JSON_THROW_ON_ERROR));
 
-        $responseHeaders = $rows->current()->first()->valueOf('response_headers');
-        \assert(\is_array($responseHeaders));
+        $responseHeadersValue = $rows->current()->first()->valueOf('response_headers');
+        self::assertInstanceOf(Json::class, $responseHeadersValue);
+        $responseHeaders = $responseHeadersValue->toArray();
         self::assertSame(['GitHub.com'], $responseHeaders['Server']);
         self::assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
         self::assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));

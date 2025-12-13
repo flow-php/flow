@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\RowsNormalizer;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
-use function Flow\Types\DSL\type_json;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{DateEntry, DateTimeEntry, EnumEntry, JsonEntry, ListEntry, MapEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
 
@@ -32,8 +31,8 @@ final readonly class EntryNormalizer
             EnumEntry::class => $entry->value()?->name,
             ListEntry::class,
             MapEntry::class,
-            StructureEntry::class,
-            JsonEntry::class => type_json()->cast($entry->value()),
+            StructureEntry::class => \json_encode($entry->value(), \JSON_THROW_ON_ERROR),
+            JsonEntry::class => $entry->toString(),
             default => $entry->value(),
         };
 

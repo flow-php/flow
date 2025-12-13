@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\type_json;
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
+use Flow\Types\Value\Json;
 
 /**
- * @implements Type<string>
+ * @implements Type<Json>
  */
 final readonly class JsonType implements Type
 {
-    public function assert(mixed $value) : string
+    public function assert(mixed $value) : Json
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,45 +22,42 @@ final readonly class JsonType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : string
+    public function cast(mixed $value) : Json
     {
         if ($this->isValid($value)) {
             return $value;
         }
 
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
+        }
+
+        if (\is_string($value) && Json::isValid($value)) {
+            return new Json($value);
+        }
+
         try {
             if (\is_scalar($value)) {
-                throw new CastingException($value, type_json());
+                throw new CastingException($value, $this);
             }
 
-            return \json_encode($value, \JSON_THROW_ON_ERROR);
-        } catch (\Throwable) {
+            if (\is_array($value)) {
+                return Json::fromArray($value);
+            }
+
+            return new Json(\json_encode($value, \JSON_THROW_ON_ERROR));
+        } catch (\Throwable $e) {
+            if ($e instanceof CastingException) {
+                throw $e;
+            }
+
             throw new CastingException($value, $this);
         }
     }
 
     public function isValid(mixed $value) : bool
     {
-        if (!\is_string($value)) {
-            return false;
-        }
-
-        if ($value === '') {
-            return false;
-        }
-
-        if ('{' !== $value[0] && '[' !== $value[0]) {
-            return false;
-        }
-
-        if (
-            !(\str_starts_with($value, '{') && \str_ends_with($value, '}'))
-            && !(\str_starts_with($value, '[') && \str_ends_with($value, ']'))
-        ) {
-            return false;
-        }
-
-        return \json_validate($value);
+        return $value instanceof Json;
     }
 
     public function normalize() : array

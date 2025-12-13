@@ -43,7 +43,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
                 'line' => '3644 Clement Street',
                 'city' => 'Atalanta',
             ],
-            'estimated_delivery_date' => new \DateTimeImmutable('2023-04-01 10:00:00 UTC'),
+            'estimated_delivery_date' => '2023-04-01T10:00:00+00:00',
         ]));
 
         self::assertEquals(
@@ -60,7 +60,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
                     'street' => '3644 Clement Street',
                     'city' => 'Atalanta',
                 ],
-                'estimated_delivery_date' => new \DateTimeImmutable('2023-04-01 10:00:00 UTC'),
+                'estimated_delivery_date' => '2023-04-01T10:00:00+00:00',
 
             ],
             array_key_rename(ref('shipping'), 'address.line', 'street')->eval($row, flow_context())

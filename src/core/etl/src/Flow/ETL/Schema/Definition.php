@@ -35,7 +35,7 @@ use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, TypeFactory};
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{Json, Uuid};
 
 /**
  * @template-covariant T
@@ -166,7 +166,7 @@ final class Definition
     }
 
     /**
-     * @return Definition<string>
+     * @return Definition<Json>
      */
     public static function json(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {

@@ -220,6 +220,7 @@ use Flow\Types\Type\Native\{
     UnionType
 };
 use Flow\Types\Type\Types;
+use Flow\Types\Value\Json;
 use UnitEnum;
 
 /**
@@ -552,26 +553,30 @@ function float_entry(string $name, float|int|string|null $value, ?Metadata $meta
 }
 
 /**
- * @param null|array<array-key, mixed>|string $data
+ * @param null|array<array-key, mixed>|Json|string $data
  *
- * @return Entry<?array<mixed>>
+ * @return Entry<?Json>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|null $data, ?Metadata $metadata = null) : Entry
+function json_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null) : Entry
 {
     return new JsonEntry($name, $data, $metadata);
 }
 
 /**
- * @param null|array<array-key, mixed>|string $data
+ * @param null|array<array-key, mixed>|Json|string $data
  *
  * @throws InvalidArgumentException
  *
- * @return Entry<mixed>
+ * @return Entry<?Json>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_object_entry(string $name, array|string|null $data, ?Metadata $metadata = null) : Entry
+function json_object_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null) : Entry
 {
+    if ($data instanceof Json) {
+        return new JsonEntry($name, $data, $metadata);
+    }
+
     if (\is_string($data)) {
         return new JsonEntry($name, $data, $metadata);
     }
@@ -856,7 +861,7 @@ function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metada
 /**
  * @deprecated please use \Flow\Types\DSL\type_json() : JsonType
  *
- * @return Type<string>
+ * @return Type<Json>
  */
 #[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_json() : Type
@@ -1984,7 +1989,7 @@ function date_schema(string $name, bool $nullable = false, ?Metadata $metadata =
 }
 
 /**
- * @return Definition<string>
+ * @return Definition<Json>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function json_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition

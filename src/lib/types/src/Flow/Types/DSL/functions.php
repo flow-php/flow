@@ -41,7 +41,7 @@ use Flow\Types\Type\Native\{ArrayType,
     ResourceType,
     StringType,
     UnionType};
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{Json, Uuid};
 use UnitEnum;
 
 /**
@@ -210,7 +210,7 @@ function type_map(Type $key_type, Type $value_type) : Type
 }
 
 /**
- * @return Type<string>
+ * @return Type<Json>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_json() : Type

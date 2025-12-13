@@ -18,6 +18,7 @@ use function Flow\Types\DSL\{
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
 
 final class PHPValueNormalizerTest extends FlowTestCase
 {
@@ -96,7 +97,7 @@ final class PHPValueNormalizerTest extends FlowTestCase
 
         self::assertEquals(
             XMLNode::flatNode('json', '{"a":"1","b":22}'),
-            $normalizer->normalize('json', type_json(), ['a' => '1', 'b' => 22])
+            $normalizer->normalize('json', type_json(), Json::fromArray(['a' => '1', 'b' => 22]))
         );
     }
 
