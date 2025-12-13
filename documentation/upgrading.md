@@ -7,6 +7,109 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.27.x to 0.28.x
+
+### 1) JsonType now uses Json value object instead of string
+
+The `JsonType` has been refactored to use a dedicated `Json` value object (similar to `Uuid`/`UuidType` pattern).
+This allows static analysis tools to distinguish between regular strings and JSON strings.
+
+**Breaking Changes:**
+
+- `JsonType::assert()` now returns `Json` instance instead of `string`
+- `JsonType::cast()` now returns `Json` instance instead of `string`
+- `JsonType::isValid()` now checks for `Json` instance (plain strings are no longer valid)
+- `Cast::cast('json', $value)` function now returns `Json` object instead of string
+- `type_json()` return type annotation changed from `Type<string>` to `Type<Json>`
+- `JsonEntry::value()` now returns `?Json` instead of `?array` (consistent with `UuidEntry::value()` returning `?Uuid`)
+- `JsonEntry::json()` method removed (use `value()` instead)
+
+**Migration:**
+
+If you were using `type_json()->cast($value)` and expected a string, use `->toString()`:
+
+Before:
+```php
+$jsonString = type_json()->cast($array); // was string
+```
+
+After:
+```php
+$json = type_json()->cast($array); // now Json object
+$jsonString = $json->toString(); // get the string
+$jsonArray = $json->toArray(); // get as array
+```
+
+If you were using `JsonEntry::value()` and edxpected an array:
+
+Before:
+```php
+$entry = json_entry('data', ['key' => 'value']);
+$array = $entry->value(); // was array
+```
+
+After:
+```php
+$entry = json_entry('data', ['key' => 'value']);
+$json = $entry->value(); // now Json object
+$array = $json?->toArray(); // get as array
+$string = $json?->toString(); // get as string
+```
+
+If you were using `JsonEntry::json()`:
+
+Before:
+```php
+$json = $entry->json();
+```
+
+After:
+```php
+$json = $entry->value(); // json() method removed, use value() instead
+```
+
+**New Json value object features:**
+
+```php
+use Flow\Types\Value\Json;
+
+// Create from string
+$json = new Json('{"key": "value"}');
+
+// Create from array
+$json = Json::fromArray(['key' => 'value']);
+
+// Check if valid JSON
+Json::isValid('{"key": "value"}'); // true
+
+// Convert to string/array
+$json->toString(); // '{"key":"value"}'
+$json->toArray(); // ['key' => 'value']
+
+// Json implements Stringable
+(string) $json; // '{"key":"value"}'
+
+// Json implements JsonSerializable
+json_encode($json); // '{"key":"value"}'
+```
+
+**Note:** `JsonEntry::value()` now returns `?Json` for consistency with `UuidEntry::value()` returning `?Uuid`. Use `->toArray()` or `->toString()` on the Json object to get the underlying data.
+
+**Row methods behavior:**
+
+```php
+// Row::toArray() converts Json to array automatically (for convenient serialization)
+$row->toArray();           // Returns ['data' => ['key' => 'value']] not ['data' => Json(...)]
+
+// Row::valueOf() returns the raw value (Json object for json entries)
+$row->valueOf('data');     // Returns Json object (use ->toArray() if you need array)
+
+// Entry value() returns the typed value
+$row->get('data')->value();  // Returns Json object (use ->toArray() if you need array)
+```
+
+---
+
 ## Upgrading from 0.26.x to 0.27.x
 
 ### 1) Force `EntryFactory $entryFactory` to be required on `array_to_row` & `array_to_row(s)`

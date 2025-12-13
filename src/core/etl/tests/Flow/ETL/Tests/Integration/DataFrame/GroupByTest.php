@@ -18,7 +18,7 @@ use function Flow\ETL\DSL\{average,
     int_entry,
     int_schema,
     json_entry,
-    list_schema,
+    json_schema,
     lit,
     max,
     null_entry,
@@ -32,7 +32,6 @@ use function Flow\ETL\DSL\{average,
     uuid_entry,
     uuid_schema,
     window};
-use function Flow\Types\DSL\{type_list, type_string};
 use Flow\ETL\{Loader, Rows};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -58,7 +57,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(list_schema('array', type_list(type_string())), int_schema('score_sum'), float_schema('score_avg')),
+            schema(json_schema('array'), int_schema('score_sum'), float_schema('score_avg')),
             $rows->schema()
         );
         self::assertEquals(

@@ -13,6 +13,7 @@ use function Flow\Types\DSL\{
     type_structure};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
+use Flow\Types\Value\Json;
 
 /**
  * @template TKey of array-key
@@ -58,6 +59,10 @@ final readonly class MapType implements Type
     public function cast(mixed $value) : array
     {
         try {
+            if ($value instanceof Json) {
+                $value = $value->toArray();
+            }
+
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
                 $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
 

@@ -24,7 +24,7 @@ final class EntryFactoryTest extends TestCase
     {
         yield 'json' => [
             $json = '{"id":1}',
-            json_entry('e', $json),
+            string_entry('e', $json),
         ];
 
         yield 'xml' => [
@@ -298,7 +298,7 @@ final class EntryFactoryTest extends TestCase
     public function test_json() : void
     {
         self::assertEquals(
-            json_entry('e', '{}'),
+            str_entry('e', '{}'),
             $this->entryFactory->create('e', '{}')
         );
     }
@@ -306,7 +306,7 @@ final class EntryFactoryTest extends TestCase
     public function test_json_object() : void
     {
         self::assertEquals(
-            json_object_entry('e', ['id' => 1]),
+            str_entry('e', '{"id":1}'),
             $this->entryFactory->create('e', '{"id":1}')
         );
     }
@@ -322,7 +322,7 @@ final class EntryFactoryTest extends TestCase
     public function test_json_string() : void
     {
         self::assertEquals(
-            json_entry('e', '{"id": 1}'),
+            str_entry('e', '{"id": 1}'),
             $this->entryFactory->create('e', '{"id": 1}')
         );
     }

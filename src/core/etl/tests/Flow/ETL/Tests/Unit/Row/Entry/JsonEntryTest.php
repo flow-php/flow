@@ -10,6 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class JsonEntryTest extends FlowTestCase
@@ -83,6 +84,24 @@ final class JsonEntryTest extends FlowTestCase
         ];
     }
 
+    public function test_create_entry_from_json_string() : void
+    {
+        $entry = json_entry('name', '{"key":"value"}');
+
+        self::assertInstanceOf(Json::class, $entry->value());
+        self::assertSame(['key' => 'value'], $entry->value()->toArray());
+    }
+
+    public function test_create_entry_from_json_value_object() : void
+    {
+        $json = new Json('{"key":"value"}');
+        $entry = json_entry('name', $json);
+
+        self::assertInstanceOf(Json::class, $entry->value());
+        self::assertSame(['key' => 'value'], $entry->value()->toArray());
+        self::assertTrue($json->isEqual($entry->value()));
+    }
+
     public function test_duplicating_entry() : void
     {
         $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
@@ -97,8 +116,8 @@ final class JsonEntryTest extends FlowTestCase
         $jsonEntry = json_entry('empty', []);
         $jsonObjectEntry = JsonEntry::object('empty', []);
 
-        self::assertEquals([], $jsonEntry->value());
-        self::assertEquals([], $jsonObjectEntry->value());
+        self::assertEquals([], $jsonEntry->value()?->toArray());
+        self::assertEquals([], $jsonObjectEntry->value()?->toArray());
     }
 
     public function test_entry_name_can_be_zero() : void
@@ -109,7 +128,7 @@ final class JsonEntryTest extends FlowTestCase
     public function test_invalid_json() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Invalid value given: 'random string', reason: Syntax error");
+        $this->expectExceptionMessage("Invalid value given: 'random string', reason: Invalid JSON: 'random string'");
 
         json_entry('a', 'random string');
     }
@@ -127,7 +146,8 @@ final class JsonEntryTest extends FlowTestCase
             ['item-id' => 2, 'name' => 'two'],
             ['item-id' => 3, 'name' => 'three'],
         ];
-        $entry = (json_entry('items', $items))->map(function (?array $value) : array {
+        $entry = (json_entry('items', $items))->map(function (?Json $json) : array {
+            $value = $json?->toArray();
             type_array()->assert($value);
             \array_walk_recursive($value, function (&$v) : void {
                 if (\is_string($v)) {
@@ -144,7 +164,7 @@ final class JsonEntryTest extends FlowTestCase
                 ['item-id' => 2, 'name' => 'two'],
                 ['item-id' => 3, 'name' => 'three'],
             ],
-            $entry->value()
+            $entry->value()?->toArray()
         );
     }
 
@@ -205,5 +225,22 @@ final class JsonEntryTest extends FlowTestCase
 
         \assert($unserialized instanceof Entry);
         self::assertTrue($entry->isEqual($unserialized));
+    }
+
+    public function test_value_method_returns_json_value_object() : void
+    {
+        $entry = json_entry('name', ['foo' => 'bar']);
+
+        $json = $entry->value();
+
+        self::assertInstanceOf(Json::class, $json);
+        self::assertSame('{"foo":"bar"}', $json->toString());
+    }
+
+    public function test_value_method_returns_null_for_null_entry() : void
+    {
+        $entry = json_entry('name', null);
+
+        self::assertNull($entry->value());
     }
 }

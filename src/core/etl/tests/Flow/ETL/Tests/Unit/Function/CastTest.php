@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use function Flow\ETL\DSL\{cast, config, flow_context, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{Json, Uuid};
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class CastTest extends FlowTestCase
@@ -39,7 +39,7 @@ XML;
             'array' => ['1', 'array', ['1']],
             'object' => ['1', 'object', (object) '1'],
             'null' => ['1', 'null', null],
-            'json' => [[1], 'json', '[1]'],
+            'json' => [[1], 'json', new Json('[1]')],
             'json_pretty' => [[1], 'json_pretty', "[\n    1\n]"],
             'xml_to_array' => [$xml, 'array', ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]]],
             'string_to_xml' => [$xmlString, 'xml', $xml],

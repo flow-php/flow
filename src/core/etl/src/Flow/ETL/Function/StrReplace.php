@@ -25,8 +25,8 @@ final class StrReplace extends ScalarFunctionChain
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $value = (new Parameter($this->value))->asString($row, $context);
-        $search = (new Parameter($this->search))->as($row, $context, type_string(), type_list(type_string()));
-        $replace = (new Parameter($this->replace))->as($row, $context, type_string(), type_list(type_string()));
+        $search = (new Parameter($this->search))->asString($row, $context) ?? (new Parameter($this->search))->asArray($row, $context);
+        $replace = (new Parameter($this->replace))->asString($row, $context) ?? (new Parameter($this->replace))->asArray($row, $context);
 
         if ($value === null) {
             return $context->functions()->invalidResult(new InvalidArgumentException('StrReplace function requires non-null value'));

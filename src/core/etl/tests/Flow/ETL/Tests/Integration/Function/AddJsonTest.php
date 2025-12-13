@@ -81,7 +81,7 @@ final class AddJsonTest extends FlowTestCase
             ->read(
                 from_array([['id' => 1]])
             )
-            ->withEntry('json', lit('[{"id":1},{"id":2}]'))
+            ->withEntry('json', lit('[{"id":1},{"id":2}]')->jsonDecode())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

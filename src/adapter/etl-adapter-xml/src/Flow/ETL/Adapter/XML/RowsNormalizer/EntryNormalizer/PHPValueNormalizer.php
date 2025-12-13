@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 
-use function Flow\Types\DSL\{type_json, type_string};
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type;
@@ -114,11 +114,11 @@ final readonly class PHPValueNormalizer
             IntegerType::class,
             BooleanType::class,
             FloatType::class => XMLNode::flatNode($name, type_string()->cast($value)),
-            ArrayType::class => XMLNode::flatNode($name, type_json()->cast($value)),
+            ArrayType::class => XMLNode::flatNode($name, \is_array($value) ? \json_encode($value, \JSON_THROW_ON_ERROR) : ''),
             EnumType::class => XMLNode::flatNode($name, $value instanceof \BackedEnum ? $value->name : ''),
             InstanceOfType::class => XMLNode::flatNode($name, type_string()->cast($value)),
             DateTimeType::class => XMLNode::flatNode($name, type_string()->cast($value instanceof \DateTimeInterface ? $value->format($this->dateTimeFormat) : '')),
-            JsonType::class => XMLNode::flatNode($name, type_json()->cast($value)),
+            JsonType::class => XMLNode::flatNode($name, $value instanceof \Stringable ? $value->__toString() : ''),
             UuidType::class => XMLNode::flatNode($name, \is_scalar($value) || $value instanceof \Stringable ? (string) $value : ''),
             default => throw new InvalidArgumentException("Given type can't be converted to node, given type: {$type->toString()}"),
         };

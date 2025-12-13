@@ -22,7 +22,7 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertCommandOutputIdentical(
             <<<'OUTPUT'
-[{"ref":"order_id","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":false,"metadata":[]}]
+[{"ref":"order_id","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"string"},"nullable":false,"metadata":[]}]
 
 OUTPUT,
             $tester->getDisplay()
@@ -44,9 +44,9 @@ schema
 |-- created_at: string
 |-- updated_at: string
 |-- discount: ?string
-|-- address: json
-|-- notes: json
-|-- items: json
+|-- address: string
+|-- notes: string
+|-- items: string
 
 OUTPUT,
             $tester->getDisplay()
@@ -89,9 +89,9 @@ schema
 |-- created_at: string
 |-- updated_at: string
 |-- discount: ?string
-|-- address: json
-|-- notes: json
-|-- items: json
+|-- address: string
+|-- notes: string
+|-- items: string
 
 OUTPUT,
             $tester->getDisplay()
@@ -121,9 +121,9 @@ OUTPUT,
 | created_at | string |    false |       [] |
 | updated_at | string |    false |       [] |
 |   discount | string |    false |       [] |
-|    address |   json |    false |       [] |
-|      notes |   json |    false |       [] |
-|      items |   json |    false |       [] |
+|    address | string |    false |       [] |
+|      notes | string |    false |       [] |
+|      items | string |    false |       [] |
 +------------+--------+----------+----------+
 7 rows
 
@@ -147,9 +147,9 @@ OUTPUT,
     \Flow\ETL\DSL\string_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\json_schema("address", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\json_schema("notes", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\json_schema("items", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("address", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("notes", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("items", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
 );
 
 OUTPUT,
@@ -203,7 +203,7 @@ OUTPUT,
     {
         "ref": "address",
         "type": {
-            "type": "json"
+            "type": "string"
         },
         "nullable": false,
         "metadata": []
@@ -211,7 +211,7 @@ OUTPUT,
     {
         "ref": "notes",
         "type": {
-            "type": "json"
+            "type": "string"
         },
         "nullable": false,
         "metadata": []
@@ -219,7 +219,7 @@ OUTPUT,
     {
         "ref": "items",
         "type": {
-            "type": "json"
+            "type": "string"
         },
         "nullable": false,
         "metadata": []
@@ -248,9 +248,9 @@ OUTPUT,
 | created_at | string |    false |       [] |
 | updated_at | string |    false |       [] |
 |   discount | string |     true |       [] |
-|    address |   json |    false |       [] |
-|      notes |   json |    false |       [] |
-|      items |   json |    false |       [] |
+|    address | string |    false |       [] |
+|      notes | string |    false |       [] |
+|      items | string |    false |       [] |
 +------------+--------+----------+----------+
 7 rows
 
@@ -276,9 +276,9 @@ OUTPUT,
 | created_at | datetime |    false |       [] |
 | updated_at | datetime |    false |       [] |
 |   discount |    float |     true |       [] |
-|    address |      map |    false |       [] |
-|      notes |     list |    false |       [] |
-|      items |     list |    false |       [] |
+|    address |     json |    false |       [] |
+|      notes |     json |    false |       [] |
+|      items |     json |    false |       [] |
 +------------+----------+----------+----------+
 7 rows
 
@@ -304,9 +304,9 @@ OUTPUT,
 | created_at | datetime |    false |       [] |
 | updated_at | datetime |    false |       [] |
 |   discount |    float |     true |       [] |
-|    address |      map |    false |       [] |
-|      notes |     list |    false |       [] |
-|      items |     list |    false |       [] |
+|    address |     json |    false |       [] |
+|      notes |     json |    false |       [] |
+|      items |     json |    false |       [] |
 +------------+----------+----------+----------+
 7 rows
 
@@ -332,9 +332,9 @@ OUTPUT,
 | created_at | string |    false |       [] |
 | updated_at | string |    false |       [] |
 |   discount | string |     true |       [] |
-|    address |   json |    false |       [] |
-|      notes |   json |    false |       [] |
-|      items |   json |    false |       [] |
+|    address | string |    false |       [] |
+|      notes | string |    false |       [] |
+|      items | string |    false |       [] |
 +------------+--------+----------+----------+
 7 rows
 
@@ -467,9 +467,9 @@ schema
 |-- created_at: string
 |-- updated_at: string
 |-- discount: ?string
-|-- address: json
-|-- notes: json
-|-- items: json
+|-- address: string
+|-- notes: string
+|-- items: string
 
 OUTPUT,
             $tester->getDisplay()

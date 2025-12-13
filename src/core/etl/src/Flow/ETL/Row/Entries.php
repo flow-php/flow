@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, InvalidLogicException, RuntimeException};
+use Flow\Types\Value\Json;
 
 /**
  * @implements \ArrayAccess<string, Entry<mixed>>
@@ -359,9 +360,15 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         $data = [];
 
         foreach ($this->entries as $entry) {
+            $value = $entry->value();
+
+            if ($value instanceof Json) {
+                $value = $value->toArray();
+            }
+
             $withKeys
-                ? $data[$entry->name()] = $entry->value()
-                : $data[] = $entry->value();
+                ? $data[$entry->name()] = $value
+                : $data[] = $value;
         }
 
         return $data;

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_array, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
+use Flow\Types\Value\Json;
 
 final class JsonDecode extends ScalarFunctionChain
 {
@@ -18,19 +18,27 @@ final class JsonDecode extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->value))->as($row, $context, type_string(), type_array());
+        $value = (new Parameter($this->value))->eval($row, $context);
         $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
 
         if ($value === null) {
             return $context->functions()->invalidResult(new InvalidArgumentException('JsonDecode function requires non-null value'));
         }
 
+        if ($value instanceof Json) {
+            return $value->toArray();
+        }
+
         if (\is_array($value)) {
             return $value;
         }
 
+        if (!\is_string($value)) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('JsonDecode function requires string, array, or Json value'));
+        }
+
         try {
-            return \json_decode(\is_scalar($value) ? (string) $value : '', true, 512, $flags);
+            return \json_decode($value, true, 512, $flags);
         } catch (\JsonException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('JsonDecode error: ' . $e->getMessage()));
 

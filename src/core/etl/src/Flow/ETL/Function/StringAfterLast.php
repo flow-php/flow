@@ -26,7 +26,7 @@ final class StringAfterLast extends ScalarFunctionChain
             return $context->functions()->invalidResult(new InvalidArgumentException('StringAfterLast function requires non-null value'));
         }
 
-        $needle = (new Parameter($this->needle))->as($row, $context, type_string(), type_list(type_string()));
+        $needle = (new Parameter($this->needle))->asString($row, $context) ?? (new Parameter($this->needle))->asArray($row, $context);
         $typedNeedle = type_union(type_string(), type_list(type_string()))->assert($needle);
         $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row, $context);
 

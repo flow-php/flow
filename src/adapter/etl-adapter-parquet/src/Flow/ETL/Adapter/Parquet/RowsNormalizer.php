@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\Types\DSL\type_string;
-use Flow\ETL\Row\Entry\{UuidEntry, XMLEntry};
+use Flow\ETL\Row\Entry\{JsonEntry, UuidEntry, XMLEntry};
 use Flow\ETL\{Rows, Schema};
+use Flow\Types\Value\Json;
 
 final readonly class RowsNormalizer
 {
@@ -35,11 +36,18 @@ final readonly class RowsNormalizer
                     continue;
                 }
 
-                $columns[$entry->name()] = match ($entry::class) {
+                $value = match ($entry::class) {
+                    JsonEntry::class => $entry->toString(),
                     UuidEntry::class => type_string()->cast($entry->value()),
                     XMLEntry::class => type_string()->cast($entry->value()),
                     default => $schema->get($entry->ref())->type()->cast($entry->value()),
                 };
+
+                if ($value instanceof Json) {
+                    $value = $value->toString();
+                }
+
+                $columns[$entry->name()] = $value;
             }
 
             $normalizedRows[] = $columns;

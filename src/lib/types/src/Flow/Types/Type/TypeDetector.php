@@ -27,6 +27,7 @@ use function Flow\Types\DSL\{type_array,
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, StructureType};
+use Flow\Types\Value\{Json, Uuid};
 
 final class TypeDetector
 {
@@ -39,16 +40,15 @@ final class TypeDetector
             return type_null();
         }
 
+        if ($value instanceof Json) {
+            return type_json();
+        }
+
+        if ($value instanceof Uuid) {
+            return type_uuid();
+        }
+
         if (\is_string($value)) {
-            // TODO: #1955 Improve type detection for strings
-            if (type_json()->isValid($value)) {
-                return type_json();
-            }
-
-            if (type_uuid()->isValid($value)) {
-                return type_uuid();
-            }
-
             return type_string();
         }
 

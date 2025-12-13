@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use function Flow\ETL\DSL\{integer_entry, json_object_entry};
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class JsonObjectEntryTest extends FlowTestCase
@@ -74,7 +75,7 @@ final class JsonObjectEntryTest extends FlowTestCase
     {
         $item = ['item-id' => 1, 'name' => 'one'];
         $entry = JsonEntry::object('item', $item);
-        $mappedEntry = $entry->map(fn (?array $value) : array => ['item-id' => 1, 'name' => 'ONE']);
+        $mappedEntry = $entry->map(fn (?Json $json) : array => ['item-id' => 1, 'name' => 'ONE']);
 
         self::assertEquals(JsonEntry::object('item', ['item-id' => 1, 'name' => 'ONE']), $mappedEntry);
     }
