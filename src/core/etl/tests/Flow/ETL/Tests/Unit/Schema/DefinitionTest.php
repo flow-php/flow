@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, float_schema, int_entry, int_schema, integer_schema, json_schema, list_schema, map_schema, str_entry, string_schema, struct_entry, structure_schema, time_schema};
+use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, definition_from_array, float_schema, int_entry, int_schema, integer_schema, json_schema, list_schema, map_schema, str_entry, string_schema, struct_entry, structure_schema, time_schema};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\{Metadata};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class DefinitionTest extends FlowTestCase
@@ -273,7 +273,7 @@ final class DefinitionTest extends FlowTestCase
 
         self::assertEquals(
             $definition,
-            Definition::fromArray($definition->normalize())
+            definition_from_array($definition->normalize())
         );
     }
 

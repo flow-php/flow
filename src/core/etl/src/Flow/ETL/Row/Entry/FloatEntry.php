@@ -9,7 +9,8 @@ use function Flow\Types\DSL\{type_equals, type_float, type_optional};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\FloatDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 /**
@@ -47,9 +48,9 @@ final class FloatEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    public function definition() : FloatDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new FloatDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self

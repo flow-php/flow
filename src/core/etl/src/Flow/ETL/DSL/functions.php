@@ -183,6 +183,23 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
 use Flow\ETL\Row\Entry\HTMLEntry;
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Schema\Definition\{BooleanDefinition,
+    DateDefinition,
+    DateTimeDefinition,
+    EnumDefinition,
+    FloatDefinition,
+    HTMLDefinition,
+    HTMLElementDefinition,
+    IntegerDefinition,
+    JsonDefinition,
+    ListDefinition,
+    MapDefinition,
+    StringDefinition,
+    StructureDefinition,
+    TimeDefinition,
+    UuidDefinition,
+    XMLDefinition,
+    XMLElementDefinition};
 use Flow\ETL\Schema\{Definition, Formatter\PHPFormatter\TypeFormatter, Formatter\PHPFormatter\ValueFormatter};
 use Flow\ETL\Schema\Formatter\{JsonSchemaFormatter, PHPSchemaFormatter};
 use Flow\ETL\Schema\Metadata;
@@ -198,11 +215,14 @@ use Flow\Serializer\{NativePHPSerializer, Serializer};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLElementType,
+    HTMLType,
     InstanceOfType,
     JsonType,
     ListType,
     MapType,
     OptionalType,
+    StructureType,
     TimeType,
     UuidType,
     XMLElementType,
@@ -219,7 +239,7 @@ use Flow\Types\Type\Native\{
     StringType,
     UnionType
 };
-use Flow\Types\Type\Types;
+use Flow\Types\Type\{TypeFactory, Types};
 use Flow\Types\Value\Json;
 use UnitEnum;
 
@@ -1855,88 +1875,74 @@ function schema_metadata(array $metadata = []) : Metadata
 }
 
 /**
- * Alias for `int_schema`.
- *
- * @return Definition<int>
+ * Alias for `integer_schema`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function int_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function int_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : IntegerDefinition
 {
     return integer_schema($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<int>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function integer_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function integer_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : IntegerDefinition
 {
-    return Definition::integer($name, $nullable, $metadata);
+    return new IntegerDefinition($name, $nullable, $metadata);
 }
 
 /**
  * Alias for `string_schema`.
- *
- * @return Definition<string>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function str_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function str_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : StringDefinition
 {
     return string_schema($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<string>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function string_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function string_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : StringDefinition
 {
-    return Definition::string($name, $nullable, $metadata);
+    return new StringDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<bool>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function bool_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function bool_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : BooleanDefinition
 {
-    return Definition::boolean($name, $nullable, $metadata);
+    return new BooleanDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<float>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function float_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function float_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : FloatDefinition
 {
-    return Definition::float($name, $nullable, $metadata);
+    return new FloatDefinition($name, $nullable, $metadata);
 }
 
 /**
  * @template TKey of array-key
  * @template TValue
  *
- * @param Type<array<TKey, TValue>> $type
+ * @param MapType<TKey, TValue>|Type<array<TKey, TValue>> $type
  *
- * @return Definition<array<TKey, TValue>>
+ * @return MapDefinition<TKey, TValue>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function map_schema(string $name, Type $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function map_schema(string $name, MapType|Type $type, bool $nullable = false, ?Metadata $metadata = null) : MapDefinition
 {
-    return Definition::map($name, $type, $nullable, $metadata);
+    /** @var MapType<TKey, TValue> $type */
+    return new MapDefinition($name, $type, $nullable, $metadata);
 }
 
 /**
  * @template T
  *
- * @param Type<list<T>> $type
+ * @param ListType<T>|Type<list<T>> $type
  *
- * @return Definition<list<T>>
+ * @return ListDefinition<T>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function list_schema(string $name, Type $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function list_schema(string $name, ListType|Type $type, bool $nullable = false, ?Metadata $metadata = null) : ListDefinition
 {
-    return Definition::list($name, $type, $nullable, $metadata);
+    /** @var ListType<T> $type */
+    return new ListDefinition($name, $type, $nullable, $metadata);
 }
 
 /**
@@ -1944,130 +1950,168 @@ function list_schema(string $name, Type $type, bool $nullable = false, ?Metadata
  *
  * @param class-string<T> $type
  *
- * @return Definition<T>
+ * @return EnumDefinition<T>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function enum_schema(string $name, string $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function enum_schema(string $name, string $type, bool $nullable = false, ?Metadata $metadata = null) : EnumDefinition
 {
-    return Definition::enum($name, $type, $nullable, $metadata);
+    return new EnumDefinition($name, $type, $nullable, $metadata);
 }
 
-/**
- * @return Definition<string>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function null_schema(string $name, ?Metadata $metadata = null) : Definition
+function null_schema(string $name, ?Metadata $metadata = null) : StringDefinition
 {
-    return Definition::string($name, true, $metadata);
+    return new StringDefinition($name, true, Metadata::fromArray([Metadata::FROM_NULL => true])->merge($metadata ?? Metadata::empty()));
 }
 
-/**
- * @return Definition<\DateTimeInterface>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function datetime_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function datetime_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : DateTimeDefinition
 {
-    return Definition::datetime($name, $nullable, $metadata);
+    return new DateTimeDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<\DateInterval>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function time_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function time_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : TimeDefinition
 {
-    return Definition::time($name, $nullable, $metadata);
+    return new TimeDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<\DateTimeInterface>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function date_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function date_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : DateDefinition
 {
-    return Definition::date($name, $nullable, $metadata);
+    return new DateDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<Json>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function json_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function json_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : JsonDefinition
 {
-    return Definition::json($name, $nullable, $metadata);
+    return new JsonDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<HTMLDocument>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : HTMLDefinition
 {
-    return Definition::html($name, $nullable, $metadata);
+    return new HTMLDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<HTMLElement>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function html_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function html_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : HTMLElementDefinition
 {
-    return Definition::html_element($name, $nullable, $metadata);
+    return new HTMLElementDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<\DOMDocument>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function xml_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function xml_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : XMLDefinition
 {
-    return Definition::xml($name, $nullable, $metadata);
+    return new XMLDefinition($name, $nullable, $metadata);
 }
 
-/**
- * @return Definition<\DOMElement>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function xml_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function xml_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : XMLElementDefinition
 {
-    return Definition::xml_element($name, $nullable, $metadata);
+    return new XMLElementDefinition($name, $nullable, $metadata);
 }
 
 /**
  * @template T
  *
- * @param Type<T> $type
+ * @param StructureType<T>|Type<array<string, T>> $type
  *
- * @return Definition<T>
+ * @return StructureDefinition<T>
  *
  * @deprecated Use `structure_schema()` instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function struct_schema(string $name, Type $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function struct_schema(string $name, StructureType|Type $type, bool $nullable = false, ?Metadata $metadata = null) : StructureDefinition
 {
-    return Definition::structure($name, $type, $nullable, $metadata);
+    /** @var StructureType<T> $type */
+    return new StructureDefinition($name, $type, $nullable, $metadata);
 }
 
 /**
  * @template T
  *
- * @param Type<T> $type
+ * @param StructureType<T>|Type<array<string, T>> $type
  *
- * @return Definition<T>
+ * @return StructureDefinition<T>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function structure_schema(string $name, Type $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function structure_schema(string $name, StructureType|Type $type, bool $nullable = false, ?Metadata $metadata = null) : StructureDefinition
 {
-    return Definition::structure($name, $type, $nullable, $metadata);
+    /** @var StructureType<T> $type */
+    return new StructureDefinition($name, $type, $nullable, $metadata);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : UuidDefinition
+{
+    return new UuidDefinition($name, $nullable, $metadata);
 }
 
 /**
- * @return Definition<\Flow\Types\Value\Uuid>
+ * Create a Definition from an array representation.
+ *
+ * @param array<array-key, mixed> $definition
+ *
+ * @return Definition<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function definition_from_array(array $definition) : Definition
 {
-    return Definition::uuid($name, $nullable, $metadata);
+    if (!\array_key_exists('ref', $definition) || !\is_string($definition['ref'])) {
+        throw new RuntimeException('Definition array must have a string "ref" key');
+    }
+
+    if (!\array_key_exists('type', $definition) || !\is_array($definition['type'])) {
+        throw new RuntimeException('Definition array must have an array "type" key');
+    }
+
+    $ref = $definition['ref'];
+
+    /** @var array<string, mixed> $typeData */
+    $typeData = $definition['type'];
+    $type = TypeFactory::fromArray($typeData);
+
+    $nullable = isset($definition['nullable']) && \is_bool($definition['nullable']) ? $definition['nullable'] : false;
+
+    /** @var array<string, array<mixed>|bool|float|int|string> $metadataData */
+    $metadataData = isset($definition['metadata']) && \is_array($definition['metadata']) ? $definition['metadata'] : [];
+    $metadata = Metadata::fromArray($metadataData);
+
+    return definition_from_type($ref, $type, $nullable, $metadata);
+}
+
+/**
+ * Create a Definition from a Type.
+ *
+ * @param Type<mixed> $type
+ *
+ * @return Definition<mixed>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function definition_from_type(string|Reference $ref, Type $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
+{
+    return match (true) {
+        $type instanceof BooleanType => new BooleanDefinition($ref, $nullable, $metadata),
+        $type instanceof IntegerType => new IntegerDefinition($ref, $nullable, $metadata),
+        $type instanceof FloatType => new FloatDefinition($ref, $nullable, $metadata),
+        $type instanceof StringType => new StringDefinition($ref, $nullable, $metadata),
+        $type instanceof DateType => new DateDefinition($ref, $nullable, $metadata),
+        $type instanceof DateTimeType => new DateTimeDefinition($ref, $nullable, $metadata),
+        $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),
+        $type instanceof JsonType => new JsonDefinition($ref, $nullable, $metadata),
+        $type instanceof ArrayType => new JsonDefinition($ref, $nullable, $metadata),
+        $type instanceof UuidType => new UuidDefinition($ref, $nullable, $metadata),
+        $type instanceof ListType => new ListDefinition($ref, $type, $nullable, $metadata),
+        $type instanceof MapType => new MapDefinition($ref, $type, $nullable, $metadata),
+        $type instanceof StructureType => new StructureDefinition($ref, $type, $nullable, $metadata),
+        $type instanceof EnumType => new EnumDefinition($ref, $type->class, $nullable, $metadata),
+        $type instanceof HTMLType => new HTMLDefinition($ref, $nullable, $metadata),
+        $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
+        $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
+        $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
+        default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
+    };
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]

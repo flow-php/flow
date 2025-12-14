@@ -7,7 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string, type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\XMLElementDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\XMLElementType;
 
@@ -94,9 +95,9 @@ final class XMLElementEntry implements Entry
         $this->value = (new \DOMDocument())->importNode($domDocument->documentElement, true);
     }
 
-    public function definition() : Definition
+    public function definition() : XMLElementDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new XMLElementDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self

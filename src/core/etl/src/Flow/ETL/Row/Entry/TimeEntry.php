@@ -8,7 +8,8 @@ use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_time};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\TimeDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 /**
@@ -142,9 +143,9 @@ final class TimeEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    public function definition() : TimeDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new TimeDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self

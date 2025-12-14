@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification;
 
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_list, type_map, type_string, type_structure, type_time, type_uuid, type_xml};
 use Flow\Bridge\OpenAPI\Specification\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Schema;
@@ -341,7 +342,7 @@ final class OpenAPIConverter
 
         $type = $this->convertOpenAPITypeToFlowType($propertySpec);
 
-        return new Definition($propertyName, $type, $nullable, $metadata);
+        return definition_from_type($propertyName, $type, $nullable, $metadata);
     }
 
     /**

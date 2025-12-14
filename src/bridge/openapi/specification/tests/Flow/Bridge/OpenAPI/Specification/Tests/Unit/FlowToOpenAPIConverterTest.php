@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
 use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
-use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, enum_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, str_schema, structure_schema, time_schema, uuid_schema, xml_element_schema, xml_schema};
+use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, definition_from_type, enum_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, str_schema, structure_schema, time_schema, uuid_schema, xml_element_schema, xml_schema};
 use function Flow\Types\DSL\{type_array, type_callable, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
 use Flow\ETL\Schema\{Definition, Metadata};
@@ -169,7 +169,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
     {
         $converter = new OpenAPIConverter();
         $arrayType = type_array();
-        $definition = map_schema('items', $arrayType, false);
+        $definition = definition_from_type('items', $arrayType, false);
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
@@ -178,8 +178,8 @@ final class FlowToOpenAPIConverterTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'items' => [
-                    'type' => 'array',
-                    'items' => ['type' => 'string'],
+                    'type' => 'string',
+                    'format' => 'json',
                     'nullable' => false,
                 ],
             ],

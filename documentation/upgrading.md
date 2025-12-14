@@ -7,7 +7,7 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
-## Upgrading from 0.27.x to 0.28.x
+## Upgrading from 0.28.x to 0.29.x
 
 ### 1) JsonType now uses Json value object instead of string
 
@@ -29,11 +29,13 @@ This allows static analysis tools to distinguish between regular strings and JSO
 If you were using `type_json()->cast($value)` and expected a string, use `->toString()`:
 
 Before:
+
 ```php
 $jsonString = type_json()->cast($array); // was string
 ```
 
 After:
+
 ```php
 $json = type_json()->cast($array); // now Json object
 $jsonString = $json->toString(); // get the string
@@ -43,12 +45,14 @@ $jsonArray = $json->toArray(); // get as array
 If you were using `JsonEntry::value()` and edxpected an array:
 
 Before:
+
 ```php
 $entry = json_entry('data', ['key' => 'value']);
 $array = $entry->value(); // was array
 ```
 
 After:
+
 ```php
 $entry = json_entry('data', ['key' => 'value']);
 $json = $entry->value(); // now Json object
@@ -59,11 +63,13 @@ $string = $json?->toString(); // get as string
 If you were using `JsonEntry::json()`:
 
 Before:
+
 ```php
 $json = $entry->json();
 ```
 
 After:
+
 ```php
 $json = $entry->value(); // json() method removed, use value() instead
 ```
@@ -93,7 +99,8 @@ $json->toArray(); // ['key' => 'value']
 json_encode($json); // '{"key":"value"}'
 ```
 
-**Note:** `JsonEntry::value()` now returns `?Json` for consistency with `UuidEntry::value()` returning `?Uuid`. Use `->toArray()` or `->toString()` on the Json object to get the underlying data.
+**Note:** `JsonEntry::value()` now returns `?Json` for consistency with `UuidEntry::value()` returning `?Uuid`. Use
+`->toArray()` or `->toString()` on the Json object to get the underlying data.
 
 **Row methods behavior:**
 
@@ -115,6 +122,7 @@ $row->get('data')->value();  // Returns Json object (use ->toArray() if you need
 ### 1) Force `EntryFactory $entryFactory` to be required on `array_to_row` & `array_to_row(s)`
 
 Before:
+
 ```php
 to_entry('name', 'data');
 array_to_row([]);
@@ -134,6 +142,7 @@ array_to_rows([], flow_context(config())->entryFactory());
 ### 1) Removed $nullable property from all types
 
 Before:
+
 ```php
 type_string(nullable:true)->toString() // ?string
 ```
@@ -147,18 +156,21 @@ type_optional(string())->toString() // ?string
 ### 2) Removed precision from `float_type()`
 
 Before `float_type()` use to have default precision 6. This means that any operations on float had to round values
-to given precision. The problem with this approach is that all operations now need to receive a dedicated rounding option. 
+to given precision. The problem with this approach is that all operations now need to receive a dedicated rounding
+option.
 
 Instead, end users should handle precision of float columns through `round()` scalar function.
 
 ### 3) Moved all Types to `Flow\Types\Type` namespace
 
 Before
+
 ```php
 \Flow\ETL\DSL\type_string(); // now deprecated, alias for \Flow\Types\DSL\type_string();
 ```
 
 After
+
 ```php
 \Flow\Types\DSL\type_string();
 ```
@@ -168,6 +180,7 @@ After
 ### 1) Deprecated `Flow\ETL\DataFrame::renameAll*` methods
 
 Methods:
+
 - `Flow\ETL\DataFrame::renameAll()`,
 - `Flow\ETL\DataFrame::renameAllLowerCase()`,
 - `Flow\ETL\DataFrame::renameAllUpperCase()`,
@@ -179,6 +192,7 @@ Were deprecated in favor of using new method: `DataFrame::renameEach()` with pro
 ### 2) Deprecated `RenameAllCaseTransformer` & `RenameStrReplaceAllEntriesTransformer`
 
 Selected transformers were deprecated in favor of using `DataFrame::renameEach()` with related `RenameEntryStrategy`:
+
 - `RenameAllCaseTransformer` -> `RenameCaseTransformer`,
 - `RenameStrReplaceAllEntriesTransformer` -> `RenameReplaceStrategy`,
 
@@ -187,10 +201,12 @@ Selected transformers were deprecated in favor of using `DataFrame::renameEach()
 ## Upgrading from 0.14.x to 0.15.x
 
 ### 1) Removed `Flow\ETL\Row\Schema\Matcher` and implementations
+
 Schema Matcher was the initial attempt to implement a schema evolution next to schema validation that over
 time got replaced with a different implementation of Schema Validator.
 
 ### 2) Renamed `Flow\ETL\Row\Schema` namespace into `Flow\ETL\Schema`.
+
 This means all classes related to Schema now live under `Flow\ETL\Schema` namespace.
 
 ---
@@ -199,19 +215,21 @@ This means all classes related to Schema now live under `Flow\ETL\Schema` namesp
 
 ### 1) Replaced `Flow\ETL\DataFrame::validate()` with `Flow\ETL\DataFrame::match()`
 
-The old method is now deprecated and will be removed in the next release. 
+The old method is now deprecated and will be removed in the next release.
 
-### 2) Replaced `Flow\ETL\Function\ScalarFunction\TypedScalarFunction` with `Flow\ETL\Function\ScalarFunction\ScalarResult`.
+### 2) Replaced `Flow\ETL\Function\ScalarFunction\TypedScalarFunction` with
+`Flow\ETL\Function\ScalarFunction\ScalarResult`.
 
-The old interface was used to allow defining the return type of the ScalarFunctions. 
+The old interface was used to allow defining the return type of the ScalarFunctions.
 It was replaced with a ScalarResult value object that is much more flexible than the interface,
-because it's allowing to return any type dynamically without making the scalar function stateful. 
+because it's allowing to return any type dynamically without making the scalar function stateful.
 
 ## Upgrading from 0.10.x to 0.11.x
 
 ### 1) Removed StructureElement/struct_element/structure_element from StructureType Definition
 
 Before:
+
 ```php
 type_structure([
     struct_element('name', string()),
@@ -220,6 +238,7 @@ type_structure([
 ```
 
 After:
+
 ```php
 type_structure([
     'name' => string(),
@@ -229,7 +248,7 @@ type_structure([
 
 ### 2) Doctrine DBAL Adapter
 
-From now options for: 
+From now options for:
 
 - `to_dbal_table_insert()`
 - `to_db_table_update()`
@@ -238,23 +257,23 @@ are passed as objects (instance of UpdateOptions|InsertOptions interfaces) and t
 so please use the proper class for the platform you are using.
 
 - PostgreSQL
-  - PostgreSQLInsertOptions
-  - PostgreSQLUpdateOptions
+    - PostgreSQLInsertOptions
+    - PostgreSQLUpdateOptions
 - MySQL
-  - MySQLInsertOptions
-  - MySQLUpdateOptions
-- Sqlite 
-  - SQLiteInsertOptions
-  - SQLiteUpdateOptions
+    - MySQLInsertOptions
+    - MySQLUpdateOptions
+- Sqlite
+    - SQLiteInsertOptions
+    - SQLiteUpdateOptions
 
 ## Upgrading from 0.8.x to 0.10.x
-
 
 ### 1) Providing multiple paths to a single extractor
 
 From now to read from multiple locations use `from_all(Extractor ...$extractors) : Exctractor` extractor.
 
 Before:
+
 ```php
 <?php
 
@@ -265,6 +284,7 @@ from_parquet([
 ```
 
 After:
+
 ```php
 <?php
 
@@ -280,6 +300,7 @@ From now all extractors/loaders are accepting only mandatory arguments,
 all optional arguments should be passed through `with*` methods and fluent interface.
 
 Before:
+
 ```php
 <?php
 
@@ -287,6 +308,7 @@ from_parquet(path(__DIR__ . '/data/1.parquet'), schema: $schema);
 ```
 
 After:
+
 ```php
 <?php
 
@@ -301,7 +323,8 @@ To support joining bigger datasets, we had to move from initial NestedLoop join 
 
 - the only supported coin expression is `=` (equals) that can be grouped with `AND` and `OR` operators.
 - `joinPrefix` is now always required, and by default is set to 'joined_'
-- join will always result all columns from both datasets, columns used in join condition will be prefixed with `joinPrefix`.
+- join will always result all columns from both datasets, columns used in join condition will be prefixed with
+  `joinPrefix`.
 
 Other than that, API stays the same.
 
@@ -320,7 +343,8 @@ statement Builder. To get the results, you first need to define the aggregation 
 
 ### 1) DataFrame::appendSafe() method was removed
 
-`DataFrame::appendSafe()` aka `DataFrame::threadSafe()` method was removed as it was introducing additional complexity and was not used in any of the adapters.
+`DataFrame::appendSafe()` aka `DataFrame::threadSafe()` method was removed as it was introducing additional complexity
+and was not used in any of the adapters.
 
 ## Upgrading from 0.5.x to 0.6.x
 
@@ -344,11 +368,14 @@ Rows::merge(Rows $rows) : Rows
 
 ### 1) Entry factory moved from extractors to `FlowContext`
 
-To improve code quality and reduce code coupling `EntryFactory` was removed from all constructors of extractors, in favor of passing it into `FlowContext` & re-using same entry factory in a whole pipeline.
+To improve code quality and reduce code coupling `EntryFactory` was removed from all constructors of extractors, in
+favor of passing it into `FlowContext` & re-using same entry factory in a whole pipeline.
 
 ### 2) Invalid schema has no fallback in `NativeEntryFactory`
 
-Before, passing `Schema` into `NativeEntryFactory::create()` had fallback when the given entry was not found in a passed schema, now the schema has higher priority & fallback is no longer available, instead when the definition is missing in a passed schema, `InvalidArgumentException` will be thrown.
+Before, passing `Schema` into `NativeEntryFactory::create()` had fallback when the given entry was not found in a passed
+schema, now the schema has higher priority & fallback is no longer available, instead when the definition is missing in
+a passed schema, `InvalidArgumentException` will be thrown.
 
 ### 3) BufferLoader was removed
 
@@ -363,7 +390,8 @@ Additionally, \Closure::close method no longer requires Rows to be passed as an 
 
 ### 5) Parallelize
 
-DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size) method.
+DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size)
+method.
 
 ### 6) Rows in batch - Extractors
 
@@ -371,6 +399,7 @@ From now, file-based Extractors will always throw one Row at time, in order to m
 use `DataFrame::batchSize(int $size)` just after extractor method.
 
 Before:
+
 ```php
 <?php
 
@@ -381,6 +410,7 @@ Before:
 ```
 
 After:
+
 ```php
 (new Flow())
     ->read(CSV::from(__DIR__ . '/1_mln_rows.csv',))
@@ -402,7 +432,8 @@ Affected extractors:
 
 ### 7) `GoogleSheetExtractor`
 
-Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size of the page that will be fetched from Google API.
+Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size
+of the page that will be fetched from Google API.
 Rows are yielded one by one.
 
 ### 8) `DataFrame::threadSafe()` method was replaced by `DataFrame::appendSafe()`
@@ -419,6 +450,7 @@ the number of rows saved at once use `DataFrame::batchSize(int $size)` method.
 ### 10) Removed DSL functions: `datetime_string()`, `json_string()`
 
 Those functions were removed in favor of accepting string values in related DSL functions:
+
 - `datetime_string()` => `datetime()`,
 - `json_string()` => `json()` & `json_object()`
 
@@ -433,22 +465,26 @@ More details can be found in [this issue](https://github.com/flow-php/flow/issue
 
 ### 12) `CollectionEntry` removal
 
-After adding native & logical types into the Flow, we remove the `CollectionEntry` as obsolete. New types that cover it better are: `ListType`, `MapType` & `StructureType` along with related new entry types.
+After adding native & logical types into the Flow, we remove the `CollectionEntry` as obsolete. New types that cover it
+better are: `ListType`, `MapType` & `StructureType` along with related new entry types.
 
 ### 13) Removed `from*()` methods from scalar entries
 
-Removed `BooleanEntry::from()`, `FloatEntry::from()`, `IntegerEntry::from()`, `StringEntry::fromDateTime()` methods in favor of using DSL functions.
+Removed `BooleanEntry::from()`, `FloatEntry::from()`, `IntegerEntry::from()`, `StringEntry::fromDateTime()` methods in
+favor of using DSL functions.
 
 ### 14) Removed deprecated `Sha1IdFactory`
 
 Class `Sha1IdFactory` was removed, use `HashIdFactory` class:
+
 ```php
 (new HashIdFactory('entry_name'))->withAlgorithm('sha1');
 ```
 
 ### 15) Deprecate DSL Static classes
 
-DSL static classes were deprecated in favor of using functions defined in `src/core/etl/src/Flow/ETL/DSL/functions.php` file.
+DSL static classes were deprecated in favor of using functions defined in `src/core/etl/src/Flow/ETL/DSL/functions.php`
+file.
 
 Deprecated classes:
 
@@ -475,13 +511,20 @@ Deprecated classes:
 
 ### 1) Transformers replaced with scalar functions
 
-Transformers are a really powerful tool that was used in Flow since the beginning, but that tool was too powerful for the simple cases that were needed, and introduced additional complexity and maintenance issues when they were handwritten.
+Transformers are a really powerful tool that was used in Flow since the beginning, but that tool was too powerful for
+the simple cases that were needed, and introduced additional complexity and maintenance issues when they were
+handwritten.
 
-We reworked most of the internal transformers to new scalar functions and entry scalar functions (based on the built-in functions), and we still internally use that powerful tool, but we don't expose it to end users, instead, we provide easy-to-use, covering all user needs functions.
+We reworked most of the internal transformers to new scalar functions and entry scalar functions (based on the built-in
+functions), and we still internally use that powerful tool, but we don't expose it to end users, instead, we provide
+easy-to-use, covering all user needs functions.
 
-All available functions can be found in [`ETL\Row\Function` folder](src/core/etl/src/Flow/ETL/Function) or in [`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry scalar functions are defined in `EntryScalarFunction`.
+All available functions can be found in [`ETL\Row\Function` folder](src/core/etl/src/Flow/ETL/Function) or in [
+`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry scalar functions are defined in
+`EntryScalarFunction`.
 
 Before:
+
 ```php
 <?php
 
@@ -495,6 +538,7 @@ use Flow\ETL\DSL\Transform;
 ```
 
 After:
+
 ```php
 <?php
 
@@ -514,6 +558,7 @@ use Flow\ETL\Flow;
 The same behavior can be achieved through using a newly introduced `optional` function:
 
 Before:
+
 ```php
 <?php
 
@@ -524,6 +569,7 @@ ref('non_existing_column')->cast('string');
 ```
 
 After:
+
 ```php
 <?php
 
@@ -548,12 +594,14 @@ Affected extractors:
 * Text
 * XML
 
-Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become redundant.
+Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become
+redundant.
 
 Because of that all DSL functions are no longer expecting `$entry_row_name` parameter, if it was used anywhere,
 please remove it.
 
 Before:
+
 ```php
 <?php 
 
@@ -585,6 +633,7 @@ In order to avoid collisions with datasets columns, additional columns created a
 would now be prefixed with `_` (underscore) symbol.
 
 Before:
+
 ```php
 <?php
 
@@ -604,6 +653,7 @@ foreach ($rows as $row) {
 ```
 
 After:
+
 ```php
 <?php
 

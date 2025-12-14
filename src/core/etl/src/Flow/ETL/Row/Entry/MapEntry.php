@@ -8,8 +8,10 @@ use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\MapDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\TypeDetector;
 
 /**
@@ -58,9 +60,15 @@ final class MapEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    /**
+     * @return MapDefinition<TKey, TValue>
+     */
+    public function definition() : MapDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        /** @var MapType<TKey, TValue> $type */
+        $type = $this->type;
+
+        return new MapDefinition($this->name, $type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry

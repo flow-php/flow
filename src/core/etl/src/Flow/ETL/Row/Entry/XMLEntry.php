@@ -7,7 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string, type_xml};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\XMLDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\XMLType;
 
@@ -96,9 +97,9 @@ final class XMLEntry implements Entry
         $this->value = $doc;
     }
 
-    public function definition() : Definition
+    public function definition() : XMLDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new XMLDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self

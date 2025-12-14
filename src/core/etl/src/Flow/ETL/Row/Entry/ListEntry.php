@@ -8,8 +8,10 @@ use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\ListDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\TypeDetector;
 
 /**
@@ -57,9 +59,15 @@ final class ListEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    /**
+     * @return ListDefinition<T>
+     */
+    public function definition() : ListDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        /** @var ListType<T> $type */
+        $type = $this->type;
+
+        return new ListDefinition($this->name, $type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry

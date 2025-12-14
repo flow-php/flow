@@ -1,0 +1,244 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Schema\Definition;
+
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\type_equals;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\{Entry, EntryReference, Reference};
+use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\{OptionalType, StructureType};
+
+/**
+ * @template TElement
+ *
+ * @implements Definition<array<string, TElement>>
+ */
+final class StructureDefinition implements Definition
+{
+    private Metadata $metadata;
+
+    private readonly Reference $ref;
+
+    /**
+     * @param StructureType<TElement> $type
+     */
+    public function __construct(
+        string|Reference $ref,
+        private readonly StructureType $type,
+        private readonly bool $nullable = false,
+        ?Metadata $metadata = null,
+    ) {
+        $this->ref = EntryReference::init($ref);
+        $this->metadata = $metadata ?? Metadata::empty();
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
+    public function addMetadata(string $key, int|string|bool|float|array $value) : static
+    {
+        $this->metadata = $this->metadata->add($key, $value);
+
+        return $this;
+    }
+
+    public function entry() : Reference
+    {
+        return $this->ref;
+    }
+
+    public function isCompatible(Definition $definition) : bool
+    {
+        if (!$this->ref->is($definition->entry())) {
+            return false;
+        }
+
+        if (!$this->nullable && $definition->isNullable()) {
+            return false;
+        }
+
+        if (!$definition instanceof self) {
+            return false;
+        }
+
+        $thisElements = $this->type->elements();
+        $definitionElements = $definition->type->elements();
+
+        if (\count($thisElements) !== \count($definitionElements)) {
+            return false;
+        }
+
+        foreach ($thisElements as $name => $element) {
+            if (!\array_key_exists($name, $definitionElements)) {
+                return false;
+            }
+
+            $thisElement = $element;
+            $thisElementNullable = false;
+            $definitionElement = $definitionElements[$name];
+            $definitionElementNullable = false;
+
+            if ($thisElement instanceof OptionalType) {
+                $thisElement = $thisElement->base();
+                $thisElementNullable = true;
+            }
+
+            if ($definitionElement instanceof OptionalType) {
+                $definitionElement = $definitionElement->base();
+                $definitionElementNullable = true;
+            }
+
+            $thisElementDef = definition_from_type($this->ref->name() . '.' . $name, $thisElement, $thisElementNullable);
+            $definitionElementDef = definition_from_type($definition->ref->name() . '.' . $name, $definitionElement, $definitionElementNullable);
+
+            if (!$thisElementDef->isCompatible($definitionElementDef)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function isNullable() : bool
+    {
+        return $this->nullable;
+    }
+
+    public function isSame(Definition $definition) : bool
+    {
+        if ($this->nullable !== $definition->isNullable()) {
+            return false;
+        }
+
+        if (!type_equals($this->type, $definition->type())) {
+            return false;
+        }
+
+        return $this->metadata->isEqual($definition->metadata());
+    }
+
+    public function makeNullable(bool $nullable = true) : static
+    {
+        return new self($this->ref, $this->type, $nullable, $this->metadata);
+    }
+
+    public function matches(Entry $entry) : bool
+    {
+        if ($this->isNullable() && $entry->is($this->ref)) {
+            return true;
+        }
+
+        if (!$entry->is($this->ref)) {
+            return false;
+        }
+
+        return $entry->type() instanceof StructureType;
+    }
+
+    public function merge(Definition $definition) : Definition
+    {
+        if (!$this->ref->is($definition->entry())) {
+            throw new RuntimeException(\sprintf(
+                'Cannot merge different definitions, %s and %s',
+                $this->ref->name(),
+                $definition->entry()->name()
+            ));
+        }
+
+        $thisFromNull = $this->metadata->has(Metadata::FROM_NULL);
+        $defFromNull = $definition->metadata()->has(Metadata::FROM_NULL);
+
+        if ($thisFromNull && $defFromNull) {
+            return $this->makeNullable()->setMetadata(
+                $this->metadata->merge($definition->metadata())
+            );
+        }
+
+        if ($thisFromNull) {
+            return $definition->makeNullable()->setMetadata(
+                $definition->metadata()->remove(Metadata::FROM_NULL)->merge($this->metadata->remove(Metadata::FROM_NULL))
+            );
+        }
+
+        if ($defFromNull) {
+            return $this->makeNullable()->setMetadata(
+                $this->metadata->remove(Metadata::FROM_NULL)->merge($definition->metadata()->remove(Metadata::FROM_NULL))
+            );
+        }
+
+        if ($definition instanceof self) {
+            if (type_equals($this->type, $definition->type)) {
+                return new self(
+                    $this->ref,
+                    $this->type,
+                    $this->nullable || $definition->nullable,
+                    $this->metadata->merge($definition->metadata)
+                );
+            }
+
+            return new JsonDefinition(
+                $this->ref,
+                $this->nullable || $definition->nullable,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        if ($definition instanceof StringDefinition) {
+            return new StringDefinition(
+                $this->ref,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata())
+            );
+        }
+
+        throw new RuntimeException(\sprintf(
+            'Cannot merge %s with %s',
+            self::class,
+            $definition::class
+        ));
+    }
+
+    public function metadata() : Metadata
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function normalize() : array
+    {
+        return [
+            'ref' => $this->ref->name(),
+            'type' => $this->type->normalize(),
+            'nullable' => $this->nullable,
+            'metadata' => $this->metadata->normalize(),
+        ];
+    }
+
+    public function nullable() : static
+    {
+        return $this->makeNullable();
+    }
+
+    public function rename(string $newName) : static
+    {
+        return new self($newName, $this->type, $this->nullable, $this->metadata);
+    }
+
+    public function setMetadata(Metadata $metadata) : static
+    {
+        $this->metadata = $metadata;
+
+        return $this;
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
+    }
+}

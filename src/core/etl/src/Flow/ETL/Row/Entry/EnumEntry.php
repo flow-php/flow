@@ -6,7 +6,8 @@ namespace Flow\ETL\Row\Entry;
 
 use function Flow\Types\DSL\{type_enum, type_equals, type_optional};
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\EnumDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 /**
@@ -41,9 +42,15 @@ final class EnumEntry implements Entry
         return $this->value->name;
     }
 
-    public function definition() : Definition
+    /**
+     * @return EnumDefinition<\UnitEnum>
+     */
+    public function definition() : EnumDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        /** @var class-string<\UnitEnum>&literal-string $enumClass */
+        $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
+
+        return new EnumDefinition($this->name, $enumClass, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self

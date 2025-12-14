@@ -7,7 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_equals, type_optional, type_uuid};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\UuidDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Value\Uuid;
 
@@ -59,9 +60,9 @@ final class UuidEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    public function definition() : UuidDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new UuidDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self

@@ -9,7 +9,7 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 
-final class Metadata
+final readonly class Metadata
 {
     public const string FROM_NULL = 'from_null';
 
