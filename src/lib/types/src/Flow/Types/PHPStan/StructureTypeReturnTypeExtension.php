@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\Types\PHPStan;
 
 use Flow\Types\Type as FlowType;
-use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\{OptionalType, StructureType};
 use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Type\Constant\{ConstantArrayType, ConstantArrayTypeBuilder};
-use PHPStan\Type\{DynamicFunctionReturnTypeExtension, ErrorType, Type, TypeCombinator};
+use PHPStan\Type\{DynamicFunctionReturnTypeExtension, ErrorType, IntersectionType, Type, TypeCombinator};
 use PHPStan\Type\Generic\GenericObjectType;
+use PHPStan\Type\ObjectType;
 
 final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTypeExtension
 {
@@ -50,12 +51,15 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
             }
         }
 
-        return new GenericObjectType(
-            FlowType::class,
-            [
-                TypeCombinator::union(...$results),
-            ]
-        );
+        $arrayShapeType = TypeCombinator::union(...$results);
+
+        return new IntersectionType([
+            new ObjectType(StructureType::class),
+            new GenericObjectType(
+                FlowType::class,
+                [$arrayShapeType]
+            ),
+        ]);
     }
 
     public function isFunctionSupported(FunctionReflection $functionReflection) : bool

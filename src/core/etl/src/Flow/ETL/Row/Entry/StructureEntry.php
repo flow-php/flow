@@ -10,7 +10,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeDetector;
 
@@ -26,20 +25,20 @@ final class StructureEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var Type<array<string, T>>
+     * @var StructureType<T>
      */
-    private readonly Type $type;
+    private readonly StructureType $type;
 
     /**
      * @param ?array<array-key, mixed> $value
-     * @param Type<array<string, T>> $type
+     * @param StructureType<T> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        Type $type,
+        StructureType $type,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -68,10 +67,7 @@ final class StructureEntry implements Entry
      */
     public function definition() : StructureDefinition
     {
-        /** @var StructureType<T> $type */
-        $type = $this->type;
-
-        return new StructureDefinition($this->name, $type, $this->value === null, $this->metadata);
+        return new StructureDefinition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : static
@@ -133,9 +129,9 @@ final class StructureEntry implements Entry
     }
 
     /**
-     * @return Type<array<string, T>>
+     * @return StructureType<T>
      */
-    public function type() : Type
+    public function type() : StructureType
     {
         return $this->type;
     }

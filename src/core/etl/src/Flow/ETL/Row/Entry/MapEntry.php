@@ -10,7 +10,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\MapDefinition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\TypeDetector;
 
@@ -27,20 +26,20 @@ final class MapEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var Type<array<TKey, TValue>>
+     * @var MapType<TKey, TValue>
      */
-    private Type $type;
+    private MapType $type;
 
     /**
      * @param ?array<array-key, mixed> $value
-     * @param Type<array<TKey, TValue>> $type
+     * @param MapType<TKey, TValue> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        Type $type,
+        MapType $type,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -65,10 +64,7 @@ final class MapEntry implements Entry
      */
     public function definition() : MapDefinition
     {
-        /** @var MapType<TKey, TValue> $type */
-        $type = $this->type;
-
-        return new MapDefinition($this->name, $type, $this->value === null, $this->metadata);
+        return new MapDefinition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : static
@@ -134,7 +130,10 @@ final class MapEntry implements Entry
         return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
-    public function type() : Type
+    /**
+     * @return MapType<TKey, TValue>
+     */
+    public function type() : MapType
     {
         return $this->type;
     }

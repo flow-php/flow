@@ -8,7 +8,6 @@ use function Flow\Types\DSL\{type_enum, type_equals};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\Types\Type;
 use Flow\Types\Type\Native\EnumType;
 
 /**
@@ -23,9 +22,9 @@ final class EnumDefinition implements Definition
     private readonly Reference $ref;
 
     /**
-     * @var Type<TEnum>
+     * @var EnumType<TEnum>
      */
-    private readonly Type $type;
+    private readonly EnumType $type;
 
     /**
      * @param class-string<TEnum> $enumClass
@@ -42,7 +41,7 @@ final class EnumDefinition implements Definition
 
         $this->ref = EntryReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
-        /** @var Type<TEnum> $type */
+        /** @var EnumType<TEnum> $type */
         $type = type_enum($enumClass);
         $this->type = $type;
     }
@@ -209,7 +208,10 @@ final class EnumDefinition implements Definition
         return $this;
     }
 
-    public function type() : Type
+    /**
+     * @return EnumType<TEnum>
+     */
+    public function type() : EnumType
     {
         return $this->type;
     }

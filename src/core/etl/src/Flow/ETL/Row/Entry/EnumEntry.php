@@ -8,7 +8,7 @@ use function Flow\Types\DSL\{type_enum, type_equals, type_optional};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\EnumDefinition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type;
+use Flow\Types\Type\Native\EnumType;
 
 /**
  * @implements Entry<?\UnitEnum>
@@ -20,9 +20,9 @@ final class EnumEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var Type<\UnitEnum>
+     * @var EnumType<\UnitEnum>
      */
-    private readonly Type $type;
+    private readonly EnumType $type;
 
     public function __construct(
         private readonly string $name,
@@ -30,7 +30,9 @@ final class EnumEntry implements Entry
         ?Metadata $metadata = null,
     ) {
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
+        /** @var EnumType<\UnitEnum> $type */
+        $type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
+        $this->type = $type;
     }
 
     public function __toString() : string
@@ -96,7 +98,10 @@ final class EnumEntry implements Entry
         return $this->value->name;
     }
 
-    public function type() : Type
+    /**
+     * @return EnumType<\UnitEnum>
+     */
+    public function type() : EnumType
     {
         return $this->type;
     }
