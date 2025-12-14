@@ -57,7 +57,7 @@ final class HTMLElementEntry implements Entry
         return new HTMLElementDefinition($this->name, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : self
+    public function duplicate() : static
     {
         return new self($this->name, type_optional(type_instance_of(HTMLElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->metadata);
     }
@@ -84,7 +84,7 @@ final class HTMLElementEntry implements Entry
         return $this->value?->C14N() === $entry->value?->C14N();
     }
 
-    public function map(callable $mapper) : self
+    public function map(callable $mapper) : static
     {
         $mappedValue = $mapper($this->value());
         $mappedValue = type_optional(type_instance_of(HTMLElement::class))->assert($mappedValue);
@@ -97,7 +97,7 @@ final class HTMLElementEntry implements Entry
         return $this->name;
     }
 
-    public function rename(string $name) : self
+    public function rename(string $name) : static
     {
         return new self($name, $this->value);
     }
@@ -121,7 +121,7 @@ final class HTMLElementEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : self
+    public function withValue(mixed $value) : static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }

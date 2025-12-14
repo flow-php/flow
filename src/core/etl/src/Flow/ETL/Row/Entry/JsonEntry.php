@@ -94,7 +94,7 @@ final class JsonEntry implements Entry
         return new JsonDefinition($this->name, $this->json === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : static
     {
         return new self($this->name, $this->json, $this->metadata);
     }
@@ -136,7 +136,7 @@ final class JsonEntry implements Entry
         return $thisJson->isEqual($entryJson);
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : static
     {
         return new self($this->name, $mapper($this->json), $this->metadata);
     }
@@ -146,7 +146,7 @@ final class JsonEntry implements Entry
         return $this->name;
     }
 
-    public function rename(string $name) : Entry
+    public function rename(string $name) : static
     {
         return new self($name, $this->json, $this->metadata);
     }
@@ -173,7 +173,7 @@ final class JsonEntry implements Entry
         return $this->json;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : static
     {
         return new self($this->name, type_optional($this->type())->cast($value), $this->metadata);
     }

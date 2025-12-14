@@ -20,9 +20,9 @@ interface Entry extends \Stringable
     public function definition() : Definition;
 
     /**
-     * @return Entry<T>
+     * @return static
      */
-    public function duplicate() : self;
+    public function duplicate() : static;
 
     public function is(string|Reference $name) : bool;
 
@@ -32,18 +32,18 @@ interface Entry extends \Stringable
     public function isEqual(self $entry) : bool;
 
     /**
-     * @return Entry<T>
+     * @return static
      */
-    public function map(callable $mapper) : self;
+    public function map(callable $mapper) : static;
 
     public function name() : string;
 
     public function ref() : Reference;
 
     /**
-     * @return Entry<T>
+     * @return static
      */
-    public function rename(string $name) : self;
+    public function rename(string $name) : static;
 
     public function toString() : string;
 
@@ -58,7 +58,7 @@ interface Entry extends \Stringable
     public function value();
 
     /**
-     * @return Entry<T>
+     * @return static
      */
-    public function withValue(mixed $value) : self;
+    public function withValue(mixed $value) : static;
 }
