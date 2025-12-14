@@ -52,7 +52,7 @@ final class HTMLEntry implements Entry
         return new HTMLDefinition($this->name, null === $this->value, $this->metadata);
     }
 
-    public function duplicate() : self
+    public function duplicate() : static
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
@@ -79,7 +79,7 @@ final class HTMLEntry implements Entry
         return $entry->value()?->saveHtml() === $this->value?->saveHtml();
     }
 
-    public function map(callable $mapper) : self
+    public function map(callable $mapper) : static
     {
         return new self($this->name, $mapper($this->value));
     }
@@ -89,7 +89,7 @@ final class HTMLEntry implements Entry
         return $this->name;
     }
 
-    public function rename(string $name) : self
+    public function rename(string $name) : static
     {
         return new self($name, $this->value);
     }
@@ -113,7 +113,7 @@ final class HTMLEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : self
+    public function withValue(mixed $value) : static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }

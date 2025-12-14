@@ -70,7 +70,7 @@ final class ListEntry implements Entry
         return new ListDefinition($this->name, $type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : static
     {
         return new self($this->name, $this->value, $this->type, $this->metadata);
     }
@@ -109,7 +109,7 @@ final class ListEntry implements Entry
             && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : static
     {
         return new self($this->name, $mapper($this->value), $this->type);
     }
@@ -119,7 +119,7 @@ final class ListEntry implements Entry
         return $this->name;
     }
 
-    public function rename(string $name) : Entry
+    public function rename(string $name) : static
     {
         return new self($name, $this->value, $this->type);
     }
@@ -143,7 +143,7 @@ final class ListEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->type);
     }
