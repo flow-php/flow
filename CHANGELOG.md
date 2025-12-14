@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-13
+## [Unreleased] - 2025-12-14
 
 ### Added
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **Json value to flow-php/types** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +24,8 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2076](https://github.com/flow-php/flow/pull/2076) - **Break monolithic Definition into specific types definitions** - [@norberttech](https://github.com/norberttech)
+- [#2076](https://github.com/flow-php/flow/pull/2076) - **Improved types definitions in Entry interface and implementations** - [@norberttech](https://github.com/norberttech)
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **changed TypeJson from Type{string} into Type{Json}** - [@norberttech](https://github.com/norberttech)
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **JsonEntry now holds value as Json** - [@norberttech](https://github.com/norberttech)
 - [ca8d0e](https://github.com/flow-php/flow/commit/ca8d0e9ee26e29f8550a82b7621c237b01346fdc) - **chore: add 8.5 to flow-php/pg-query-ext** - [@norberttech](https://github.com/norberttech)
