@@ -7,7 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_boolean, type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 /**
@@ -42,12 +43,9 @@ final class BooleanEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @return Definition<bool>
-     */
-    public function definition() : Definition
+    public function definition() : BooleanDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        return new BooleanDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry

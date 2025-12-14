@@ -7,7 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_equals, type_optional, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\StringDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 /**
@@ -71,11 +72,10 @@ final class StringEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    public function definition() : StringDefinition
     {
-        return new Definition(
+        return new StringDefinition(
             $this->name,
-            $this->type,
             $this->value === null,
             $this->fromNull
                 ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))

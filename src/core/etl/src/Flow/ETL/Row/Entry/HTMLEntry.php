@@ -7,7 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_equals, type_html, type_optional};
 use Dom\HTMLDocument;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\HTMLDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 /**
@@ -46,9 +47,9 @@ final class HTMLEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    public function definition() : HTMLDefinition
     {
-        return new Definition($this->name, $this->type, null === $this->value, $this->metadata);
+        return new HTMLDefinition($this->name, null === $this->value, $this->metadata);
     }
 
     public function duplicate() : self

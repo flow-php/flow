@@ -7,13 +7,13 @@ namespace Flow\ETL\Tests\Unit\Schema;
 use function Flow\ETL\DSL\{bool_schema, int_schema, integer_schema, json_schema, list_schema, map_schema, refs, schema, schema_from_json, schema_to_json, str_schema, string_schema, structure_schema, uuid_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException,
+    RuntimeException,
     SchemaDefinitionNotFoundException,
     SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Exception\InvalidTypeException;
 
 final class SchemaTest extends FlowTestCase
 {
@@ -90,8 +90,8 @@ final class SchemaTest extends FlowTestCase
 
     public function test_creating_schema_from_invalid_json_format_at_definition_level() : void
     {
-        $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('Expected type "structure{ref: string, type: array<mixed>, nullable: ?boolean, metadata: ?array<mixed>}", got "map<string, string>"');
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Definition array must have an array "type" key');
 
         schema_from_json('[{"ref": "id", "type": "test", "metadata": []}]');
     }

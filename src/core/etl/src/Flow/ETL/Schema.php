@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\{definition_from_array, schema};
 use Flow\ETL\Exception\{InvalidArgumentException,
     SchemaDefinitionNotFoundException,
     SchemaDefinitionNotUniqueException};
@@ -38,7 +38,7 @@ final class Schema implements \Countable
                 throw new InvalidArgumentException('Schema definition must be an array');
             }
 
-            $schema[] = Definition::fromArray($definition);
+            $schema[] = definition_from_array($definition);
         }
 
         return new self(...$schema);

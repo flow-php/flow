@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_string;
 use Doctrine\DBAL\Schema\{Column, Index, Table};
 use Doctrine\DBAL\Types\Type as DbalType;
@@ -122,7 +123,7 @@ final readonly class SchemaConverter
             }
         }
 
-        return new Definition($column->getName(), $type, $nullable, $metadata);
+        return definition_from_type($column->getName(), $type, $nullable, $metadata);
     }
 
     /**

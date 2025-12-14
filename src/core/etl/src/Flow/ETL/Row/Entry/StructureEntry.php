@@ -8,8 +8,10 @@ use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition\StructureDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeDetector;
 
 /**
@@ -61,9 +63,15 @@ final class StructureEntry implements Entry
         return $this->toString();
     }
 
-    public function definition() : Definition
+    /**
+     * @return StructureDefinition<T>
+     */
+    public function definition() : StructureDefinition
     {
-        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
+        /** @var StructureType<T> $type */
+        $type = $this->type;
+
+        return new StructureDefinition($this->name, $type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry
