@@ -9,7 +9,6 @@ use function Flow\Types\DSL\type_equals;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\Types\Type;
 use Flow\Types\Type\Logical\{OptionalType, StructureType};
 
 /**
@@ -237,7 +236,10 @@ final class StructureDefinition implements Definition
         return $this;
     }
 
-    public function type() : Type
+    /**
+     * @return StructureType<TElement>
+     */
+    public function type() : StructureType
     {
         return $this->type;
     }

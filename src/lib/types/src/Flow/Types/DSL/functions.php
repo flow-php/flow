@@ -50,10 +50,10 @@ use UnitEnum;
  * @param array<string, Type<T>> $elements
  * @param array<string, Type<T>> $optional_elements
  *
- * @return Type<array<string, T>>
+ * @return StructureType<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false) : Type
+function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false) : StructureType
 {
     return new StructureType($elements, $optional_elements, $allow_extra);
 }
@@ -201,10 +201,10 @@ function type_list(Type $element) : ListType
  * @param Type<TKey> $key_type
  * @param Type<TValue> $value_type
  *
- * @return Type<array<TKey, TValue>>
+ * @return MapType<TKey, TValue>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_map(Type $key_type, Type $value_type) : Type
+function type_map(Type $key_type, Type $value_type) : MapType
 {
     return new MapType($key_type, $value_type);
 }

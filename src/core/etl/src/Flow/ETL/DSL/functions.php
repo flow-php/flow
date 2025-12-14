@@ -698,12 +698,12 @@ function entries(Entry ...$entries) : Entries
  * @template T
  *
  * @param ?array<string, mixed> $value
- * @param Type<array<string, T>> $type
+ * @param StructureType<T> $type
  *
  * @return Entry<?array<string, T>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null) : Entry
+function struct_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null) : Entry
 {
     return new StructureEntry($name, $value, $type, $metadata);
 }
@@ -712,12 +712,12 @@ function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metada
  * @template T
  *
  * @param ?array<string, mixed> $value
- * @param Type<array<string, T>> $type
+ * @param StructureType<T> $type
  *
  * @return Entry<?array<string, T>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null) : Entry
+function structure_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null) : Entry
 {
     return new StructureEntry($name, $value, $type, $metadata);
 }
@@ -727,12 +727,12 @@ function structure_entry(string $name, ?array $value, Type $type, ?Metadata $met
  *
  * @param array<string, Type<T>> $elements
  *
- * @return Type<array<string, T>>
+ * @return StructureType<T>
  *
  * @deprecated please use \Flow\Types\DSL\type_structure(array $elements) instead
  */
 #[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_structure(array $elements) : Type
+function type_structure(array $elements) : StructureType
 {
     return type_structure_new($elements);
 }
@@ -853,12 +853,12 @@ function type_list(Type $element) : Type
  * @param IntegerType|StringType $key_type
  * @param Type<TValue> $value_type
  *
- * @return Type<array<int|string, TValue>>
+ * @return MapType<int|string, TValue>
  *
  * @deprecated please use \Flow\Types\DSL\type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
  */
 #[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_map(StringType|IntegerType $key_type, Type $value_type) : Type
+function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
 {
     return type_map_new($key_type, $value_type);
 }
@@ -868,12 +868,12 @@ function type_map(StringType|IntegerType $key_type, Type $value_type) : Type
  * @template TValue
  *
  * @param ?array<array-key, mixed> $value
- * @param Type<array<TKey, TValue>> $mapType
+ * @param MapType<TKey, TValue> $mapType
  *
  * @return Entry<?array<TKey, TValue>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null) : Entry
+function map_entry(string $name, ?array $value, MapType $mapType, ?Metadata $metadata = null) : Entry
 {
     return new MapEntry($name, $value, $mapType, $metadata);
 }

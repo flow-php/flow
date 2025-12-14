@@ -9,7 +9,6 @@ use function Flow\Types\DSL\{type_equals, type_float, type_is_any, type_list, ty
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, OptionalType};
 use Flow\Types\Type\Native\{FloatType, IntegerType};
 
@@ -237,7 +236,10 @@ final class ListDefinition implements Definition
         return $this;
     }
 
-    public function type() : Type
+    /**
+     * @return ListType<TElement>
+     */
+    public function type() : ListType
     {
         return $this->type;
     }

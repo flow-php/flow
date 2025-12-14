@@ -10,7 +10,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\TypeDetector;
 
@@ -26,20 +25,20 @@ final class ListEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var Type<list<T>>
+     * @var ListType<T>
      */
-    private readonly Type $type;
+    private readonly ListType $type;
 
     /**
      * @param ?list<T> $value
-     * @param Type<list<T>> $type
+     * @param ListType<T> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        Type $type,
+        ListType $type,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -64,10 +63,7 @@ final class ListEntry implements Entry
      */
     public function definition() : ListDefinition
     {
-        /** @var ListType<T> $type */
-        $type = $this->type;
-
-        return new ListDefinition($this->name, $type, $this->value === null, $this->metadata);
+        return new ListDefinition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : static
@@ -133,7 +129,10 @@ final class ListEntry implements Entry
         return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
-    public function type() : Type
+    /**
+     * @return ListType<T>
+     */
+    public function type() : ListType
     {
         return $this->type;
     }

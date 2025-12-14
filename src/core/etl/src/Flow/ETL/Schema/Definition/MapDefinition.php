@@ -9,7 +9,6 @@ use function Flow\Types\DSL\type_equals;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\Types\Type;
 use Flow\Types\Type\Logical\{MapType, OptionalType};
 
 /**
@@ -227,7 +226,10 @@ final class MapDefinition implements Definition
         return $this;
     }
 
-    public function type() : Type
+    /**
+     * @return MapType<TKey, TValue>
+     */
+    public function type() : MapType
     {
         return $this->type;
     }
