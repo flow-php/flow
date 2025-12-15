@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView;
 
 use Flow\PostgreSql\Protobuf\AST\RefreshMatViewStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface RefreshMatViewFinalStep
+interface RefreshMatViewFinalStep extends SqlQuery
 {
     public function toAst() : RefreshMatViewStmt;
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Copy;
 
 use Flow\PostgreSql\Protobuf\AST\{A_Star, CopyStmt, DefElem, Node, PBList, PBString, RangeVar};
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
-use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 /**
@@ -14,6 +14,8 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
  */
 final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptionsStep, CopyToTableStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $columns
      * @param list<string> $forceQuoteColumns

@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Delete;
 
 use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
 /**
  * Terminal interface for DELETE query builder.
  * Represents a complete DELETE statement that can be converted to AST.
  */
-interface DeleteFinalStep
+interface DeleteFinalStep extends SqlQuery
 {
     /**
      * Convert this DELETE query to a protobuf AST DeleteStmt.

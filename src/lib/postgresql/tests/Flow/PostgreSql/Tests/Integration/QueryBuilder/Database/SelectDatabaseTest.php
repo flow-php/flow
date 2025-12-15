@@ -11,6 +11,10 @@ use function Flow\PostgreSql\DSL\{
     cond_and,
     create,
     cte,
+    data_type_decimal,
+    data_type_integer,
+    data_type_serial,
+    data_type_varchar,
     desc,
     eq,
     gt,
@@ -18,10 +22,6 @@ use function Flow\PostgreSql\DSL\{
     literal,
     primary_key,
     select,
-    sql_type_decimal,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table,
     with
@@ -39,20 +39,20 @@ final class SelectDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_USERS)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100))->notNull())
-                ->column(column('email', sql_type_varchar(255)))
-                ->column(column('age', sql_type_integer())->default(0))
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('email', data_type_varchar(255)))
+                ->column(column('age', data_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
         $this->execute(
             create()->table(self::TABLE_ORDERS)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('user_id', sql_type_integer()))
-                ->column(column('amount', sql_type_decimal(10, 2))->notNull())
-                ->column(column('status', sql_type_varchar(50))->default('pending'))
+                ->column(column('id', data_type_serial()))
+                ->column(column('user_id', data_type_integer()))
+                ->column(column('amount', data_type_decimal(10, 2))->notNull())
+                ->column(column('status', data_type_varchar(50))->default('pending'))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );

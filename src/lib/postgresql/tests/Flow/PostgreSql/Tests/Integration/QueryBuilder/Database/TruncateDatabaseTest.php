@@ -8,13 +8,13 @@ use function Flow\PostgreSql\DSL\{
     col,
     column,
     create,
+    data_type_serial,
+    data_type_varchar,
     desc,
     insert,
     literal,
     primary_key,
     select,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table,
     truncate_table
@@ -32,16 +32,16 @@ final class TruncateDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_ONE)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100))->notNull())
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
         $this->execute(
             create()->table(self::TABLE_TWO)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100))->notNull())
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );

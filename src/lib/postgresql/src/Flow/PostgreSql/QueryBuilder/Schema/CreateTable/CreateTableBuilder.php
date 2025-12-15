@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
-final readonly class CreateTableBuilder implements CreateTableColumnsStep
+final readonly class CreateTableBuilder implements CreateTableColumnsStep, CreateTableTemporaryStep, CreateTemporaryTableColumnsStep
 {
     use AstToSql;
 
@@ -31,6 +31,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
         private ?int $partitionStrategy = null,
         private array $partitionColumns = [],
         private ?string $tablespace = null,
+        private ?int $onCommitAction = null,
     ) {
     }
 
@@ -39,7 +40,12 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
         return new self($table, $schema);
     }
 
-    public function column(ColumnDefinition $column) : CreateTableColumnsStep
+    public static function createTemporary(string $table, ?string $schema = null) : CreateTemporaryTableColumnsStep
+    {
+        return new self($table, $schema, temporary: true);
+    }
+
+    public function column(ColumnDefinition $column) : self
     {
         return new self(
             $this->table,
@@ -53,6 +59,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 
@@ -70,6 +77,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 
@@ -87,6 +95,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 
@@ -104,6 +113,61 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
+            $this->onCommitAction,
+        );
+    }
+
+    public function onCommitDeleteRows() : CreateTableFinalStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $this->constraints,
+            $this->ifNotExists,
+            $this->temporary,
+            $this->unlogged,
+            $this->inherits,
+            $this->partitionStrategy,
+            $this->partitionColumns,
+            $this->tablespace,
+            OnCommitAction::ONCOMMIT_DELETE_ROWS,
+        );
+    }
+
+    public function onCommitDrop() : CreateTableFinalStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $this->constraints,
+            $this->ifNotExists,
+            $this->temporary,
+            $this->unlogged,
+            $this->inherits,
+            $this->partitionStrategy,
+            $this->partitionColumns,
+            $this->tablespace,
+            OnCommitAction::ONCOMMIT_DROP,
+        );
+    }
+
+    public function onCommitPreserveRows() : CreateTableFinalStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $this->constraints,
+            $this->ifNotExists,
+            $this->temporary,
+            $this->unlogged,
+            $this->inherits,
+            $this->partitionStrategy,
+            $this->partitionColumns,
+            $this->tablespace,
+            OnCommitAction::ONCOMMIT_PRESERVE_ROWS,
         );
     }
 
@@ -121,6 +185,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             PartitionStrategy::PARTITION_STRATEGY_HASH,
             \array_values($columns),
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 
@@ -138,6 +203,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             PartitionStrategy::PARTITION_STRATEGY_LIST,
             \array_values($columns),
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 
@@ -155,6 +221,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             PartitionStrategy::PARTITION_STRATEGY_RANGE,
             \array_values($columns),
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 
@@ -172,10 +239,11 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $tablespaceName,
+            $this->onCommitAction,
         );
     }
 
-    public function temporary() : CreateTableFinalStep
+    public function temporary() : CreateTableTemporaryStep
     {
         return new self(
             $this->table,
@@ -189,6 +257,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
+            null,
         );
     }
 
@@ -236,8 +305,8 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $createStmt->setIfNotExists(true);
         }
 
-        if ($this->temporary) {
-            $createStmt->setOncommit(OnCommitAction::ONCOMMIT_DROP);
+        if ($this->temporary && $this->onCommitAction !== null) {
+            $createStmt->setOncommit($this->onCommitAction);
         }
 
         if ($this->inherits !== []) {
@@ -297,6 +366,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
+            $this->onCommitAction,
         );
     }
 }

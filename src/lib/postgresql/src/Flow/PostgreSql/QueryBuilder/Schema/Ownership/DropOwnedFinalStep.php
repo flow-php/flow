@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Ownership;
 
 use Flow\PostgreSql\Protobuf\AST\DropOwnedStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface DropOwnedFinalStep
+interface DropOwnedFinalStep extends SqlQuery
 {
     public function cascade() : self;
 

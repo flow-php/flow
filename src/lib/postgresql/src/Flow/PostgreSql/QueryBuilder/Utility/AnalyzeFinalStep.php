@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface AnalyzeFinalStep
+interface AnalyzeFinalStep extends SqlQuery
 {
     public function skipLocked() : self;
 

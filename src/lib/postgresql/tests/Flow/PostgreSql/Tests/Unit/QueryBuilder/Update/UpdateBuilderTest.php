@@ -591,7 +591,6 @@ final class UpdateBuilderTest extends TestCase
         $val = $resTarget->getVal();
         self::assertNotNull($val);
 
-        // Star.toAst() produces a ColumnRef with A_Star inside
         self::assertTrue($val->hasColumnRef());
         $columnRef = $val->getColumnRef();
         self::assertNotNull($columnRef);

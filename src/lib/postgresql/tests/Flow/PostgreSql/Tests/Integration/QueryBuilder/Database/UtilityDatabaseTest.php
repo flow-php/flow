@@ -10,15 +10,15 @@ use function Flow\PostgreSql\DSL\{
     column,
     comment,
     create,
+    data_type_integer,
+    data_type_serial,
+    data_type_varchar,
     explain,
     insert,
     literal,
     lock_table,
     primary_key,
     select,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table,
     vacuum
@@ -37,9 +37,9 @@ final class UtilityDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100))->notNull())
-                ->column(column('value', sql_type_integer())->default(0))
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('value', data_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );

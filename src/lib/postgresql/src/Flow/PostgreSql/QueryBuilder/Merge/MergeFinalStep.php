@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Merge;
 
 use Flow\PostgreSql\Protobuf\AST\MergeStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
 /**
  * Terminal interface for MERGE query builder.
  */
-interface MergeFinalStep
+interface MergeFinalStep extends SqlQuery
 {
     /**
      * Convert this MERGE query to protobuf AST.

@@ -8,6 +8,9 @@ use function Flow\PostgreSql\DSL\{
     col,
     column,
     create,
+    data_type_integer,
+    data_type_serial,
+    data_type_varchar,
     drop,
     eq,
     gt,
@@ -15,9 +18,6 @@ use function Flow\PostgreSql\DSL\{
     literal,
     refresh_materialized_view,
     select,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table
 };
@@ -37,9 +37,9 @@ final class ViewDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $query = create()->table(self::TABLE_SOURCE)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('name', sql_type_varchar(100)))
-            ->column(column('value', sql_type_integer()));
+            ->column(column('id', data_type_serial()))
+            ->column(column('name', data_type_varchar(100)))
+            ->column(column('value', data_type_integer()));
 
         $this->execute($query->toSql());
 

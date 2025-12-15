@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\LockStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface LockFinalStep
+interface LockFinalStep extends SqlQuery
 {
     public function accessExclusive() : self;
 

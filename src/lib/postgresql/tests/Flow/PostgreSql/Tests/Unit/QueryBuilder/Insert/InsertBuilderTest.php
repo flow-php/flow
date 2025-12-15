@@ -90,8 +90,6 @@ final class InsertBuilderTest extends TestCase
 
         self::assertInstanceOf(InsertStmt::class, $ast);
 
-        // DEFAULT VALUES produces an INSERT with no selectStmt at all
-        // This is the correct PostgreSQL AST representation for DEFAULT VALUES
         $selectStmtNode = $ast->getSelectStmt();
         self::assertNull($selectStmtNode);
     }
@@ -435,7 +433,6 @@ final class InsertBuilderTest extends TestCase
         self::assertNotNull($relation);
         self::assertSame('logs', $relation->getRelname());
 
-        // DEFAULT VALUES has no selectStmt - this is correct PostgreSQL AST
         self::assertNull($restoredAst->getSelectStmt());
     }
 

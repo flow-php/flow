@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Copy;
 
 use Flow\PostgreSql\Protobuf\AST\{CopyStmt, DefElem, Node, PBList, PBString, RangeVar};
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
-use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 /**
  * Builder for COPY FROM statements (data import).
  */
 final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSourceStep, CopyFromTableStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $columns
      * @param list<string> $forceNotNullColumns

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTableAs;
 
 use Flow\PostgreSql\Protobuf\AST\CreateTableAsStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface CreateTableAsFinalStep
+interface CreateTableAsFinalStep extends SqlQuery
 {
     public function columnNames(string ...$names) : self;
 

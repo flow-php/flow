@@ -10,17 +10,17 @@ use function Flow\PostgreSql\DSL\{
     column,
     cond_or,
     create,
+    data_type_integer,
+    data_type_serial,
+    data_type_text,
+    data_type_timestamp,
+    data_type_varchar,
     delete,
     eq,
     insert,
     literal,
     primary_key,
     select,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_text,
-    sql_type_timestamp,
-    sql_type_varchar,
     star,
     table
 };
@@ -37,18 +37,18 @@ final class DeleteDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_LOGS)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('level', sql_type_varchar(20))->notNull())
-                ->column(column('message', sql_type_text()))
-                ->column(column('created_at', sql_type_timestamp()))
+                ->column(column('id', data_type_serial()))
+                ->column(column('level', data_type_varchar(20))->notNull())
+                ->column(column('message', data_type_text()))
+                ->column(column('created_at', data_type_timestamp()))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
         $this->execute(
             create()->table(self::TABLE_ARCHIVE)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('log_id', sql_type_integer())->notNull())
+                ->column(column('id', data_type_serial()))
+                ->column(column('log_id', data_type_integer())->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );

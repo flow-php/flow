@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\DropIndex;
 
 use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface DropIndexFinalStep
+interface DropIndexFinalStep extends SqlQuery
 {
     public function cascade() : self;
 

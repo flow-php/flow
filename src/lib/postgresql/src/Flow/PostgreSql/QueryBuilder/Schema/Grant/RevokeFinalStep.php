@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
 use Flow\PostgreSql\Protobuf\AST\GrantStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface RevokeFinalStep
+interface RevokeFinalStep extends SqlQuery
 {
     public function cascade() : self;
 

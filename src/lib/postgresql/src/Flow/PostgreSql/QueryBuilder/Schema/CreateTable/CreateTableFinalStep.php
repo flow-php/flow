@@ -6,8 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTable;
 
 use Flow\PostgreSql\Protobuf\AST\CreateStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface CreateTableFinalStep
+interface CreateTableFinalStep extends SqlQuery
 {
     public function constraint(TableConstraint $constraint) : self;
 
@@ -23,7 +24,7 @@ interface CreateTableFinalStep
 
     public function tablespace(string $tablespaceName) : self;
 
-    public function temporary() : self;
+    public function temporary() : CreateTableTemporaryStep;
 
     public function toAst() : CreateStmt;
 
