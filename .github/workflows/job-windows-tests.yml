@@ -37,7 +37,7 @@ jobs:
           echo "dir=$(composer config cache-files-dir)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
+        uses: "actions/cache@v5"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
           key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-windows-${{ hashFiles('**/composer.lock') }}"
