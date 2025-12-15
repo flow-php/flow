@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface VacuumFinalStep
+interface VacuumFinalStep extends SqlQuery
 {
     public function analyze() : self;
 

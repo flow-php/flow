@@ -122,7 +122,6 @@ final class DeleteBuilderTest extends TestCase
         $val = $firstReturn->getVal();
         self::assertNotNull($val);
 
-        // Star.toAst() produces a ColumnRef with A_Star inside
         self::assertTrue($val->hasColumnRef());
         $columnRef = $val->getColumnRef();
         self::assertNotNull($columnRef);

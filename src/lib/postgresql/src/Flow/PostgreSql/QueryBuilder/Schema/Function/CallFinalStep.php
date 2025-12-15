@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\CallStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface CallFinalStep
+interface CallFinalStep extends SqlQuery
 {
     public function toAst() : CallStmt;
 

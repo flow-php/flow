@@ -144,10 +144,6 @@ final class TransactionBuilderTest extends PGQueryTestCase
         );
     }
 
-    // -------------------------------------------------------------------
-    // COMMIT
-    // -------------------------------------------------------------------
-
     public function test_commit_basic() : void
     {
         $query = commit();

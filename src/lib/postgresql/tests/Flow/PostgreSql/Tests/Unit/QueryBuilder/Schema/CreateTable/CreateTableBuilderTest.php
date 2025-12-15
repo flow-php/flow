@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\CreateTable;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateStmt, OnCommitAction, PartitionStrategy};
+use Flow\PostgreSql\Protobuf\AST\{CreateStmt, PartitionStrategy};
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTable\CreateTableBuilder;
@@ -118,7 +118,7 @@ final class CreateTableBuilderTest extends TestCase
 
         self::assertInstanceOf(CreateStmt::class, $ast);
         self::assertSame('t', $ast->getRelation()->getRelpersistence());
-        self::assertSame(OnCommitAction::ONCOMMIT_DROP, $ast->getOncommit());
+        self::assertSame(0, $ast->getOncommit());
     }
 
     public function test_create_table_unlogged() : void
@@ -144,9 +144,7 @@ final class CreateTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertInstanceOf(CreateStmt::class, $ast);
-        // 2 columns + 2 constraints = 4 table elements
         self::assertCount(4, $ast->getTableElts());
-        // Last 2 elements should be constraints
         self::assertTrue($ast->getTableElts()[2]->hasConstraint());
         self::assertTrue($ast->getTableElts()[3]->hasConstraint());
     }
@@ -161,9 +159,7 @@ final class CreateTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertInstanceOf(CreateStmt::class, $ast);
-        // 2 columns + 1 constraint = 3 table elements
         self::assertCount(3, $ast->getTableElts());
-        // Last element should be the foreign key constraint
         self::assertTrue($ast->getTableElts()[2]->hasConstraint());
     }
 

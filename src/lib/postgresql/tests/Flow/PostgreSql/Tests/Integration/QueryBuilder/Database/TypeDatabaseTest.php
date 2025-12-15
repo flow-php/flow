@@ -8,13 +8,13 @@ use function Flow\PostgreSql\DSL\{
     alter,
     column,
     create,
+    data_type_serial,
+    data_type_varchar,
     drop,
     insert,
     literal,
     primary_key,
     select,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table
 };
@@ -164,9 +164,9 @@ final class TypeDatabaseTest extends DatabaseTestCase
         $result = $this->execute(
             create()->compositeType(self::COMPOSITE_TYPE)
                 ->attributes(
-                    TypeAttribute::of('street', sql_type_varchar(100)),
-                    TypeAttribute::of('city', sql_type_varchar(50)),
-                    TypeAttribute::of('postal_code', sql_type_varchar(20))
+                    TypeAttribute::of('street', data_type_varchar(100)),
+                    TypeAttribute::of('city', data_type_varchar(50)),
+                    TypeAttribute::of('postal_code', data_type_varchar(20))
                 )
                 ->toSql()
         );
@@ -180,16 +180,16 @@ final class TypeDatabaseTest extends DatabaseTestCase
         $this->execute(
             create()->compositeType(self::COMPOSITE_TYPE)
                 ->attributes(
-                    TypeAttribute::of('street', sql_type_varchar(100)),
-                    TypeAttribute::of('city', sql_type_varchar(50))
+                    TypeAttribute::of('street', data_type_varchar(100)),
+                    TypeAttribute::of('city', data_type_varchar(50))
                 )
                 ->toSql()
         );
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100)))
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100)))
                 ->column(column('address', DataType::custom(self::COMPOSITE_TYPE)))
                 ->constraint(primary_key('id'))
                 ->toSql()
@@ -232,7 +232,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
+                ->column(column('id', data_type_serial()))
                 ->column(column('status', DataType::custom(self::ENUM_TYPE))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
@@ -295,7 +295,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
+                ->column(column('id', data_type_serial()))
                 ->column(column('status', DataType::custom(self::ENUM_TYPE)))
                 ->constraint(primary_key('id'))
                 ->toSql()

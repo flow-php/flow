@@ -6,6 +6,13 @@ namespace Flow\PostgreSql\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PostgreSql\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
+use Flow\PostgreSql\Client;
+use Flow\PostgreSql\Client\{ConnectionParameters, RowMapper, TypedValue};
+use Flow\PostgreSql\Client\DsnParser;
+use Flow\PostgreSql\Client\Exception\ConnectionException;
+use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
+use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
+use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
 use Flow\PostgreSql\Extractors\{Columns, Functions, Tables};
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -119,7 +126,8 @@ use Flow\PostgreSql\QueryBuilder\Table\{
     Lateral,
     Table,
     TableFunction,
-    TableReference
+    TableReference,
+    ValuesTable
 };
 use Flow\PostgreSql\QueryBuilder\Transaction\{
     BeginBuilder,
@@ -156,6 +164,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\{
     VacuumFinalStep
 };
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
+use Flow\Types\Type;
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function sql_parser() : Parser
@@ -455,10 +464,6 @@ function sql_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateB
     return sql_parse($sql)->toQueryBuilder();
 }
 
-// ----------------------------------------------------------------------------
-// Expressions
-// ----------------------------------------------------------------------------
-
 /**
  * Create a column reference expression.
  *
@@ -660,12 +665,267 @@ function least(Expression ...$expressions) : Least
  * Create a type cast expression.
  *
  * @param Expression $expr Expression to cast
- * @param string $type Target type name (can include schema like "pg_catalog.int4")
+ * @param DataType $dataType Target data type (use data_type_* functions)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function cast(Expression $expr, string $type) : TypeCast
+function cast(Expression $expr, DataType $dataType) : TypeCast
 {
-    return new TypeCast($expr, QualifiedIdentifier::parse($type)->parts());
+    return new TypeCast($expr, $dataType);
+}
+
+/**
+ * Create an integer data type (PostgreSQL int4).
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_integer() : DataType
+{
+    return DataType::integer();
+}
+
+/**
+ * Create a smallint data type (PostgreSQL int2).
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_smallint() : DataType
+{
+    return DataType::smallint();
+}
+
+/**
+ * Create a bigint data type (PostgreSQL int8).
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_bigint() : DataType
+{
+    return DataType::bigint();
+}
+
+/**
+ * Create a boolean data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_boolean() : DataType
+{
+    return DataType::boolean();
+}
+
+/**
+ * Create a text data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_text() : DataType
+{
+    return DataType::text();
+}
+
+/**
+ * Create a varchar data type with length constraint.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_varchar(int $length) : DataType
+{
+    return DataType::varchar($length);
+}
+
+/**
+ * Create a char data type with length constraint.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_char(int $length) : DataType
+{
+    return DataType::char($length);
+}
+
+/**
+ * Create a numeric data type with optional precision and scale.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_numeric(?int $precision = null, ?int $scale = null) : DataType
+{
+    return DataType::numeric($precision, $scale);
+}
+
+/**
+ * Create a decimal data type with optional precision and scale.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_decimal(?int $precision = null, ?int $scale = null) : DataType
+{
+    return DataType::decimal($precision, $scale);
+}
+
+/**
+ * Create a real data type (PostgreSQL float4).
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_real() : DataType
+{
+    return DataType::real();
+}
+
+/**
+ * Create a double precision data type (PostgreSQL float8).
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_double_precision() : DataType
+{
+    return DataType::doublePrecision();
+}
+
+/**
+ * Create a date data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_date() : DataType
+{
+    return DataType::date();
+}
+
+/**
+ * Create a time data type with optional precision.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_time(?int $precision = null) : DataType
+{
+    return DataType::time($precision);
+}
+
+/**
+ * Create a timestamp data type with optional precision.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_timestamp(?int $precision = null) : DataType
+{
+    return DataType::timestamp($precision);
+}
+
+/**
+ * Create a timestamp with time zone data type with optional precision.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_timestamptz(?int $precision = null) : DataType
+{
+    return DataType::timestamptz($precision);
+}
+
+/**
+ * Create an interval data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_interval() : DataType
+{
+    return DataType::interval();
+}
+
+/**
+ * Create a UUID data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_uuid() : DataType
+{
+    return DataType::uuid();
+}
+
+/**
+ * Create a JSON data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_json() : DataType
+{
+    return DataType::json();
+}
+
+/**
+ * Create a JSONB data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_jsonb() : DataType
+{
+    return DataType::jsonb();
+}
+
+/**
+ * Create a bytea data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_bytea() : DataType
+{
+    return DataType::bytea();
+}
+
+/**
+ * Create an inet data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_inet() : DataType
+{
+    return DataType::inet();
+}
+
+/**
+ * Create a cidr data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_cidr() : DataType
+{
+    return DataType::cidr();
+}
+
+/**
+ * Create a macaddr data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_macaddr() : DataType
+{
+    return DataType::macaddr();
+}
+
+/**
+ * Create a serial data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_serial() : DataType
+{
+    return DataType::serial();
+}
+
+/**
+ * Create a smallserial data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_smallserial() : DataType
+{
+    return DataType::smallserial();
+}
+
+/**
+ * Create a bigserial data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_bigserial() : DataType
+{
+    return DataType::bigserial();
+}
+
+/**
+ * Create an array data type from an element type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_array(DataType $elementType) : DataType
+{
+    return DataType::array($elementType);
+}
+
+/**
+ * Create a custom data type.
+ *
+ * @param string $typeName Type name
+ * @param null|string $schema Optional schema name
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function data_type_custom(string $typeName, ?string $schema = null) : DataType
+{
+    return DataType::custom($typeName, $schema);
 }
 
 /**
@@ -899,7 +1159,7 @@ function any_sub_select(Expression $left, ComparisonOperator $operator, SelectFi
  * Create an ALL condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function all_sub_selects(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : All
+function all_sub_select(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : All
 {
     $node = new Node();
     $node->setSelectStmt($subquery->toAst());
@@ -945,6 +1205,33 @@ function cond_not(Condition $condition) : NotCondition
 function raw_cond(string $sql) : RawCondition
 {
     return new RawCondition($sql);
+}
+
+/**
+ * Create a TRUE condition for WHERE clauses.
+ *
+ * Useful when you need a condition that always evaluates to true.
+ *
+ * Example: select(literal(1))->where(cond_true()) // SELECT 1 WHERE true
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function cond_true() : RawCondition
+{
+    return new RawCondition('true');
+}
+
+/**
+ * Create a FALSE condition for WHERE clauses.
+ *
+ * Useful when you need a condition that always evaluates to false,
+ * typically for testing or to return an empty result set.
+ *
+ * Example: select(literal(1))->where(cond_false()) // SELECT 1 WHERE false
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function cond_false() : RawCondition
+{
+    return new RawCondition('false');
 }
 
 /**
@@ -1163,10 +1450,6 @@ function text_search_match(Expression $document, Expression $query) : OperatorCo
     return new OperatorCondition($document, '@@', $query);
 }
 
-// ----------------------------------------------------------------------------
-// Table References
-// ----------------------------------------------------------------------------
-
 /**
  * Create a table reference.
  *
@@ -1223,9 +1506,24 @@ function table_func(FunctionCall $function, bool $withOrdinality = false) : Tabl
     return new TableFunction($function, $withOrdinality);
 }
 
-// ----------------------------------------------------------------------------
-// Clauses
-// ----------------------------------------------------------------------------
+/**
+ * Create a VALUES clause as a table reference.
+ *
+ * Usage:
+ *   select()->from(
+ *       values_table(
+ *           row_expr([literal(1), literal('Alice')]),
+ *           row_expr([literal(2), literal('Bob')])
+ *       )->as('t', ['id', 'name'])
+ *   )
+ *
+ * Generates: SELECT * FROM (VALUES (1, 'Alice'), (2, 'Bob')) AS t(id, name)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function values_table(RowExpression ...$rows) : ValuesTable
+{
+    return new ValuesTable($rows);
+}
 
 /**
  * Create an ORDER BY item.
@@ -1454,10 +1752,6 @@ function returning_all() : ReturningClause
     return ReturningClause::all();
 }
 
-// ----------------------------------------------------------------------------
-// Transaction Commands
-// ----------------------------------------------------------------------------
-
 /**
  * Create a BEGIN transaction builder.
  *
@@ -1590,275 +1884,6 @@ function rollback_prepared(string $transactionId) : PreparedTransactionFinalStep
     return PreparedTransactionBuilder::rollbackPrepared($transactionId);
 }
 
-// ----------------------------------------------------------------------------
-// SQL Data Types
-// ----------------------------------------------------------------------------
-
-/**
- * Create an INTEGER data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_integer() : DataType
-{
-    return DataType::integer();
-}
-
-/**
- * Create a BIGINT data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_bigint() : DataType
-{
-    return DataType::bigint();
-}
-
-/**
- * Create a SMALLINT data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_smallint() : DataType
-{
-    return DataType::smallint();
-}
-
-/**
- * Create a SERIAL (auto-incrementing integer) data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_serial() : DataType
-{
-    return DataType::serial();
-}
-
-/**
- * Create a BIGSERIAL (auto-incrementing bigint) data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_bigserial() : DataType
-{
-    return DataType::bigserial();
-}
-
-/**
- * Create a SMALLSERIAL (auto-incrementing smallint) data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_smallserial() : DataType
-{
-    return DataType::smallserial();
-}
-
-/**
- * Create a TEXT data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_text() : DataType
-{
-    return DataType::text();
-}
-
-/**
- * Create a VARCHAR data type.
- *
- * @param int $length Maximum character length
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_varchar(int $length) : DataType
-{
-    return DataType::varchar($length);
-}
-
-/**
- * Create a CHAR data type.
- *
- * @param int $length Fixed character length
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_char(int $length) : DataType
-{
-    return DataType::char($length);
-}
-
-/**
- * Create a BOOLEAN data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_boolean() : DataType
-{
-    return DataType::boolean();
-}
-
-/**
- * Create a DATE data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_date() : DataType
-{
-    return DataType::date();
-}
-
-/**
- * Create a TIME data type.
- *
- * @param null|int $precision Fractional seconds precision
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_time(?int $precision = null) : DataType
-{
-    return DataType::time($precision);
-}
-
-/**
- * Create a TIMESTAMP data type.
- *
- * @param null|int $precision Fractional seconds precision
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_timestamp(?int $precision = null) : DataType
-{
-    return DataType::timestamp($precision);
-}
-
-/**
- * Create a TIMESTAMP WITH TIME ZONE data type.
- *
- * @param null|int $precision Fractional seconds precision
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_timestamptz(?int $precision = null) : DataType
-{
-    return DataType::timestamptz($precision);
-}
-
-/**
- * Create an INTERVAL data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_interval() : DataType
-{
-    return DataType::interval();
-}
-
-/**
- * Create a NUMERIC data type.
- *
- * @param null|int $precision Total number of digits
- * @param null|int $scale Number of digits after decimal point
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_numeric(?int $precision = null, ?int $scale = null) : DataType
-{
-    return DataType::numeric($precision, $scale);
-}
-
-/**
- * Create a DECIMAL data type (alias for NUMERIC).
- *
- * @param null|int $precision Total number of digits
- * @param null|int $scale Number of digits after decimal point
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_decimal(?int $precision = null, ?int $scale = null) : DataType
-{
-    return DataType::decimal($precision, $scale);
-}
-
-/**
- * Create a REAL data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_real() : DataType
-{
-    return DataType::real();
-}
-
-/**
- * Create a DOUBLE PRECISION data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_double() : DataType
-{
-    return DataType::doublePrecision();
-}
-
-/**
- * Create a UUID data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_uuid() : DataType
-{
-    return DataType::uuid();
-}
-
-/**
- * Create a JSON data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_json() : DataType
-{
-    return DataType::json();
-}
-
-/**
- * Create a JSONB data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_jsonb() : DataType
-{
-    return DataType::jsonb();
-}
-
-/**
- * Create a BYTEA data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_bytea() : DataType
-{
-    return DataType::bytea();
-}
-
-/**
- * Create an INET data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_inet() : DataType
-{
-    return DataType::inet();
-}
-
-/**
- * Create a CIDR data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_cidr() : DataType
-{
-    return DataType::cidr();
-}
-
-/**
- * Create a MACADDR data type.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_macaddr() : DataType
-{
-    return DataType::macaddr();
-}
-
-/**
- * Create an ARRAY data type.
- *
- * @param DataType $elementType The type of array elements
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_type_array(DataType $elementType) : DataType
-{
-    return DataType::array($elementType);
-}
-
-// ----------------------------------------------------------------------------
-// Column Definitions
-// ----------------------------------------------------------------------------
-
 /**
  * Create a column definition for CREATE TABLE.
  *
@@ -1870,10 +1895,6 @@ function column(string $name, DataType $type) : ColumnDefinition
 {
     return ColumnDefinition::create($name, $type);
 }
-
-// ----------------------------------------------------------------------------
-// Table Constraints
-// ----------------------------------------------------------------------------
 
 /**
  * Create a PRIMARY KEY constraint.
@@ -1921,10 +1942,6 @@ function check_constraint(string $expression) : CheckConstraint
     return CheckConstraint::create($expression);
 }
 
-// ----------------------------------------------------------------------------
-// DDL Factory Entry Points
-// ----------------------------------------------------------------------------
-
 /**
  * Create a factory for building CREATE statements.
  *
@@ -1947,7 +1964,7 @@ function check_constraint(string $expression) : CheckConstraint
  * - create()->rangeType() - CREATE TYPE (range)
  * - create()->domain() - CREATE DOMAIN
  *
- * Example: create()->table('users')->columns(col_def('id', sql_type_serial()))
+ * Example: create()->table('users')->columns(col_def('id', data_type_serial()))
  * Example: create()->index('idx_email')->on('users')->columns('email')
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
@@ -2010,7 +2027,7 @@ function drop() : DropFactory
  * - alter()->role('old')->renameTo('new')
  * - alter()->trigger('old')->on('table')->renameTo('new')
  *
- * Example: alter()->table('users')->addColumn(col_def('email', sql_type_text()))
+ * Example: alter()->table('users')->addColumn(col_def('email', data_type_text()))
  * Example: alter()->sequence('user_id_seq')->restart(1000)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
@@ -2047,10 +2064,6 @@ function refresh_materialized_view(string $name, ?string $schema = null) : Refre
 {
     return RefreshMaterializedViewBuilder::create($name, $schema);
 }
-
-// ----------------------------------------------------------------------------
-// Referential Actions (for Foreign Keys)
-// ----------------------------------------------------------------------------
 
 /**
  * Get a CASCADE referential action.
@@ -2241,10 +2254,6 @@ function index_method_brin() : IndexMethod
     return IndexMethod::BRIN;
 }
 
-// ----------------------------------------------------------------------------
-// Utility Commands
-// ----------------------------------------------------------------------------
-
 /**
  * Create a VACUUM builder.
  *
@@ -2336,10 +2345,6 @@ function discard(DiscardType $type) : DiscardFinalStep
     return DiscardBuilder::create($type);
 }
 
-// ----------------------------------------------------------------------------
-// Grant/Revoke Commands
-// ----------------------------------------------------------------------------
-
 /**
  * Create a GRANT privileges builder.
  *
@@ -2416,10 +2421,6 @@ function revoke_role(string ...$roles) : RevokeRoleFromStep
     return RevokeRoleBuilder::create(...$roles);
 }
 
-// ----------------------------------------------------------------------------
-// Session Commands
-// ----------------------------------------------------------------------------
-
 /**
  * Create a SET ROLE builder.
  *
@@ -2449,10 +2450,6 @@ function reset_role() : ResetRoleFinalStep
 {
     return ResetRoleBuilder::create();
 }
-
-// ----------------------------------------------------------------------------
-// Ownership Commands
-// ----------------------------------------------------------------------------
 
 /**
  * Create a REASSIGN OWNED builder.
@@ -2489,17 +2486,13 @@ function drop_owned(string ...$roles) : DropOwnedFinalStep
     return DropOwnedBuilder::create(...$roles);
 }
 
-// =====================================================
-// Function and Procedure Helpers
-// =====================================================
-
 /**
  * Creates a new function argument for use in function/procedure definitions.
  *
- * Example: func_arg(sql_type_integer())
- * Example: func_arg(sql_type_text())->named('username')
- * Example: func_arg(sql_type_integer())->named('count')->default('0')
- * Example: func_arg(sql_type_text())->out()
+ * Example: func_arg(data_type_integer())
+ * Example: func_arg(data_type_text())->named('username')
+ * Example: func_arg(data_type_integer())->named('count')->default('0')
+ * Example: func_arg(data_type_text())->out()
  *
  * @param DataType $type The PostgreSQL data type for the argument
  *
@@ -2549,17 +2542,13 @@ function do_block(string $code) : DoFinalStep
     return DoBuilder::create($code);
 }
 
-// =====================================================
-// Type Helpers
-// =====================================================
-
 /**
  * Creates a type attribute for composite types.
  *
- * Example: type_attr('name', sql_type_text())
+ * Example: type_attr('name', data_type_text())
  * Produces: name text
  *
- * Example: type_attr('description', sql_type_text())->collate('en_US')
+ * Example: type_attr('description', data_type_text())->collate('en_US')
  * Produces: description text COLLATE "en_US"
  *
  * @param string $name The attribute name
@@ -2571,4 +2560,173 @@ function do_block(string $code) : DoFinalStep
 function type_attr(string $name, DataType $type) : TypeAttribute
 {
     return TypeAttribute::of($name, $type);
+}
+
+/**
+ * Create connection parameters from a connection string.
+ *
+ * Accepts libpq-style connection strings:
+ * - Key-value format: "host=localhost port=5432 dbname=mydb user=myuser password=secret"
+ * - URI format: "postgresql://user:password@localhost:5432/dbname"
+ *
+ * @example
+ * $params = pgsql_connection('host=localhost dbname=mydb');
+ * $params = pgsql_connection('postgresql://user:pass@localhost/mydb');
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_connection(string $connectionString) : ConnectionParameters
+{
+    return ConnectionParameters::fromString($connectionString);
+}
+
+/**
+ * Create connection parameters from a DSN string.
+ *
+ * Parses standard PostgreSQL DSN format commonly used in environment variables
+ * (e.g., DATABASE_URL). Supports postgres://, postgresql://, and pgsql:// schemes.
+ *
+ * @param string $dsn DSN string in format: postgres://user:password@host:port/database?options
+ *
+ * @throws Client\DsnParserException If the DSN cannot be parsed
+ *
+ * @example
+ * $params = pgsql_connection_dsn('postgres://myuser:secret@localhost:5432/mydb');
+ * $params = pgsql_connection_dsn('postgresql://user:pass@db.example.com/app?sslmode=require');
+ * $params = pgsql_connection_dsn('pgsql://user:pass@localhost/mydb'); // Symfony/Doctrine format
+ * $params = pgsql_connection_dsn(getenv('DATABASE_URL'));
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_connection_dsn(#[\SensitiveParameter] string $dsn) : ConnectionParameters
+{
+    return (new DsnParser())->parse($dsn);
+}
+
+/**
+ * Create connection parameters from individual values.
+ *
+ * Allows specifying connection parameters individually for better type safety
+ * and IDE support.
+ *
+ * @param string $database Database name (required)
+ * @param string $host Hostname (default: localhost)
+ * @param int $port Port number (default: 5432)
+ * @param null|string $user Username (optional)
+ * @param null|string $password Password (optional)
+ * @param array<string, string> $options Additional libpq options
+ *
+ * @example
+ * $params = pgsql_connection_params(
+ *     database: 'mydb',
+ *     host: 'localhost',
+ *     user: 'myuser',
+ *     password: 'secret',
+ * );
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_connection_params(
+    string $database,
+    string $host = 'localhost',
+    int $port = 5432,
+    ?string $user = null,
+    ?string $password = null,
+    array $options = [],
+) : ConnectionParameters {
+    return ConnectionParameters::fromParams(
+        database: $database,
+        host: $host,
+        port: $port,
+        user: $user,
+        password: $password,
+        options: $options,
+    );
+}
+
+/**
+ * Create a PostgreSQL client using ext-pgsql.
+ *
+ * The client connects immediately and is ready to execute queries.
+ * For object mapping, provide a RowMapper (use pgsql_mapper() for the default).
+ *
+ * @param Client\ConnectionParameters $params Connection parameters
+ * @param null|ValueConverters $valueConverters Custom type converters (optional)
+ * @param null|Client\RowMapper $mapper Row mapper for object hydration (optional)
+ *
+ * @throws ConnectionException If connection fails
+ *
+ * @example
+ * // Basic client
+ * $client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
+ *
+ * // With object mapping
+ * $client = pgsql_client(
+ *     pgsql_connection('host=localhost dbname=mydb'),
+ *     mapper: pgsql_mapper(),
+ * );
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_client(
+    ConnectionParameters $params,
+    ?ValueConverters $valueConverters = null,
+    ?RowMapper $mapper = null,
+) : Client\Client {
+    return PgSqlClient::connect($params, $valueConverters, $mapper);
+}
+
+/**
+ * Create a default constructor-based row mapper.
+ *
+ * Maps database rows directly to constructor parameters.
+ * Column names must match parameter names exactly (1:1).
+ * Use SQL aliases if column names differ from parameter names.
+ *
+ * @example
+ * // DTO where column names match parameter names
+ * readonly class User {
+ *     public function __construct(
+ *         public int $id,
+ *         public string $name,
+ *         public string $email,
+ *     ) {}
+ * }
+ *
+ * // Usage
+ * $client = pgsql_client(pgsql_connection('...'), mapper: pgsql_mapper());
+ *
+ * // For snake_case columns, use SQL aliases
+ * $user = $client->fetchInto(
+ *     User::class,
+ *     'SELECT id, user_name AS name, user_email AS email FROM users WHERE id = $1',
+ *     [1]
+ * );
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_mapper() : ConstructorMapper
+{
+    return new ConstructorMapper();
+}
+
+/**
+ * Wrap a value with explicit type for parameter binding.
+ *
+ * Use when auto-detection isn't sufficient, e.g.:
+ * - String that should be UUID
+ * - String that should be JSON
+ * - DateTime that should be DATE (not TIMESTAMP)
+ *
+ * @param mixed $value The value to bind
+ * @param Type<mixed> $type The Flow type to use for conversion
+ *
+ * @example
+ * $client->fetch(
+ *     'SELECT * FROM users WHERE id = $1 AND metadata = $2',
+ *     [
+ *         typed('550e8400-e29b-41d4-a716-446655440000', type_uuid()),
+ *         typed('{"key": "value"}', type_json()),
+ *     ]
+ * );
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function typed(mixed $value, Type $type) : TypedValue
+{
+    return new TypedValue($value, $type);
 }

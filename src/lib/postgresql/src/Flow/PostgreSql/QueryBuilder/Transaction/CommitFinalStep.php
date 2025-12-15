@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface CommitFinalStep
+interface CommitFinalStep extends SqlQuery
 {
     public function toAst() : TransactionStmt;
 

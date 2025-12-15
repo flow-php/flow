@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Factory;
 
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\CreateSequence\{CreateSequenceBuilder, CreateSequenceOptionsStep};
-use Flow\PostgreSql\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep};
+use Flow\PostgreSql\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep, CreateTemporaryTableColumnsStep};
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
 use Flow\PostgreSql\QueryBuilder\Schema\Domain\{CreateDomainBuilder, CreateDomainTypeStep};
 use Flow\PostgreSql\QueryBuilder\Schema\Extension\{CreateExtensionBuilder, CreateExtensionOptionsStep};
@@ -114,6 +114,22 @@ final readonly class CreateFactory
         $identifier = QualifiedIdentifier::parse($table);
 
         return CreateTableAsBuilder::create($identifier->name(), $query, $identifier->schema());
+    }
+
+    public function temporarySequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
+    {
+        return CreateSequenceBuilder::createTemporary()->sequence($name, $schema);
+    }
+
+    public function temporaryTable(string $table, ?string $schema = null) : CreateTemporaryTableColumnsStep
+    {
+        if ($schema !== null) {
+            return CreateTableBuilder::createTemporary($table, $schema);
+        }
+
+        $identifier = QualifiedIdentifier::parse($table);
+
+        return CreateTableBuilder::createTemporary($identifier->name(), $identifier->schema());
     }
 
     public function trigger(string $name) : CreateTriggerTimingStep

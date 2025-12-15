@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Insert;
 
 use Flow\PostgreSql\Protobuf\AST\InsertStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
 /**
  * Terminal interface for INSERT query builder.
  */
-interface InsertFinalStep
+interface InsertFinalStep extends SqlQuery
 {
     /**
      * Convert this INSERT query to protobuf AST.

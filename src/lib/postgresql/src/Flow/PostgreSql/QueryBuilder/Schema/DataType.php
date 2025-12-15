@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema;
 
 use Flow\PostgreSql\Protobuf\AST\{A_Const, Integer, Node, PBString, TypeName};
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class DataType
 {
@@ -81,6 +82,61 @@ final readonly class DataType
     public static function doublePrecision() : self
     {
         return new self(['pg_catalog', 'float8']);
+    }
+
+    public static function fromAst(TypeName $typeName) : self
+    {
+        $namesNodes = $typeName->getNames();
+
+        if ($namesNodes === null || \count($namesNodes) === 0) {
+            throw InvalidAstException::missingRequiredField('names', 'TypeName');
+        }
+
+        $names = [];
+
+        foreach ($namesNodes as $nameNode) {
+            $stringNode = $nameNode->getString();
+
+            if ($stringNode === null) {
+                throw InvalidAstException::invalidFieldValue('names', 'TypeName', 'expected String node');
+            }
+
+            $names[] = $stringNode->getSval();
+        }
+
+        $typmods = [];
+        $typmodsNodes = $typeName->getTypmods();
+
+        foreach ($typmodsNodes as $typmodNode) {
+            $aConst = $typmodNode->getAConst();
+
+            if ($aConst !== null) {
+                $ival = $aConst->getIval();
+
+                if ($ival !== null) {
+                    /** @phpstan-ignore method.nonObject (protobuf PHPDoc says int but getIval() actually returns Integer object) */
+                    $typmods[] = $ival->getIval();
+                }
+            }
+        }
+
+        $arrayBounds = [];
+        $arrayBoundsNodes = $typeName->getArrayBounds();
+
+        foreach ($arrayBoundsNodes as $boundNode) {
+            $aConst = $boundNode->getAConst();
+
+            if ($aConst !== null) {
+                $ival = $aConst->getIval();
+
+                if ($ival !== null) {
+                    /** @phpstan-ignore method.nonObject (protobuf PHPDoc says int but getIval() actually returns Integer object) */
+                    $arrayBounds[] = $ival->getIval();
+                }
+            }
+        }
+
+        return new self($names, $typmods, $arrayBounds);
     }
 
     public static function inet() : self

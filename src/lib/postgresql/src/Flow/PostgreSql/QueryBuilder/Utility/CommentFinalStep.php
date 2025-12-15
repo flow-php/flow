@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\CommentStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface CommentFinalStep
+interface CommentFinalStep extends SqlQuery
 {
     public function is(string $comment) : self;
 

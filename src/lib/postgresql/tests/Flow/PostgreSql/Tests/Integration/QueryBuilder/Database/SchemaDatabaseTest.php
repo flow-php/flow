@@ -8,13 +8,13 @@ use function Flow\PostgreSql\DSL\{
     alter,
     column,
     create,
+    data_type_serial,
+    data_type_varchar,
     drop,
     insert,
     literal,
     primary_key,
     select,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table
 };
@@ -125,8 +125,8 @@ final class SchemaDatabaseTest extends DatabaseTestCase
 
         $result = $this->execute(
             create()->table(self::TABLE_NAME, self::SCHEMA_NAME)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100))->notNull())
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
@@ -191,7 +191,7 @@ final class SchemaDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME, self::SCHEMA_NAME)
-                ->column(column('id', sql_type_serial()))
+                ->column(column('id', data_type_serial()))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );

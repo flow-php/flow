@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{alter, create, drop, sql_type_text, type_attr};
+use function Flow\PostgreSql\DSL\{alter, create, data_type_text, drop, type_attr};
 
 final class TypeBuilderTest extends PGQueryTestCase
 {
@@ -68,9 +68,9 @@ final class TypeBuilderTest extends PGQueryTestCase
     {
         $builder = create()->compositeType('address')
             ->attributes(
-                type_attr('street', sql_type_text()),
-                type_attr('city', sql_type_text()),
-                type_attr('zip', sql_type_text())
+                type_attr('street', data_type_text()),
+                type_attr('city', data_type_text()),
+                type_attr('zip', data_type_text())
             );
 
         $this->assertCreateCompositeTypeQuery(
@@ -83,7 +83,7 @@ final class TypeBuilderTest extends PGQueryTestCase
     {
         $builder = create()->compositeType('person')
             ->attributes(
-                type_attr('name', sql_type_text())->collate('en_US')
+                type_attr('name', data_type_text())->collate('en_US')
             );
 
         $this->assertCreateCompositeTypeQuery(
@@ -96,7 +96,7 @@ final class TypeBuilderTest extends PGQueryTestCase
     {
         $builder = create()->compositeType('public.address')
             ->attributes(
-                type_attr('street', sql_type_text())
+                type_attr('street', data_type_text())
             );
 
         $this->assertCreateCompositeTypeQuery(

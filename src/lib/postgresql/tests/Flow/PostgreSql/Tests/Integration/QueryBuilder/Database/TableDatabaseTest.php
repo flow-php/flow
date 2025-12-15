@@ -9,13 +9,13 @@ use function Flow\PostgreSql\DSL\{
     check_constraint,
     column,
     create,
+    data_type_integer,
+    data_type_serial,
+    data_type_text,
+    data_type_varchar,
     drop,
     foreign_key,
     primary_key,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_text,
-    sql_type_varchar,
     truncate_table,
     unique_constraint
 };
@@ -40,12 +40,12 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_alter_table_add_column() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('name', sql_type_varchar(100)));
+            ->column(column('id', data_type_serial()))
+            ->column(column('name', data_type_varchar(100)));
         $this->execute($createQuery->toSql());
 
         $alterQuery = alter()->table(self::TABLE_TEST)
-            ->addColumn(column('email', sql_type_varchar(255)));
+            ->addColumn(column('email', data_type_varchar(255)));
 
         $result = $this->execute($alterQuery->toSql());
 
@@ -59,9 +59,9 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_alter_table_drop_column() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('name', sql_type_varchar(100)))
-            ->column(column('to_drop', sql_type_text()));
+            ->column(column('id', data_type_serial()))
+            ->column(column('name', data_type_varchar(100)))
+            ->column(column('to_drop', data_type_text()));
         $this->execute($createQuery->toSql());
 
         $alterQuery = alter()->table(self::TABLE_TEST)
@@ -79,8 +79,8 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_check_constraint() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('age', sql_type_integer()))
+            ->column(column('id', data_type_serial()))
+            ->column(column('age', data_type_integer()))
             ->constraint(check_constraint('age >= 0'));
 
         $result = $this->execute($query->toSql());
@@ -111,9 +111,9 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_columns() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('name', sql_type_varchar(100))->notNull())
-            ->column(column('description', sql_type_text()));
+            ->column(column('id', data_type_serial()))
+            ->column(column('name', data_type_varchar(100))->notNull())
+            ->column(column('description', data_type_text()));
 
         $result = $this->execute($query->toSql());
 
@@ -131,14 +131,14 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_foreign_key() : void
     {
         $parentQuery = create()->table(self::TABLE_PARENT)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('name', sql_type_varchar(100)))
+            ->column(column('id', data_type_serial()))
+            ->column(column('name', data_type_varchar(100)))
             ->constraint(primary_key('id'));
         $this->execute($parentQuery->toSql());
 
         $childQuery = create()->table(self::TABLE_CHILD)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('parent_id', sql_type_integer())->notNull())
+            ->column(column('id', data_type_serial()))
+            ->column(column('parent_id', data_type_integer())->notNull())
             ->constraint(foreign_key(['parent_id'], self::TABLE_PARENT, ['id']));
 
         $result = $this->execute($childQuery->toSql());
@@ -160,8 +160,8 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_primary_key() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_integer())->notNull())
-            ->column(column('name', sql_type_varchar(100)))
+            ->column(column('id', data_type_integer())->notNull())
+            ->column(column('name', data_type_varchar(100)))
             ->constraint(primary_key('id'));
 
         $result = $this->execute($query->toSql());
@@ -179,8 +179,8 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_unique_constraint() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('email', sql_type_varchar(255))->notNull())
+            ->column(column('id', data_type_serial()))
+            ->column(column('email', data_type_varchar(255))->notNull())
             ->constraint(unique_constraint('email'));
 
         $result = $this->execute($query->toSql());
@@ -198,7 +198,7 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_drop_table() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()));
+            ->column(column('id', data_type_serial()));
         $this->execute($createQuery->toSql());
 
         $dropQuery = drop()->table(self::TABLE_TEST);
@@ -215,8 +215,8 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_truncate_table() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', sql_type_serial()))
-            ->column(column('name', sql_type_varchar(100)));
+            ->column(column('id', data_type_serial()))
+            ->column(column('name', data_type_varchar(100)));
         $this->execute($createQuery->toSql());
 
         $this->execute('INSERT INTO ' . self::TABLE_TEST . " (name) VALUES ('test1'), ('test2')");

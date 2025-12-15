@@ -8,12 +8,12 @@ use function Flow\PostgreSql\DSL\{
     alter,
     column,
     create,
+    data_type_serial,
     drop,
     insert,
     literal,
     primary_key,
     select,
-    sql_type_serial,
     star,
     table
 };
@@ -167,7 +167,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
+                ->column(column('id', data_type_serial()))
                 ->column(column('email', DataType::custom(self::DOMAIN_NAME))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
@@ -258,7 +258,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
+                ->column(column('id', data_type_serial()))
                 ->column(column('email', DataType::custom(self::DOMAIN_NAME)))
                 ->constraint(primary_key('id'))
                 ->toSql()

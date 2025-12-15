@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\ClusterStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface ClusterFinalStep
+interface ClusterFinalStep extends SqlQuery
 {
     public function table(string $table) : self;
 

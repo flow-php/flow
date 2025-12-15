@@ -7,9 +7,9 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use function Flow\PostgreSql\DSL\{
     alter,
     create,
+    data_type_integer,
     drop,
-    func_arg,
-    sql_type_integer
+    func_arg
 };
 use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
@@ -35,7 +35,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT 42')
                 ->toSql()
@@ -58,7 +58,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT 42')
                 ->toSql()
@@ -95,10 +95,10 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $result = $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments(
-                    func_arg(sql_type_integer())->named('a'),
-                    func_arg(sql_type_integer())->named('b')
+                    func_arg(data_type_integer())->named('a'),
+                    func_arg(data_type_integer())->named('b')
                 )
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT a + b')
                 ->toSql()
@@ -116,10 +116,10 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $result = $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments(
-                    func_arg(sql_type_integer())->named('a'),
-                    func_arg(sql_type_integer())->named('b')->default('10')
+                    func_arg(data_type_integer())->named('a'),
+                    func_arg(data_type_integer())->named('b')->default('10')
                 )
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT a + b')
                 ->toSql()
@@ -139,7 +139,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $result = $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->parallel(ParallelSafety::SAFE)
                 ->as('SELECT 42')
@@ -155,7 +155,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $result = $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->immutable()
                 ->as('SELECT 42')
@@ -171,7 +171,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT 1')
                 ->toSql()
@@ -184,7 +184,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
             create()->function(self::FUNCTION_NAME)
                 ->orReplace()
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT 2')
                 ->toSql()
@@ -201,7 +201,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $result = $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT 42')
                 ->toSql()
@@ -219,7 +219,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         $this->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(sql_type_integer())
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT 42')
                 ->toSql()
@@ -248,8 +248,8 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     {
         $this->execute(
             create()->function(self::FUNCTION_NAME)
-                ->arguments(func_arg(sql_type_integer())->named('a'))
-                ->returns(sql_type_integer())
+                ->arguments(func_arg(data_type_integer())->named('a'))
+                ->returns(data_type_integer())
                 ->language('sql')
                 ->as('SELECT a * 2')
                 ->toSql()
@@ -257,7 +257,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
 
         $result = $this->execute(
             drop()->function(self::FUNCTION_NAME)
-                ->arguments(func_arg(sql_type_integer()))
+                ->arguments(func_arg(data_type_integer()))
                 ->toSql()
         );
 

@@ -63,7 +63,7 @@ final class NamedParameterNormalizerTest extends TestCase
         );
     }
 
-    public function test_normalize_preserves_postgresql_type_casts() : void
+    public function test_normalize_preserves_postgredata_type_casts() : void
     {
         $normalizer = new NamedParameterNormalizer();
 

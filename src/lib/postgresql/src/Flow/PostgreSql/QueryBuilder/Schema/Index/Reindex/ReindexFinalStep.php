@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\Reindex;
 
 use Flow\PostgreSql\Protobuf\AST\ReindexStmt;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface ReindexFinalStep
+interface ReindexFinalStep extends SqlQuery
 {
     public function concurrently() : self;
 

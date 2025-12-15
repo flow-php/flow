@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{alter,
+use function Flow\PostgreSql\DSL\{
+    alter,
     check_constraint,
     col,
     column,
     create,
+    data_type_boolean,
+    data_type_integer,
+    data_type_serial,
+    data_type_text,
+    data_type_timestamp,
+    data_type_varchar,
     drop,
     foreign_key,
     primary_key,
@@ -16,22 +23,17 @@ use function Flow\PostgreSql\DSL\{alter,
     ref_action_restrict,
     ref_action_set_null,
     select,
-    sql_type_boolean,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_text,
-    sql_type_timestamp,
-    sql_type_varchar,
     table,
     truncate_table,
-    unique_constraint};
+    unique_constraint
+};
 
 final class TableBuilderTest extends PGQueryTestCase
 {
     public function test_alter_table_add_column() : void
     {
         $builder = alter()->table('users')
-            ->addColumn(column('email', sql_type_varchar(255))->notNull());
+            ->addColumn(column('email', data_type_varchar(255))->notNull());
 
         $this->assertAlterTableQuery(
             $builder,
@@ -75,7 +77,7 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_alter_table_alter_column_type() : void
     {
         $builder = alter()->table('users')
-            ->alterColumnType('name', sql_type_text());
+            ->alterColumnType('name', data_type_text());
 
         $this->assertAlterTableQuery(
             $builder,
@@ -120,7 +122,7 @@ final class TableBuilderTest extends PGQueryTestCase
     {
         $builder = alter()->table('users')
             ->ifExists()
-            ->addColumn(column('email', sql_type_varchar(255)));
+            ->addColumn(column('email', data_type_varchar(255)));
 
         $this->assertAlterTableQuery(
             $builder,
@@ -131,7 +133,7 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_alter_table_multiple_operations() : void
     {
         $builder = alter()->table('users')
-            ->addColumn(column('phone', sql_type_varchar(20)))
+            ->addColumn(column('phone', data_type_varchar(20)))
             ->dropColumn('fax')
             ->alterColumnSetNotNull('email');
 
@@ -223,7 +225,7 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_alter_table_with_schema() : void
     {
         $builder = alter()->table('users', 'public')
-            ->addColumn(column('email', sql_type_varchar(255)));
+            ->addColumn(column('email', data_type_varchar(255)));
 
         $this->assertAlterTableQuery(
             $builder,
@@ -280,8 +282,8 @@ final class TableBuilderTest extends PGQueryTestCase
     {
         $builder = create()->table('users')
             ->ifNotExists()
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('name', sql_type_varchar(100)));
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('name', data_type_varchar(100)));
 
         $this->assertCreateTableQuery(
             $builder,
@@ -292,8 +294,8 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_simple() : void
     {
         $builder = create()->table('users')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('name', sql_type_varchar(100))->notNull());
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('name', data_type_varchar(100))->notNull());
 
         $this->assertCreateTableQuery(
             $builder,
@@ -304,8 +306,8 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_check_constraint() : void
     {
         $builder = create()->table('products')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('price', sql_type_integer()))
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('price', data_type_integer()))
             ->constraint(check_constraint('price > 0')->name('positive_price'));
 
         $this->assertCreateTableQuery(
@@ -317,8 +319,8 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_column_default() : void
     {
         $builder = create()->table('users')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('active', sql_type_boolean())->default(true));
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('active', data_type_boolean())->default(true));
 
         $this->assertCreateTableQuery(
             $builder,
@@ -329,9 +331,9 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_composite_primary_key() : void
     {
         $builder = create()->table('order_items')
-            ->column(column('order_id', sql_type_integer())->notNull())
-            ->column(column('product_id', sql_type_integer())->notNull())
-            ->column(column('quantity', sql_type_integer()))
+            ->column(column('order_id', data_type_integer())->notNull())
+            ->column(column('product_id', data_type_integer())->notNull())
+            ->column(column('quantity', data_type_integer()))
             ->constraint(primary_key('order_id', 'product_id'));
 
         $this->assertCreateTableQuery(
@@ -343,8 +345,8 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_foreign_key() : void
     {
         $builder = create()->table('orders')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('user_id', sql_type_integer())->notNull())
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('user_id', data_type_integer())->notNull())
             ->constraint(
                 foreign_key(['user_id'], 'users', ['id'])
                     ->onDelete(ref_action_cascade())
@@ -360,8 +362,8 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_foreign_key_set_null() : void
     {
         $builder = create()->table('comments')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('user_id', sql_type_integer()))
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('user_id', data_type_integer()))
             ->constraint(
                 foreign_key(['user_id'], 'users', ['id'])
                     ->onDelete(ref_action_set_null())
@@ -376,7 +378,7 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_schema() : void
     {
         $builder = create()->table('users', 'public')
-            ->column(column('id', sql_type_serial())->primaryKey());
+            ->column(column('id', data_type_serial())->primaryKey());
 
         $this->assertCreateTableQuery(
             $builder,
@@ -387,9 +389,9 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_timestamp() : void
     {
         $builder = create()->table('audit_log')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('created_at', sql_type_timestamp())->notNull())
-            ->column(column('updated_at', sql_type_timestamp()));
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('created_at', data_type_timestamp())->notNull())
+            ->column(column('updated_at', data_type_timestamp()));
 
         $this->assertCreateTableQuery(
             $builder,
@@ -400,8 +402,8 @@ final class TableBuilderTest extends PGQueryTestCase
     public function test_create_table_with_unique_constraint() : void
     {
         $builder = create()->table('users')
-            ->column(column('id', sql_type_serial())->primaryKey())
-            ->column(column('email', sql_type_varchar(255))->notNull())
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('email', data_type_varchar(255))->notNull())
             ->constraint(unique_constraint('email'));
 
         $this->assertCreateTableQuery(

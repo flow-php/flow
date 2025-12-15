@@ -7,8 +7,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
-interface AlterTableFinalStep
+interface AlterTableFinalStep extends SqlQuery
 {
     public function addColumn(ColumnDefinition $column) : self;
 

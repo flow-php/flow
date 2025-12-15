@@ -1,0 +1,75 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
+
+use PHPUnit\Framework\Attributes\DataProvider;
+
+final class StringConverterTest extends ConverterTestCase
+{
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function provide_char_values() : \Generator
+    {
+        yield 'padded' => ['test', 'test      '];
+        yield 'exact length' => ['1234567890', '1234567890'];
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function provide_text_values() : \Generator
+    {
+        yield 'simple string' => ['hello world', 'hello world'];
+        yield 'empty string' => ['', ''];
+        yield 'unicode' => ['こんにちは', 'こんにちは'];
+        yield 'emoji' => ['Hello 👋 World 🌍', 'Hello 👋 World 🌍'];
+        yield 'special chars' => ["O'Reilly", "O'Reilly"];
+        yield 'backslash' => ['path\\to\\file', 'path\\to\\file'];
+        yield 'newlines' => ["line1\nline2\nline3", "line1\nline2\nline3"];
+        yield 'tabs' => ["col1\tcol2\tcol3", "col1\tcol2\tcol3"];
+        yield 'quotes' => ['"quoted"', '"quoted"'];
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function provide_varchar_values() : \Generator
+    {
+        yield 'simple' => ['test', 'test'];
+        yield 'max length' => [\str_repeat('a', 255), \str_repeat('a', 255)];
+    }
+
+    #[DataProvider('provide_char_values')]
+    public function test_char_round_trip(string $input, string $expected) : void
+    {
+        $result = $this->fetchValue('SELECT $1::char(10) AS val', [$input]);
+
+        self::assertSame($expected, $result);
+    }
+
+    public function test_null_text() : void
+    {
+        $result = $this->fetchValue('SELECT NULL::text AS val');
+
+        self::assertNull($result);
+    }
+
+    #[DataProvider('provide_text_values')]
+    public function test_text_round_trip(string $input, string $expected) : void
+    {
+        $result = $this->fetchValue('SELECT $1::text AS val', [$input]);
+
+        self::assertSame($expected, $result);
+    }
+
+    #[DataProvider('provide_varchar_values')]
+    public function test_varchar_round_trip(string $input, string $expected) : void
+    {
+        $result = $this->fetchValue('SELECT $1::varchar(255) AS val', [$input]);
+
+        self::assertSame($expected, $result);
+    }
+}

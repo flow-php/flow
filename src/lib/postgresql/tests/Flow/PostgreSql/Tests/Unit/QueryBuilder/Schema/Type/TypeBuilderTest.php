@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Type;
 
-use function Flow\PostgreSql\DSL\{sql_type_text, sql_type_varchar};
+use function Flow\PostgreSql\DSL\{data_type_text, data_type_varchar};
 use Flow\PostgreSql\Protobuf\AST\{AlterEnumStmt, CompositeTypeStmt, CreateEnumStmt, CreateRangeStmt, DropBehavior, DropStmt, ObjectType};
 use Flow\PostgreSql\QueryBuilder\Schema\Type\{AlterEnumTypeBuilder, CreateCompositeTypeBuilder, CreateEnumTypeBuilder, CreateRangeTypeBuilder, DropTypeBuilder, TypeAttribute};
 
@@ -89,7 +89,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_ast_type() : void
     {
         $builder = CreateCompositeTypeBuilder::create('address')
-            ->attributes(TypeAttribute::of('street', sql_type_text()));
+            ->attributes(TypeAttribute::of('street', data_type_text()));
 
         $ast = $builder->toAst();
 
@@ -100,9 +100,9 @@ final class TypeBuilderTest extends TestCase
     {
         $builder = CreateCompositeTypeBuilder::create('address')
             ->attributes(
-                TypeAttribute::of('street', sql_type_text()),
-                TypeAttribute::of('city', sql_type_text()),
-                TypeAttribute::of('zip', sql_type_varchar(50))
+                TypeAttribute::of('street', data_type_text()),
+                TypeAttribute::of('city', data_type_text()),
+                TypeAttribute::of('zip', data_type_varchar(50))
             );
 
         $ast = $builder->toAst();
@@ -114,7 +114,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_sets_name() : void
     {
         $builder = CreateCompositeTypeBuilder::create('address')
-            ->attributes(TypeAttribute::of('street', sql_type_text()));
+            ->attributes(TypeAttribute::of('street', data_type_text()));
 
         $ast = $builder->toAst();
         $typevar = $ast->getTypevar();
@@ -126,7 +126,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_with_collation() : void
     {
         $builder = CreateCompositeTypeBuilder::create('address')
-            ->attributes(TypeAttribute::of('name', sql_type_text())->collate('en_US'));
+            ->attributes(TypeAttribute::of('name', data_type_text())->collate('en_US'));
 
         $ast = $builder->toAst();
         $coldeflist = $ast->getColdeflist();
@@ -141,7 +141,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_with_schema() : void
     {
         $builder = CreateCompositeTypeBuilder::create('public.address')
-            ->attributes(TypeAttribute::of('street', sql_type_text()));
+            ->attributes(TypeAttribute::of('street', data_type_text()));
 
         $ast = $builder->toAst();
         $typevar = $ast->getTypevar();

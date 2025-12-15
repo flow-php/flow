@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, PBString, TypeCast as AstTypeCast, TypeName};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\Protobuf\AST\{Node, TypeCast as AstTypeCast};
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Schema\DataType;
 
 /**
  * Represents a type cast expression: expr::type or CAST(expr AS type).
@@ -14,15 +15,12 @@ final readonly class TypeCast implements Expression
 {
     /**
      * @param Expression $expression Expression to cast
-     * @param non-empty-list<string> $typeName Type name parts (e.g., ['pg_catalog', 'int4'] or ['varchar'])
+     * @param DataType $dataType Target data type
      */
     public function __construct(
         private Expression $expression,
-        private array $typeName,
+        private DataType $dataType,
     ) {
-        if ($this->typeName === []) {
-            throw InvalidExpressionException::emptyArray('Type name');
-        }
     }
 
     public static function fromAst(Node $node) : static
@@ -47,29 +45,9 @@ final readonly class TypeCast implements Expression
             throw InvalidAstException::missingRequiredField('typeName', 'TypeCast');
         }
 
-        $namesNodes = $typeNameNode->getNames();
+        $dataType = DataType::fromAst($typeNameNode);
 
-        if ($namesNodes === null || \count($namesNodes) === 0) {
-            throw InvalidAstException::missingRequiredField('names', 'TypeName');
-        }
-
-        $typeName = [];
-
-        foreach ($namesNodes as $nameNode) {
-            $stringNode = $nameNode->getString();
-
-            if ($stringNode === null) {
-                throw InvalidAstException::invalidFieldValue('names', 'TypeName', 'expected String node');
-            }
-
-            $typeName[] = $stringNode->getSval();
-        }
-
-        if ($typeName === []) {
-            throw InvalidAstException::invalidFieldValue('names', 'TypeName', 'cannot be empty');
-        }
-
-        return new self($expression, $typeName);
+        return new self($expression, $dataType);
     }
 
     public function as(string $alias) : AliasedExpression
@@ -77,39 +55,21 @@ final readonly class TypeCast implements Expression
         return new AliasedExpression($this, $alias);
     }
 
+    public function getDataType() : DataType
+    {
+        return $this->dataType;
+    }
+
     public function getExpression() : Expression
     {
         return $this->expression;
     }
 
-    /**
-     * @return non-empty-list<string>
-     */
-    public function getTypeName() : array
-    {
-        return $this->typeName;
-    }
-
     public function toAst() : Node
     {
-        $typeName = new TypeName();
-        $namesNodes = [];
-
-        foreach ($this->typeName as $namePart) {
-            $stringNode = new PBString();
-            $stringNode->setSval($namePart);
-
-            $nameNode = new Node();
-            $nameNode->setString($stringNode);
-
-            $namesNodes[] = $nameNode;
-        }
-
-        $typeName->setNames($namesNodes);
-
         $typeCast = new AstTypeCast();
         $typeCast->setArg($this->expression->toAst());
-        $typeCast->setTypeName($typeName);
+        $typeCast->setTypeName($this->dataType->toAst());
 
         $node = new Node();
         $node->setTypeCast($typeCast);
@@ -117,19 +77,13 @@ final readonly class TypeCast implements Expression
         return $node;
     }
 
-    public function withExpression(Expression $expression) : self
+    public function withDataType(DataType $dataType) : self
     {
-        return new self($expression, $this->typeName);
+        return new self($this->expression, $dataType);
     }
 
-    public function withTypeName(string ...$typeName) : self
+    public function withExpression(Expression $expression) : self
     {
-        $typeNameList = \array_values($typeName);
-
-        if ($typeNameList === []) {
-            throw InvalidExpressionException::emptyArray('Type name');
-        }
-
-        return new self($this->expression, $typeNameList);
+        return new self($expression, $this->dataType);
     }
 }

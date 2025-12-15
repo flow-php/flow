@@ -8,15 +8,15 @@ use function Flow\PostgreSql\DSL\{
     alter,
     column,
     create,
+    data_type_integer,
+    data_type_serial,
+    data_type_varchar,
     drop,
     insert,
     literal,
     primary_key,
     raw_cond,
     select,
-    sql_type_integer,
-    sql_type_serial,
-    sql_type_varchar,
     star,
     table
 };
@@ -42,17 +42,17 @@ final class TriggerDatabaseTest extends DatabaseTestCase
 
         $this->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('name', sql_type_varchar(100))->notNull())
-                ->column(column('value', sql_type_integer())->default(0))
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('value', data_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
         $this->execute(
             create()->table(self::TABLE_LOG)
-                ->column(column('id', sql_type_serial()))
-                ->column(column('action', sql_type_varchar(50))->notNull())
+                ->column(column('id', data_type_serial()))
+                ->column(column('action', data_type_varchar(50))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );

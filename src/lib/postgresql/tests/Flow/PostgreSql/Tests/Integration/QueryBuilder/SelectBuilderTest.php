@@ -10,7 +10,7 @@ use function Flow\PostgreSql\DSL\{
     agg_max,
     agg_min,
     agg_sum,
-    all_sub_selects,
+    all_sub_select,
     any_sub_select,
     array_expr,
     asc,
@@ -24,6 +24,8 @@ use function Flow\PostgreSql\DSL\{
     cond_not,
     cond_or,
     cte,
+    data_type_integer,
+    data_type_text,
     derived,
     desc,
     eq,
@@ -162,7 +164,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(all_sub_selects(col('price'), ComparisonOperator::GT, $subquery));
+            ->where(all_sub_select(col('price'), ComparisonOperator::GT, $subquery));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -890,7 +892,7 @@ final class SelectBuilderTest extends PGQueryTestCase
                 col('name'),
                 col('manager_id'),
                 literal(0)->as('level'),
-                cast(col('name'), 'text')->as('path')
+                cast(col('name'), data_type_text())->as('path')
             )
             ->from(table('employees'))
             ->where(is_null(col('manager_id')));
@@ -993,7 +995,7 @@ final class SelectBuilderTest extends PGQueryTestCase
             );
 
         $expectedSql = <<<'SQL'
-            WITH RECURSIVE org_tree(id, name, manager_id, level, path) AS (SELECT id, name, manager_id, 0 AS level, name::text AS path FROM employees WHERE manager_id IS NULL UNION ALL SELECT e.id, e.name, e.manager_id, org_tree.level + 1, (org_tree.path || ' -> ') || e.name FROM employees e JOIN org_tree ON e.manager_id = org_tree.id), dept_stats(department_id, avg_salary, max_salary, employee_count) AS (SELECT department_id, avg(salary), max(salary), count(*) FROM employees GROUP BY department_id), ranked_employees(id, name, department_id, salary, salary_rank, pct_of_max) AS (SELECT e.id, e.name, e.department_id, e.salary, row_number() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC), round((e.salary / ds.max_salary) * 100, 2) FROM employees e JOIN dept_stats ds ON e.department_id = ds.department_id) SELECT org_tree.name AS employee, org_tree.level, org_tree.path AS reporting_chain, d.name AS department, re.salary, re.salary_rank, re.pct_of_max, ds.avg_salary AS dept_avg, CASE WHEN re.salary > ds.avg_salary THEN 'Above Average' ELSE 'At/Below Average' END AS salary_status FROM org_tree JOIN ranked_employees re ON org_tree.id = re.id JOIN dept_stats ds ON re.department_id = ds.department_id JOIN departments d ON re.department_id = d.id WHERE org_tree.level <= 3 AND re.salary_rank <= 5 ORDER BY org_tree.level ASC, d.name ASC, re.salary DESC
+            WITH RECURSIVE org_tree(id, name, manager_id, level, path) AS (SELECT id, name, manager_id, 0 AS level, name::pg_catalog.text AS path FROM employees WHERE manager_id IS NULL UNION ALL SELECT e.id, e.name, e.manager_id, org_tree.level + 1, (org_tree.path || ' -> ') || e.name FROM employees e JOIN org_tree ON e.manager_id = org_tree.id), dept_stats(department_id, avg_salary, max_salary, employee_count) AS (SELECT department_id, avg(salary), max(salary), count(*) FROM employees GROUP BY department_id), ranked_employees(id, name, department_id, salary, salary_rank, pct_of_max) AS (SELECT e.id, e.name, e.department_id, e.salary, row_number() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC), round((e.salary / ds.max_salary) * 100, 2) FROM employees e JOIN dept_stats ds ON e.department_id = ds.department_id) SELECT org_tree.name AS employee, org_tree.level, org_tree.path AS reporting_chain, d.name AS department, re.salary, re.salary_rank, re.pct_of_max, ds.avg_salary AS dept_avg, CASE WHEN re.salary > ds.avg_salary THEN 'Above Average' ELSE 'At/Below Average' END AS salary_status FROM org_tree JOIN ranked_employees re ON org_tree.id = re.id JOIN dept_stats ds ON re.department_id = ds.department_id JOIN departments d ON re.department_id = d.id WHERE org_tree.level <= 3 AND re.salary_rank <= 5 ORDER BY org_tree.level ASC, d.name ASC, re.salary DESC
             SQL;
 
         $this->assertSelectQueryRoundTrip($query, $expectedSql);
@@ -1095,13 +1097,13 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(
                 col('id'),
-                cast(col('price'), 'integer')->as('price_int')
+                cast(col('price'), data_type_integer())->as('price_int')
             )
             ->from(table('products'));
 
         $this->assertSelectQueryRoundTrip(
             $query,
-            'SELECT id, price::"integer" AS price_int FROM products'
+            'SELECT id, price::int AS price_int FROM products'
         );
     }
 
