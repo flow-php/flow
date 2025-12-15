@@ -32,7 +32,7 @@ jobs:
         run: "mkdir -p var/infection/cache"
 
       - name: "Cache infection results"
-        uses: "actions/cache@v4"
+        uses: "actions/cache@v5"
         with:
           path: "var/infection/cache"
           key: "php-${{ matrix.php-version }}-infection-cache-${{ hashFiles('infection.json', 'tools/infection/phpunit.xml', 'composer.lock') }}"
