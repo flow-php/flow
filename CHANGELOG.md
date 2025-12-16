@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-16
+## [Unreleased] - 2025-12-15
 
 ### Added
+- [#2084](https://github.com/flow-php/flow/pull/2084) - **optional playground link to bug.yml template** - [@norberttech](https://github.com/norberttech)
 - [#2083](https://github.com/flow-php/flow/pull/2083) - **Dedicated postgresql client interface to flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **Json value to flow-php/types** - [@norberttech](https://github.com/norberttech)
 - [#1906](https://github.com/flow-php/flow/pull/1906) - **support for php 8.5** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +26,7 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2082](https://github.com/flow-php/flow/pull/2082) - **Allow usage of newer "openspout/openspout"** - [@stloyd](https://github.com/stloyd)
 - [#2076](https://github.com/flow-php/flow/pull/2076) - **Break monolithic Definition into specific types definitions** - [@norberttech](https://github.com/norberttech)
 - [#2076](https://github.com/flow-php/flow/pull/2076) - **Improved types definitions in Entry interface and implementations** - [@norberttech](https://github.com/norberttech)
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **changed TypeJson from Type{string} into Type{Json}** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +43,7 @@
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2084](https://github.com/flow-php/flow/pull/2084) - **value functions in query builder** - [@norberttech](https://github.com/norberttech)
 - [3fb046](https://github.com/flow-php/flow/commit/3fb046eae182f08ae9b180f36f569e41e80ee508) - **building docker on github actions** - [@norberttech](https://github.com/norberttech)
 - [#2063](https://github.com/flow-php/flow/pull/2063) - **failing test on latest version of symfony in php 8.4** - [@norberttech](https://github.com/norberttech)
 - [#2048](https://github.com/flow-php/flow/pull/2048) - **headline links to navigate to specific section of page** - [@norberttech](https://github.com/norberttech)
