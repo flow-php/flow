@@ -6,6 +6,8 @@ It's designed to work together with static analysis tools like PHPStan and Psalm
 The main goal of this library is to simplify common type-related tasks, such as type checking, type casting, and type assertion.
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/types)
+- [🐙GitHub](https://github.com/flow-php/types)
 - [📖Architecture](/documentation/components/libs/types/architecture.md)
 - [📚API Reference](/documentation/api/lib/types)
 - [🗺DSL](/documentation/api/lib/types/namespaces/flow-types-dsl.html) 

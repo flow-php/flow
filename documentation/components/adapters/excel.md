@@ -1,6 +1,8 @@
 # Excel Adapter 
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-excel)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-excel)
 - [📚API Reference](/documentation/api/adapter/excel)
 - [📁Files](/documentation/api/adapter/excel/indices/files.html)
 

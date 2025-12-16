@@ -1,6 +1,8 @@
 # Symfony Http Foundation Bridge
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/symfony-http-foundation-bridge)
+- [🐙GitHub](https://github.com/flow-php/symfony-http-foundation-bridge)
 - [📚API Reference](/documentation/api/bridge/symfony/http-foundation)
 - [📁Files](/documentation/api/bridge/symfony/http-foundation/indices/files.html)
 

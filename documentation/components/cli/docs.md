@@ -1,6 +1,8 @@
 # Flow Command Line Interface
 
 - [⬅️️ Back](/documentation/quick-start.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/cli)
+- [🐙GitHub](https://github.com/flow-php/cli)
 - [📚API Reference](/documentation/api/cli)
 - [📁Files](/documentation/api/cli/indices/files.html)
 

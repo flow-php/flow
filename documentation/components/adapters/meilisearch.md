@@ -1,6 +1,8 @@
 # ETL Adapter: MeiliSearch
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-meilisearch)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-meilisearch)
 - [📚API Reference](/documentation/api/adapter/meilisearch)
 - [📁Files](/documentation/api/adapter/meilisearch/indices/files.html)
 

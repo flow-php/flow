@@ -1,6 +1,8 @@
 # Parquet
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/parquet)
+- [🐙GitHub](https://github.com/flow-php/parquet)
 - [📚API Reference](/documentation/api/lib/parquet)
 - [📁Files](/documentation/api/lib/parquet/indices/files.html)
 
