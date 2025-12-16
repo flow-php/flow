@@ -20,7 +20,8 @@
     },
     "suggest": {
         "ext-protobuf": "For faster protobuf parsing performance",
-        "ext-pg_query": "Mandatory for PostgreSQL query parsing functionality"
+        "ext-pg_query": "Required for QueryBuilder and Parser functionality (SQL parsing, AST manipulation)",
+        "ext-pgsql": "Required for Client functionality (database connections, query execution)"
     },
     "config": {
         "optimize-autoloader": true,

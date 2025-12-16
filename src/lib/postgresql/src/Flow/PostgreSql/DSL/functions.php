@@ -986,6 +986,19 @@ function row_expr(array $elements) : RowExpression
 
 /**
  * Create a raw SQL expression (use with caution).
+ *
+ * SECURITY WARNING: This function accepts raw SQL without parameterization.
+ * SQL injection is possible if used with untrusted user input.
+ * Only use with trusted, validated input.
+ *
+ * For user-provided values, use param() instead:
+ * ```php
+ * // UNSAFE - SQL injection possible:
+ * raw_expr("custom_func('" . $userInput . "')")
+ *
+ * // SAFE - use parameters:
+ * func('custom_func', param(1))
+ * ```
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function raw_expr(string $sql) : RawExpression
@@ -1200,6 +1213,19 @@ function cond_not(Condition $condition) : NotCondition
 
 /**
  * Create a raw SQL condition (use with caution).
+ *
+ * SECURITY WARNING: This function accepts raw SQL without parameterization.
+ * SQL injection is possible if used with untrusted user input.
+ * Only use with trusted, validated input.
+ *
+ * For user-provided values, use standard condition functions with param():
+ * ```php
+ * // UNSAFE - SQL injection possible:
+ * raw_cond("status = '" . $userInput . "'")
+ *
+ * // SAFE - use typed conditions:
+ * eq(col('status'), param(1))
+ * ```
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function raw_cond(string $sql) : RawCondition

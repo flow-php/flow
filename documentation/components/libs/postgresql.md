@@ -1,4 +1,4 @@
-# PG Query
+# PostgreSQL
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/postgresql)
@@ -9,28 +9,36 @@
 
 ## Overview
 
-PG Query is a PostgreSQL query library with two main capabilities:
+PostgreSQL library provides three main capabilities:
 
 1. **SQL Parser** - Parse, analyze, and modify existing PostgreSQL queries using the real PostgreSQL
    parser ([libpg_query](https://github.com/pganalyze/libpg_query))
 2. **Query Builder** - Build new queries programmatically with a fluent, type-safe API
+3. **Client** - Execute queries against PostgreSQL with automatic type conversion and object mapping
 
-Both features produce valid PostgreSQL syntax and can be combined - for example, parse an existing query, modify it, and
-convert it back to SQL.
+All features produce valid PostgreSQL syntax and can be combined - for example, build a query with the Query Builder,
+execute it with the Client, and map results to objects.
 
 ## Use Case Navigator
 
-| I want to...                       | Go to                                     |
-|------------------------------------|-------------------------------------------|
-| Build SQL queries with type safety | [Query Builder](#query-builder)           |
-| Parse and analyze existing SQL     | [SQL Parser](#sql-parser)                 |
-| Add pagination to existing queries | [Query Modification](#query-modification) |
-| Traverse or modify AST directly    | [Advanced Features](#advanced-features)   |
+| I want to...                       | Go to                                     | Extension needed |
+|------------------------------------|-------------------------------------------|------------------|
+| Execute queries and fetch results  | [Client](#client)                         | `ext-pgsql`      |
+| Build SQL queries with type safety | [Query Builder](#query-builder)           | `ext-pg_query`   |
+| Parse and analyze existing SQL     | [SQL Parser](#sql-parser)                 | `ext-pg_query`   |
+| Add pagination to existing queries | [Query Modification](#query-modification) | `ext-pg_query`   |
+| Traverse or modify AST directly    | [Advanced Features](#advanced-features)   | `ext-pg_query`   |
 
 ## Requirements
 
-This library requires the `pg_query` PHP extension.
-See [postgresql-ext documentation](/documentation/components/extensions/postgresql-ext.md) for installation instructions.
+This library has two optional PHP extensions depending on which features you use:
+
+| Extension      | Required for                                          | Installation                                                                            |
+|----------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `ext-pgsql`    | Client (database connections, query execution)        | Usually bundled with PHP, or `apt install php-pgsql`                                    |
+| `ext-pg_query` | Query Builder, SQL Parser (AST parsing, manipulation) | [postgresql-ext documentation](/documentation/components/extensions/postgresql-ext.md) |
+
+Both extensions are optional - you can use the Client without installing `ext-pg_query`, and vice versa.
 
 ## Installation
 
@@ -242,6 +250,50 @@ echo $query->toSQL();
 - [Extension Query Builder](/documentation/components/libs/postgresql/extension-query-builder.md) - CREATE/DROP EXTENSION
 - [Type Query Builder](/documentation/components/libs/postgresql/type-query-builder.md) - CREATE/DROP TYPE (enum, composite, range)
 - [Domain Query Builder](/documentation/components/libs/postgresql/domain-query-builder.md) - CREATE/DROP DOMAIN
+
+---
+
+## Client
+
+Execute queries against PostgreSQL with automatic type conversion and object mapping.
+
+### Quick Start
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection};
+
+// Connect
+$client = pgsql_client(pgsql_connection('host=localhost dbname=mydb user=postgres'));
+
+// Fetch single row
+$user = $client->fetch('SELECT * FROM users WHERE id = $1', [1]);
+
+// Fetch all rows
+$users = $client->fetchAll('SELECT * FROM users WHERE active = $1', [true]);
+
+// Execute INSERT/UPDATE/DELETE
+$affected = $client->execute('UPDATE users SET active = $1 WHERE id = $2', [false, 1]);
+
+// Transaction with automatic commit/rollback
+$result = $client->transaction(function ($client) {
+    $client->execute('INSERT INTO users (name) VALUES ($1)', ['John']);
+    return $client->fetchScalar('SELECT lastval()');
+});
+
+// Close when done
+$client->close();
+```
+
+### Detailed Documentation
+
+- [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing, lifecycle
+- [Fetching Data](/documentation/components/libs/postgresql/client-fetching.md) - fetch, fetchOne, fetchAll, fetchScalar
+- [Object Mapping](/documentation/components/libs/postgresql/client-object-mapping.md) - Map rows to objects with RowMapper
+- [Cursors](/documentation/components/libs/postgresql/client-cursor.md) - Memory-efficient streaming for large result sets
+- [Transactions](/documentation/components/libs/postgresql/client-transactions.md) - Transaction callback pattern, nesting
+- [Type System](/documentation/components/libs/postgresql/client-types.md) - Value converters, TypedValue, custom types
 
 ---
 
