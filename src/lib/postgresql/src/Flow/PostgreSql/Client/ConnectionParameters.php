@@ -21,6 +21,7 @@ final readonly class ConnectionParameters
         string $host = 'localhost',
         int $port = 5432,
         ?string $user = null,
+        #[\SensitiveParameter]
         ?string $password = null,
         array $options = [],
     ) : self {
@@ -51,5 +52,17 @@ final readonly class ConnectionParameters
     public static function fromString(string $connectionString) : self
     {
         return new self($connectionString);
+    }
+
+    /**
+     * Mask password in debug output to prevent accidental exposure.
+     *
+     * @return array<string, string>
+     */
+    public function __debugInfo() : array
+    {
+        return [
+            'connectionString' => \preg_replace('/password=[^\s]+/', 'password=***', $this->connectionString) ?? $this->connectionString,
+        ];
     }
 }

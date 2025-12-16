@@ -13,6 +13,13 @@ use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, UnsupportedNode
  *
  * Use this when you need to include raw SQL that isn't supported by the query builder.
  * The SQL will be parsed to ensure it's valid PostgreSQL syntax.
+ *
+ * SECURITY WARNING: This class accepts raw SQL without parameterization.
+ * SQL injection is possible if used with untrusted user input.
+ * Only use with trusted, validated input. For user-provided values,
+ * use parameterized queries with Parameter expressions instead.
+ *
+ * @see Parameter For safe parameterized values
  */
 final readonly class RawExpression implements Expression
 {

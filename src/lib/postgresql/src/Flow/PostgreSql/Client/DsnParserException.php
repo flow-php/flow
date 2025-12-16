@@ -24,8 +24,18 @@ final class DsnParserException extends \InvalidArgumentException
         ));
     }
 
+    /**
+     * Mask password in DSN for safe display in error messages.
+     *
+     * Handles standard URL format: scheme://user:password@host:port/database
+     * Supports URL-encoded passwords (e.g., p%40ssword for p@ssword).
+     */
     private static function maskPassword(string $dsn) : string
     {
-        return \preg_replace('/:([^@\/]+)@/', ':***@', $dsn) ?? $dsn;
+        return \preg_replace(
+            '/(:\/\/[^:]*):([^@]*)@/',
+            '$1:***@',
+            $dsn
+        ) ?? $dsn;
     }
 }
