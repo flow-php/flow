@@ -1513,16 +1513,16 @@
         },
         {
             "name": "openspout/openspout",
-            "version": "v5.1.0",
+            "version": "v5.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openspout/openspout.git",
-                "reference": "712cfe507f4c90767f4cda21947f6bca4539b7e3"
+                "reference": "b02a6e64de649ef0f160e25c79fac95801ce5de6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openspout/openspout/zipball/712cfe507f4c90767f4cda21947f6bca4539b7e3",
-                "reference": "712cfe507f4c90767f4cda21947f6bca4539b7e3",
+                "url": "https://api.github.com/repos/openspout/openspout/zipball/b02a6e64de649ef0f160e25c79fac95801ce5de6",
+                "reference": "b02a6e64de649ef0f160e25c79fac95801ce5de6",
                 "shasum": ""
             },
             "require": {
@@ -1535,13 +1535,13 @@
             },
             "require-dev": {
                 "ext-zlib": "*",
-                "friendsofphp/php-cs-fixer": "^3.91.3",
+                "friendsofphp/php-cs-fixer": "^3.92.1",
                 "infection/infection": "^0.31.9",
                 "phpbench/phpbench": "^1.4.3",
                 "phpstan/phpstan": "^2.1.33",
                 "phpstan/phpstan-phpunit": "^2.0.10",
                 "phpstan/phpstan-strict-rules": "^2.0.7",
-                "phpunit/phpunit": "^12.5.3"
+                "phpunit/phpunit": "^12.5.4"
             },
             "suggest": {
                 "ext-iconv": "To handle non UTF-8 CSV files (if \"php-mbstring\" is not already installed or is too limited)",
@@ -1589,7 +1589,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openspout/openspout/issues",
-                "source": "https://github.com/openspout/openspout/tree/v5.1.0"
+                "source": "https://github.com/openspout/openspout/tree/v5.1.1"
             },
             "funding": [
                 {
@@ -1601,7 +1601,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-11T09:45:03+00:00"
+            "time": "2025-12-16T11:29:34+00:00"
         },
         {
             "name": "packaged/thrift",
