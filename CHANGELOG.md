@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-14
+## [Unreleased] - 2025-12-16
 
 ### Added
+- [#2083](https://github.com/flow-php/flow/pull/2083) - **Dedicated postgresql client interface to flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **Json value to flow-php/types** - [@norberttech](https://github.com/norberttech)
 - [#1906](https://github.com/flow-php/flow/pull/1906) - **support for php 8.5** - [@norberttech](https://github.com/norberttech)
 - [#2062](https://github.com/flow-php/flow/pull/2062) - **flow-php/postgresql - Query Builder that covers most of the Postgres SQL syntax** - [@norberttech](https://github.com/norberttech)
