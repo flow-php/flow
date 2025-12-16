@@ -72,6 +72,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\{
     Parameter,
     RawExpression,
     RowExpression,
+    SQLValueFunctionExpression,
     Star,
     Subquery,
     TypeCast,
@@ -815,6 +816,51 @@ function data_type_timestamptz(?int $precision = null) : DataType
 function data_type_interval() : DataType
 {
     return DataType::interval();
+}
+
+/**
+ * SQL standard CURRENT_TIMESTAMP function.
+ *
+ * Returns the current date and time (at the start of the transaction).
+ * Useful as a column default value or in SELECT queries.
+ *
+ * Example: column('created_at', data_type_timestamp())->default(current_timestamp())
+ * Example: select()->select(current_timestamp()->as('now'))
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function current_timestamp() : SQLValueFunctionExpression
+{
+    return SQLValueFunctionExpression::currentTimestamp();
+}
+
+/**
+ * SQL standard CURRENT_DATE function.
+ *
+ * Returns the current date (at the start of the transaction).
+ * Useful as a column default value or in SELECT queries.
+ *
+ * Example: column('birth_date', data_type_date())->default(current_date())
+ * Example: select()->select(current_date()->as('today'))
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function current_date() : SQLValueFunctionExpression
+{
+    return SQLValueFunctionExpression::currentDate();
+}
+
+/**
+ * SQL standard CURRENT_TIME function.
+ *
+ * Returns the current time (at the start of the transaction).
+ * Useful as a column default value or in SELECT queries.
+ *
+ * Example: column('start_time', data_type_time())->default(current_time())
+ * Example: select()->select(current_time()->as('now_time'))
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function current_time() : SQLValueFunctionExpression
+{
+    return SQLValueFunctionExpression::currentTime();
 }
 
 /**

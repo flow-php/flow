@@ -8,6 +8,7 @@ use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{ColumnDef, ConstrType, Constraint, Node, RangeVar};
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 final readonly class ColumnDefinition
 {
@@ -47,13 +48,17 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function default(bool|float|int|string|null $value) : self
+    public function default(bool|float|int|string|Expression|null $value) : self
     {
+        $node = $value instanceof Expression
+            ? $value->toAst()
+            : $this->createLiteralNode($value);
+
         return new self(
             $this->name,
             $this->type,
             $this->notNull,
-            $this->createLiteralNode($value),
+            $node,
             $this->identity,
             $this->generatedExpression,
             $this->constraints,

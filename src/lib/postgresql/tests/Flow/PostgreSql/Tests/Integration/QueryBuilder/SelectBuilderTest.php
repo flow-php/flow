@@ -24,6 +24,9 @@ use function Flow\PostgreSql\DSL\{
     cond_not,
     cond_or,
     cte,
+    current_date,
+    current_time,
+    current_timestamp,
     data_type_integer,
     data_type_text,
     derived,
@@ -1223,6 +1226,55 @@ final class SelectBuilderTest extends PGQueryTestCase
         $this->assertSelectQueryRoundTrip(
             $query,
             'SELECT * FROM users WHERE active = true'
+        );
+    }
+
+    public function test_sql_value_function_current_date() : void
+    {
+        $query = select()
+            ->select(current_date()->as('today'));
+
+        $this->assertSelectQueryRoundTrip(
+            $query,
+            'SELECT current_date AS today'
+        );
+    }
+
+    public function test_sql_value_function_current_time() : void
+    {
+        $query = select()
+            ->select(current_time()->as('now_time'));
+
+        $this->assertSelectQueryRoundTrip(
+            $query,
+            'SELECT current_time AS now_time'
+        );
+    }
+
+    public function test_sql_value_function_current_timestamp() : void
+    {
+        $query = select()
+            ->select(current_timestamp()->as('now'));
+
+        $this->assertSelectQueryRoundTrip(
+            $query,
+            'SELECT current_timestamp AS now'
+        );
+    }
+
+    public function test_sql_value_functions_with_other_columns() : void
+    {
+        $query = select()
+            ->select(
+                col('id'),
+                col('name'),
+                current_timestamp()->as('created_at')
+            )
+            ->from(table('users'));
+
+        $this->assertSelectQueryRoundTrip(
+            $query,
+            'SELECT id, name, current_timestamp AS created_at FROM users'
         );
     }
 }

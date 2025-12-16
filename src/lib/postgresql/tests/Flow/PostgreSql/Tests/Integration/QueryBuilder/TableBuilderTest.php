@@ -10,6 +10,7 @@ use function Flow\PostgreSql\DSL\{
     col,
     column,
     create,
+    current_timestamp,
     data_type_boolean,
     data_type_integer,
     data_type_serial,
@@ -325,6 +326,19 @@ final class TableBuilderTest extends PGQueryTestCase
         $this->assertCreateTableQuery(
             $builder,
             'CREATE TABLE users (id serial PRIMARY KEY, active boolean DEFAULT true)'
+        );
+    }
+
+    public function test_create_table_with_column_default_current_timestamp() : void
+    {
+        $builder = create()->table('audit_log')
+            ->column(column('id', data_type_serial())->primaryKey())
+            ->column(column('message', data_type_text())->notNull())
+            ->column(column('created_at', data_type_timestamp())->notNull()->default(current_timestamp()));
+
+        $this->assertCreateTableQuery(
+            $builder,
+            'CREATE TABLE audit_log (id serial PRIMARY KEY, message pg_catalog.text NOT NULL, created_at timestamp NOT NULL DEFAULT current_timestamp)'
         );
     }
 

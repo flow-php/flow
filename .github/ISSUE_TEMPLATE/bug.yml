@@ -24,6 +24,14 @@ body:
       render: php
     validations:
       required: true
+  - type: input
+    id: playground-url
+    attributes:
+      label: Playground snippet
+      description: "Share a snippet from the Flow PHP Playground to help us reproduce the issue."
+      placeholder: "https://flow-php.com/playground/?snippet=..."
+    validations:
+      required: false
   - type: textarea
     id: data
     attributes:
