@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-12-16
 
 ### Added
+- [#2085](https://github.com/flow-php/flow/pull/2085) - **links to github/packagist in docs** - [@norberttech](https://github.com/norberttech)
 - [#2084](https://github.com/flow-php/flow/pull/2084) - **optional playground link to bug.yml template** - [@norberttech](https://github.com/norberttech)
 - [#2083](https://github.com/flow-php/flow/pull/2083) - **Dedicated postgresql client interface to flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
 - [#2074](https://github.com/flow-php/flow/pull/2074) - **Json value to flow-php/types** - [@norberttech](https://github.com/norberttech)
