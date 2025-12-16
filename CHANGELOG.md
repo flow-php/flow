@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-15
+## [Unreleased] - 2025-12-16
 
 ### Added
 - [#2084](https://github.com/flow-php/flow/pull/2084) - **optional playground link to bug.yml template** - [@norberttech](https://github.com/norberttech)
