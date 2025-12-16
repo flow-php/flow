@@ -117,6 +117,10 @@ final class ExpressionFactory
             return ArrayExpression::fromAst($node);
         }
 
+        if ($node->getSqlValueFunction() !== null) {
+            return SQLValueFunctionExpression::fromAst($node);
+        }
+
         throw UnsupportedNodeException::forNodeType('Unknown expression node type');
     }
 }

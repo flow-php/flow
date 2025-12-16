@@ -9,6 +9,9 @@
 
 ## Overview
 
+> **Note:** This library is under active development. If you encounter any issues, especially with the Query Builder,
+> please [report a bug](https://github.com/flow-php/flow/issues/new?template=bug.yml).
+
 PostgreSQL library provides three main capabilities:
 
 1. **SQL Parser** - Parse, analyze, and modify existing PostgreSQL queries using the real PostgreSQL

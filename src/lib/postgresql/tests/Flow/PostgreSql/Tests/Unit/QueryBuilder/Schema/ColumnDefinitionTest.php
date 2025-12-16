@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema;
 
+use function Flow\PostgreSql\DSL\{current_date, current_time, current_timestamp};
 use Flow\PostgreSql\Protobuf\AST\{ColumnDef, ConstrType};
+use Flow\PostgreSql\QueryBuilder\Expression\SQLValueFunctionExpression;
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
+
 use PHPUnit\Framework\TestCase;
 
 final class ColumnDefinitionTest extends TestCase
@@ -38,6 +41,54 @@ final class ColumnDefinitionTest extends TestCase
         self::assertInstanceOf(ColumnDef::class, $ast);
         self::assertCount(1, $ast->getConstraints());
         self::assertSame(ConstrType::CONSTR_CHECK, $ast->getConstraints()[0]->getConstraint()->getContype());
+    }
+
+    public function test_column_default_with_current_date() : void
+    {
+        $column = ColumnDefinition::create('birth_date', DataType::date())
+            ->default(current_date());
+
+        $ast = $column->toAst();
+
+        self::assertInstanceOf(ColumnDef::class, $ast);
+        self::assertCount(1, $ast->getConstraints());
+        self::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+    }
+
+    public function test_column_default_with_current_time() : void
+    {
+        $column = ColumnDefinition::create('check_in_time', DataType::time())
+            ->default(current_time());
+
+        $ast = $column->toAst();
+
+        self::assertInstanceOf(ColumnDef::class, $ast);
+        self::assertCount(1, $ast->getConstraints());
+        self::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+    }
+
+    public function test_column_default_with_current_timestamp() : void
+    {
+        $column = ColumnDefinition::create('created_at', DataType::timestamp())
+            ->default(current_timestamp());
+
+        $ast = $column->toAst();
+
+        self::assertInstanceOf(ColumnDef::class, $ast);
+        self::assertCount(1, $ast->getConstraints());
+        self::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+    }
+
+    public function test_column_default_with_expression() : void
+    {
+        $column = ColumnDefinition::create('created_at', DataType::timestamp())
+            ->default(SQLValueFunctionExpression::currentTimestamp());
+
+        $ast = $column->toAst();
+
+        self::assertInstanceOf(ColumnDef::class, $ast);
+        self::assertCount(1, $ast->getConstraints());
+        self::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
     }
 
     public function test_column_with_boolean_default_false() : void
