@@ -1,6 +1,8 @@
 # ETL Adapter: Parquet
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-parquet)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-parquet)
 - [📚API Reference](/documentation/api/adapter/parquet)
 - [📁Files](/documentation/api/adapter/parquet/indices/files.html)
 

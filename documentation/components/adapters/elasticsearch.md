@@ -1,6 +1,8 @@
 # ETL Adapter: Elasticsearch
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-elasticsearch)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-elasticsearch)
 - [📚API Reference](/documentation/api/adapter/elasticsearch)
 - [📁Files](/documentation/api/adapter/elasticsearch/indices/files.html)
 

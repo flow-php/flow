@@ -1,6 +1,8 @@
 # Filesystem
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/filesystem)
+- [🐙GitHub](https://github.com/flow-php/filesystem)
 - [📚API Reference](/documentation/api/lib/filesystem)
 - [📁Files](/documentation/api/lib/filesystem/indices/files.html)
 - [🗺DSL](/documentation/api/lib/filesystem/namespaces/flow-filesystem-dsl.html)

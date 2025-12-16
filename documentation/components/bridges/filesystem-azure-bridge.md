@@ -1,6 +1,8 @@
 # Filesystem Azure Bridge
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/filesystem-azure-bridge)
+- [🐙GitHub](https://github.com/flow-php/filesystem-azure-bridge)
 - [📚API Reference](/documentation/api/bridge/filesystem/azure)
 - [📁Files](/documentation/api/bridge/filesystem/azure/indices/files.html)
 

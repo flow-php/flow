@@ -1,6 +1,8 @@
 # OpenAPI Specification Bridge
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/openapi-specification-bridge)
+- [🐙GitHub](https://github.com/flow-php/openapi-specification-bridge)
 - [📚API Reference](/documentation/api/bridge/openapi/specification)
 - [📁Files](/documentation/api/bridge/openapi/specification/indices/files.html)
 

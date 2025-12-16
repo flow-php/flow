@@ -1,6 +1,8 @@
 # Filesystem Async AWS
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/filesystem-async-aws-bridge)
+- [🐙GitHub](https://github.com/flow-php/filesystem-async-aws-bridge)
 - [📚API Reference](/documentation/api/bridge/filesystem/async-aws)
 - [📁Files](/documentation/api/bridge/filesystem/async-aws/indices/files.html)
 

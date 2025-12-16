@@ -1,6 +1,8 @@
 # Doctrine Bulk
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/doctrine-dbal-bulk)
+- [🐙GitHub](https://github.com/flow-php/doctrine-dbal-bulk)
 - [📚API Reference](/documentation/api/lib/doctrine-dbal-bulk)
 - [📁Files](/documentation/api/lib/doctrine-dbal-bulk/indices/files.html)
 

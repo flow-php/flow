@@ -1,6 +1,8 @@
 # Chart JS Adapter
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-chartjs)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-chartjs)
 - [📚API Reference](/documentation/api/adapter/chartjs)
 - [📁Files](/documentation/api/adapter/chartjs/indices/files.html)
 

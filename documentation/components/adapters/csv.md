@@ -1,6 +1,8 @@
 # CSV Adapter 
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-csv)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-csv)
 - [📚API Reference](/documentation/api/adapter/csv)
 - [📁Files](/documentation/api/adapter/csv/indices/files.html)
 

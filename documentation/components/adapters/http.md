@@ -1,6 +1,8 @@
 # ETL Adapter: HTTP
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-http)
+- [🐙GitHub](https://github.com/flow-php/etl-adapter-http)
 - [📚API Reference](/documentation/api/adapter/http)
 - [📁Files](/documentation/api/adapter/http/indices/files.html)
 

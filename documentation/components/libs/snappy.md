@@ -1,6 +1,8 @@
 # Snappy
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/snappy)
+- [🐙GitHub](https://github.com/flow-php/snappy)
 - [📚API Reference](/documentation/api/lib/snappy)
 - [📁Files](/documentation/api/lib/snappy/indices/files.html)
 

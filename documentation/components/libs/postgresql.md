@@ -1,6 +1,8 @@
 # PostgreSQL
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/postgresql)
+- [🐙GitHub](https://github.com/flow-php/postgresql)
 - [📚API Reference](/documentation/api/lib/postgresql)
 - [📁Files](/documentation/api/lib/postgresql/indices/files.html)
 - [🗺DSL](/documentation/api/lib/postgresql/namespaces/flow-pgquery-dsl.html)

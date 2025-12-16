@@ -1,6 +1,8 @@
 # Array Dot
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [📦Packagist](https://packagist.org/packages/flow-php/array-dot)
+- [🐙GitHub](https://github.com/flow-php/array-dot)
 - [📚API Reference](/documentation/api/lib/array-dot)
 - [📁Files](/documentation/api/lib/array-dot/indices/files.html)
 
