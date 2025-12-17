@@ -45,14 +45,8 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self();
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(DeleteStmt $deleteStmt) : static
     {
-        $deleteStmt = $node->getDeleteStmt();
-
-        if ($deleteStmt === null) {
-            throw InvalidAstException::invalidFieldValue('node', 'DeleteBuilder', 'Expected DeleteStmt');
-        }
-
         $relation = $deleteStmt->getRelation();
 
         if ($relation === null) {
@@ -74,9 +68,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             $protoWithClause = $deleteStmt->getWithClause();
 
             if ($protoWithClause !== null) {
-                $withNode = new Node();
-                $withNode->setWithClause($protoWithClause);
-                $withClause = WithClause::fromAst($withNode);
+                $withClause = WithClause::fromAst($protoWithClause);
             }
         }
 

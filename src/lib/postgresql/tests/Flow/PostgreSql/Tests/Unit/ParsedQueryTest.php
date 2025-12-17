@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit;
 
-use function Flow\PostgreSql\DSL\{col, cond_and, eq, gt, literal, sql_parse, sql_query_columns, sql_query_functions, sql_query_tables, sql_to_query_builder};
-use Flow\PostgreSql\AST\Nodes\{Column, FunctionCall, Table};
+use function Flow\PostgreSql\DSL\{sql_parse, sql_query_columns, sql_query_functions, sql_query_tables};
+use Flow\PostgreSql\AST\Nodes\{Column, FunctionCall, Statements, Table};
+use Flow\PostgreSql\AST\Nodes\Statement\{DeleteStatement, InsertStatement, SelectStatement, UpdateStatement};
 use Flow\PostgreSql\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
 use Flow\PostgreSql\ParsedQuery;
-use Flow\PostgreSql\Protobuf\AST\{Node, ParseResult, RawStmt};
-use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
-use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
-use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
-use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
+use Flow\PostgreSql\Protobuf\AST\{ParseResult};
 use PHPUnit\Framework\TestCase;
 
 final class ParsedQueryTest extends TestCase
@@ -100,6 +97,14 @@ final class ParsedQueryTest extends TestCase
         }
     }
 
+    public function test_delete_statement_to_builder() : void
+    {
+        $result = sql_parse('DELETE FROM users WHERE id = 1');
+
+        $deleteStatement = $result->statements()->first();
+        self::assertInstanceOf(DeleteStatement::class, $deleteStatement);
+    }
+
     public function test_functions_from_select() : void
     {
         $result = sql_parse('SELECT COUNT(*), SUM(amount) FROM orders');
@@ -137,11 +142,149 @@ final class ParsedQueryTest extends TestCase
         self::assertSame('pg_catalog', $functions[0]->schema());
     }
 
+    public function test_insert_statement_to_builder() : void
+    {
+        $result = sql_parse("INSERT INTO users (name) VALUES ('John')");
+
+        $insertStatement = $result->statements()->first();
+        self::assertInstanceOf(InsertStatement::class, $insertStatement);
+    }
+
     public function test_raw_returns_parse_result() : void
     {
         $result = sql_parse('SELECT 1');
 
         self::assertInstanceOf(ParseResult::class, $result->raw());
+    }
+
+    public function test_select_statement_to_builder() : void
+    {
+        $result = sql_parse('SELECT * FROM users');
+
+        $selectStatement = $result->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $selectStatement);
+    }
+
+    public function test_statements_all() : void
+    {
+        $result = sql_parse('SELECT 1; SELECT 2');
+
+        $all = $result->statements()->all();
+
+        self::assertCount(2, $all);
+        self::assertInstanceOf(SelectStatement::class, $all[0]);
+        self::assertInstanceOf(SelectStatement::class, $all[1]);
+    }
+
+    public function test_statements_count() : void
+    {
+        $result = sql_parse('SELECT * FROM users');
+
+        self::assertCount(1, $result->statements());
+    }
+
+    public function test_statements_first() : void
+    {
+        $result = sql_parse('SELECT * FROM users');
+
+        $first = $result->statements()->first();
+
+        self::assertNotNull($first);
+        self::assertInstanceOf(SelectStatement::class, $first);
+    }
+
+    public function test_statements_first_is_delete_statement() : void
+    {
+        $result = sql_parse('DELETE FROM users WHERE id = 1');
+
+        self::assertInstanceOf(DeleteStatement::class, $result->statements()->first());
+    }
+
+    public function test_statements_first_is_insert_statement() : void
+    {
+        $result = sql_parse("INSERT INTO users (name) VALUES ('John')");
+
+        self::assertInstanceOf(InsertStatement::class, $result->statements()->first());
+    }
+
+    public function test_statements_first_is_select_statement() : void
+    {
+        $result = sql_parse('SELECT * FROM users');
+
+        self::assertInstanceOf(SelectStatement::class, $result->statements()->first());
+    }
+
+    public function test_statements_first_is_update_statement() : void
+    {
+        $result = sql_parse("UPDATE users SET name = 'John' WHERE id = 1");
+
+        self::assertInstanceOf(UpdateStatement::class, $result->statements()->first());
+    }
+
+    public function test_statements_get() : void
+    {
+        $result = sql_parse('SELECT 1; INSERT INTO users (id) VALUES (1)');
+
+        self::assertInstanceOf(SelectStatement::class, $result->statements()->get(0));
+        self::assertInstanceOf(InsertStatement::class, $result->statements()->get(1));
+        self::assertNull($result->statements()->get(2));
+    }
+
+    public function test_statements_is_empty() : void
+    {
+        $sql = new ParseResult();
+        $sql->setStmts([]);
+        $result = new ParsedQuery($sql);
+
+        self::assertTrue($result->statements()->isEmpty());
+    }
+
+    public function test_statements_is_single() : void
+    {
+        $result = sql_parse('SELECT * FROM users');
+
+        self::assertTrue($result->statements()->isSingle());
+    }
+
+    public function test_statements_iterable() : void
+    {
+        $result = sql_parse('SELECT 1; SELECT 2');
+
+        $count = 0;
+
+        foreach ($result->statements() as $statement) {
+            self::assertInstanceOf(SelectStatement::class, $statement);
+            $count++;
+        }
+
+        self::assertSame(2, $count);
+    }
+
+    public function test_statements_last() : void
+    {
+        $result = sql_parse('SELECT 1; INSERT INTO users (id) VALUES (1)');
+
+        $last = $result->statements()->last();
+
+        self::assertNotNull($last);
+        self::assertInstanceOf(InsertStatement::class, $last);
+    }
+
+    public function test_statements_returns_statements_collection() : void
+    {
+        $result = sql_parse('SELECT * FROM users');
+
+        $statements = $result->statements();
+
+        self::assertInstanceOf(Statements::class, $statements);
+    }
+
+    public function test_statements_with_multiple_statements() : void
+    {
+        $result = sql_parse('SELECT 1; SELECT 2');
+
+        self::assertCount(2, $result->statements());
+        self::assertFalse($result->statements()->isSingle());
     }
 
     public function test_tables_from_cte() : void
@@ -245,134 +388,6 @@ final class ParsedQueryTest extends TestCase
         self::assertSame('public', $tables[0]->schema());
     }
 
-    public function test_to_delete_builder() : void
-    {
-        $builder = sql_parse('DELETE FROM users WHERE id = 1')->toDeleteBuilder();
-
-        self::assertInstanceOf(DeleteBuilder::class, $builder);
-    }
-
-    public function test_to_delete_builder_throws_on_wrong_type() : void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Query is not a DELETE statement');
-
-        sql_parse('SELECT * FROM users')->toDeleteBuilder();
-    }
-
-    public function test_to_insert_builder() : void
-    {
-        $builder = sql_parse("INSERT INTO users (name) VALUES ('John')")->toInsertBuilder();
-
-        self::assertInstanceOf(InsertBuilder::class, $builder);
-    }
-
-    public function test_to_insert_builder_throws_on_wrong_type() : void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Query is not an INSERT statement');
-
-        sql_parse('SELECT * FROM users')->toInsertBuilder();
-    }
-
-    public function test_to_query_builder_delete() : void
-    {
-        $builder = sql_parse('DELETE FROM users WHERE id = 1')->toQueryBuilder();
-
-        self::assertInstanceOf(DeleteBuilder::class, $builder);
-    }
-
-    public function test_to_query_builder_dsl_function() : void
-    {
-        $builder = sql_to_query_builder('SELECT * FROM users');
-
-        self::assertInstanceOf(SelectBuilder::class, $builder);
-    }
-
-    public function test_to_query_builder_insert() : void
-    {
-        $builder = sql_parse("INSERT INTO users (name) VALUES ('John')")->toQueryBuilder();
-
-        self::assertInstanceOf(InsertBuilder::class, $builder);
-    }
-
-    public function test_to_query_builder_modify_and_deparse() : void
-    {
-        $builder = sql_parse('SELECT * FROM users')->toQueryBuilder();
-
-        self::assertInstanceOf(SelectBuilder::class, $builder);
-
-        $modified = $builder
-            ->where(cond_and(
-                eq(col('id'), literal(1)),
-                gt(col('age'), literal(18))
-            ))
-            ->limit(10);
-
-        $sql = sql_parse('SELECT 1')->raw();
-        $rawStmt = new RawStmt();
-        $node = new Node();
-        $node->setSelectStmt($modified->toAst());
-        $rawStmt->setStmt($node);
-        $sql->setStmts([$rawStmt]);
-
-        $result = (new ParsedQuery($sql))->deparse();
-
-        self::assertSame('SELECT * FROM users WHERE id = 1 AND age > 18 LIMIT 10', $result);
-    }
-
-    public function test_to_query_builder_select() : void
-    {
-        $builder = sql_parse('SELECT * FROM users')->toQueryBuilder();
-
-        self::assertInstanceOf(SelectBuilder::class, $builder);
-    }
-
-    public function test_to_query_builder_throws_on_multiple_statements() : void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Multiple statements found. Use pg_split() to parse statements individually.');
-
-        sql_parse('SELECT 1; SELECT 2')->toQueryBuilder();
-    }
-
-    public function test_to_query_builder_update() : void
-    {
-        $builder = sql_parse("UPDATE users SET name = 'John' WHERE id = 1")->toQueryBuilder();
-
-        self::assertInstanceOf(UpdateBuilder::class, $builder);
-    }
-
-    public function test_to_select_builder() : void
-    {
-        $builder = sql_parse('SELECT * FROM users')->toSelectBuilder();
-
-        self::assertInstanceOf(SelectBuilder::class, $builder);
-    }
-
-    public function test_to_select_builder_throws_on_wrong_type() : void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Query is not a SELECT statement');
-
-        sql_parse('DELETE FROM users')->toSelectBuilder();
-    }
-
-    public function test_to_update_builder() : void
-    {
-        $builder = sql_parse("UPDATE users SET name = 'John' WHERE id = 1")->toUpdateBuilder();
-
-        self::assertInstanceOf(UpdateBuilder::class, $builder);
-    }
-
-    public function test_to_update_builder_throws_on_wrong_type() : void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Query is not an UPDATE statement');
-
-        sql_parse('SELECT * FROM users')->toUpdateBuilder();
-    }
-
     public function test_traverse_with_multiple_visitors() : void
     {
         $result = sql_parse('SELECT COUNT(id), name FROM users WHERE active = true');
@@ -396,5 +411,13 @@ final class ParsedQueryTest extends TestCase
         $result->traverse($collector);
 
         self::assertCount(2, $collector->getColumnRefs());
+    }
+
+    public function test_update_statement_to_builder() : void
+    {
+        $result = sql_parse("UPDATE users SET name = 'John' WHERE id = 1");
+
+        $updateStatement = $result->statements()->first();
+        self::assertInstanceOf(UpdateStatement::class, $updateStatement);
     }
 }

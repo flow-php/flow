@@ -445,7 +445,10 @@ trait QueryBuilderAssertions
         $rebuiltStmt = $stmts[0]->getStmt();
         Assert::assertNotNull($rebuiltStmt);
 
-        $rebuilt = DeleteBuilder::fromAst($rebuiltStmt);
+        $deleteStmt = $rebuiltStmt->getDeleteStmt();
+        Assert::assertNotNull($deleteStmt);
+
+        $rebuilt = DeleteBuilder::fromAst($deleteStmt);
         $rebuiltSql = $this->deparseDeleteStmt($rebuilt->toAst());
 
         Assert::assertSame($sql, $rebuiltSql);
@@ -604,7 +607,10 @@ trait QueryBuilderAssertions
         $rebuiltStmt = $stmts[0]->getStmt();
         Assert::assertNotNull($rebuiltStmt);
 
-        $rebuilt = InsertBuilder::fromAst($rebuiltStmt);
+        $insertStmt = $rebuiltStmt->getInsertStmt();
+        Assert::assertNotNull($insertStmt);
+
+        $rebuilt = InsertBuilder::fromAst($insertStmt);
         $rebuiltSql = $this->deparseInsertStmt($rebuilt->toAst());
 
         Assert::assertSame($sql, $rebuiltSql);
@@ -679,7 +685,10 @@ trait QueryBuilderAssertions
         $rebuiltStmt = $stmts[0]->getStmt();
         Assert::assertNotNull($rebuiltStmt);
 
-        $rebuilt = SelectBuilder::fromAst($rebuiltStmt);
+        $selectStmt = $rebuiltStmt->getSelectStmt();
+        Assert::assertNotNull($selectStmt);
+
+        $rebuilt = SelectBuilder::fromAst($selectStmt);
         $rebuiltSql = $this->deparseSelectStmt($rebuilt->toAst());
 
         Assert::assertSame($sql, $rebuiltSql);
@@ -726,7 +735,10 @@ trait QueryBuilderAssertions
         $rebuiltStmt = $stmts[0]->getStmt();
         Assert::assertNotNull($rebuiltStmt);
 
-        $rebuilt = UpdateBuilder::fromAst($rebuiltStmt);
+        $updateStmt = $rebuiltStmt->getUpdateStmt();
+        Assert::assertNotNull($updateStmt);
+
+        $rebuilt = UpdateBuilder::fromAst($updateStmt);
         $rebuiltSql = $this->deparseUpdateStmt($rebuilt->toAst());
 
         Assert::assertSame($sql, $rebuiltSql);

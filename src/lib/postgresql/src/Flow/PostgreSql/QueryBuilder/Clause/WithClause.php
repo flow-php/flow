@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
 use Flow\PostgreSql\Protobuf\AST\{Node, WithClause as ProtobufWithClause};
-use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * Represents a WITH clause containing one or more CTEs.
  */
-final readonly class WithClause implements AstConvertible
+final readonly class WithClause
 {
     /**
      * @param array<CTE> $ctes
@@ -22,14 +21,8 @@ final readonly class WithClause implements AstConvertible
     ) {
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(ProtobufWithClause $withClause) : static
     {
-        $withClause = $node->getWithClause();
-
-        if ($withClause === null) {
-            throw InvalidAstException::unexpectedNodeType('WithClause', 'unknown');
-        }
-
         $cteNodes = $withClause->getCtes();
 
         if ($cteNodes === null || \count($cteNodes) === 0) {

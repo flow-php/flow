@@ -42,14 +42,8 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         return new self();
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(InsertStmt $insertStmt) : static
     {
-        $insertStmt = $node->getInsertStmt();
-
-        if ($insertStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('InsertStmt', 'unknown');
-        }
-
         $relation = $insertStmt->getRelation();
 
         if ($relation === null) {
@@ -199,9 +193,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         $withClauseNode = $insertStmt->getWithClause();
 
         if ($withClauseNode !== null) {
-            $withNode = new Node();
-            $withNode->setWithClause($withClauseNode);
-            $with = WithClause::fromAst($withNode);
+            $with = WithClause::fromAst($withClauseNode);
         }
 
         return new self(

@@ -40,22 +40,14 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self();
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(UpdateStmt $updateStmt) : static
     {
-        $updateStmt = $node->getUpdateStmt();
-
-        if ($updateStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('UpdateStmt', 'unknown');
-        }
-
         $with = null;
 
         if ($updateStmt->hasWithClause()) {
             $withClauseProto = $updateStmt->getWithClause();
             \assert($withClauseProto !== null);
-            $withNode = new Node();
-            $withNode->setWithClause($withClauseProto);
-            $with = WithClause::fromAst($withNode);
+            $with = WithClause::fromAst($withClauseProto);
         }
 
         $relation = $updateStmt->getRelation();

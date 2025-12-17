@@ -452,20 +452,6 @@ function copy() : CopyFactory
 }
 
 /**
- * Parse SQL and convert to a QueryBuilder for modification.
- *
- * Only works for single-statement queries. For multiple statements,
- * use pg_split() to parse statements individually.
- *
- * @throws \InvalidArgumentException if query contains multiple statements or unsupported statement type
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateBuilder|DeleteBuilder
-{
-    return sql_parse($sql)->toQueryBuilder();
-}
-
-/**
  * Create a column reference expression.
  *
  * Can be used in two modes:

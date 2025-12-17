@@ -36,7 +36,8 @@ $finder = Finder::create()
         'Flow/Parquet/ThriftModel',
         'Flow/CLI/Tests/Integration',
         'Flow/ETL/Tests/Unit/Loader',
-        'Flow/ETL/Tests/Unit/Exception'
+        'Flow/ETL/Tests/Unit/Exception',
+        'extension/pg-query-ext/ext',
     ]);
 
 return (new Config())

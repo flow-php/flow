@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Select;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, SelectStmt};
+use Flow\PostgreSql\Protobuf\AST\{SelectStmt};
 use Flow\PostgreSql\QueryBuilder\Clause\{OrderByItem, SortDirection};
 use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
 use Flow\PostgreSql\QueryBuilder\Expression\{AggregateCall, Column, Literal, Star};
@@ -93,10 +93,7 @@ final class SelectBuilderTest extends TestCase
             ->limit(10);
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setSelectStmt($ast);
-
-        $restored = SelectBuilder::fromAst($node);
+        $restored = SelectBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         self::assertEquals($ast->serializeToString(), $restoredAst->serializeToString());
@@ -116,10 +113,7 @@ final class SelectBuilderTest extends TestCase
             ->orderBy(new OrderByItem(Column::name('category')));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setSelectStmt($ast);
-
-        $restored = SelectBuilder::fromAst($node);
+        $restored = SelectBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         self::assertEquals($ast->serializeToString(), $restoredAst->serializeToString());
@@ -138,10 +132,7 @@ final class SelectBuilderTest extends TestCase
             ->orderBy(new OrderByItem(Column::tableColumn('o', 'total'), SortDirection::DESC));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setSelectStmt($ast);
-
-        $restored = SelectBuilder::fromAst($node);
+        $restored = SelectBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         self::assertEquals($ast->serializeToString(), $restoredAst->serializeToString());
@@ -163,10 +154,7 @@ final class SelectBuilderTest extends TestCase
             ->limit(20);
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setSelectStmt($ast);
-
-        $restored = SelectBuilder::fromAst($node);
+        $restored = SelectBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         self::assertEquals($ast->serializeToString(), $restoredAst->serializeToString());
