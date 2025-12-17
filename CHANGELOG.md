@@ -3,6 +3,9 @@
 ### Added
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
+### Changed
+- [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
+
 ## [0.29.0] - 2025-12-17
 
 ### Added
