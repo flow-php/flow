@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-17
+## [0.29.0] - 2025-12-17
 
 ### Added
 - [#2085](https://github.com/flow-php/flow/pull/2085) - **links to github/packagist in docs** - [@norberttech](https://github.com/norberttech)
