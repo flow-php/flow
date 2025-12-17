@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-16
+## [Unreleased] - 2025-12-17
 
 ### Added
 - [#2085](https://github.com/flow-php/flow/pull/2085) - **links to github/packagist in docs** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +44,7 @@
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2086](https://github.com/flow-php/flow/pull/2086) - **missing flow-php/types dependency to postgresql** - [@norberttech](https://github.com/norberttech)
 - [#2084](https://github.com/flow-php/flow/pull/2084) - **value functions in query builder** - [@norberttech](https://github.com/norberttech)
 - [3fb046](https://github.com/flow-php/flow/commit/3fb046eae182f08ae9b180f36f569e41e80ee508) - **building docker on github actions** - [@norberttech](https://github.com/norberttech)
 - [#2063](https://github.com/flow-php/flow/pull/2063) - **failing test on latest version of symfony in php 8.4** - [@norberttech](https://github.com/norberttech)
