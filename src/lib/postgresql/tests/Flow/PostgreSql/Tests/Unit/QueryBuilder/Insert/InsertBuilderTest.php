@@ -423,9 +423,7 @@ final class InsertBuilderTest extends TestCase
             ->defaultValues();
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -446,9 +444,7 @@ final class InsertBuilderTest extends TestCase
             ->values(Literal::string('Bob'), Literal::string('bob@example.com'));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -468,9 +464,7 @@ final class InsertBuilderTest extends TestCase
             ->returningAll();
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -487,9 +481,7 @@ final class InsertBuilderTest extends TestCase
             ->values(Literal::string('John'), Literal::string('john@example.com'));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -515,9 +507,7 @@ final class InsertBuilderTest extends TestCase
             );
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -534,9 +524,7 @@ final class InsertBuilderTest extends TestCase
             ->returning(Column::name('id'));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -552,9 +540,7 @@ final class InsertBuilderTest extends TestCase
             ->values(Literal::string('John'));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 
@@ -581,9 +567,7 @@ final class InsertBuilderTest extends TestCase
             ->where(new IsNull(Column::name('deleted_at')));
 
         $ast = $original->toAst();
-        $node = new Node();
-        $node->setInsertStmt($ast);
-        $restored = InsertBuilder::fromAst($node);
+        $restored = InsertBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
 

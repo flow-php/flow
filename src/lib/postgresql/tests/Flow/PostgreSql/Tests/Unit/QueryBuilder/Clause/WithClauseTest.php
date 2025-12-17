@@ -116,7 +116,9 @@ final class WithClauseTest extends TestCase
         $original = new WithClause([$cte1, $cte2, $cte3], true);
 
         $node = $original->toAst();
-        $reconstructed = WithClause::fromAst($node);
+        $protoWithClause = $node->getWithClause();
+        self::assertNotNull($protoWithClause);
+        $reconstructed = WithClause::fromAst($protoWithClause);
 
         self::assertCount(3, $reconstructed->ctes());
         self::assertTrue($reconstructed->recursive());
@@ -138,7 +140,9 @@ final class WithClauseTest extends TestCase
         $original = new WithClause([$cte]);
 
         $node = $original->toAst();
-        $reconstructed = WithClause::fromAst($node);
+        $protoWithClause = $node->getWithClause();
+        self::assertNotNull($protoWithClause);
+        $reconstructed = WithClause::fromAst($protoWithClause);
 
         self::assertCount(\count($original->ctes()), $reconstructed->ctes());
         self::assertSame($original->recursive(), $reconstructed->recursive());

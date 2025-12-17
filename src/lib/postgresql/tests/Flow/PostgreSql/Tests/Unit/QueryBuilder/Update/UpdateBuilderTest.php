@@ -67,10 +67,7 @@ final class UpdateBuilderTest extends TestCase
         $rangeVar = new \Flow\PostgreSql\Protobuf\AST\RangeVar(['relname' => 'users']);
         $updateStmt->setRelation($rangeVar);
 
-        $node = new Node();
-        $node->setUpdateStmt($updateStmt);
-
-        UpdateBuilder::fromAst($node);
+        UpdateBuilder::fromAst($updateStmt);
     }
 
     public function test_from_ast_throws_on_missing_relation() : void
@@ -79,18 +76,7 @@ final class UpdateBuilderTest extends TestCase
 
         $updateStmt = new UpdateStmt();
 
-        $node = new Node();
-        $node->setUpdateStmt($updateStmt);
-
-        UpdateBuilder::fromAst($node);
-    }
-
-    public function test_from_ast_throws_on_non_update_stmt() : void
-    {
-        $this->expectException(InvalidAstException::class);
-
-        $node = new Node();
-        UpdateBuilder::fromAst($node);
+        UpdateBuilder::fromAst($updateStmt);
     }
 
     public function test_immutability_from() : void
@@ -162,10 +148,7 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $original->toAst();
 
-        $node = new Node();
-        $node->setUpdateStmt($ast);
-
-        $restored = UpdateBuilder::fromAst($node);
+        $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         self::assertNotNull($restoredAst->getRelation());
@@ -184,10 +167,7 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $original->toAst();
 
-        $node = new Node();
-        $node->setUpdateStmt($ast);
-
-        $restored = UpdateBuilder::fromAst($node);
+        $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         $originalRelation = $ast->getRelation();
@@ -213,10 +193,7 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $original->toAst();
 
-        $node = new Node();
-        $node->setUpdateStmt($ast);
-
-        $restored = UpdateBuilder::fromAst($node);
+        $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         $fromClause = $restoredAst->getFromClause();
@@ -234,10 +211,7 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $original->toAst();
 
-        $node = new Node();
-        $node->setUpdateStmt($ast);
-
-        $restored = UpdateBuilder::fromAst($node);
+        $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         $returningList = $restoredAst->getReturningList();
@@ -255,10 +229,7 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $original->toAst();
 
-        $node = new Node();
-        $node->setUpdateStmt($ast);
-
-        $restored = UpdateBuilder::fromAst($node);
+        $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         self::assertTrue($restoredAst->hasWhereClause());

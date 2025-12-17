@@ -51,21 +51,13 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return new self();
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(ProtobufSelectStmt $selectStmt) : static
     {
-        $selectStmt = $node->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
         $with = null;
         $withClause = $selectStmt->getWithClause();
 
         if ($withClause !== null) {
-            $withNode = new Node();
-            $withNode->setWithClause($withClause);
-            $with = WithClause::fromAst($withNode);
+            $with = WithClause::fromAst($withClause);
         }
 
         $larg = $selectStmt->getLarg();
@@ -1064,9 +1056,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             throw InvalidAstException::missingRequiredField('larg', 'SelectStmt');
         }
 
-        $largNode = new Node();
-        $largNode->setSelectStmt($larg);
-        $left = self::fromAst($largNode);
+        $left = self::fromAst($larg);
 
         $rarg = $selectStmt->getRarg();
 
@@ -1074,9 +1064,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             throw InvalidAstException::missingRequiredField('rarg', 'SelectStmt');
         }
 
-        $rargNode = new Node();
-        $rargNode->setSelectStmt($rarg);
-        $right = self::fromAst($rargNode);
+        $right = self::fromAst($rarg);
 
         $orderBy = [];
         $sortClause = $selectStmt->getSortClause();

@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\PostgreSql\AST\Nodes\Statement;
+
+use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\Protobuf\AST\{GrantRoleStmt, GrantStmt};
+
+/**
+ * @implements Statement<GrantRoleStmt|GrantStmt>
+ */
+final readonly class GrantStatement implements Statement
+{
+    use StatementTrait;
+
+    public function __construct(
+        private GrantStmt|GrantRoleStmt $stmt,
+    ) {
+    }
+
+    public function raw() : GrantStmt|GrantRoleStmt
+    {
+        return $this->stmt;
+    }
+}
