@@ -27,11 +27,6 @@
                 "name": "with-pg-query",
                 "needs-value": false,
                 "description": "Path to libpg_query installation (optional - will auto-download if not found)"
-            },
-            {
-                "name": "with-pg-version",
-                "needs-value": true,
-                "description": "PostgreSQL grammar version: 15, 16, or 17 (default: 17)"
             }
         ],
         "support-zts": true,
