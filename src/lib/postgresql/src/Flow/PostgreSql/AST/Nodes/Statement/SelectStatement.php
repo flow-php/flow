@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
-use Flow\PostgreSql\Protobuf\AST\SelectStmt;
-use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
+use Flow\PostgreSql\AST\Nodes\{From, Statement, StatementTrait};
+use Flow\PostgreSql\Protobuf\AST\{SelectStmt, SetOperation};
 
 /**
  * @implements Statement<SelectStmt>
@@ -18,6 +17,11 @@ final readonly class SelectStatement implements Statement
     public function __construct(
         private SelectStmt $stmt,
     ) {
+    }
+
+    public function from() : From
+    {
+        return new From(\iterator_to_array($this->stmt->getFromClause()));
     }
 
     public function hasCte() : bool
@@ -45,13 +49,15 @@ final readonly class SelectStatement implements Statement
         return $this->stmt->hasLimitOffset();
     }
 
+    public function hasSetOperation() : bool
+    {
+        $op = $this->stmt->getOp();
+
+        return $op !== SetOperation::SET_OPERATION_UNDEFINED && $op !== SetOperation::SETOP_NONE;
+    }
+
     public function raw() : SelectStmt
     {
         return $this->stmt;
-    }
-
-    public function toBuilder() : SelectBuilder
-    {
-        return SelectBuilder::fromAst($this->stmt);
     }
 }
