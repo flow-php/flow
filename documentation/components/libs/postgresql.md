@@ -38,10 +38,10 @@ execute it with the Client, and map results to objects.
 
 This library has two optional PHP extensions depending on which features you use:
 
-| Extension      | Required for                                          | Installation                                                                            |
-|----------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| `ext-pgsql`    | Client (database connections, query execution)        | Usually bundled with PHP, or `apt install php-pgsql`                                    |
-| `ext-pg_query` | Query Builder, SQL Parser (AST parsing, manipulation) | [postgresql-ext documentation](/documentation/components/extensions/postgresql-ext.md) |
+| Extension      | Required for                                          | Installation                                                                         |
+|----------------|-------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `ext-pgsql`    | Client (database connections, query execution)        | Usually bundled with PHP, or `apt install php-pgsql`                                 |
+| `ext-pg_query` | Query Builder, SQL Parser (AST parsing, manipulation) | [postgresql-ext documentation](/documentation/components/extensions/pg-query-ext.md) |
 
 Both extensions are optional - you can use the Client without installing `ext-pg_query`, and vice versa.
 
@@ -227,33 +227,47 @@ echo $query->toSQL();
 
 **Data Queries (DML)**
 
-- [Select Query Builder](/documentation/components/libs/postgresql/select-query-builder.md) - SELECT with JOINs, CTEs, window functions, subqueries
-- [Insert Query Builder](/documentation/components/libs/postgresql/insert-query-builder.md) - INSERT with ON CONFLICT (upsert), RETURNING
-- [Update Query Builder](/documentation/components/libs/postgresql/update-query-builder.md) - UPDATE with FROM clause, RETURNING
-- [Delete Query Builder](/documentation/components/libs/postgresql/delete-query-builder.md) - DELETE with USING clause, RETURNING
+- [Select Query Builder](/documentation/components/libs/postgresql/select-query-builder.md) - SELECT with JOINs, CTEs,
+  window functions, subqueries
+- [Insert Query Builder](/documentation/components/libs/postgresql/insert-query-builder.md) - INSERT with ON CONFLICT (
+  upsert), RETURNING
+- [Update Query Builder](/documentation/components/libs/postgresql/update-query-builder.md) - UPDATE with FROM clause,
+  RETURNING
+- [Delete Query Builder](/documentation/components/libs/postgresql/delete-query-builder.md) - DELETE with USING clause,
+  RETURNING
 - [Merge Query Builder](/documentation/components/libs/postgresql/merge-query-builder.md) - MERGE (SQL:2008 upsert)
 
 **Schema Management (DDL)**
 
 - [Table Query Builder](/documentation/components/libs/postgresql/table-query-builder.md) - CREATE/ALTER/DROP TABLE
 - [Index Query Builder](/documentation/components/libs/postgresql/index-query-builder.md) - CREATE/DROP INDEX
-- [View Query Builder](/documentation/components/libs/postgresql/view-query-builder.md) - CREATE/DROP VIEW, materialized views
-- [Sequence Query Builder](/documentation/components/libs/postgresql/sequence-query-builder.md) - CREATE/ALTER/DROP SEQUENCE
+- [View Query Builder](/documentation/components/libs/postgresql/view-query-builder.md) - CREATE/DROP VIEW, materialized
+  views
+- [Sequence Query Builder](/documentation/components/libs/postgresql/sequence-query-builder.md) - CREATE/ALTER/DROP
+  SEQUENCE
 - [Schema Query Builder](/documentation/components/libs/postgresql/schema-query-builder.md) - CREATE/DROP SCHEMA
 
 **Database Administration**
 
-- [Transaction Query Builder](/documentation/components/libs/postgresql/transaction-query-builder.md) - BEGIN, COMMIT, ROLLBACK, SAVEPOINT
-- [Role & Grant Query Builder](/documentation/components/libs/postgresql/role-grant-query-builder.md) - CREATE/ALTER ROLE, GRANT/REVOKE
-- [Utility Query Builder](/documentation/components/libs/postgresql/utility-query-builder.md) - VACUUM, ANALYZE, EXPLAIN, LOCK, CLUSTER
+- [Transaction Query Builder](/documentation/components/libs/postgresql/transaction-query-builder.md) - BEGIN, COMMIT,
+  ROLLBACK, SAVEPOINT
+- [Role & Grant Query Builder](/documentation/components/libs/postgresql/role-grant-query-builder.md) - CREATE/ALTER
+  ROLE, GRANT/REVOKE
+- [Utility Query Builder](/documentation/components/libs/postgresql/utility-query-builder.md) - VACUUM, ANALYZE,
+  EXPLAIN, LOCK, CLUSTER
 
 **Extensions & Types**
 
-- [Copy Query Builder](/documentation/components/libs/postgresql/copy-query-builder.md) - COPY for bulk data import/export
-- [Trigger & Rule Query Builder](/documentation/components/libs/postgresql/trigger-rule-query-builder.md) - CREATE/DROP TRIGGER, RULE
-- [Function & Procedure Query Builder](/documentation/components/libs/postgresql/function-procedure-query-builder.md) - CREATE/DROP FUNCTION, PROCEDURE
-- [Extension Query Builder](/documentation/components/libs/postgresql/extension-query-builder.md) - CREATE/DROP EXTENSION
-- [Type Query Builder](/documentation/components/libs/postgresql/type-query-builder.md) - CREATE/DROP TYPE (enum, composite, range)
+- [Copy Query Builder](/documentation/components/libs/postgresql/copy-query-builder.md) - COPY for bulk data
+  import/export
+- [Trigger & Rule Query Builder](/documentation/components/libs/postgresql/trigger-rule-query-builder.md) - CREATE/DROP
+  TRIGGER, RULE
+- [Function & Procedure Query Builder](/documentation/components/libs/postgresql/function-procedure-query-builder.md) -
+  CREATE/DROP FUNCTION, PROCEDURE
+- [Extension Query Builder](/documentation/components/libs/postgresql/extension-query-builder.md) - CREATE/DROP
+  EXTENSION
+- [Type Query Builder](/documentation/components/libs/postgresql/type-query-builder.md) - CREATE/DROP TYPE (enum,
+  composite, range)
 - [Domain Query Builder](/documentation/components/libs/postgresql/domain-query-builder.md) - CREATE/DROP DOMAIN
 
 ---
@@ -293,11 +307,15 @@ $client->close();
 
 ### Detailed Documentation
 
-- [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing, lifecycle
+- [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing,
+  lifecycle
 - [Fetching Data](/documentation/components/libs/postgresql/client-fetching.md) - fetch, fetchOne, fetchAll, fetchScalar
-- [Object Mapping](/documentation/components/libs/postgresql/client-object-mapping.md) - Map rows to objects with RowMapper
-- [Cursors](/documentation/components/libs/postgresql/client-cursor.md) - Memory-efficient streaming for large result sets
-- [Transactions](/documentation/components/libs/postgresql/client-transactions.md) - Transaction callback pattern, nesting
+- [Object Mapping](/documentation/components/libs/postgresql/client-object-mapping.md) - Map rows to objects with
+  RowMapper
+- [Cursors](/documentation/components/libs/postgresql/client-cursor.md) - Memory-efficient streaming for large result
+  sets
+- [Transactions](/documentation/components/libs/postgresql/client-transactions.md) - Transaction callback pattern,
+  nesting
 - [Type System](/documentation/components/libs/postgresql/client-types.md) - Value converters, TypedValue, custom types
 
 ---

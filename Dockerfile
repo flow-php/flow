@@ -14,7 +14,6 @@ RUN apk update && apk add --no-cache \
     mariadb-dev \
     postgresql-dev \
     sqlite-dev \
-    libpq \
     curl \
     build-base \
     autoconf \
