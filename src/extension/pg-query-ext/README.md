@@ -33,25 +33,16 @@ sudo dnf install protobuf-c-devel git make gcc
 **Install the extension:**
 
 ```bash
-# Simple installation (auto-downloads libpg_query for PostgreSQL 17)
+# Simple installation (auto-downloads libpg_query)
 pie install flow-php/pg-query-ext
 
-# Install with a specific PostgreSQL grammar version (15, 16, or 17)
-pie install flow-php/pg-query-ext --with-pg-version=16
-
-# Or with a pre-installed libpg_query
+# Or with a pre-installed libpg_query (must be version 17+)
 pie install flow-php/pg-query-ext --with-pg-query=/usr/local
 ```
 
-The extension will automatically download and build the appropriate libpg_query version if not found on your system.
+The extension will automatically download and build libpg_query 17-latest if not found on your system.
 
-**Supported PostgreSQL versions:**
-
-| PostgreSQL | libpg_query version |
-|------------|---------------------|
-| 17         | 17-6.1.0 (default)  |
-| 16         | 16-5.2.0            |
-| 15         | 15-4.2.4            |
+> **Note:** This extension uses PostgreSQL 17 grammar (libpg_query 17-latest). It requires `postgres_deparse.h` which is only available in libpg_query 17+.
 
 ### Requirements
 

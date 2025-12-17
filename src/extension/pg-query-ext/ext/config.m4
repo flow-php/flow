@@ -5,30 +5,10 @@ PHP_ARG_WITH([pg-query],
   [AS_HELP_STRING([--with-pg-query@<:@=DIR@:>@],
     [Include pg_query support. DIR is the libpg_query install prefix (optional - will download if not found)])])
 
-PHP_ARG_WITH([pg-version],
-  [PostgreSQL grammar version],
-  [AS_HELP_STRING([--with-pg-version@<:@=VERSION@:>@],
-    [PostgreSQL grammar version: 15, 16, or 17 (default: 17)])], [17], [no])
-
 if test "$PHP_PG_QUERY" != "no"; then
-  dnl Map PostgreSQL version to libpg_query version
-  case "$PHP_PG_VERSION" in
-    15)
-      LIBPG_QUERY_VERSION="15-4.2.4"
-      ;;
-    16)
-      LIBPG_QUERY_VERSION="16-5.2.0"
-      ;;
-    17|yes|"")
-      LIBPG_QUERY_VERSION="17-latest"
-      PHP_PG_VERSION="17"
-      ;;
-    *)
-      AC_MSG_ERROR([Unsupported PostgreSQL version: $PHP_PG_VERSION. Supported versions: 15, 16, 17])
-      ;;
-  esac
-
-  AC_MSG_NOTICE([Using PostgreSQL $PHP_PG_VERSION grammar (libpg_query $LIBPG_QUERY_VERSION)])
+  dnl libpg_query 17-latest is required for postgres_deparse.h support
+  LIBPG_QUERY_VERSION="17-latest"
+  AC_MSG_NOTICE([Using libpg_query $LIBPG_QUERY_VERSION (PostgreSQL 17 grammar)])
 
   PG_QUERY_DIR=""
 
@@ -42,12 +22,14 @@ if test "$PHP_PG_QUERY" != "no"; then
   AC_MSG_CHECKING([for libpg_query])
 
   for i in $SEARCH_PATH ; do
-    if test -r "$i/pg_query.h" && test -r "$i/libpg_query.a"; then
+    dnl Check flat directory structure (headers and lib in same dir)
+    if test -r "$i/pg_query.h" && test -r "$i/postgres_deparse.h" && test -r "$i/libpg_query.a"; then
       PG_QUERY_DIR=$i
       AC_MSG_RESULT([found in $i])
       break
     fi
-    if test -r "$i/include/pg_query.h" && test -r "$i/lib/libpg_query.a"; then
+    dnl Check standard include/lib directory structure
+    if test -r "$i/include/pg_query.h" && test -r "$i/include/postgres_deparse.h" && test -r "$i/lib/libpg_query.a"; then
       PG_QUERY_DIR=$i
       PG_QUERY_INCLUDE_DIR="$i/include"
       PG_QUERY_LIB_DIR="$i/lib"
@@ -61,7 +43,7 @@ if test "$PHP_PG_QUERY" != "no"; then
 
   dnl Check bundled directory
   if test -z "$PG_QUERY_DIR"; then
-    if test -r "$EXT_DIR/libpg_query/pg_query.h" && test -r "$EXT_DIR/libpg_query/libpg_query.a"; then
+    if test -r "$EXT_DIR/libpg_query/pg_query.h" && test -r "$EXT_DIR/libpg_query/postgres_deparse.h" && test -r "$EXT_DIR/libpg_query/libpg_query.a"; then
       PG_QUERY_DIR="$EXT_DIR/libpg_query"
       AC_MSG_RESULT([using bundled libpg_query])
     fi
