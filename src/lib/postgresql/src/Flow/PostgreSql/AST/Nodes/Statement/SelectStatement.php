@@ -20,6 +20,31 @@ final readonly class SelectStatement implements Statement
     ) {
     }
 
+    public function hasCte() : bool
+    {
+        return $this->stmt->hasWithClause();
+    }
+
+    public function hasIntoClause() : bool
+    {
+        return $this->stmt->hasIntoClause();
+    }
+
+    public function hasLimit() : bool
+    {
+        return $this->stmt->hasLimitCount();
+    }
+
+    public function hasLockingClause() : bool
+    {
+        return \count($this->stmt->getLockingClause()) > 0;
+    }
+
+    public function hasOffset() : bool
+    {
+        return $this->stmt->hasLimitOffset();
+    }
+
     public function raw() : SelectStmt
     {
         return $this->stmt;
