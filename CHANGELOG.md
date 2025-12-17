@@ -1,6 +1,8 @@
 ## [Unreleased] - 2025-12-17
 
 ### Added
+- [#2091](https://github.com/flow-php/flow/pull/2091) - **added SelectStatement::from() : From** - [@norberttech](https://github.com/norberttech)
+- [#2091](https://github.com/flow-php/flow/pull/2091) - **sql_query_depth(string $query): int** - [@norberttech](https://github.com/norberttech)
 - [#2090](https://github.com/flow-php/flow/pull/2090) - **expose helper methods on SelectStatement** - [@norberttech](https://github.com/norberttech)
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
