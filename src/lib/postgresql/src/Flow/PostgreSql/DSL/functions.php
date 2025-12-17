@@ -14,7 +14,7 @@ use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
-use Flow\PostgreSql\Extractors\{Columns, Functions, Tables};
+use Flow\PostgreSql\Extractors\{Columns, Functions, QueryDepth, Tables};
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Clause\{
     CTE,
@@ -365,6 +365,20 @@ function sql_query_tables(ParsedQuery $query) : Tables
 function sql_query_functions(ParsedQuery $query) : Functions
 {
     return new Functions($query);
+}
+
+/**
+ * Get the maximum nesting depth of a SQL query.
+ *
+ * Example:
+ * - "SELECT * FROM t" => 1
+ * - "SELECT * FROM (SELECT * FROM t)" => 2
+ * - "SELECT * FROM (SELECT * FROM (SELECT * FROM t))" => 3
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_query_depth(string $sql) : int
+{
+    return (new QueryDepth(sql_parse($sql)))->depth();
 }
 
 /**

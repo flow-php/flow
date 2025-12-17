@@ -18,6 +18,54 @@ final class SelectStatementTest extends TestCase
         }
     }
 
+    public function test_from_has_values_returns_false_when_from_regular_table() : void
+    {
+        $statement = sql_parse('SELECT * FROM users')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertFalse($statement->from()->hasValues());
+    }
+
+    public function test_from_has_values_returns_false_when_from_subquery() : void
+    {
+        $statement = sql_parse('SELECT * FROM (SELECT id FROM users) AS t')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertFalse($statement->from()->hasValues());
+    }
+
+    public function test_from_has_values_returns_true_when_values_used() : void
+    {
+        $statement = sql_parse('SELECT * FROM (VALUES (1, 2), (3, 4)) AS t')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertTrue($statement->from()->hasValues());
+    }
+
+    public function test_from_has_values_returns_true_when_values_with_column_names() : void
+    {
+        $statement = sql_parse('SELECT * FROM (VALUES (1, 2), (3, 4)) AS t(a, b)')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertTrue($statement->from()->hasValues());
+    }
+
+    public function test_from_is_empty_returns_false_when_from_clause_exists() : void
+    {
+        $statement = sql_parse('SELECT * FROM users')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertFalse($statement->from()->isEmpty());
+    }
+
+    public function test_from_is_empty_returns_true_when_no_from_clause() : void
+    {
+        $statement = sql_parse('SELECT 1')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertTrue($statement->from()->isEmpty());
+    }
+
     public function test_has_cte_returns_false_when_no_with_clause() : void
     {
         $statement = sql_parse('SELECT * FROM users')->statements()->first();
@@ -113,5 +161,37 @@ final class SelectStatementTest extends TestCase
         self::assertInstanceOf(SelectStatement::class, $statement);
 
         self::assertTrue($statement->hasOffset());
+    }
+
+    public function test_has_set_operation_returns_false_when_no_set_operation() : void
+    {
+        $statement = sql_parse('SELECT * FROM users')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertFalse($statement->hasSetOperation());
+    }
+
+    public function test_has_set_operation_returns_true_when_except_exists() : void
+    {
+        $statement = sql_parse('SELECT * FROM t1 EXCEPT SELECT * FROM t2')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertTrue($statement->hasSetOperation());
+    }
+
+    public function test_has_set_operation_returns_true_when_intersect_exists() : void
+    {
+        $statement = sql_parse('SELECT * FROM t1 INTERSECT SELECT * FROM t2')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertTrue($statement->hasSetOperation());
+    }
+
+    public function test_has_set_operation_returns_true_when_union_exists() : void
+    {
+        $statement = sql_parse('SELECT * FROM t1 UNION SELECT * FROM t2')->statements()->first();
+        self::assertInstanceOf(SelectStatement::class, $statement);
+
+        self::assertTrue($statement->hasSetOperation());
     }
 }
