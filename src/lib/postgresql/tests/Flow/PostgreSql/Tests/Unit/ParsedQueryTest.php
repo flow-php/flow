@@ -9,7 +9,7 @@ use Flow\PostgreSql\AST\Nodes\{Column, FunctionCall, Statements, Table};
 use Flow\PostgreSql\AST\Nodes\Statement\{DeleteStatement, InsertStatement, SelectStatement, UpdateStatement};
 use Flow\PostgreSql\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
 use Flow\PostgreSql\ParsedQuery;
-use Flow\PostgreSql\Protobuf\AST\{ParseResult};
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use PHPUnit\Framework\TestCase;
 
 final class ParsedQueryTest extends TestCase

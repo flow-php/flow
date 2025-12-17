@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Select;
 
-use Flow\PostgreSql\Protobuf\AST\{SelectStmt};
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\Clause\{OrderByItem, SortDirection};
 use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
 use Flow\PostgreSql\QueryBuilder\Expression\{AggregateCall, Column, Literal, Star};
