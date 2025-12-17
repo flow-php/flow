@@ -4,6 +4,7 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [a2bfdc](https://github.com/flow-php/flow/commit/a2bfdc69b9d30a4b9585a6a59d1c33cd3f79991b) - **chores: cleanups** - [@norberttech](https://github.com/norberttech)
 - [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
