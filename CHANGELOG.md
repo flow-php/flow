@@ -1,3 +1,8 @@
+## [Unreleased] - 2025-12-17
+
+### Added
+- [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
+
 ## [0.29.0] - 2025-12-17
 
 ### Added
