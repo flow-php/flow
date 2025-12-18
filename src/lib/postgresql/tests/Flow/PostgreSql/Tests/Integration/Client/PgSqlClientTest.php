@@ -13,6 +13,7 @@ use function Flow\PostgreSql\DSL\{
     data_type_double_precision,
     data_type_integer,
     delete,
+    eq,
     func,
     gt,
     insert,
@@ -20,12 +21,15 @@ use function Flow\PostgreSql\DSL\{
     param,
     row_expr,
     select,
+    sql_explain_config,
     star,
+    table,
     values_table
 };
 use function Flow\Types\DSL\type_integer;
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\TypedValue;
+use Flow\PostgreSql\Explain\Plan\{Plan, PlanNodeType};
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
 
 final class PgSqlClientTest extends ClientTestCase
@@ -55,6 +59,91 @@ final class PgSqlClientTest extends ClientTestCase
         );
 
         self::assertSame(2, $affected);
+    }
+
+    public function test_explain_returns_plan_for_select_query() : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain')
+                ->column(ColumnDefinition::create('id', DataType::integer()))
+                ->column(ColumnDefinition::create('name', DataType::text()))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain'))
+        );
+
+        self::assertInstanceOf(Plan::class, $plan);
+        self::assertInstanceOf(PlanNodeType::class, $plan->rootNode()->nodeType());
+        self::assertNotNull($plan->executionTime());
+        self::assertNotNull($plan->planningTime());
+    }
+
+    public function test_explain_returns_plan_with_parameters() : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain_params')
+                ->column(ColumnDefinition::create('id', DataType::integer()))
+                ->column(ColumnDefinition::create('name', DataType::text()))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain_params'))->where(eq(col('id'), param(1))),
+            [42]
+        );
+
+        self::assertInstanceOf(Plan::class, $plan);
+        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+    }
+
+    public function test_explain_returns_plan_with_raw_sql() : void
+    {
+        $plan = $this->client->explain(
+            'SELECT $1::int + $2::int',
+            [10, 32]
+        );
+
+        self::assertInstanceOf(Plan::class, $plan);
+        self::assertSame(PlanNodeType::RESULT, $plan->rootNode()->nodeType());
+    }
+
+    public function test_explain_with_custom_config() : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain_config')
+                ->column(ColumnDefinition::create('id', DataType::integer()))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain_config')),
+            config: sql_explain_config(
+                analyze: true,
+                buffers: true,
+                timing: true,
+                costs: true,
+            )
+        );
+
+        self::assertInstanceOf(Plan::class, $plan);
+        self::assertNotNull($plan->executionTime());
+        self::assertGreaterThanOrEqual(0.0, $plan->rootNode()->cost()->totalCost());
+    }
+
+    public function test_explain_without_analyze() : void
+    {
+        $plan = $this->client->explain(
+            select(literal(1)),
+            config: sql_explain_config(
+                analyze: false,
+                buffers: false,
+                timing: false,
+            )
+        );
+
+        self::assertInstanceOf(Plan::class, $plan);
+        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        self::assertNull($plan->executionTime());
+        self::assertNull($plan->rootNode()->timing());
     }
 
     public function test_fetch_all_into_maps_to_objects() : void

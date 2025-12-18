@@ -121,6 +121,10 @@ final class PgSqlClient implements Client
 
         $jsonOutput = $this->fetchScalar($explainQuery, $parameters);
 
+        if ($jsonOutput instanceof Json) {
+            $jsonOutput = $jsonOutput->toString();
+        }
+
         /** @var string $jsonOutput */
         return (new ExplainParser())->parse($jsonOutput);
     }
