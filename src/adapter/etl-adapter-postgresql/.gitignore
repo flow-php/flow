@@ -1,0 +1,4 @@
+tools/vendor
+vendor
+var
+phpunit.xml

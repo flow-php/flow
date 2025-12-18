@@ -6,7 +6,8 @@
 
 A compiled PHP extension for PostgreSQL query parsing using [libpg_query](https://github.com/pganalyze/libpg_query).
 
-This extension provides low-level functions for parsing PostgreSQL SQL queries. For a higher-level, object-oriented interface with strongly-typed AST nodes, see the [pg-query library](/documentation/components/libs/pg-query.md).
+This extension provides low-level functions for parsing PostgreSQL SQL queries. For a higher-level, object-oriented
+interface with strongly-typed AST nodes, see the [pg-query library](/documentation/components/libs/pg-query.md).
 
 ## Features
 
@@ -41,7 +42,8 @@ pie install flow-php/pg-query-ext
 pie install flow-php/pg-query-ext --with-pg-version=16
 ```
 
-The extension will automatically download and build the appropriate libpg_query version. Build dependencies (`protobuf-c`, `git`, `make`, `gcc`) must be available on your system.
+The extension will automatically download and build the appropriate libpg_query version. Build dependencies (
+`protobuf-c`, `git`, `make`, `gcc`) must be available on your system.
 
 ### Supported PostgreSQL Versions
 
@@ -56,7 +58,7 @@ The extension will automatically download and build the appropriate libpg_query 
 ### In php.ini
 
 ```ini
-extension=pg_query
+extension = pg_query
 ```
 
 ### During Development
@@ -129,19 +131,19 @@ $summary = pg_query_summary('SELECT * FROM users WHERE id = 1');
 
 ## Functions Reference
 
-| Function | Description | Returns |
-|----------|-------------|---------|
-| `pg_query_parse(string $sql)` | Parse SQL to JSON AST | `string` (JSON) |
-| `pg_query_parse_protobuf(string $sql)` | Parse SQL to protobuf AST | `string` (protobuf) |
-| `pg_query_fingerprint(string $sql)` | Generate query fingerprint | `string\|false` |
-| `pg_query_normalize(string $sql)` | Normalize query with placeholders | `string\|false` |
-| `pg_query_normalize_utility(string $sql)` | Normalize DDL/utility statements | `string\|false` |
-| `pg_query_parse_plpgsql(string $sql)` | Parse PL/pgSQL function | `string` (JSON) |
-| `pg_query_split(string $sql)` | Split multiple statements | `array<string>` |
-| `pg_query_scan(string $sql)` | Scan SQL into tokens | `string` (protobuf) |
-| `pg_query_deparse(string $protobuf)` | Convert protobuf AST back to SQL | `string` |
-| `pg_query_deparse_opts(...)` | Deparse with formatting options | `string` |
-| `pg_query_summary(string $sql, int $options, int $truncate)` | Generate query summary | `string` (protobuf) |
+| Function                                                     | Description                       | Returns             |
+|--------------------------------------------------------------|-----------------------------------|---------------------|
+| `pg_query_parse(string $sql)`                                | Parse SQL to JSON AST             | `string` (JSON)     |
+| `pg_query_parse_protobuf(string $sql)`                       | Parse SQL to protobuf AST         | `string` (protobuf) |
+| `pg_query_fingerprint(string $sql)`                          | Generate query fingerprint        | `string\|false`     |
+| `pg_query_normalize(string $sql)`                            | Normalize query with placeholders | `string\|false`     |
+| `pg_query_normalize_utility(string $sql)`                    | Normalize DDL/utility statements  | `string\|false`     |
+| `pg_query_parse_plpgsql(string $sql)`                        | Parse PL/pgSQL function           | `string` (JSON)     |
+| `pg_query_split(string $sql)`                                | Split multiple statements         | `array<string>`     |
+| `pg_query_scan(string $sql)`                                 | Scan SQL into tokens              | `string` (protobuf) |
+| `pg_query_deparse(string $protobuf)`                         | Convert protobuf AST back to SQL  | `string`            |
+| `pg_query_deparse_opts(...)`                                 | Deparse with formatting options   | `string`            |
+| `pg_query_summary(string $sql, int $options, int $truncate)` | Generate query summary            | `string` (protobuf) |
 
 ### pg_query_deparse_opts Parameters
 
@@ -206,15 +208,18 @@ make test
 
 ## Architecture
 
-The extension is built on top of [libpg_query](https://github.com/pganalyze/libpg_query), which extracts PostgreSQL's query parser into a standalone library. This means you get the exact same SQL parsing behavior as PostgreSQL itself.
+The extension is built on top of [libpg_query](https://github.com/pganalyze/libpg_query), which extracts PostgreSQL's
+query parser into a standalone library. This means you get the exact same SQL parsing behavior as PostgreSQL itself.
 
 Key implementation details:
+
 - **Static linking**: libpg_query.a is statically linked into the extension
 - **Build dependency**: Requires `protobuf-c` library for compilation (libpg_query uses protobuf internally)
 - **Auto-download**: The build system automatically downloads the correct libpg_query version
 
 ## See Also
 
-- [pg-query library](/documentation/components/libs/pg-query.md) - Higher-level PHP wrapper with strongly-typed AST nodes
+- [pg-query library](/documentation/components/libs/pg-query.md) - Higher-level PHP wrapper with strongly-typed AST
+  nodes
 - [libpg_query](https://github.com/pganalyze/libpg_query) - The underlying C library
 - [Nix Development Environment](/documentation/contributing/nix.md) - Using nix-shell for development

@@ -1,0 +1,39 @@
+{
+    "name": "flow-php/etl-adapter-postgresql",
+    "type": "library",
+    "license": "MIT",
+    "description": "PHP ETL - Adapter - PostgreSQL",
+    "keywords": [
+        "postgresql",
+        "postgres",
+        "pgsql",
+        "etl",
+        "extractor"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/etl": "self.version",
+        "flow-php/postgresql": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/PostgreSql/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
