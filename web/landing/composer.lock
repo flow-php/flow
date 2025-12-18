@@ -353,20 +353,20 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "0.28.0",
+            "version": "0.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "37c0dd8ce3464097d41eed659776ba16373b7a20"
+                "reference": "1dd6d879ef5900b28b95013157e9f3c6ec765b2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/37c0dd8ce3464097d41eed659776ba16373b7a20",
-                "reference": "37c0dd8ce3464097d41eed659776ba16373b7a20",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/1dd6d879ef5900b28b95013157e9f3c6ec765b2f",
+                "reference": "1dd6d879ef5900b28b95013157e9f3c6ec765b2f",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
             },
             "type": "library",
             "autoload": {
@@ -395,7 +395,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.28.0"
+                "source": "https://github.com/flow-php/array-dot/tree/0.29.0"
             },
             "funding": [
                 {
@@ -407,20 +407,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-06-25T17:53:02+00:00"
+            "time": "2025-12-12T10:55:08+00:00"
         },
         {
             "name": "flow-php/etl",
-            "version": "0.28.0",
+            "version": "0.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "474fe23cae510a968607a6e3eaefca60bc214b9a"
+                "reference": "88ac4409d2108abb4ae594069ad49b6f21eeabf3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/474fe23cae510a968607a6e3eaefca60bc214b9a",
-                "reference": "474fe23cae510a968607a6e3eaefca60bc214b9a",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/88ac4409d2108abb4ae594069ad49b6f21eeabf3",
+                "reference": "88ac4409d2108abb4ae594069ad49b6f21eeabf3",
                 "shasum": ""
             },
             "require": {
@@ -430,7 +430,7 @@
                 "flow-php/array-dot": "self.version",
                 "flow-php/filesystem": "self.version",
                 "flow-php/types": "self.version",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
                 "symfony/string": "^6.4 || ^7.3 || ^8.0",
@@ -467,7 +467,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/0.28.0"
+                "source": "https://github.com/flow-php/etl/tree/0.29.0"
             },
             "funding": [
                 {
@@ -479,26 +479,26 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-15T17:40:42+00:00"
+            "time": "2025-12-14T14:33:21+00:00"
         },
         {
             "name": "flow-php/etl-adapter-http",
-            "version": "0.28.0",
+            "version": "0.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-http.git",
-                "reference": "807ca1fad7808ae8370e1766c4366a7fccfee86e"
+                "reference": "2353aae484d9f4eb07efae8f81c3acbfa006bdea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/807ca1fad7808ae8370e1766c4366a7fccfee86e",
-                "reference": "807ca1fad7808ae8370e1766c4366a7fccfee86e",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/2353aae484d9f4eb07efae8f81c3acbfa006bdea",
+                "reference": "2353aae484d9f4eb07efae8f81c3acbfa006bdea",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "flow-php/etl": "self.version",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "psr/http-client": "^1.0"
             },
             "require-dev": {
@@ -530,7 +530,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl-adapter-http/issues",
-                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.28.0"
+                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.29.0"
             },
             "funding": [
                 {
@@ -542,25 +542,25 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-09T20:01:29+00:00"
+            "time": "2025-12-13T19:30:32+00:00"
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.28.0",
+            "version": "0.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
-                "reference": "eeebf5e9a707afb67f8b1820766b1a2a2a84e5c8"
+                "reference": "9a92c442feb3ee3e5e266d7c64d331c7edb4654b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/eeebf5e9a707afb67f8b1820766b1a2a2a84e5c8",
-                "reference": "eeebf5e9a707afb67f8b1820766b1a2a2a84e5c8",
+                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/9a92c442feb3ee3e5e266d7c64d331c7edb4654b",
+                "reference": "9a92c442feb3ee3e5e266d7c64d331c7edb4654b",
                 "shasum": ""
             },
             "require": {
                 "flow-php/types": "self.version",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "webmozart/glob": "^3.0 || ^4.0"
             },
             "type": "library",
@@ -592,7 +592,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.28.0"
+                "source": "https://github.com/flow-php/filesystem/tree/0.29.0"
             },
             "funding": [
                 {
@@ -604,24 +604,24 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-10T11:25:06+00:00"
+            "time": "2025-12-12T10:55:46+00:00"
         },
         {
             "name": "flow-php/types",
-            "version": "0.28.0",
+            "version": "0.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/types.git",
-                "reference": "11a264628b3e701ad1d197f125b6a5e41745446d"
+                "reference": "128ad67416e35e0e3d86a5c874a3af8510773b8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/types/zipball/11a264628b3e701ad1d197f125b6a5e41745446d",
-                "reference": "11a264628b3e701ad1d197f125b6a5e41745446d",
+                "url": "https://api.github.com/repos/flow-php/types/zipball/128ad67416e35e0e3d86a5c874a3af8510773b8c",
+                "reference": "128ad67416e35e0e3d86a5c874a3af8510773b8c",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "symfony/polyfill-php83": "^1.33"
             },
             "type": "library",
@@ -646,7 +646,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/types/issues",
-                "source": "https://github.com/flow-php/types/tree/0.28.0"
+                "source": "https://github.com/flow-php/types/tree/0.29.0"
             },
             "funding": [
                 {
@@ -658,7 +658,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-15T14:41:25+00:00"
+            "time": "2025-12-14T14:33:40+00:00"
         },
         {
             "name": "league/commonmark",
