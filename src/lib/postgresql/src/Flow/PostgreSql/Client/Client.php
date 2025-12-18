@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
+use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\{QueryException, TransactionException};
+use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
 interface Client
@@ -52,6 +54,18 @@ interface Client
      * @throws QueryException
      */
     public function execute(SqlQuery|string $sql, array $parameters = []) : int;
+
+    /**
+     * Execute EXPLAIN ANALYZE on a query and return the execution plan.
+     * Useful for analyzing query performance.
+     *
+     * @param SqlQuery|string $sql SQL query to explain
+     * @param array<int, mixed> $parameters Positional parameters
+     * @param null|ExplainConfig $config EXPLAIN configuration (defaults to forAnalysis())
+     *
+     * @throws QueryException
+     */
+    public function explain(SqlQuery|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan;
 
     /**
      * Fetch the first row from query result.
@@ -166,6 +180,47 @@ interface Client
      * @throws QueryException
      */
     public function fetchScalar(SqlQuery|string $sql, array $parameters = []) : mixed;
+
+    /**
+     * Fetch a single boolean value from the first column of first row.
+     *
+     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param array<int, mixed> $parameters Positional parameters
+     *
+     * @throws QueryException
+     */
+    public function fetchScalarBool(SqlQuery|string $sql, array $parameters = []) : bool;
+
+    /**
+     * Fetch a single float value from the first column of first row.
+     *
+     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param array<int, mixed> $parameters Positional parameters
+     *
+     * @throws QueryException
+     */
+    public function fetchScalarFloat(SqlQuery|string $sql, array $parameters = []) : float;
+
+    /**
+     * Fetch a single integer value from the first column of first row.
+     * Ideal for COUNT(*), MAX(), MIN(), etc.
+     *
+     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param array<int, mixed> $parameters Positional parameters
+     *
+     * @throws QueryException
+     */
+    public function fetchScalarInt(SqlQuery|string $sql, array $parameters = []) : int;
+
+    /**
+     * Fetch a single string value from the first column of first row.
+     *
+     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param array<int, mixed> $parameters Positional parameters
+     *
+     * @throws QueryException
+     */
+    public function fetchScalarString(SqlQuery|string $sql, array $parameters = []) : string;
 
     /**
      * Get the current transaction nesting level.

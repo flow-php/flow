@@ -10,6 +10,7 @@ use function Flow\PostgreSql\DSL\{
     col,
     cond_false,
     create,
+    data_type_double_precision,
     data_type_integer,
     delete,
     func,
@@ -184,6 +185,39 @@ final class PgSqlClientTest extends ClientTestCase
         self::assertSame('Alice', $row['name']);
     }
 
+    public function test_fetch_scalar_bool_returns_boolean() : void
+    {
+        $value = $this->client->fetchScalarBool(
+            select(literal(true))
+        );
+
+        self::assertTrue($value);
+
+        $value = $this->client->fetchScalarBool(
+            select(literal(false))
+        );
+
+        self::assertFalse($value);
+    }
+
+    public function test_fetch_scalar_float_returns_float() : void
+    {
+        $value = $this->client->fetchScalarFloat(
+            select(cast(literal(3.14), data_type_double_precision()))
+        );
+
+        self::assertSame(3.14, $value);
+    }
+
+    public function test_fetch_scalar_int_returns_integer() : void
+    {
+        $value = $this->client->fetchScalarInt(
+            select(literal(42))
+        );
+
+        self::assertSame(42, $value);
+    }
+
     public function test_fetch_scalar_returns_null_when_no_rows() : void
     {
         $value = $this->client->fetchScalar(
@@ -207,6 +241,15 @@ final class PgSqlClientTest extends ClientTestCase
         );
 
         self::assertSame(42, $value);
+    }
+
+    public function test_fetch_scalar_string_returns_string() : void
+    {
+        $value = $this->client->fetchScalarString(
+            select(literal('hello world'))
+        );
+
+        self::assertSame('hello world', $value);
     }
 
     public function test_is_connected() : void

@@ -6,9 +6,13 @@ namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
 use function Flow\PostgreSql\DSL\{begin, commit, release_savepoint, rollback, savepoint};
 use function Flow\Types\DSL\{type_boolean, type_datetime, type_float, type_integer, type_json, type_list, type_string, type_uuid};
+use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper, TransactionContext, TypedValue};
 use Flow\PostgreSql\Client\Exception\{ConnectionException, MappingException, QueryException, TransactionException};
 use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter, ValueConverters};
+use Flow\PostgreSql\Explain\ExplainParser;
+use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 use Flow\Types\Value\{Json, Uuid};
 use PgSql\{Connection, Result};
@@ -104,6 +108,21 @@ final class PgSqlClient implements Client
         \pg_free_result($result);
 
         return $affected;
+    }
+
+    public function explain(SqlQuery|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan
+    {
+        $config ??= ExplainConfig::forAnalysis();
+        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+
+        $parsed = (new Parser())->parse($query);
+        $parsed->traverse(new ExplainModifier($config));
+        $explainQuery = $parsed->deparse();
+
+        $jsonOutput = $this->fetchScalar($explainQuery, $parameters);
+
+        /** @var string $jsonOutput */
+        return (new ExplainParser())->parse($jsonOutput);
     }
 
     public function fetch(SqlQuery|string $sql, array $parameters = []) : ?array
@@ -247,6 +266,26 @@ final class PgSqlClient implements Client
         \pg_free_result($result);
 
         return $value;
+    }
+
+    public function fetchScalarBool(SqlQuery|string $sql, array $parameters = []) : bool
+    {
+        return type_boolean()->assert($this->fetchScalar($sql, $parameters));
+    }
+
+    public function fetchScalarFloat(SqlQuery|string $sql, array $parameters = []) : float
+    {
+        return type_float()->assert($this->fetchScalar($sql, $parameters));
+    }
+
+    public function fetchScalarInt(SqlQuery|string $sql, array $parameters = []) : int
+    {
+        return type_integer()->assert($this->fetchScalar($sql, $parameters));
+    }
+
+    public function fetchScalarString(SqlQuery|string $sql, array $parameters = []) : string
+    {
+        return type_string()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function getTransactionNestingLevel() : int
