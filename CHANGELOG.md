@@ -1,6 +1,8 @@
-## [Unreleased] - 2025-12-17
+## [Unreleased] - 2025-12-18
 
 ### Added
+- [#2093](https://github.com/flow-php/flow/pull/2093) - **Client::explain() : Plan - to postgresql client** - [@norberttech](https://github.com/norberttech)
+- [#2093](https://github.com/flow-php/flow/pull/2093) - **More precise fetchScalarX functions to postgresql client** - [@norberttech](https://github.com/norberttech)
 - [#2091](https://github.com/flow-php/flow/pull/2091) - **added SelectStatement::from() : From** - [@norberttech](https://github.com/norberttech)
 - [#2091](https://github.com/flow-php/flow/pull/2091) - **sql_query_depth(string $query): int** - [@norberttech](https://github.com/norberttech)
 - [#2090](https://github.com/flow-php/flow/pull/2090) - **expose helper methods on SelectStatement** - [@norberttech](https://github.com/norberttech)
