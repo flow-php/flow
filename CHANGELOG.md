@@ -17,6 +17,9 @@
 - [c68c46](https://github.com/flow-php/flow/commit/c68c460f0880bbf6c3f5ebf01fe1e73bf63fda7e) - **documentation link** - [@norberttech](https://github.com/norberttech)
 - [#2089](https://github.com/flow-php/flow/pull/2089) - **installation of libpg when installing pg-query-ext through pie** - [@norberttech](https://github.com/norberttech)
 
+### Updated
+- [58d619](https://github.com/flow-php/flow/commit/58d619c9f9d0c5d293dcf36011a8098bdb271e74) - **supported PHP versions in introduction.md** - [@norberttech](https://github.com/norberttech)
+
 ## [0.29.0] - 2025-12-17
 
 ### Added
