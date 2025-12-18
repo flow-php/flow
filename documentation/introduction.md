@@ -9,9 +9,9 @@ Flow is a PHP based, strongly typed data processing framework with low memory fo
 
 Supported PHP versions: 
 
-- 8.2 
-- 8.3
+- 8.3 
 - 8.4
+- 8.5
 
 # Key Features
 
