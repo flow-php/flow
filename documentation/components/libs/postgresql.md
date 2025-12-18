@@ -26,14 +26,14 @@ execute it with the Client, and map results to objects.
 
 ## Use Case Navigator
 
-| I want to...                       | Go to                                     | Extension needed |
-|------------------------------------|-------------------------------------------|------------------|
-| Execute queries and fetch results  | [Client](#client)                         | `ext-pgsql`      |
-| Build SQL queries with type safety | [Query Builder](#query-builder)           | `ext-pg_query`   |
-| Parse and analyze existing SQL     | [SQL Parser](#sql-parser)                 | `ext-pg_query`   |
-| Add pagination to existing queries | [Query Modification](#query-modification) | `ext-pg_query`   |
-| Analyze query performance          | [Query Plan Analysis](postgresql/client-explain.md) | `ext-pgsql`, `ext-pg_query` |
-| Traverse or modify AST directly    | [Advanced Features](#advanced-features)   | `ext-pg_query`   |
+| I want to...                       | Go to                                                                              | Extension needed            |
+|------------------------------------|------------------------------------------------------------------------------------|-----------------------------|
+| Execute queries and fetch results  | [Client](#client)                                                                  | `ext-pgsql`                 |
+| Build SQL queries with type safety | [Query Builder](#query-builder)                                                    | `ext-pg_query`              |
+| Parse and analyze existing SQL     | [SQL Parser](#sql-parser)                                                          | `ext-pg_query`              |
+| Add pagination to existing queries | [Query Modification](#query-modification)                                          | `ext-pg_query`              |
+| Analyze query performance          | [Query Plan Analysis](/documentation/components/libs/postgresql/client-explain.md) | `ext-pgsql`, `ext-pg_query` |
+| Traverse or modify AST directly    | [Advanced Features](#advanced-features)                                            | `ext-pg_query`              |
 
 ## Requirements
 
