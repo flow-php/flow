@@ -13,6 +13,7 @@
 - [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2094](https://github.com/flow-php/flow/pull/2094) - **handling query json result in postgresql/client** - [@norberttech](https://github.com/norberttech)
 - [c68c46](https://github.com/flow-php/flow/commit/c68c460f0880bbf6c3f5ebf01fe1e73bf63fda7e) - **documentation link** - [@norberttech](https://github.com/norberttech)
 - [#2089](https://github.com/flow-php/flow/pull/2089) - **installation of libpg when installing pg-query-ext through pie** - [@norberttech](https://github.com/norberttech)
 
