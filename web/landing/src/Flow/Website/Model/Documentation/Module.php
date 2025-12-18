@@ -22,6 +22,7 @@ enum Module : string
     case MEILI_SEARCH = 'Meili Search';
     case PARQUET = 'Parquet';
     case PG_QUERY = 'PG_QUERY';
+    case POSTGRESQL = 'POSTGRESQL';
     case S3_FILESYSTEM = 'S3 Filesystem';
     case TEXT = 'Text';
     case TYPES = 'Types';
@@ -40,21 +41,22 @@ enum Module : string
             self::CORE => 1,
             self::CSV => 2,
             self::DOCTRINE => 3,
-            self::ELASTIC_SEARCH => 4,
-            self::GOOGLE_SHEET => 5,
-            self::CHART_JS => 6,
-            self::JSON => 7,
-            self::MEILI_SEARCH => 8,
-            self::PARQUET => 9,
-            self::TEXT => 10,
-            self::XML => 11,
-            self::FILESYSTEM => 12,
-            self::TYPES => 13,
-            self::AZURE_FILESYSTEM => 14,
-            self::AZURE_SDK => 15,
-            self::HTTP => 16,
-            self::EXCEL => 17,
-            self::PG_QUERY => 18,
+            self::POSTGRESQL => 4,
+            self::ELASTIC_SEARCH => 5,
+            self::GOOGLE_SHEET => 6,
+            self::CHART_JS => 7,
+            self::JSON => 8,
+            self::MEILI_SEARCH => 9,
+            self::PARQUET => 10,
+            self::TEXT => 11,
+            self::XML => 12,
+            self::FILESYSTEM => 13,
+            self::TYPES => 14,
+            self::AZURE_FILESYSTEM => 15,
+            self::AZURE_SDK => 16,
+            self::HTTP => 17,
+            self::EXCEL => 18,
+            self::PG_QUERY => 19,
             default => 99,
         };
     }
