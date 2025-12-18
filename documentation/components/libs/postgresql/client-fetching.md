@@ -104,6 +104,35 @@ $exists = $client->fetchScalar(
 $name = $client->fetchScalar('SELECT name FROM users WHERE id = $1', [1]);
 ```
 
+## Typed Scalar Methods
+
+For better static analysis and type safety, use the typed scalar methods that assert the return type:
+
+```php
+<?php
+
+// fetchScalarInt() - Returns int
+$count = $client->fetchScalarInt('SELECT COUNT(*) FROM users WHERE active = $1', [true]);
+// $count is guaranteed to be int
+
+// fetchScalarBool() - Returns bool
+$exists = $client->fetchScalarBool(
+    'SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)',
+    ['john@example.com']
+);
+// $exists is guaranteed to be bool
+
+// fetchScalarFloat() - Returns float
+$average = $client->fetchScalarFloat('SELECT AVG(price) FROM products');
+// $average is guaranteed to be float
+
+// fetchScalarString() - Returns string
+$name = $client->fetchScalarString('SELECT name FROM users WHERE id = $1', [1]);
+// $name is guaranteed to be string
+```
+
+These methods throw `InvalidTypeException` if the value cannot be converted to the expected type.
+
 ## execute() - Data Modification
 
 For INSERT, UPDATE, DELETE statements. Returns the number of affected rows:

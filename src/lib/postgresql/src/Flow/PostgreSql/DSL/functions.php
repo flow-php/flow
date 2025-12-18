@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\PostgreSql\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
+use Flow\PostgreSql\AST\Transformers\{CountModifier, ExplainConfig, ExplainModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
 use Flow\PostgreSql\Client;
 use Flow\PostgreSql\Client\{ConnectionParameters, RowMapper, TypedValue};
 use Flow\PostgreSql\Client\DsnParser;
@@ -14,6 +14,9 @@ use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
+use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
+use Flow\PostgreSql\Explain\ExplainParser;
+use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Extractors\{Columns, Functions, QueryDepth, Tables};
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Clause\{
@@ -159,6 +162,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\{
     DiscardType,
     ExplainBuilder,
     ExplainFinalStep,
+    ExplainFormat,
     LockBuilder,
     LockFinalStep,
     VacuumBuilder,
@@ -379,6 +383,91 @@ function sql_query_functions(ParsedQuery $query) : Functions
 function sql_query_depth(string $sql) : int
 {
     return (new QueryDepth(sql_parse($sql)))->depth();
+}
+
+/**
+ * Transform a SQL query into an EXPLAIN query.
+ *
+ * Returns the modified SQL with EXPLAIN wrapped around it.
+ * Defaults to EXPLAIN ANALYZE with JSON format for easy parsing.
+ *
+ * @param string $sql The SQL query to explain
+ * @param null|ExplainConfig $config EXPLAIN configuration (defaults to forAnalysis())
+ *
+ * @return string The EXPLAIN query
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_to_explain(string $sql, ?ExplainConfig $config = null) : string
+{
+    $config ??= ExplainConfig::forAnalysis();
+    $query = (new Parser())->parse($sql);
+    $query->traverse(new ExplainModifier($config));
+
+    return $query->deparse();
+}
+
+/**
+ * Create an ExplainConfig for customizing EXPLAIN options.
+ *
+ * @param bool $analyze Whether to actually execute the query (ANALYZE)
+ * @param bool $verbose Include verbose output
+ * @param bool $costs Include cost estimates (default true)
+ * @param bool $buffers Include buffer usage statistics (requires analyze)
+ * @param bool $timing Include timing information (requires analyze)
+ * @param ExplainFormat $format Output format (JSON recommended for parsing)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_explain_config(
+    bool $analyze = true,
+    bool $verbose = false,
+    bool $costs = true,
+    bool $buffers = true,
+    bool $timing = true,
+    ExplainFormat $format = ExplainFormat::JSON,
+) : ExplainConfig {
+    return new ExplainConfig(
+        analyze: $analyze,
+        verbose: $verbose,
+        costs: $costs,
+        buffers: $buffers,
+        timing: $timing,
+        format: $format,
+    );
+}
+
+/**
+ * Create an ExplainModifier for transforming queries into EXPLAIN queries.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_explain_modifier(ExplainConfig $config) : ExplainModifier
+{
+    return new ExplainModifier($config);
+}
+
+/**
+ * Parse EXPLAIN JSON output into a Plan object.
+ *
+ * @param string $jsonOutput The JSON output from EXPLAIN (FORMAT JSON)
+ *
+ * @return Plan The parsed execution plan
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_explain_parse(string $jsonOutput) : Plan
+{
+    return (new ExplainParser())->parse($jsonOutput);
+}
+
+/**
+ * Create a plan analyzer for analyzing EXPLAIN plans.
+ *
+ * @param Plan $plan The execution plan to analyze
+ *
+ * @return PlanAnalyzer The analyzer for extracting insights
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_analyze(Plan $plan) : PlanAnalyzer
+{
+    return new PlanAnalyzer($plan);
 }
 
 /**
