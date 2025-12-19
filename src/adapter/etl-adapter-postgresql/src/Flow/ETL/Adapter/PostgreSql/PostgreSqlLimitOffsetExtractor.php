@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\PostgreSql\DSL\{sql_to_count_query, sql_to_paginated_query};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
-use Flow\PostgreSql\AST\Transformers\{CountModifier, PaginationConfig, PaginationModifier};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
 final class PostgreSqlLimitOffsetExtractor implements Extractor
@@ -19,15 +18,12 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
     private int $pageSize = 1000;
 
-    private readonly Parser $parser;
-
     private ?Schema $schema = null;
 
     public function __construct(
         private readonly Client $client,
         private readonly string|SqlQuery $query,
     ) {
-        $this->parser = new Parser();
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -103,23 +99,11 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
     private function applyPagination(string $sql, int $limit, int $offset) : string
     {
-        $parsedQuery = $this->parser->parse($sql);
-
-        $parsedQuery->traverse(new PaginationModifier(new PaginationConfig($limit, $offset)));
-
-        return $parsedQuery->deparse();
+        return sql_to_paginated_query($sql, $limit, $offset);
     }
 
     private function countTotal(string $sql) : int
     {
-        $parsedQuery = $this->parser->parse($sql);
-
-        $parsedQuery->traverse(new CountModifier());
-
-        $countSql = $parsedQuery->deparse();
-
-        $result = $this->client->fetchScalarInt($countSql);
-
-        return $result;
+        return $this->client->fetchScalarInt(sql_to_count_query($sql));
     }
 }

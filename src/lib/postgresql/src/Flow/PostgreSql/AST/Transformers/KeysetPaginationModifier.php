@@ -18,7 +18,9 @@ use Flow\PostgreSql\Protobuf\AST\{
     Node,
     PBString,
     ParamRef,
-    SelectStmt
+    SelectStmt,
+    SortBy,
+    SortByDir
 };
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
@@ -56,7 +58,7 @@ final readonly class KeysetPaginationModifier implements NodeModifier
         }
 
         if (!$this->hasOrderBy($node)) {
-            throw new PaginationException('Keyset pagination requires ORDER BY clause');
+            $this->addOrderByFromKeyset($node);
         }
 
         $this->applyLimit($node);
@@ -74,6 +76,29 @@ final readonly class KeysetPaginationModifier implements NodeModifier
         }
 
         return NodeModifier::DONT_TRAVERSE_CHILDREN;
+    }
+
+    /**
+     * Adds ORDER BY clause to the statement based on keyset columns configuration.
+     */
+    private function addOrderByFromKeyset(SelectStmt $stmt) : void
+    {
+        $sortNodes = [];
+
+        foreach ($this->config->columns as $column) {
+            $sortBy = new SortBy();
+            $sortBy->setNode($this->createColumnRef($column->column));
+            $sortBy->setSortbyDir(
+                $column->order === SortOrder::ASC ? SortByDir::SORTBY_ASC : SortByDir::SORTBY_DESC
+            );
+
+            $sortByNode = new Node();
+            $sortByNode->setSortBy($sortBy);
+
+            $sortNodes[] = $sortByNode;
+        }
+
+        $stmt->setSortClause($sortNodes);
     }
 
     private function applyKeysetWhere(SelectStmt $stmt) : void

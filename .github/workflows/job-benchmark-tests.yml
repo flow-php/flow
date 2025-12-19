@@ -14,6 +14,17 @@ jobs:
         operating-system:
           - "ubuntu-latest"
 
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v5"
@@ -24,8 +35,10 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
           coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
           php-env: '{"SNAPPY_CONFIGURE_PREFIX_OPTS": "CXXFLAGS=-std=c++11"}'
+          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
+          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
           cache-key-suffix: "-locked"
 
       - name: "Download phpbench benchmarks artifact"
@@ -34,6 +47,10 @@ jobs:
           workflow: baseline.yml
           name: phpbench-baseline
           path: ./var/phpbench/
+
+      - name: "Generate phpbench.json with dynamic port"
+        run: |
+          echo '{"runner.php_env": {"PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"}}' > phpbench.json
 
       - name: "Execute benchmarks"
         id: init_comment

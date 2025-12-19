@@ -8,7 +8,12 @@
 
 [TOC]
 
-Flow PHP's Adapter PostgreSQL is designed to seamlessly integrate PostgreSQL within your ETL (Extract, Transform, Load) workflows. This adapter is built on top of the [PostgreSQL library](/documentation/components/libs/postgresql/client-connection.md), providing efficient data extraction capabilities with built-in pagination support. By harnessing the Adapter PostgreSQL library, developers can tap into robust features for precise database interaction, simplifying complex data transformations and enhancing data processing efficiency.
+Flow PHP's Adapter PostgreSQL is designed to seamlessly integrate PostgreSQL within your ETL (Extract, Transform, Load)
+workflows. This adapter is built on top of
+the [PostgreSQL library](/documentation/components/libs/postgresql/client-connection.md), providing efficient data
+extraction and loading capabilities. By harnessing the Adapter PostgreSQL library, developers can tap into robust
+features for precise database interaction, simplifying complex data transformations and enhancing data processing
+efficiency.
 
 ## Installation
 
@@ -24,20 +29,35 @@ composer require flow-php/etl-adapter-postgresql:~--FLOW_PHP_VERSION--
 
 ## Description
 
-This adapter provides two extraction strategies optimized for different use cases:
+This adapter provides:
+
+### Extractors
+
+Two extraction strategies optimized for different use cases:
 
 - **LIMIT/OFFSET Pagination**: Simple pagination suitable for smaller datasets
 - **Keyset (Cursor) Pagination**: Efficient pagination for large datasets with consistent performance
 
 Both extractors support:
+
 - Raw SQL strings or Query Builder objects
 - Configurable page sizes
 - Maximum row limits
 - Custom schema definitions
 
+### Loader
+
+A flexible loader supporting:
+
+- **INSERT**: Simple inserts with batch support
+- **UPDATE**: Update existing rows by primary key
+- **DELETE**: Delete rows by primary key
+- **UPSERT**: ON CONFLICT handling for insert-or-update operations
+
 ## Extractor - LIMIT/OFFSET Pagination
 
-The `from_pgsql_limit_offset` extractor uses traditional LIMIT/OFFSET pagination. This is simple to use but may have performance degradation on very large datasets with high offsets.
+The `from_pgsql_limit_offset` extractor uses traditional LIMIT/OFFSET pagination. This is simple to use but may have
+performance degradation on very large datasets with high offsets.
 
 ### Basic Usage
 
@@ -93,7 +113,11 @@ data_frame()
 
 ## Extractor - Keyset (Cursor) Pagination
 
-The `from_pgsql_key_set` extractor uses keyset pagination (also known as cursor-based pagination). This provides consistent performance regardless of how deep you paginate, making it ideal for large datasets.
+The `from_pgsql_key_set` extractor uses keyset pagination (also known as cursor-based pagination). This provides
+consistent performance regardless of how deep you paginate, making it ideal for large datasets.
+
+> **Note:** The ORDER BY clause is automatically generated from the keyset configuration. You only need to define
+> the sort order once using `pgsql_pagination_key_asc()` or `pgsql_pagination_key_desc()`.
 
 ### Basic Usage
 
@@ -169,44 +193,143 @@ data_frame()
 
 ### Extractor Functions
 
-| Function | Description |
-|----------|-------------|
-| `from_pgsql_limit_offset($client, $query, $pageSize, $maximum)` | Extract using LIMIT/OFFSET pagination |
-| `from_pgsql_key_set($client, $query, $keySet, $pageSize, $maximum)` | Extract using keyset pagination |
+| Function                                                            | Description                           |
+|---------------------------------------------------------------------|---------------------------------------|
+| `from_pgsql_limit_offset($client, $query, $pageSize, $maximum)`     | Extract using LIMIT/OFFSET pagination |
+| `from_pgsql_key_set($client, $query, $keySet, $pageSize, $maximum)` | Extract using keyset pagination       |
 
 ### Key Functions
 
-| Function | Description |
-|----------|-------------|
-| `pgsql_pagination_key_asc($column)` | Create an ascending key for keyset pagination |
+| Function                             | Description                                   |
+|--------------------------------------|-----------------------------------------------|
+| `pgsql_pagination_key_asc($column)`  | Create an ascending key for keyset pagination |
 | `pgsql_pagination_key_desc($column)` | Create a descending key for keyset pagination |
-| `pgsql_pagination_key_set(...$keys)` | Create a keyset from one or more keys |
+| `pgsql_pagination_key_set(...$keys)` | Create a keyset from one or more keys         |
 
-## Choosing Between Extractors
+## Loader
 
-### Use LIMIT/OFFSET when:
-- Working with smaller datasets (< 100k rows)
-- You need simple, straightforward pagination
-- Random page access is required
-- The offset values remain relatively small
+The `to_pgsql_table` loader writes data to PostgreSQL tables. It supports INSERT, UPDATE, and DELETE operations with
+configurable conflict handling.
 
-### Use Keyset Pagination when:
-- Working with large datasets (100k+ rows)
-- Performance consistency is critical
-- You're doing sequential/forward pagination
-- Your table has suitable indexed columns for the keyset
+### Basic Insert
 
-## Performance Considerations
+```php
+use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
+use function Flow\ETL\DSL\{df, from_array};
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection_dsn};
 
-### LIMIT/OFFSET
+$client = pgsql_client(pgsql_connection_dsn('pgsql://user:pass@localhost:5432/database'));
 
-- Simple to understand and implement
-- Performance degrades as offset increases (PostgreSQL must skip all previous rows)
-- Memory usage increases with larger offsets
+df()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
+        ['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com'],
+    ]))
+    ->write(to_pgsql_table($client, 'users'))
+    ->run();
+```
 
-### Keyset Pagination
+### Insert with Skip Conflicts (ON CONFLICT DO NOTHING)
 
-- Consistent O(1) performance regardless of position
-- Requires indexed columns in the keyset
-- Cannot jump to arbitrary pages (sequential access only)
-- Handles concurrent modifications more gracefully
+Skip rows that would cause a constraint violation:
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\{pgsql_insert_options, to_pgsql_table};
+
+df()
+    ->read(from_array($data))
+    ->write(
+        to_pgsql_table($client, 'users')
+            ->withInsertOptions(pgsql_insert_options(skipConflicts: true))
+    )
+    ->run();
+```
+
+### Upsert (ON CONFLICT DO UPDATE)
+
+Update existing rows on conflict using specific columns:
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\{pgsql_insert_options, to_pgsql_table};
+
+df()
+    ->read(from_array($data))
+    ->write(
+        to_pgsql_table($client, 'users')
+            ->withInsertOptions(pgsql_insert_options(
+                conflictColumns: ['email'],        // Detect conflicts on these columns
+                updateColumns: ['name', 'updated_at']  // Update these columns on conflict
+            ))
+    )
+    ->run();
+```
+
+### Upsert on Constraint
+
+Use a named constraint for conflict detection:
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\{pgsql_insert_options, to_pgsql_table};
+
+df()
+    ->read(from_array($data))
+    ->write(
+        to_pgsql_table($client, 'users')
+            ->withInsertOptions(pgsql_insert_options(
+                conflictConstraint: 'users_email_key',
+                updateColumns: ['name']
+            ))
+    )
+    ->run();
+```
+
+### Update Existing Rows
+
+Update rows matching primary key values:
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\{pgsql_update_options, to_pgsql_table};
+use Flow\ETL\Adapter\PostgreSql\Operation;
+
+df()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'Alice Updated', 'email' => 'alice_new@example.com'],
+        ['id' => 2, 'name' => 'Bob Updated', 'email' => 'bob_new@example.com'],
+    ]))
+    ->write(
+        to_pgsql_table($client, 'users')
+            ->withOperation(Operation::UPDATE)
+            ->withUpdateOptions(pgsql_update_options(['id']))  // Match on 'id' column
+    )
+    ->run();
+```
+
+### Delete Rows
+
+Delete rows matching primary key values:
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\{pgsql_delete_options, to_pgsql_table};
+use Flow\ETL\Adapter\PostgreSql\Operation;
+
+df()
+    ->read(from_array([
+        ['id' => 1],
+        ['id' => 3],
+    ]))
+    ->write(
+        to_pgsql_table($client, 'users')
+            ->withOperation(Operation::DELETE)
+            ->withDeleteOptions(pgsql_delete_options(['id']))
+    )
+    ->run();
+```
+
+## Loader DSL Functions Reference
+
+| Function                             | Description                                     |
+|--------------------------------------|-------------------------------------------------|
+| `to_pgsql_table($client, $table)`    | Create a PostgreSQL loader for a table          |
+| `pgsql_insert_options(...)`          | Configure insert behavior (conflicts, upsert)   |
+| `pgsql_update_options($primaryKeys)` | Configure update behavior (primary key columns) |
+| `pgsql_delete_options($primaryKeys)` | Configure delete behavior (primary key columns) |

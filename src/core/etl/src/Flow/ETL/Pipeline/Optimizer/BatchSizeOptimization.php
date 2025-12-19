@@ -37,6 +37,7 @@ final class BatchSizeOptimization implements Optimization
         'Flow\ETL\Adapter\Doctrine\DbalLoader',
         'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
         'Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader',
+        'Flow\ETL\Adapter\PostgreSql\PostgreSqlLoader',
     ];
 
     /**

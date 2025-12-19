@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\PostgreSql\DSL\sql_to_keyset_query;
 use Flow\ETL\Adapter\PostgreSql\Pagination\{Key, KeySet};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
-use Flow\PostgreSql\AST\Transformers\{KeysetPaginationConfig, KeysetPaginationModifier};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
 final class PostgreSqlKeySetExtractor implements Extractor
@@ -20,8 +19,6 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
     private int $pageSize = 1000;
 
-    private readonly Parser $parser;
-
     private ?Schema $schema = null;
 
     public function __construct(
@@ -29,7 +26,6 @@ final class PostgreSqlKeySetExtractor implements Extractor
         private readonly string|SqlQuery $query,
         private readonly KeySet $keySet,
     ) {
-        $this->parser = new Parser();
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -112,17 +108,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
      */
     private function applyKeysetPagination(string $sql, int $limit, ?array $cursorValues) : string
     {
-        $parsedQuery = $this->parser->parse($sql);
-
-        $config = new KeysetPaginationConfig(
-            $limit,
-            $this->keySet->toKeysetColumns(),
-            $cursorValues
-        );
-
-        $parsedQuery->traverse(new KeysetPaginationModifier($config));
-
-        return $parsedQuery->deparse();
+        return sql_to_keyset_query($sql, $limit, $this->keySet->toKeysetColumns(), $cursorValues);
     }
 
     /**

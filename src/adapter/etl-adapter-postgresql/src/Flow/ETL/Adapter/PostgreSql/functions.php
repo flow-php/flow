@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\{DeleteOptions, InsertOptions, UpdateOptions};
 use Flow\ETL\Adapter\PostgreSql\Pagination\{Key, KeySet, Order};
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType};
 use Flow\PostgreSql\Client\Client;
@@ -60,4 +61,52 @@ function pgsql_pagination_key_desc(string $column) : Key
 function pgsql_pagination_key_set(Key ...$keys) : KeySet
 {
     return new KeySet(...$keys);
+}
+
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::LOADER)]
+function to_pgsql_table(
+    Client $client,
+    string $table,
+) : PostgreSqlLoader {
+    return new PostgreSqlLoader($client, $table);
+}
+
+/**
+ * Create insert options for PostgreSQL loader.
+ *
+ * @param bool $skipConflicts If true, use ON CONFLICT DO NOTHING
+ * @param list<string> $conflictColumns Column names for ON CONFLICT (columns)
+ * @param null|string $conflictConstraint Constraint name for ON CONFLICT ON CONSTRAINT
+ * @param list<string> $updateColumns Columns to update on conflict (empty = all non-key columns)
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function pgsql_insert_options(
+    bool $skipConflicts = false,
+    array $conflictColumns = [],
+    ?string $conflictConstraint = null,
+    array $updateColumns = [],
+) : InsertOptions {
+    return new InsertOptions($skipConflicts, $conflictColumns, $conflictConstraint, $updateColumns);
+}
+
+/**
+ * Create update options for PostgreSQL loader.
+ *
+ * @param list<string> $primaryKeys Columns to use in WHERE clause for matching rows
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function pgsql_update_options(array $primaryKeys) : UpdateOptions
+{
+    return new UpdateOptions($primaryKeys);
+}
+
+/**
+ * Create delete options for PostgreSQL loader.
+ *
+ * @param list<string> $primaryKeys Columns to use in WHERE clause for matching rows
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function pgsql_delete_options(array $primaryKeys) : DeleteOptions
+{
+    return new DeleteOptions($primaryKeys);
 }

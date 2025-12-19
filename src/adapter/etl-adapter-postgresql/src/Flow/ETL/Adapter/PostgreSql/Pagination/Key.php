@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Pagination;
 
+use function Flow\PostgreSql\DSL\sql_keyset_column;
 use Flow\PostgreSql\AST\Transformers\KeysetColumn;
 
 final readonly class Key
@@ -26,6 +27,6 @@ final readonly class Key
 
     public function toKeysetColumn() : KeysetColumn
     {
-        return new KeysetColumn($this->column, $this->order->toSortOrder());
+        return sql_keyset_column($this->column, $this->order->toSortOrder());
     }
 }
