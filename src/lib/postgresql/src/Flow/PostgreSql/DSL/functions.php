@@ -84,7 +84,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\{
 };
 use Flow\PostgreSql\QueryBuilder\Factory\{AlterFactory, CreateFactory, DropFactory};
 use Flow\PostgreSql\QueryBuilder\Factory\CopyFactory;
-use Flow\PostgreSql\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
+use Flow\PostgreSql\QueryBuilder\Insert\{BulkInsert, InsertBuilder, InsertIntoStep};
 use Flow\PostgreSql\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType, ReferentialAction};
@@ -507,6 +507,22 @@ function with(CTE ...$ctes) : WithBuilder
 function insert() : InsertIntoStep
 {
     return InsertBuilder::create();
+}
+
+/**
+ * Create an optimized bulk INSERT query for high-performance multi-row inserts.
+ *
+ * Unlike insert() which uses immutable builder patterns (O(n²) for n rows),
+ * this function generates SQL directly using string operations (O(n) complexity).
+ *
+ * @param string $table Table name
+ * @param list<string> $columns Column names
+ * @param int $rowCount Number of rows to insert
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function bulk_insert(string $table, array $columns, int $rowCount) : BulkInsert
+{
+    return BulkInsert::into($table, $columns, $rowCount);
 }
 
 /**

@@ -4,4 +4,5 @@ var
 vendor
 compose.yml
 phpunit.xml
+phpbench.json
 .env

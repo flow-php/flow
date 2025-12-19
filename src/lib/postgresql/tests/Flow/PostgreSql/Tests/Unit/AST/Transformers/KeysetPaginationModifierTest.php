@@ -18,6 +18,39 @@ final class KeysetPaginationModifierTest extends TestCase
         }
     }
 
+    public function test_auto_generates_order_by_when_missing() : void
+    {
+        $parsed = sql_parse('SELECT * FROM users');
+
+        $modifier = new KeysetPaginationModifier(new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)]));
+        $parsed->traverse($modifier);
+
+        self::assertSame('SELECT * FROM users ORDER BY id ASC LIMIT 10', $parsed->deparse());
+    }
+
+    public function test_auto_generates_order_by_with_cursor() : void
+    {
+        $parsed = sql_parse('SELECT * FROM users');
+
+        $modifier = new KeysetPaginationModifier(new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)], [42]));
+        $parsed->traverse($modifier);
+
+        self::assertSame('SELECT * FROM users WHERE id > $1 ORDER BY id ASC LIMIT 10', $parsed->deparse());
+    }
+
+    public function test_auto_generates_order_by_with_multiple_columns() : void
+    {
+        $parsed = sql_parse('SELECT * FROM users');
+
+        $modifier = new KeysetPaginationModifier(new KeysetPaginationConfig(10, [
+            sql_keyset_column('created_at', SortOrder::DESC),
+            sql_keyset_column('id', SortOrder::ASC),
+        ]));
+        $parsed->traverse($modifier);
+
+        self::assertSame('SELECT * FROM users ORDER BY created_at DESC, id ASC LIMIT 10', $parsed->deparse());
+    }
+
     public function test_first_page_multiple_columns() : void
     {
         $parsed = sql_parse('SELECT * FROM users ORDER BY created_at, id');
@@ -191,17 +224,6 @@ final class KeysetPaginationModifierTest extends TestCase
         $parsed = sql_parse('SELECT * FROM users ORDER BY id');
 
         $modifier = new KeysetPaginationModifier(new KeysetPaginationConfig(10, []));
-        $parsed->traverse($modifier);
-    }
-
-    public function test_throws_when_no_order_by() : void
-    {
-        $this->expectException(PaginationException::class);
-        $this->expectExceptionMessage('Keyset pagination requires ORDER BY clause');
-
-        $parsed = sql_parse('SELECT * FROM users');
-
-        $modifier = new KeysetPaginationModifier(new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)]));
         $parsed->traverse($modifier);
     }
 

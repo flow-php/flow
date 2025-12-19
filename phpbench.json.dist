@@ -17,15 +17,20 @@
   },
   "runner.path": [
     "src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Benchmark/",
+    "src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Benchmark/",
     "src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Benchmark/",
     "src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Benchmark/",
     "src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Benchmark/",
+    "src/adapter/etl-adapter-postgresql/tests/Flow/ETL/Adapter/PostgreSql/Tests/Benchmark/",
     "src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Benchmark/",
     "src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Benchmark/",
     "src/core/etl/tests/Flow/ETL/Tests/Benchmark/",
     "src/lib/parquet/tests/Flow/Parquet/Tests/Benchmark/"
   ],
   "runner.php_config": { "memory_limit": "1G" },
+  "runner.php_env": {
+    "PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11&charset=utf8"
+  },
   "runner.iterations": 3,
   "runner.retry_threshold": 5,
   "storage.xml_storage_path": "var/phpbench"
