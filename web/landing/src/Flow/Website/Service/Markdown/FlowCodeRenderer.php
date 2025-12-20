@@ -28,17 +28,9 @@ class FlowCodeRenderer implements NodeRendererInterface
         $escapedContent = htmlspecialchars($node->getLiteral(), ENT_NOQUOTES, 'UTF-8');
 
         // Render as <pre><code class="language-...">content</code></pre>
-        $codeElement = new HtmlElement(
-            'code',
-            \array_merge(
-                $attrs,
-                [
-                    'data-controller' => 'syntax-highlight',
-                ]
-            ),
-            $escapedContent
-        );
+        $codeElement = new HtmlElement('code', $attrs, $escapedContent);
 
-        return new HtmlElement('pre', $attrs, $codeElement);
+        // Render as <pre class="language-php" data-controller="syntax-highlight"><code class="language-...">content</code></pre>
+        return new HtmlElement('pre', array_merge($attrs, ['data-controller' => 'syntax-highlight']), $codeElement);
     }
 }

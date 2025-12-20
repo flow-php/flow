@@ -4,27 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use Flow\Types\Value\Json;
+use function Flow\PostgreSql\DSL\typed;
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class JsonConverterTest extends ConverterTestCase
 {
     /**
-     * @return \Generator<string, array{Json, string}>
+     * @return \Generator<string, array{array<mixed>, string}>
      */
-    public static function provide_json_objects() : \Generator
+    public static function provide_json_arrays() : \Generator
     {
-        yield 'json object' => [
-            Json::fromArray(['name' => 'John', 'age' => 30]),
+        yield 'json array' => [
+            ['name' => 'John', 'age' => 30],
             '{"name":"John","age":30}',
         ];
         yield 'empty array json' => [
-            Json::fromArray([]),
+            [],
             '[]',
-        ];
-        yield 'empty object json' => [
-            Json::fromArray([], asObject: true),
-            '{}',
         ];
     }
 
@@ -51,12 +48,12 @@ final class JsonConverterTest extends ConverterTestCase
     }
 
     /**
-     * @return \Generator<string, array{Json}>
+     * @return \Generator<string, array{array<mixed>}>
      */
     public static function provide_nested_json() : \Generator
     {
         yield 'nested object' => [
-            Json::fromArray([
+            [
                 'user' => [
                     'name' => 'John',
                     'addresses' => [
@@ -64,23 +61,26 @@ final class JsonConverterTest extends ConverterTestCase
                         ['city' => 'London', 'country' => 'UK'],
                     ],
                 ],
-            ]),
+            ],
         ];
         yield 'array of objects' => [
-            Json::fromArray([
+            [
                 ['id' => 1, 'name' => 'First'],
                 ['id' => 2, 'name' => 'Second'],
-            ]),
+            ],
         ];
     }
 
-    #[DataProvider('provide_json_objects')]
-    public function test_json_object_round_trip(Json $input, string $expected) : void
+    /**
+     * @param array<mixed> $input
+     */
+    #[DataProvider('provide_json_arrays')]
+    public function test_json_array_round_trip(array $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::json AS val', [$input]);
+        $result = $this->fetchValue('SELECT $1::json AS val', [typed($input, PostgreSqlType::JSON)]);
 
-        self::assertInstanceOf(Json::class, $result);
-        self::assertSame($expected, $result->toString());
+        self::assertIsString($result);
+        self::assertSame($expected, $result);
     }
 
     #[DataProvider('provide_json_strings')]
@@ -88,8 +88,8 @@ final class JsonConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT $1::json AS val', [$input]);
 
-        self::assertInstanceOf(Json::class, $result);
-        self::assertSame($input, $result->toString());
+        self::assertIsString($result);
+        self::assertSame($input, $result);
     }
 
     #[DataProvider('provide_jsonb_strings')]
@@ -97,17 +97,20 @@ final class JsonConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT $1::jsonb AS val', [$input]);
 
-        self::assertInstanceOf(Json::class, $result);
-        self::assertSame($expected, $result->toString());
+        self::assertIsString($result);
+        self::assertSame($expected, $result);
     }
 
+    /**
+     * @param array<mixed> $input
+     */
     #[DataProvider('provide_nested_json')]
-    public function test_nested_json_round_trip(Json $input) : void
+    public function test_nested_json_round_trip(array $input) : void
     {
-        $result = $this->fetchValue('SELECT $1::json AS val', [$input]);
+        $result = $this->fetchValue('SELECT $1::json AS val', [typed($input, PostgreSqlType::JSON)]);
 
-        self::assertInstanceOf(Json::class, $result);
-        self::assertSame($input->toArray(), $result->toArray());
+        self::assertIsString($result);
+        self::assertSame($input, \json_decode($result, true, 512, \JSON_THROW_ON_ERROR));
     }
 
     public function test_null_json() : void

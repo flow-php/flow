@@ -306,6 +306,32 @@ $result = $client->transaction(function ($client) {
 $client->close();
 ```
 
+### Array Types
+
+PostgreSQL arrays are supported through type-specific converters. Use `typed()` with the appropriate array type:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection, typed, pgsql_type_int4_array, pgsql_type_text_array};
+
+$client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
+
+// Integer array
+$client->execute(
+    'INSERT INTO scores (values) VALUES ($1)',
+    [typed([100, 200, 300], pgsql_type_int4_array())]
+);
+
+// Text array
+$client->execute(
+    'INSERT INTO tags (names) VALUES ($1)',
+    [typed(['php', 'postgresql'], pgsql_type_text_array())]
+);
+```
+
+See [Type System](/documentation/components/libs/postgresql/client-types.md) for all supported array types.
+
 ### Detailed Documentation
 
 - [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing,

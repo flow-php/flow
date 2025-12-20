@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
+use function Flow\PostgreSql\DSL\typed;
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class DateConverterTest extends ConverterTestCase
@@ -41,17 +43,17 @@ final class DateConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT $1::date AS val', [$input]);
 
-        self::assertInstanceOf(\DateTimeImmutable::class, $result);
-        self::assertSame($expected, $result->format('Y-m-d'));
+        self::assertIsString($result);
+        self::assertSame($expected, $result);
     }
 
     #[DataProvider('provide_datetime_to_date')]
     public function test_datetime_object_to_date(\DateTimeImmutable $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::date AS val', [$input]);
+        $result = $this->fetchValue('SELECT $1::date AS val', [typed($input, PostgreSqlType::DATE)]);
 
-        self::assertInstanceOf(\DateTimeImmutable::class, $result);
-        self::assertSame($expected, $result->format('Y-m-d'));
+        self::assertIsString($result);
+        self::assertSame($expected, $result);
     }
 
     public function test_null_date() : void

@@ -42,6 +42,11 @@ final class QueryException extends ClientException
         return new self(\sprintf('Expected exactly one row, but %d were returned', $count));
     }
 
+    public static function unexpectedScalarType(string $expected, string $actual) : self
+    {
+        return new self(\sprintf('Expected scalar of type %s, got %s', $expected, $actual));
+    }
+
     /**
      * Get the full SQL query that caused the exception.
      *

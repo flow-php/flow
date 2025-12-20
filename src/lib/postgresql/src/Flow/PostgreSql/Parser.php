@@ -18,23 +18,17 @@ final class Parser
 
     public function fingerprint(string $sql) : ?string
     {
-        $result = pg_query_fingerprint($sql);
-
-        return $result === false ? null : $result;
+        return pg_query_fingerprint($sql) ?: null;
     }
 
     public function normalize(string $sql) : ?string
     {
-        $result = pg_query_normalize((new NamedParameterNormalizer())->normalize($sql));
-
-        return $result === false ? null : $result;
+        return pg_query_normalize((new NamedParameterNormalizer())->normalize($sql)) ?: null;
     }
 
     public function normalizeUtility(string $sql) : ?string
     {
-        $result = pg_query_normalize_utility($sql);
-
-        return $result === false ? null : $result;
+        return pg_query_normalize_utility($sql) ?: null;
     }
 
     public function parse(string $sql) : ParsedQuery

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
+use function Flow\PostgreSql\DSL\typed;
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class BooleanConverterTest extends ConverterTestCase
@@ -35,7 +37,7 @@ final class BooleanConverterTest extends ConverterTestCase
     #[DataProvider('provide_boolean_values')]
     public function test_boolean_round_trip(bool $input, bool $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::bool AS val', [$input]);
+        $result = $this->fetchValue('SELECT $1::bool AS val', [typed($input, PostgreSqlType::BOOL)]);
 
         self::assertSame($expected, $result);
     }

@@ -93,9 +93,7 @@ final readonly class PaginationModifier implements NodeModifier
 
     private function hasOrderBy(SelectStmt $stmt) : bool
     {
-        $sortClause = $stmt->getSortClause();
-
-        return $sortClause !== null && \count($sortClause) > 0;
+        return \count($stmt->getSortClause() ?? []) > 0;
     }
 
     private function isSetOperation(SelectStmt $stmt) : bool

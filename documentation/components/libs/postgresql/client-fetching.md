@@ -131,7 +131,7 @@ $name = $client->fetchScalarString('SELECT name FROM users WHERE id = $1', [1]);
 // $name is guaranteed to be string
 ```
 
-These methods throw `InvalidTypeException` if the value cannot be converted to the expected type.
+These methods throw `QueryException` if the value cannot be converted to the expected type.
 
 ## execute() - Data Modification
 

@@ -25,7 +25,7 @@ final class TimeConverterTest extends ConverterTestCase
     public static function provide_time_with_microseconds() : \Generator
     {
         yield 'with microseconds' => ['14:30:00.123456', '14:30:00.123456'];
-        yield 'milliseconds only' => ['14:30:00.123', '14:30:00.123000'];
+        yield 'milliseconds only' => ['14:30:00.123', '14:30:00.123'];
     }
 
     /**
@@ -50,8 +50,8 @@ final class TimeConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT $1::time AS val', [$input]);
 
-        self::assertInstanceOf(\DateTimeImmutable::class, $result);
-        self::assertSame($expected, $result->format('H:i:s'));
+        self::assertIsString($result);
+        self::assertSame($expected, $result);
     }
 
     #[DataProvider('provide_time_with_microseconds')]
@@ -59,8 +59,8 @@ final class TimeConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT $1::time AS val', [$input]);
 
-        self::assertInstanceOf(\DateTimeImmutable::class, $result);
-        self::assertSame($expected, $result->format('H:i:s.u'));
+        self::assertIsString($result);
+        self::assertSame($expected, $result);
     }
 
     #[DataProvider('provide_timetz_values')]
@@ -68,8 +68,7 @@ final class TimeConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT $1::timetz AS val', [$input]);
 
-        self::assertInstanceOf(\DateTimeImmutable::class, $result);
-        self::assertSame($expectedTime, $result->format('H:i:s'));
-        self::assertSame($expectedOffset, $result->format('P'));
+        self::assertIsString($result);
+        self::assertStringStartsWith($expectedTime, $result);
     }
 }

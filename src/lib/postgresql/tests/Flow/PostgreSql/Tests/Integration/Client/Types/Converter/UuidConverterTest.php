@@ -4,26 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class UuidConverterTest extends ConverterTestCase
 {
-    /**
-     * @return \Generator<string, array{Uuid, string}>
-     */
-    public static function provide_uuid_objects() : \Generator
-    {
-        yield 'uuid object' => [
-            new Uuid('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
-            'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        ];
-        yield 'nil uuid object' => [
-            new Uuid('00000000-0000-0000-0000-000000000000'),
-            '00000000-0000-0000-0000-000000000000',
-        ];
-    }
-
     /**
      * @return \Generator<string, array{string}>
      */
@@ -39,8 +23,11 @@ final class UuidConverterTest extends ConverterTestCase
     {
         $result = $this->fetchValue('SELECT gen_random_uuid() AS val');
 
-        self::assertInstanceOf(Uuid::class, $result);
-        self::assertTrue(Uuid::isValid($result->toString()));
+        self::assertIsString($result);
+        self::assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
+            $result
+        );
     }
 
     public function test_null_uuid() : void
@@ -50,21 +37,12 @@ final class UuidConverterTest extends ConverterTestCase
         self::assertNull($result);
     }
 
-    #[DataProvider('provide_uuid_objects')]
-    public function test_uuid_object_round_trip(Uuid $input, string $expected) : void
-    {
-        $result = $this->fetchValue('SELECT $1::uuid AS val', [$input]);
-
-        self::assertInstanceOf(Uuid::class, $result);
-        self::assertSame($expected, $result->toString());
-    }
-
     #[DataProvider('provide_uuid_strings')]
     public function test_uuid_string_round_trip(string $input) : void
     {
         $result = $this->fetchValue('SELECT $1::uuid AS val', [$input]);
 
-        self::assertInstanceOf(Uuid::class, $result);
-        self::assertSame(\strtolower($input), $result->toString());
+        self::assertIsString($result);
+        self::assertSame(\strtolower($input), $result);
     }
 }

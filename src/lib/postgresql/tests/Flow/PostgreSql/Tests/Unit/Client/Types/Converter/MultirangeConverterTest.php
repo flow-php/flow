@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\Converter\MultirangeConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use PHPUnit\Framework\TestCase;
 
 final class MultirangeConverterTest extends TestCase
@@ -23,7 +22,7 @@ final class MultirangeConverterTest extends TestCase
         self::assertNull($converter->toDatabase(null));
     }
 
-    public function test_string_passthrough() : void
+    public function test_string_to_database() : void
     {
         $converter = new MultirangeConverter();
         $multirange = '{[1,5),[10,20)}';
@@ -31,21 +30,11 @@ final class MultirangeConverterTest extends TestCase
         $dbValue = $converter->toDatabase($multirange);
         self::assertNotNull($dbValue);
         self::assertSame($multirange, $dbValue);
-
-        $phpValue = $converter->toPhp($dbValue, PostgreSqlType::INT4);
-        self::assertSame($multirange, $phpValue);
     }
 
     public function test_supported_types_empty() : void
     {
         $converter = new MultirangeConverter();
         self::assertSame([], $converter->supportedTypes());
-    }
-
-    public function test_to_php_returns_string() : void
-    {
-        $converter = new MultirangeConverter();
-        $result = $converter->toPhp('{[2024-01-01,2024-12-31)}', PostgreSqlType::DATE);
-        self::assertSame('{[2024-01-01,2024-12-31)}', $result);
     }
 }

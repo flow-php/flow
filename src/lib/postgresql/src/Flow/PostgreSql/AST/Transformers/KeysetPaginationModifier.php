@@ -210,8 +210,6 @@ final readonly class KeysetPaginationModifier implements NodeModifier
 
     private function hasOrderBy(SelectStmt $stmt) : bool
     {
-        $sortClause = $stmt->getSortClause();
-
-        return $sortClause !== null && \count($sortClause) > 0;
+        return \count($stmt->getSortClause() ?? []) > 0;
     }
 }

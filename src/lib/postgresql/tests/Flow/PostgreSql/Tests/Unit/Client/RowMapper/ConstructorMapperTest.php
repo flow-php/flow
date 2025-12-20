@@ -6,7 +6,6 @@ namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
-use Flow\Types\Value\{Json, Uuid};
 use PHPUnit\Framework\TestCase;
 
 final class ConstructorMapperTest extends TestCase
@@ -49,8 +48,8 @@ final class ConstructorMapperTest extends TestCase
     public function test_maps_all_supported_types() : void
     {
         $createdAt = new \DateTimeImmutable('2024-03-15 14:30:00');
-        $metadata = Json::fromArray(['settings' => ['theme' => 'dark']]);
-        $uuid = Uuid::fromString('550e8400-e29b-41d4-a716-446655440000');
+        $metadata = '{"settings":{"theme":"dark"}}';
+        $uuid = '550e8400-e29b-41d4-a716-446655440000';
         $tags = ['important', 'urgent'];
 
         $row = [
@@ -152,7 +151,7 @@ final class ConstructorMapperTest extends TestCase
 
     public function test_maps_json_type() : void
     {
-        $json = Json::fromArray(['name' => 'John', 'age' => 30]);
+        $json = '{"name":"John","age":30}';
         $row = [
             'id' => 1,
             'metadata' => $json,
@@ -162,7 +161,7 @@ final class ConstructorMapperTest extends TestCase
 
         self::assertInstanceOf(JsonDto::class, $result);
         self::assertSame($json, $result->metadata);
-        self::assertSame(['name' => 'John', 'age' => 30], $result->metadata->toArray());
+        self::assertSame(['name' => 'John', 'age' => 30], \json_decode($result->metadata, true, 512, \JSON_THROW_ON_ERROR));
     }
 
     public function test_maps_nullable_complex_types() : void
@@ -184,8 +183,8 @@ final class ConstructorMapperTest extends TestCase
     public function test_maps_nullable_complex_types_with_values() : void
     {
         $createdAt = new \DateTimeImmutable('2024-01-01');
-        $metadata = Json::fromArray(['key' => 'value']);
-        $uuid = Uuid::fromString('550e8400-e29b-41d4-a716-446655440000');
+        $metadata = '{"key":"value"}';
+        $uuid = '550e8400-e29b-41d4-a716-446655440000';
         $tags = ['tag1', 'tag2'];
 
         $row = [
@@ -238,7 +237,7 @@ final class ConstructorMapperTest extends TestCase
 
     public function test_maps_uuid_type() : void
     {
-        $uuid = Uuid::fromString('550e8400-e29b-41d4-a716-446655440000');
+        $uuid = '550e8400-e29b-41d4-a716-446655440000';
         $row = [
             'id' => 1,
             'uuid' => $uuid,
@@ -248,7 +247,6 @@ final class ConstructorMapperTest extends TestCase
 
         self::assertInstanceOf(UuidDto::class, $result);
         self::assertSame($uuid, $result->uuid);
-        self::assertSame('550e8400-e29b-41d4-a716-446655440000', $result->uuid->toString());
     }
 
     public function test_throws_for_class_without_constructor() : void
@@ -335,7 +333,7 @@ final readonly class JsonDto
 {
     public function __construct(
         public int $id,
-        public Json $metadata,
+        public string $metadata,
     ) {
     }
 }
@@ -344,7 +342,7 @@ final readonly class UuidDto
 {
     public function __construct(
         public int $id,
-        public Uuid $uuid,
+        public string $uuid,
     ) {
     }
 }
@@ -398,8 +396,8 @@ final readonly class NullableTypedDto
     public function __construct(
         public int $id,
         public ?\DateTimeImmutable $createdAt = null,
-        public ?Json $metadata = null,
-        public ?Uuid $uuid = null,
+        public ?string $metadata = null,
+        public ?string $uuid = null,
         public ?array $tags = null,
     ) {
     }
@@ -416,8 +414,8 @@ final readonly class FullTypedDto
         public float $price,
         public bool $active,
         public \DateTimeImmutable $createdAt,
-        public Json $metadata,
-        public Uuid $uuid,
+        public string $metadata,
+        public string $uuid,
         public array $tags,
     ) {
     }

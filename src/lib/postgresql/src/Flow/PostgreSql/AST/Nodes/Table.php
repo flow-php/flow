@@ -21,9 +21,7 @@ final readonly class Table
             return null;
         }
 
-        $aliasname = $alias->getAliasname();
-
-        return $aliasname !== '' ? $aliasname : null;
+        return $alias->getAliasname() ?: null;
     }
 
     public function name() : string
@@ -38,8 +36,6 @@ final readonly class Table
 
     public function schema() : ?string
     {
-        $schemaname = $this->rangeVar->getSchemaname();
-
-        return $schemaname !== '' ? $schemaname : null;
+        return $this->rangeVar->getSchemaname() ?: null;
     }
 }
