@@ -4,21 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
-use function Flow\Types\DSL\type_float;
+use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
 
-use Flow\Types\Type;
-
-/**
- * @implements ValueConverter<float>
- */
 final class FloatConverter implements ValueConverter
 {
-    public function flowType() : Type
-    {
-        return type_float();
-    }
-
     public function supportedTypes() : array
     {
         return [
@@ -49,20 +39,10 @@ final class FloatConverter implements ValueConverter
             return (string) $value;
         }
 
-        if (\is_scalar($value)) {
-            return (string) (float) $value;
+        if (\is_string($value)) {
+            return $value;
         }
 
-        return '0';
-    }
-
-    public function toPhp(string $value, PostgreSqlType $type) : float
-    {
-        return match ($value) {
-            'Infinity' => \INF,
-            '-Infinity' => -\INF,
-            'NaN' => \NAN,
-            default => (float) $value,
-        };
+        throw ValueConversionException::cannotConvert($value, 'float');
     }
 }

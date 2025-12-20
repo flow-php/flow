@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Types;
 
-use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_json, type_string, type_uuid};
-use Flow\PostgreSql\Client\Types\Converter\{ArrayConverter, BooleanConverter, DateTimeConverter, FloatConverter, IntegerConverter, JsonConverter, StringConverter, UuidConverter};
+use Flow\PostgreSql\Client\Types\Converter\{BooleanConverter, DateTimeConverter, IntArrayConverter, IntegerConverter, JsonConverter, StringConverter, TextArrayConverter, UuidArrayConverter, UuidConverter};
 use Flow\PostgreSql\Client\Types\{PostgreSqlType, PostgreSqlVersion, ValueConverter, ValueConverters};
 use PHPUnit\Framework\TestCase;
 
@@ -19,8 +18,9 @@ final class ValueConvertersTest extends TestCase
         self::assertTrue($converters->hasConverterFor(PostgreSqlType::TEXT_ARRAY));
         self::assertTrue($converters->hasConverterFor(PostgreSqlType::UUID_ARRAY));
 
-        self::assertInstanceOf(ArrayConverter::class, $converters->forPostgreSqlType(PostgreSqlType::INT4_ARRAY));
-        self::assertInstanceOf(ArrayConverter::class, $converters->forPostgreSqlType(PostgreSqlType::TEXT_ARRAY));
+        self::assertInstanceOf(IntArrayConverter::class, $converters->forPostgreSqlType(PostgreSqlType::INT4_ARRAY));
+        self::assertInstanceOf(TextArrayConverter::class, $converters->forPostgreSqlType(PostgreSqlType::TEXT_ARRAY));
+        self::assertInstanceOf(UuidArrayConverter::class, $converters->forPostgreSqlType(PostgreSqlType::UUID_ARRAY));
     }
 
     public function test_create_returns_default_converters() : void
@@ -41,17 +41,6 @@ final class ValueConvertersTest extends TestCase
 
         $converter = $converters->forPostgreSqlType(PostgreSqlType::OID);
         self::assertInstanceOf(StringConverter::class, $converter);
-    }
-
-    public function test_for_flow_type_returns_correct_converter() : void
-    {
-        $converters = ValueConverters::create();
-
-        self::assertInstanceOf(IntegerConverter::class, $converters->forFlowType(type_integer()));
-        self::assertInstanceOf(FloatConverter::class, $converters->forFlowType(type_float()));
-        self::assertInstanceOf(BooleanConverter::class, $converters->forFlowType(type_boolean()));
-        self::assertInstanceOf(UuidConverter::class, $converters->forFlowType(type_uuid()));
-        self::assertInstanceOf(JsonConverter::class, $converters->forFlowType(type_json()));
     }
 
     public function test_for_postgredata_type_returns_correct_converter() : void
@@ -86,11 +75,6 @@ final class ValueConvertersTest extends TestCase
         $converters = ValueConverters::create();
 
         $customConverter = new class implements ValueConverter {
-            public function flowType() : \Flow\Types\Type
-            {
-                return type_string();
-            }
-
             public function supportedTypes() : array
             {
                 return [PostgreSqlType::XML];
@@ -99,11 +83,6 @@ final class ValueConvertersTest extends TestCase
             public function toDatabase(mixed $value) : ?string
             {
                 return \is_string($value) ? $value : null;
-            }
-
-            public function toPhp(string $value, PostgreSqlType $type) : string
-            {
-                return $value;
             }
         };
 

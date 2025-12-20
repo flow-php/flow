@@ -49,7 +49,7 @@ final readonly class ConnectionParameters
     /**
      * Create from a PostgreSQL connection string.
      */
-    public static function fromString(string $connectionString) : self
+    public static function fromString(#[\SensitiveParameter] string $connectionString) : self
     {
         return new self($connectionString);
     }

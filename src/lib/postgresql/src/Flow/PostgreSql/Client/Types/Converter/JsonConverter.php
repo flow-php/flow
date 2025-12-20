@@ -4,22 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
-use function Flow\Types\DSL\type_json;
+use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
-use Flow\Types\Type;
 
-use Flow\Types\Value\Json;
-
-/**
- * @implements ValueConverter<Json>
- */
 final class JsonConverter implements ValueConverter
 {
-    public function flowType() : Type
-    {
-        return type_json();
-    }
-
     public function supportedTypes() : array
     {
         return [
@@ -34,19 +23,18 @@ final class JsonConverter implements ValueConverter
             return null;
         }
 
-        if ($value instanceof Json) {
-            return $value->toString();
-        }
-
         if (\is_string($value)) {
             return $value;
         }
 
-        return \json_encode($value, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION);
-    }
+        if ($value instanceof \Stringable) {
+            return $value->__toString();
+        }
 
-    public function toPhp(string $value, PostgreSqlType $type) : Json
-    {
-        return Json::fromString($value);
+        if (\is_array($value)) {
+            return \json_encode($value, \JSON_THROW_ON_ERROR);
+        }
+
+        throw ValueConversionException::cannotConvert($value, 'json');
     }
 }

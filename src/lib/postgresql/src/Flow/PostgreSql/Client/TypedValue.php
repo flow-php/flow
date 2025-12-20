@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
-use Flow\Types\Type;
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
 
 /**
  * Wrapper for values that need explicit type specification.
  *
  * Use when automatic type detection doesn't produce the desired PostgreSQL type.
+ * The targetType specifies which PostgreSQL type the value should be converted to.
  */
 final readonly class TypedValue
 {
-    /**
-     * @param Type<mixed> $type
-     */
     public function __construct(
         public mixed $value,
-        public Type $type,
+        public PostgreSqlType $targetType,
     ) {
     }
 }

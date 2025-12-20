@@ -12,7 +12,7 @@ use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
-use Flow\PostgreSql\Client\Types\ValueConverters;
+use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverters};
 use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
 use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
 use Flow\PostgreSql\Explain\ExplainParser;
@@ -169,7 +169,6 @@ use Flow\PostgreSql\QueryBuilder\Utility\{
     VacuumFinalStep
 };
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
-use Flow\Types\Type;
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function sql_parser() : Parser
@@ -2735,7 +2734,7 @@ function type_attr(string $name, DataType $type) : TypeAttribute
  * $params = pgsql_connection('postgresql://user:pass@localhost/mydb');
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pgsql_connection(string $connectionString) : ConnectionParameters
+function pgsql_connection(#[\SensitiveParameter] string $connectionString) : ConnectionParameters
 {
     return ConnectionParameters::fromString($connectionString);
 }
@@ -2867,27 +2866,334 @@ function pgsql_mapper() : ConstructorMapper
 }
 
 /**
- * Wrap a value with explicit type for parameter binding.
+ * Wrap a value with explicit PostgreSQL type information for parameter binding.
  *
- * Use when auto-detection isn't sufficient, e.g.:
- * - String that should be UUID
- * - String that should be JSON
- * - DateTime that should be DATE (not TIMESTAMP)
+ * Use when auto-detection isn't sufficient or when you need to specify
+ * the exact PostgreSQL type (since one PHP type can map to multiple PostgreSQL types):
+ * - int could be INT2, INT4, or INT8
+ * - string could be TEXT, VARCHAR, or CHAR
+ * - array must always use typed() since auto-detection cannot determine element type
+ * - DateTimeInterface could be TIMESTAMP or TIMESTAMPTZ
+ * - Json could be JSON or JSONB
  *
  * @param mixed $value The value to bind
- * @param Type<mixed> $type The Flow type to use for conversion
+ * @param PostgreSqlType $targetType The PostgreSQL type to convert the value to
  *
  * @example
  * $client->fetch(
- *     'SELECT * FROM users WHERE id = $1 AND metadata = $2',
+ *     'SELECT * FROM users WHERE id = $1 AND tags = $2',
  *     [
- *         typed('550e8400-e29b-41d4-a716-446655440000', type_uuid()),
- *         typed('{"key": "value"}', type_json()),
+ *         typed('550e8400-e29b-41d4-a716-446655440000', PostgreSqlType::UUID),
+ *         typed(['tag1', 'tag2'], PostgreSqlType::TEXT_ARRAY),
  *     ]
  * );
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function typed(mixed $value, Type $type) : TypedValue
+function typed(mixed $value, PostgreSqlType $targetType) : TypedValue
 {
-    return new TypedValue($value, $type);
+    return new TypedValue($value, $targetType);
+}
+
+// PostgreSqlType DSL functions - Scalar types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_text() : PostgreSqlType
+{
+    return PostgreSqlType::TEXT;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_varchar() : PostgreSqlType
+{
+    return PostgreSqlType::VARCHAR;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_char() : PostgreSqlType
+{
+    return PostgreSqlType::CHAR;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_bpchar() : PostgreSqlType
+{
+    return PostgreSqlType::BPCHAR;
+}
+
+// PostgreSqlType DSL functions - Integer types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_int2() : PostgreSqlType
+{
+    return PostgreSqlType::INT2;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_smallint() : PostgreSqlType
+{
+    return PostgreSqlType::INT2;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_int4() : PostgreSqlType
+{
+    return PostgreSqlType::INT4;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_integer() : PostgreSqlType
+{
+    return PostgreSqlType::INT4;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_int8() : PostgreSqlType
+{
+    return PostgreSqlType::INT8;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_bigint() : PostgreSqlType
+{
+    return PostgreSqlType::INT8;
+}
+
+// PostgreSqlType DSL functions - Floating point types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_float4() : PostgreSqlType
+{
+    return PostgreSqlType::FLOAT4;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_real() : PostgreSqlType
+{
+    return PostgreSqlType::FLOAT4;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_float8() : PostgreSqlType
+{
+    return PostgreSqlType::FLOAT8;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_double() : PostgreSqlType
+{
+    return PostgreSqlType::FLOAT8;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_numeric() : PostgreSqlType
+{
+    return PostgreSqlType::NUMERIC;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_money() : PostgreSqlType
+{
+    return PostgreSqlType::MONEY;
+}
+
+// PostgreSqlType DSL functions - Boolean type
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_bool() : PostgreSqlType
+{
+    return PostgreSqlType::BOOL;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_boolean() : PostgreSqlType
+{
+    return PostgreSqlType::BOOL;
+}
+
+// PostgreSqlType DSL functions - Binary types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_bytea() : PostgreSqlType
+{
+    return PostgreSqlType::BYTEA;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_bit() : PostgreSqlType
+{
+    return PostgreSqlType::BIT;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_varbit() : PostgreSqlType
+{
+    return PostgreSqlType::VARBIT;
+}
+
+// PostgreSqlType DSL functions - Date/time types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_date() : PostgreSqlType
+{
+    return PostgreSqlType::DATE;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_time() : PostgreSqlType
+{
+    return PostgreSqlType::TIME;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_timetz() : PostgreSqlType
+{
+    return PostgreSqlType::TIMETZ;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_timestamp() : PostgreSqlType
+{
+    return PostgreSqlType::TIMESTAMP;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_timestamptz() : PostgreSqlType
+{
+    return PostgreSqlType::TIMESTAMPTZ;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_interval() : PostgreSqlType
+{
+    return PostgreSqlType::INTERVAL;
+}
+
+// PostgreSqlType DSL functions - JSON types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_json() : PostgreSqlType
+{
+    return PostgreSqlType::JSON;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_jsonb() : PostgreSqlType
+{
+    return PostgreSqlType::JSONB;
+}
+
+// PostgreSqlType DSL functions - UUID type
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_uuid() : PostgreSqlType
+{
+    return PostgreSqlType::UUID;
+}
+
+// PostgreSqlType DSL functions - Network types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_inet() : PostgreSqlType
+{
+    return PostgreSqlType::INET;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_cidr() : PostgreSqlType
+{
+    return PostgreSqlType::CIDR;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_macaddr() : PostgreSqlType
+{
+    return PostgreSqlType::MACADDR;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_macaddr8() : PostgreSqlType
+{
+    return PostgreSqlType::MACADDR8;
+}
+
+// PostgreSqlType DSL functions - Other types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_xml() : PostgreSqlType
+{
+    return PostgreSqlType::XML;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_oid() : PostgreSqlType
+{
+    return PostgreSqlType::OID;
+}
+
+// PostgreSqlType DSL functions - Array types
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_text_array() : PostgreSqlType
+{
+    return PostgreSqlType::TEXT_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_varchar_array() : PostgreSqlType
+{
+    return PostgreSqlType::VARCHAR_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_int2_array() : PostgreSqlType
+{
+    return PostgreSqlType::INT2_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_int4_array() : PostgreSqlType
+{
+    return PostgreSqlType::INT4_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_int8_array() : PostgreSqlType
+{
+    return PostgreSqlType::INT8_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_float4_array() : PostgreSqlType
+{
+    return PostgreSqlType::FLOAT4_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_float8_array() : PostgreSqlType
+{
+    return PostgreSqlType::FLOAT8_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_bool_array() : PostgreSqlType
+{
+    return PostgreSqlType::BOOL_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_uuid_array() : PostgreSqlType
+{
+    return PostgreSqlType::UUID_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_json_array() : PostgreSqlType
+{
+    return PostgreSqlType::JSON_ARRAY;
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pgsql_type_jsonb_array() : PostgreSqlType
+{
+    return PostgreSqlType::JSONB_ARRAY;
 }

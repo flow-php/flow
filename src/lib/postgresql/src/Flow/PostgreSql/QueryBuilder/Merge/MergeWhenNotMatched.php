@@ -62,17 +62,14 @@ final readonly class MergeWhenNotMatched
      */
     public function thenInsertValues(array $columnValuePairs) : MergeWhenStep
     {
-        $columns = \array_keys($columnValuePairs);
-        $values = \array_values($columnValuePairs);
-
         return $this->builder->addWhenClause(
             new MergeWhenClauseData(
                 MergeMatchKind::NOT_MATCHED_BY_TARGET,
                 MergeActionType::INSERT,
                 $this->condition,
                 [],
-                $columns,
-                $values,
+                \array_keys($columnValuePairs),
+                \array_values($columnValuePairs),
             )
         );
     }

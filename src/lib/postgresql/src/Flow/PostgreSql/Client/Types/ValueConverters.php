@@ -4,37 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types;
 
-use Flow\PostgreSql\Client\Types\Converter\{ArrayConverter, BooleanConverter, ByteaConverter, DateConverter, DateTimeConverter, FloatConverter, IntegerConverter, IntervalConverter, JsonConverter, MultirangeConverter, StringConverter, TimeConverter, UuidConverter};
-use Flow\Types\Type;
+use Flow\PostgreSql\Client\Types\Converter\{BoolArrayConverter, BooleanConverter, ByteaConverter, CidrConverter, DateConverter, DateTimeConverter, FloatArrayConverter, FloatConverter, InetConverter, IntArrayConverter, IntegerConverter, IntervalConverter, JsonArrayConverter, JsonConverter, MoneyConverter, MultirangeConverter, NumericConverter, StringConverter, TextArrayConverter, TimeConverter, UuidArrayConverter, UuidConverter};
 
 final readonly class ValueConverters
 {
-    /** @var array<class-string<Type<mixed>>, ValueConverter<mixed>> */
-    private array $flowTypeConverters;
-
-    /** @var array<int, ValueConverter<mixed>> */
+    /** @var array<int, ValueConverter> */
     private array $pgTypeConverters;
 
     /**
-     * @param list<ValueConverter<mixed>> $converters
-     * @param ValueConverter<string> $fallbackConverter
+     * @param list<ValueConverter> $converters
      */
     public function __construct(
         array $converters,
         private ValueConverter $fallbackConverter = new StringConverter(),
     ) {
-        $flowTypeConverters = [];
         $pgTypeConverters = [];
 
         foreach ($converters as $converter) {
-            $flowTypeConverters[$converter->flowType()::class] = $converter;
-
             foreach ($converter->supportedTypes() as $type) {
                 $pgTypeConverters[$type->value] = $converter;
             }
         }
 
-        $this->flowTypeConverters = $flowTypeConverters;
         $this->pgTypeConverters = $pgTypeConverters;
     }
 
@@ -46,19 +37,6 @@ final readonly class ValueConverters
         return new self(self::defaultConverters($version));
     }
 
-    /**
-     * @param Type<mixed> $type
-     *
-     * @return ValueConverter<mixed>
-     */
-    public function forFlowType(Type $type) : ValueConverter
-    {
-        return $this->flowTypeConverters[$type::class] ?? $this->fallbackConverter;
-    }
-
-    /**
-     * @return ValueConverter<mixed>
-     */
     public function forPostgreSqlType(PostgreSqlType $type) : ValueConverter
     {
         if (isset($this->pgTypeConverters[$type->value])) {
@@ -83,13 +61,11 @@ final readonly class ValueConverters
 
     /**
      * Add a value converter, returning a new instance.
-     *
-     * @param ValueConverter<mixed> $converter
      */
     public function with(ValueConverter $converter) : self
     {
         return new self(
-            [...\array_values($this->flowTypeConverters), $converter],
+            [...\array_values($this->pgTypeConverters), $converter],
             $this->fallbackConverter,
         );
     }
@@ -113,7 +89,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * @return list<ValueConverter<mixed>>
+     * @return list<ValueConverter>
      */
     private static function defaultConverters(PostgreSqlVersion $version) : array
     {
@@ -128,8 +104,17 @@ final readonly class ValueConverters
             new UuidConverter(),
             new JsonConverter(),
             new ByteaConverter(),
-            new ArrayConverter(),
+            new BoolArrayConverter(),
+            new IntArrayConverter(),
+            new FloatArrayConverter(),
+            new TextArrayConverter(),
+            new UuidArrayConverter(),
+            new JsonArrayConverter(),
             new IntervalConverter(),
+            new NumericConverter(),
+            new MoneyConverter(),
+            new InetConverter(),
+            new CidrConverter(),
         ];
 
         if ($version->supportsMultirange()) {

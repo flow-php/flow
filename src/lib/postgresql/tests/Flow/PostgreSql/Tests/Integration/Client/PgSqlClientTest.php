@@ -26,9 +26,9 @@ use function Flow\PostgreSql\DSL\{
     table,
     values_table
 };
-use function Flow\Types\DSL\type_integer;
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\TypedValue;
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use Flow\PostgreSql\Explain\Plan\{Plan, PlanNodeType};
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
 
@@ -89,7 +89,7 @@ final class PgSqlClientTest extends ClientTestCase
 
         $plan = $this->client->explain(
             select(star())->from(table('test_explain_params'))->where(eq(col('id'), param(1))),
-            [42]
+            ['42']
         );
 
         self::assertInstanceOf(Plan::class, $plan);
@@ -100,7 +100,7 @@ final class PgSqlClientTest extends ClientTestCase
     {
         $plan = $this->client->explain(
             'SELECT $1::int + $2::int',
-            [10, 32]
+            ['10', '32']
         );
 
         self::assertInstanceOf(Plan::class, $plan);
@@ -326,7 +326,7 @@ final class PgSqlClientTest extends ClientTestCase
                     cast(param(2), data_type_integer())
                 )
             ),
-            [10, 32]
+            ['10', '32']
         );
 
         self::assertSame(42, $value);
@@ -383,7 +383,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_typed_value_forces_type() : void
     {
-        $value = new TypedValue(42, type_integer());
+        $value = new TypedValue(42, PostgreSqlType::INT4);
         $row = $this->client->fetchOne(
             select(cast(param(1), data_type_integer())->as('val')),
             [$value]

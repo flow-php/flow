@@ -6,20 +6,23 @@ namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
 use Flow\PostgreSql\Client\{Cursor, RowMapper};
 use Flow\PostgreSql\Client\Exception\MappingException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverters};
+use Flow\PostgreSql\Client\Types\ResultCaster;
 use PgSql\Result;
 
 final class PgSqlCursor implements Cursor
 {
     /**
-     * @var null|list<array{name: string, type: int}>
+     * @var null|list<array{name: string, type: string}>
      */
     private ?array $columnMetaCache = null;
 
     private int $position = 0;
 
-    public function __construct(private ?Result $result, private readonly ValueConverters $valueConverters, private readonly ?RowMapper $defaultMapper = null)
+    private readonly ResultCaster $resultCaster;
+
+    public function __construct(private ?Result $result, private readonly ?RowMapper $defaultMapper = null)
     {
+        $this->resultCaster = new ResultCaster();
     }
 
     /**
@@ -31,9 +34,7 @@ final class PgSqlCursor implements Cursor
             return 0;
         }
 
-        $count = \pg_num_rows($this->result);
-
-        return $count >= 0 ? $count : 0;
+        return \max(0, \pg_num_rows($this->result));
     }
 
     public function free() : void
@@ -89,7 +90,7 @@ final class PgSqlCursor implements Cursor
     }
 
     /**
-     * @return list<array{name: string, type: int}>
+     * @return list<array{name: string, type: string}>
      */
     private function columnMeta() : array
     {
@@ -107,7 +108,7 @@ final class PgSqlCursor implements Cursor
         for ($i = 0; $i < $count; $i++) {
             $meta[] = [
                 'name' => \pg_field_name($this->result, $i),
-                'type' => (int) \pg_field_type_oid($this->result, $i),
+                'type' => \pg_field_type($this->result, $i),
             ];
         }
 
@@ -129,11 +130,13 @@ final class PgSqlCursor implements Cursor
         $i = 0;
 
         foreach ($row as $column => $value) {
-            $oid = $meta[$i]['type'] ?? 0;
-            $type = PostgreSqlType::tryFrom($oid);
-            $converted[$column] = $value !== null && $type !== null
-                ? $this->valueConverters->forPostgreSqlType($type)->toPhp($value, $type)
-                : $value;
+            $key = (string) $column;
+
+            if ($value === null) {
+                $converted[$key] = null;
+            } else {
+                $converted[$key] = $this->resultCaster->cast($value, $meta[$i]['type'] ?? null);
+            }
             $i++;
         }
 

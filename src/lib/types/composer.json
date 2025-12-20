@@ -7,8 +7,7 @@
         "types"
     ],
     "require": {
-        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "symfony/polyfill-php83": "^1.33"
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
     },
     "config": {
         "optimize-autoloader": true,

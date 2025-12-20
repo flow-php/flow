@@ -4,37 +4,38 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
+use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\JsonConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
-use Flow\Types\Value\Json;
 use PHPUnit\Framework\TestCase;
 
 final class JsonConverterTest extends TestCase
 {
-    public function test_array_conversion() : void
+    public function test_array_is_encoded_to_json() : void
     {
         $converter = new JsonConverter();
         $array = ['name' => 'test', 'value' => 42, 'nested' => ['a' => 1]];
 
-        $dbValue = $converter->toDatabase($array);
-        self::assertSame('{"name":"test","value":42,"nested":{"a":1}}', $dbValue);
+        $result = $converter->toDatabase($array);
+        self::assertSame('{"name":"test","value":42,"nested":{"a":1}}', $result);
     }
 
-    public function test_array_with_numeric_keys() : void
+    public function test_invalid_type_throws_exception() : void
     {
         $converter = new JsonConverter();
-        $array = ['a', 'b', 'c'];
 
-        $dbValue = $converter->toDatabase($array);
-        self::assertSame('["a","b","c"]', $dbValue);
+        $this->expectException(ValueConversionException::class);
+        $converter->toDatabase(12345);
     }
 
-    public function test_jsonb_type() : void
+    public function test_json_string_to_database() : void
     {
         $converter = new JsonConverter();
-        $result = $converter->toPhp('{"key":"value"}', PostgreSqlType::JSONB);
-        self::assertInstanceOf(Json::class, $result);
-        self::assertSame(['key' => 'value'], $result->toArray());
+        $json = '{"name":"test","value":42}';
+
+        $dbValue = $converter->toDatabase($json);
+        self::assertNotNull($dbValue);
+        self::assertSame('{"name":"test","value":42}', $dbValue);
     }
 
     public function test_null_handling() : void
@@ -43,18 +44,18 @@ final class JsonConverterTest extends TestCase
         self::assertNull($converter->toDatabase(null));
     }
 
-    public function test_round_trip_conversion_with_json_object() : void
+    public function test_object_with_to_string_method() : void
     {
         $converter = new JsonConverter();
-        $json = Json::fromString('{"name":"test","value":42}');
+        $jsonObject = new class {
+            public function toString() : string
+            {
+                return '{"name":"test","value":42}';
+            }
+        };
 
-        $dbValue = $converter->toDatabase($json);
-        self::assertNotNull($dbValue);
+        $dbValue = $converter->toDatabase($jsonObject);
         self::assertSame('{"name":"test","value":42}', $dbValue);
-
-        $phpValue = $converter->toPhp($dbValue, PostgreSqlType::JSON);
-        self::assertInstanceOf(Json::class, $phpValue);
-        self::assertSame(['name' => 'test', 'value' => 42], $phpValue->toArray());
     }
 
     public function test_string_json_passthrough() : void
@@ -70,12 +71,5 @@ final class JsonConverterTest extends TestCase
 
         self::assertContains(PostgreSqlType::JSON, $types);
         self::assertContains(PostgreSqlType::JSONB, $types);
-    }
-
-    public function test_to_php_returns_json_object() : void
-    {
-        $converter = new JsonConverter();
-        $result = $converter->toPhp('{"key":"value"}', PostgreSqlType::JSON);
-        self::assertInstanceOf(Json::class, $result);
     }
 }

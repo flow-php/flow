@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
+use function Flow\PostgreSql\DSL\typed;
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class FloatConverterTest extends ConverterTestCase
@@ -46,7 +48,7 @@ final class FloatConverterTest extends ConverterTestCase
     #[DataProvider('provide_float4_values')]
     public function test_float4_round_trip(float $input, float $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::float4 AS val', [$input]);
+        $result = $this->fetchValue('SELECT $1::float4 AS val', [typed($input, PostgreSqlType::FLOAT4)]);
 
         self::assertEqualsWithDelta($expected, $result, 0.0001);
     }
@@ -54,7 +56,7 @@ final class FloatConverterTest extends ConverterTestCase
     #[DataProvider('provide_float8_values')]
     public function test_float8_round_trip(float $input, float $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::float8 AS val', [$input]);
+        $result = $this->fetchValue('SELECT $1::float8 AS val', [typed($input, PostgreSqlType::FLOAT8)]);
 
         self::assertEqualsWithDelta($expected, $result, 0.00000001);
     }

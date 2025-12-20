@@ -4,21 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
-use function Flow\Types\DSL\type_date;
+use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
 
-use Flow\Types\Type;
-
-/**
- * @implements ValueConverter<\DateTimeInterface>
- */
 final class DateConverter implements ValueConverter
 {
-    public function flowType() : Type
-    {
-        return type_date();
-    }
-
     public function supportedTypes() : array
     {
         return [PostgreSqlType::DATE];
@@ -38,11 +28,6 @@ final class DateConverter implements ValueConverter
             return $value;
         }
 
-        return '';
-    }
-
-    public function toPhp(string $value, PostgreSqlType $type) : \DateTimeInterface
-    {
-        return new \DateTimeImmutable($value);
+        throw ValueConversionException::cannotConvert($value, 'date');
     }
 }

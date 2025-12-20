@@ -5,26 +5,27 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
 use function Flow\PostgreSql\DSL\{begin, commit, release_savepoint, rollback, savepoint};
-use function Flow\Types\DSL\{type_boolean, type_datetime, type_float, type_integer, type_json, type_list, type_string, type_uuid};
 use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper, TransactionContext, TypedValue};
-use Flow\PostgreSql\Client\Exception\{ConnectionException, MappingException, QueryException, TransactionException};
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter, ValueConverters};
+use Flow\PostgreSql\Client\Exception\{ConnectionException, MappingException, QueryException, TransactionException, ValueConversionException};
+use Flow\PostgreSql\Client\Types\{PostgreSqlType, ResultCaster, ValueConverters};
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
-use Flow\Types\Value\{Json, Uuid};
 use PgSql\{Connection, Result};
 
 final class PgSqlClient implements Client
 {
     private bool $autoCommit = true;
 
+    private readonly ResultCaster $resultCaster;
+
     private readonly TransactionContext $transactionContext;
 
     private function __construct(private ?Connection $connection, private readonly ValueConverters $valueConverters, private readonly ?RowMapper $defaultMapper = null)
     {
+        $this->resultCaster = new ResultCaster();
         $this->transactionContext = new TransactionContext();
     }
 
@@ -36,7 +37,9 @@ final class PgSqlClient implements Client
         ?ValueConverters $valueConverters = null,
         ?RowMapper $mapper = null,
     ) : self {
-        self::assertExtensionLoaded();
+        if (!\extension_loaded('pgsql')) {
+            throw ConnectionException::extensionNotLoaded('pgsql');
+        }
 
         \error_clear_last();
         $connection = @\pg_connect($params->connectionString);
@@ -98,7 +101,7 @@ final class PgSqlClient implements Client
     {
         $result = $this->query($sql, $parameters);
 
-        return new PgSqlCursor($result, $this->valueConverters, $this->defaultMapper);
+        return new PgSqlCursor($result, $this->defaultMapper);
     }
 
     public function execute(SqlQuery|string $sql, array $parameters = []) : int
@@ -119,13 +122,8 @@ final class PgSqlClient implements Client
         $parsed->traverse(new ExplainModifier($config));
         $explainQuery = $parsed->deparse();
 
-        $jsonOutput = $this->fetchScalar($explainQuery, $parameters);
+        $jsonOutput = $this->fetchScalarString($explainQuery, $parameters);
 
-        if ($jsonOutput instanceof Json) {
-            $jsonOutput = $jsonOutput->toString();
-        }
-
-        /** @var string $jsonOutput */
         return (new ExplainParser())->parse($jsonOutput);
     }
 
@@ -235,9 +233,7 @@ final class PgSqlClient implements Client
         array $parameters = [],
         ?RowMapper $mapper = null,
     ) : object {
-        $row = $this->fetchOne($sql, $parameters);
-
-        return $this->resolveMapper($mapper)->map($class, $row);
+        return $this->resolveMapper($mapper)->map($class, $this->fetchOne($sql, $parameters));
     }
 
     public function fetchScalar(SqlQuery|string $sql, array $parameters = []) : mixed
@@ -259,12 +255,7 @@ final class PgSqlClient implements Client
         }
 
         if ($value !== null) {
-            $oid = \pg_field_type_oid($result, 0);
-            $type = PostgreSqlType::tryFrom($oid);
-
-            if ($type !== null) {
-                $value = $this->valueConverters->forPostgreSqlType($type)->toPhp($value, $type);
-            }
+            $value = $this->resultCaster->cast($value, \pg_field_type($result, 0));
         }
 
         \pg_free_result($result);
@@ -274,22 +265,46 @@ final class PgSqlClient implements Client
 
     public function fetchScalarBool(SqlQuery|string $sql, array $parameters = []) : bool
     {
-        return type_boolean()->assert($this->fetchScalar($sql, $parameters));
+        $value = $this->fetchScalar($sql, $parameters);
+
+        if (!\is_bool($value)) {
+            throw QueryException::unexpectedScalarType('bool', \get_debug_type($value));
+        }
+
+        return $value;
     }
 
     public function fetchScalarFloat(SqlQuery|string $sql, array $parameters = []) : float
     {
-        return type_float()->assert($this->fetchScalar($sql, $parameters));
+        $value = $this->fetchScalar($sql, $parameters);
+
+        if (!\is_float($value)) {
+            throw QueryException::unexpectedScalarType('float', \get_debug_type($value));
+        }
+
+        return $value;
     }
 
     public function fetchScalarInt(SqlQuery|string $sql, array $parameters = []) : int
     {
-        return type_integer()->assert($this->fetchScalar($sql, $parameters));
+        $value = $this->fetchScalar($sql, $parameters);
+
+        if (!\is_int($value)) {
+            throw QueryException::unexpectedScalarType('int', \get_debug_type($value));
+        }
+
+        return $value;
     }
 
     public function fetchScalarString(SqlQuery|string $sql, array $parameters = []) : string
     {
-        return type_string()->assert($this->fetchScalar($sql, $parameters));
+        $value = $this->fetchScalar($sql, $parameters);
+
+        if (!\is_string($value)) {
+            throw QueryException::unexpectedScalarType('string', \get_debug_type($value));
+        }
+
+        return $value;
     }
 
     public function getTransactionNestingLevel() : int
@@ -397,11 +412,14 @@ final class PgSqlClient implements Client
             if ($value === null) {
                 $converted[] = null;
             } elseif ($value instanceof TypedValue) {
-                $converter = $this->valueConverters->forFlowType($value->type);
+                $converter = $this->valueConverters->forPostgreSqlType($value->targetType);
                 $converted[] = $converter->toDatabase($value->value);
             } else {
-                $converter = $this->detectConverterForValue($value);
-                $converted[] = $converter->toDatabase($value);
+                if (\is_array($value)) {
+                    throw ValueConversionException::ambiguousArrayType();
+                }
+
+                $converted[] = $this->valueConverters->forPostgreSqlType(PostgreSqlType::TEXT)->toDatabase($value);
             }
         }
 
@@ -419,37 +437,18 @@ final class PgSqlClient implements Client
         $i = 0;
 
         foreach ($row as $column => $value) {
+            $key = (string) $column;
+
             if ($value === null) {
-                $converted[$column] = null;
+                $converted[$key] = null;
             } else {
-                $oid = \pg_field_type_oid($result, $i);
-                $type = PostgreSqlType::tryFrom($oid);
-                $converted[$column] = $type !== null
-                    ? $this->valueConverters->forPostgreSqlType($type)->toPhp($value, $type)
-                    : $value;
+                $converted[$key] = $this->resultCaster->cast($value, \pg_field_type($result, $i));
             }
 
             $i++;
         }
 
         return $converted;
-    }
-
-    /**
-     * @return ValueConverter<mixed>
-     */
-    private function detectConverterForValue(mixed $value) : ValueConverter
-    {
-        return match (true) {
-            \is_bool($value) => $this->valueConverters->forFlowType(type_boolean()),
-            \is_int($value) => $this->valueConverters->forFlowType(type_integer()),
-            \is_float($value) => $this->valueConverters->forFlowType(type_float()),
-            $value instanceof \DateTimeInterface => $this->valueConverters->forFlowType(type_datetime()),
-            $value instanceof Uuid => $this->valueConverters->forFlowType(type_uuid()),
-            $value instanceof Json => $this->valueConverters->forFlowType(type_json()),
-            \is_array($value) => $this->valueConverters->forFlowType(type_list(type_string())),
-            default => $this->valueConverters->forFlowType(type_string()),
-        };
     }
 
     private function executeTransactionCommand(SqlQuery $query, callable $exceptionFactory) : void
@@ -479,8 +478,7 @@ final class PgSqlClient implements Client
         $connection = $this->connection;
 
         $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
-        $params = $this->convertParameters($parameters);
-        $result = @\pg_query_params($connection, $query, $params);
+        $result = @\pg_query_params($connection, $query, $this->convertParameters($parameters));
 
         if ($result === false) {
             throw QueryException::executionFailed($query, \pg_last_error($connection) ?: 'Unknown error');
@@ -498,12 +496,5 @@ final class PgSqlClient implements Client
         }
 
         return $resolved;
-    }
-
-    private static function assertExtensionLoaded() : void
-    {
-        if (!\extension_loaded('pgsql')) {
-            throw ConnectionException::extensionNotLoaded('pgsql');
-        }
     }
 }

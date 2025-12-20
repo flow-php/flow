@@ -4,23 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
+use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\StringConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use PHPUnit\Framework\TestCase;
 
 final class StringConverterTest extends TestCase
 {
+    public function test_bool_throws_exception() : void
+    {
+        $converter = new StringConverter();
+
+        $this->expectException(ValueConversionException::class);
+        $converter->toDatabase(true);
+    }
+
     public function test_empty_string() : void
     {
         $converter = new StringConverter();
         self::assertSame('', $converter->toDatabase(''));
-        self::assertSame('', $converter->toPhp('', PostgreSqlType::TEXT));
     }
 
-    public function test_non_stringable_returns_empty_string() : void
+    public function test_non_stringable_throws_exception() : void
     {
         $converter = new StringConverter();
-        self::assertSame('', $converter->toDatabase(['array']));
+
+        $this->expectException(ValueConversionException::class);
+        $converter->toDatabase(['array']);
     }
 
     public function test_null_handling() : void
@@ -29,7 +39,15 @@ final class StringConverterTest extends TestCase
         self::assertNull($converter->toDatabase(null));
     }
 
-    public function test_round_trip_conversion() : void
+    public function test_scalar_throws_exception() : void
+    {
+        $converter = new StringConverter();
+
+        $this->expectException(ValueConversionException::class);
+        $converter->toDatabase(42);
+    }
+
+    public function test_string_to_database() : void
     {
         $converter = new StringConverter();
         $value = 'hello world';
@@ -37,17 +55,6 @@ final class StringConverterTest extends TestCase
         $dbValue = $converter->toDatabase($value);
         self::assertNotNull($dbValue);
         self::assertSame('hello world', $dbValue);
-
-        $phpValue = $converter->toPhp($dbValue, PostgreSqlType::TEXT);
-        self::assertSame($value, $phpValue);
-    }
-
-    public function test_scalar_conversion() : void
-    {
-        $converter = new StringConverter();
-        self::assertSame('42', $converter->toDatabase(42));
-        self::assertSame('3.14', $converter->toDatabase(3.14));
-        self::assertSame('1', $converter->toDatabase(true));
     }
 
     public function test_stringable_object_conversion() : void
