@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
-use Flow\PostgreSql\Client\Types\{ValueConverter};
+use Flow\PostgreSql\Client\Types\ValueConverter;
 
 /**
  * Multirange type converter for PostgreSQL 14+.

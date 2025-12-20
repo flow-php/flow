@@ -34,8 +34,8 @@ final class UuidConverterTest extends TestCase
     public function test_object_with_to_string_method() : void
     {
         $converter = new UuidConverter();
-        $uuidObject = new class {
-            public function toString() : string
+        $uuidObject = new class implements \Stringable {
+            public function __toString() : string
             {
                 return '550e8400-e29b-41d4-a716-446655440000';
             }
