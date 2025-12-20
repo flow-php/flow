@@ -1,6 +1,12 @@
-## [Unreleased] - 2025-12-18
+## [Unreleased] - 2025-12-20
 
 ### Added
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **added BoolArrayConverter for PostgreSQL BOOL[] type** - [@norberttech](https://github.com/norberttech)
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **IntArrayConverter for PostgreSQL INT2[], INT4[], INT8[] types** - [@norberttech](https://github.com/norberttech)
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **FloatArrayConverter for PostgreSQL FLOAT4[], FLOAT8[] types** - [@norberttech](https://github.com/norberttech)
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **TextArrayConverter for PostgreSQL TEXT[], VARCHAR[] types** - [@norberttech](https://github.com/norberttech)
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **UuidArrayConverter for PostgreSQL UUID[] type** - [@norberttech](https://github.com/norberttech)
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **JsonArrayConverter for PostgreSQL JSON[], JSONB[] types** - [@norberttech](https://github.com/norberttech)
 - [#2093](https://github.com/flow-php/flow/pull/2093) - **Client::explain() : Plan - to postgresql client** - [@norberttech](https://github.com/norberttech)
 - [#2093](https://github.com/flow-php/flow/pull/2093) - **More precise fetchScalarX functions to postgresql client** - [@norberttech](https://github.com/norberttech)
 - [#2091](https://github.com/flow-php/flow/pull/2091) - **added SelectStatement::from() : From** - [@norberttech](https://github.com/norberttech)
@@ -9,16 +15,22 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **array converters to throw ValueConversionException for invalid element types instead of silently converting** - [@norberttech](https://github.com/norberttech)
 - [a2bfdc](https://github.com/flow-php/flow/commit/a2bfdc69b9d30a4b9585a6a59d1c33cd3f79991b) - **chores: cleanups** - [@norberttech](https://github.com/norberttech)
 - [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **monolithic ArrayConverter in favor of type-specific converters** - [@norberttech](https://github.com/norberttech)
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **syntax highlighing on website** - [@norberttech](https://github.com/norberttech)
 - [#2094](https://github.com/flow-php/flow/pull/2094) - **handling query json result in postgresql/client** - [@norberttech](https://github.com/norberttech)
 - [c68c46](https://github.com/flow-php/flow/commit/c68c460f0880bbf6c3f5ebf01fe1e73bf63fda7e) - **documentation link** - [@norberttech](https://github.com/norberttech)
 - [#2089](https://github.com/flow-php/flow/pull/2089) - **installation of libpg when installing pg-query-ext through pie** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
 - [58d619](https://github.com/flow-php/flow/commit/58d619c9f9d0c5d293dcf36011a8098bdb271e74) - **supported PHP versions in introduction.md** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2095](https://github.com/flow-php/flow/pull/2095) - **symfony/polyfill-83 dependency** - [@norberttech](https://github.com/norberttech)
 
 ## [0.29.0] - 2025-12-17
 
