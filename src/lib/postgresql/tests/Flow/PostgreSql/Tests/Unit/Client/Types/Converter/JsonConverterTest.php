@@ -47,8 +47,8 @@ final class JsonConverterTest extends TestCase
     public function test_object_with_to_string_method() : void
     {
         $converter = new JsonConverter();
-        $jsonObject = new class {
-            public function toString() : string
+        $jsonObject = new class implements \Stringable {
+            public function __toString() : string
             {
                 return '{"name":"test","value":42}';
             }
