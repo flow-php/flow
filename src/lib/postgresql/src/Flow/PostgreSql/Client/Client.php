@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Client;
 
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\{QueryException, TransactionException};
+use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
@@ -31,6 +32,11 @@ interface Client
      * @throws TransactionException
      */
     public function commit() : void;
+
+    /**
+     * Get the value converters registry.
+     */
+    public function converters() : ValueConverters;
 
     /**
      * Get a cursor for lazy iteration over large result sets.

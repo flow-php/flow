@@ -7,47 +7,47 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\BoolArrayConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BoolArrayConverterTest extends TestCase
 {
-    public function test_boolean_array_to_database() : void
+    public static function provide_non_array_values() : \Generator
     {
-        $converter = new BoolArrayConverter();
-        $array = [true, false, true];
-
-        $dbValue = $converter->toDatabase($array);
-        self::assertSame('{t,f,t}', $dbValue);
+        yield 'string' => ['not an array', '{}'];
+        yield 'integer' => [12345, '{}'];
+        yield 'float' => [3.14, '{}'];
+        yield 'boolean true' => [true, '{}'];
+        yield 'boolean false' => [false, '{}'];
+        yield 'object' => [new \stdClass(), '{}'];
     }
 
-    public function test_empty_array() : void
+    public static function provide_valid_values() : \Generator
     {
-        $converter = new BoolArrayConverter();
-        self::assertSame('{}', $converter->toDatabase([]));
+        yield 'boolean array' => [[true, false, true], '{t,f,t}'];
+        yield 'empty array' => [[], '{}'];
+        yield 'array with null' => [[true, null, false], '{t,NULL,f}'];
+        yield 'single true' => [[true], '{t}'];
+        yield 'single false' => [[false], '{f}'];
+        yield 'all true' => [[true, true, true], '{t,t,t}'];
+        yield 'all false' => [[false, false, false], '{f,f,f}'];
+        yield 'all nulls' => [[null, null, null], '{NULL,NULL,NULL}'];
+        yield 'alternating' => [[true, false, true, false], '{t,f,t,f}'];
+        yield 'large array' => [array_fill(0, 10, true), '{t,t,t,t,t,t,t,t,t,t}'];
     }
 
-    public function test_invalid_element_type_throws_exception() : void
+    public function test_invalid_element_throws_exception() : void
     {
         $converter = new BoolArrayConverter();
-
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase([true, 'not a boolean', false]);
     }
 
-    public function test_non_array_returns_empty_braces() : void
+    #[DataProvider('provide_non_array_values')]
+    public function test_non_array_returns_empty_braces(mixed $input, string $expected) : void
     {
         $converter = new BoolArrayConverter();
-        self::assertSame('{}', $converter->toDatabase('not an array'));
-        self::assertSame('{}', $converter->toDatabase(12345));
-    }
-
-    public function test_null_element_in_array() : void
-    {
-        $converter = new BoolArrayConverter();
-        $array = [true, null, false];
-
-        $dbValue = $converter->toDatabase($array);
-        self::assertSame('{t,NULL,f}', $dbValue);
+        self::assertSame($expected, $converter->toDatabase($input));
     }
 
     public function test_null_handling() : void
@@ -63,5 +63,12 @@ final class BoolArrayConverterTest extends TestCase
 
         self::assertContains(PostgreSqlType::BOOL_ARRAY, $types);
         self::assertCount(1, $types);
+    }
+
+    #[DataProvider('provide_valid_values')]
+    public function test_to_database(array $input, string $expected) : void
+    {
+        $converter = new BoolArrayConverter();
+        self::assertSame($expected, $converter->toDatabase($input));
     }
 }

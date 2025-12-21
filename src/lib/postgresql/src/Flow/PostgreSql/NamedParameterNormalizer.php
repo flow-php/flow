@@ -21,7 +21,7 @@ final class NamedParameterNormalizer
             function (array $matches) use (&$parameters, &$position) : string {
                 $name = $matches[1];
 
-                if (!isset($parameters[$name])) {
+                if (!\array_key_exists($name, $parameters)) {
                     $parameters[$name] = $position++;
                 }
 
@@ -46,7 +46,7 @@ final class NamedParameterNormalizer
             function (array $matches) use (&$parameters, &$position) : string {
                 $name = $matches[1];
 
-                if (!isset($parameters[$name])) {
+                if (!\array_key_exists($name, $parameters)) {
                     $parameters[$name] = $position++;
                 }
 

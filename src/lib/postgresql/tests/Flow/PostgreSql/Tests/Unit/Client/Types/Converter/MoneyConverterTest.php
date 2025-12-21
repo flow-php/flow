@@ -7,29 +7,43 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\MoneyConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class MoneyConverterTest extends TestCase
 {
-    public function test_array_throws_exception() : void
+    public static function provide_invalid_values() : \Generator
     {
-        $converter = new MoneyConverter();
-        $this->expectException(ValueConversionException::class);
-        $converter->toDatabase(['array']);
+        yield 'integer' => [100];
+        yield 'float' => [123.45];
+        yield 'array' => [['array']];
+        yield 'boolean true' => [true];
+        yield 'boolean false' => [false];
+        yield 'object' => [new \stdClass()];
     }
 
-    public function test_float_throws_exception() : void
+    public static function provide_valid_values() : \Generator
     {
-        $converter = new MoneyConverter();
-        $this->expectException(ValueConversionException::class);
-        $converter->toDatabase(123.45);
+        yield 'money with symbol' => ['$99.99', '$99.99'];
+        yield 'money with comma' => ['$1,234.56', '$1,234.56'];
+        yield 'zero amount' => ['$0.00', '$0.00'];
+        yield 'negative amount prefix' => ['-$99.99', '-$99.99'];
+        yield 'negative amount suffix' => ['$-99.99', '$-99.99'];
+        yield 'euro symbol' => ['€99.99', '€99.99'];
+        yield 'pound symbol' => ['£99.99', '£99.99'];
+        yield 'yen symbol' => ['¥9999', '¥9999'];
+        yield 'no symbol' => ['99.99', '99.99'];
+        yield 'european format' => ['1.234,56', '1.234,56'];
+        yield 'large amount' => ['$1,234,567.89', '$1,234,567.89'];
+        yield 'cents only' => ['$0.01', '$0.01'];
     }
 
-    public function test_integer_throws_exception() : void
+    #[DataProvider('provide_invalid_values')]
+    public function test_invalid_value_throws_exception(mixed $value) : void
     {
         $converter = new MoneyConverter();
         $this->expectException(ValueConversionException::class);
-        $converter->toDatabase(100);
+        $converter->toDatabase($value);
     }
 
     public function test_null_handling() : void
@@ -38,25 +52,16 @@ final class MoneyConverterTest extends TestCase
         self::assertNull($converter->toDatabase(null));
     }
 
-    public function test_string_passthrough() : void
-    {
-        $converter = new MoneyConverter();
-        self::assertSame('$99.99', $converter->toDatabase('$99.99'));
-    }
-
-    public function test_string_to_database() : void
-    {
-        $converter = new MoneyConverter();
-        $value = '$1,234.56';
-
-        $dbValue = $converter->toDatabase($value);
-        self::assertNotNull($dbValue);
-        self::assertSame('$1,234.56', $dbValue);
-    }
-
     public function test_supported_types() : void
     {
         $converter = new MoneyConverter();
         self::assertContains(PostgreSqlType::MONEY, $converter->supportedTypes());
+    }
+
+    #[DataProvider('provide_valid_values')]
+    public function test_to_database(string $input, string $expected) : void
+    {
+        $converter = new MoneyConverter();
+        self::assertSame($expected, $converter->toDatabase($input));
     }
 }

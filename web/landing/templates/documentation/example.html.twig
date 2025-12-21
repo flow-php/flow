@@ -50,7 +50,7 @@
                     <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
                         <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
                     </button>
-                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code id="composer-json" class="language-json" data-controller="syntax-highlight" >{{- composer | raw -}}</code></pre>
+                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-json" data-controller="syntax-highlight"><code id="composer-json">{{- composer | raw -}}</code></pre>
                 </div>
                 {% endif %}
 
@@ -60,8 +60,8 @@
                         <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code-php" {{ stimulus_controller('clipboard') }}>
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
                         </button>
-                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
-                            <code id="code-php" class="language-php" data-controller="syntax-highlight" >
+                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-php" data-controller="syntax-highlight">
+                            <code id="code-php">
                                 {{- code | escape('html') -}}
                             </code>
                         </pre>
@@ -76,8 +76,8 @@
                         <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
                         </button>
-                        <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2">
-                <code id="output" class="language-{{ output.type}} overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
+                        <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2 language-{{ output.type}}" {{ stimulus_controller('syntax_highlight') }}>
+                <code id="output" class="overflow-auto">
                     {{- output.content | escape('html') -}}
                 </code>
             </pre>

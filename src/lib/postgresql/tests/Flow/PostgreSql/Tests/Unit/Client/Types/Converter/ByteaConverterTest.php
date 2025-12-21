@@ -7,28 +7,42 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\ByteaConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ByteaConverterTest extends TestCase
 {
-    public function test_array_throws_exception() : void
+    public static function provide_invalid_values() : \Generator
+    {
+        yield 'integer' => [12345];
+        yield 'array' => [['array']];
+        yield 'float' => [3.14];
+        yield 'boolean true' => [true];
+        yield 'boolean false' => [false];
+        yield 'object' => [new \stdClass()];
+    }
+
+    public static function provide_valid_values() : \Generator
+    {
+        yield 'simple text' => ['simple text', 'simple text'];
+        yield 'hello' => ['hello', 'hello'];
+        yield 'empty string' => ['', ''];
+        yield 'binary with null byte' => ["hello\x00world", "hello\x00world"];
+        yield 'binary with special bytes' => ["\x01\x02\x03\xff\xfe", "\x01\x02\x03\xff\xfe"];
+        yield 'unicode characters' => ['日本語テスト', '日本語テスト'];
+        yield 'emoji' => ['Hello 🎉 World', 'Hello 🎉 World'];
+        yield 'newlines and tabs' => ["line1\nline2\ttab", "line1\nline2\ttab"];
+        yield 'backslash' => ['path\\to\\file', 'path\\to\\file'];
+        yield 'single quote' => ["it's a test", "it's a test"];
+        yield 'double quote' => ['say "hello"', 'say "hello"'];
+    }
+
+    #[DataProvider('provide_invalid_values')]
+    public function test_invalid_value_throws_exception(mixed $value) : void
     {
         $converter = new ByteaConverter();
         $this->expectException(ValueConversionException::class);
-        $converter->toDatabase(['array']);
-    }
-
-    public function test_empty_string() : void
-    {
-        $converter = new ByteaConverter();
-        self::assertSame('', $converter->toDatabase(''));
-    }
-
-    public function test_non_string_throws_exception() : void
-    {
-        $converter = new ByteaConverter();
-        $this->expectException(ValueConversionException::class);
-        $converter->toDatabase(12345);
+        $converter->toDatabase($value);
     }
 
     public function test_null_handling() : void
@@ -37,28 +51,16 @@ final class ByteaConverterTest extends TestCase
         self::assertNull($converter->toDatabase(null));
     }
 
-    public function test_string_to_database() : void
-    {
-        $converter = new ByteaConverter();
-        $text = 'simple text';
-
-        $dbValue = $converter->toDatabase($text);
-        self::assertNotNull($dbValue);
-        self::assertSame($text, $dbValue);
-    }
-
     public function test_supported_types() : void
     {
         $converter = new ByteaConverter();
         self::assertContains(PostgreSqlType::BYTEA, $converter->supportedTypes());
     }
 
-    public function test_to_database_format() : void
+    #[DataProvider('provide_valid_values')]
+    public function test_to_database(string $input, string $expected) : void
     {
         $converter = new ByteaConverter();
-        $text = 'hello';
-
-        $dbValue = $converter->toDatabase($text);
-        self::assertSame('hello', $dbValue);
+        self::assertSame($expected, $converter->toDatabase($input));
     }
 }
