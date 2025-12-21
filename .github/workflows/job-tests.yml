@@ -77,7 +77,7 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "${{ matrix.dependencies }}"
           coverage: 'pcov'
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql'
           ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
