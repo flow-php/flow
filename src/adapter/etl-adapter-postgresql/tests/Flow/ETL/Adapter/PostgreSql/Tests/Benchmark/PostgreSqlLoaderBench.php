@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
 use function Flow\ETL\DSL\df;
-use function Flow\PostgreSql\DSL\{column, create, data_type_double_precision, data_type_integer, data_type_jsonb, data_type_text, data_type_timestamptz, drop, pgsql_client, pgsql_connection_dsn, pgsql_mapper};
+use function Flow\PostgreSql\DSL\{column, create, data_type_double_precision, data_type_integer, data_type_jsonb, data_type_text, data_type_timestamptz, data_type_uuid, drop, pgsql_client, pgsql_connection_dsn, pgsql_mapper};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\PostgreSql\Client\Client;
 use PhpBench\Attributes\{BeforeMethods, Groups};
@@ -57,7 +57,7 @@ final class PostgreSqlLoaderBench
         $this->client->execute(
             create()->table(self::TABLE_NAME)
                 ->column(column('index', data_type_integer())->primaryKey())
-                ->column(column('order_id', data_type_text()))
+                ->column(column('order_id', data_type_uuid()))
                 ->column(column('created_at', data_type_timestamptz()))
                 ->column(column('updated_at', data_type_timestamptz()))
                 ->column(column('discount', data_type_double_precision()))

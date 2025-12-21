@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_key_set, from_pgsql_limit_offset, pgsql_pagination_key_asc, pgsql_pagination_key_set, to_pgsql_table};
 use function Flow\ETL\DSL\{config, df, flow_context};
-use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_double_precision, data_type_integer, data_type_jsonb, data_type_text, data_type_timestamptz, drop, pgsql_client, pgsql_connection_dsn, pgsql_mapper, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_double_precision, data_type_integer, data_type_jsonb, data_type_text, data_type_timestamptz, data_type_uuid, drop, pgsql_client, pgsql_connection_dsn, pgsql_mapper, select, star, table};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\PostgreSql\Client\Client;
 use PhpBench\Attributes\Groups;
@@ -84,7 +84,7 @@ final class PostgreSqlExtractorBench
         $this->client->execute(
             create()->table(self::TABLE_NAME)
                 ->column(column('index', data_type_integer())->primaryKey())
-                ->column(column('order_id', data_type_text()))
+                ->column(column('order_id', data_type_uuid()))
                 ->column(column('created_at', data_type_timestamptz()))
                 ->column(column('updated_at', data_type_timestamptz()))
                 ->column(column('discount', data_type_double_precision()))
