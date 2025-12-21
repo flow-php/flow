@@ -50,7 +50,7 @@ jobs:
 
       - name: "Generate phpbench.json with dynamic port"
         run: |
-          echo '{"runner.php_env": {"PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"}}' > phpbench.json
+          sed 's/127.0.0.1:5432/127.0.0.1:${{ job.services.postgres.ports[5432] }}/' phpbench.json.dist > phpbench.json
 
       - name: "Execute benchmarks"
         id: init_comment
