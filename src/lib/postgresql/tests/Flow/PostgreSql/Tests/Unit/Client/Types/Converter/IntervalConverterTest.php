@@ -7,69 +7,48 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\IntervalConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class IntervalConverterTest extends TestCase
 {
-    public function test_date_interval_with_all_components() : void
+    public static function provide_invalid_values() : \Generator
     {
-        $converter = new IntervalConverter();
-        $interval = new \DateInterval('P1Y2M3DT4H5M6S');
-
-        $dbValue = $converter->toDatabase($interval);
-        self::assertSame('1 year 2 months 3 days 04:05:06', $dbValue);
+        yield 'integer' => [12345];
+        yield 'array' => [['array']];
+        yield 'float' => [3.14];
+        yield 'boolean true' => [true];
+        yield 'boolean false' => [false];
+        yield 'object' => [new \stdClass()];
     }
 
-    public function test_date_interval_with_days() : void
+    public static function provide_valid_values() : \Generator
     {
-        $converter = new IntervalConverter();
-        $interval = new \DateInterval('P5D');
-
-        $dbValue = $converter->toDatabase($interval);
-        self::assertSame('5 days', $dbValue);
+        yield 'years only' => [new \DateInterval('P2Y'), '2 years'];
+        yield 'year singular' => [new \DateInterval('P1Y'), '1 year'];
+        yield 'month singular' => [new \DateInterval('P1M'), '1 month'];
+        yield 'months plural' => [new \DateInterval('P3M'), '3 months'];
+        yield 'days only' => [new \DateInterval('P5D'), '5 days'];
+        yield 'day singular' => [new \DateInterval('P1D'), '1 day'];
+        yield 'time only' => [new \DateInterval('PT2H30M15S'), '02:30:15'];
+        yield 'hours only' => [new \DateInterval('PT5H'), '05:00:00'];
+        yield 'minutes only' => [new \DateInterval('PT30M'), '00:30:00'];
+        yield 'seconds only' => [new \DateInterval('PT45S'), '00:00:45'];
+        yield 'all components' => [new \DateInterval('P1Y2M3DT4H5M6S'), '1 year 2 months 3 days 04:05:06'];
+        yield 'years and months' => [new \DateInterval('P2Y6M'), '2 years 6 months'];
+        yield 'days and time' => [new \DateInterval('P10DT12H'), '10 days 12:00:00'];
+        yield 'empty interval' => [new \DateInterval('P0D'), '0'];
+        yield 'large values' => [new \DateInterval('P100Y'), '100 years'];
+        yield 'string passthrough' => ['1 day', '1 day'];
+        yield 'string interval format' => ['1 year 2 months 3 days', '1 year 2 months 3 days'];
     }
 
-    public function test_date_interval_with_months() : void
-    {
-        $converter = new IntervalConverter();
-        $interval = new \DateInterval('P1M');
-
-        $dbValue = $converter->toDatabase($interval);
-        self::assertSame('1 month', $dbValue);
-    }
-
-    public function test_date_interval_with_time() : void
-    {
-        $converter = new IntervalConverter();
-        $interval = new \DateInterval('PT2H30M15S');
-
-        $dbValue = $converter->toDatabase($interval);
-        self::assertSame('02:30:15', $dbValue);
-    }
-
-    public function test_date_interval_with_years() : void
-    {
-        $converter = new IntervalConverter();
-        $interval = new \DateInterval('P2Y');
-
-        $dbValue = $converter->toDatabase($interval);
-        self::assertSame('2 years', $dbValue);
-    }
-
-    public function test_empty_date_interval() : void
-    {
-        $converter = new IntervalConverter();
-        $interval = new \DateInterval('P0D');
-
-        $dbValue = $converter->toDatabase($interval);
-        self::assertSame('0', $dbValue);
-    }
-
-    public function test_non_interval_throws_exception() : void
+    #[DataProvider('provide_invalid_values')]
+    public function test_invalid_value_throws_exception(mixed $value) : void
     {
         $converter = new IntervalConverter();
         $this->expectException(ValueConversionException::class);
-        $converter->toDatabase(12345);
+        $converter->toDatabase($value);
     }
 
     public function test_null_handling() : void
@@ -78,15 +57,16 @@ final class IntervalConverterTest extends TestCase
         self::assertNull($converter->toDatabase(null));
     }
 
-    public function test_string_passthrough() : void
-    {
-        $converter = new IntervalConverter();
-        self::assertSame('1 day', $converter->toDatabase('1 day'));
-    }
-
     public function test_supported_types() : void
     {
         $converter = new IntervalConverter();
         self::assertContains(PostgreSqlType::INTERVAL, $converter->supportedTypes());
+    }
+
+    #[DataProvider('provide_valid_values')]
+    public function test_to_database(\DateInterval|string $input, string $expected) : void
+    {
+        $converter = new IntervalConverter();
+        self::assertSame($expected, $converter->toDatabase($input));
     }
 }

@@ -37,7 +37,7 @@ final readonly class DsnParser
      */
     private function parseDatabase(array $parts) : string
     {
-        $path = isset($parts['path']) && \is_string($parts['path']) ? $parts['path'] : '';
+        $path = \array_key_exists('path', $parts) && \is_string($parts['path']) ? $parts['path'] : '';
         $database = \ltrim($path, '/');
 
         if ($database === '') {
@@ -73,8 +73,8 @@ final readonly class DsnParser
             'dbname' => $this->parseDatabase($parts),
             'host' => $parts['host'] ?? 'localhost',
             'port' => $parts['port'] ?? 5432,
-            'user' => isset($parts['user']) ? \urldecode($parts['user']) : null,
-            'password' => isset($parts['pass']) ? \urldecode($parts['pass']) : null,
+            'user' => \array_key_exists('user', $parts) ? \urldecode($parts['user']) : null,
+            'password' => \array_key_exists('pass', $parts) ? \urldecode($parts['pass']) : null,
             'options' => $this->parseOptions($parts),
         ];
     }
@@ -86,7 +86,7 @@ final readonly class DsnParser
      */
     private function parseOptions(array $parts) : array
     {
-        if (!isset($parts['query']) || !\is_string($parts['query'])) {
+        if (!\array_key_exists('query', $parts) || !\is_string($parts['query'])) {
             return [];
         }
 

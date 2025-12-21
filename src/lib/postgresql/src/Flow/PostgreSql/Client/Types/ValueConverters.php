@@ -6,27 +6,21 @@ namespace Flow\PostgreSql\Client\Types;
 
 use Flow\PostgreSql\Client\Types\Converter\{BoolArrayConverter, BooleanConverter, ByteaConverter, CidrConverter, DateConverter, DateTimeConverter, FloatArrayConverter, FloatConverter, InetConverter, IntArrayConverter, IntegerConverter, IntervalConverter, JsonArrayConverter, JsonConverter, MoneyConverter, MultirangeConverter, NumericConverter, StringConverter, TextArrayConverter, TimeConverter, UuidArrayConverter, UuidConverter};
 
-final readonly class ValueConverters
+final class ValueConverters
 {
     /** @var array<int, ValueConverter> */
-    private array $pgTypeConverters;
+    private array $pgTypeConverters = [];
 
     /**
      * @param list<ValueConverter> $converters
      */
     public function __construct(
-        array $converters,
-        private ValueConverter $fallbackConverter = new StringConverter(),
+        array $converters = [],
+        private readonly ValueConverter $fallbackConverter = new StringConverter(),
     ) {
-        $pgTypeConverters = [];
-
         foreach ($converters as $converter) {
-            foreach ($converter->supportedTypes() as $type) {
-                $pgTypeConverters[$type->value] = $converter;
-            }
+            $this->register($converter);
         }
-
-        $this->pgTypeConverters = $pgTypeConverters;
     }
 
     /**
@@ -54,20 +48,27 @@ final readonly class ValueConverters
     /**
      * Check if a converter exists for the given PostgreSQL type.
      */
-    public function hasConverterFor(PostgreSqlType $type) : bool
+    public function has(PostgreSqlType $type) : bool
     {
         return isset($this->pgTypeConverters[$type->value]) || $this->isArrayType($type);
     }
 
     /**
-     * Add a value converter, returning a new instance.
+     * Register a value converter for its supported types.
      */
-    public function with(ValueConverter $converter) : self
+    public function register(ValueConverter $converter) : void
     {
-        return new self(
-            [...\array_values($this->pgTypeConverters), $converter],
-            $this->fallbackConverter,
-        );
+        foreach ($converter->supportedTypes() as $type) {
+            $this->pgTypeConverters[$type->value] = $converter;
+        }
+    }
+
+    /**
+     * Unregister a converter for the given PostgreSQL type.
+     */
+    public function unregister(PostgreSqlType $type) : void
+    {
+        unset($this->pgTypeConverters[$type->value]);
     }
 
     private function isArrayType(PostgreSqlType $type) : bool

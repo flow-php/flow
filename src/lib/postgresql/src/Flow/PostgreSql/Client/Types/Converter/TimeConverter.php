@@ -27,6 +27,10 @@ final class TimeConverter implements ValueConverter
             return $value->format('H:i:s.u');
         }
 
+        if ($value instanceof \DateInterval) {
+            return \sprintf('%02d:%02d:%02d', $value->h, $value->i, $value->s);
+        }
+
         if (\is_string($value)) {
             return $value;
         }

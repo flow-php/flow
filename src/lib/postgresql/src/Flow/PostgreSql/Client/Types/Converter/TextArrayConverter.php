@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{PostgreSqlType, StringEscaper, ValueConverter};
 
 final class TextArrayConverter implements ValueConverter
 {
@@ -33,7 +33,7 @@ final class TextArrayConverter implements ValueConverter
             if ($v === null) {
                 $elements[] = 'NULL';
             } elseif (\is_string($v)) {
-                $elements[] = $v;
+                $elements[] = StringEscaper::escape($v);
             } elseif (\is_scalar($v)) {
                 $elements[] = (string) $v;
             } else {

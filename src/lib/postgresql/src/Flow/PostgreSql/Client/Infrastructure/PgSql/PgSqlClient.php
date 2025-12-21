@@ -97,6 +97,11 @@ final class PgSqlClient implements Client
         }
     }
 
+    public function converters() : ValueConverters
+    {
+        return $this->valueConverters;
+    }
+
     public function cursor(SqlQuery|string $sql, array $parameters = []) : Cursor
     {
         $result = $this->query($sql, $parameters);

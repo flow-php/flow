@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{PostgreSqlType, StringEscaper, ValueConverter};
 
 final class JsonArrayConverter implements ValueConverter
 {
@@ -34,7 +34,8 @@ final class JsonArrayConverter implements ValueConverter
                 $elements[] = 'NULL';
             } else {
                 try {
-                    $elements[] = \json_encode($v, JSON_THROW_ON_ERROR);
+                    $json = \json_encode($v, JSON_THROW_ON_ERROR);
+                    $elements[] = StringEscaper::escapeAlwaysQuoted($json);
                 } catch (\JsonException) {
                     throw ValueConversionException::cannotConvert($v, 'JSON array element');
                 }
