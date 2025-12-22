@@ -17,7 +17,7 @@ use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
 use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
-use Flow\PostgreSql\Extractors\{Columns, Functions, QueryDepth, Tables};
+use Flow\PostgreSql\Extractors\{Columns, Functions, OrderBy as OrderByExtractor, QueryDepth, Tables};
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Clause\{
     CTE,
@@ -368,6 +368,15 @@ function sql_query_tables(ParsedQuery $query) : Tables
 function sql_query_functions(ParsedQuery $query) : Functions
 {
     return new Functions($query);
+}
+
+/**
+ * Extract ORDER BY clauses from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_query_order_by(ParsedQuery $query) : OrderByExtractor
+{
+    return new OrderByExtractor($query);
 }
 
 /**
