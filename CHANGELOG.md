@@ -16,11 +16,13 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2100](https://github.com/flow-php/flow/pull/2100) - **OrderBy and OrderByItem were merged into single OrderBy class** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **array converters to throw ValueConversionException for invalid element types instead of silently converting** - [@norberttech](https://github.com/norberttech)
 - [a2bfdc](https://github.com/flow-php/flow/commit/a2bfdc69b9d30a4b9585a6a59d1c33cd3f79991b) - **chores: cleanups** - [@norberttech](https://github.com/norberttech)
 - [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2100](https://github.com/flow-php/flow/pull/2100) - **limit/offset postgresql extracto will now detect lack of order by in query** - [@norberttech](https://github.com/norberttech)
 - [d4e9bd](https://github.com/flow-php/flow/commit/d4e9bdb3e855bfc3e76aee053517c734bf47fe37) - **trigger in github workflow** - [@norberttech](https://github.com/norberttech)
 - [5e8882](https://github.com/flow-php/flow/commit/5e888217111c382a4ceaa16b7d34f6083b75000e) - **missing phpbench setup in baseline workflow** - [@norberttech](https://github.com/norberttech)
 - [#2096](https://github.com/flow-php/flow/pull/2096) - **few more places that had syntax highlighting broken on website** - [@norberttech](https://github.com/norberttech)
