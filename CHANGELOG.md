@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-20
+## [Unreleased] - 2025-12-21
 
 ### Added
+- [#2096](https://github.com/flow-php/flow/pull/2096) - **flow-php/etl-adapter-postgresql based on flow-php/postgresql library** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **added BoolArrayConverter for PostgreSQL BOOL[] type** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **IntArrayConverter for PostgreSQL INT2[], INT4[], INT8[] types** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **FloatArrayConverter for PostgreSQL FLOAT4[], FLOAT8[] types** - [@norberttech](https://github.com/norberttech)
@@ -20,6 +21,7 @@
 - [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2096](https://github.com/flow-php/flow/pull/2096) - **few more places that had syntax highlighting broken on website** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **monolithic ArrayConverter in favor of type-specific converters** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **syntax highlighing on website** - [@norberttech](https://github.com/norberttech)
 - [#2094](https://github.com/flow-php/flow/pull/2094) - **handling query json result in postgresql/client** - [@norberttech](https://github.com/norberttech)
