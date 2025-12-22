@@ -1513,16 +1513,16 @@
         },
         {
             "name": "openspout/openspout",
-            "version": "v5.1.1",
+            "version": "v5.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openspout/openspout.git",
-                "reference": "b02a6e64de649ef0f160e25c79fac95801ce5de6"
+                "reference": "22ba807c918484efc27e80d67d30c36ac28ff8dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openspout/openspout/zipball/b02a6e64de649ef0f160e25c79fac95801ce5de6",
-                "reference": "b02a6e64de649ef0f160e25c79fac95801ce5de6",
+                "url": "https://api.github.com/repos/openspout/openspout/zipball/22ba807c918484efc27e80d67d30c36ac28ff8dc",
+                "reference": "22ba807c918484efc27e80d67d30c36ac28ff8dc",
                 "shasum": ""
             },
             "require": {
@@ -1535,11 +1535,11 @@
             },
             "require-dev": {
                 "ext-zlib": "*",
-                "friendsofphp/php-cs-fixer": "^3.92.1",
+                "friendsofphp/php-cs-fixer": "^3.92.3",
                 "infection/infection": "^0.31.9",
                 "phpbench/phpbench": "^1.4.3",
                 "phpstan/phpstan": "^2.1.33",
-                "phpstan/phpstan-phpunit": "^2.0.10",
+                "phpstan/phpstan-phpunit": "^2.0.11",
                 "phpstan/phpstan-strict-rules": "^2.0.7",
                 "phpunit/phpunit": "^12.5.4"
             },
@@ -1589,7 +1589,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openspout/openspout/issues",
-                "source": "https://github.com/openspout/openspout/tree/v5.1.1"
+                "source": "https://github.com/openspout/openspout/tree/v5.2.0"
             },
             "funding": [
                 {
@@ -1601,7 +1601,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-16T11:29:34+00:00"
+            "time": "2025-12-19T13:28:49+00:00"
         },
         {
             "name": "packaged/thrift",
