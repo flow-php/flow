@@ -93,6 +93,17 @@ jobs:
   benchmark-baseline:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     strategy:
       fail-fast: false
       matrix:
@@ -133,7 +144,14 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
           coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql'
           cache-key-suffix: "-locked"
+          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
+          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+
+      - name: "Generate phpbench.json with dynamic port"
+        run: |
+          sed 's/127.0.0.1:5432/127.0.0.1:${{ job.services.postgres.ports[5432] }}/' phpbench.json.dist > phpbench.json
 
       - name: "Benchmark"
         run: |
