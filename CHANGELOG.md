@@ -21,6 +21,7 @@
 - [#2087](https://github.com/flow-php/flow/pull/2087) - **Update Homebrew TAP formula: flow-php to version: 0.29.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [5e8882](https://github.com/flow-php/flow/commit/5e888217111c382a4ceaa16b7d34f6083b75000e) - **missing phpbench setup in baseline workflow** - [@norberttech](https://github.com/norberttech)
 - [#2096](https://github.com/flow-php/flow/pull/2096) - **few more places that had syntax highlighting broken on website** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **monolithic ArrayConverter in favor of type-specific converters** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **syntax highlighing on website** - [@norberttech](https://github.com/norberttech)
