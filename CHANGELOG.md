@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-21
+## [Unreleased] - 2025-12-22
 
 ### Added
 - [#2096](https://github.com/flow-php/flow/pull/2096) - **flow-php/etl-adapter-postgresql based on flow-php/postgresql library** - [@norberttech](https://github.com/norberttech)
