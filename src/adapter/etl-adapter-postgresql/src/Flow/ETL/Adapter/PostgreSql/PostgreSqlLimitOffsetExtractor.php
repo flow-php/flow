@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\PostgreSql\DSL\{sql_to_count_query, sql_to_paginated_query};
+use function Flow\PostgreSql\DSL\{sql_parse, sql_query_order_by, sql_to_count_query, sql_to_paginated_query};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
@@ -29,6 +29,12 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         $sql = $this->query instanceof SqlQuery ? $this->query->toSql() : $this->query;
+
+        if (!sql_query_order_by(sql_parse($sql))->hasOrderBy()) {
+            throw new InvalidArgumentException(
+                'LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results'
+            );
+        }
 
         $total = $this->maximum ?? $this->countTotal($sql);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
+use function Flow\ETL\DSL\flow_context;
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlLimitOffsetExtractor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
@@ -13,6 +14,24 @@ use PHPUnit\Framework\MockObject\MockObject;
 
 final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
 {
+    protected function setUp() : void
+    {
+        if (!\extension_loaded('pg_query')) {
+            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+        }
+    }
+
+    public function test_throws_exception_when_query_has_no_order_by() : void
+    {
+        $client = $this->createClientMock();
+        $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results');
+
+        \iterator_to_array($extractor->extract(flow_context()));
+    }
+
     public function test_with_maximum_validates_positive_value() : void
     {
         $client = $this->createClientMock();
