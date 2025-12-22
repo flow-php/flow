@@ -1684,7 +1684,6 @@ function array_to_rows(array $data, EntryFactory $entryFactory, array|Partitions
     $rows = [];
 
     foreach ($data as $row) {
-        $row = type_array_new()->assert($row);
         $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
     }
 
