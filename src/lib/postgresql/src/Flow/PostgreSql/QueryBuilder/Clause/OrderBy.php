@@ -5,77 +5,91 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
 use Flow\PostgreSql\Protobuf\AST\{Node, SortBy};
-use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\{Column, Expression, ExpressionFactory};
 
 /**
- * Represents an ORDER BY clause element.
+ * Represents an ORDER BY item.
  */
-final readonly class OrderBy implements AstConvertible
+final readonly class OrderBy
 {
     public function __construct(
         private Expression $expression,
         private SortDirection $direction = SortDirection::ASC,
-        private NullsPosition $nullsPosition = NullsPosition::DEFAULT,
+        private NullsPosition $nulls = NullsPosition::DEFAULT,
     ) {
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(SortBy $node) : self
     {
-        $sortBy = $node->getSortBy();
-
-        if ($sortBy === null) {
-            throw InvalidAstException::unexpectedNodeType('SortBy', 'unknown');
-        }
-
-        $nodeExpr = $sortBy->getNode();
+        $nodeExpr = $node->getNode();
 
         if ($nodeExpr === null) {
             throw InvalidAstException::missingRequiredField('node', 'SortBy');
         }
 
         $expression = ExpressionFactory::fromAst($nodeExpr);
+        $direction = SortDirection::fromProtobuf($node->getSortbyDir());
+        $nulls = NullsPosition::fromProtobuf($node->getSortbyNulls());
 
-        $direction = SortDirection::fromProtobuf($sortBy->getSortbyDir());
-        $nullsPosition = NullsPosition::fromProtobuf($sortBy->getSortbyNulls());
-
-        return new self($expression, $direction, $nullsPosition);
+        return new self($expression, $direction, $nulls);
     }
 
-    public function getDirection() : SortDirection
+    public function asc() : self
+    {
+        return new self($this->expression, SortDirection::ASC, $this->nulls);
+    }
+
+    public function column() : ?string
+    {
+        if ($this->expression instanceof Column) {
+            return $this->expression->columnName();
+        }
+
+        return null;
+    }
+
+    public function desc() : self
+    {
+        return new self($this->expression, SortDirection::DESC, $this->nulls);
+    }
+
+    public function direction() : SortDirection
     {
         return $this->direction;
     }
 
-    public function getExpression() : Expression
+    public function expression() : Expression
     {
         return $this->expression;
     }
 
-    public function getNullsPosition() : NullsPosition
+    public function nulls() : NullsPosition
     {
-        return $this->nullsPosition;
+        return $this->nulls;
     }
 
-    public function toAst() : Node
+    public function nullsFirst() : self
     {
-        $sortBy = new SortBy([
+        return new self($this->expression, $this->direction, NullsPosition::FIRST);
+    }
+
+    public function nullsLast() : self
+    {
+        return new self($this->expression, $this->direction, NullsPosition::LAST);
+    }
+
+    public function toAst() : SortBy
+    {
+        return new SortBy([
             'node' => $this->expression->toAst(),
             'sortby_dir' => $this->direction->toProtobuf(),
-            'sortby_nulls' => $this->nullsPosition->toProtobuf(),
+            'sortby_nulls' => $this->nulls->toProtobuf(),
         ]);
-
-        return new Node(['sort_by' => $sortBy]);
     }
 
-    public function withDirection(SortDirection $direction) : self
+    public function toNode() : Node
     {
-        return new self($this->expression, $direction, $this->nullsPosition);
-    }
-
-    public function withNullsPosition(NullsPosition $nullsPosition) : self
-    {
-        return new self($this->expression, $this->direction, $nullsPosition);
+        return new Node(['sort_by' => $this->toAst()]);
     }
 }

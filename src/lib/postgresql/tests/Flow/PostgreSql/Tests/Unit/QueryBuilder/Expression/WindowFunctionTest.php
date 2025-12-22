@@ -97,7 +97,7 @@ final class WindowFunctionTest extends TestCase
         $funcNameNode->setString((new PBString())->setSval('row_number'));
 
         $partitionNode = Column::name('category')->toAst();
-        $orderByNode = (new OrderBy(Column::name('created_at')))->toAst();
+        $orderByNode = (new OrderBy(Column::name('created_at')))->toNode();
 
         $windowDef = new WindowDef();
         $windowDef->setPartitionClause([$partitionNode]);

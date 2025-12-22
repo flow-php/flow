@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Extractors;
 
 use function Flow\PostgreSql\DSL\sql_parse;
-use Flow\PostgreSql\AST\Transformers\SortOrder;
 use Flow\PostgreSql\Extractors\OrderBy;
+use Flow\PostgreSql\QueryBuilder\Clause\SortDirection;
 use PHPUnit\Framework\TestCase;
 
 final class OrderByTest extends TestCase
@@ -44,7 +44,7 @@ final class OrderByTest extends TestCase
 
         self::assertCount(1, $items);
         self::assertSame('name', $items[0]->column());
-        self::assertSame(SortOrder::ASC, $items[0]->direction());
+        self::assertSame(SortDirection::DEFAULT, $items[0]->direction());
     }
 
     public function test_all_returns_order_by_with_direction() : void
@@ -55,9 +55,9 @@ final class OrderByTest extends TestCase
 
         self::assertCount(2, $items);
         self::assertSame('name', $items[0]->column());
-        self::assertSame(SortOrder::ASC, $items[0]->direction());
+        self::assertSame(SortDirection::ASC, $items[0]->direction());
         self::assertSame('created_at', $items[1]->column());
-        self::assertSame(SortOrder::DESC, $items[1]->direction());
+        self::assertSame(SortDirection::DESC, $items[1]->direction());
     }
 
     public function test_has_order_by_returns_false_when_no_order_by() : void
