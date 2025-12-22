@@ -1667,24 +1667,13 @@ function array_to_rows(array $data, EntryFactory $entryFactory, array|Partitions
 {
     $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
 
-    $isRows = true;
-
-    foreach ($data as $v) {
-        if (!\is_array($v)) {
-            $isRows = false;
-
-            break;
-        }
-    }
-
-    if (!$isRows) {
-        return Rows::partitioned([array_to_row($data, $entryFactory, $partitions, $schema)], $partitions);
-    }
-
     $rows = [];
 
     foreach ($data as $row) {
-        $row = type_array_new()->assert($row);
+        if (!\is_array($row)) {
+            return Rows::partitioned([array_to_row($data, $entryFactory, $partitions, $schema)], $partitions);
+        }
+
         $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
     }
 
