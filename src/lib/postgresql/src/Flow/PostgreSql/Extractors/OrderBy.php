@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Extractors;
 
-use Flow\PostgreSql\AST\Nodes\OrderByItem;
 use Flow\PostgreSql\AST\Visitors\SortByCollector;
 use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\QueryBuilder\Clause\OrderBy as OrderByClause;
 
 final readonly class OrderBy
 {
@@ -15,7 +15,7 @@ final readonly class OrderBy
     }
 
     /**
-     * @return array<OrderByItem>
+     * @return array<OrderByClause>
      */
     public function all() : array
     {
@@ -23,7 +23,7 @@ final readonly class OrderBy
         $this->query->traverse($collector);
 
         return \array_map(
-            static fn ($sortBy) => new OrderByItem($sortBy),
+            static fn ($sortBy) => OrderByClause::fromAst($sortBy),
             $collector->getSortByClauses()
         );
     }

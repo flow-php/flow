@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
 use Flow\PostgreSql\Protobuf\AST\{FuncCall, Node, PBString, WindowDef};
-use Flow\PostgreSql\QueryBuilder\Clause\{OrderBy, OrderByItem};
+use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
 use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
 
 final readonly class WindowFunction implements Expression
@@ -14,7 +14,7 @@ final readonly class WindowFunction implements Expression
      * @param non-empty-list<string> $funcName Function name parts (e.g., ['row_number'] or ['rank'])
      * @param list<Expression> $args Function arguments
      * @param list<Expression> $partitionBy PARTITION BY expressions
-     * @param list<OrderBy|OrderByItem> $orderBy ORDER BY clauses
+     * @param list<OrderBy> $orderBy ORDER BY clauses
      */
     public function __construct(
         private array $funcName,
@@ -86,7 +86,11 @@ final readonly class WindowFunction implements Expression
 
         if ($orderNodes !== null) {
             foreach ($orderNodes as $orderNode) {
-                $orderBy[] = OrderBy::fromAst($orderNode);
+                $sortBy = $orderNode->getSortBy();
+
+                if ($sortBy !== null) {
+                    $orderBy[] = OrderBy::fromAst($sortBy);
+                }
             }
         }
 
@@ -115,7 +119,7 @@ final readonly class WindowFunction implements Expression
     }
 
     /**
-     * @return list<OrderBy|OrderByItem>
+     * @return list<OrderBy>
      */
     public function getOrderBy() : array
     {
@@ -170,11 +174,7 @@ final readonly class WindowFunction implements Expression
         $orderNodes = [];
 
         foreach ($this->orderBy as $order) {
-            if ($order instanceof OrderByItem) {
-                $orderNodes[] = new Node(['sort_by' => $order->toAst()]);
-            } else {
-                $orderNodes[] = $order->toAst();
-            }
+            $orderNodes[] = $order->toNode();
         }
 
         if ($orderNodes !== []) {

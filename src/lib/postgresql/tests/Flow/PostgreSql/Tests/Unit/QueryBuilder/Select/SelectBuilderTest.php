@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Select;
 
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
-use Flow\PostgreSql\QueryBuilder\Clause\{OrderByItem, SortDirection};
+use Flow\PostgreSql\QueryBuilder\Clause\{OrderBy, SortDirection};
 use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
 use Flow\PostgreSql\QueryBuilder\Expression\{AggregateCall, Column, Literal, Star};
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
@@ -60,7 +60,7 @@ final class SelectBuilderTest extends TestCase
         $builder1 = SelectBuilder::create()
             ->select(Column::name('id'))
             ->from(new Table('users'));
-        $builder2 = $builder1->orderBy(new OrderByItem(Column::name('id')));
+        $builder2 = $builder1->orderBy(new OrderBy(Column::name('id')));
 
         self::assertNotSame($builder1, $builder2);
     }
@@ -89,7 +89,7 @@ final class SelectBuilderTest extends TestCase
             ->select(Column::name('id'), Column::name('name'))
             ->from(new Table('users'))
             ->where(new Comparison(Column::name('active'), ComparisonOperator::EQ, Literal::bool(true)))
-            ->orderBy(new OrderByItem(Column::name('name')))
+            ->orderBy(new OrderBy(Column::name('name')))
             ->limit(10);
 
         $ast = $original->toAst();
@@ -110,7 +110,7 @@ final class SelectBuilderTest extends TestCase
             ->from(new Table('products'))
             ->groupBy(Column::name('category'))
             ->having(new Comparison(new AggregateCall(['count'], [], true), ComparisonOperator::GT, Literal::int(5)))
-            ->orderBy(new OrderByItem(Column::name('category')));
+            ->orderBy(new OrderBy(Column::name('category')));
 
         $ast = $original->toAst();
         $restored = SelectBuilder::fromAst($ast);
@@ -129,7 +129,7 @@ final class SelectBuilderTest extends TestCase
                 new Comparison(Column::tableColumn('u', 'id'), ComparisonOperator::EQ, Column::tableColumn('o', 'user_id'))
             )
             ->where(new Comparison(Column::tableColumn('o', 'total'), ComparisonOperator::GT, Literal::int(100)))
-            ->orderBy(new OrderByItem(Column::tableColumn('o', 'total'), SortDirection::DESC));
+            ->orderBy(new OrderBy(Column::tableColumn('o', 'total'), SortDirection::DESC));
 
         $ast = $original->toAst();
         $restored = SelectBuilder::fromAst($ast);
@@ -150,7 +150,7 @@ final class SelectBuilderTest extends TestCase
             ->from(new Table('table2'));
 
         $original = $query1->union($query2)
-            ->orderBy(new OrderByItem(Column::name('id')))
+            ->orderBy(new OrderBy(Column::name('id')))
             ->limit(20);
 
         $ast = $original->toAst();
@@ -438,8 +438,8 @@ final class SelectBuilderTest extends TestCase
             ->select(Star::all())
             ->from(new Table('users'))
             ->orderBy(
-                new OrderByItem(Column::name('last_name')),
-                new OrderByItem(Column::name('first_name'), SortDirection::DESC)
+                new OrderBy(Column::name('last_name')),
+                new OrderBy(Column::name('first_name'), SortDirection::DESC)
             );
 
         $ast = $query->toAst();
@@ -454,7 +454,7 @@ final class SelectBuilderTest extends TestCase
         $query = SelectBuilder::create()
             ->select(Star::all())
             ->from(new Table('events'))
-            ->orderBy(new OrderByItem(Column::name('created_at'), SortDirection::DESC))
+            ->orderBy(new OrderBy(Column::name('created_at'), SortDirection::DESC))
             ->limit(10)
             ->offset(20);
 

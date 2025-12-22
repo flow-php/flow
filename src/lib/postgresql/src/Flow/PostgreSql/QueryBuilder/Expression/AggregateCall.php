@@ -86,7 +86,11 @@ final readonly class AggregateCall implements Expression
 
         if ($orderByNodes !== null) {
             foreach ($orderByNodes as $orderByNode) {
-                $orderBy[] = OrderBy::fromAst($orderByNode);
+                $sortBy = $orderByNode->getSortBy();
+
+                if ($sortBy !== null) {
+                    $orderBy[] = OrderBy::fromAst($sortBy);
+                }
             }
         }
 
@@ -180,7 +184,7 @@ final readonly class AggregateCall implements Expression
         $orderByNodes = [];
 
         foreach ($this->orderBy as $orderByClause) {
-            $orderByNodes[] = $orderByClause->toAst();
+            $orderByNodes[] = $orderByClause->toNode();
         }
 
         if ($orderByNodes !== []) {

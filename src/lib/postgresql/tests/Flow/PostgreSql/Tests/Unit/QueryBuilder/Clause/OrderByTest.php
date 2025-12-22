@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Clause;
 
 use Flow\PostgreSql\Protobuf\AST\{SortBy, SortByDir, SortByNulls};
-use Flow\PostgreSql\QueryBuilder\Clause\{NullsPosition, OrderByItem, SortDirection};
+use Flow\PostgreSql\QueryBuilder\Clause\{NullsPosition, OrderBy, SortDirection};
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use PHPUnit\Framework\TestCase;
 
-final class OrderByItemTest extends TestCase
+final class OrderByTest extends TestCase
 {
     public function test_asc_creates_new_instance_with_ascending_direction() : void
     {
         $column = Column::name('name');
-        $orderBy = new OrderByItem($column);
+        $orderBy = new OrderBy($column);
 
         $ascOrderBy = $orderBy->asc();
 
@@ -26,7 +26,7 @@ final class OrderByItemTest extends TestCase
     public function test_constructor_with_all_parameters() : void
     {
         $column = Column::name('priority');
-        $orderBy = new OrderByItem($column, SortDirection::DESC, NullsPosition::FIRST);
+        $orderBy = new OrderBy($column, SortDirection::DESC, NullsPosition::FIRST);
 
         self::assertSame($column, $orderBy->expression());
         self::assertSame(SortDirection::DESC, $orderBy->direction());
@@ -36,7 +36,7 @@ final class OrderByItemTest extends TestCase
     public function test_constructor_with_default_parameters() : void
     {
         $column = Column::name('name');
-        $orderBy = new OrderByItem($column);
+        $orderBy = new OrderBy($column);
 
         self::assertSame($column, $orderBy->expression());
         self::assertSame(SortDirection::ASC, $orderBy->direction());
@@ -46,7 +46,7 @@ final class OrderByItemTest extends TestCase
     public function test_desc_creates_new_instance_with_descending_direction() : void
     {
         $column = Column::name('created_at');
-        $orderBy = new OrderByItem($column);
+        $orderBy = new OrderBy($column);
 
         $descOrderBy = $orderBy->desc();
 
@@ -58,7 +58,7 @@ final class OrderByItemTest extends TestCase
     public function test_fluent_methods_return_new_instances() : void
     {
         $column = Column::name('score');
-        $original = new OrderByItem($column);
+        $original = new OrderBy($column);
 
         $modified = $original->desc()->nullsFirst();
 
@@ -79,7 +79,7 @@ final class OrderByItemTest extends TestCase
             'sortby_nulls' => SortByNulls::SORTBY_NULLS_DEFAULT,
         ]);
 
-        $orderBy = OrderByItem::fromAst($sortBy);
+        $orderBy = OrderBy::fromAst($sortBy);
 
         self::assertSame(SortDirection::ASC, $orderBy->direction());
         self::assertSame(NullsPosition::DEFAULT, $orderBy->nulls());
@@ -96,7 +96,7 @@ final class OrderByItemTest extends TestCase
             'sortby_nulls' => SortByNulls::SORTBY_NULLS_DEFAULT,
         ]);
 
-        $orderBy = OrderByItem::fromAst($sortBy);
+        $orderBy = OrderBy::fromAst($sortBy);
 
         self::assertSame(SortDirection::DEFAULT, $orderBy->direction());
         self::assertSame(NullsPosition::DEFAULT, $orderBy->nulls());
@@ -112,7 +112,7 @@ final class OrderByItemTest extends TestCase
             'sortby_nulls' => SortByNulls::SORTBY_NULLS_DEFAULT,
         ]);
 
-        $orderBy = OrderByItem::fromAst($sortBy);
+        $orderBy = OrderBy::fromAst($sortBy);
 
         self::assertSame(SortDirection::DESC, $orderBy->direction());
         self::assertSame(NullsPosition::DEFAULT, $orderBy->nulls());
@@ -128,7 +128,7 @@ final class OrderByItemTest extends TestCase
             'sortby_nulls' => SortByNulls::SORTBY_NULLS_FIRST,
         ]);
 
-        $orderBy = OrderByItem::fromAst($sortBy);
+        $orderBy = OrderBy::fromAst($sortBy);
 
         self::assertSame(NullsPosition::FIRST, $orderBy->nulls());
     }
@@ -143,7 +143,7 @@ final class OrderByItemTest extends TestCase
             'sortby_nulls' => SortByNulls::SORTBY_NULLS_LAST,
         ]);
 
-        $orderBy = OrderByItem::fromAst($sortBy);
+        $orderBy = OrderBy::fromAst($sortBy);
 
         self::assertSame(NullsPosition::LAST, $orderBy->nulls());
     }
@@ -151,7 +151,7 @@ final class OrderByItemTest extends TestCase
     public function test_nulls_first_creates_new_instance_with_first_nulls_position() : void
     {
         $column = Column::name('priority');
-        $orderBy = new OrderByItem($column);
+        $orderBy = new OrderBy($column);
 
         $nullsFirstOrderBy = $orderBy->nullsFirst();
 
@@ -163,7 +163,7 @@ final class OrderByItemTest extends TestCase
     public function test_nulls_last_creates_new_instance_with_last_nulls_position() : void
     {
         $column = Column::name('priority');
-        $orderBy = new OrderByItem($column);
+        $orderBy = new OrderBy($column);
 
         $nullsLastOrderBy = $orderBy->nullsLast();
 
@@ -183,9 +183,9 @@ final class OrderByItemTest extends TestCase
         ];
 
         foreach ($testCases as [$name, $expression, $direction, $nulls]) {
-            $original = new OrderByItem($expression, $direction, $nulls);
+            $original = new OrderBy($expression, $direction, $nulls);
             $ast = $original->toAst();
-            $restored = OrderByItem::fromAst($ast);
+            $restored = OrderBy::fromAst($ast);
 
             self::assertEquals($direction, $restored->direction(), "Direction mismatch for {$name}");
             self::assertEquals($nulls, $restored->nulls(), "Nulls position mismatch for {$name}");
@@ -199,7 +199,7 @@ final class OrderByItemTest extends TestCase
     public function test_to_ast_creates_sort_by_node() : void
     {
         $column = Column::name('name');
-        $orderBy = new OrderByItem($column);
+        $orderBy = new OrderBy($column);
 
         $ast = $orderBy->toAst();
 
@@ -212,7 +212,7 @@ final class OrderByItemTest extends TestCase
     public function test_to_ast_with_all_options() : void
     {
         $column = Column::name('priority');
-        $orderBy = new OrderByItem($column, SortDirection::DESC, NullsPosition::LAST);
+        $orderBy = new OrderBy($column, SortDirection::DESC, NullsPosition::LAST);
 
         $ast = $orderBy->toAst();
 
@@ -224,13 +224,13 @@ final class OrderByItemTest extends TestCase
     public function test_to_ast_with_complex_column_reference() : void
     {
         $column = Column::tableColumn('users', 'email');
-        $orderBy = new OrderByItem($column, SortDirection::ASC, NullsPosition::FIRST);
+        $orderBy = new OrderBy($column, SortDirection::ASC, NullsPosition::FIRST);
 
         $ast = $orderBy->toAst();
 
         self::assertInstanceOf(SortBy::class, $ast);
 
-        $restored = OrderByItem::fromAst($ast);
+        $restored = OrderBy::fromAst($ast);
         self::assertInstanceOf(Column::class, $restored->expression());
         self::assertSame(['users', 'email'], $restored->expression()->parts());
     }

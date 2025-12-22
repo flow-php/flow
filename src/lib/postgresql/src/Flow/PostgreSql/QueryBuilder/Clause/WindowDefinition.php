@@ -16,7 +16,7 @@ final readonly class WindowDefinition implements AstConvertible
 {
     /**
      * @param list<Expression> $partitionBy
-     * @param list<OrderBy|OrderByItem> $orderBy
+     * @param list<OrderBy> $orderBy
      */
     public function __construct(
         private string $name,
@@ -56,7 +56,11 @@ final readonly class WindowDefinition implements AstConvertible
 
         if ($orderClause !== null) {
             foreach ($orderClause as $orderNode) {
-                $orderBy[] = OrderBy::fromAst($orderNode);
+                $sortBy = $orderNode->getSortBy();
+
+                if ($sortBy !== null) {
+                    $orderBy[] = OrderBy::fromAst($sortBy);
+                }
             }
         }
 
@@ -80,7 +84,7 @@ final readonly class WindowDefinition implements AstConvertible
     }
 
     /**
-     * @return list<OrderBy|OrderByItem>
+     * @return list<OrderBy>
      */
     public function orderBy() : array
     {
@@ -123,11 +127,7 @@ final readonly class WindowDefinition implements AstConvertible
             $orderNodes = [];
 
             foreach ($this->orderBy as $orderItem) {
-                if ($orderItem instanceof OrderByItem) {
-                    $orderNodes[] = new Node(['sort_by' => $orderItem->toAst()]);
-                } else {
-                    $orderNodes[] = $orderItem->toAst();
-                }
+                $orderNodes[] = $orderItem->toNode();
             }
 
             $windowDef->setOrderClause($orderNodes);

@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 
 use Flow\PostgreSql\Protobuf\AST\{LimitOption, Node, ResTarget, SelectStmt as ProtobufSelectStmt};
 use Flow\PostgreSql\QueryBuilder\AstToSql;
-use Flow\PostgreSql\QueryBuilder\Clause\{LockingClause, OrderByItem, WindowDefinition, WithClause};
+use Flow\PostgreSql\QueryBuilder\Clause\{LockingClause, OrderBy, WindowDefinition, WithClause};
 use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory, Literal};
@@ -23,7 +23,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
      * @param array<JoinedTable> $joins
      * @param array<Expression> $groupBy
      * @param array<WindowDefinition> $windows
-     * @param array<OrderByItem> $orderBy
+     * @param array<OrderBy> $orderBy
      * @param array<LockingClause> $locks
      */
     private function __construct(
@@ -160,7 +160,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
                 $sortBy = $sortNode->getSortBy();
 
                 if ($sortBy !== null) {
-                    $orderBy[] = OrderByItem::fromAst($sortBy);
+                    $orderBy[] = OrderBy::fromAst($sortBy);
                 }
             }
         }
@@ -613,7 +613,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function orderBy(OrderByItem ...$items) : SelectLimitStep
+    public function orderBy(OrderBy ...$items) : SelectLimitStep
     {
         return new self(
             with: $this->with,
@@ -847,10 +847,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             $sortClause = [];
 
             foreach ($this->orderBy as $orderByItem) {
-                $sortBy = $orderByItem->toAst();
-                $node = new Node();
-                $node->setSortBy($sortBy);
-                $sortClause[] = $node;
+                $sortClause[] = $orderByItem->toNode();
             }
 
             $selectStmt->setSortClause($sortClause);
@@ -986,10 +983,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             $sortClause = [];
 
             foreach ($this->orderBy as $orderByItem) {
-                $sortBy = $orderByItem->toAst();
-                $node = new Node();
-                $node->setSortBy($sortBy);
-                $sortClause[] = $node;
+                $sortClause[] = $orderByItem->toNode();
             }
 
             $selectStmt->setSortClause($sortClause);
@@ -1074,7 +1068,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
                 $sortBy = $sortNode->getSortBy();
 
                 if ($sortBy !== null) {
-                    $orderBy[] = OrderByItem::fromAst($sortBy);
+                    $orderBy[] = OrderBy::fromAst($sortBy);
                 }
             }
         }
