@@ -1,0 +1,135 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\PostgreSql;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\PostgreSql\DSL\{close_cursor, declare_cursor, fetch};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\QueryBuilder\SqlQuery;
+
+/**
+ * PostgreSQL extractor using server-side cursors for memory-efficient extraction.
+ *
+ * Uses DECLARE CURSOR + FETCH to stream data from PostgreSQL without loading
+ * the entire result set into memory. This is the only way to achieve true
+ * low memory extraction with PHP's ext-pgsql.
+ *
+ * Note: Requires a transaction context (auto-started if not in one).
+ */
+final class PostgreSqlCursorExtractor implements Extractor
+{
+    private ?string $cursorName = null;
+
+    private int $fetchSize = 1000;
+
+    private ?int $maximum = null;
+
+    private ?Schema $schema = null;
+
+    /**
+     * @param array<int, mixed> $parameters
+     */
+    public function __construct(
+        private readonly Client $client,
+        private readonly string|SqlQuery $query,
+        private readonly array $parameters = [],
+    ) {
+    }
+
+    public function extract(FlowContext $context) : \Generator
+    {
+        $cursorName = $this->cursorName ?? 'flow_cursor_' . \bin2hex(\random_bytes(8));
+
+        $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
+
+        if ($ownTransaction) {
+            $this->client->beginTransaction();
+        }
+
+        try {
+            $this->client->execute(
+                declare_cursor($cursorName, $this->query),
+                $this->parameters
+            );
+
+            $totalFetched = 0;
+
+            while (true) {
+                $cursor = $this->client->cursor(fetch($cursorName)->forward($this->fetchSize));
+                $hasRows = false;
+
+                foreach ($cursor->iterate() as $row) {
+                    $hasRows = true;
+                    $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
+
+                    if ($signal === Signal::STOP) {
+                        $cursor->free();
+
+                        return;
+                    }
+
+                    $totalFetched++;
+
+                    if ($this->maximum !== null && $totalFetched >= $this->maximum) {
+                        $cursor->free();
+
+                        return;
+                    }
+                }
+
+                $cursor->free();
+
+                if (!$hasRows) {
+                    break;
+                }
+            }
+        } finally {
+            $this->client->execute(close_cursor($cursorName));
+
+            if ($ownTransaction) {
+                $this->client->commit();
+            }
+        }
+    }
+
+    public function withCursorName(string $cursorName) : self
+    {
+        $this->cursorName = $cursorName;
+
+        return $this;
+    }
+
+    public function withFetchSize(int $fetchSize) : self
+    {
+        if ($fetchSize <= 0) {
+            throw new InvalidArgumentException('Fetch size must be greater than 0, got ' . $fetchSize);
+        }
+
+        $this->fetchSize = $fetchSize;
+
+        return $this;
+    }
+
+    public function withMaximum(int $maximum) : self
+    {
+        if ($maximum <= 0) {
+            throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
+        }
+
+        $this->maximum = $maximum;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
+
+        return $this;
+    }
+}
