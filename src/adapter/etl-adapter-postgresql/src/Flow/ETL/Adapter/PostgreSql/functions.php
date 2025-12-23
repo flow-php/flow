@@ -10,6 +10,38 @@ use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DS
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
+/**
+ * Create a PostgreSQL cursor extractor using server-side cursors for memory-efficient extraction.
+ *
+ * Uses DECLARE CURSOR + FETCH to stream data without loading entire result set into memory.
+ * This is the only way to achieve true low memory extraction with PHP's ext-pgsql.
+ *
+ * Note: Requires a transaction context (auto-started if not in one).
+ *
+ * @param Client $client PostgreSQL client
+ * @param SqlQuery|string $query SQL query to execute (wrapped in DECLARE CURSOR)
+ * @param array<int, mixed> $parameters Positional parameters for the query
+ * @param int $fetchSize Number of rows to fetch per batch (default: 1000)
+ * @param null|int $maximum Maximum number of rows to extract (null for unlimited)
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
+function from_pgsql_cursor(
+    Client $client,
+    string|SqlQuery $query,
+    array $parameters = [],
+    int $fetchSize = 1000,
+    ?int $maximum = null,
+) : PostgreSqlCursorExtractor {
+    $extractor = (new PostgreSqlCursorExtractor($client, $query, $parameters))
+        ->withFetchSize($fetchSize);
+
+    if ($maximum !== null) {
+        $extractor->withMaximum($maximum);
+    }
+
+    return $extractor;
+}
+
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_limit_offset(
     Client $client,

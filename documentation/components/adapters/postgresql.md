@@ -33,15 +33,16 @@ This adapter provides:
 
 ### Extractors
 
-Two extraction strategies optimized for different use cases:
+Three extraction strategies optimized for different use cases:
 
+- **Server-Side Cursor**: True streaming extraction using PostgreSQL DECLARE CURSOR for maximum memory efficiency
 - **LIMIT/OFFSET Pagination**: Simple pagination suitable for smaller datasets
 - **Keyset (Cursor) Pagination**: Efficient pagination for large datasets with consistent performance
 
-Both extractors support:
+All extractors support:
 
 - Raw SQL strings or Query Builder objects
-- Configurable page sizes
+- Configurable batch/page sizes
 - Maximum row limits
 - Custom schema definitions
 
@@ -53,6 +54,73 @@ A flexible loader supporting:
 - **UPDATE**: Update existing rows by primary key
 - **DELETE**: Delete rows by primary key
 - **UPSERT**: ON CONFLICT handling for insert-or-update operations
+
+## Extractor - Server-Side Cursor
+
+The `from_pgsql_cursor` extractor uses PostgreSQL's native server-side cursors via `DECLARE CURSOR` + `FETCH`.
+This is the **only way** to achieve true low-memory streaming with PHP's ext-pgsql, as the extension
+has no unbuffered query mode.
+
+> **Note:** This extractor automatically manages transactions. Cursors require a transaction context,
+> which is auto-started if not already in one.
+
+### Basic Usage
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection_dsn};
+
+$client = pgsql_client(pgsql_connection_dsn('pgsql://user:pass@localhost:5432/database'));
+
+data_frame()
+    ->read(from_pgsql_cursor(
+        $client,
+        "SELECT id, name, email FROM users",
+        fetchSize: 1000
+    ))
+    ->write(to_output())
+    ->run();
+```
+
+### With Query Builder
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\PostgreSql\DSL\{col, select, star, table};
+
+data_frame()
+    ->read(from_pgsql_cursor(
+        $client,
+        select(star())->from(table('large_table')),
+        fetchSize: 500
+    ))
+    ->write(to_output())
+    ->run();
+```
+
+### With Parameters
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+
+data_frame()
+    ->read(from_pgsql_cursor(
+        $client,
+        "SELECT * FROM orders WHERE status = $1 AND created_at > $2",
+        parameters: ['pending', '2024-01-01'],
+        fetchSize: 1000
+    ))
+    ->write(to_output())
+    ->run();
+```
+
+### When to Use Each Extractor
+
+| Extractor                 | Best For                            | Memory                 | ORDER BY Required |
+|---------------------------|-------------------------------------|------------------------|-------------------|
+| `from_pgsql_cursor`       | Very large datasets, true streaming | Lowest (server-side)   | No                |
+| `from_pgsql_key_set`      | Large datasets with indexed keys    | Medium (page buffered) | Auto-generated    |
+| `from_pgsql_limit_offset` | Small-medium datasets               | Medium (page buffered) | Yes               |
 
 ## Extractor - LIMIT/OFFSET Pagination
 
@@ -195,6 +263,7 @@ data_frame()
 
 | Function                                                            | Description                           |
 |---------------------------------------------------------------------|---------------------------------------|
+| `from_pgsql_cursor($client, $query, $parameters, $fetchSize, $max)` | Extract using server-side cursor      |
 | `from_pgsql_limit_offset($client, $query, $pageSize, $maximum)`     | Extract using LIMIT/OFFSET pagination |
 | `from_pgsql_key_set($client, $query, $keySet, $pageSize, $maximum)` | Extract using keyset pagination       |
 

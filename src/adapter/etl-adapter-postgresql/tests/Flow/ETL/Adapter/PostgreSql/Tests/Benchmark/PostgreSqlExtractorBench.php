@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_key_set, from_pgsql_limit_offset, pgsql_pagination_key_asc, pgsql_pagination_key_set, to_pgsql_table};
+use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_cursor, from_pgsql_key_set, from_pgsql_limit_offset, pgsql_pagination_key_asc, pgsql_pagination_key_set, to_pgsql_table};
 use function Flow\ETL\DSL\{config, df, flow_context};
 use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_double_precision, data_type_integer, data_type_jsonb, data_type_text, data_type_timestamptz, data_type_uuid, drop, pgsql_client, pgsql_connection_dsn, pgsql_mapper, select, star, table};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
@@ -48,6 +48,18 @@ final class PostgreSqlExtractorBench
             drop()->table(self::TABLE_NAME)->ifExists()->cascade()
         );
         $this->client->close();
+    }
+
+    public function bench_extract_10k_cursor() : void
+    {
+        $context = flow_context(config());
+
+        foreach (from_pgsql_cursor(
+            $this->client,
+            select(star())->from(table(self::TABLE_NAME)),
+            fetchSize: 1000
+        )->extract($context) as $rows) {
+        }
     }
 
     public function bench_extract_10k_keyset() : void

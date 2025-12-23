@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
-use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
 use function Flow\ETL\DSL\df;
 use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_integer, data_type_text, delete, drop, insert, literal, select, star, table};
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
-final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTestCase
+final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
 {
-    private string $tableName = 'flow_postgresql_limit_offset_test';
+    private string $tableName = 'flow_postgresql_cursor_test';
 
     protected function setUp() : void
     {
@@ -41,13 +41,13 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
         parent::tearDown();
     }
 
-    public function test_extracts_all_rows_with_pagination() : void
+    public function test_extracts_all_rows_with_cursor() : void
     {
         $rows = df()
-            ->read(from_pgsql_limit_offset(
+            ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-                pageSize: 5
+                fetchSize: 5
             ))
             ->fetch()
             ->toArray();
@@ -58,13 +58,27 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
         self::assertSame(\range(1, 25), \array_column($rows, 'id'));
     }
 
+    public function test_extracts_all_rows_without_order_by() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_cursor(
+                $this->client,
+                select(col('id'), col('name'))->from(table($this->tableName)),
+                fetchSize: 5
+            ))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(25, $rows);
+    }
+
     public function test_extracts_limited_rows_with_maximum() : void
     {
         $rows = df()
-            ->read(from_pgsql_limit_offset(
+            ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-                pageSize: 5,
+                fetchSize: 5,
                 maximum: 12
             ))
             ->fetch()
@@ -76,13 +90,65 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
         self::assertSame(\range(1, 12), \array_column($rows, 'id'));
     }
 
+    public function test_extracts_with_custom_cursor_name() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_cursor(
+                $this->client,
+                select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
+                fetchSize: 5
+            )->withCursorName('my_custom_cursor'))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(25, $rows);
+        self::assertSame(1, $rows[0]['id']);
+        self::assertSame(25, $rows[24]['id']);
+        self::assertSame(\range(1, 25), \array_column($rows, 'id'));
+    }
+
+    public function test_extracts_with_custom_fetch_size() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_cursor(
+                $this->client,
+                select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
+                fetchSize: 3
+            ))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(25, $rows);
+        self::assertSame(1, $rows[0]['id']);
+        self::assertSame(25, $rows[24]['id']);
+        self::assertSame(\range(1, 25), \array_column($rows, 'id'));
+    }
+
+    public function test_extracts_with_parameterized_query() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_cursor(
+                $this->client,
+                'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1 ORDER BY id',
+                parameters: [10],
+                fetchSize: 5
+            ))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(15, $rows);
+        self::assertSame(11, $rows[0]['id']);
+        self::assertSame(25, $rows[14]['id']);
+        self::assertSame(\range(11, 25), \array_column($rows, 'id'));
+    }
+
     public function test_extracts_with_raw_sql() : void
     {
         $rows = df()
-            ->read(from_pgsql_limit_offset(
+            ->read(from_pgsql_cursor(
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' ORDER BY id',
-                pageSize: 5
+                fetchSize: 5
             ))
             ->fetch()
             ->toArray();
@@ -98,10 +164,9 @@ final class PostgreSqlLimitOffsetExtractorIntegrationTest extends IntegrationTes
         $this->client->execute(delete()->from($this->tableName));
 
         $rows = df()
-            ->read(from_pgsql_limit_offset(
+            ->read(from_pgsql_cursor(
                 $this->client,
-                select(star())->from(table($this->tableName))->orderBy(asc(col('id'))),
-                pageSize: 10
+                select(star())->from(table($this->tableName))
             ))
             ->fetch()
             ->toArray();

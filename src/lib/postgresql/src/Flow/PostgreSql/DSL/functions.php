@@ -57,6 +57,13 @@ use Flow\PostgreSql\QueryBuilder\Condition\{
     RawCondition,
     SimilarTo
 };
+use Flow\PostgreSql\QueryBuilder\Cursor\{
+    CloseCursorBuilder,
+    CloseCursorFinalStep,
+    DeclareCursorBuilder,
+    DeclareCursorOptionsStep,
+    FetchCursorBuilder
+};
 use Flow\PostgreSql\QueryBuilder\Delete\{DeleteBuilder, DeleteFromStep};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\{
@@ -86,7 +93,7 @@ use Flow\PostgreSql\QueryBuilder\Factory\{AlterFactory, CreateFactory, DropFacto
 use Flow\PostgreSql\QueryBuilder\Factory\CopyFactory;
 use Flow\PostgreSql\QueryBuilder\Insert\{BulkInsert, InsertBuilder, InsertIntoStep};
 use Flow\PostgreSql\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
-use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
+use Flow\PostgreSql\QueryBuilder\{QualifiedIdentifier, SqlQuery};
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType, ReferentialAction};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
 use Flow\PostgreSql\QueryBuilder\Schema\Function\{
@@ -2067,6 +2074,71 @@ function commit_prepared(string $transactionId) : PreparedTransactionFinalStep
 function rollback_prepared(string $transactionId) : PreparedTransactionFinalStep
 {
     return PreparedTransactionBuilder::rollbackPrepared($transactionId);
+}
+
+/**
+ * Declare a server-side cursor for a query.
+ *
+ * Cursors must be declared within a transaction and provide memory-efficient
+ * iteration over large result sets via FETCH commands.
+ *
+ * Example with query builder:
+ *   declare_cursor('my_cursor', select(star())->from(table('users')))->noScroll()
+ *   Produces: DECLARE my_cursor NO SCROLL CURSOR FOR SELECT * FROM users
+ *
+ * Example with raw SQL:
+ *   declare_cursor('my_cursor', 'SELECT * FROM users WHERE active = true')->withHold()
+ *   Produces: DECLARE my_cursor NO SCROLL CURSOR WITH HOLD FOR SELECT * FROM users WHERE active = true
+ *
+ * @param string $cursorName Unique cursor name
+ * @param SelectFinalStep|SqlQuery|string $query Query to iterate over
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function declare_cursor(string $cursorName, SelectFinalStep|string|SqlQuery $query) : DeclareCursorOptionsStep
+{
+    if ($query instanceof SelectFinalStep) {
+        return DeclareCursorBuilder::create($cursorName, $query);
+    }
+
+    return DeclareCursorBuilder::createFromSql($cursorName, $query);
+}
+
+/**
+ * Fetch rows from a cursor.
+ *
+ * Example: fetch('my_cursor')->forward(100)
+ * Produces: FETCH FORWARD 100 my_cursor
+ *
+ * Example: fetch('my_cursor')->all()
+ * Produces: FETCH ALL my_cursor
+ *
+ * @param string $cursorName Cursor to fetch from
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function fetch(string $cursorName) : FetchCursorBuilder
+{
+    return FetchCursorBuilder::create($cursorName);
+}
+
+/**
+ * Close a cursor.
+ *
+ * Example: close_cursor('my_cursor')
+ * Produces: CLOSE my_cursor
+ *
+ * Example: close_cursor() - closes all cursors
+ * Produces: CLOSE ALL
+ *
+ * @param null|string $cursorName Cursor to close, or null to close all
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function close_cursor(?string $cursorName = null) : CloseCursorFinalStep
+{
+    if ($cursorName === null) {
+        return CloseCursorBuilder::closeAll();
+    }
+
+    return CloseCursorBuilder::close($cursorName);
 }
 
 /**
