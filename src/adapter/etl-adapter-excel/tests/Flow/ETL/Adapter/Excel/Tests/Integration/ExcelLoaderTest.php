@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
 use function Flow\ETL\Adapter\Excel\DSL\{from_excel, to_excel};
-use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, df, float_entry, from_rows, int_entry, json_entry, row, rows, string_entry, time_entry, uuid_entry};
+use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, df, float_entry, from_rows, int_entry, json_entry, overwrite, row, rows, string_entry, time_entry, uuid_entry};
 use Flow\ETL\Adapter\Excel\{CellStyler, ExcelWriter};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class ExcelLoaderTest extends FlowIntegrationTestCase
+final class ExcelLoaderTest extends FlowTestCase
 {
     /**
      * @return iterable<string, array{ExcelWriter, string}>
@@ -28,7 +28,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
 
     public function test_auto_detects_ods_writer_from_extension() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_auto.ods')->path();
+        $outputPath = __DIR__ . '/var/output_auto.ods';
 
         df()
             ->read(from_rows(
@@ -36,6 +36,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 1), string_entry('name', 'Test')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath))
             ->run();
 
@@ -44,13 +45,17 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            $rows
+        );
     }
 
     public function test_auto_detects_xlsx_writer_from_extension() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_auto.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_auto.xlsx';
 
         df()
             ->read(from_rows(
@@ -58,6 +63,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 1), string_entry('name', 'Test')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath))
             ->run();
 
@@ -66,20 +72,17 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
-    }
-
-    public function test_destination_returns_path() : void
-    {
-        $loader = to_excel('/tmp/test.xlsx');
-
-        self::assertSame('/tmp/test.xlsx', $loader->destination()->path());
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            $rows
+        );
     }
 
     public function test_multiple_rows_in_single_batch() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_batches.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_batches.xlsx';
 
         df()
             ->read(from_rows(
@@ -90,6 +93,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                 )
             ))
             ->batchSize(2)
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath))
             ->run();
 
@@ -98,21 +102,20 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(3, $rows);
-    }
-
-    public function test_non_local_path_throws_exception() : void
-    {
-        $this->expectException(\Flow\ETL\Exception\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Only local filesystem paths are supported');
-
-        to_excel('s3://bucket/path/to/file.xlsx');
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'First'],
+                ['id' => 2, 'name' => 'Second'],
+                ['id' => 3, 'name' => 'Third'],
+            ],
+            $rows
+        );
     }
 
     #[DataProvider('provide_writers')]
     public function test_round_trip_with_basic_data(ExcelWriter $writer, string $extension) : void
     {
-        $outputPath = $this->cacheDir->suffix('output.' . $extension)->path();
+        $outputPath = __DIR__ . '/var/output.' . $extension;
 
         df()
             ->read(from_rows(
@@ -122,6 +125,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 3), string_entry('name', 'Charlie'), string_entry('email', 'charlie@example.com')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withWriter($writer))
             ->run();
 
@@ -130,16 +134,19 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(3, $rows);
-        self::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
-        self::assertSame([1, 'Alice', 'alice@example.com'], [$rows[0]['id'], $rows[0]['name'], $rows[0]['email']]);
-        self::assertSame([2, 'Bob', 'bob@example.com'], [$rows[1]['id'], $rows[1]['name'], $rows[1]['email']]);
-        self::assertSame([3, 'Charlie', 'charlie@example.com'], [$rows[2]['id'], $rows[2]['name'], $rows[2]['email']]);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
+                ['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com'],
+                ['id' => 3, 'name' => 'Charlie', 'email' => 'charlie@example.com'],
+            ],
+            $rows
+        );
     }
 
     public function test_round_trip_with_custom_date_formats() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_custom_formats.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_custom_formats.xlsx';
         $date = new \DateTimeImmutable('2024-06-15');
         $datetime = new \DateTimeImmutable('2024-06-15 14:30:45');
         $time = new \DateInterval('PT14H30M45S');
@@ -154,6 +161,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     ),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(
                 to_excel($outputPath)
                     ->withDateFormat('d/m/Y')
@@ -167,16 +175,18 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame('15/06/2024', $rows[0]['date_val']);
-        self::assertSame('15/06/2024 14:30', $rows[0]['datetime_val']);
-        self::assertSame('14:30', $rows[0]['time_val']);
+        self::assertEquals(
+            [
+                ['date_val' => '15/06/2024', 'datetime_val' => '15/06/2024 14:30', 'time_val' => '14:30'],
+            ],
+            $rows
+        );
     }
 
     #[DataProvider('provide_writers')]
     public function test_round_trip_with_custom_sheet_name(ExcelWriter $writer, string $extension) : void
     {
-        $outputPath = $this->cacheDir->suffix('output_custom_sheet.' . $extension)->path();
+        $outputPath = __DIR__ . '/var/output_custom_sheet.' . $extension;
 
         df()
             ->read(from_rows(
@@ -184,6 +194,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 1), string_entry('name', 'Test')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(
                 to_excel($outputPath)->withSheetName('MySheet')->withWriter($writer)
             )
@@ -194,13 +205,17 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            $rows
+        );
     }
 
     public function test_round_trip_with_datetime_xlsx() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_datetime.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_datetime.xlsx';
         $date = new \DateTimeImmutable('2024-06-15');
         $datetime = new \DateTimeImmutable('2024-06-15 14:30:00');
 
@@ -213,6 +228,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     ),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withWriter(ExcelWriter::XLSX))
             ->run();
 
@@ -221,14 +237,17 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertNotNull($rows[0]['date_val']);
-        self::assertNotNull($rows[0]['datetime_val']);
+        self::assertEquals(
+            [
+                ['date_val' => '2024-06-15', 'datetime_val' => '2024-06-15 14:30:00'],
+            ],
+            $rows
+        );
     }
 
     public function test_round_trip_with_dynamic_sheet_names() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_dynamic_sheets.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_dynamic_sheets.xlsx';
 
         $loader = to_excel($outputPath);
         $loader = $loader->withSheetNameFromEntry('category');
@@ -241,6 +260,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 3), string_entry('name', 'Product A'), string_entry('category', 'Products')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write($loader)
             ->run();
 
@@ -249,22 +269,31 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(2, $usersRows);
-        self::assertSame(['id', 'name'], \array_keys($usersRows[0]));
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            $usersRows
+        );
 
         $productsRows = df()
             ->read(from_excel($outputPath)->withSheetName('Products'))
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $productsRows);
-        self::assertSame(['id', 'name'], \array_keys($productsRows[0]));
+        self::assertEquals(
+            [
+                ['id' => 3, 'name' => 'Product A'],
+            ],
+            $productsRows
+        );
     }
 
     #[DataProvider('provide_writers')]
     public function test_round_trip_with_null_values(ExcelWriter $writer, string $extension) : void
     {
-        $outputPath = $this->cacheDir->suffix('output_nulls.' . $extension)->path();
+        $outputPath = __DIR__ . '/var/output_nulls.' . $extension;
 
         df()
             ->read(from_rows(
@@ -273,6 +302,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 2), string_entry('name', null), string_entry('email', 'bob@example.com')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withWriter($writer))
             ->run();
 
@@ -281,15 +311,19 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(2, $rows);
-        self::assertNull($rows[0]['email']);
-        self::assertNull($rows[1]['name']);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice', 'email' => null],
+                ['id' => 2, 'name' => null, 'email' => 'bob@example.com'],
+            ],
+            $rows
+        );
     }
 
     #[DataProvider('provide_writers')]
     public function test_round_trip_with_various_data_types(ExcelWriter $writer, string $extension) : void
     {
-        $outputPath = $this->cacheDir->suffix('output_types.' . $extension)->path();
+        $outputPath = __DIR__ . '/var/output_types.' . $extension;
         $uuidString = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
         df()
@@ -305,6 +339,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     ),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withWriter($writer))
             ->run();
 
@@ -313,19 +348,25 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame(42, $rows[0]['int_val']);
-        self::assertEqualsWithDelta(3.14, $rows[0]['float_val'], 0.0001);
-        self::assertTrue($rows[0]['bool_val']);
-        self::assertSame('hello', $rows[0]['string_val']);
-        self::assertSame($uuidString, $rows[0]['uuid_val']);
-        self::assertSame('{"key":"value"}', $rows[0]['json_val']);
+        self::assertEquals(
+            [
+                [
+                    'int_val' => 42,
+                    'float_val' => 3.14,
+                    'bool_val' => true,
+                    'string_val' => 'hello',
+                    'uuid_val' => $uuidString,
+                    'json_val' => '{"key":"value"}',
+                ],
+            ],
+            $rows
+        );
     }
 
     #[DataProvider('provide_writers')]
     public function test_round_trip_without_header(ExcelWriter $writer, string $extension) : void
     {
-        $outputPath = $this->cacheDir->suffix('output_no_header.' . $extension)->path();
+        $outputPath = __DIR__ . '/var/output_no_header.' . $extension;
 
         df()
             ->read(from_rows(
@@ -334,6 +375,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 2), string_entry('name', 'Bob')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withHeader(false)->withWriter($writer))
             ->run();
 
@@ -342,8 +384,12 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertGreaterThanOrEqual(1, \count($rows));
-        self::assertSame(['e00', 'e01'], \array_keys($rows[0]));
+        self::assertEquals(
+            [
+                ['e00' => 2, 'e01' => 'Bob'],
+            ],
+            $rows
+        );
     }
 
     public function test_sheet_name_and_sheet_name_from_entry_are_mutually_exclusive() : void
@@ -368,7 +414,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
 
     public function test_with_cell_styler() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_cell_styler.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_cell_styler.xlsx';
 
         $cellStyler = new class implements CellStyler {
             public function style(Entry $entry, int $rowNumber, int $columnIndex, string $sheetName) : ?Style
@@ -391,6 +437,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 2), string_entry('name', 'Bob')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write($loader)
             ->run();
 
@@ -399,12 +446,18 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(2, $rows);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            $rows
+        );
     }
 
     public function test_with_header_style() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_header_style.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_header_style.xlsx';
 
         $headerStyle = (new Style(fontBold: true));
 
@@ -417,6 +470,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 1), string_entry('name', 'Test')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write($loader)
             ->run();
 
@@ -425,13 +479,17 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            $rows
+        );
     }
 
     public function test_with_ods_options() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_with_ods_options.ods')->path();
+        $outputPath = __DIR__ . '/var/output_with_ods_options.ods';
 
         $options = new OdsOptions(
             DEFAULT_COLUMN_WIDTH: 15.0,
@@ -444,6 +502,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 1), string_entry('name', 'Test')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withWriterOptions($options))
             ->run();
 
@@ -452,13 +511,17 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            $rows
+        );
     }
 
     public function test_with_xlsx_options() : void
     {
-        $outputPath = $this->cacheDir->suffix('output_with_options.xlsx')->path();
+        $outputPath = __DIR__ . '/var/output_with_options.xlsx';
 
         $options = new XlsxOptions(
             SHOULD_USE_INLINE_STRINGS: false,
@@ -471,6 +534,7 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                     row(int_entry('id', 1), string_entry('name', 'Test')),
                 )
             ))
+            ->saveMode(overwrite())
             ->write(to_excel($outputPath)->withWriterOptions($options))
             ->run();
 
@@ -479,7 +543,11 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            $rows
+        );
     }
 }
