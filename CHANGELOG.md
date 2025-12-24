@@ -1,6 +1,8 @@
-## [Unreleased] - 2025-12-22
+## [Unreleased] - 2025-12-23
 
 ### Added
+- [#2101](https://github.com/flow-php/flow/pull/2101) - **cursor based extractor to postgresql adapter** - [@norberttech](https://github.com/norberttech)
+- [#2101](https://github.com/flow-php/flow/pull/2101) - **dsl and builder to cover cursors to postgresql library** - [@norberttech](https://github.com/norberttech)
 - [#2096](https://github.com/flow-php/flow/pull/2096) - **flow-php/etl-adapter-postgresql based on flow-php/postgresql library** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **added BoolArrayConverter for PostgreSQL BOOL[] type** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **IntArrayConverter for PostgreSQL INT2[], INT4[], INT8[] types** - [@norberttech](https://github.com/norberttech)
