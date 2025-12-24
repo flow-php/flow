@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-23
+## [Unreleased] - 2025-12-24
 
 ### Added
 - [#2101](https://github.com/flow-php/flow/pull/2101) - **cursor based extractor to postgresql adapter** - [@norberttech](https://github.com/norberttech)
