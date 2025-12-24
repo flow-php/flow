@@ -1,0 +1,275 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Excel;
+
+use Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer;
+use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Flow\ETL\Loader\{Closure, FileLoader};
+use Flow\Filesystem\Path;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\ODS\Options as OdsOptions;
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+
+final class ExcelLoader implements Closure, FileLoader, Loader
+{
+    private ?CellStyler $cellStyler = null;
+
+    private string $dateFormat = 'Y-m-d';
+
+    private string $dateTimeFormat = 'Y-m-d H:i:s';
+
+    private ?Style $headerStyle = null;
+
+    private readonly Path $path;
+
+    private ?string $sheetName = null;
+
+    private ?string $sheetNameEntryName = null;
+
+    private string $timeFormat = 'H:i:s';
+
+    private bool $useInlineStrings = true;
+
+    private bool $withHeader = true;
+
+    private ?WorkbookManager $workbookManager = null;
+
+    private OdsOptions|XlsxOptions|null $writerOptions = null;
+
+    private ?ExcelWriter $writerType = null;
+
+    public function __construct(Path $path)
+    {
+        if (!$path->isLocal()) {
+            throw new InvalidArgumentException(
+                'Only local filesystem paths are supported by ExcelLoader due to OpenSpout limitations.'
+            );
+        }
+
+        $this->path = $path;
+    }
+
+    public function closure(FlowContext $context) : void
+    {
+        if ($this->workbookManager !== null) {
+            $this->workbookManager->close();
+            $this->workbookManager = null;
+        }
+
+        $context->streams()->closeStreams($this->path);
+    }
+
+    public function destination() : Path
+    {
+        return $this->path;
+    }
+
+    public function load(Rows $rows, FlowContext $context) : void
+    {
+        $normalizer = new ExcelRowsNormalizer(
+            dateFormat: $this->dateFormat,
+            dateTimeFormat: $this->dateTimeFormat,
+            timeFormat: $this->timeFormat,
+        );
+
+        $streams = $context->streams();
+
+        if ($rows->partitions()->count()) {
+            $stream = $streams->writeTo($this->path, $rows->partitions()->toArray());
+        } else {
+            $stream = $streams->writeTo($this->path);
+        }
+
+        $filePath = $stream->path()->path();
+        $manager = $this->getWorkbookManager();
+        $manager->open($filePath);
+
+        $rowIndex = 0;
+
+        foreach ($rows as $row) {
+            $sheetName = $this->resolveSheetName($row);
+
+            $rowForExcel = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
+                ? $row->remove($this->sheetNameEntryName)
+                : $row;
+
+            if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
+                $headers = $normalizer->headers($rowForExcel);
+                $manager->writeHeader($sheetName, $headers, $this->headerStyle);
+            }
+
+            $values = $normalizer->normalize($rowForExcel);
+            $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
+            $manager->writeRow($sheetName, $values, $styles);
+
+            $rowIndex++;
+        }
+    }
+
+    public function withCellStyler(CellStyler $styler) : self
+    {
+        $this->cellStyler = $styler;
+
+        return $this;
+    }
+
+    public function withDateFormat(string $format) : self
+    {
+        $this->dateFormat = $format;
+
+        return $this;
+    }
+
+    public function withDateTimeFormat(string $format) : self
+    {
+        $this->dateTimeFormat = $format;
+
+        return $this;
+    }
+
+    public function withHeader(bool $withHeader = true) : self
+    {
+        $this->withHeader = $withHeader;
+
+        return $this;
+    }
+
+    public function withHeaderStyle(Style $style) : self
+    {
+        $this->headerStyle = $style;
+
+        return $this;
+    }
+
+    public function withInlineStrings(bool $useInlineStrings) : self
+    {
+        $this->useInlineStrings = $useInlineStrings;
+
+        return $this;
+    }
+
+    public function withSheetName(?string $sheetName) : self
+    {
+        if ($sheetName !== null) {
+            SheetNameAssertion::assert($sheetName);
+        }
+
+        $this->sheetName = $sheetName;
+
+        return $this;
+    }
+
+    public function withSheetNameFromEntry(string $entryName) : self
+    {
+        $this->sheetNameEntryName = $entryName;
+
+        return $this;
+    }
+
+    public function withTimeFormat(string $format) : self
+    {
+        $this->timeFormat = $format;
+
+        return $this;
+    }
+
+    public function withWriter(ExcelWriter $writer) : self
+    {
+        $this->writerType = $writer;
+
+        return $this;
+    }
+
+    public function withWriterOptions(OdsOptions|XlsxOptions $options) : self
+    {
+        $this->writerOptions = $options;
+
+        return $this;
+    }
+
+    private function getWorkbookManager() : WorkbookManager
+    {
+        if ($this->workbookManager === null) {
+            $this->workbookManager = new WorkbookManager(
+                writerType: $this->resolveWriterType(),
+                xlsxOptions: $this->resolveXlsxOptions(),
+                odsOptions: $this->resolveOdsOptions(),
+            );
+        }
+
+        return $this->workbookManager;
+    }
+
+    /**
+     * @return null|array<int, null|Style>
+     */
+    private function resolveCellStyles(Row $row, int $rowIndex, string $sheetName) : ?array
+    {
+        if ($this->cellStyler === null) {
+            return null;
+        }
+
+        $styles = [];
+        $columnIndex = 0;
+
+        foreach ($row->entries() as $entry) {
+            $styles[$columnIndex] = $this->cellStyler->style($entry, $rowIndex + 1, $columnIndex, $sheetName);
+            $columnIndex++;
+        }
+
+        return $styles;
+    }
+
+    private function resolveOdsOptions() : ?OdsOptions
+    {
+        if ($this->writerOptions instanceof OdsOptions) {
+            return $this->writerOptions;
+        }
+
+        return null;
+    }
+
+    private function resolveSheetName(Row $row) : string
+    {
+        if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
+            $value = $row->get($this->sheetNameEntryName)->value();
+
+            if (\is_string($value) && $value !== '') {
+                SheetNameAssertion::assert($value);
+
+                return $value;
+            }
+        }
+
+        return $this->sheetName ?? 'Sheet1';
+    }
+
+    private function resolveWriterType() : ExcelWriter
+    {
+        if ($this->writerType !== null) {
+            return $this->writerType;
+        }
+
+        $extension = $this->path->extension();
+
+        return match (\strtolower((string) $extension)) {
+            'ods' => ExcelWriter::ODS,
+            default => ExcelWriter::XLSX,
+        };
+    }
+
+    private function resolveXlsxOptions() : ?XlsxOptions
+    {
+        if ($this->writerOptions instanceof XlsxOptions) {
+            return $this->writerOptions;
+        }
+
+        return $this->resolveWriterType() === ExcelWriter::XLSX
+            ? new XlsxOptions(SHOULD_USE_INLINE_STRINGS: $this->useInlineStrings)
+            : null;
+    }
+}
