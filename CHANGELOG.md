@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-12-24
 
 ### Added
+- [#2102](https://github.com/flow-php/flow/pull/2102) - **ExcelLoader** - [@norberttech](https://github.com/norberttech)
 - [#2101](https://github.com/flow-php/flow/pull/2101) - **cursor based extractor to postgresql adapter** - [@norberttech](https://github.com/norberttech)
 - [#2101](https://github.com/flow-php/flow/pull/2101) - **dsl and builder to cover cursors to postgresql library** - [@norberttech](https://github.com/norberttech)
 - [#2096](https://github.com/flow-php/flow/pull/2096) - **flow-php/etl-adapter-postgresql based on flow-php/postgresql library** - [@norberttech](https://github.com/norberttech)
