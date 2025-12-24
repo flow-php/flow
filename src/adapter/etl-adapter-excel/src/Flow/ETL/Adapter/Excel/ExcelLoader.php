@@ -32,8 +32,6 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     private string $timeFormat = 'H:i:s';
 
-    private bool $useInlineStrings = true;
-
     private bool $withHeader = true;
 
     private ?WorkbookManager $workbookManager = null;
@@ -145,15 +143,12 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         return $this;
     }
 
-    public function withInlineStrings(bool $useInlineStrings) : self
-    {
-        $this->useInlineStrings = $useInlineStrings;
-
-        return $this;
-    }
-
     public function withSheetName(?string $sheetName) : self
     {
+        if ($sheetName !== null && $this->sheetNameEntryName !== null) {
+            throw new InvalidArgumentException('Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.');
+        }
+
         if ($sheetName !== null) {
             SheetNameAssertion::assert($sheetName);
         }
@@ -165,6 +160,10 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     public function withSheetNameFromEntry(string $entryName) : self
     {
+        if ($this->sheetName !== null) {
+            throw new InvalidArgumentException('Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.');
+        }
+
         $this->sheetNameEntryName = $entryName;
 
         return $this;
@@ -196,8 +195,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         if ($this->workbookManager === null) {
             $this->workbookManager = new WorkbookManager(
                 writerType: $this->resolveWriterType(),
-                xlsxOptions: $this->resolveXlsxOptions(),
-                odsOptions: $this->resolveOdsOptions(),
+                options: $this->writerOptions,
             );
         }
 
@@ -222,15 +220,6 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         }
 
         return $styles;
-    }
-
-    private function resolveOdsOptions() : ?OdsOptions
-    {
-        if ($this->writerOptions instanceof OdsOptions) {
-            return $this->writerOptions;
-        }
-
-        return null;
     }
 
     private function resolveSheetName(Row $row) : string
@@ -260,16 +249,5 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             'ods' => ExcelWriter::ODS,
             default => ExcelWriter::XLSX,
         };
-    }
-
-    private function resolveXlsxOptions() : ?XlsxOptions
-    {
-        if ($this->writerOptions instanceof XlsxOptions) {
-            return $this->writerOptions;
-        }
-
-        return $this->resolveWriterType() === ExcelWriter::XLSX
-            ? new XlsxOptions(SHOULD_USE_INLINE_STRINGS: $this->useInlineStrings)
-            : null;
     }
 }

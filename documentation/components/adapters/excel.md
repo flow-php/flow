@@ -204,3 +204,45 @@ data_frame()
     ->write(to_excel('path/to/output.xlsx')->withWriterOptions($options))
     ->run();
 ```
+
+For ODS format:
+
+```php
+<?php
+
+use OpenSpout\Writer\ODS\Options as OdsOptions;
+
+$options = new OdsOptions(
+    DEFAULT_COLUMN_WIDTH: 15.0,
+    DEFAULT_ROW_HEIGHT: 20.0,
+);
+
+data_frame()
+    ->read($extractor)
+    ->write(to_excel('path/to/output.ods')->withWriterOptions($options))
+    ->run();
+```
+
+### Custom Date/Time Formats
+
+Control how date, datetime, and time values are formatted in the output:
+
+```php
+<?php
+
+data_frame()
+    ->read($extractor)
+    ->write(
+        to_excel('path/to/output.xlsx')
+            ->withDateFormat('d/m/Y')
+            ->withDateTimeFormat('d/m/Y H:i')
+            ->withTimeFormat('%H:%I')
+    )
+    ->run();
+```
+
+Default formats:
+- Date: `Y-m-d`
+- DateTime: `Y-m-d H:i:s`
+- Time: `H:i:s`
+

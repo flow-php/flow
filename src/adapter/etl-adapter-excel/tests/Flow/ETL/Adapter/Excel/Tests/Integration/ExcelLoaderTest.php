@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 use function Flow\ETL\Adapter\Excel\DSL\{from_excel, to_excel};
 use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, df, float_entry, from_rows, int_entry, json_entry, row, rows, string_entry, time_entry, uuid_entry};
 use Flow\ETL\Adapter\Excel\{CellStyler, ExcelWriter};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use OpenSpout\Common\Entity\Style\Style;
@@ -345,6 +346,26 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
         self::assertSame(['e00', 'e01'], \array_keys($rows[0]));
     }
 
+    public function test_sheet_name_and_sheet_name_from_entry_are_mutually_exclusive() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromEntry');
+
+        to_excel('/tmp/test.xlsx')
+            ->withSheetName('MySheet')
+            ->withSheetNameFromEntry('category');
+    }
+
+    public function test_sheet_name_from_entry_and_sheet_name_are_mutually_exclusive() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromEntry');
+
+        to_excel('/tmp/test.xlsx')
+            ->withSheetNameFromEntry('category')
+            ->withSheetName('MySheet');
+    }
+
     public function test_with_cell_styler() : void
     {
         $outputPath = $this->cacheDir->suffix('output_cell_styler.xlsx')->path();
@@ -397,28 +418,6 @@ final class ExcelLoaderTest extends FlowIntegrationTestCase
                 )
             ))
             ->write($loader)
-            ->run();
-
-        $rows = df()
-            ->read(from_excel($outputPath))
-            ->fetch()
-            ->toArray();
-
-        self::assertCount(1, $rows);
-        self::assertSame([1, 'Test'], [$rows[0]['id'], $rows[0]['name']]);
-    }
-
-    public function test_with_inline_strings_disabled() : void
-    {
-        $outputPath = $this->cacheDir->suffix('output_no_inline_strings.xlsx')->path();
-
-        df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), string_entry('name', 'Test')),
-                )
-            ))
-            ->write(to_excel($outputPath)->withInlineStrings(false))
             ->run();
 
         $rows = df()

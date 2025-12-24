@@ -32,8 +32,7 @@ final class WorkbookManager
 
     public function __construct(
         private readonly ExcelWriter $writerType = ExcelWriter::XLSX,
-        private readonly ?XlsxOptions $xlsxOptions = null,
-        private readonly ?OdsOptions $odsOptions = null,
+        private readonly OdsOptions|XlsxOptions|null $options = null,
     ) {
     }
 
@@ -131,12 +130,16 @@ final class WorkbookManager
 
     private function createOdsWriter() : OdsWriter
     {
-        return new OdsWriter($this->odsOptions ?? new OdsOptions());
+        $options = $this->options instanceof OdsOptions ? $this->options : new OdsOptions();
+
+        return new OdsWriter($options);
     }
 
     private function createXlsxWriter() : XlsxWriter
     {
-        return new XlsxWriter($this->xlsxOptions ?? new XlsxOptions());
+        $options = $this->options instanceof XlsxOptions ? $this->options : new XlsxOptions();
+
+        return new XlsxWriter($options);
     }
 
     private function getOrCreateSheet(string $sheetName) : Sheet
