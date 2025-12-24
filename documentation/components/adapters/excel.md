@@ -1,4 +1,4 @@
-# Excel Adapter 
+# Excel Adapter
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-excel)
@@ -19,6 +19,9 @@ Flow PHP's dedication to offering versatile and effective data processing soluti
 developers dealing with Excel in large-scale and data-intensive projects. With Flow PHP's Adapter Excel,
 managing Excel data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning
 with the robust and adaptable nature of the Flow PHP ecosystem.
+
+> **Note:** This adapter only supports local filesystem paths due to limitations of the underlying OpenSpout library.
+> Remote filesystems (S3, Azure Blob Storage, etc.) are not supported.
 
 ## Installation
 
@@ -65,4 +68,139 @@ $rows = data_frame()
             ->withOffset(5)
     )
     ->fetch();
+```
+
+## Loader
+
+### Basic Usage
+
+```php
+<?php
+
+data_frame()
+    ->read($extractor)
+    ->write(to_excel('path/to/output.xlsx'))
+    ->run();
+```
+
+### ODS Format
+
+```php
+<?php
+
+use Flow\ETL\Adapter\Excel\ExcelWriter;
+
+data_frame()
+    ->read($extractor)
+    ->write(to_excel('path/to/output.ods')->withWriter(ExcelWriter::ODS))
+    ->run();
+```
+
+### Custom Sheet Name
+
+```php
+<?php
+
+data_frame()
+    ->read($extractor)
+    ->write(to_excel('path/to/output.xlsx')->withSheetName('MyData'))
+    ->run();
+```
+
+### Dynamic Sheet Names from Entry
+
+Route rows to different sheets based on entry values:
+
+```php
+<?php
+
+$loader = to_excel('path/to/output.xlsx')
+    ->withSheetNameFromEntry('category');
+
+data_frame()
+    ->read($extractor)
+    ->write($loader)
+    ->run();
+```
+
+### Without Header Row
+
+```php
+<?php
+
+data_frame()
+    ->read($extractor)
+    ->write(to_excel('path/to/output.xlsx')->withHeader(false))
+    ->run();
+```
+
+### Header Styling
+
+```php
+<?php
+
+use OpenSpout\Common\Entity\Style\Style;
+
+$headerStyle = new Style(fontBold: true);
+
+$loader = to_excel('path/to/output.xlsx')
+    ->withHeaderStyle($headerStyle);
+
+data_frame()
+    ->read($extractor)
+    ->write($loader)
+    ->run();
+```
+
+### Cell Styling
+
+Apply custom styles to individual cells based on entry values:
+
+```php
+<?php
+
+use Flow\ETL\Adapter\Excel\CellStyler;
+use Flow\ETL\Row\Entry;
+use OpenSpout\Common\Entity\Style\Style;
+
+$cellStyler = new class implements CellStyler {
+    public function style(Entry $entry, int $rowNumber, int $columnIndex, string $sheetName): ?Style
+    {
+        // Make first column bold
+        if ($columnIndex === 0) {
+            return new Style(fontBold: true);
+        }
+
+        return null;
+    }
+};
+
+$loader = to_excel('path/to/output.xlsx')
+    ->withCellStyler($cellStyler);
+
+data_frame()
+    ->read($extractor)
+    ->write($loader)
+    ->run();
+```
+
+### Custom Writer Options
+
+For advanced configuration, pass OpenSpout options directly:
+
+```php
+<?php
+
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+
+$options = new XlsxOptions(
+    SHOULD_USE_INLINE_STRINGS: false,
+    DEFAULT_COLUMN_WIDTH: 15.0,
+    DEFAULT_ROW_HEIGHT: 20.0,
+);
+
+data_frame()
+    ->read($extractor)
+    ->write(to_excel('path/to/output.xlsx')->withWriterOptions($options))
+    ->run();
 ```

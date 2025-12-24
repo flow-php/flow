@@ -15,7 +15,6 @@ final readonly class SheetsManager
 
     public function first() : SheetInterface
     {
-        // Reset iterator when the previous search could be applied
         $this->sheets->rewind();
 
         return $this->sheets->current();
@@ -25,7 +24,6 @@ final readonly class SheetsManager
     {
         SheetNameAssertion::assert($sheetName);
 
-        // Reset iterator when the previous search could be applied
         $this->sheets->rewind();
 
         foreach ($this->sheets as $sheet) {

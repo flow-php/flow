@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
-use function Flow\ETL\Adapter\Excel\DSL\from_excel;
-use function Flow\ETL\DSL\{config, df, flow_context, int_schema, schema, string_schema};
+use function Flow\ETL\Adapter\Excel\DSL\{from_excel, is_valid_excel_sheet_name};
+use function Flow\ETL\DSL\{config, df, flow_context, from_rows, int_schema, ref, row, rows, schema, string_entry, string_schema};
 use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -214,6 +214,34 @@ final class ExcelExtractorTest extends FlowTestCase
         }
     }
 
+    public function test_extract_with_explicit_ods_reader() : void
+    {
+        $rows = df()
+            ->extract(
+                from_excel(__DIR__ . '/../Fixtures/fixture.ods')
+                    ->withReader(ExcelReader::ODS)
+            )
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(10, $rows);
+        self::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
+    }
+
+    public function test_extract_with_explicit_xlsx_reader() : void
+    {
+        $rows = df()
+            ->extract(
+                from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')
+                    ->withReader(ExcelReader::XLSX)
+            )
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(10, $rows);
+        self::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
+    }
+
     public function test_extract_with_unknown_file() : void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -237,6 +265,29 @@ final class ExcelExtractorTest extends FlowTestCase
             )
             ->fetch()
             ->toArray();
+    }
+
+    public function test_is_valid_excel_sheet_name_function() : void
+    {
+        $result = df()
+            ->read(from_rows(
+                rows(
+                    row(string_entry('sheet', 'ValidSheet')),
+                    row(string_entry('sheet', 'Invalid/Sheet')),
+                    row(string_entry('sheet', 'Sheet*Name')),
+                    row(string_entry('sheet', 'This is a very long sheet name that exceeds the 31 character limit')),
+                    row(string_entry('sheet', 'Normal')),
+                )
+            ))
+            ->withEntry('is_valid', is_valid_excel_sheet_name(ref('sheet')))
+            ->fetch()
+            ->toArray();
+
+        self::assertTrue($result[0]['is_valid']);
+        self::assertFalse($result[1]['is_valid']);
+        self::assertFalse($result[2]['is_valid']);
+        self::assertFalse($result[3]['is_valid']);
+        self::assertTrue($result[4]['is_valid']);
     }
 
     public function test_loading_data_from_all_partitions() : void
