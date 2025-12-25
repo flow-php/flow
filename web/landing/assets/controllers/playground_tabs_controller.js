@@ -74,6 +74,19 @@ export default class extends Controller {
 
         try {
             const fullPath = `/workspace${filePath}`
+            const fileName = filePath.split('/').pop()
+            const extension = fileName.split('.').pop().toLowerCase()
+            const isBinary = this.#isBinaryExtension(extension)
+
+            if (isBinary) {
+                this.previewFileValue = filePath
+                this.#setPreviewContent(`[Binary file: ${fileName}]\n\nClick the download button to save this file.`, filePath)
+                this.activeTabValue = 'preview'
+                this.#updateTabUI()
+                this.#log('Binary file opened:', filePath)
+                return
+            }
+
             const result = await this.wasmOutlet.readFile(fullPath)
 
             if (!result.success || result.content === null || result.content === undefined) {
@@ -118,21 +131,39 @@ export default class extends Controller {
         this.openFile({ currentTarget: { dataset: { filePath } } })
     }
 
-    downloadPreviewFile(event) {
+    async downloadPreviewFile(event) {
         if (event) {
             event.preventDefault()
         }
 
-        if (!this.previewFileValue || !this.#previewEditor) {
+        if (!this.previewFileValue) {
             this.#log('No file to download')
             return
         }
 
         try {
-            const content = this.#previewEditor.state.doc.toString()
             const fileName = this.previewFileValue.split('/').pop()
+            const extension = fileName.split('.').pop().toLowerCase()
+            const isBinary = this.#isBinaryExtension(extension)
 
-            const blob = new Blob([content], { type: 'text/plain' })
+            let blob
+            if (isBinary && this.hasWasmOutlet) {
+                const fullPath = `/workspace${this.previewFileValue}`
+                const result = await this.wasmOutlet.readFile(fullPath, true)
+                if (!result.success) {
+                    this.#log('Failed to read binary file:', this.previewFileValue)
+                    return
+                }
+                const mimeType = this.#getMimeType(extension)
+                blob = new Blob([result.content], { type: mimeType })
+            } else if (this.#previewEditor) {
+                const content = this.#previewEditor.state.doc.toString()
+                blob = new Blob([content], { type: 'text/plain' })
+            } else {
+                this.#log('No content to download')
+                return
+            }
+
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
@@ -146,6 +177,32 @@ export default class extends Controller {
         } catch (error) {
             this.#log('Error downloading file:', error)
         }
+    }
+
+    #isBinaryExtension(extension) {
+        const binaryExtensions = ['xlsx', 'xls', 'zip', 'tar', 'gz', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'ico', 'parquet', 'avro', 'orc']
+        return binaryExtensions.includes(extension)
+    }
+
+    #getMimeType(extension) {
+        const mimeTypes = {
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'xls': 'application/vnd.ms-excel',
+            'zip': 'application/zip',
+            'tar': 'application/x-tar',
+            'gz': 'application/gzip',
+            'pdf': 'application/pdf',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif',
+            'bmp': 'image/bmp',
+            'ico': 'image/x-icon',
+            'parquet': 'application/octet-stream',
+            'avro': 'application/octet-stream',
+            'orc': 'application/octet-stream'
+        }
+        return mimeTypes[extension] || 'application/octet-stream'
     }
 
     #setPreviewContent(content, filePath) {

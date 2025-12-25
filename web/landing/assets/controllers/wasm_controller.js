@@ -223,8 +223,8 @@ require '/workspace/bin/cs-fixer.php';
         })
     }
 
-    async readFile(path) {
-        const content = this.#readFileSync(path)
+    async readFile(path, binary = false) {
+        const content = binary ? this.#readFileBinarySync(path) : this.#readFileSync(path)
         if (content === null) {
             return { success: false, error: 'File not found' }
         }
@@ -356,6 +356,23 @@ require '/workspace/bin/cs-fixer.php';
             const FS = this.#phpModule.FS
             const content = FS.readFile(filePath, { encoding: 'utf8' })
             this.#log('File read successfully:', filePath)
+            return content
+        } catch (error) {
+            this.#logError('Error reading file:', error)
+            return null
+        }
+    }
+
+    #readFileBinarySync(filePath) {
+        if (!this.#phpModuleLoaded) {
+            this.#logError('Cannot read file: PHP module not loaded yet')
+            return null
+        }
+
+        try {
+            const FS = this.#phpModule.FS
+            const content = FS.readFile(filePath)
+            this.#log('File read successfully (binary):', filePath)
             return content
         } catch (error) {
             this.#logError('Error reading file:', error)
