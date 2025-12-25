@@ -56,6 +56,7 @@ pkgs.mkShell {
             # WASM build tools
             pkgs.emscripten
             pkgs.autoconf
+            pkgs.cmake
             pkgs.wget
             pkgs.gnutar
             pkgs.xz
