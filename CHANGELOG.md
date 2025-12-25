@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-24
+## [Unreleased] - 2025-12-25
 
 ### Added
+- [#2104](https://github.com/flow-php/flow/pull/2104) - **excel support to playground** - [@norberttech](https://github.com/norberttech)
 - [#2102](https://github.com/flow-php/flow/pull/2102) - **ExcelLoader** - [@norberttech](https://github.com/norberttech)
 - [#2101](https://github.com/flow-php/flow/pull/2101) - **cursor based extractor to postgresql adapter** - [@norberttech](https://github.com/norberttech)
 - [#2101](https://github.com/flow-php/flow/pull/2101) - **dsl and builder to cover cursors to postgresql library** - [@norberttech](https://github.com/norberttech)
