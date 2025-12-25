@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\RowsNormalizer;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{BooleanEntry,
@@ -11,14 +12,18 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
     DateTimeEntry,
     EnumEntry,
     FloatEntry,
+    HTMLElementEntry,
+    HTMLEntry,
     IntegerEntry,
     JsonEntry,
     ListEntry,
     MapEntry,
     StringEntry,
     StructureEntry,
-    TimeEntry
-};
+    TimeEntry,
+    UuidEntry,
+    XMLElementEntry,
+    XMLEntry};
 
 final readonly class ExcelRowsNormalizer
 {
@@ -62,7 +67,7 @@ final readonly class ExcelRowsNormalizer
      */
     private function normalizeEntry(Entry $entry) : bool|float|int|string|null
     {
-        $value = match ($entry::class) {
+        return match ($entry::class) {
             BooleanEntry::class,
             IntegerEntry::class,
             FloatEntry::class,
@@ -75,30 +80,13 @@ final readonly class ExcelRowsNormalizer
             ListEntry::class,
             MapEntry::class,
             StructureEntry::class => $this->normalizeToJson($entry->value()),
-            default => $entry->toString(),
+            UuidEntry::class,
+            XMLEntry::class,
+            XMLElementEntry::class,
+            HTMLEntry::class,
+            HTMLElementEntry::class => $entry->toString(),
+            default => throw new InvalidArgumentException('Unknown entry type: ' . $entry::class),
         };
-
-        if ($value === null) {
-            return null;
-        }
-
-        if (\is_bool($value)) {
-            return $value;
-        }
-
-        if (\is_int($value)) {
-            return $value;
-        }
-
-        if (\is_float($value)) {
-            return $value;
-        }
-
-        if (\is_string($value)) {
-            return $value;
-        }
-
-        return $entry->toString();
     }
 
     private function normalizeEnumEntry(EnumEntry $entry) : ?string
