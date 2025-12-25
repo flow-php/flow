@@ -77,15 +77,18 @@ final class WorkbookManager
      */
     public function writeHeader(string $sheetName, array $headers, ?Style $style = null) : void
     {
-        $sheet = $this->getOrCreateSheet($sheetName);
         $writer = $this->writers[$this->currentFilePath];
 
-        $row = $style !== null
-            ? OpenSpoutRow::fromValuesWithStyle($headers, $style)
-            : OpenSpoutRow::fromValues($headers);
+        if ($sheetName !== $writer->getCurrentSheet()->getName()) {
+            $sheet = $this->getOrCreateSheet($sheetName);
+            $writer->setCurrentSheet($sheet);
+        }
 
-        $writer->setCurrentSheet($sheet);
-        $writer->addRow($row);
+        $writer->addRow(
+            $style !== null
+                ? OpenSpoutRow::fromValuesWithStyle($headers, $style)
+                : OpenSpoutRow::fromValues($headers)
+        );
 
         $key = $this->sheetKey($sheetName);
         $this->headersWritten[$key] = true;
@@ -97,21 +100,19 @@ final class WorkbookManager
      */
     public function writeRow(string $sheetName, array $values, ?array $styles = null) : void
     {
-        $sheet = $this->getOrCreateSheet($sheetName);
         $writer = $this->writers[$this->currentFilePath];
 
-        if ($styles !== null) {
-            $filteredStyles = \array_filter($styles, static fn (?Style $style) : bool => $style !== null);
-
-            $row = \count($filteredStyles) > 0
-                ? OpenSpoutRow::fromValuesWithStyles($values, $filteredStyles)
-                : OpenSpoutRow::fromValues($values);
-        } else {
-            $row = OpenSpoutRow::fromValues($values);
+        if ($sheetName !== $writer->getCurrentSheet()->getName()) {
+            $sheet = $this->getOrCreateSheet($sheetName);
+            $writer->setCurrentSheet($sheet);
         }
 
-        $writer->setCurrentSheet($sheet);
-        $writer->addRow($row);
+        $writer->addRow(
+            OpenSpoutRow::fromValuesWithStyles(
+                $values,
+                $styles ? \array_filter($styles, static fn (?Style $style) : bool => $style !== null) : []
+            )
+        );
     }
 
     private function countSheetsForCurrentFile() : int

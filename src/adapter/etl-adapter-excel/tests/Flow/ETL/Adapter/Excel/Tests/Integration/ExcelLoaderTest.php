@@ -380,12 +380,13 @@ final class ExcelLoaderTest extends FlowTestCase
             ->run();
 
         $rows = df()
-            ->read(from_excel($outputPath)->withHeader(false))
+            ->read(from_excel($outputPath))
             ->fetch()
             ->toArray();
 
         self::assertEquals(
             [
+                ['e00' => 1, 'e01' => 'Alice'],
                 ['e00' => 2, 'e01' => 'Bob'],
             ],
             $rows
