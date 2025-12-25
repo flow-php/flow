@@ -380,7 +380,7 @@ final class ExcelLoaderTest extends FlowTestCase
             ->run();
 
         $rows = df()
-            ->read(from_excel($outputPath))
+            ->read(from_excel($outputPath)->withHeader(false))
             ->fetch()
             ->toArray();
 
