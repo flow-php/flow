@@ -60,17 +60,6 @@ final readonly class EntryNormalizer
         };
     }
 
-    private function normalizeEnumEntry(EnumEntry $entry) : ?string
-    {
-        $value = $entry->value();
-
-        if ($value instanceof \BackedEnum) {
-            return (string) $value->value;
-        }
-
-        return $value?->name;
-    }
-
     private function normalizeToJson(mixed $value) : ?string
     {
         return $value !== null ? \json_encode($value, JSON_THROW_ON_ERROR) : null;

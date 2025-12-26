@@ -62,17 +62,6 @@ final readonly class EntryNormalizer
         };
     }
 
-    private function normalizeEnumEntry(EnumEntry $entry) : ?string
-    {
-        $value = $entry->value();
-
-        if ($value instanceof \BackedEnum) {
-            return (string) $value->value;
-        }
-
-        return $value?->name;
-    }
-
     /**
      * @return null|array<string, mixed>|bool|float|int|string
      */
