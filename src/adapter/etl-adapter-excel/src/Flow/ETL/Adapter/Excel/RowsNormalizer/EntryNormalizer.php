@@ -25,7 +25,7 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
     XMLElementEntry,
     XMLEntry};
 
-final readonly class ExcelRowsNormalizer
+final readonly class EntryNormalizer
 {
     public function __construct(
         private string $dateFormat = 'Y-m-d',

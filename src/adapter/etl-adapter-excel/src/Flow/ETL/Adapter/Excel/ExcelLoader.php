@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer;
+use Flow\ETL\Adapter\Excel\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
@@ -68,7 +68,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $normalizer = new ExcelRowsNormalizer(
+        $normalizer = new EntryNormalizer(
             dateFormat: $this->dateFormat,
             dateTimeFormat: $this->dateTimeFormat,
             timeFormat: $this->timeFormat,
