@@ -113,7 +113,7 @@ final class ExcelExtractorTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(6, $rows);
+        self::assertCount(7, $rows);
 
         foreach ($rows as $row) {
             self::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
@@ -166,7 +166,7 @@ final class ExcelExtractorTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(10, $rows);
+        self::assertCount(11, $rows);
 
         foreach ($rows as $row) {
             self::assertSame(['e00', 'e01', 'e02'], \array_keys($row));

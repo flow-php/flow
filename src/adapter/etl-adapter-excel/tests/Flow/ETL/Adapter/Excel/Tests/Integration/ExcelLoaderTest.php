@@ -386,6 +386,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         self::assertEquals(
             [
+                ['e00' => 1, 'e01' => 'Alice'],
                 ['e00' => 2, 'e01' => 'Bob'],
             ],
             $rows

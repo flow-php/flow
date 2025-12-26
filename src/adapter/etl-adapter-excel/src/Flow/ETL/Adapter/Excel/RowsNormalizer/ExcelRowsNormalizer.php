@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\RowsNormalizer;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{BooleanEntry,
@@ -66,7 +67,7 @@ final readonly class ExcelRowsNormalizer
      */
     private function normalizeEntry(Entry $entry) : bool|float|int|string|null
     {
-        $value = match ($entry::class) {
+        return match ($entry::class) {
             BooleanEntry::class,
             IntegerEntry::class,
             FloatEntry::class,
@@ -74,60 +75,29 @@ final readonly class ExcelRowsNormalizer
             DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value()?->format($this->timeFormat),
-            UuidEntry::class => $entry->toString(),
             EnumEntry::class => $this->normalizeEnumEntry($entry),
             JsonEntry::class,
             ListEntry::class,
             MapEntry::class,
             StructureEntry::class => $this->normalizeToJson($entry->value()),
+            UuidEntry::class,
             XMLEntry::class,
             XMLElementEntry::class,
             HTMLEntry::class,
             HTMLElementEntry::class => $entry->toString(),
-            default => $entry->toString(),
+            default => throw new InvalidArgumentException('Unknown entry type: ' . $entry::class),
         };
-
-        if ($value === null) {
-            return null;
-        }
-
-        if (\is_bool($value)) {
-            return $value;
-        }
-
-        if (\is_int($value)) {
-            return $value;
-        }
-
-        if (\is_float($value)) {
-            return $value;
-        }
-
-        if (\is_string($value)) {
-            return $value;
-        }
-
-        return $entry->toString();
-    }
-
-    private function normalizeEnum(\UnitEnum $enum) : string
-    {
-        if ($enum instanceof \BackedEnum) {
-            return (string) $enum->value;
-        }
-
-        return $enum->name;
     }
 
     private function normalizeEnumEntry(EnumEntry $entry) : ?string
     {
         $value = $entry->value();
 
-        if ($value === null) {
-            return null;
+        if ($value instanceof \BackedEnum) {
+            return (string) $value->value;
         }
 
-        return $this->normalizeEnum($value);
+        return $value?->name;
     }
 
     private function normalizeToJson(mixed $value) : ?string

@@ -52,10 +52,6 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         // Offset must be a positive number
         $offset = $this->offset ?? 1;
 
-        if (!$this->withHeader) {
-            $offset++;
-        }
-
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
                 // Ensure $row is an array before passing to array_to_rows

@@ -74,21 +74,12 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             timeFormat: $this->timeFormat,
         );
 
-        $streams = $context->streams();
+        $stream = $context->streams()->writeTo($this->path, $rows->partitions()->toArray());
 
-        if ($rows->partitions()->count()) {
-            $stream = $streams->writeTo($this->path, $rows->partitions()->toArray());
-        } else {
-            $stream = $streams->writeTo($this->path);
-        }
-
-        $filePath = $stream->path()->path();
         $manager = $this->getWorkbookManager();
-        $manager->open($filePath);
+        $manager->open($stream->path()->path());
 
-        $rowIndex = 0;
-
-        foreach ($rows as $row) {
+        foreach ($rows as $rowIndex => $row) {
             $sheetName = $this->resolveSheetName($row);
 
             $rowForExcel = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
@@ -103,8 +94,6 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             $values = $normalizer->normalize($rowForExcel);
             $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
             $manager->writeRow($sheetName, $values, $styles);
-
-            $rowIndex++;
         }
     }
 
@@ -243,9 +232,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             return $this->writerType;
         }
 
-        $extension = $this->path->extension();
-
-        return match (\strtolower((string) $extension)) {
+        return match ((string) $this->path->extension()) {
             'ods' => ExcelWriter::ODS,
             default => ExcelWriter::XLSX,
         };
