@@ -75,11 +75,11 @@ final readonly class ExcelRowsNormalizer
             DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value()?->format($this->timeFormat),
-            EnumEntry::class => $this->normalizeEnumEntry($entry),
             JsonEntry::class,
             ListEntry::class,
             MapEntry::class,
             StructureEntry::class => $this->normalizeToJson($entry->value()),
+            EnumEntry::class,
             UuidEntry::class,
             XMLEntry::class,
             XMLElementEntry::class,
@@ -87,17 +87,6 @@ final readonly class ExcelRowsNormalizer
             HTMLElementEntry::class => $entry->toString(),
             default => throw new InvalidArgumentException('Unknown entry type: ' . $entry::class),
         };
-    }
-
-    private function normalizeEnumEntry(EnumEntry $entry) : ?string
-    {
-        $value = $entry->value();
-
-        if ($value instanceof \BackedEnum) {
-            return (string) $value->value;
-        }
-
-        return $value?->name;
     }
 
     private function normalizeToJson(mixed $value) : ?string

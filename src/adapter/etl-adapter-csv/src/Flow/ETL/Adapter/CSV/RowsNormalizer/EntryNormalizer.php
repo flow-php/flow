@@ -5,8 +5,25 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\RowsNormalizer;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{DateEntry, DateTimeEntry, EnumEntry, JsonEntry, ListEntry, MapEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry,
+    DateEntry,
+    DateTimeEntry,
+    EnumEntry,
+    FloatEntry,
+    HTMLElementEntry,
+    HTMLEntry,
+    IntegerEntry,
+    JsonEntry,
+    ListEntry,
+    MapEntry,
+    StringEntry,
+    StructureEntry,
+    TimeEntry,
+    UuidEntry,
+    XMLElementEntry,
+    XMLEntry};
 
 final readonly class EntryNormalizer
 {
@@ -21,56 +38,41 @@ final readonly class EntryNormalizer
      */
     public function normalize(Entry $entry) : string|float|int|bool|null
     {
-        $value = match ($entry::class) {
-            UuidEntry::class,
-            XMLElementEntry::class,
-            XMLEntry::class => $entry->toString(),
+        return match ($entry::class) {
+            BooleanEntry::class,
+            IntegerEntry::class,
+            FloatEntry::class,
+            StringEntry::class => $entry->value(),
             DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
-            EnumEntry::class => $entry->value()?->name,
+            JsonEntry::class,
             ListEntry::class,
             MapEntry::class,
-            StructureEntry::class => \json_encode($entry->value(), \JSON_THROW_ON_ERROR),
-            JsonEntry::class => $entry->toString(),
-            default => $entry->value(),
+            StructureEntry::class => $this->normalizeToJson($entry->value()),
+            EnumEntry::class,
+            UuidEntry::class,
+            XMLEntry::class,
+            XMLElementEntry::class,
+            HTMLEntry::class,
+            HTMLElementEntry::class => $entry->toString(),
+            default => throw new InvalidArgumentException('Unknown entry type: ' . $entry::class),
         };
+    }
 
-        // Ensure we return only the expected types
-        if (\is_string($value)) {
-            return $value;
+    private function normalizeEnumEntry(EnumEntry $entry) : ?string
+    {
+        $value = $entry->value();
+
+        if ($value instanceof \BackedEnum) {
+            return (string) $value->value;
         }
 
-        if (\is_float($value)) {
-            return $value;
-        }
+        return $value?->name;
+    }
 
-        if (\is_int($value)) {
-            return $value;
-        }
-
-        if (\is_bool($value)) {
-            return $value;
-        }
-
-        if ($value === null) {
-            return null;
-        }
-
-        // Handle remaining types
-        if (\is_resource($value)) {
-            return (string) $value;
-        }
-
-        if (\is_object($value) && \method_exists($value, '__toString')) {
-            return $value->__toString();
-        }
-
-        if (\is_array($value) || \is_object($value)) {
-            return '';
-        }
-
-        // At this point, we should have covered all cases
-        return '';
+    private function normalizeToJson(mixed $value) : ?string
+    {
+        return $value !== null ? \json_encode($value, JSON_THROW_ON_ERROR) : null;
     }
 }

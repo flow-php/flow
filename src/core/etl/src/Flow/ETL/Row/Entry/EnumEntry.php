@@ -95,6 +95,10 @@ final class EnumEntry implements Entry
             return '';
         }
 
+        if ($this->value instanceof \BackedEnum) {
+            return (string) $this->value->value;
+        }
+
         return $this->value->name;
     }
 
