@@ -14,7 +14,7 @@
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "flow-php/etl": "self.version",
-        "openspout/openspout": "^4.0 || ^5.0"
+        "openspout/openspout": "^5.2"
     },
     "config": {
         "optimize-autoloader": true,
