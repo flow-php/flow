@@ -42,7 +42,7 @@ jobs:
           cache-key-suffix: "-locked"
 
       - name: "Download phpbench benchmarks artifact"
-        uses: dawidd6/action-download-artifact@v11
+        uses: dawidd6/action-download-artifact@v12
         with:
           workflow: baseline.yml
           name: phpbench-baseline

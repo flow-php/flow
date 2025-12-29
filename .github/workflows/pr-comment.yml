@@ -19,7 +19,7 @@ jobs:
           # The workflow will continue even if artifacts don't exist
           echo "exists=true" >> $GITHUB_OUTPUT
       - name: Download pull request id artifact
-        uses: dawidd6/action-download-artifact@v11
+        uses: dawidd6/action-download-artifact@v12
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: pr
@@ -31,7 +31,7 @@ jobs:
           echo "id=$(<./var/phpbench/pr/pr-id.txt)" >> $GITHUB_OUTPUT
 
       - name: Download phpbench benchmarks artifact
-        uses: dawidd6/action-download-artifact@v11
+        uses: dawidd6/action-download-artifact@v12
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: phpbench
