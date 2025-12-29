@@ -8,52 +8,38 @@ final class QueryException extends ClientException
 {
     private const int SQL_PREVIEW_LENGTH = 100;
 
-    private ?string $sql = null;
-
-    public static function columnNotFound(string $column) : self
-    {
-        return new self(\sprintf('Column "%s" not found in result set', $column));
+    private function __construct(
+        string $message,
+        private readonly string $sql,
+        private readonly PostgreSqlError $error,
+    ) {
+        parent::__construct($message);
     }
 
-    public static function executionFailed(string $sql, string $error) : self
+    public static function executionFailed(string $sql, PostgreSqlError $error) : self
     {
         $sqlPreview = \strlen($sql) > self::SQL_PREVIEW_LENGTH
             ? \substr($sql, 0, self::SQL_PREVIEW_LENGTH) . '...'
             : $sql;
 
-        $exception = new self(\sprintf('Query execution failed: %s. SQL: %s', $error, $sqlPreview));
-        $exception->sql = $sql;
-
-        return $exception;
+        return new self(
+            \sprintf(
+                'Query execution failed [%s]: %s. SQL: %s',
+                $error->sqlState,
+                $error->safeMessage(),
+                $sqlPreview
+            ),
+            $sql,
+            $error
+        );
     }
 
-    public static function noRowsFound() : self
+    public function error() : PostgreSqlError
     {
-        return new self('Expected exactly one row, but none were returned');
+        return $this->error;
     }
 
-    public static function sequenceNotUsed(string $sequenceName) : self
-    {
-        return new self(\sprintf('Sequence "%s" has not been used in this session', $sequenceName));
-    }
-
-    public static function tooManyRows(int $count) : self
-    {
-        return new self(\sprintf('Expected exactly one row, but %d were returned', $count));
-    }
-
-    public static function unexpectedScalarType(string $expected, string $actual) : self
-    {
-        return new self(\sprintf('Expected scalar of type %s, got %s', $expected, $actual));
-    }
-
-    /**
-     * Get the full SQL query that caused the exception.
-     *
-     * Note: This is only available for executionFailed exceptions.
-     * Use with caution - do not log or expose to users as it may contain sensitive data.
-     */
-    public function sql() : ?string
+    public function sql() : string
     {
         return $this->sql;
     }

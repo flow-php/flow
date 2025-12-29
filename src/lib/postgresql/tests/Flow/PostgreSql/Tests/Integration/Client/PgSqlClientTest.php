@@ -26,7 +26,7 @@ use function Flow\PostgreSql\DSL\{
     table,
     values_table
 };
-use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Client\Exception\{QueryException, ResultException};
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\PostgreSqlType;
 use Flow\PostgreSql\Explain\Plan\{Plan, PlanNodeType};
@@ -235,7 +235,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_one_throws_when_multiple_rows() : void
     {
-        $this->expectException(QueryException::class);
+        $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Expected exactly one row');
 
         $this->client->fetchOne(
@@ -245,7 +245,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_one_throws_when_no_rows() : void
     {
-        $this->expectException(QueryException::class);
+        $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Expected exactly one row');
 
         $this->client->fetchOne(
@@ -376,7 +376,7 @@ final class PgSqlClientTest extends ClientTestCase
         );
 
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('has not been used');
+        $this->expectExceptionMessage('Query execution failed [55000]: Object not in prerequisite state. SQL: SELECT currval($1)');
 
         $this->client->lastInsertId('test_unused_seq');
     }
