@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-26
+## [Unreleased] - 2025-12-29
 
 ### Added
 - [#2104](https://github.com/flow-php/flow/pull/2104) - **excel support to playground** - [@norberttech](https://github.com/norberttech)
@@ -20,6 +20,7 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2110](https://github.com/flow-php/flow/pull/2110) - **updated openspout to accept only latest version** - [@norberttech](https://github.com/norberttech)
 - [#2103](https://github.com/flow-php/flow/pull/2103) - **Simplify a little bit the `ExcelLoader` code** - [@stloyd](https://github.com/stloyd)
 - [#2100](https://github.com/flow-php/flow/pull/2100) - **OrderBy and OrderByItem were merged into single OrderBy class** - [@norberttech](https://github.com/norberttech)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **array converters to throw ValueConversionException for invalid element types instead of silently converting** - [@norberttech](https://github.com/norberttech)
