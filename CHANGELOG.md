@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-12-30
 
 ### Added
+- [#2113](https://github.com/flow-php/flow/pull/2113) - **postgresql - condition builder fluent interface** - [@norberttech](https://github.com/norberttech)
 - [#2104](https://github.com/flow-php/flow/pull/2104) - **excel support to playground** - [@norberttech](https://github.com/norberttech)
 - [#2102](https://github.com/flow-php/flow/pull/2102) - **ExcelLoader** - [@norberttech](https://github.com/norberttech)
 - [#2101](https://github.com/flow-php/flow/pull/2101) - **cursor based extractor to postgresql adapter** - [@norberttech](https://github.com/norberttech)
