@@ -46,6 +46,7 @@ use Flow\PostgreSql\QueryBuilder\Condition\{
     Comparison,
     ComparisonOperator,
     Condition,
+    ConditionBuilder,
     Exists,
     In,
     IsDistinctFrom,
@@ -1344,6 +1345,29 @@ function all_sub_select(Expression $left, ComparisonOperator $operator, SelectFi
     $node->setSelectStmt($subquery->toAst());
 
     return new All($left, $operator, $node);
+}
+
+/**
+ * Create a condition builder for fluent condition composition.
+ *
+ * This builder allows incremental condition building with a fluent API:
+ *
+ * ```php
+ * $builder = conditions();
+ *
+ * if ($hasFilter) {
+ *     $builder = $builder->and(eq(col('status'), literal('active')));
+ * }
+ *
+ * if (!$builder->isEmpty()) {
+ *     $query = select()->from(table('users'))->where($builder);
+ * }
+ * ```
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function conditions() : ConditionBuilder
+{
+    return ConditionBuilder::create();
 }
 
 /**

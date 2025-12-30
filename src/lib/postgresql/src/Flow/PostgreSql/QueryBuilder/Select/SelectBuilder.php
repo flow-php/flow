@@ -7,8 +7,8 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 use Flow\PostgreSql\Protobuf\AST\{LimitOption, Node, ResTarget, SelectStmt as ProtobufSelectStmt};
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\{LockingClause, OrderBy, WindowDefinition, WithClause};
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionBuilder, ConditionFactory};
+use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidBuilderStateException};
 use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory, Literal};
 use Flow\PostgreSql\QueryBuilder\Table\{AliasedTable, DerivedTable, JoinType, JoinedTable, Table, TableFunction, TableReference};
 
@@ -773,8 +773,18 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function where(Condition $condition) : SelectGroupByStep
+    public function where(Condition|ConditionBuilder $condition) : SelectGroupByStep
     {
+        if ($condition instanceof ConditionBuilder) {
+            $resolved = $condition->getCondition();
+
+            if ($resolved === null) {
+                throw InvalidBuilderStateException::emptyConditionBuilder();
+            }
+
+            $condition = $resolved;
+        }
+
         return new self(
             with: $this->with,
             selectList: $this->selectList,

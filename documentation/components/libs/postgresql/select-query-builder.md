@@ -107,6 +107,8 @@ echo $query->toSQL();
 // SELECT * FROM users WHERE email LIKE '%@example.com'
 ```
 
+> **Tip:** For building WHERE conditions dynamically based on runtime logic (e.g., user filters), see [Condition Builder](/documentation/components/libs/postgresql/condition-builder.md).
+
 ## JOINs
 
 ```php

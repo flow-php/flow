@@ -6,6 +6,11 @@ namespace Flow\PostgreSql\QueryBuilder\Exception;
 
 final class InvalidBuilderStateException extends \InvalidArgumentException
 {
+    public static function emptyConditionBuilder() : self
+    {
+        return new self('Cannot use empty ConditionBuilder in where clause, use isEmpty() to check before passing to where()');
+    }
+
     public static function mutuallyExclusiveOptions(string $option1, string $option2) : self
     {
         return new self(\sprintf(
