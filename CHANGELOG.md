@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-12-29
+## [Unreleased] - 2025-12-30
 
 ### Added
 - [#2104](https://github.com/flow-php/flow/pull/2104) - **excel support to playground** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +44,7 @@
 - [58d619](https://github.com/flow-php/flow/commit/58d619c9f9d0c5d293dcf36011a8098bdb271e74) - **supported PHP versions in introduction.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2112](https://github.com/flow-php/flow/pull/2112) - **Remove old OpenSpout code fallback** - [@stloyd](https://github.com/stloyd)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **symfony/polyfill-83 dependency** - [@norberttech](https://github.com/norberttech)
 
 ## [0.29.0] - 2025-12-17
