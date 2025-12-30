@@ -133,8 +133,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $rowData = \array_map(
             // Convert empty values to nullables if allowed
             fn (Cell $cell) => $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
-            /** @phpstan-ignore-next-line method remove in 5.0 in favor of public property */
-            method_exists($row, 'getCells') ? $row->getCells() : $row->cells
+            $row->cells
         );
 
         // Expand columns to the size of the previous row
