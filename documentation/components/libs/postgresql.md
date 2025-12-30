@@ -238,6 +238,10 @@ echo $query->toSQL();
   RETURNING
 - [Merge Query Builder](/documentation/components/libs/postgresql/merge-query-builder.md) - MERGE (SQL:2008 upsert)
 
+**Query Building Utilities**
+
+- [Condition Builder](/documentation/components/libs/postgresql/condition-builder.md) - Build WHERE conditions incrementally with fluent API
+
 **Schema Management (DDL)**
 
 - [Table Query Builder](/documentation/components/libs/postgresql/table-query-builder.md) - CREATE/ALTER/DROP TABLE
