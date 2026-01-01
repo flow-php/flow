@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-01-01
 
 ### Added
+- [#2120](https://github.com/flow-php/flow/pull/2120) - **postgresql - support modification connection parameters** - [@norberttech](https://github.com/norberttech)
 - [#2119](https://github.com/flow-php/flow/pull/2119) - **expose tables through from statement of select statement** - [@norberttech](https://github.com/norberttech)
 - [#2113](https://github.com/flow-php/flow/pull/2113) - **postgresql - condition builder fluent interface** - [@norberttech](https://github.com/norberttech)
 - [#2104](https://github.com/flow-php/flow/pull/2104) - **excel support to playground** - [@norberttech](https://github.com/norberttech)
