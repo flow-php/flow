@@ -42,7 +42,7 @@ final class PgSqlClient implements Client
         }
 
         \error_clear_last();
-        $connection = @\pg_connect($params->connectionString);
+        $connection = @\pg_connect($params->toString());
 
         if ($connection === false) {
             $error = \error_get_last();
