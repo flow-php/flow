@@ -73,6 +73,21 @@ final readonly class From implements \Countable
         return $this->count() === 0;
     }
 
+    public function tables() : Tables
+    {
+        $tables = [];
+
+        foreach ($this->nodes as $node) {
+            $rangeVar = $node->getRangeVar();
+
+            if ($rangeVar !== null) {
+                $tables[] = new Table($rangeVar);
+            }
+        }
+
+        return new Tables($tables);
+    }
+
     private function isValidFromNode(Node $node) : bool
     {
         return $node->getRangeVar() !== null
