@@ -48,8 +48,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-                pageSize: 5
-            ))
+            )->withPageSize(5))
             ->fetch()
             ->toArray();
 
@@ -66,9 +65,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-                pageSize: 5,
-                maximum: 12
-            ))
+            )->withPageSize(5)->withMaximum(12))
             ->fetch()
             ->toArray();
 
@@ -85,8 +82,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_desc('id')),
-                pageSize: 5
-            ))
+            )->withPageSize(5))
             ->fetch()
             ->toArray();
 
@@ -96,6 +92,24 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
         self::assertSame(\range(25, 1), \array_column($rows, 'id'));
     }
 
+    public function test_extracts_with_multiple_positional_parameters() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                [5, 15],
+            )->withPageSize(3))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(11, $rows);
+        self::assertSame(5, $rows[0]['id']);
+        self::assertSame(15, $rows[10]['id']);
+        self::assertSame(\range(5, 15), \array_column($rows, 'id'));
+    }
+
     public function test_extracts_with_raw_sql() : void
     {
         $rows = df()
@@ -103,8 +117,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName,
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-                pageSize: 5
-            ))
+            )->withPageSize(5))
             ->fetch()
             ->toArray();
 
@@ -112,6 +125,42 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
         self::assertSame(1, $rows[0]['id']);
         self::assertSame(25, $rows[24]['id']);
         self::assertSame(\range(1, 25), \array_column($rows, 'id'));
+    }
+
+    public function test_extracts_with_single_positional_parameter() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                [10],
+            )->withPageSize(5))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(15, $rows);
+        self::assertSame(11, $rows[0]['id']);
+        self::assertSame(25, $rows[14]['id']);
+        self::assertSame(\range(11, 25), \array_column($rows, 'id'));
+    }
+
+    public function test_extracts_with_three_positional_parameters() : void
+    {
+        $rows = df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                'SELECT id, name FROM ' . $this->tableName . ' WHERE id >= $1 AND id <= $2 AND name LIKE $3',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                [5, 15, 'User_%'],
+            )->withPageSize(3))
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(11, $rows);
+        self::assertSame(5, $rows[0]['id']);
+        self::assertSame(15, $rows[10]['id']);
+        self::assertSame(\range(5, 15), \array_column($rows, 'id'));
     }
 
     public function test_returns_empty_for_empty_table() : void
@@ -123,8 +172,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 $this->client,
                 select(star())->from(table($this->tableName)),
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-                pageSize: 10
-            ))
+            )->withPageSize(10))
             ->fetch()
             ->toArray();
 

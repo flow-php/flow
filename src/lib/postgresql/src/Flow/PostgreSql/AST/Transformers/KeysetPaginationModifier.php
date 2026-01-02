@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier};
+use Flow\PostgreSql\AST\{ModificationContext, NodeModifier, Traverser};
+use Flow\PostgreSql\AST\Visitors\ParamRefCollector;
 use Flow\PostgreSql\Exception\PaginationException;
 use Flow\PostgreSql\Protobuf\AST\{
     A_Const,
@@ -32,11 +33,16 @@ use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
  *
  * For first page (no cursor): Just adds LIMIT
  * For subsequent pages: Adds WHERE (col1, col2) > ($1, $2) AND existing_where
+ *
+ * Automatically detects existing query parameters and appends keyset placeholders
+ * at the end (e.g., if query has $1, $2, keyset uses $3, $4, etc.)
  */
-final readonly class KeysetPaginationModifier implements NodeModifier
+final class KeysetPaginationModifier implements NodeModifier
 {
+    private int $parameterOffset = 0;
+
     public function __construct(
-        private KeysetPaginationConfig $config,
+        private readonly KeysetPaginationConfig $config,
     ) {
     }
 
@@ -56,6 +62,8 @@ final readonly class KeysetPaginationModifier implements NodeModifier
         if (\count($this->config->columns) === 0) {
             throw new PaginationException('Keyset pagination requires at least one column');
         }
+
+        $this->parameterOffset = $this->detectMaxParamNumber($context);
 
         if (!$this->hasOrderBy($node)) {
             $this->addOrderByFromKeyset($node);
@@ -130,7 +138,7 @@ final readonly class KeysetPaginationModifier implements NodeModifier
     private function buildComparisonExpr(Node $leftColumnRef, int $paramNumber, string $operator) : Node
     {
         $paramRef = new ParamRef();
-        $paramRef->setNumber($paramNumber);
+        $paramRef->setNumber($paramNumber + $this->parameterOffset);
 
         $paramNode = new Node();
         $paramNode->setParamRef($paramRef);
@@ -231,6 +239,15 @@ final readonly class KeysetPaginationModifier implements NodeModifier
         $node->setAConst($aConst);
 
         return $node;
+    }
+
+    private function detectMaxParamNumber(ModificationContext $context) : int
+    {
+        $collector = new ParamRefCollector();
+        $traverser = new Traverser($collector);
+        $traverser->traverse($context->parseResult());
+
+        return $collector->getMaxParamNumber();
     }
 
     private function hasOrderBy(SelectStmt $stmt) : bool

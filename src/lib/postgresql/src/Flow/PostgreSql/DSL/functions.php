@@ -322,6 +322,7 @@ function sql_to_count_query(string $sql) : string
  * Transform a SQL query into a keyset (cursor-based) paginated query.
  *
  * More efficient than OFFSET for large datasets - uses indexed WHERE conditions.
+ * Automatically detects existing query parameters and appends keyset placeholders at the end.
  *
  * @param string $sql The SQL query to paginate (must have ORDER BY)
  * @param int $limit Maximum number of rows to return

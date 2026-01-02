@@ -47,8 +47,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-                fetchSize: 5
-            ))
+            )->withFetchSize(5))
             ->fetch()
             ->toArray();
 
@@ -64,8 +63,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName)),
-                fetchSize: 5
-            ))
+            )->withFetchSize(5))
             ->fetch()
             ->toArray();
 
@@ -78,9 +76,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-                fetchSize: 5,
-                maximum: 12
-            ))
+            )->withFetchSize(5)->withMaximum(12))
             ->fetch()
             ->toArray();
 
@@ -96,8 +92,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-                fetchSize: 5
-            )->withCursorName('my_custom_cursor'))
+            )->withFetchSize(5)->withCursorName('my_custom_cursor'))
             ->fetch()
             ->toArray();
 
@@ -113,8 +108,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 select(col('id'), col('name'))->from(table($this->tableName))->orderBy(asc(col('id'))),
-                fetchSize: 3
-            ))
+            )->withFetchSize(3))
             ->fetch()
             ->toArray();
 
@@ -130,9 +124,8 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' WHERE id > $1 ORDER BY id',
-                parameters: [10],
-                fetchSize: 5
-            ))
+                [10],
+            )->withFetchSize(5))
             ->fetch()
             ->toArray();
 
@@ -148,8 +141,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
             ->read(from_pgsql_cursor(
                 $this->client,
                 'SELECT id, name FROM ' . $this->tableName . ' ORDER BY id',
-                fetchSize: 5
-            ))
+            )->withFetchSize(5))
             ->fetch()
             ->toArray();
 

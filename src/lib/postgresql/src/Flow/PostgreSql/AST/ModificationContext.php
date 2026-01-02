@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST;
 
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
+
 /**
  * Provides context information during AST modification.
  *
@@ -15,10 +17,12 @@ final readonly class ModificationContext
     /**
      * @param array<object> $ancestors Stack of parent nodes (from root to immediate parent)
      * @param int $depth Current depth in the AST (1-based, root statements are at depth 1)
+     * @param ParseResult $parseResult The full parsed AST for context-aware operations
      */
     public function __construct(
         private array $ancestors,
         private int $depth,
+        private ParseResult $parseResult,
     ) {
     }
 
@@ -43,5 +47,10 @@ final readonly class ModificationContext
     public function parent() : ?object
     {
         return $this->ancestors[\count($this->ancestors) - 1] ?? null;
+    }
+
+    public function parseResult() : ParseResult
+    {
+        return $this->parseResult;
     }
 }

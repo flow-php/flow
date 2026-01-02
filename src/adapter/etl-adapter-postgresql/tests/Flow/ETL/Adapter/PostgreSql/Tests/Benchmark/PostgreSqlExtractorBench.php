@@ -57,8 +57,7 @@ final class PostgreSqlExtractorBench
         foreach (from_pgsql_cursor(
             $this->client,
             select(star())->from(table(self::TABLE_NAME)),
-            fetchSize: 1000
-        )->extract($context) as $rows) {
+        )->withFetchSize(1000)->extract($context) as $rows) {
         }
     }
 
@@ -70,8 +69,7 @@ final class PostgreSqlExtractorBench
             $this->client,
             select(star())->from(table(self::TABLE_NAME)),
             pgsql_pagination_key_set(pgsql_pagination_key_asc('index')),
-            pageSize: 1000
-        )->extract($context) as $rows) {
+        )->withPageSize(1000)->extract($context) as $rows) {
         }
     }
 
@@ -82,8 +80,7 @@ final class PostgreSqlExtractorBench
         foreach (from_pgsql_limit_offset(
             $this->client,
             select(star())->from(table(self::TABLE_NAME))->orderBy(asc(col('index'))),
-            pageSize: 1000
-        )->extract($context) as $rows) {
+        )->withPageSize(1000)->extract($context) as $rows) {
         }
     }
 

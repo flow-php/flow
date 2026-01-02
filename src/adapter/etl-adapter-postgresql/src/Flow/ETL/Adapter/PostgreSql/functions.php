@@ -21,60 +21,54 @@ use Flow\PostgreSql\QueryBuilder\SqlQuery;
  * @param Client $client PostgreSQL client
  * @param SqlQuery|string $query SQL query to execute (wrapped in DECLARE CURSOR)
  * @param array<int, mixed> $parameters Positional parameters for the query
- * @param int $fetchSize Number of rows to fetch per batch (default: 1000)
- * @param null|int $maximum Maximum number of rows to extract (null for unlimited)
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_cursor(
     Client $client,
     string|SqlQuery $query,
     array $parameters = [],
-    int $fetchSize = 1000,
-    ?int $maximum = null,
 ) : PostgreSqlCursorExtractor {
-    $extractor = (new PostgreSqlCursorExtractor($client, $query, $parameters))
-        ->withFetchSize($fetchSize);
-
-    if ($maximum !== null) {
-        $extractor->withMaximum($maximum);
-    }
-
-    return $extractor;
+    return new PostgreSqlCursorExtractor($client, $query, $parameters);
 }
 
+/**
+ * Create a PostgreSQL extractor using LIMIT/OFFSET pagination.
+ *
+ * Suitable for smaller datasets. For large datasets, consider using keyset pagination
+ * (from_pgsql_key_set) which is more efficient.
+ *
+ * @param Client $client PostgreSQL client
+ * @param SqlQuery|string $query SQL query to execute (must have ORDER BY clause)
+ * @param array<int, mixed> $parameters Positional parameters for the query
+ */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_limit_offset(
     Client $client,
     string|SqlQuery $query,
-    int $pageSize = 1000,
-    ?int $maximum = null,
+    array $parameters = [],
 ) : PostgreSqlLimitOffsetExtractor {
-    $extractor = (new PostgreSqlLimitOffsetExtractor($client, $query))
-        ->withPageSize($pageSize);
-
-    if ($maximum !== null) {
-        $extractor->withMaximum($maximum);
-    }
-
-    return $extractor;
+    return new PostgreSqlLimitOffsetExtractor($client, $query, $parameters);
 }
 
+/**
+ * Create a PostgreSQL extractor using keyset (cursor-based) pagination.
+ *
+ * More efficient than LIMIT/OFFSET for large datasets - uses indexed WHERE conditions
+ * instead of skipping rows.
+ *
+ * @param Client $client PostgreSQL client
+ * @param SqlQuery|string $query SQL query to execute (must have ORDER BY matching keyset columns)
+ * @param KeySet $keySet Columns to use for keyset pagination
+ * @param array<int, mixed> $parameters Positional parameters for the query
+ */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_key_set(
     Client $client,
     string|SqlQuery $query,
     KeySet $keySet,
-    int $pageSize = 1000,
-    ?int $maximum = null,
+    array $parameters = [],
 ) : PostgreSqlKeySetExtractor {
-    $extractor = (new PostgreSqlKeySetExtractor($client, $query, $keySet))
-        ->withPageSize($pageSize);
-
-    if ($maximum !== null) {
-        $extractor->withMaximum($maximum);
-    }
-
-    return $extractor;
+    return new PostgreSqlKeySetExtractor($client, $query, $keySet, $parameters);
 }
 
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
