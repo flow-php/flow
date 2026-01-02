@@ -25,6 +25,8 @@ final class Traverser
      */
     private readonly array $modifiers;
 
+    private ?ParseResult $parseResult = null;
+
     private bool $stopTraversal = false;
 
     /**
@@ -61,6 +63,7 @@ final class Traverser
         $this->stopTraversal = false;
         $this->ancestorStack = [];
         $this->currentDepth = 0;
+        $this->parseResult = $parseResult;
 
         foreach ($parseResult->getStmts() as $rawStmt) {
             $this->currentDepth = 1;
@@ -186,6 +189,10 @@ final class Traverser
             $nodes[] = $inner;
         }
 
+        if (($inner = $node->getParamRef()) !== null) {
+            $nodes[] = $inner;
+        }
+
         return $nodes;
     }
 
@@ -199,7 +206,8 @@ final class Traverser
         $replacement = null;
 
         $innerNodes = $this->extractInnerNodes($node);
-        $context = new ModificationContext($this->ancestorStack, $this->currentDepth);
+        /** @phpstan-ignore argument.type (parseResult is always set by traverse() before traverseNode() is called) */
+        $context = new ModificationContext($this->ancestorStack, $this->currentDepth, $this->parseResult);
 
         foreach ($innerNodes as $innerNode) {
             $nodeClass = $innerNode::class;

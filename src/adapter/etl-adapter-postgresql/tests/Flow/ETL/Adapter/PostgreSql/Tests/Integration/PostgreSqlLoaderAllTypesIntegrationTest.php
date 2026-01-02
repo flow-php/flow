@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_limit_offset, to_pgsql_table};
 use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, df, enum_entry, float_entry, from_rows, int_entry, json_entry, list_entry, map_entry, row, rows, str_entry, structure_entry, time_entry, uuid_entry, xml_element_entry, xml_entry};
-use function Flow\PostgreSql\DSL\{column, create, data_type_bigint, data_type_boolean, data_type_custom, data_type_date, data_type_double_precision, data_type_jsonb, data_type_serial, data_type_text, data_type_time, data_type_timestamptz, data_type_uuid, drop, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_bigint, data_type_boolean, data_type_custom, data_type_date, data_type_double_precision, data_type_jsonb, data_type_serial, data_type_text, data_type_time, data_type_timestamptz, data_type_uuid, drop, select, star, table};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\PostgreSql\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
@@ -102,7 +102,7 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         $result = df()
             ->read(from_pgsql_limit_offset(
                 $this->client,
-                select(star())->from(table($this->tableName)),
+                select(star())->from(table($this->tableName))->orderBy(asc(col('id'))),
             ))
             ->fetch()
             ->toArray();
@@ -162,7 +162,7 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         $result = df()
             ->read(from_pgsql_limit_offset(
                 $this->client,
-                select(star())->from(table($this->tableName)),
+                select(star())->from(table($this->tableName))->orderBy(asc(col('id'))),
             ))
             ->fetch()
             ->toArray();

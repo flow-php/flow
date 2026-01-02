@@ -21,10 +21,14 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
     private ?Schema $schema = null;
 
+    /**
+     * @param array<int, mixed> $parameters
+     */
     public function __construct(
         private readonly Client $client,
         private readonly string|SqlQuery $query,
         private readonly KeySet $keySet,
+        private readonly array $parameters = [],
     ) {
     }
 
@@ -38,7 +42,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         while (true) {
             $paginatedSql = $this->applyKeysetPagination($sql, $this->pageSize, $cursorValues);
 
-            $cursor = $this->client->cursor($paginatedSql, $cursorValues ?? []);
+            $cursor = $this->client->cursor($paginatedSql, \array_merge($this->parameters, $cursorValues ?? []));
 
             $hasRows = false;
             $lastRow = null;

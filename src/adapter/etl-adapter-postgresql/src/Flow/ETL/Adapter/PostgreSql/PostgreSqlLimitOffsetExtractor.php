@@ -20,9 +20,13 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
     private ?Schema $schema = null;
 
+    /**
+     * @param array<int, mixed> $parameters
+     */
     public function __construct(
         private readonly Client $client,
         private readonly string|SqlQuery $query,
+        private readonly array $parameters = [],
     ) {
     }
 
@@ -50,7 +54,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
             $paginatedSql = $this->applyPagination($sql, $this->pageSize, $offset);
 
-            $cursor = $this->client->cursor($paginatedSql);
+            $cursor = $this->client->cursor($paginatedSql, $this->parameters);
 
             foreach ($cursor->iterate() as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
@@ -110,6 +114,6 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
     private function countTotal(string $sql) : int
     {
-        return $this->client->fetchScalarInt(sql_to_count_query($sql));
+        return $this->client->fetchScalarInt(sql_to_count_query($sql), $this->parameters);
     }
 }
