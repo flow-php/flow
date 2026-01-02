@@ -1,6 +1,10 @@
-## [Unreleased] - 2026-01-01
+## [Unreleased] - 2026-01-02
 
 ### Added
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - query parameters support for from_pgsql_cursor(), from_pgsql_limit_offset() and from_pgsql_key_set() extractors** - [@norberttech](https://github.com/norberttech)
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - ParamRefCollector visitor for collecting parameter references from AST** - [@norberttech](https://github.com/norberttech)
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - parseResult() method to ModificationContext for context-aware AST modifications** - [@norberttech](https://github.com/norberttech)
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - auto-detection of existing query parameters in keyset pagination (placeholders are appended after the highest existing parameter number)** - [@norberttech](https://github.com/norberttech)
 - [#2120](https://github.com/flow-php/flow/pull/2120) - **postgresql - support modification connection parameters** - [@norberttech](https://github.com/norberttech)
 - [#2119](https://github.com/flow-php/flow/pull/2119) - **expose tables through from statement of select statement** - [@norberttech](https://github.com/norberttech)
 - [#2113](https://github.com/flow-php/flow/pull/2113) - **postgresql - condition builder fluent interface** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +27,9 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **simplified DSL functions (from_pgsql_cursor, from_pgsql_limit_offset, from_pgsql_key_set) - removed optional parameters (pageSize, fetchSize, maximum) in favor of ->withXXX() fluent methods** - [@norberttech](https://github.com/norberttech)
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - ModificationContext now requires ParseResult parameter for full AST access** - [@norberttech](https://github.com/norberttech)
+- [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - KeysetPaginationModifier now auto-detects parameter offset instead of requiring it in config** - [@norberttech](https://github.com/norberttech)
 - [#2111](https://github.com/flow-php/flow/pull/2111) - **split query and result exception in postgresql client** - [@norberttech](https://github.com/norberttech)
 - [#2110](https://github.com/flow-php/flow/pull/2110) - **updated openspout to accept only latest version** - [@norberttech](https://github.com/norberttech)
 - [#2103](https://github.com/flow-php/flow/pull/2103) - **Simplify a little bit the `ExcelLoader` code** - [@stloyd](https://github.com/stloyd)
