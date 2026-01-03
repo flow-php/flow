@@ -6,7 +6,7 @@ namespace Flow\ETL\Config;
 
 use function Flow\Filesystem\DSL\fstab;
 use Flow\Clock\SystemClock;
-use Flow\ETL\{Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
+use Flow\ETL\{Analyze, Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Dataset\Memory\Unit;
@@ -23,6 +23,8 @@ final class ConfigBuilder
     public readonly CacheConfigBuilder $cache;
 
     public readonly SortConfigBuilder $sort;
+
+    private ?Analyze $analyze;
 
     private ?ClockInterface $clock;
 
@@ -49,6 +51,14 @@ final class ConfigBuilder
         $this->cache = new CacheConfigBuilder();
         $this->sort = new SortConfigBuilder();
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
+        $this->analyze = null;
+    }
+
+    public function analyze(Analyze $analyze) : self
+    {
+        $this->analyze = $analyze;
+
+        return $this;
     }
 
     public function build(EntryFactory $entryFactory = new EntryFactory()) : Config
@@ -71,7 +81,8 @@ final class ConfigBuilder
             $this->putInputIntoRows,
             $entryFactory,
             $this->cache->build($this->fstab(), $this->serializer),
-            $this->sort->build()
+            $this->sort->build(),
+            $this->analyze,
         );
     }
 

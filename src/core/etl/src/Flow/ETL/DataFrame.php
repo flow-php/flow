@@ -811,6 +811,10 @@ final class DataFrame
 
         $totalRows = 0;
 
+        if ($analyze === false) {
+            $analyze = $this->context->config->analyze();
+        }
+
         $analyze = $analyze === true ? analyze() : $analyze;
 
         if ($analyze) {

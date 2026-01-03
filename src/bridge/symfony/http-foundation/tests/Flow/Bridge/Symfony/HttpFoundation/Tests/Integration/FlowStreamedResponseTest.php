@@ -4,14 +4,83 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Integration;
 
-use function Flow\Bridge\Symfony\HttpFoundation\{http_csv_output, http_xml_output};
+use function Flow\Bridge\Symfony\HttpFoundation\{http_csv_output, http_on_complete, http_xml_output};
 use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\{analyze, from_array};
 use Flow\Bridge\Symfony\HttpFoundation\{DataStream, Output\CSVOutput, Output\JsonOutput, Response\FlowStreamedResponse};
+use Flow\ETL\Config;
+use Flow\ETL\Dataset\Report;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class FlowStreamedResponseTest extends FlowTestCase
 {
+    public function test_stream_closure_is_called_after_streaming_with_report() : void
+    {
+        $closureCalled = false;
+        $receivedReport = null;
+
+        $response = DataStream::open(
+            from_array([
+                ['id' => 1, 'name' => 'test'],
+            ])
+        )
+            ->config(Config::builder()->analyze(analyze()))
+            ->onComplete(http_on_complete(function (?Report $report) use (&$closureCalled, &$receivedReport) : void {
+                $closureCalled = true;
+                $receivedReport = $report;
+            }))
+            ->streamedResponse(new JsonOutput());
+
+        $this->sendResponse($response);
+
+        self::assertTrue($closureCalled);
+        self::assertNotNull($receivedReport);
+        self::assertSame(1, $receivedReport->statistics()->totalRows());
+    }
+
+    public function test_stream_closure_receives_null_without_analyze() : void
+    {
+        $receivedReport = 'not_null';
+
+        $response = DataStream::open(
+            from_array([
+                ['id' => 1, 'name' => 'test'],
+            ])
+        )
+            ->onComplete(http_on_complete(function (?Report $report) use (&$receivedReport) : void {
+                $receivedReport = $report;
+            }))
+            ->streamedResponse(new JsonOutput());
+
+        $this->sendResponse($response);
+
+        self::assertNull($receivedReport);
+    }
+
+    public function test_stream_closure_receives_report_with_schema_when_enabled() : void
+    {
+        $receivedReport = null;
+
+        $response = DataStream::open(
+            from_array([
+                ['id' => 1, 'name' => 'test'],
+                ['id' => 2, 'name' => 'test2'],
+            ])
+        )
+            ->config(Config::builder()->analyze(analyze()->withSchema()))
+            ->onComplete(http_on_complete(function (?Report $report) use (&$receivedReport) : void {
+                $receivedReport = $report;
+            }))
+            ->streamedResponse(new JsonOutput());
+
+        $this->sendResponse($response);
+
+        self::assertNotNull($receivedReport);
+        self::assertSame(2, $receivedReport->statistics()->totalRows());
+        self::assertNotNull($receivedReport->schema());
+        self::assertCount(2, $receivedReport->schema()->entries());
+    }
+
     public function test_streaming_array_response_to_csv() : void
     {
         $response = new FlowStreamedResponse(

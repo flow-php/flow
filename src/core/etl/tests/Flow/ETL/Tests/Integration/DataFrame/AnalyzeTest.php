@@ -189,4 +189,32 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             $report->schema()
         );
     }
+
+    public function test_run_explicit_analyze_overrides_config() : void
+    {
+        $config = config_builder()
+            ->analyze(analyze())
+            ->build();
+
+        $report = df($config)
+            ->read(from_array([['id' => 1]]))
+            ->run(analyze: analyze()->withSchema());
+
+        self::assertNotNull($report);
+        self::assertNotNull($report->schema());
+    }
+
+    public function test_run_uses_analyze_from_config() : void
+    {
+        $config = config_builder()
+            ->analyze(analyze())
+            ->build();
+
+        $report = df($config)
+            ->read(from_array([['id' => 1]]))
+            ->run();
+
+        self::assertNotNull($report);
+        self::assertSame(1, $report->statistics()->totalRows());
+    }
 }

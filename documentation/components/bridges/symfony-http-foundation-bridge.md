@@ -98,3 +98,87 @@ new class implements Transformation {
 ```
 
 Above example will add a new column `time` to the dataset with the current timestamp.
+
+## Collecting Telemetry After Streaming
+
+When streaming large datasets, you may want to collect telemetry data such as total row counts, execution time,
+or memory usage after the streaming completes. Flow provides a `StreamClosure` mechanism that gets called
+with a `Report` containing statistics about the streamed data.
+
+To receive a `Report`, you need to:
+1. Configure `Analyze` in the `Config` using `config()` method
+2. Set an `onComplete()` callback using `http_on_complete()` DSL function
+
+```php
+<?php
+
+namespace Symfony\Application\Controller;
+
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
+use Flow\ETL\Config;
+use Flow\ETL\Dataset\Report;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Attribute\Route;
+use function Flow\Bridge\Symfony\HttpFoundation\http_json_output;
+use function Flow\Bridge\Symfony\HttpFoundation\http_on_complete;
+use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\analyze;
+
+final class ReportsController extends AbstractController
+{
+    public function __construct(
+        private readonly LoggerInterface $logger,
+    ) {}
+
+    #[Route('/report/stream', name: 'report_stream')]
+    public function streamReport() : FlowStreamedResponse
+    {
+        return http_stream_open(from_parquet(__DIR__ . '/reports/orders.parquet'))
+            ->config(Config::builder()->analyze(analyze()))
+            ->onComplete(http_on_complete(function (?Report $report) : void {
+                if ($report === null) {
+                    return;
+                }
+
+                $this->logger->info('Stream completed', [
+                    'total_rows' => $report->statistics()->totalRows(),
+                    'execution_time_seconds' => $report->statistics()->executionTime->inSeconds(),
+                    'memory_peak_mb' => $report->statistics()->memory->max()->inMb(),
+                ]);
+            }))
+            ->as('orders.json')
+            ->streamedResponse(http_json_output());
+    }
+}
+```
+
+### Analyze Options
+
+The `analyze()` function supports additional options for collecting more detailed statistics:
+
+- `analyze()` - Basic statistics (row count, execution time, memory usage)
+- `analyze()->withSchema()` - Also collects schema information about the dataset
+- `analyze()->withColumnStatistics()` - Also collects per-column statistics (min, max, null counts)
+- `analyze()->withSchema()->withColumnStatistics()` - Collects all available statistics
+
+```php
+// Collect schema information along with basic statistics
+->config(Config::builder()->analyze(analyze()->withSchema()))
+
+// Collect everything
+->config(Config::builder()->analyze(analyze()->withSchema()->withColumnStatistics()))
+```
+
+### Report Contents
+
+The `Report` object provides access to:
+
+- `$report->statistics()->totalRows()` - Total number of rows streamed
+- `$report->statistics()->executionTime->inSeconds()` - Execution duration
+- `$report->statistics()->executionTime->startedAt` - Start timestamp
+- `$report->statistics()->executionTime->finishedAt` - End timestamp
+- `$report->statistics()->memory->max()` - Peak memory usage
+- `$report->schema()` - Dataset schema (when `withSchema()` is enabled)
+- `$report->statistics()->columns` - Column statistics (when `withColumnStatistics()` is enabled)
