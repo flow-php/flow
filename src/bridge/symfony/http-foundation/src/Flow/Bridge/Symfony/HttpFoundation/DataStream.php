@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation;
 
 use Flow\Bridge\Symfony\HttpFoundation\Response\{FlowBufferedResponse, FlowStreamedResponse};
-use Flow\ETL\{Extractor, Transformation, Transformations};
+use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\{Config, Extractor, Transformation, Transformations};
 use Symfony\Component\HttpFoundation\{HeaderUtils, Response};
 
 /**
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\{HeaderUtils, Response};
  */
 final class DataStream
 {
+    private Config|ConfigBuilder|null $config = null;
+
     /**
      * @var array<string, string>
      */
@@ -23,6 +26,8 @@ final class DataStream
     ];
 
     private int $status = Response::HTTP_OK;
+
+    private ?StreamClosure $streamClosure = null;
 
     /**
      * @var array<Transformation>
@@ -54,6 +59,17 @@ final class DataStream
     }
 
     /**
+     * Set the Config for the DataFrame execution.
+     * Use this to configure Analyze for enabling Report generation.
+     */
+    public function config(Config|ConfigBuilder $config) : self
+    {
+        $this->config = $config;
+
+        return $this;
+    }
+
+    /**
      * Set additional headers.
      * Headers are merged with the default headers.
      *
@@ -62,6 +78,18 @@ final class DataStream
     public function headers(array $headers) : self
     {
         $this->headers = array_merge($this->headers, $headers);
+
+        return $this;
+    }
+
+    /**
+     * Set a closure to be called after streaming completes.
+     * The closure receives the Report from DataFrame execution.
+     * Note: Report will be null unless Analyze is configured via config().
+     */
+    public function onComplete(StreamClosure $streamClosure) : self
+    {
+        $this->streamClosure = $streamClosure;
 
         return $this;
     }
@@ -80,7 +108,8 @@ final class DataStream
             $output,
             \count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,
-            $this->headers
+            $this->headers,
+            $this->config,
         );
     }
 
@@ -99,7 +128,6 @@ final class DataStream
      */
     public function streamedResponse(Output $output) : FlowStreamedResponse
     {
-
         $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
 
         return new FlowStreamedResponse(
@@ -107,7 +135,9 @@ final class DataStream
             $output,
             \count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,
-            $this->headers
+            $this->headers,
+            $this->config,
+            $this->streamClosure,
         );
     }
 

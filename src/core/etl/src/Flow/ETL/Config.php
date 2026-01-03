@@ -41,6 +41,7 @@ final readonly class Config
         private EntryFactory $entryFactory,
         public CacheConfig $cache,
         public SortConfig $sort,
+        private ?Analyze $analyze = null,
     ) {
     }
 
@@ -52,6 +53,11 @@ final readonly class Config
     public static function default() : self
     {
         return self::builder()->build();
+    }
+
+    public function analyze() : ?Analyze
+    {
+        return $this->analyze;
     }
 
     public function clock() : ClockInterface

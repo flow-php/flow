@@ -6,9 +6,9 @@ namespace Flow\ETL;
 
 use function Flow\ETL\DSL\{analyze, refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
-use Flow\ETL\Dataset\{Memory\Consumption, Report, Statistics};
-use Flow\ETL\Dataset\Statistics\{Columns, ExecutionTime, HighResolutionTime};
+use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Execution\ReportCollector;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -809,58 +809,21 @@ final class DataFrame
     {
         $clone = clone $this;
 
-        $totalRows = 0;
-
-        $analyze = $analyze === true ? analyze() : $analyze;
-
-        if ($analyze) {
-            gc_collect_cycles();
-            $memory = new Consumption();
-            $startedAt = $this->context->config->clock()->now();
-            $startTime = HighResolutionTime::now();
-            $columnStatistics = $analyze->collectColumnStatistics() ? new Columns() : null;
-            $schema = $analyze->collectSchema() ? new Schema() : null;
+        if ($analyze === false) {
+            $analyze = $this->context->config->analyze();
         }
+
+        $collector = new ReportCollector($analyze, $this->context->config->clock());
 
         foreach ($clone->pipeline->process($clone->context) as $rows) {
             if ($callback !== null) {
                 $callback($rows, $clone->context);
             }
 
-            if ($analyze) {
-                $totalRows += $rows->count();
-                $memory->capture();
-
-                if ($schema !== null) {
-                    $schema = $schema->merge($rows->schema());
-                }
-
-                if ($columnStatistics !== null) {
-                    foreach ($rows->all() as $row) {
-                        foreach ($row->entries()->all() as $entry) {
-                            $columnStatistics->add($entry);
-                        }
-                    }
-                }
-            }
+            $collector->capture($rows);
         }
 
-        if ($analyze) {
-            $endedAt = $this->context->config->clock()->now();
-            $endTime = HighResolutionTime::now();
-
-            return new Report(
-                $schema,
-                new Statistics(
-                    $totalRows,
-                    new ExecutionTime($startedAt, $endedAt, $startTime->diff($endTime)),
-                    $memory,
-                    $columnStatistics
-                )
-            );
-        }
-
-        return null;
+        return $collector->report();
     }
 
     /**
