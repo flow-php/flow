@@ -1,6 +1,13 @@
-## [Unreleased] - 2026-01-02
+## [Unreleased] - 2026-01-03
 
 ### Added
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **StreamClosure interface for HTTP streaming completion callbacks** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **http_on_complete() DSL function to create stream closures from callables** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **DataStream::onComplete() method to set post-streaming callbacks** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **DataStream::config() method to configure DataFrame execution (enables Analyze/Report)** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **Config::analyze() method to retrieve configured Analyze instance** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **ConfigBuilder::analyze() method to set Analyze configuration at config level** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **ReportCollector class to encapsulate DataFrame execution analysis logic** - [@norberttech](https://github.com/norberttech)
 - [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - query parameters support for from_pgsql_cursor(), from_pgsql_limit_offset() and from_pgsql_key_set() extractors** - [@norberttech](https://github.com/norberttech)
 - [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - ParamRefCollector visitor for collecting parameter references from AST** - [@norberttech](https://github.com/norberttech)
 - [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - parseResult() method to ModificationContext for context-aware AST modifications** - [@norberttech](https://github.com/norberttech)
@@ -27,6 +34,9 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **DataFrame::run() now respects Analyze configured at Config level when not explicitly passed** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **DataFrame::run() refactored to use ReportCollector for cleaner code and better static analysis** - [@norberttech](https://github.com/norberttech)
+- [#2122](https://github.com/flow-php/flow/pull/2122) - **FlowStreamedResponse now accepts optional StreamClosure and Config parameters** - [@norberttech](https://github.com/norberttech)
 - [#2121](https://github.com/flow-php/flow/pull/2121) - **simplified DSL functions (from_pgsql_cursor, from_pgsql_limit_offset, from_pgsql_key_set) - removed optional parameters (pageSize, fetchSize, maximum) in favor of ->withXXX() fluent methods** - [@norberttech](https://github.com/norberttech)
 - [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - ModificationContext now requires ParseResult parameter for full AST access** - [@norberttech](https://github.com/norberttech)
 - [#2121](https://github.com/flow-php/flow/pull/2121) - **postgresql - KeysetPaginationModifier now auto-detects parameter offset instead of requiring it in config** - [@norberttech](https://github.com/norberttech)
