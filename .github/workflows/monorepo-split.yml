@@ -44,6 +44,8 @@ jobs:
             split_repository: 'types'
           - local_path: 'src/lib/postgresql'
             split_repository: 'postgresql'
+          - local_path: 'src/lib/telemetry'
+            split_repository: 'telemetry'
 
           - local_path: 'src/adapter/etl-adapter-avro'
             split_repository: 'etl-adapter-avro'
@@ -86,6 +88,8 @@ jobs:
             split_repository: 'openapi-specification-bridge'
           - local_path: 'src/bridge/symfony/http-foundation'
             split_repository: 'symfony-http-foundation-bridge'
+          - local_path: 'src/bridge/telemetry/telemetry-otlp'
+            split_repository: 'telemetry-otlp-bridge'
 
           - local_path: 'src/tools/homebrew'
             split_repository: 'homebrew-flow'

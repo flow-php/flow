@@ -1,0 +1,17 @@
+name: Readonly
+
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: superbrothers/close-pull-request@v3
+        with:
+          comment: |
+            Hi, thank you for your contribution.
+            Unfortunately, this repository is read-only. It's a split from our main monorepo repository.
+            In order to proceed with this PR please open it against https://github.com/flow-php/flow repository.
+            Thank you.

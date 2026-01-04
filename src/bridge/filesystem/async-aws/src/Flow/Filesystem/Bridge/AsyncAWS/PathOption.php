@@ -6,5 +6,5 @@ namespace Flow\Filesystem\Bridge\AsyncAWS;
 
 final class PathOption
 {
-    public const BUCKET = 'bucket';
+    public const string BUCKET = 'bucket';
 }

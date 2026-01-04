@@ -8,7 +8,8 @@
     with-pcov ? true,
     with-xdebug ? false,
     with-blackfire ? false,
-    with-pg-query-ext ? false
+    with-pg-query-ext ? false,
+    with-grpc ? false
 }:
 
 let
@@ -33,6 +34,7 @@ let
         ++ (if with-pcov then [pcov] else [])
         ++ (if with-blackfire then [blackfire] else [])
         ++ (if with-pg-query-ext then [(php-pg-query-ext.override { inherit php; })] else [])
+        ++ (if with-grpc then [grpc] else [])
     );
 in
 flowPHP.buildEnv {

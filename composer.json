@@ -15,11 +15,11 @@
         "ext-dom": "*",
         "ext-hash": "*",
         "ext-json": "*",
+        "ext-pgsql": "*",
         "ext-xml": "*",
         "ext-xmlreader": "*",
         "ext-xmlwriter": "*",
         "ext-zlib": "*",
-        "ext-pgsql": "*",
         "composer-runtime-api": "^2.1",
         "async-aws/s3": "^2.6",
         "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",
@@ -36,6 +36,7 @@
         "php-http/discovery": "^1.0",
         "psr/clock": "^1.0",
         "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
         "psr/http-message": "^1.0 || ^2.0",
         "psr/log": "^2.0 || ^3.0",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
@@ -49,8 +50,10 @@
         "composer/semver": "^3.4",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
+        "grpc/grpc": "^1.74",
         "nikic/php-parser": "^5.3",
         "nyholm/psr7": "^1.8",
+        "open-telemetry/gen-otlp-protobuf": "^1.8",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
         "ramsey/uuid": "^4.5",
@@ -80,9 +83,9 @@
         "flow-php/etl-adapter-logger": "self.version",
         "flow-php/etl-adapter-meilisearch": "self.version",
         "flow-php/etl-adapter-parquet": "self.version",
+        "flow-php/etl-adapter-postgresql": "self.version",
         "flow-php/etl-adapter-text": "self.version",
         "flow-php/etl-adapter-xml": "self.version",
-        "flow-php/etl-adapter-postgresql": "self.version",
         "flow-php/filesystem": "self.version",
         "flow-php/filesystem-async-aws-bridge": "self.version",
         "flow-php/filesystem-azure-bridge": "self.version",
@@ -92,10 +95,12 @@
         "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
+        "flow-php/postgresql": "self.version",
         "flow-php/snappy": "self.version",
         "flow-php/symfony-http-foundation-bridge": "self.version",
-        "flow-php/types": "self.version",
-        "flow-php/postgresql": "self.version"
+        "flow-php/telemetry": "self.version",
+        "flow-php/telemetry-otlp-bridge": "self.version",
+        "flow-php/types": "self.version"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -114,14 +119,15 @@
                 "src/adapter/etl-adapter-logger/src/Flow",
                 "src/adapter/etl-adapter-meilisearch/src/Flow",
                 "src/adapter/etl-adapter-parquet/src/Flow",
+                "src/adapter/etl-adapter-postgresql/src/Flow",
                 "src/adapter/etl-adapter-text/src/Flow",
                 "src/adapter/etl-adapter-xml/src/Flow",
-                "src/adapter/etl-adapter-postgresql/src/Flow",
                 "src/bridge/filesystem/async-aws/src/Flow",
                 "src/bridge/filesystem/azure/src/Flow",
                 "src/bridge/monolog/http/src/Flow",
                 "src/bridge/openapi/specification/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
+                "src/bridge/telemetry/otlp/src/Flow",
                 "src/cli/src/Flow",
                 "src/core/etl/src/Flow",
                 "src/lib/array-dot/src/Flow",
@@ -131,9 +137,10 @@
                 "src/lib/filesystem/src/Flow",
                 "src/lib/parquet-viewer/src/Flow",
                 "src/lib/parquet/src/Flow",
-                "src/lib/snappy/src/Flow",
-                "src/lib/types/src/Flow",
                 "src/lib/postgresql/src/Flow",
+                "src/lib/snappy/src/Flow",
+                "src/lib/telemetry/src/Flow",
+                "src/lib/types/src/Flow",
                 "src/tools/documentation/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
@@ -155,14 +162,15 @@
             "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
             "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
             "src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php",
+            "src/adapter/etl-adapter-postgresql/src/Flow/ETL/Adapter/PostgreSql/functions.php",
             "src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php",
             "src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php",
-            "src/adapter/etl-adapter-postgresql/src/Flow/ETL/Adapter/PostgreSql/functions.php",
             "src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php",
             "src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php",
             "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
             "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
             "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
+            "src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php",
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/functions.php",
@@ -171,10 +179,11 @@
             "src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",
             "src/lib/parquet/src/stubs.php",
-            "src/lib/snappy/polyfill.php",
-            "src/lib/types/src/Flow/Types/DSL/functions.php",
             "src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php",
-            "src/lib/postgresql/src/stubs.php"
+            "src/lib/postgresql/src/stubs.php",
+            "src/lib/snappy/polyfill.php",
+            "src/lib/telemetry/src/Flow/Telemetry/DSL/functions.php",
+            "src/lib/types/src/Flow/Types/DSL/functions.php"
         ]
     },
     "autoload-dev": {
@@ -192,14 +201,15 @@
                 "src/adapter/etl-adapter-logger/tests/Flow",
                 "src/adapter/etl-adapter-meilisearch/tests/Flow",
                 "src/adapter/etl-adapter-parquet/tests/Flow",
+                "src/adapter/etl-adapter-postgresql/tests/Flow",
                 "src/adapter/etl-adapter-text/tests/Flow",
                 "src/adapter/etl-adapter-xml/tests/Flow",
-                "src/adapter/etl-adapter-postgresql/tests/Flow",
                 "src/bridge/filesystem/async-aws/tests/Flow",
                 "src/bridge/filesystem/azure/tests/Flow",
                 "src/bridge/monolog/http/tests/Flow",
                 "src/bridge/openapi/specification/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
+                "src/bridge/telemetry/otlp/tests/Flow",
                 "src/cli/tests/Flow",
                 "src/core/etl/tests/Flow",
                 "src/lib/array-dot/tests/Flow",
@@ -209,9 +219,10 @@
                 "src/lib/filesystem/tests/Flow",
                 "src/lib/parquet-viewer/tests/Flow",
                 "src/lib/parquet/tests/Flow",
-                "src/lib/snappy/tests/Flow",
-                "src/lib/types/tests/Flow",
                 "src/lib/postgresql/tests/Flow",
+                "src/lib/snappy/tests/Flow",
+                "src/lib/telemetry/tests/Flow",
+                "src/lib/types/tests/Flow",
                 "src/tools/documentation/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
@@ -258,6 +269,7 @@
             "@test:lib:parquet-viewer",
             "@test:lib:postgresql",
             "@test:lib:snappy",
+            "@test:lib:telemetry",
             "@test:lib:types"
         ],
         "test:bridges": [
@@ -265,7 +277,8 @@
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
             "@test:bridge:openapi-specification",
-            "@test:bridge:symfony-http-foundation"
+            "@test:bridge:symfony-http-foundation",
+            "@test:bridge:telemetry-otlp"
         ],
         "test:adapters": [
             "@test:adapter:chartjs",
@@ -315,6 +328,9 @@
         "test:lib:snappy": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-snappy-integration --log-junit ./var/phpunit/logs/lib-snappy-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-snappy-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-snappy-integration"
         ],
+        "test:lib:telemetry": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-telemetry-unit --log-junit ./var/phpunit/logs/lib-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-telemetry-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-telemetry-unit"
+        ],
         "test:lib:types": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-types-unit --log-junit ./var/phpunit/logs/lib-types-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-types-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-types-unit"
         ],
@@ -338,6 +354,10 @@
         "test:bridge:symfony-http-foundation": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-integration --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-integration"
+        ],
+        "test:bridge:telemetry-otlp": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-telemetry-otlp-unit --log-junit ./var/phpunit/logs/bridge-telemetry-otlp-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-telemetry-otlp-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-telemetry-otlp-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-telemetry-otlp-integration --log-junit ./var/phpunit/logs/bridge-telemetry-otlp-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-telemetry-otlp-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-telemetry-otlp-integration"
         ],
         "test:adapter:chartjs": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-unit --log-junit ./var/phpunit/logs/adapter-chartjs-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-chartjs-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-chartjs-unit",
@@ -400,7 +420,8 @@
             "@test:benchmark:extractor",
             "@test:benchmark:loader",
             "@test:benchmark:transformer",
-            "@test:benchmark:parquet-library"
+            "@test:benchmark:parquet-library",
+            "@test:benchmark:telemetry"
         ],
         "test:website": [
             "composer test --working-dir=./web/landing"
@@ -422,6 +443,9 @@
         ],
         "test:benchmark:parquet-library": [
             "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=parquet-library"
+        ],
+        "test:benchmark:telemetry": [
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=telemetry"
         ],
         "test:mutation": [
             "Composer\\Config::disableProcessTimeout",
@@ -476,6 +500,7 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.postgresql.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.telemetry.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.types.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.csv.xml",

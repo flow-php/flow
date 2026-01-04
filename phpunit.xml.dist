@@ -27,6 +27,8 @@
         <env name="ELASTICSEARCH_URL" value="localhost:9200"/>
         <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
         <env name="MEILISEARCH_API_KEY" value="masterKey"/>
+        <env name="OTEL_COLLECTOR_HTTP_ENDPOINT" value="http://localhost:4318"/>
+        <env name="OTEL_COLLECTOR_OUTPUT_DIR" value="./var/otel"/>
         <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
         <env name="FLOW_PARQUET_TESTS_DEBUG"
              value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
@@ -77,6 +79,12 @@
         <testsuite name="lib-snappy-integration">
             <directory>src/lib/snappy/tests/Flow/Snappy/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="lib-telemetry-unit">
+            <directory>src/lib/telemetry/tests/Flow/Telemetry/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-telemetry-integration">
+            <directory>src/lib/telemetry/tests/Flow/Telemetry/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="lib-types-unit">
             <directory>src/lib/types/tests/Flow/Types/Tests/Unit</directory>
         </testsuite>
@@ -109,6 +117,12 @@
         <testsuite name="bridge-symfony-http-foundation-integration">
             <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Integration
             </directory>
+        </testsuite>
+        <testsuite name="bridge-telemetry-otlp-unit">
+            <directory>src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-telemetry-otlp-integration">
+            <directory>src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Integration</directory>
         </testsuite>
         <testsuite name="adapter-chartjs-unit">
             <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
@@ -222,7 +236,9 @@
             <file>src/lib/types/src/Flow/Types/DSL/functions.php</file>
             <file>src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php</file>
             <file>src/lib/parquet/src/Flow/Parquet/functions.php</file>
+            <file>src/lib/telemetry/src/Flow/Telemetry/DSL/functions.php</file>
             <file>src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php</file>
+            <file>src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php</file>
         </exclude>
     </source>
 </phpunit>

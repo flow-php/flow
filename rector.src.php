@@ -15,7 +15,7 @@ return RectorConfig::configure()
         __DIR__ . '/src/cli/src',
         __DIR__ . '/src/lib/*/src',
         __DIR__ . '/src/adapter/*/src',
-        __DIR__ . '/src/bridge/*/src',
+        __DIR__ . '/src/bridge/*/*/src',
         __DIR__ . '/src/tools/*/src',
         __DIR__ . '/web/landing/src',
     ])

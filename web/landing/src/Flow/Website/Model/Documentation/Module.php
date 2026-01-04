@@ -24,6 +24,8 @@ enum Module : string
     case PG_QUERY = 'PG_QUERY';
     case POSTGRESQL = 'POSTGRESQL';
     case S3_FILESYSTEM = 'S3 Filesystem';
+    case TELEMETRY = 'Telemetry';
+    case TELEMETRY_OTLP = 'Telemetry OTLP';
     case TEXT = 'Text';
     case TYPES = 'Types';
     case XML = 'XML';
@@ -57,6 +59,8 @@ enum Module : string
             self::HTTP => 17,
             self::EXCEL => 18,
             self::PG_QUERY => 19,
+            self::TELEMETRY => 20,
+            self::TELEMETRY_OTLP => 21,
             default => 99,
         };
     }

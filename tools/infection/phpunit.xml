@@ -12,26 +12,38 @@
     <testsuite name="infection">
       <directory>../../src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
       <directory>../../src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
-        <directory>../../src/lib/dremel/tests/Flow/Dremel/Tests/Unit</directory>
-        <directory>../../src/lib/types/tests/Flow/Types/Tests/Unit</directory>
+      <directory>../../src/lib/dremel/tests/Flow/Dremel/Tests/Unit</directory>
+      <directory>../../src/lib/types/tests/Flow/Types/Tests/Unit</directory>
       <directory>../../src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
       <directory>../../src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
       <directory>../../src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
+      <directory>../../src/lib/telemetry/tests/Flow/Telemetry/Tests/Unit</directory>
+      <directory>../../src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Unit</directory>
     </testsuite>
   </testsuites>
   <source>
     <include>
-        <directory suffix=".php">../../src/core/etl/src</directory>
-        <directory suffix=".php">../../src/lib/array-dot/src</directory>
-        <directory suffix=".php">../../src/lib/dremel/src</directory>
-        <directory suffix=".php">../../src/lib/types/src</directory>
-        <directory suffix=".php">../../src/lib/doctrine-dbal-bulk/src</directory>
-        <directory suffix=".php">../../src/lib/filesystem/src</directory>
-        <directory suffix=".php">../../src/lib/parquet/src</directory>
+      <directory suffix=".php">../../src/core/etl/src</directory>
+      <directory suffix=".php">../../src/lib/array-dot/src</directory>
+      <directory suffix=".php">../../src/lib/dremel/src</directory>
+      <directory suffix=".php">../../src/lib/types/src</directory>
+      <directory suffix=".php">../../src/lib/doctrine-dbal-bulk/src</directory>
+      <directory suffix=".php">../../src/lib/filesystem/src</directory>
+      <directory suffix=".php">../../src/lib/parquet/src</directory>
+      <directory suffix=".php">../../src/lib/telemetry/src</directory>
+      <directory suffix=".php">../../src/bridge/telemetry/otlp/src</directory>
     </include>
     <exclude>
       <directory suffix=".php">../../src/lib/parquet/src/Flow/Parquet/Thrift</directory>
-      <file>../../src/core/etl/src/Flow/ETL/DSL/functions.php</file>
+      <directory suffix=".php">../../src/core/etl/src/Flow/ETL/DSL</directory>
+      <directory suffix=".php">../../src/lib/array-dot/src/Flow/ArrayDot/DSL</directory>
+      <directory suffix=".php">../../src/lib/dremel/src/Flow/Dremel/DSL</directory>
+      <directory suffix=".php">../../src/lib/types/src/Flow/Types/DSL</directory>
+      <directory suffix=".php">../../src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/DSL</directory>
+      <directory suffix=".php">../../src/lib/filesystem/src/Flow/Filesystem/DSL</directory>
+      <directory suffix=".php">../../src/lib/parquet/src/Flow/Parquet/DSL</directory>
+      <directory suffix=".php">../../src/lib/telemetry/src/Flow/Telemetry/DSL</directory>
+      <directory suffix=".php">../../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL</directory>
     </exclude>
   </source>
 </phpunit>

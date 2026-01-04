@@ -5,7 +5,9 @@
       "src/lib/array-dot/src",
       "src/lib/doctrine-dbal-bulk/src",
       "src/lib/filesystem/src",
-      "src/lib/parquet/src"
+      "src/lib/parquet/src",
+      "src/lib/telemetry/src",
+      "src/bridge/telemetry/otlp/src"
     ],
     "excludes": [
       "{.*/DSL.*}",
@@ -18,7 +20,11 @@
       "Flow/Filesystem/Exception",
       "Flow/Parquet/Exception",
       "Flow/Parquet/ThriftModel",
-      "Flow/ArrayDot/Exception"
+      "Flow/ArrayDot/Exception",
+      "Flow/Telemetry/Exception",
+      "Flow/Telemetry/Provider/Void",
+      "Flow/Telemetry/Provider/Console",
+      "Flow/Bridge/Telemetry/OTLP/Exception"
     ]
   },
   "logs": {
