@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
-use function Flow\ETL\DSL\{array_to_rows, config, flow_context, ref, string_entry};
+use function Flow\ETL\DSL\{array_to_rows, config, flow_context, int_entry, list_entry, map_entry, ref, row, rows, str_entry, string_entry, struct_entry};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\{Row, Rows};
 use PhpBench\Attributes\{BeforeMethods, Groups, Revs};
 
@@ -13,6 +14,10 @@ use PhpBench\Attributes\{BeforeMethods, Groups, Revs};
 #[Groups(['building_blocks'])]
 final class RowsBench
 {
+    private Rows $complexRows;
+
+    private Rows $mixedSchemaRows;
+
     private Rows $reducedRows;
 
     private Rows $rows;
@@ -40,6 +45,41 @@ final class RowsBench
             ], \range(0, 1000))),
             flow_context(config())->entryFactory(),
         );
+
+        $complexRowsArray = [];
+
+        for ($i = 0; $i < 1000; $i++) {
+            $complexRowsArray[] = row(
+                int_entry('id', $i),
+                str_entry('name', 'name_' . $i),
+                list_entry('tags', ['tag1', 'tag2', 'tag3'], type_list(type_string())),
+                map_entry('metadata', ['key1' => 1, 'key2' => 2], type_map(type_string(), type_integer())),
+                struct_entry('address', ['street' => 'Main St', 'city' => 'NYC', 'zip' => '10001'], type_structure([
+                    'street' => type_string(),
+                    'city' => type_string(),
+                    'zip' => type_string(),
+                ])),
+            );
+        }
+        $this->complexRows = rows(...$complexRowsArray);
+
+        $mixedRowsArray = [];
+
+        for ($i = 0; $i < 1000; $i++) {
+            if ($i % 100 === 0) {
+                $mixedRowsArray[] = row(
+                    int_entry('id', $i),
+                    str_entry('name', 'name_' . $i),
+                    str_entry('extra_column_' . $i, 'extra_value'),
+                );
+            } else {
+                $mixedRowsArray[] = row(
+                    int_entry('id', $i),
+                    str_entry('name', 'name_' . $i),
+                );
+            }
+        }
+        $this->mixedSchemaRows = rows(...$mixedRowsArray);
     }
 
     public function bench_chunk_10_on_10k() : void
@@ -126,6 +166,26 @@ final class RowsBench
     public function bench_remove_on_10k() : void
     {
         $this->rows->remove(1001);
+    }
+
+    public function bench_schema_on_10k_identical_rows() : void
+    {
+        $this->rows->schema();
+    }
+
+    public function bench_schema_on_1k_complex_identical_rows() : void
+    {
+        $this->complexRows->schema();
+    }
+
+    public function bench_schema_on_1k_identical_rows() : void
+    {
+        $this->reducedRows->schema();
+    }
+
+    public function bench_schema_on_1k_mixed_schema_rows() : void
+    {
+        $this->mixedSchemaRows->schema();
     }
 
     public function bench_sort_asc_on_1k() : void

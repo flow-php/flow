@@ -14,9 +14,163 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class SchemaTest extends FlowTestCase
 {
+    public static function provide_is_same_cases() : \Generator
+    {
+        yield 'identical simple schemas' => [
+            schema(int_schema('id'), str_schema('name')),
+            schema(int_schema('id'), str_schema('name')),
+            true,
+        ];
+
+        yield 'different column count' => [
+            schema(int_schema('id'), str_schema('name')),
+            schema(int_schema('id')),
+            false,
+        ];
+
+        yield 'different column names' => [
+            schema(int_schema('id'), str_schema('name')),
+            schema(int_schema('id'), str_schema('surname')),
+            false,
+        ];
+
+        yield 'different column types' => [
+            schema(int_schema('id'), str_schema('name')),
+            schema(int_schema('id'), int_schema('name')),
+            false,
+        ];
+
+        yield 'different nullable flags' => [
+            schema(int_schema('id'), str_schema('name', nullable: false)),
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            false,
+        ];
+
+        yield 'different metadata' => [
+            schema(int_schema('id', metadata: Metadata::fromArray(['foo' => 'bar'])), str_schema('name')),
+            schema(int_schema('id', metadata: Metadata::fromArray(['foo' => 'baz'])), str_schema('name')),
+            false,
+        ];
+
+        yield 'empty schemas' => [
+            schema(),
+            schema(),
+            true,
+        ];
+
+        yield 'identical nested structure schemas' => [
+            schema(structure_schema('address', type_structure(['street' => type_string(), 'city' => type_string()]))),
+            schema(structure_schema('address', type_structure(['street' => type_string(), 'city' => type_string()]))),
+            true,
+        ];
+
+        yield 'different nested structure field types' => [
+            schema(structure_schema('address', type_structure(['street' => type_string(), 'city' => type_string()]))),
+            schema(structure_schema('address', type_structure(['street' => type_string(), 'city' => type_integer()]))),
+            false,
+        ];
+
+        yield 'different nested structure field names' => [
+            schema(structure_schema('address', type_structure(['street' => type_string(), 'city' => type_string()]))),
+            schema(structure_schema('address', type_structure(['street' => type_string(), 'town' => type_string()]))),
+            false,
+        ];
+
+        yield 'identical list schemas' => [
+            schema(list_schema('tags', type_list(type_string()))),
+            schema(list_schema('tags', type_list(type_string()))),
+            true,
+        ];
+
+        yield 'different list element types' => [
+            schema(list_schema('tags', type_list(type_string()))),
+            schema(list_schema('tags', type_list(type_integer()))),
+            false,
+        ];
+
+        yield 'identical map schemas' => [
+            schema(map_schema('metadata', type_map(type_string(), type_integer()))),
+            schema(map_schema('metadata', type_map(type_string(), type_integer()))),
+            true,
+        ];
+
+        yield 'different map key types' => [
+            schema(map_schema('metadata', type_map(type_string(), type_integer()))),
+            schema(map_schema('metadata', type_map(type_integer(), type_integer()))),
+            false,
+        ];
+
+        yield 'different map value types' => [
+            schema(map_schema('metadata', type_map(type_string(), type_integer()))),
+            schema(map_schema('metadata', type_map(type_string(), type_string()))),
+            false,
+        ];
+
+        yield 'identical map of list of structure' => [
+            schema(map_schema('complex', type_map(
+                type_string(),
+                type_list(type_structure(['id' => type_integer(), 'name' => type_string()]))
+            ))),
+            schema(map_schema('complex', type_map(
+                type_string(),
+                type_list(type_structure(['id' => type_integer(), 'name' => type_string()]))
+            ))),
+            true,
+        ];
+
+        yield 'different nested element in map of list of structure' => [
+            schema(map_schema('complex', type_map(
+                type_string(),
+                type_list(type_structure(['id' => type_integer(), 'name' => type_string()]))
+            ))),
+            schema(map_schema('complex', type_map(
+                type_string(),
+                type_list(type_structure(['id' => type_integer(), 'name' => type_integer()]))
+            ))),
+            false,
+        ];
+
+        yield 'deeply nested structure' => [
+            schema(structure_schema('root', type_structure([
+                'level1' => type_structure([
+                    'level2' => type_structure([
+                        'value' => type_string(),
+                    ]),
+                ]),
+            ]))),
+            schema(structure_schema('root', type_structure([
+                'level1' => type_structure([
+                    'level2' => type_structure([
+                        'value' => type_string(),
+                    ]),
+                ]),
+            ]))),
+            true,
+        ];
+
+        yield 'different deeply nested structure' => [
+            schema(structure_schema('root', type_structure([
+                'level1' => type_structure([
+                    'level2' => type_structure([
+                        'value' => type_string(),
+                    ]),
+                ]),
+            ]))),
+            schema(structure_schema('root', type_structure([
+                'level1' => type_structure([
+                    'level2' => type_structure([
+                        'value' => type_integer(),
+                    ]),
+                ]),
+            ]))),
+            false,
+        ];
+    }
+
     public function test_add_metadata() : void
     {
         $schema = schema(
@@ -124,6 +278,12 @@ final class SchemaTest extends FlowTestCase
         );
     }
 
+    #[DataProvider('provide_is_same_cases')]
+    public function test_is_same(Schema $schema1, Schema $schema2, bool $expected) : void
+    {
+        self::assertSame($expected, $schema1->isSame($schema2));
+    }
+
     public function test_keep_non_existing_entries() : void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
@@ -162,6 +322,23 @@ final class SchemaTest extends FlowTestCase
             schema(integer_schema('id', $nullable = true), string_schema('name', $nullable = true)),
             $schema->makeNullable()
         );
+    }
+
+    public function test_merge_returns_self_when_schemas_are_identical() : void
+    {
+        $schema1 = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        $schema2 = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        $merged = $schema1->merge($schema2);
+
+        self::assertSame($schema1, $merged);
     }
 
     public function test_normalizing_and_recreating_schema() : void

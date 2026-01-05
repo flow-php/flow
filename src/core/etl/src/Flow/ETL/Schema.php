@@ -207,6 +207,25 @@ final class Schema implements \Countable
         return $this;
     }
 
+    public function isSame(self $schema) : bool
+    {
+        if (\count($this->definitions) !== \count($schema->definitions)) {
+            return false;
+        }
+
+        foreach ($this->definitions as $entry => $definition) {
+            if (!\array_key_exists($entry, $schema->definitions)) {
+                return false;
+            }
+
+            if (!$definition->isSame($schema->definitions[$entry])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * @return Schema
      */
@@ -255,8 +274,6 @@ final class Schema implements \Countable
 
     public function merge(self $schema) : self
     {
-        $newDefinitions = $this->definitions;
-
         if (!$this->count()) {
             return $schema;
         }
@@ -264,6 +281,12 @@ final class Schema implements \Countable
         if (!$schema->count()) {
             return $this;
         }
+
+        if ($this->isSame($schema)) {
+            return $this;
+        }
+
+        $newDefinitions = $this->definitions;
 
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {

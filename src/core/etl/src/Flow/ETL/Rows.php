@@ -697,9 +697,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         $schema = null;
 
         foreach ($this->rows as $row) {
-            $schema = $schema === null
-                ? $row->schema()
-                : $schema->merge($row->schema());
+            if ($schema === null) {
+                $schema = $row->schema();
+            } else {
+                $schema = $schema->merge($row->schema());
+            }
         }
 
         /** @var Schema $schema */
