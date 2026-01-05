@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_json, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\JsonDefinition;
@@ -22,11 +22,6 @@ final class JsonEntry implements Entry
     private JsonDefinition $definition;
 
     private readonly ?Json $json;
-
-    /**
-     * @var Type<Json>
-     */
-    private readonly Type $type;
 
     /**
      * @param null|array<array-key, mixed>|Json|string $value
@@ -56,7 +51,6 @@ final class JsonEntry implements Entry
             $this->json = null;
         }
 
-        $this->type = type_json();
         $this->definition = new JsonDefinition($this->name, $this->json === null, $metadata ?: Metadata::empty());
     }
 
@@ -118,7 +112,7 @@ final class JsonEntry implements Entry
             return false;
         }
 
-        if (!type_equals($this->type, $entry->type)) {
+        if (!type_equals($this->type(), $entry->type())) {
             return false;
         }
 
@@ -165,7 +159,7 @@ final class JsonEntry implements Entry
      */
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?Json

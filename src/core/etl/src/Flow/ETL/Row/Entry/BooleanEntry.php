@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_boolean, type_equals, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\BooleanDefinition;
@@ -21,11 +21,6 @@ final class BooleanEntry implements Entry
     private BooleanDefinition $definition;
 
     /**
-     * @var Type<bool>
-     */
-    private readonly Type $type;
-
-    /**
      * @throws InvalidArgumentException
      */
     public function __construct(private readonly string $name, private readonly ?bool $value, ?Metadata $metadata = null)
@@ -34,7 +29,6 @@ final class BooleanEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_boolean();
         $this->definition = new BooleanDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -64,7 +58,7 @@ final class BooleanEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : static
@@ -96,7 +90,7 @@ final class BooleanEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?bool

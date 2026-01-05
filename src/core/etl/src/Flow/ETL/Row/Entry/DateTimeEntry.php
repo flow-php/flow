@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_datetime, type_equals, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
@@ -19,11 +19,6 @@ final class DateTimeEntry implements Entry
     use EntryRef;
 
     private DateTimeDefinition $definition;
-
-    /**
-     * @var Type<\DateTimeInterface>
-     */
-    private readonly Type $type;
 
     private readonly ?\DateTimeInterface $value;
 
@@ -51,7 +46,6 @@ final class DateTimeEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_datetime();
         $this->definition = new DateTimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -81,7 +75,7 @@ final class DateTimeEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() == $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() == $entry->value();
     }
 
     public function map(callable $mapper) : static
@@ -112,7 +106,7 @@ final class DateTimeEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\DateTimeInterface

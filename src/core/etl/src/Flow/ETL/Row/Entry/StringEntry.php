@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional, type_string};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\StringDefinition;
@@ -21,11 +21,6 @@ final class StringEntry implements Entry
     private StringDefinition $definition;
 
     /**
-     * @var Type<string>
-     */
-    private readonly Type $type;
-
-    /**
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -39,7 +34,6 @@ final class StringEntry implements Entry
         }
 
         $metadata = $metadata ?: Metadata::empty();
-        $this->type = type_string();
         $this->definition = new StringDefinition(
             $this->name,
             $this->value === null,
@@ -96,7 +90,7 @@ final class StringEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : static
@@ -135,7 +129,7 @@ final class StringEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?string

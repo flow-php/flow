@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_enum, type_equals, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\EnumDefinition;
 use Flow\ETL\Schema\Metadata;
@@ -22,20 +22,11 @@ final class EnumEntry implements Entry
      */
     private EnumDefinition $definition;
 
-    /**
-     * @var EnumType<\UnitEnum>
-     */
-    private readonly EnumType $type;
-
     public function __construct(
         private readonly string $name,
         private readonly ?\UnitEnum $value,
         ?Metadata $metadata = null,
     ) {
-        /** @var EnumType<\UnitEnum> $type */
-        $type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
-        $this->type = $type;
-
         /** @var class-string<\UnitEnum>&literal-string $enumClass */
         $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
         $this->definition = new EnumDefinition($this->name, $enumClass, $this->value === null, $metadata ?: Metadata::empty());
@@ -74,7 +65,7 @@ final class EnumEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $entry instanceof self && type_equals($this->type, $entry->type) && $this->value === $entry->value;
+        return $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value === $entry->value;
     }
 
     public function map(callable $mapper) : static
@@ -106,7 +97,7 @@ final class EnumEntry implements Entry
      */
     public function type() : EnumType
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\UnitEnum

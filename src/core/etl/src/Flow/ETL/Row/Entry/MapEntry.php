@@ -29,11 +29,6 @@ final class MapEntry implements Entry
     private MapDefinition $definition;
 
     /**
-     * @var MapType<TKey, TValue>
-     */
-    private MapType $type;
-
-    /**
      * @param ?array<array-key, mixed> $value
      * @param MapType<TKey, TValue> $type
      *
@@ -53,8 +48,7 @@ final class MapEntry implements Entry
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
-        $this->type = $type;
-        $this->definition = new MapDefinition($this->name, $this->type, $this->value === null, $metadata ?: Metadata::empty());
+        $this->definition = new MapDefinition($this->name, $type, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -72,7 +66,7 @@ final class MapEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->type, $this->definition->metadata());
+        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -100,18 +94,18 @@ final class MapEntry implements Entry
         if ($entryValue === null && $thisValue === null) {
             return $this->is($entry->name())
                 && $entry instanceof self
-                && type_equals($this->type, $entry->type);
+                && type_equals($this->type(), $entry->type());
         }
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && type_equals($this->type, $entry->type)
+            && type_equals($this->type(), $entry->type())
             && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
     public function map(callable $mapper) : static
     {
-        return new self($this->name, $mapper($this->value), $this->type);
+        return new self($this->name, $mapper($this->value), $this->type());
     }
 
     public function name() : string
@@ -121,7 +115,7 @@ final class MapEntry implements Entry
 
     public function rename(string $name) : static
     {
-        return new self($name, $this->value, $this->type);
+        return new self($name, $this->value, $this->type());
     }
 
     public function toString() : string
@@ -138,7 +132,7 @@ final class MapEntry implements Entry
      */
     public function type() : MapType
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?array
@@ -148,6 +142,6 @@ final class MapEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->type);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->type());
     }
 }

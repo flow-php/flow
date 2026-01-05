@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
-use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_time};
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\TimeDefinition;
@@ -20,11 +20,6 @@ final class TimeEntry implements Entry
     use EntryRef;
 
     private TimeDefinition $definition;
-
-    /**
-     * @var Type<\DateInterval>
-     */
-    private readonly Type $type;
 
     /**
      * Time represented php \DateInterval.
@@ -87,7 +82,6 @@ final class TimeEntry implements Entry
             $this->value = null;
         }
 
-        $this->type = type_time();
         $this->definition = new TimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -180,7 +174,7 @@ final class TimeEntry implements Entry
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && type_equals($this->type, $entry->type)
+            && type_equals($this->type(), $entry->type())
             && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue);
     }
 
@@ -218,7 +212,7 @@ final class TimeEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\DateInterval

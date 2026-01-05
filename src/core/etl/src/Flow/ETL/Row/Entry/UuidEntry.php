@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional, type_uuid};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\UuidDefinition;
@@ -20,11 +20,6 @@ final class UuidEntry implements Entry
     use EntryRef;
 
     private UuidDefinition $definition;
-
-    /**
-     * @var Type<Uuid>
-     */
-    private readonly Type $type;
 
     private ?Uuid $value;
 
@@ -46,7 +41,6 @@ final class UuidEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_uuid();
         $this->definition = new UuidDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -95,7 +89,7 @@ final class UuidEntry implements Entry
         /**
          * @var Uuid $entryValue
          */
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value?->isEqual($entryValue);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value?->isEqual($entryValue);
     }
 
     public function map(callable $mapper) : static
@@ -127,7 +121,7 @@ final class UuidEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?Uuid

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_html, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Dom\HTMLDocument;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\HTMLDefinition;
@@ -20,11 +20,6 @@ final class HTMLEntry implements Entry
 
     private HTMLDefinition $definition;
 
-    /**
-     * @var Type<HTMLDocument>
-     */
-    private readonly Type $type;
-
     private ?HTMLDocument $value;
 
     public function __construct(
@@ -38,7 +33,6 @@ final class HTMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_html();
         $this->definition = new HTMLDefinition($this->name, null === $this->value, $metadata ?: Metadata::empty());
     }
 
@@ -72,7 +66,7 @@ final class HTMLEntry implements Entry
             return false;
         }
 
-        if (!type_equals($this->type, $entry->type)) {
+        if (!type_equals($this->type(), $entry->type())) {
             return false;
         }
 
@@ -105,7 +99,7 @@ final class HTMLEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?HTMLDocument

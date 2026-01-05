@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\is_type;
-use function Flow\Types\DSL\{type_equals, type_float, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
@@ -22,11 +22,6 @@ final class FloatEntry implements Entry
 
     private FloatDefinition $definition;
 
-    /**
-     * @var Type<float>
-     */
-    private readonly Type $type;
-
     private readonly ?float $value;
 
     public function __construct(
@@ -39,7 +34,6 @@ final class FloatEntry implements Entry
         }
 
         $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
-        $this->type = type_float();
         $this->definition = new FloatDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -83,12 +77,12 @@ final class FloatEntry implements Entry
         if ($entryValue === null && $thisValue === null) {
             return $this->is($entry->name())
                 && $entry instanceof self
-                && is_type($this->type, $entry->type);
+                && is_type($this->type(), $entry->type());
         }
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && type_equals($this->type, $entry->type)
+            && type_equals($this->type(), $entry->type())
             /** @phpstan-ignore-next-line */
             && \bccomp((string) $thisValue, (string) $entryValue) === 0;
     }
@@ -122,7 +116,7 @@ final class FloatEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?float
