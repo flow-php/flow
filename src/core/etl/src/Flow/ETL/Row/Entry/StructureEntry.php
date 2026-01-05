@@ -22,6 +22,11 @@ final class StructureEntry implements Entry
 {
     use EntryRef;
 
+    /**
+     * @var StructureDefinition<T>
+     */
+    private StructureDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -55,6 +60,7 @@ final class StructureEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type;
+        $this->definition = new StructureDefinition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -67,7 +73,7 @@ final class StructureEntry implements Entry
      */
     public function definition() : StructureDefinition
     {
-        return new StructureDefinition($this->name, $this->type, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

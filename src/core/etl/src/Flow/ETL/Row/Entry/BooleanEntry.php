@@ -18,6 +18,8 @@ final class BooleanEntry implements Entry
 {
     use EntryRef;
 
+    private BooleanDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -36,6 +38,7 @@ final class BooleanEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_boolean();
+        $this->definition = new BooleanDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -45,7 +48,7 @@ final class BooleanEntry implements Entry
 
     public function definition() : BooleanDefinition
     {
-        return new BooleanDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

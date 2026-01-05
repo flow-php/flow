@@ -18,6 +18,8 @@ final class DateEntry implements Entry
 {
     use EntryRef;
 
+    private DateDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -52,6 +54,7 @@ final class DateEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_date();
+        $this->definition = new DateDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -61,7 +64,7 @@ final class DateEntry implements Entry
 
     public function definition() : DateDefinition
     {
-        return new DateDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

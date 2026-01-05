@@ -18,6 +18,8 @@ final class HTMLEntry implements Entry
 {
     use EntryRef;
 
+    private HTMLDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -40,6 +42,7 @@ final class HTMLEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_html();
+        $this->definition = new HTMLDefinition($this->name, null === $this->value, $this->metadata);
     }
 
     public function __toString() : string
@@ -49,7 +52,7 @@ final class HTMLEntry implements Entry
 
     public function definition() : HTMLDefinition
     {
-        return new HTMLDefinition($this->name, null === $this->value, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

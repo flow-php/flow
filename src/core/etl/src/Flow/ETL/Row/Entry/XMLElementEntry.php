@@ -19,6 +19,8 @@ final class XMLElementEntry implements Entry
 {
     use EntryRef;
 
+    private XMLElementDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -46,6 +48,7 @@ final class XMLElementEntry implements Entry
         $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value;
         $this->type = type_xml_element();
+        $this->definition = new XMLElementDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __serialize() : array
@@ -97,7 +100,7 @@ final class XMLElementEntry implements Entry
 
     public function definition() : XMLElementDefinition
     {
-        return new XMLElementDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

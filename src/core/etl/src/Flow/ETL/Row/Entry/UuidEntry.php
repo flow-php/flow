@@ -19,6 +19,8 @@ final class UuidEntry implements Entry
 {
     use EntryRef;
 
+    private UuidDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -48,6 +50,7 @@ final class UuidEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_uuid();
+        $this->definition = new UuidDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public static function from(string $name, string $value) : self
@@ -62,7 +65,7 @@ final class UuidEntry implements Entry
 
     public function definition() : UuidDefinition
     {
-        return new UuidDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

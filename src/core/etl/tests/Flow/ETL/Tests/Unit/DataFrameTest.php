@@ -444,9 +444,9 @@ final class DataFrameTest extends FlowTestCase
             new SelectiveValidator()
         )->fetch();
 
-        self::assertEquals(
-            rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false))),
-            $rows
+        self::assertSame(
+            rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))->toArray(),
+            $rows->toArray()
         );
     }
 
@@ -458,9 +458,9 @@ final class DataFrameTest extends FlowTestCase
             schema(integer_schema('id', $nullable = false), string_schema('name', $nullable = true), bool_schema('active', $nullable = false))
         )->fetch();
 
-        self::assertEquals(
-            rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false))),
-            $rows
+        self::assertSame(
+            rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))->toArray(),
+            $rows->toArray()
         );
     }
 

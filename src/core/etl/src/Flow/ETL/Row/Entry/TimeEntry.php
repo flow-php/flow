@@ -19,6 +19,8 @@ final class TimeEntry implements Entry
 {
     use EntryRef;
 
+    private TimeDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -89,6 +91,7 @@ final class TimeEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_time();
+        $this->definition = new TimeDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public static function fromDays(string $name, int $days) : self
@@ -145,7 +148,7 @@ final class TimeEntry implements Entry
 
     public function definition() : TimeDefinition
     {
-        return new TimeDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

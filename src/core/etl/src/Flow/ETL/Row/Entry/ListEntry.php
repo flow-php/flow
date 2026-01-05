@@ -22,6 +22,11 @@ final class ListEntry implements Entry
 {
     use EntryRef;
 
+    /**
+     * @var ListDefinition<T>
+     */
+    private ListDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -51,6 +56,7 @@ final class ListEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type;
+        $this->definition = new ListDefinition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -63,7 +69,7 @@ final class ListEntry implements Entry
      */
     public function definition() : ListDefinition
     {
-        return new ListDefinition($this->name, $this->type, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

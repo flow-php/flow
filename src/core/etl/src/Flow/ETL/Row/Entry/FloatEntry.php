@@ -20,6 +20,8 @@ final class FloatEntry implements Entry
 {
     use EntryRef;
 
+    private FloatDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -41,6 +43,7 @@ final class FloatEntry implements Entry
         $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
         $this->type = type_float();
+        $this->definition = new FloatDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -50,7 +53,7 @@ final class FloatEntry implements Entry
 
     public function definition() : FloatDefinition
     {
-        return new FloatDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

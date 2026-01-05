@@ -18,7 +18,7 @@ final class StringEntry implements Entry
 {
     use EntryRef;
 
-    private bool $fromNull = false;
+    private StringDefinition $definition;
 
     private Metadata $metadata;
 
@@ -34,6 +34,7 @@ final class StringEntry implements Entry
         private readonly string $name,
         private readonly ?string $value,
         ?Metadata $metadata = null,
+        bool $fromNull = false,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -41,14 +42,18 @@ final class StringEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_string();
+        $this->definition = new StringDefinition(
+            $this->name,
+            $this->value === null,
+            $fromNull
+                ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
+                : $this->metadata
+        );
     }
 
     public static function fromNull(string $name, ?Metadata $metadata = null) : self
     {
-        $entry = new self($name, null, $metadata);
-        $entry->fromNull = true;
-
-        return $entry;
+        return new self($name, null, $metadata, fromNull: true);
     }
 
     /**
@@ -74,13 +79,7 @@ final class StringEntry implements Entry
 
     public function definition() : StringDefinition
     {
-        return new StringDefinition(
-            $this->name,
-            $this->value === null,
-            $this->fromNull
-                ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
-                : $this->metadata
-        );
+        return $this->definition;
     }
 
     public function duplicate() : static

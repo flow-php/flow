@@ -18,6 +18,8 @@ final class HTMLElementEntry implements Entry
 {
     use EntryRef;
 
+    private HTMLElementDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -41,6 +43,7 @@ final class HTMLElementEntry implements Entry
         $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value;
         $this->type = type_html_element();
+        $this->definition = new HTMLElementDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -54,7 +57,7 @@ final class HTMLElementEntry implements Entry
 
     public function definition() : HTMLElementDefinition
     {
-        return new HTMLElementDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

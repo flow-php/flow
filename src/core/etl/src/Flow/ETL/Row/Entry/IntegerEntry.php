@@ -18,6 +18,8 @@ final class IntegerEntry implements Entry
 {
     use EntryRef;
 
+    private IntegerDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -39,6 +41,7 @@ final class IntegerEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_integer();
+        $this->definition = new IntegerDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -48,7 +51,7 @@ final class IntegerEntry implements Entry
 
     public function definition() : IntegerDefinition
     {
-        return new IntegerDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

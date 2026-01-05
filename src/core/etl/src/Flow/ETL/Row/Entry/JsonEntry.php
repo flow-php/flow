@@ -19,6 +19,8 @@ final class JsonEntry implements Entry
 {
     use EntryRef;
 
+    private JsonDefinition $definition;
+
     private readonly ?Json $json;
 
     private Metadata $metadata;
@@ -58,6 +60,7 @@ final class JsonEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_json();
+        $this->definition = new JsonDefinition($this->name, $this->json === null, $this->metadata);
     }
 
     /**
@@ -91,7 +94,7 @@ final class JsonEntry implements Entry
 
     public function definition() : JsonDefinition
     {
-        return new JsonDefinition($this->name, $this->json === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

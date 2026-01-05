@@ -18,6 +18,8 @@ final class DateTimeEntry implements Entry
 {
     use EntryRef;
 
+    private DateTimeDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -53,6 +55,7 @@ final class DateTimeEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_datetime();
+        $this->definition = new DateTimeDefinition($this->name, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -62,7 +65,7 @@ final class DateTimeEntry implements Entry
 
     public function definition() : DateTimeDefinition
     {
-        return new DateTimeDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

@@ -23,6 +23,11 @@ final class MapEntry implements Entry
 {
     use EntryRef;
 
+    /**
+     * @var MapDefinition<TKey, TValue>
+     */
+    private MapDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -52,6 +57,7 @@ final class MapEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type;
+        $this->definition = new MapDefinition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -64,7 +70,7 @@ final class MapEntry implements Entry
      */
     public function definition() : MapDefinition
     {
-        return new MapDefinition($this->name, $this->type, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static

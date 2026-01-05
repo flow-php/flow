@@ -8,9 +8,11 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Row\{Entries, Entry, Reference};
 
-final readonly class Row
+final class Row
 {
-    public function __construct(private Entries $entries)
+    private ?Schema $schema = null;
+
+    public function __construct(private readonly Entries $entries)
     {
     }
 
@@ -137,13 +139,19 @@ final readonly class Row
      */
     public function schema() : Schema
     {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
         $definitions = [];
 
         foreach ($this->entries->all() as $entry) {
             $definitions[] = $entry->definition();
         }
 
-        return new Schema(...$definitions);
+        $this->schema = new Schema(...$definitions);
+
+        return $this->schema;
     }
 
     /**

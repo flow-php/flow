@@ -17,6 +17,11 @@ final class EnumEntry implements Entry
 {
     use EntryRef;
 
+    /**
+     * @var EnumDefinition<\UnitEnum>
+     */
+    private EnumDefinition $definition;
+
     private Metadata $metadata;
 
     /**
@@ -33,6 +38,10 @@ final class EnumEntry implements Entry
         /** @var EnumType<\UnitEnum> $type */
         $type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
         $this->type = $type;
+
+        /** @var class-string<\UnitEnum>&literal-string $enumClass */
+        $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
+        $this->definition = new EnumDefinition($this->name, $enumClass, $this->value === null, $this->metadata);
     }
 
     public function __toString() : string
@@ -49,10 +58,7 @@ final class EnumEntry implements Entry
      */
     public function definition() : EnumDefinition
     {
-        /** @var class-string<\UnitEnum>&literal-string $enumClass */
-        $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
-
-        return new EnumDefinition($this->name, $enumClass, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
