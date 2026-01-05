@@ -20,8 +20,6 @@ final class BooleanEntry implements Entry
 
     private BooleanDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<bool>
      */
@@ -36,9 +34,8 @@ final class BooleanEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_boolean();
-        $this->definition = new BooleanDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new BooleanDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -53,7 +50,7 @@ final class BooleanEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -109,6 +106,6 @@ final class BooleanEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

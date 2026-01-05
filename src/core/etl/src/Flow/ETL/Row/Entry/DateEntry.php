@@ -20,8 +20,6 @@ final class DateEntry implements Entry
 
     private DateDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<\DateTimeInterface>
      */
@@ -52,9 +50,8 @@ final class DateEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_date();
-        $this->definition = new DateDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new DateDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -69,7 +66,7 @@ final class DateEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -124,6 +121,6 @@ final class DateEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

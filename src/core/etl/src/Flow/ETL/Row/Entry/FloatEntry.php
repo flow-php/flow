@@ -22,8 +22,6 @@ final class FloatEntry implements Entry
 
     private FloatDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<float>
      */
@@ -40,10 +38,9 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
         $this->type = type_float();
-        $this->definition = new FloatDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new FloatDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -58,7 +55,7 @@ final class FloatEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -135,6 +132,6 @@ final class FloatEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

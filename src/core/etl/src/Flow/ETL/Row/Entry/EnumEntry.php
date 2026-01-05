@@ -22,8 +22,6 @@ final class EnumEntry implements Entry
      */
     private EnumDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var EnumType<\UnitEnum>
      */
@@ -34,14 +32,13 @@ final class EnumEntry implements Entry
         private readonly ?\UnitEnum $value,
         ?Metadata $metadata = null,
     ) {
-        $this->metadata = $metadata ?: Metadata::empty();
         /** @var EnumType<\UnitEnum> $type */
         $type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
         $this->type = $type;
 
         /** @var class-string<\UnitEnum>&literal-string $enumClass */
         $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
-        $this->definition = new EnumDefinition($this->name, $enumClass, $this->value === null, $this->metadata);
+        $this->definition = new EnumDefinition($this->name, $enumClass, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -63,7 +60,7 @@ final class EnumEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -119,6 +116,6 @@ final class EnumEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

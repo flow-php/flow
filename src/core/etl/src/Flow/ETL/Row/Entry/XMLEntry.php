@@ -21,8 +21,6 @@ final class XMLEntry implements Entry
 
     private XMLDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<\DOMDocument>
      */
@@ -47,9 +45,8 @@ final class XMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_xml();
-        $this->definition = new XMLDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __serialize() : array
@@ -107,7 +104,7 @@ final class XMLEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(Reference|string $name) : bool
@@ -176,6 +173,6 @@ final class XMLEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

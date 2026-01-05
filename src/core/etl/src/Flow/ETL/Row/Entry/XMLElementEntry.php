@@ -21,8 +21,6 @@ final class XMLElementEntry implements Entry
 
     private XMLElementDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<\DOMElement>
      */
@@ -45,10 +43,9 @@ final class XMLElementEntry implements Entry
             $value = $doc->documentElement;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value;
         $this->type = type_xml_element();
-        $this->definition = new XMLElementDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new XMLElementDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __serialize() : array
@@ -105,7 +102,7 @@ final class XMLElementEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, type_optional(type_instance_of(\DOMElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->metadata);
+        return new self($this->name, type_optional(type_instance_of(\DOMElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->definition->metadata());
     }
 
     public function is(Reference|string $name) : bool
@@ -170,6 +167,6 @@ final class XMLElementEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

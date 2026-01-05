@@ -23,8 +23,6 @@ final class JsonEntry implements Entry
 
     private readonly ?Json $json;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<Json>
      */
@@ -58,9 +56,8 @@ final class JsonEntry implements Entry
             $this->json = null;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_json();
-        $this->definition = new JsonDefinition($this->name, $this->json === null, $this->metadata);
+        $this->definition = new JsonDefinition($this->name, $this->json === null, $metadata ?: Metadata::empty());
     }
 
     /**
@@ -99,7 +96,7 @@ final class JsonEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->json, $this->metadata);
+        return new self($this->name, $this->json, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -141,7 +138,7 @@ final class JsonEntry implements Entry
 
     public function map(callable $mapper) : static
     {
-        return new self($this->name, $mapper($this->json), $this->metadata);
+        return new self($this->name, $mapper($this->json), $this->definition->metadata());
     }
 
     public function name() : string
@@ -151,7 +148,7 @@ final class JsonEntry implements Entry
 
     public function rename(string $name) : static
     {
-        return new self($name, $this->json, $this->metadata);
+        return new self($name, $this->json, $this->definition->metadata());
     }
 
     public function toString() : string
@@ -178,6 +175,6 @@ final class JsonEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->cast($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->cast($value), $this->definition->metadata());
     }
 }

@@ -20,8 +20,6 @@ final class IntegerEntry implements Entry
 
     private IntegerDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<int>
      */
@@ -39,9 +37,8 @@ final class IntegerEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_integer();
-        $this->definition = new IntegerDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new IntegerDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -56,7 +53,7 @@ final class IntegerEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -112,6 +109,6 @@ final class IntegerEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

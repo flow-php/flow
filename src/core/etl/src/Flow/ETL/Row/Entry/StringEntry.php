@@ -20,8 +20,6 @@ final class StringEntry implements Entry
 
     private StringDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<string>
      */
@@ -40,14 +38,14 @@ final class StringEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
+        $metadata = $metadata ?: Metadata::empty();
         $this->type = type_string();
         $this->definition = new StringDefinition(
             $this->name,
             $this->value === null,
             $fromNull
-                ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
-                : $this->metadata
+                ? $metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
+                : $metadata
         );
     }
 
@@ -84,7 +82,7 @@ final class StringEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -147,6 +145,6 @@ final class StringEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

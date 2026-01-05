@@ -21,8 +21,6 @@ final class UuidEntry implements Entry
 
     private UuidDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<Uuid>
      */
@@ -48,9 +46,8 @@ final class UuidEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_uuid();
-        $this->definition = new UuidDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new UuidDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public static function from(string $name, string $value) : self
@@ -70,7 +67,7 @@ final class UuidEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->metadata);
+        return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -140,6 +137,6 @@ final class UuidEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

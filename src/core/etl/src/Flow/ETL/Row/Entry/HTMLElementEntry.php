@@ -20,8 +20,6 @@ final class HTMLElementEntry implements Entry
 
     private HTMLElementDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var Type<HTMLElement>
      */
@@ -40,10 +38,9 @@ final class HTMLElementEntry implements Entry
             $value = $document->documentElement;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value;
         $this->type = type_html_element();
-        $this->definition = new HTMLElementDefinition($this->name, $this->value === null, $this->metadata);
+        $this->definition = new HTMLElementDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -62,7 +59,7 @@ final class HTMLElementEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, type_optional(type_instance_of(HTMLElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->metadata);
+        return new self($this->name, type_optional(type_instance_of(HTMLElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->definition->metadata());
     }
 
     public function is(Reference|string $name) : bool
@@ -126,6 +123,6 @@ final class HTMLElementEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

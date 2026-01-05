@@ -27,8 +27,6 @@ final class StructureEntry implements Entry
      */
     private StructureDefinition $definition;
 
-    private Metadata $metadata;
-
     /**
      * @var StructureType<T>
      */
@@ -58,9 +56,8 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type;
-        $this->definition = new StructureDefinition($this->name, $this->type, $this->value === null, $this->metadata);
+        $this->definition = new StructureDefinition($this->name, $this->type, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -78,7 +75,7 @@ final class StructureEntry implements Entry
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->type, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
