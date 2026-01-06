@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext, Rows};
+use Flow\ETL\{FlowContext, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
@@ -22,11 +22,7 @@ final class ParquetLoaderBench
     {
         $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet';
-        $this->rows = \Flow\ETL\DSL\rows();
-
-        foreach (from_parquet(__DIR__ . '/Fixtures/orders_10k.parquet')->extract($this->context) as $rows) {
-            $this->rows = $this->rows->merge($rows);
-        }
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
     }
 
     public function __destruct()

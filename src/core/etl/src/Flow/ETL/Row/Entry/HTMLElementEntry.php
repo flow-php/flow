@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_html_element, type_instance_of, type_optional};
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional};
 use Dom\{HTMLDocument, HTMLElement};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\HTMLElementDefinition;
@@ -18,12 +18,7 @@ final class HTMLElementEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<HTMLElement>
-     */
-    private readonly Type $type;
+    private HTMLElementDefinition $definition;
 
     private readonly ?HTMLElement $value;
 
@@ -38,9 +33,8 @@ final class HTMLElementEntry implements Entry
             $value = $document->documentElement;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value;
-        $this->type = type_html_element();
+        $this->definition = new HTMLElementDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -54,12 +48,12 @@ final class HTMLElementEntry implements Entry
 
     public function definition() : HTMLElementDefinition
     {
-        return new HTMLElementDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, type_optional(type_instance_of(HTMLElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->metadata);
+        return new self($this->name, type_optional(type_instance_of(HTMLElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->definition->metadata());
     }
 
     public function is(Reference|string $name) : bool
@@ -77,7 +71,7 @@ final class HTMLElementEntry implements Entry
             return false;
         }
 
-        if (!type_equals($this->type, $entry->type)) {
+        if (!type_equals($this->type(), $entry->type())) {
             return false;
         }
 
@@ -113,7 +107,7 @@ final class HTMLElementEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?HTMLElement
@@ -123,6 +117,6 @@ final class HTMLElementEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

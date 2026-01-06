@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional, type_uuid};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\UuidDefinition;
@@ -19,12 +19,7 @@ final class UuidEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<Uuid>
-     */
-    private readonly Type $type;
+    private UuidDefinition $definition;
 
     private ?Uuid $value;
 
@@ -46,8 +41,7 @@ final class UuidEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_uuid();
+        $this->definition = new UuidDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public static function from(string $name, string $value) : self
@@ -62,12 +56,12 @@ final class UuidEntry implements Entry
 
     public function definition() : UuidDefinition
     {
-        return new UuidDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->metadata);
+        return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -95,7 +89,7 @@ final class UuidEntry implements Entry
         /**
          * @var Uuid $entryValue
          */
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value?->isEqual($entryValue);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value?->isEqual($entryValue);
     }
 
     public function map(callable $mapper) : static
@@ -127,7 +121,7 @@ final class UuidEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?Uuid
@@ -137,6 +131,6 @@ final class UuidEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

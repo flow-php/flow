@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_html, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Dom\HTMLDocument;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\HTMLDefinition;
@@ -18,12 +18,7 @@ final class HTMLEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<HTMLDocument>
-     */
-    private readonly Type $type;
+    private HTMLDefinition $definition;
 
     private ?HTMLDocument $value;
 
@@ -38,8 +33,7 @@ final class HTMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_html();
+        $this->definition = new HTMLDefinition($this->name, null === $this->value, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -49,12 +43,12 @@ final class HTMLEntry implements Entry
 
     public function definition() : HTMLDefinition
     {
-        return new HTMLDefinition($this->name, null === $this->value, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(Reference|string $name) : bool
@@ -72,7 +66,7 @@ final class HTMLEntry implements Entry
             return false;
         }
 
-        if (!type_equals($this->type, $entry->type)) {
+        if (!type_equals($this->type(), $entry->type())) {
             return false;
         }
 
@@ -105,7 +99,7 @@ final class HTMLEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?HTMLDocument
@@ -115,6 +109,6 @@ final class HTMLEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

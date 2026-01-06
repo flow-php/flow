@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\JSON\{from_json, to_json};
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext, Rows};
+use Flow\ETL\{FlowContext, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
@@ -22,11 +22,7 @@ final class JsonLoaderBench
     {
         $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json';
-        $this->rows = \Flow\ETL\DSL\rows();
-
-        foreach (from_json(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
-            $this->rows = $this->rows->merge($rows);
-        }
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
     }
 
     public function __destruct()

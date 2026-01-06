@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\Text\{from_text, to_text};
+use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext, Rows};
+use Flow\ETL\{FlowContext, Row, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
@@ -22,11 +22,9 @@ final class TextLoaderBench
     {
         $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt';
-        $this->rows = \Flow\ETL\DSL\rows();
-
-        foreach (from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
-            $this->rows = $this->rows->merge($rows);
-        }
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows()->map(
+            fn (Row $r) => \Flow\ETL\DSL\row($r->get('order_id'))
+        );
     }
 
     public function __destruct()

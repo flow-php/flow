@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\Types\{BigIntType, BlobType, DateImmutableType, DateTimeImmutableType, DateTimeTzImmutableType, DateTimeTzType, DecimalType, GuidType, SmallFloatType, SmallIntType, TextType, TimeImmutableType};
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row;
 use Flow\Types\Type as FlowType;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
@@ -20,7 +21,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
 
 final class TypesMap
 {
@@ -67,6 +68,7 @@ final class TypesMap
         XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
         HTMLType::class => \Doctrine\DBAL\Types\StringType::class,
         HTMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
+        EnumType::class => \Doctrine\DBAL\Types\StringType::class,
         ListType::class => \Doctrine\DBAL\Types\JsonType::class,
         MapType::class => \Doctrine\DBAL\Types\JsonType::class,
         StructureType::class => \Doctrine\DBAL\Types\JsonType::class,
@@ -97,6 +99,29 @@ final class TypesMap
         } else {
             $this->map = $map;
         }
+    }
+
+    /**
+     * Build DBAL types array from a row's entries.
+     *
+     * @return array<string, DbalType> Column name => DBAL Type instance
+     */
+    public function flowRowTypes(Row $row) : array
+    {
+        $types = [];
+        $typeClassToName = \array_flip(DbalType::getTypesMap());
+
+        foreach ($row->entries() as $entry) {
+            $dbalTypeClass = $this->toDbalType($entry->type()::class);
+
+            if (!\array_key_exists($dbalTypeClass, $typeClassToName)) {
+                throw new \InvalidArgumentException(\sprintf('DBAL type "%s" is not registered.', $dbalTypeClass));
+            }
+
+            $types[$entry->name()] = DbalType::getType($typeClassToName[$dbalTypeClass]);
+        }
+
+        return $types;
     }
 
     /**

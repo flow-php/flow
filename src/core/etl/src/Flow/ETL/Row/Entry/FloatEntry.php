@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\is_type;
-use function Flow\Types\DSL\{type_equals, type_float, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
@@ -20,12 +20,7 @@ final class FloatEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<float>
-     */
-    private readonly Type $type;
+    private FloatDefinition $definition;
 
     private readonly ?float $value;
 
@@ -38,9 +33,8 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
-        $this->type = type_float();
+        $this->definition = new FloatDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -50,12 +44,12 @@ final class FloatEntry implements Entry
 
     public function definition() : FloatDefinition
     {
-        return new FloatDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -83,12 +77,12 @@ final class FloatEntry implements Entry
         if ($entryValue === null && $thisValue === null) {
             return $this->is($entry->name())
                 && $entry instanceof self
-                && is_type($this->type, $entry->type);
+                && is_type($this->type(), $entry->type());
         }
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && type_equals($this->type, $entry->type)
+            && type_equals($this->type(), $entry->type())
             /** @phpstan-ignore-next-line */
             && \bccomp((string) $thisValue, (string) $entryValue) === 0;
     }
@@ -122,7 +116,7 @@ final class FloatEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?float
@@ -132,6 +126,6 @@ final class FloatEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

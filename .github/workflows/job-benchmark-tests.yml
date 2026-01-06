@@ -55,34 +55,11 @@ jobs:
       - name: "Execute benchmarks"
         id: init_comment
         run: |
-          # Run all benchmarks in parallel
-          composer test:benchmark:extractor -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/extractor.txt 2>&1 &
-          PID_EXTRACTOR=$!
-
-          composer test:benchmark:transformer -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/transformer.txt 2>&1 &
-          PID_TRANSFORMER=$!
-
-          composer test:benchmark:loader -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/loader.txt 2>&1 &
-          PID_LOADER=$!
-
-          composer test:benchmark:building_blocks -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/building_blocks.txt 2>&1 &
-          PID_BUILDING=$!
-
-          composer test:benchmark:parquet-library -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/parquet.txt 2>&1 &
-          PID_PARQUET=$!
-
-          # Wait for all to complete and capture exit codes
-          EXIT_CODE=0
-          wait $PID_EXTRACTOR || EXIT_CODE=$?
-          wait $PID_TRANSFORMER || EXIT_CODE=$?
-          wait $PID_LOADER || EXIT_CODE=$?
-          wait $PID_BUILDING || EXIT_CODE=$?
-          wait $PID_PARQUET || EXIT_CODE=$?
-
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "One or more benchmarks failed with exit code $EXIT_CODE"
-            exit $EXIT_CODE
-          fi
+          composer test:benchmark:extractor -- --ref=1.x --progress=none > ./var/phpbench/extractor.txt
+          composer test:benchmark:transformer -- --ref=1.x --progress=none > ./var/phpbench/transformer.txt
+          composer test:benchmark:loader -- --ref=1.x --progress=none > ./var/phpbench/loader.txt
+          composer test:benchmark:building_blocks -- --ref=1.x --progress=none > ./var/phpbench/building_blocks.txt
+          composer test:benchmark:parquet-library -- --ref=1.x --progress=none > ./var/phpbench/parquet.txt
 
           # Build the summary file
           {

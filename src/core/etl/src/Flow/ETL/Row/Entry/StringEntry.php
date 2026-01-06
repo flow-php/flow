@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional, type_string};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\StringDefinition;
@@ -18,14 +18,7 @@ final class StringEntry implements Entry
 {
     use EntryRef;
 
-    private bool $fromNull = false;
-
-    private Metadata $metadata;
-
-    /**
-     * @var Type<string>
-     */
-    private readonly Type $type;
+    private StringDefinition $definition;
 
     /**
      * @throws InvalidArgumentException
@@ -34,21 +27,25 @@ final class StringEntry implements Entry
         private readonly string $name,
         private readonly ?string $value,
         ?Metadata $metadata = null,
+        bool $fromNull = false,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_string();
+        $metadata = $metadata ?: Metadata::empty();
+        $this->definition = new StringDefinition(
+            $this->name,
+            $this->value === null,
+            $fromNull
+                ? $metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
+                : $metadata
+        );
     }
 
     public static function fromNull(string $name, ?Metadata $metadata = null) : self
     {
-        $entry = new self($name, null, $metadata);
-        $entry->fromNull = true;
-
-        return $entry;
+        return new self($name, null, $metadata, fromNull: true);
     }
 
     /**
@@ -74,18 +71,12 @@ final class StringEntry implements Entry
 
     public function definition() : StringDefinition
     {
-        return new StringDefinition(
-            $this->name,
-            $this->value === null,
-            $this->fromNull
-                ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
-                : $this->metadata
-        );
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -99,7 +90,7 @@ final class StringEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : static
@@ -138,7 +129,7 @@ final class StringEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?string
@@ -148,6 +139,6 @@ final class StringEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

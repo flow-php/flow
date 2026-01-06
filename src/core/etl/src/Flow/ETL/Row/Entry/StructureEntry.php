@@ -22,12 +22,10 @@ final class StructureEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
     /**
-     * @var StructureType<T>
+     * @var StructureDefinition<T>
      */
-    private readonly StructureType $type;
+    private StructureDefinition $definition;
 
     /**
      * @param ?array<array-key, mixed> $value
@@ -53,8 +51,7 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type;
+        $this->definition = new StructureDefinition($this->name, $type, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -67,12 +64,12 @@ final class StructureEntry implements Entry
      */
     public function definition() : StructureDefinition
     {
-        return new StructureDefinition($this->name, $this->type, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -98,15 +95,15 @@ final class StructureEntry implements Entry
         }
 
         if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type);
+            return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type());
         }
 
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
     public function map(callable $mapper) : static
     {
-        return new self($this->name, $mapper($this->value), $this->type);
+        return new self($this->name, $mapper($this->value), $this->type());
     }
 
     public function name() : string
@@ -116,7 +113,7 @@ final class StructureEntry implements Entry
 
     public function rename(string $name) : static
     {
-        return new self($name, $this->value, $this->type);
+        return new self($name, $this->value, $this->type());
     }
 
     public function toString() : string
@@ -133,7 +130,7 @@ final class StructureEntry implements Entry
      */
     public function type() : StructureType
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?array
@@ -143,6 +140,6 @@ final class StructureEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->type);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->type());
     }
 }

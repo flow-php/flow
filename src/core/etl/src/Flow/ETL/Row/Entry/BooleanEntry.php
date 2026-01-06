@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_boolean, type_equals, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\BooleanDefinition;
@@ -18,12 +18,7 @@ final class BooleanEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<bool>
-     */
-    private readonly Type $type;
+    private BooleanDefinition $definition;
 
     /**
      * @throws InvalidArgumentException
@@ -34,8 +29,7 @@ final class BooleanEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_boolean();
+        $this->definition = new BooleanDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -45,12 +39,12 @@ final class BooleanEntry implements Entry
 
     public function definition() : BooleanDefinition
     {
-        return new BooleanDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -64,7 +58,7 @@ final class BooleanEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : static
@@ -96,7 +90,7 @@ final class BooleanEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?bool
@@ -106,6 +100,6 @@ final class BooleanEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

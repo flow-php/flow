@@ -35,7 +35,7 @@ final class EnumDefinition implements Definition
         private readonly bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
-        if (!\enum_exists($enumClass)) {
+        if ($enumClass !== \UnitEnum::class && !\enum_exists($enumClass)) {
             throw new InvalidArgumentException(\sprintf('Enum of type "%s" not found', $enumClass));
         }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_datetime, type_equals, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
@@ -18,12 +18,7 @@ final class DateTimeEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<\DateTimeInterface>
-     */
-    private readonly Type $type;
+    private DateTimeDefinition $definition;
 
     private readonly ?\DateTimeInterface $value;
 
@@ -51,8 +46,7 @@ final class DateTimeEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_datetime();
+        $this->definition = new DateTimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -62,12 +56,12 @@ final class DateTimeEntry implements Entry
 
     public function definition() : DateTimeDefinition
     {
-        return new DateTimeDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -81,7 +75,7 @@ final class DateTimeEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() == $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() == $entry->value();
     }
 
     public function map(callable $mapper) : static
@@ -112,7 +106,7 @@ final class DateTimeEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\DateTimeInterface
@@ -122,6 +116,6 @@ final class DateTimeEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

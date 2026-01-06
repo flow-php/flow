@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
-use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_time};
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\TimeDefinition;
@@ -19,12 +19,7 @@ final class TimeEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<\DateInterval>
-     */
-    private readonly Type $type;
+    private TimeDefinition $definition;
 
     /**
      * Time represented php \DateInterval.
@@ -87,8 +82,7 @@ final class TimeEntry implements Entry
             $this->value = null;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_time();
+        $this->definition = new TimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public static function fromDays(string $name, int $days) : self
@@ -145,12 +139,12 @@ final class TimeEntry implements Entry
 
     public function definition() : TimeDefinition
     {
-        return new TimeDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -180,7 +174,7 @@ final class TimeEntry implements Entry
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && type_equals($this->type, $entry->type)
+            && type_equals($this->type(), $entry->type())
             && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue);
     }
 
@@ -218,7 +212,7 @@ final class TimeEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\DateInterval
@@ -228,6 +222,6 @@ final class TimeEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

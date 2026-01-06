@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string, type_xml};
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\XMLType;
 
 /**
  * @implements Entry<?\DOMDocument>
@@ -19,12 +18,7 @@ final class XMLEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
-    /**
-     * @var Type<\DOMDocument>
-     */
-    private readonly Type $type;
+    private XMLDefinition $definition;
 
     private readonly ?\DOMDocument $value;
 
@@ -45,8 +39,7 @@ final class XMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_xml();
+        $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __serialize() : array
@@ -55,7 +48,6 @@ final class XMLEntry implements Entry
             'name' => $this->name,
             /** @phpstan-ignore-next-line  */
             'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->toString())),
-            'type' => $this->type,
         ];
     }
 
@@ -74,13 +66,12 @@ final class XMLEntry implements Entry
     public function __unserialize(array $data) : void
     {
         type_string()->assert($data['name']);
-        type_instance_of(XMLType::class)->assert($data['type']);
 
         $this->name = $data['name'];
-        $this->type = $data['type'];
 
         if ($data['value'] === null) {
             $this->value = null;
+            $this->definition = new XMLDefinition($this->name, true, Metadata::empty());
 
             return;
         }
@@ -95,16 +86,17 @@ final class XMLEntry implements Entry
         }
 
         $this->value = $doc;
+        $this->definition = new XMLDefinition($this->name, false, Metadata::empty());
     }
 
     public function definition() : XMLDefinition
     {
-        return new XMLDefinition($this->name, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(Reference|string $name) : bool
@@ -122,7 +114,7 @@ final class XMLEntry implements Entry
             return false;
         }
 
-        if (!type_equals($this->type, $entry->type)) {
+        if (!type_equals($this->type(), $entry->type())) {
             return false;
         }
 
@@ -163,7 +155,7 @@ final class XMLEntry implements Entry
 
     public function type() : Type
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\DOMDocument
@@ -173,6 +165,6 @@ final class XMLEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

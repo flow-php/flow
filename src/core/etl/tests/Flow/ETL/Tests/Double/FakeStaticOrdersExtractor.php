@@ -9,12 +9,13 @@ use function Flow\ETL\DSL\{array_to_rows,
     float_schema,
     integer_schema,
     list_schema,
+    rows,
     schema,
     string_schema,
     structure_schema,
     uuid_schema};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\{Extractor, FlowContext, Row\EntryFactory, Rows, Schema};
 
 final readonly class FakeStaticOrdersExtractor implements Extractor
 {
@@ -106,5 +107,16 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
                 ],
             ];
         }
+    }
+
+    public function toRows(EntryFactory $entryFactory = new EntryFactory()) : Rows
+    {
+        $rows = rows();
+
+        foreach ($this->rawData() as $row) {
+            $rows = $rows->merge(array_to_rows($row, entryFactory: $entryFactory, schema: self::schema()));
+        }
+
+        return $rows;
     }
 }

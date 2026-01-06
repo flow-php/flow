@@ -28,6 +28,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     private readonly array $rows;
 
+    private ?Schema $schema = null;
+
     public function __construct(Row ...$rows)
     {
         $this->rows = \array_values($rows);
@@ -689,6 +691,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function schema() : Schema
     {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
         if (!$this->count()) {
             return new Schema();
         }
@@ -697,13 +703,17 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         $schema = null;
 
         foreach ($this->rows as $row) {
-            $schema = $schema === null
-                ? $row->schema()
-                : $schema->merge($row->schema());
+            if ($schema === null) {
+                $schema = $row->schema();
+            } else {
+                $schema = $schema->merge($row->schema());
+            }
         }
 
         /** @var Schema $schema */
-        return $schema;
+        $this->schema = $schema;
+
+        return $this->schema;
     }
 
     /**

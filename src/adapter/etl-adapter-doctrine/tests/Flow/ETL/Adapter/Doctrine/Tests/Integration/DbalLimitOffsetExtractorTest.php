@@ -8,7 +8,7 @@ use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
 use function Flow\ETL\DSL\{data_frame, flow_context, from_array};
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\{TextType, Type, Types};
-use Flow\ETL\Adapter\Doctrine\{DbalLoader, DbalTypesDetector, Order, OrderBy, Table, TypesMap};
+use Flow\ETL\Adapter\Doctrine\{DbalLoader, Order, OrderBy, Table, TypesMap};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\{Config, Rows};
 use Flow\Types\Type\Native\{IntegerType, StringType};
@@ -31,10 +31,8 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
         ]);
 
-        $customConverter = new DbalTypesDetector($customTypesMap);
-
         $loader = (new DbalLoader($table, $this->postgresqlConnectionParams()))
-            ->withTypesDetector($customConverter);
+            ->withTypesMap($customTypesMap);
 
         (data_frame())
             ->read(from_array([

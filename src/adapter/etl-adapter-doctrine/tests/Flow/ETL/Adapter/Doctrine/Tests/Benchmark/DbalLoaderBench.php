@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_schema_table, to_dbal_table_insert};
-use function Flow\ETL\DSL\df;
-use Doctrine\DBAL\DriverManager;
+use function Flow\ETL\DSL\flow_context;
+use Doctrine\DBAL\{Connection, DriverManager};
 use Doctrine\DBAL\Tools\DsnParser;
+use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use PhpBench\Attributes\{BeforeMethods, Groups};
 
@@ -16,7 +17,11 @@ final class DbalLoaderBench
 {
     private const TABLE_NAME = 'benchmark_orders_loader';
 
-    private \Doctrine\DBAL\Connection $connection;
+    private Connection $connection;
+
+    private readonly FlowContext $context;
+
+    private Rows $rows;
 
     public function __construct()
     {
@@ -29,6 +34,8 @@ final class DbalLoaderBench
         $params = (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse($dsn);
 
         $this->connection = DriverManager::getConnection($params);
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->context = flow_context();
     }
 
     public function __destruct()
@@ -58,9 +65,8 @@ final class DbalLoaderBench
     #[BeforeMethods('setUp')]
     public function bench_load_10k() : void
     {
-        df()
-            ->read(new FakeStaticOrdersExtractor(10_000))
-            ->write(to_dbal_table_insert($this->connection, self::TABLE_NAME))
-            ->run();
+        foreach ($this->rows->chunks(1_000) as $chunk) {
+            to_dbal_table_insert($this->connection, self::TABLE_NAME)->load($chunk, $this->context);
+        }
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_enum, type_equals, type_optional};
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Definition\EnumDefinition;
 use Flow\ETL\Schema\Metadata;
@@ -17,22 +17,19 @@ final class EnumEntry implements Entry
 {
     use EntryRef;
 
-    private Metadata $metadata;
-
     /**
-     * @var EnumType<\UnitEnum>
+     * @var EnumDefinition<\UnitEnum>
      */
-    private readonly EnumType $type;
+    private EnumDefinition $definition;
 
     public function __construct(
         private readonly string $name,
         private readonly ?\UnitEnum $value,
         ?Metadata $metadata = null,
     ) {
-        $this->metadata = $metadata ?: Metadata::empty();
-        /** @var EnumType<\UnitEnum> $type */
-        $type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
-        $this->type = $type;
+        /** @var class-string<\UnitEnum>&literal-string $enumClass */
+        $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
+        $this->definition = new EnumDefinition($this->name, $enumClass, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __toString() : string
@@ -49,15 +46,12 @@ final class EnumEntry implements Entry
      */
     public function definition() : EnumDefinition
     {
-        /** @var class-string<\UnitEnum>&literal-string $enumClass */
-        $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
-
-        return new EnumDefinition($this->name, $enumClass, $this->value === null, $this->metadata);
+        return $this->definition;
     }
 
     public function duplicate() : static
     {
-        return new self($this->name, $this->value, $this->metadata);
+        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name) : bool
@@ -71,7 +65,7 @@ final class EnumEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $entry instanceof self && type_equals($this->type, $entry->type) && $this->value === $entry->value;
+        return $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value === $entry->value;
     }
 
     public function map(callable $mapper) : static
@@ -103,7 +97,7 @@ final class EnumEntry implements Entry
      */
     public function type() : EnumType
     {
-        return $this->type;
+        return $this->definition->type();
     }
 
     public function value() : ?\UnitEnum
@@ -113,6 +107,6 @@ final class EnumEntry implements Entry
 
     public function withValue(mixed $value) : static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }
