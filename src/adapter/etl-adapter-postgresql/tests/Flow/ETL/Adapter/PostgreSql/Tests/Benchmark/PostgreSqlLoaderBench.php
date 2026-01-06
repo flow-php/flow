@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
-use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\PostgreSql\DSL\{column, create, data_type_double_precision, data_type_integer, data_type_jsonb, data_type_text, data_type_timestamptz, data_type_uuid, drop, pgsql_client, pgsql_connection_dsn, pgsql_mapper};
+use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\PostgreSql\Client\Client;
 use PhpBench\Attributes\{BeforeMethods, Groups};
@@ -17,6 +18,10 @@ final class PostgreSqlLoaderBench
     private const TABLE_NAME = 'benchmark_orders_loader';
 
     private Client $client;
+
+    private FlowContext $context;
+
+    private Rows $rows;
 
     public function __construct()
     {
@@ -38,6 +43,8 @@ final class PostgreSqlLoaderBench
             pgsql_connection_dsn($dsn),
             mapper: pgsql_mapper(),
         );
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->context = flow_context();
     }
 
     public function __destruct()
@@ -72,9 +79,8 @@ final class PostgreSqlLoaderBench
     #[BeforeMethods('setUp')]
     public function bench_load_10k() : void
     {
-        df()
-            ->read(new FakeStaticOrdersExtractor(10_000))
-            ->write(to_pgsql_table($this->client, self::TABLE_NAME))
-            ->run();
+        foreach ($this->rows->chunks(1_000) as $chunk) {
+            to_pgsql_table($this->client, self::TABLE_NAME)->load($chunk, $this->context);
+        }
     }
 }

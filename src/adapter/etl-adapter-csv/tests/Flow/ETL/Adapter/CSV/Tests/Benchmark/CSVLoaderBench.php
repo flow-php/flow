@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext, Rows};
+use Flow\ETL\{FlowContext, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
@@ -22,11 +22,7 @@ final class CSVLoaderBench
     {
         $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_csv_loader_bench') . '.csv';
-        $this->rows = \Flow\ETL\DSL\rows();
-
-        foreach (from_csv(__DIR__ . '/Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
-            $this->rows = $this->rows->merge($rows);
-        }
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
     }
 
     public function __destruct()
