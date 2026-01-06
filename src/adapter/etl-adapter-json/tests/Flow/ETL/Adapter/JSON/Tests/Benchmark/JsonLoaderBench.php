@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\JSON\{to_json};
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\{FlowContext, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;

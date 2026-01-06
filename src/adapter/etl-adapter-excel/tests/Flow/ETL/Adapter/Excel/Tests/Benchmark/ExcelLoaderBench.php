@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\Excel\DSL\{to_excel};
-use function Flow\ETL\DSL\{flow_context};
+use function Flow\ETL\Adapter\Excel\DSL\to_excel;
+use function Flow\ETL\DSL\flow_context;
 use Flow\ETL\Adapter\Excel\ExcelWriter;
 use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;

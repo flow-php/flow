@@ -4,230 +4,118 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
-use function Flow\ETL\DSL\{array_to_rows, config, flow_context, int_entry, list_entry, map_entry, ref, row, rows, str_entry, string_entry, struct_entry};
-use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
-use Flow\ETL\{Row, Rows};
-use PhpBench\Attributes\{BeforeMethods, Groups, Revs};
+use function Flow\ETL\DSL\{ref};
+use Flow\ETL\{Row, Rows, Tests\Double\FakeStaticOrdersExtractor};
+use PhpBench\Attributes\{BeforeMethods, Groups};
 
 #[BeforeMethods('setUp')]
-#[Revs(2)]
 #[Groups(['building_blocks'])]
 final class RowsBench
 {
-    private Rows $complexRows;
-
-    private Rows $mixedSchemaRows;
-
-    private Rows $reducedRows;
-
     private Rows $rows;
+
+    private Rows $rows100;
+
+    private Rows $rows1k;
 
     public function setUp() : void
     {
-        $this->rows = array_to_rows(
-            \array_merge(...\array_map(static fn () : array => [
-                ['id' => 1, 'random' => false, 'text' => null, 'from' => 666],
-                ['id' => 2, 'random' => true, 'text' => null, 'from' => 666],
-                ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
-                ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
-                ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
-            ], \range(0, 10_000))),
-            flow_context(config())->entryFactory(),
-        );
-
-        $this->reducedRows = array_to_rows(
-            \array_merge(...\array_map(static fn () : array => [
-                ['id' => 1, 'random' => false, 'text' => null, 'from' => 666],
-                ['id' => 2, 'random' => true, 'text' => null, 'from' => 666],
-                ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
-                ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
-                ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
-            ], \range(0, 1000))),
-            flow_context(config())->entryFactory(),
-        );
-
-        $complexRowsArray = [];
-
-        for ($i = 0; $i < 1000; $i++) {
-            $complexRowsArray[] = row(
-                int_entry('id', $i),
-                str_entry('name', 'name_' . $i),
-                list_entry('tags', ['tag1', 'tag2', 'tag3'], type_list(type_string())),
-                map_entry('metadata', ['key1' => 1, 'key2' => 2], type_map(type_string(), type_integer())),
-                struct_entry('address', ['street' => 'Main St', 'city' => 'NYC', 'zip' => '10001'], type_structure([
-                    'street' => type_string(),
-                    'city' => type_string(),
-                    'zip' => type_string(),
-                ])),
-            );
-        }
-        $this->complexRows = rows(...$complexRowsArray);
-
-        $mixedRowsArray = [];
-
-        for ($i = 0; $i < 1000; $i++) {
-            if ($i % 100 === 0) {
-                $mixedRowsArray[] = row(
-                    int_entry('id', $i),
-                    str_entry('name', 'name_' . $i),
-                    str_entry('extra_column_' . $i, 'extra_value'),
-                );
-            } else {
-                $mixedRowsArray[] = row(
-                    int_entry('id', $i),
-                    str_entry('name', 'name_' . $i),
-                );
-            }
-        }
-        $this->mixedSchemaRows = rows(...$mixedRowsArray);
+        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows1k = (new FakeStaticOrdersExtractor(1_000))->toRows();
+        $this->rows100 = (new FakeStaticOrdersExtractor(100))->toRows();
     }
 
-    public function bench_chunk_10_on_10k() : void
+    public function bench_chunk_1_000_on_10k() : void
     {
-        foreach ($this->rows->chunks(10) as $chunk) {
+        foreach ($this->rows->chunks(1_000) as $chunk) {
 
         }
     }
 
-    public function bench_diff_left_1k_on_10k() : void
+    public function bench_diff_left_100_on_1k() : void
     {
-        $this->rows->diffLeft($this->reducedRows);
+        $this->rows1k->diffLeft($this->rows100);
     }
 
-    public function bench_diff_right_1k_on_10k() : void
+    public function bench_diff_right_100_on_1k() : void
     {
-        $this->rows->diffRight($this->reducedRows);
+        $this->rows1k->diffRight($this->rows100);
     }
 
-    public function bench_drop_1k_on_10k() : void
+    public function bench_drop_100_on_1k() : void
     {
-        $this->rows->drop(1000);
+        $this->rows1k->drop(100);
     }
 
-    public function bench_drop_right_1k_on_10k() : void
+    public function bench_drop_right_10_on_1k() : void
     {
-        $this->rows->dropRight(1000);
+        $this->rows1k->dropRight(100);
     }
 
-    public function bench_entries_on_10k() : void
+    public function bench_entries_on_1k() : void
     {
-        foreach ($this->rows->entries() as $entries) {
+        foreach ($this->rows1k->entries() as $entries) {
 
         }
     }
 
-    public function bench_filter_on_10k() : void
+    public function bench_filter_on_1k() : void
     {
-        $this->rows->filter(fn (Row $row) : bool => $row->valueOf('random') === true);
+        $this->rows1k->filter(fn (Row $row) : bool => $row->valueOf('order_id') === true);
     }
 
-    public function bench_find_on_10k() : void
+    public function bench_find_on_1k() : void
     {
-        $this->rows->find(fn (Row $row) : bool => $row->valueOf('random') === true);
+        $this->rows1k->find(fn (Row $row) : bool => $row->valueOf('order_id') === true);
     }
 
-    #[Revs(10)]
-    public function bench_find_one_on_10k() : void
+    public function bench_find_one_on_1k() : void
     {
-        $this->rows->findOne(fn (Row $row) : bool => $row->valueOf('random') === true);
+        $this->rows1k->findOne(fn (Row $row) : bool => $row->valueOf('order_id') === true);
     }
 
-    #[Revs(10)]
-    public function bench_first_on_10k() : void
+    public function bench_first_on_1k() : void
     {
-        $this->rows->first();
+        $this->rows1k->first();
     }
 
-    public function bench_flat_map_on_1k() : void
+    public function bench_merge_100_on_1k() : void
     {
-        $this->reducedRows->flatMap(fn (Row $row) : array => [
-            /** @phpstan-ignore-next-line */
-            $row->add(string_entry('name', $row->valueOf('id') . '-name-01')),
-            /** @phpstan-ignore-next-line */
-            $row->add(string_entry('name', $row->valueOf('id') . '-name-02')),
-        ]);
+        $this->rows1k->merge($this->rows100);
     }
 
-    public function bench_map_on_10k() : void
+    public function bench_partition_by_on_1k() : void
     {
-        $this->rows->map(fn (Row $row) : Row => $row->rename('random', 'whatever'));
-    }
-
-    public function bench_merge_1k_on_10k() : void
-    {
-        $this->rows->merge($this->reducedRows);
-    }
-
-    public function bench_partition_by_on_10k() : void
-    {
-        $this->rows->partitionBy(ref('from'));
-    }
-
-    public function bench_remove_on_10k() : void
-    {
-        $this->rows->remove(1001);
-    }
-
-    public function bench_schema_on_10k_identical_rows() : void
-    {
-        $this->rows->schema();
-    }
-
-    public function bench_schema_on_1k_complex_identical_rows() : void
-    {
-        $this->complexRows->schema();
+        $this->rows1k->partitionBy(ref('order_id'));
     }
 
     public function bench_schema_on_1k_identical_rows() : void
     {
-        $this->reducedRows->schema();
-    }
-
-    public function bench_schema_on_1k_mixed_schema_rows() : void
-    {
-        $this->mixedSchemaRows->schema();
+        $this->rows->schema();
     }
 
     public function bench_sort_asc_on_1k() : void
     {
-        $this->reducedRows->sortAscending(ref('random'));
+        $this->rows1k->sortAscending(ref('order_id'));
     }
 
     public function bench_sort_by_on_1k() : void
     {
-        $this->reducedRows->sortBy(ref('random'));
+        $this->rows1k->sortBy(ref('order_id'));
     }
 
     public function bench_sort_desc_on_1k() : void
     {
-        $this->reducedRows->sortDescending(ref('random'));
+        $this->rows1k->sortDescending(ref('order_id'));
     }
 
     public function bench_sort_entries_on_1k() : void
     {
-        $this->reducedRows->sortEntries();
-    }
-
-    public function bench_sort_on_1k() : void
-    {
-        /** @phpstan-ignore-next-line */
-        $this->reducedRows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('random') <=> $nextRow->valueOf('random'));
-    }
-
-    #[Revs(10)]
-    public function bench_take_1k_on_10k() : void
-    {
-        $this->rows->take(1000);
-    }
-
-    #[Revs(10)]
-    public function bench_take_right_1k_on_10k() : void
-    {
-        $this->rows->takeRight(1000);
+        $this->rows1k->sortEntries();
     }
 
     public function bench_unique_on_1k() : void
     {
-        $this->rows->unique();
+        $this->rows1k->unique();
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\Parquet\{to_parquet};
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\{FlowContext, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;

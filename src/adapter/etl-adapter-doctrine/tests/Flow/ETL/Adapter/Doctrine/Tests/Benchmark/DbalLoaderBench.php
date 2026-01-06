@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_schema_table, to_dbal_table_insert};
-use function Flow\ETL\DSL\{flow_context};
+use function Flow\ETL\DSL\flow_context;
 use Doctrine\DBAL\{Connection, DriverManager};
 use Doctrine\DBAL\Tools\DsnParser;
 use Flow\ETL\{FlowContext, Rows};

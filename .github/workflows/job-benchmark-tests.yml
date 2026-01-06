@@ -55,11 +55,11 @@ jobs:
       - name: "Execute benchmarks"
         id: init_comment
         run: |
-          composer test:benchmark:extractor -- --ref=1.x --progress=none --iterations=3 > ./var/phpbench/extractor.txt
-          composer test:benchmark:transformer -- --ref=1.x --progress=none --iterations=3 > ./var/phpbench/transformer.txt
-          composer test:benchmark:loader -- --ref=1.x --progress=none --iterations=3 > ./var/phpbench/loader.txt
-          composer test:benchmark:building_blocks -- --ref=1.x --progress=none --iterations=3 > ./var/phpbench/building_blocks.txt
-          composer test:benchmark:parquet-library -- --ref=1.x --progress=none --iterations=3 > ./var/phpbench/parquet.txt
+          composer test:benchmark:extractor -- --ref=1.x --progress=none > ./var/phpbench/extractor.txt
+          composer test:benchmark:transformer -- --ref=1.x --progress=none > ./var/phpbench/transformer.txt
+          composer test:benchmark:loader -- --ref=1.x --progress=none > ./var/phpbench/loader.txt
+          composer test:benchmark:building_blocks -- --ref=1.x --progress=none > ./var/phpbench/building_blocks.txt
+          composer test:benchmark:parquet-library -- --ref=1.x --progress=none > ./var/phpbench/parquet.txt
 
           # Build the summary file
           {

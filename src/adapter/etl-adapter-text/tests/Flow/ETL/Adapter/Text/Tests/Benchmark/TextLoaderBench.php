@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\Text\{to_text};
+use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\{FlowContext, Row, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
