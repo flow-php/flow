@@ -60,7 +60,7 @@ final readonly class SqliteDialect implements Dialect
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $options->conflictColumns),
                 \count($options->updateColumns)
-                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns())
+                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
@@ -82,7 +82,7 @@ final readonly class SqliteDialect implements Dialect
         );
     }
 
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $updateOptions = null) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
     {
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
@@ -105,10 +105,18 @@ final readonly class SqliteDialect implements Dialect
     /**
      * @param array<string> $updateColumns
      */
-    private function updateSelectedColumns(array $updateColumns, Columns $columns) : string
+    private function updateSelectedColumns(array $updateColumns, Columns $columns, string $tableName, ?bool $preserveExistingValues = null) : string
     {
         return [] !== $updateColumns
-            ? \implode(',', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}", $updateColumns))
+            ? \implode(',', \array_map(function (string $column) use ($tableName, $preserveExistingValues) : string {
+                $clause = "{$this->platform->quoteIdentifier($column)} = ";
+
+                if (true === $preserveExistingValues) {
+                    return $clause . "COALESCE({$this->platform->quoteIdentifier('excluded.' . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})";
+                }
+
+                return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
+            }, $updateColumns))
             : $this->updateAllColumns($columns);
     }
 }

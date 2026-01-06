@@ -204,6 +204,56 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
         );
     }
 
+    public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns_and_preserve_existing_values() : void
+    {
+        $this->databaseContext->createTable(
+            (new Table(
+                $table = 'flow_doctrine_bulk_test',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => false, 'length' => 255]),
+                    new Column('description', Type::getType(Types::STRING), ['notnull' => false, 'length' => 255]),
+                    new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
+                ],
+            ))
+                ->setPrimaryKey(['id'])
+        );
+        Bulk::create()->insert(
+            $this->databaseContext->connection(),
+            $table,
+            new BulkData([
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => false],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
+            ])
+        );
+
+        Bulk::create()->insert(
+            $this->databaseContext->connection(),
+            $table,
+            new BulkData([
+                ['id' => 2, 'name' => 'New Name Two', 'description' => null, 'active' => true],
+                ['id' => 3, 'name' => null, 'description' => 'DESCRIPTION', 'active' => true],
+            ]),
+            PostgreSQLInsertOptions::fromArray([
+                'conflict_columns' => ['id'],
+                'update_columns' => ['name', 'description'],
+                'preserve_existing_values' => true,
+            ])
+        );
+
+        self::assertEquals(3, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'Description Two', 'active' => false],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'DESCRIPTION', 'active' => true],
+            ],
+            $this->databaseContext->selectAll($table)
+        );
+    }
+
     public function test_inserts_new_rows_or_updates_already_existed_based_on_primary_key() : void
     {
         $this->databaseContext->createTable(
