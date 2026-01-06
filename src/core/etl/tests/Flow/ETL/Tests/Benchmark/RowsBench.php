@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
-use function Flow\ETL\DSL\{ref};
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\{Row, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\{BeforeMethods, Groups};
 
