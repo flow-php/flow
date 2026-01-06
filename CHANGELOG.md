@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-01-06
 
 ### Added
+- [#2130](https://github.com/flow-php/flow/pull/2130) - **Allow preserving existing values during DBAL upsert** - [@stloyd](https://github.com/stloyd)
 - [#2129](https://github.com/flow-php/flow/pull/2129) - **Schema::isSame to use it for early exit merge operation when schema is the same** - [@norberttech](https://github.com/norberttech)
 - [#2129](https://github.com/flow-php/flow/pull/2129) - **TypesMap::flowRowTypes() method for Entry-based type detection in DbalLoader** - [@norberttech](https://github.com/norberttech)
 - [#2129](https://github.com/flow-php/flow/pull/2129) - **EnumType to TypesMap FLOW_TYPES mapping (maps to DBAL StringType)** - [@norberttech](https://github.com/norberttech)
