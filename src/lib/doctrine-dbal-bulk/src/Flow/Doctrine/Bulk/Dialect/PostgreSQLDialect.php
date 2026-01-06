@@ -24,17 +24,6 @@ final readonly class PostgreSQLDialect implements Dialect
     {
         $columns = $bulkData->columns()->all();
 
-        if (count($columns) === 1) {
-            $column = $columns[0];
-
-            return \sprintf(
-                'DELETE FROM %s WHERE %s IN (%s)',
-                $table->name(),
-                $this->platform->quoteIdentifier($column),
-                $bulkData->toSqlPlaceholders()
-            );
-        }
-
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
@@ -67,7 +56,7 @@ final readonly class PostgreSQLDialect implements Dialect
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $options->conflictColumns),
                 \count($options->updateColumns)
-                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns())
+                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
@@ -80,7 +69,7 @@ final readonly class PostgreSQLDialect implements Dialect
                 $bulkData->toSqlPlaceholders(),
                 $options->constraint,
                 \count($options->updateColumns)
-                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns())
+                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
@@ -132,7 +121,7 @@ final readonly class PostgreSQLDialect implements Dialect
             'UPDATE %s as existing_table SET %s FROM (VALUES %s) as excluded (%s) WHERE %s',
             $table->name(),
             \count($options->updateColumns)
-                ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns()->without(...$options->primaryKeyColumns))
+                ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns()->without(...$options->primaryKeyColumns), $table->name(), $options->preserveExistingValues)
                 : $this->updateAllColumns($bulkData->columns()->without(...$options->primaryKeyColumns)),
             $bulkData->toSqlCastedPlaceholders($table),
             \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
@@ -140,11 +129,6 @@ final readonly class PostgreSQLDialect implements Dialect
         );
     }
 
-    /**
-     * @param Columns $columns
-     *
-     * @return string
-     */
     private function updateAllColumns(Columns $columns) : string
     {
         /**
@@ -162,8 +146,6 @@ final readonly class PostgreSQLDialect implements Dialect
 
     /**
      * @param array<string> $updateColumns
-     *
-     * @return string
      */
     private function updatedIndexColumns(array $updateColumns) : string
     {
@@ -172,11 +154,8 @@ final readonly class PostgreSQLDialect implements Dialect
 
     /**
      * @param array<string> $updateColumns
-     * @param Columns $columns
-     *
-     * @return string
      */
-    private function updatedSelectedColumns(array $updateColumns, Columns $columns) : string
+    private function updatedSelectedColumns(array $updateColumns, Columns $columns, string $tableName, ?bool $preserveExistingValues = null) : string
     {
         /**
          * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
@@ -184,7 +163,15 @@ final readonly class PostgreSQLDialect implements Dialect
          * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
          */
         return \count($updateColumns)
-            ? \implode(',', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}", $updateColumns))
+            ? \implode(',', \array_map(function (string $column) use ($tableName, $preserveExistingValues) : string {
+                $clause = "{$this->platform->quoteIdentifier($column)} = ";
+
+                if (true === $preserveExistingValues) {
+                    return $clause . "COALESCE({$this->platform->quoteIdentifier('excluded.' . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})";
+                }
+
+                return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
+            }, $updateColumns))
             : $this->updateAllColumns($columns);
     }
 }

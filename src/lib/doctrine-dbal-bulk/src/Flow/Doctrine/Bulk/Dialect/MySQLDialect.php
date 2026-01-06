@@ -24,17 +24,6 @@ final readonly class MySQLDialect implements Dialect
     {
         $columns = $bulkData->columns()->all();
 
-        if (count($columns) === 1) {
-            $column = $columns[0];
-
-            return \sprintf(
-                'DELETE FROM %s WHERE %s IN (%s)',
-                $table->name(),
-                $this->platform->quoteIdentifier($column),
-                $bulkData->toSqlPlaceholders()
-            );
-        }
-
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
@@ -78,7 +67,7 @@ final readonly class MySQLDialect implements Dialect
                 \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \count($options->updateColumns)
-                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns())
+                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
@@ -129,10 +118,18 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
-    private function updateSelectedColumns(array $updateColumns, Columns $columns) : string
+    private function updateSelectedColumns(array $updateColumns, Columns $columns, string $tableName, ?bool $preserveExistingValues = null) : string
     {
         return \count($updateColumns)
-            ? \implode(',', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = VALUES({$this->platform->quoteIdentifier($column)})", $updateColumns))
+            ? \implode(',', \array_map(function (string $column) use ($tableName, $preserveExistingValues) : string {
+                $clause = "{$this->platform->quoteIdentifier($column)} = ";
+
+                if (true === $preserveExistingValues) {
+                    return $clause . "COALESCE(VALUES({$this->platform->quoteIdentifier($column)}), {$tableName}.{$this->platform->quoteIdentifier($column)})";
+                }
+
+                return $clause . "VALUES({$this->platform->quoteIdentifier($column)})";
+            }, $updateColumns))
             : $this->updateAllColumns($columns);
     }
 }

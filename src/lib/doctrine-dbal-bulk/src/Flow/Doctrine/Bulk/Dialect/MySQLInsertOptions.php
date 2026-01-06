@@ -18,6 +18,7 @@ final readonly class MySQLInsertOptions implements InsertOptions
         public ?bool $skipConflicts = null,
         public ?bool $upsert = null,
         public array $updateColumns = [],
+        public ?bool $preserveExistingValues = null,
     ) {
     }
 
@@ -29,6 +30,7 @@ final readonly class MySQLInsertOptions implements InsertOptions
                 'skip_conflicts' => type_optional(type_boolean()),
                 'upsert' => type_optional(type_boolean()),
                 'update_columns' => type_list(type_string()),
+                'preserve_existing_values' => type_optional(type_boolean()),
             ]
         )->assert($options);
 
@@ -36,6 +38,7 @@ final readonly class MySQLInsertOptions implements InsertOptions
             $options['skip_conflicts'] ?? null,
             $options['upsert'] ?? null,
             $options['update_columns'] ?? [],
+            $options['preserve_existing_values'] ?? null,
         );
     }
 
@@ -52,9 +55,9 @@ final readonly class MySQLInsertOptions implements InsertOptions
     /**
      * @param array<string> $updateColumns
      */
-    public function updateColumns(array $updateColumns) : self
+    public function updateColumns(array $updateColumns, ?bool $preserveExistingValues = null) : self
     {
-        return new self($this->skipConflicts, $this->upsert, $updateColumns);
+        return new self($this->skipConflicts, $this->upsert, $updateColumns, $preserveExistingValues);
     }
 
     public function upsert(bool $upsert = true) : self

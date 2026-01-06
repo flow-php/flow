@@ -18,6 +18,7 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
         public ?string $constraint = null,
         public array $conflictColumns = [],
         public array $updateColumns = [],
+        public ?bool $preserveExistingValues = null,
     ) {
     }
 
@@ -27,11 +28,13 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
     public static function fromArray(array $options) : InsertOptions
     {
         $options = type_structure(
-            optional_elements: [
+            [],
+            [
                 'skip_conflicts' => type_optional(type_boolean()),
                 'constraint' => type_optional(type_string()),
                 'conflict_columns' => type_list(type_string()),
                 'update_columns' => type_list(type_string()),
+                'preserve_existing_values' => type_optional(type_boolean()),
             ]
         )->assert($options);
 
@@ -40,6 +43,7 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
             $options['constraint'] ?? null,
             $options['conflict_columns'] ?? [],
             $options['update_columns'] ?? [],
+            $options['preserve_existing_values'] ?? null,
         );
     }
 
@@ -69,8 +73,8 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
     /**
      * @param array<string> $updateColumns
      */
-    public function updateColumns(array $updateColumns) : self
+    public function updateColumns(array $updateColumns, ?bool $preserveExistingValues = null) : self
     {
-        return new self($this->skipConflicts, $this->constraint, $this->conflictColumns, $updateColumns);
+        return new self($this->skipConflicts, $this->constraint, $this->conflictColumns, $updateColumns, $preserveExistingValues);
     }
 }
