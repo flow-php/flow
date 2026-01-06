@@ -200,7 +200,6 @@ function dbal_from_query(
  * In order to control the size of the single insert, use DataFrame::chunkSize() method just before calling DataFrame::load().
  *
  * @param array<string, mixed>|Connection $connection
- * @param null|Schema $schema - optional pre-defined schema for type detection (improves performance)
  *
  * @throws InvalidArgumentException
  */
@@ -210,17 +209,10 @@ function to_dbal_table_insert(
     array|Connection $connection,
     string $table,
     ?InsertOptions $options = null,
-    ?Schema $schema = null,
 ) : DbalLoader {
-    $loader = \is_array($connection)
+    return \is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options);
-
-    if ($schema !== null) {
-        $loader->withSchema($schema);
-    }
-
-    return $loader;
 }
 
 /**
@@ -229,7 +221,6 @@ function to_dbal_table_insert(
  *  In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
  *
  * @param array<string, mixed>|Connection $connection
- * @param null|Schema $schema - optional pre-defined schema for type detection (improves performance)
  *
  * @throws InvalidArgumentException
  */
@@ -238,17 +229,10 @@ function to_dbal_table_update(
     array|Connection $connection,
     string $table,
     ?UpdateOptions $options = null,
-    ?Schema $schema = null,
 ) : DbalLoader {
-    $loader = \is_array($connection)
+    return \is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperation('update')->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options, 'update');
-
-    if ($schema !== null) {
-        $loader->withSchema($schema);
-    }
-
-    return $loader;
 }
 
 /**

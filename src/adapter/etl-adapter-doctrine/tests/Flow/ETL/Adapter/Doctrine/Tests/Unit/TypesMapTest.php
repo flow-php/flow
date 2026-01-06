@@ -20,7 +20,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
 use PHPUnit\Framework\TestCase;
 
 final class TypesMapTest extends TestCase
@@ -188,6 +188,7 @@ final class TypesMapTest extends TestCase
             XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
             HTMLType::class => \Doctrine\DBAL\Types\StringType::class,
             HTMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
+            EnumType::class => \Doctrine\DBAL\Types\StringType::class,
             ListType::class => DbalJsonType::class,
             MapType::class => DbalJsonType::class,
             StructureType::class => DbalJsonType::class,

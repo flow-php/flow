@@ -80,33 +80,13 @@ data_frame()
 // Types are automatically detected from the Flow Schema
 ```
 
-#### Manual Type Override
+#### Custom Types Map
 
-You can override specific column types for fine-grained control:
-
-```php
-use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-
-data_frame()
-    ->read(from_())
-    ->write(to_dbal_table_insert($connection, 'users')
-        ->withColumnTypes([
-            'id' => Type::getType(Types::INTEGER),
-            'email' => Type::getType(Types::STRING),
-            'created_at' => Type::getType(Types::DATETIME_IMMUTABLE),
-        ]))
-    ->run();
-```
-
-#### Custom Type Detector
-
-For advanced scenarios, you can provide a custom type detector with your own type mapping:
+For advanced scenarios, you can provide a custom type mapping to control how Flow types are converted to DBAL types:
 
 ```php
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
-use Flow\ETL\Adapter\Doctrine\{DbalTypesDetector, TypesMap};
+use Flow\ETL\Adapter\Doctrine\TypesMap;
 use Flow\Types\Type\Native\StringType;
 use Doctrine\DBAL\Types\TextType;
 
@@ -117,7 +97,7 @@ $customTypesMap = new TypesMap([
 data_frame()
     ->read(from_())
     ->write(to_dbal_table_insert($connection, 'users')
-        ->withTypesDetector(new DbalTypesDetector($customTypesMap)))
+        ->withTypesMap($customTypesMap))
     ->run();
 ```
 

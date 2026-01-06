@@ -5,19 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\{Connection, DriverManager};
-use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\{Bulk, BulkData, InsertOptions, UpdateOptions};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Loader, Rows, Schema};
+use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class DbalLoader implements Loader
 {
     private ?Bulk $bulk = null;
-
-    /**
-     * @var null|array<string, Type>
-     */
-    private ?array $columnTypes = null;
 
     private ?Connection $connection = null;
 
@@ -25,9 +19,7 @@ final class DbalLoader implements Loader
 
     private InsertOptions|UpdateOptions|null $operationOptions = null;
 
-    private ?Schema $schema = null;
-
-    private ?DbalTypesDetector $typesDetector = null;
+    private ?TypesMap $typesMap = null;
 
     /**
      * @param array<string, mixed> $connectionParams
@@ -67,26 +59,19 @@ final class DbalLoader implements Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $normalizedData = (new RowsNormalizer())->normalize($rows->sortEntries());
+        if ($rows->count() === 0) {
+            return;
+        }
+
+        $sortedRows = $rows->sortEntries();
+        $normalizedData = (new RowsNormalizer())->normalize($sortedRows);
 
         $this->bulk()->{$this->operation}(
             $this->connection(),
             $this->tableName,
-            new BulkData($normalizedData, $this->typesDetector()->convert($this->schema ?? $rows->schema(), $this->columnTypes ?? [])),
+            new BulkData($normalizedData, $this->typesMap()->flowRowTypes($sortedRows->first())),
             $this->operationOptions
         );
-    }
-
-    /**
-     * Override types taken from Flow Schema with explicitly provided DBAL types.
-     *
-     * @param array<string, Type> $types Column name => DBAL Type instance
-     */
-    public function withColumnTypes(array $types) : self
-    {
-        $this->columnTypes = $types;
-
-        return $this;
     }
 
     /**
@@ -111,22 +96,11 @@ final class DbalLoader implements Loader
     }
 
     /**
-     * Set a pre-defined schema for type detection instead of computing it from rows.
-     * This can significantly improve performance when the schema is known upfront.
+     * Set custom types map for Flow Type to DBAL Type conversion.
      */
-    public function withSchema(Schema $schema) : self
+    public function withTypesMap(TypesMap $typesMap) : self
     {
-        $this->schema = $schema;
-
-        return $this;
-    }
-
-    /**
-     * Set custom SchemaToTypesConverter with custom TypesMap.
-     */
-    public function withTypesDetector(DbalTypesDetector $detector) : self
-    {
-        $this->typesDetector = $detector;
+        $this->typesMap = $typesMap;
 
         return $this;
     }
@@ -150,14 +124,8 @@ final class DbalLoader implements Loader
         return $this->connection;
     }
 
-    private function typesDetector() : DbalTypesDetector
+    private function typesMap() : TypesMap
     {
-        if ($this->typesDetector !== null) {
-            return $this->typesDetector;
-        }
-
-        $this->typesDetector = new DbalTypesDetector();
-
-        return $this->typesDetector;
+        return $this->typesMap ??= new TypesMap([]);
     }
 }
