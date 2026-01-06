@@ -23,17 +23,6 @@ final readonly class SqliteDialect implements Dialect
     {
         $columns = $bulkData->columns()->all();
 
-        if (count($columns) === 1) {
-            $column = $columns[0];
-
-            return \sprintf(
-                'DELETE FROM %s WHERE %s IN (%s)',
-                $table->name(),
-                $this->platform->quoteIdentifier($column),
-                $bulkData->toSqlPlaceholders()
-            );
-        }
-
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
