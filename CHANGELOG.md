@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-06
+## [0.30.0] - 2026-01-06
 
 ### Added
 - [#2130](https://github.com/flow-php/flow/pull/2130) - **Allow preserving existing values during DBAL upsert** - [@stloyd](https://github.com/stloyd)
