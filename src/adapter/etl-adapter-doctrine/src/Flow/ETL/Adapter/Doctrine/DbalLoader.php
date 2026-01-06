@@ -8,7 +8,7 @@ use Doctrine\DBAL\{Connection, DriverManager};
 use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\{Bulk, BulkData, InsertOptions, UpdateOptions};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\{FlowContext, Loader, Rows, Schema};
 
 final class DbalLoader implements Loader
 {
@@ -24,6 +24,8 @@ final class DbalLoader implements Loader
     private string $operation = 'insert';
 
     private InsertOptions|UpdateOptions|null $operationOptions = null;
+
+    private ?Schema $schema = null;
 
     private ?DbalTypesDetector $typesDetector = null;
 
@@ -70,7 +72,7 @@ final class DbalLoader implements Loader
         $this->bulk()->{$this->operation}(
             $this->connection(),
             $this->tableName,
-            new BulkData($normalizedData, $this->typesDetector()->convert($rows->schema(), $this->columnTypes ?? [])),
+            new BulkData($normalizedData, $this->typesDetector()->convert($this->schema ?? $rows->schema(), $this->columnTypes ?? [])),
             $this->operationOptions
         );
     }
@@ -104,6 +106,17 @@ final class DbalLoader implements Loader
     public function withOperationOptions(InsertOptions|UpdateOptions|null $operationOptions) : self
     {
         $this->operationOptions = $operationOptions;
+
+        return $this;
+    }
+
+    /**
+     * Set a pre-defined schema for type detection instead of computing it from rows.
+     * This can significantly improve performance when the schema is known upfront.
+     */
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

@@ -63,4 +63,13 @@ final class DbalLoaderBench
             ->write(to_dbal_table_insert($this->connection, self::TABLE_NAME))
             ->run();
     }
+
+    #[BeforeMethods('setUp')]
+    public function bench_load_10k_with_schema() : void
+    {
+        df()
+            ->read(new FakeStaticOrdersExtractor(10_000))
+            ->write(to_dbal_table_insert($this->connection, self::TABLE_NAME, schema: FakeStaticOrdersExtractor::schema()))
+            ->run();
+    }
 }

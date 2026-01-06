@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, schema, str_schema};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\DBAL\Types\{Type, Types};
@@ -135,6 +136,79 @@ final class DbalLoaderTest extends IntegrationTestCase
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+            ],
+            $this->pgsqlDatabaseContext->selectAll($table)
+        );
+    }
+
+    public function test_loader_with_predefined_schema() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $flowSchema = schema(
+            int_schema('id'),
+            str_schema('name'),
+            str_schema('description')
+        );
+
+        $loader = (new DbalLoader($table, $this->postgresqlConnectionParams()))
+            ->withSchema($flowSchema);
+
+        (data_frame())
+            ->read(from_array([
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+            ]))
+            ->load($loader)
+            ->run();
+
+        self::assertEquals(2, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+            ],
+            $this->pgsqlDatabaseContext->selectAll($table)
+        );
+    }
+
+    public function test_to_dbal_table_insert_with_schema() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $flowSchema = schema(
+            int_schema('id'),
+            str_schema('name')
+        );
+
+        (data_frame())
+            ->read(from_array([
+                ['id' => 1, 'name' => 'Name One'],
+                ['id' => 2, 'name' => 'Name Two'],
+            ]))
+            ->load(to_dbal_table_insert($this->postgresqlConnectionParams(), $table, schema: $flowSchema))
+            ->run();
+
+        self::assertEquals(2, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One'],
+                ['id' => 2, 'name' => 'Name Two'],
             ],
             $this->pgsqlDatabaseContext->selectAll($table)
         );
