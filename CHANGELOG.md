@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-01-03
+## [Unreleased] - 2026-01-06
 
 ### Added
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **Schema::isSame to use it for early exit merge operation when schema is the same** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **TypesMap::flowRowTypes() method for Entry-based type detection in DbalLoader** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **EnumType to TypesMap FLOW_TYPES mapping (maps to DBAL StringType)** - [@norberttech](https://github.com/norberttech)
 - [#2122](https://github.com/flow-php/flow/pull/2122) - **StreamClosure interface for HTTP streaming completion callbacks** - [@norberttech](https://github.com/norberttech)
 - [#2122](https://github.com/flow-php/flow/pull/2122) - **http_on_complete() DSL function to create stream closures from callables** - [@norberttech](https://github.com/norberttech)
 - [#2122](https://github.com/flow-php/flow/pull/2122) - **DataStream::onComplete() method to set post-streaming callbacks** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +37,13 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **Run benchamrks on CI/CD synchronously** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **Improve loaders benchmarks performance** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **Increase benchmarks iterations on CI/CD to 3** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **Entry type now is directly extracted from Definition** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **DbalLoader now uses Entry-based type detection instead of Schema-based detection for better performance** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **Replaced DbalLoader::withTypesDetector() with withTypesMap() for simpler API** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **DbalLoader now skips processing when rows are empty** - [@norberttech](https://github.com/norberttech)
 - [#2122](https://github.com/flow-php/flow/pull/2122) - **DataFrame::run() now respects Analyze configured at Config level when not explicitly passed** - [@norberttech](https://github.com/norberttech)
 - [#2122](https://github.com/flow-php/flow/pull/2122) - **DataFrame::run() refactored to use ReportCollector for cleaner code and better static analysis** - [@norberttech](https://github.com/norberttech)
 - [#2122](https://github.com/flow-php/flow/pull/2122) - **FlowStreamedResponse now accepts optional StreamClosure and Config parameters** - [@norberttech](https://github.com/norberttech)
@@ -64,6 +74,8 @@
 - [58d619](https://github.com/flow-php/flow/commit/58d619c9f9d0c5d293dcf36011a8098bdb271e74) - **supported PHP versions in introduction.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **DbalTypesDetector class - functionality consolidated into TypesMap** - [@norberttech](https://github.com/norberttech)
+- [#2129](https://github.com/flow-php/flow/pull/2129) - **DbalLoader::withColumnTypes() method - use withTypesMap() instead** - [@norberttech](https://github.com/norberttech)
 - [#2112](https://github.com/flow-php/flow/pull/2112) - **Remove old OpenSpout code fallback** - [@stloyd](https://github.com/stloyd)
 - [#2095](https://github.com/flow-php/flow/pull/2095) - **symfony/polyfill-83 dependency** - [@norberttech](https://github.com/norberttech)
 
