@@ -38,6 +38,7 @@
 - [#2088](https://github.com/flow-php/flow/pull/2088) - **expose Statements through ParsedQuery object** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [a585f7](https://github.com/flow-php/flow/commit/a585f79adfd425e9f8ef09d44cac03effcd2149c) - **chore: update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2129](https://github.com/flow-php/flow/pull/2129) - **Run benchamrks on CI/CD synchronously** - [@norberttech](https://github.com/norberttech)
 - [#2129](https://github.com/flow-php/flow/pull/2129) - **Improve loaders benchmarks performance** - [@norberttech](https://github.com/norberttech)
 - [#2129](https://github.com/flow-php/flow/pull/2129) - **Increase benchmarks iterations on CI/CD to 3** - [@norberttech](https://github.com/norberttech)
