@@ -9,6 +9,83 @@ use PHPUnit\Framework\TestCase;
 
 final class PlanSummaryTest extends TestCase
 {
+    public function test_from_array_and_normalize_are_inverse() : void
+    {
+        $original = new PlanSummary(
+            totalCost: 150.5,
+            executionTime: 25.0,
+            planningTime: 0.5,
+            nodeCount: 5,
+            sequentialScanCount: 2,
+            indexScanCount: 3,
+            hasExternalSort: true,
+            hasDiskReads: true,
+            overallCacheHitRatio: 0.95,
+            memoryUsed: 1024,
+            memoryPeak: 2048,
+            hashJoinCount: 1,
+            nestedLoopCount: 2,
+            mergeJoinCount: 0,
+            totalSharedHit: 100,
+            totalSharedRead: 5,
+            hasTempSpill: false,
+            estimatedRows: 1000,
+            actualRows: 950,
+        );
+
+        $normalized = $original->normalize();
+        $restored = PlanSummary::fromArray($normalized);
+
+        self::assertEquals($original, $restored);
+    }
+
+    public function test_from_array_creates_instance() : void
+    {
+        $data = [
+            'total_cost' => 150.5,
+            'execution_time' => 25.0,
+            'planning_time' => 0.5,
+            'node_count' => 5,
+            'sequential_scan_count' => 2,
+            'index_scan_count' => 3,
+            'has_external_sort' => true,
+            'has_disk_reads' => true,
+            'overall_cache_hit_ratio' => 0.95,
+            'memory_used' => 1024,
+            'memory_peak' => 2048,
+            'hash_join_count' => 1,
+            'nested_loop_count' => 2,
+            'merge_join_count' => 0,
+            'total_shared_hit' => 100,
+            'total_shared_read' => 5,
+            'has_temp_spill' => false,
+            'estimated_rows' => 1000,
+            'actual_rows' => 950,
+        ];
+
+        $summary = PlanSummary::fromArray($data);
+
+        self::assertSame(150.5, $summary->totalCost);
+        self::assertSame(25.0, $summary->executionTime);
+        self::assertSame(0.5, $summary->planningTime);
+        self::assertSame(5, $summary->nodeCount);
+        self::assertSame(2, $summary->sequentialScanCount);
+        self::assertSame(3, $summary->indexScanCount);
+        self::assertTrue($summary->hasExternalSort);
+        self::assertTrue($summary->hasDiskReads);
+        self::assertSame(0.95, $summary->overallCacheHitRatio);
+        self::assertSame(1024, $summary->memoryUsed);
+        self::assertSame(2048, $summary->memoryPeak);
+        self::assertSame(1, $summary->hashJoinCount);
+        self::assertSame(2, $summary->nestedLoopCount);
+        self::assertSame(0, $summary->mergeJoinCount);
+        self::assertSame(100, $summary->totalSharedHit);
+        self::assertSame(5, $summary->totalSharedRead);
+        self::assertFalse($summary->hasTempSpill);
+        self::assertSame(1000, $summary->estimatedRows);
+        self::assertSame(950, $summary->actualRows);
+    }
+
     public function test_normalize_returns_all_fields() : void
     {
         $summary = new PlanSummary(

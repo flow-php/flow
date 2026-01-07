@@ -1,0 +1,320 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\PostgreSql\Tests\Integration\Client;
+
+use function Flow\PostgreSql\DSL\{
+    col,
+    column,
+    create,
+    data_type_integer,
+    data_type_text,
+    eq,
+    insert,
+    literal,
+    param,
+    select,
+    sql_explain_config,
+    star,
+    table
+};
+use Flow\PostgreSql\AST\Transformers\ExplainConfig;
+use Flow\PostgreSql\Explain\Analyzer\{PlanAnalyzer, PlanSummary};
+use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+final class PgSqlExplainTest extends ClientTestCase
+{
+    /**
+     * @return \Generator<string, array{ExplainConfig, array{
+     *     hasExecutionTime: bool,
+     *     hasPlanningTime: bool,
+     *     hasActualRows: bool,
+     *     hasTiming: bool,
+     *     hasBuffers: bool
+     * }}>
+     */
+    public static function provideExplainConfigCombinations() : \Generator
+    {
+        yield 'forAnalysis - full execution data' => [
+            ExplainConfig::forAnalysis(),
+            [
+                'hasExecutionTime' => true,
+                'hasPlanningTime' => true,
+                'hasActualRows' => true,
+                'hasTiming' => true,
+                'hasBuffers' => true,
+            ],
+        ];
+
+        yield 'forEstimate - no execution data' => [
+            ExplainConfig::forEstimate(),
+            [
+                'hasExecutionTime' => false,
+                'hasPlanningTime' => false,
+                'hasActualRows' => false,
+                'hasTiming' => false,
+                'hasBuffers' => false,
+            ],
+        ];
+
+        yield 'analyze with no buffers' => [
+            ExplainConfig::forAnalysis()->withoutBuffers(),
+            [
+                'hasExecutionTime' => true,
+                'hasPlanningTime' => true,
+                'hasActualRows' => true,
+                'hasTiming' => true,
+                'hasBuffers' => false,
+            ],
+        ];
+
+        yield 'analyze with no timing' => [
+            ExplainConfig::forAnalysis()->withoutTiming(),
+            [
+                'hasExecutionTime' => true,
+                'hasPlanningTime' => true,
+                'hasActualRows' => true,
+                'hasTiming' => false,
+                'hasBuffers' => true,
+            ],
+        ];
+
+        yield 'analyze with verbose' => [
+            ExplainConfig::forAnalysis()->withVerbose(),
+            [
+                'hasExecutionTime' => true,
+                'hasPlanningTime' => true,
+                'hasActualRows' => true,
+                'hasTiming' => true,
+                'hasBuffers' => true,
+            ],
+        ];
+
+        yield 'analyze without costs' => [
+            ExplainConfig::forAnalysis()->withoutCosts(),
+            [
+                'hasExecutionTime' => true,
+                'hasPlanningTime' => true,
+                'hasActualRows' => true,
+                'hasTiming' => true,
+                'hasBuffers' => true,
+            ],
+        ];
+
+        yield 'analyze without summary' => [
+            ExplainConfig::forAnalysis()->withoutSummary(),
+            [
+                'hasExecutionTime' => false,
+                'hasPlanningTime' => false,
+                'hasActualRows' => true,
+                'hasTiming' => true,
+                'hasBuffers' => true,
+            ],
+        ];
+    }
+
+    public function test_explain_for_estimate() : void
+    {
+        $plan = $this->client->explain(
+            select(literal(1)),
+            config: ExplainConfig::forEstimate()
+        );
+
+        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        self::assertNull($plan->executionTime());
+        self::assertNull($plan->planningTime());
+    }
+
+    public function test_explain_returns_plan_for_select_query() : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain')
+                ->column(column('id', data_type_integer()))
+                ->column(column('name', data_type_text()))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain'))
+        );
+
+        self::assertNotNull($plan->executionTime());
+        self::assertNotNull($plan->planningTime());
+    }
+
+    public function test_explain_returns_plan_with_parameters() : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain_params')
+                ->column(column('id', data_type_integer()))
+                ->column(column('name', data_type_text()))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain_params'))->where(eq(col('id'), param(1))),
+            ['42']
+        );
+
+        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+    }
+
+    public function test_explain_returns_plan_with_raw_sql() : void
+    {
+        $plan = $this->client->explain(
+            'SELECT $1::int + $2::int',
+            ['10', '32']
+        );
+
+        self::assertSame(PlanNodeType::RESULT, $plan->rootNode()->nodeType());
+    }
+
+    /**
+     * @param array{
+     *     hasExecutionTime: bool,
+     *     hasPlanningTime: bool,
+     *     hasActualRows: bool,
+     *     hasTiming: bool,
+     *     hasBuffers: bool
+     * } $expected
+     */
+    #[DataProvider('provideExplainConfigCombinations')]
+    public function test_explain_with_config_combinations(ExplainConfig $config, array $expected) : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain_combinations')
+                ->column(column('id', data_type_integer()))
+                ->column(column('name', data_type_text()))
+        );
+        $this->client->execute(
+            insert()->into('test_explain_combinations')->columns('id', 'name')
+                ->values(literal(1), literal('test'))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain_combinations')),
+            config: $config
+        );
+
+        if ($expected['hasExecutionTime']) {
+            self::assertNotNull($plan->executionTime(), 'Expected executionTime to be present');
+        } else {
+            self::assertNull($plan->executionTime(), 'Expected executionTime to be null');
+        }
+
+        if ($expected['hasPlanningTime']) {
+            self::assertNotNull($plan->planningTime(), 'Expected planningTime to be present');
+        } else {
+            self::assertNull($plan->planningTime(), 'Expected planningTime to be null');
+        }
+
+        if ($expected['hasActualRows']) {
+            self::assertNotNull($plan->rootNode()->actualRows(), 'Expected actualRows to be present');
+        } else {
+            self::assertNull($plan->rootNode()->actualRows(), 'Expected actualRows to be null');
+        }
+
+        if ($expected['hasTiming']) {
+            self::assertNotNull($plan->rootNode()->timing(), 'Expected timing to be present');
+        } else {
+            self::assertNull($plan->rootNode()->timing(), 'Expected timing to be null');
+        }
+
+        if ($expected['hasBuffers']) {
+            self::assertNotNull($plan->rootNode()->buffers(), 'Expected buffers to be present');
+        } else {
+            self::assertNull($plan->rootNode()->buffers(), 'Expected buffers to be null');
+        }
+
+        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+    }
+
+    public function test_explain_with_custom_config() : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_explain_config')
+                ->column(column('id', data_type_integer()))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_explain_config')),
+            config: sql_explain_config()
+        );
+
+        self::assertNotNull($plan->executionTime());
+        self::assertGreaterThanOrEqual(0.0, $plan->rootNode()->cost()->totalCost());
+    }
+
+    public function test_explain_without_analyze() : void
+    {
+        $plan = $this->client->explain(
+            select(literal(1)),
+            config: sql_explain_config(
+                analyze: false,
+                buffers: false,
+                timing: false,
+            )
+        );
+
+        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        self::assertNull($plan->executionTime());
+        self::assertNull($plan->rootNode()->timing());
+    }
+
+    /**
+     * @param array{
+     *     hasExecutionTime: bool,
+     *     hasPlanningTime: bool,
+     *     hasActualRows: bool,
+     *     hasTiming: bool,
+     *     hasBuffers: bool
+     * } $expected
+     */
+    #[DataProvider('provideExplainConfigCombinations')]
+    public function test_plan_summary_with_config_combinations(ExplainConfig $config, array $expected) : void
+    {
+        $this->client->execute(
+            create()->temporaryTable('test_summary_combinations')
+                ->column(column('id', data_type_integer()))
+                ->column(column('name', data_type_text()))
+        );
+        $this->client->execute(
+            insert()->into('test_summary_combinations')->columns('id', 'name')
+                ->values(literal(1), literal('test'))
+        );
+
+        $plan = $this->client->explain(
+            select(star())->from(table('test_summary_combinations')),
+            config: $config
+        );
+
+        $analyzer = new PlanAnalyzer($plan);
+        $summary = $analyzer->summary();
+
+        if ($expected['hasExecutionTime']) {
+            self::assertNotNull($summary->executionTime, 'Expected summary executionTime to be present');
+        } else {
+            self::assertNull($summary->executionTime, 'Expected summary executionTime to be null');
+        }
+
+        if ($expected['hasPlanningTime']) {
+            self::assertNotNull($summary->planningTime, 'Expected summary planningTime to be present');
+        } else {
+            self::assertNull($summary->planningTime, 'Expected summary planningTime to be null');
+        }
+
+        if ($expected['hasActualRows']) {
+            self::assertNotNull($summary->actualRows, 'Expected summary actualRows to be present');
+        } else {
+            self::assertNull($summary->actualRows, 'Expected summary actualRows to be null');
+        }
+
+        self::assertGreaterThanOrEqual(0, $summary->nodeCount);
+        self::assertGreaterThanOrEqual(0, $summary->estimatedRows);
+        self::assertGreaterThanOrEqual(0.0, $summary->totalCost);
+
+        $normalized = $summary->normalize();
+        $restored = PlanSummary::fromArray($normalized);
+        self::assertEquals($summary, $restored);
+    }
+}

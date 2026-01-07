@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
+use Flow\PostgreSql\Exception\InvalidExplainConfigException;
 use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 
 final readonly class ExplainConfig
@@ -20,6 +21,7 @@ final readonly class ExplainConfig
         public bool $wal = false,
         public ExplainFormat $format = ExplainFormat::JSON,
     ) {
+        $this->validate();
     }
 
     public static function forAnalysis() : self
@@ -52,5 +54,326 @@ final readonly class ExplainConfig
             wal: false,
             format: ExplainFormat::JSON,
         );
+    }
+
+    public function withAnalyze() : self
+    {
+        return new self(
+            analyze: true,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withBuffers() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: true,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withCosts() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: true,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withFormat(ExplainFormat $format) : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $format,
+        );
+    }
+
+    public function withMemory() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: true,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutAnalyze() : self
+    {
+        return new self(
+            analyze: false,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: false,
+            timing: false,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: false,
+            format: $this->format,
+        );
+    }
+
+    public function withoutBuffers() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: false,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutCosts() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: false,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutMemory() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: false,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutSettings() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: false,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutSummary() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: false,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutTiming() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: false,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutVerbose() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: false,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withoutWal() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: false,
+            format: $this->format,
+        );
+    }
+
+    public function withSettings() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: true,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withSummary() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: true,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withTiming() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: true,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withVerbose() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: true,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: $this->wal,
+            format: $this->format,
+        );
+    }
+
+    public function withWal() : self
+    {
+        return new self(
+            analyze: $this->analyze,
+            verbose: $this->verbose,
+            costs: $this->costs,
+            buffers: $this->buffers,
+            timing: $this->timing,
+            summary: $this->summary,
+            memory: $this->memory,
+            settings: $this->settings,
+            wal: true,
+            format: $this->format,
+        );
+    }
+
+    private function validate() : void
+    {
+        if (!$this->analyze) {
+            if ($this->buffers) {
+                throw InvalidExplainConfigException::buffersRequiresAnalyze();
+            }
+
+            if ($this->timing) {
+                throw InvalidExplainConfigException::timingRequiresAnalyze();
+            }
+
+            if ($this->wal) {
+                throw InvalidExplainConfigException::walRequiresAnalyze();
+            }
+        }
     }
 }
