@@ -300,6 +300,23 @@ function sql_to_paginated_query(string $sql, int $limit, int $offset = 0) : stri
 }
 
 /**
+ * Transform a SQL query to limit results to a specific number of rows.
+ *
+ * @param string $sql The SQL query to limit
+ * @param int $limit Maximum number of rows to return
+ *
+ * @return string The limited SQL query
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_to_limited_query(string $sql, int $limit) : string
+{
+    $query = (new Parser())->parse($sql);
+    $query->traverse(new PaginationModifier(new PaginationConfig($limit)));
+
+    return $query->deparse();
+}
+
+/**
  * Transform a SQL query into a COUNT query for pagination.
  *
  * Wraps the query in: SELECT COUNT(*) FROM (...) AS _count_subq

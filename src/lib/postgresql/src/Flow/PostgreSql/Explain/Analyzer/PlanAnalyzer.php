@@ -417,6 +417,10 @@ final readonly class PlanAnalyzer
         $hasDiskReads = false;
         $totalSharedHit = 0;
         $totalSharedRead = 0;
+        $hashJoinCount = 0;
+        $nestedLoopCount = 0;
+        $mergeJoinCount = 0;
+        $hasTempSpill = false;
 
         foreach ($nodes as $node) {
             if ($node->isSequentialScan()) {
@@ -431,12 +435,29 @@ final readonly class PlanAnalyzer
                 $hasExternalSort = true;
             }
 
+            if ($node->isHashJoin()) {
+                $hashJoinCount++;
+            }
+
+            if ($node->isNestedLoop()) {
+                $nestedLoopCount++;
+            }
+
+            if ($node->isMergeJoin()) {
+                $mergeJoinCount++;
+            }
+
             $buffers = $node->buffers();
 
             if ($buffers !== null) {
                 if ($buffers->sharedRead() > 0) {
                     $hasDiskReads = true;
                 }
+
+                if ($buffers->hasDiskSpill()) {
+                    $hasTempSpill = true;
+                }
+
                 $totalSharedHit += $buffers->sharedHit();
                 $totalSharedRead += $buffers->sharedRead();
             }
@@ -455,6 +476,16 @@ final readonly class PlanAnalyzer
             hasExternalSort: $hasExternalSort,
             hasDiskReads: $hasDiskReads,
             overallCacheHitRatio: $overallCacheHitRatio,
+            memoryUsed: $this->plan->memoryUsed(),
+            memoryPeak: $this->plan->memoryPeak(),
+            hashJoinCount: $hashJoinCount,
+            nestedLoopCount: $nestedLoopCount,
+            mergeJoinCount: $mergeJoinCount,
+            totalSharedHit: $totalSharedHit,
+            totalSharedRead: $totalSharedRead,
+            hasTempSpill: $hasTempSpill,
+            estimatedRows: $this->plan->rootNode()->estimatedRows(),
+            actualRows: $this->plan->rootNode()->actualRows(),
         );
     }
 
