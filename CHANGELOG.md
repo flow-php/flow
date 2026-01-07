@@ -1,3 +1,18 @@
+## [Unreleased] - 2026-01-07
+
+### Added
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **sql_to_limited_query(string $sql, int $limit) DSL function - adds LIMIT clause to queries without adding OFFSET** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary::normalize() method - returns all plan summary fields as snake_case keyed array** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary memory statistics: memoryUsed, memoryPeak** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary join statistics: hashJoinCount, nestedLoopCount, mergeJoinCount** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary buffer statistics: totalSharedHit, totalSharedRead, hasTempSpill** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary row statistics: estimatedRows, actualRows** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **LimitedQueryTest - 7 test cases for sql_to_limited_query function** - [@norberttech](https://github.com/norberttech)
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
+
 ## [0.30.0] - 2026-01-06
 
 ### Added
