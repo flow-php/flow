@@ -1,6 +1,12 @@
 ## [Unreleased] - 2026-01-07
 
 ### Added
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **InvalidExplainConfigException - exception for invalid EXPLAIN config flag combinations** - [@norberttech](https://github.com/norberttech)
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainConfig fluent builder methods: withAnalyze(), withoutAnalyze(), withBuffers(), withoutBuffers(), withTiming(), withoutTiming(), withVerbose(), withoutVerbose(), withCosts(), withoutCosts(), withMemory(), withoutMemory(), withSettings(), withoutSettings(), withSummary(), withoutSummary(), withWal(), withoutWal(), withFormat()** - [@norberttech](https://github.com/norberttech)
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainConfig validation - throws InvalidExplainConfigException when BUFFERS, TIMING, or WAL are enabled without ANALYZE** - [@norberttech](https://github.com/norberttech)
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **PlanSummary::fromArray() static factory method - creates instance from normalized array (inverse of normalize)** - [@norberttech](https://github.com/norberttech)
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainConfigTest - unit tests for validation and fluent builder methods** - [@norberttech](https://github.com/norberttech)
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **PgSqlExplainTest - integration tests with data providers for ExplainConfig combinations** - [@norberttech](https://github.com/norberttech)
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **sql_to_limited_query(string $sql, int $limit) DSL function - adds LIMIT clause to queries without adding OFFSET** - [@norberttech](https://github.com/norberttech)
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary::normalize() method - returns all plan summary fields as snake_case keyed array** - [@norberttech](https://github.com/norberttech)
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummary memory statistics: memoryUsed, memoryPeak** - [@norberttech](https://github.com/norberttech)
@@ -11,7 +17,12 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainConfig::withoutAnalyze() auto-disables buffers, timing, and wal options** - [@norberttech](https://github.com/norberttech)
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainModifier now explicitly sets BUFFERS, TIMING, SUMMARY to OFF when disabled (PostgreSQL defaults could override user config)** - [@norberttech](https://github.com/norberttech)
+- [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainParser::parseBuffers() now detects Local Hit/Read Blocks for temporary tables** - [@norberttech](https://github.com/norberttech)
 
 ## [0.30.0] - 2026-01-06
 
