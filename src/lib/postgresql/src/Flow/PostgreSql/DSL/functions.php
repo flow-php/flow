@@ -3059,8 +3059,6 @@ function pgsql_type_bpchar() : PostgreSqlType
     return PostgreSqlType::BPCHAR;
 }
 
-// PostgreSqlType DSL functions - Integer types
-
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_int2() : PostgreSqlType
 {
@@ -3096,8 +3094,6 @@ function pgsql_type_bigint() : PostgreSqlType
 {
     return PostgreSqlType::INT8;
 }
-
-// PostgreSqlType DSL functions - Floating point types
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_float4() : PostgreSqlType
@@ -3135,8 +3131,6 @@ function pgsql_type_money() : PostgreSqlType
     return PostgreSqlType::MONEY;
 }
 
-// PostgreSqlType DSL functions - Boolean type
-
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_bool() : PostgreSqlType
 {
@@ -3148,8 +3142,6 @@ function pgsql_type_boolean() : PostgreSqlType
 {
     return PostgreSqlType::BOOL;
 }
-
-// PostgreSqlType DSL functions - Binary types
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_bytea() : PostgreSqlType
@@ -3168,8 +3160,6 @@ function pgsql_type_varbit() : PostgreSqlType
 {
     return PostgreSqlType::VARBIT;
 }
-
-// PostgreSqlType DSL functions - Date/time types
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_date() : PostgreSqlType
@@ -3207,8 +3197,6 @@ function pgsql_type_interval() : PostgreSqlType
     return PostgreSqlType::INTERVAL;
 }
 
-// PostgreSqlType DSL functions - JSON types
-
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_json() : PostgreSqlType
 {
@@ -3221,15 +3209,11 @@ function pgsql_type_jsonb() : PostgreSqlType
     return PostgreSqlType::JSONB;
 }
 
-// PostgreSqlType DSL functions - UUID type
-
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_uuid() : PostgreSqlType
 {
     return PostgreSqlType::UUID;
 }
-
-// PostgreSqlType DSL functions - Network types
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_inet() : PostgreSqlType
@@ -3255,8 +3239,6 @@ function pgsql_type_macaddr8() : PostgreSqlType
     return PostgreSqlType::MACADDR8;
 }
 
-// PostgreSqlType DSL functions - Other types
-
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_xml() : PostgreSqlType
 {
@@ -3268,8 +3250,6 @@ function pgsql_type_oid() : PostgreSqlType
 {
     return PostgreSqlType::OID;
 }
-
-// PostgreSqlType DSL functions - Array types
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pgsql_type_text_array() : PostgreSqlType

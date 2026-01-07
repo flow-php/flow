@@ -100,28 +100,22 @@ final readonly class ExplainModifier implements NodeModifier
 
         $options[] = $this->createDefElemInt('costs', $this->config->costs ? 1 : 0);
 
-        if ($this->config->buffers) {
-            $options[] = $this->createDefElemInt('buffers', 1);
-        }
+        if ($this->config->analyze) {
+            $options[] = $this->createDefElemInt('buffers', $this->config->buffers ? 1 : 0);
+            $options[] = $this->createDefElemInt('timing', $this->config->timing ? 1 : 0);
+            $options[] = $this->createDefElemInt('summary', $this->config->summary ? 1 : 0);
 
-        if ($this->config->timing) {
-            $options[] = $this->createDefElemInt('timing', 1);
-        }
+            if ($this->config->memory) {
+                $options[] = $this->createDefElemInt('memory', 1);
+            }
 
-        if ($this->config->summary) {
-            $options[] = $this->createDefElemInt('summary', 1);
-        }
+            if ($this->config->settings) {
+                $options[] = $this->createDefElemInt('settings', 1);
+            }
 
-        if ($this->config->memory) {
-            $options[] = $this->createDefElemInt('memory', 1);
-        }
-
-        if ($this->config->settings) {
-            $options[] = $this->createDefElemInt('settings', 1);
-        }
-
-        if ($this->config->wal) {
-            $options[] = $this->createDefElemInt('wal', 1);
+            if ($this->config->wal) {
+                $options[] = $this->createDefElemInt('wal', 1);
+            }
         }
 
         $options[] = $this->createDefElemString('format', $this->config->format->value);

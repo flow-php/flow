@@ -30,6 +30,54 @@ final readonly class PlanSummary
     }
 
     /**
+     * @param array{
+     *     total_cost: float,
+     *     execution_time: ?float,
+     *     planning_time: ?float,
+     *     node_count: int,
+     *     sequential_scan_count: int,
+     *     index_scan_count: int,
+     *     has_external_sort: bool,
+     *     has_disk_reads: bool,
+     *     overall_cache_hit_ratio: ?float,
+     *     memory_used: ?int,
+     *     memory_peak: ?int,
+     *     hash_join_count: int,
+     *     nested_loop_count: int,
+     *     merge_join_count: int,
+     *     total_shared_hit: int,
+     *     total_shared_read: int,
+     *     has_temp_spill: bool,
+     *     estimated_rows: int,
+     *     actual_rows: ?int
+     * } $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            totalCost: $data['total_cost'],
+            executionTime: $data['execution_time'],
+            planningTime: $data['planning_time'],
+            nodeCount: $data['node_count'],
+            sequentialScanCount: $data['sequential_scan_count'],
+            indexScanCount: $data['index_scan_count'],
+            hasExternalSort: $data['has_external_sort'],
+            hasDiskReads: $data['has_disk_reads'],
+            overallCacheHitRatio: $data['overall_cache_hit_ratio'],
+            memoryUsed: $data['memory_used'],
+            memoryPeak: $data['memory_peak'],
+            hashJoinCount: $data['hash_join_count'],
+            nestedLoopCount: $data['nested_loop_count'],
+            mergeJoinCount: $data['merge_join_count'],
+            totalSharedHit: $data['total_shared_hit'],
+            totalSharedRead: $data['total_shared_read'],
+            hasTempSpill: $data['has_temp_spill'],
+            estimatedRows: $data['estimated_rows'],
+            actualRows: $data['actual_rows'],
+        );
+    }
+
+    /**
      * @return array{
      *     total_cost: float,
      *     execution_time: ?float,

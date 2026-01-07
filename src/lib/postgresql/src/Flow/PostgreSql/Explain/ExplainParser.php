@@ -52,6 +52,8 @@ final readonly class ExplainParser
     {
         $hasBuffers = \array_key_exists('Shared Hit Blocks', $nodeData)
             || \array_key_exists('Shared Read Blocks', $nodeData)
+            || \array_key_exists('Local Hit Blocks', $nodeData)
+            || \array_key_exists('Local Read Blocks', $nodeData)
             || \array_key_exists('Temp Read Blocks', $nodeData)
             || \array_key_exists('Temp Written Blocks', $nodeData);
 
