@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+/**
+ * @phpstan-type TimingShape = array{startup_time: float, total_time: float, loops: int}
+ */
 final readonly class Timing
 {
     public function __construct(
@@ -11,6 +14,18 @@ final readonly class Timing
         private float $totalTime,
         private int $loops,
     ) {
+    }
+
+    /**
+     * @param TimingShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            startupTime: $data['startup_time'],
+            totalTime: $data['total_time'],
+            loops: $data['loops'],
+        );
     }
 
     public function averageTime() : float
@@ -21,6 +36,18 @@ final readonly class Timing
     public function loops() : int
     {
         return $this->loops;
+    }
+
+    /**
+     * @return TimingShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'startup_time' => $this->startupTime,
+            'total_time' => $this->totalTime,
+            'loops' => $this->loops,
+        ];
     }
 
     public function startupTime() : float

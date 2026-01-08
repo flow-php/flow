@@ -147,6 +147,131 @@ final class ExplainConfigTest extends TestCase
         self::assertFalse($config->wal);
     }
 
+    public function test_from_array_and_normalize_are_inverse() : void
+    {
+        $original = new ExplainConfig(
+            analyze: true,
+            verbose: true,
+            costs: true,
+            buffers: true,
+            timing: true,
+            summary: true,
+            memory: true,
+            settings: true,
+            wal: true,
+            format: ExplainFormat::TEXT,
+        );
+
+        $normalized = $original->normalize();
+        $restored = ExplainConfig::fromArray($normalized);
+
+        self::assertEquals($original, $restored);
+    }
+
+    public function test_from_array_creates_instance() : void
+    {
+        $data = [
+            'analyze' => true,
+            'verbose' => true,
+            'costs' => true,
+            'buffers' => true,
+            'timing' => true,
+            'summary' => true,
+            'memory' => true,
+            'settings' => true,
+            'wal' => true,
+            'format' => 'text',
+        ];
+
+        $config = ExplainConfig::fromArray($data);
+
+        self::assertTrue($config->analyze);
+        self::assertTrue($config->verbose);
+        self::assertTrue($config->costs);
+        self::assertTrue($config->buffers);
+        self::assertTrue($config->timing);
+        self::assertTrue($config->summary);
+        self::assertTrue($config->memory);
+        self::assertTrue($config->settings);
+        self::assertTrue($config->wal);
+        self::assertSame(ExplainFormat::TEXT, $config->format);
+    }
+
+    public function test_from_array_validates_config() : void
+    {
+        $data = [
+            'analyze' => false,
+            'verbose' => false,
+            'costs' => true,
+            'buffers' => true,
+            'timing' => false,
+            'summary' => false,
+            'memory' => false,
+            'settings' => false,
+            'wal' => false,
+            'format' => 'json',
+        ];
+
+        $this->expectException(InvalidExplainConfigException::class);
+        $this->expectExceptionMessage('BUFFERS option requires ANALYZE to be enabled');
+
+        ExplainConfig::fromArray($data);
+    }
+
+    public function test_from_array_with_for_estimate_config() : void
+    {
+        $original = ExplainConfig::forEstimate();
+        $normalized = $original->normalize();
+        $restored = ExplainConfig::fromArray($normalized);
+
+        self::assertEquals($original, $restored);
+    }
+
+    public function test_normalize_returns_all_fields() : void
+    {
+        $config = ExplainConfig::forAnalysis()
+            ->withVerbose()
+            ->withMemory()
+            ->withSettings()
+            ->withWal()
+            ->withFormat(ExplainFormat::YAML);
+
+        $normalized = $config->normalize();
+
+        self::assertTrue($normalized['analyze']);
+        self::assertTrue($normalized['verbose']);
+        self::assertTrue($normalized['costs']);
+        self::assertTrue($normalized['buffers']);
+        self::assertTrue($normalized['timing']);
+        self::assertTrue($normalized['summary']);
+        self::assertTrue($normalized['memory']);
+        self::assertTrue($normalized['settings']);
+        self::assertTrue($normalized['wal']);
+        self::assertSame('yaml', $normalized['format']);
+    }
+
+    public function test_normalize_returns_expected_keys() : void
+    {
+        $config = ExplainConfig::forAnalysis();
+
+        $normalized = $config->normalize();
+
+        $expectedKeys = [
+            'analyze',
+            'verbose',
+            'costs',
+            'buffers',
+            'timing',
+            'summary',
+            'memory',
+            'settings',
+            'wal',
+            'format',
+        ];
+
+        self::assertSame($expectedKeys, \array_keys($normalized));
+    }
+
     public function test_with_analyze_returns_new_instance() : void
     {
         $original = ExplainConfig::forEstimate();
