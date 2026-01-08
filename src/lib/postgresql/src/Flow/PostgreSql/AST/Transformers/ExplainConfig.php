@@ -56,6 +56,66 @@ final readonly class ExplainConfig
         );
     }
 
+    /**
+     * @param array{
+     *     analyze: bool,
+     *     verbose: bool,
+     *     costs: bool,
+     *     buffers: bool,
+     *     timing: bool,
+     *     summary: bool,
+     *     memory: bool,
+     *     settings: bool,
+     *     wal: bool,
+     *     format: string
+     * } $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            analyze: $data['analyze'],
+            verbose: $data['verbose'],
+            costs: $data['costs'],
+            buffers: $data['buffers'],
+            timing: $data['timing'],
+            summary: $data['summary'],
+            memory: $data['memory'],
+            settings: $data['settings'],
+            wal: $data['wal'],
+            format: ExplainFormat::from($data['format']),
+        );
+    }
+
+    /**
+     * @return array{
+     *     analyze: bool,
+     *     verbose: bool,
+     *     costs: bool,
+     *     buffers: bool,
+     *     timing: bool,
+     *     summary: bool,
+     *     memory: bool,
+     *     settings: bool,
+     *     wal: bool,
+     *     format: string
+     * }
+     */
+    public function normalize() : array
+    {
+        return [
+            'analyze' => $this->analyze,
+            'verbose' => $this->verbose,
+            'costs' => $this->costs,
+            'buffers' => $this->buffers,
+            'timing' => $this->timing,
+            'summary' => $this->summary,
+            'memory' => $this->memory,
+            'settings' => $this->settings,
+            'wal' => $this->wal,
+            'format' => $this->format->value,
+        ];
+    }
+
     public function withAnalyze() : self
     {
         return new self(

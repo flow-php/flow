@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+/**
+ * @phpstan-type BuffersShape = array{shared_hit: int, shared_read: int, shared_dirtied: int, shared_written: int, local_hit: int, local_read: int, local_dirtied: int, local_written: int, temp_read: int, temp_written: int}
+ */
 final readonly class Buffers
 {
     public function __construct(
@@ -18,6 +21,25 @@ final readonly class Buffers
         private int $tempRead,
         private int $tempWritten,
     ) {
+    }
+
+    /**
+     * @param BuffersShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            sharedHit: $data['shared_hit'],
+            sharedRead: $data['shared_read'],
+            sharedDirtied: $data['shared_dirtied'],
+            sharedWritten: $data['shared_written'],
+            localHit: $data['local_hit'],
+            localRead: $data['local_read'],
+            localDirtied: $data['local_dirtied'],
+            localWritten: $data['local_written'],
+            tempRead: $data['temp_read'],
+            tempWritten: $data['temp_written'],
+        );
     }
 
     public function hasDiskSpill() : bool
@@ -50,6 +72,25 @@ final readonly class Buffers
     public function localWritten() : int
     {
         return $this->localWritten;
+    }
+
+    /**
+     * @return BuffersShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'shared_hit' => $this->sharedHit,
+            'shared_read' => $this->sharedRead,
+            'shared_dirtied' => $this->sharedDirtied,
+            'shared_written' => $this->sharedWritten,
+            'local_hit' => $this->localHit,
+            'local_read' => $this->localRead,
+            'local_dirtied' => $this->localDirtied,
+            'local_written' => $this->localWritten,
+            'temp_read' => $this->tempRead,
+            'temp_written' => $this->tempWritten,
+        ];
     }
 
     public function sharedDirtied() : int

@@ -4,6 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+/**
+ * @phpstan-import-type TimingShape from Timing
+ * @phpstan-import-type BuffersShape from Buffers
+ *
+ * @phpstan-type PlanNodeShape = array{
+ *     node_type: string,
+ *     cost: array{startup_cost: float, total_cost: float},
+ *     estimated_rows: int,
+ *     row_width: int,
+ *     children: array<array<string, mixed>>,
+ *     relation_name: ?string,
+ *     schema: ?string,
+ *     alias: ?string,
+ *     index_name: ?string,
+ *     index_cond: ?string,
+ *     filter: ?string,
+ *     timing: ?TimingShape,
+ *     buffers: ?BuffersShape,
+ *     actual_rows: ?int,
+ *     actual_loops: ?int,
+ *     rows_removed_by_filter: ?int,
+ *     rows_removed_by_index_recheck: ?int,
+ *     parent_relationship: ?string,
+ *     scan_direction: ?string,
+ *     join_type: ?string,
+ *     hash_cond: ?string,
+ *     sort_key: ?string,
+ *     sort_method: ?string,
+ *     sort_space_used: ?int,
+ *     sort_space_type: ?string,
+ *     raw_data: array<string, mixed>
+ * }
+ */
 final readonly class PlanNode
 {
     /**
@@ -38,6 +71,48 @@ final readonly class PlanNode
         private ?string $sortSpaceType = null,
         private array $rawData = [],
     ) {
+    }
+
+    /**
+     * @param PlanNodeShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        $children = [];
+
+        /** @var PlanNodeShape $childData */
+        foreach ($data['children'] as $childData) {
+            $children[] = self::fromArray($childData);
+        }
+
+        return new self(
+            nodeType: PlanNodeType::fromString($data['node_type']),
+            cost: Cost::fromArray($data['cost']),
+            estimatedRows: $data['estimated_rows'],
+            rowWidth: $data['row_width'],
+            children: $children,
+            relationName: $data['relation_name'],
+            schema: $data['schema'],
+            alias: $data['alias'],
+            indexName: $data['index_name'],
+            indexCond: $data['index_cond'],
+            filter: $data['filter'],
+            timing: $data['timing'] !== null ? Timing::fromArray($data['timing']) : null,
+            buffers: $data['buffers'] !== null ? Buffers::fromArray($data['buffers']) : null,
+            actualRows: $data['actual_rows'],
+            actualLoops: $data['actual_loops'],
+            rowsRemovedByFilter: $data['rows_removed_by_filter'],
+            rowsRemovedByIndexRecheck: $data['rows_removed_by_index_recheck'],
+            parentRelationship: $data['parent_relationship'],
+            scanDirection: $data['scan_direction'],
+            joinType: $data['join_type'],
+            hashCond: $data['hash_cond'],
+            sortKey: $data['sort_key'],
+            sortMethod: $data['sort_method'],
+            sortSpaceUsed: $data['sort_space_used'],
+            sortSpaceType: $data['sort_space_type'],
+            rawData: $data['raw_data'],
+        );
     }
 
     public function actualLoops() : ?int
@@ -153,6 +228,44 @@ final readonly class PlanNode
     public function nodeType() : PlanNodeType
     {
         return $this->nodeType;
+    }
+
+    /**
+     * @return PlanNodeShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'node_type' => $this->nodeType->value,
+            'cost' => $this->cost->normalize(),
+            'estimated_rows' => $this->estimatedRows,
+            'row_width' => $this->rowWidth,
+            'children' => \array_map(
+                static fn (self $child) : array => $child->normalize(),
+                $this->children
+            ),
+            'relation_name' => $this->relationName,
+            'schema' => $this->schema,
+            'alias' => $this->alias,
+            'index_name' => $this->indexName,
+            'index_cond' => $this->indexCond,
+            'filter' => $this->filter,
+            'timing' => $this->timing?->normalize(),
+            'buffers' => $this->buffers?->normalize(),
+            'actual_rows' => $this->actualRows,
+            'actual_loops' => $this->actualLoops,
+            'rows_removed_by_filter' => $this->rowsRemovedByFilter,
+            'rows_removed_by_index_recheck' => $this->rowsRemovedByIndexRecheck,
+            'parent_relationship' => $this->parentRelationship,
+            'scan_direction' => $this->scanDirection,
+            'join_type' => $this->joinType,
+            'hash_cond' => $this->hashCond,
+            'sort_key' => $this->sortKey,
+            'sort_method' => $this->sortMethod,
+            'sort_space_used' => $this->sortSpaceUsed,
+            'sort_space_type' => $this->sortSpaceType,
+            'raw_data' => $this->rawData,
+        ];
     }
 
     public function parentRelationship() : ?string

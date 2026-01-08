@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+/**
+ * @phpstan-import-type PlanNodeShape from PlanNode
+ */
 final readonly class Plan
 {
     public function __construct(
@@ -13,6 +16,29 @@ final readonly class Plan
         private ?int $memoryUsed = null,
         private ?int $memoryPeak = null,
     ) {
+    }
+
+    /**
+     * @param array{
+     *     root_node: PlanNodeShape,
+     *     planning_time: ?float,
+     *     execution_time: ?float,
+     *     memory_used: ?int,
+     *     memory_peak: ?int
+     * } $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        /** @var PlanNodeShape $rootNodeData */
+        $rootNodeData = $data['root_node'];
+
+        return new self(
+            rootNode: PlanNode::fromArray($rootNodeData),
+            planningTime: $data['planning_time'],
+            executionTime: $data['execution_time'],
+            memoryUsed: $data['memory_used'],
+            memoryPeak: $data['memory_peak'],
+        );
     }
 
     /**
@@ -47,6 +73,26 @@ final readonly class Plan
             $this->allNodes(),
             static fn (PlanNode $node) : bool => $node->nodeType() === $type
         );
+    }
+
+    /**
+     * @return array{
+     *     root_node: PlanNodeShape,
+     *     planning_time: ?float,
+     *     execution_time: ?float,
+     *     memory_used: ?int,
+     *     memory_peak: ?int
+     * }
+     */
+    public function normalize() : array
+    {
+        return [
+            'root_node' => $this->rootNode->normalize(),
+            'planning_time' => $this->planningTime,
+            'execution_time' => $this->executionTime,
+            'memory_used' => $this->memoryUsed,
+            'memory_peak' => $this->memoryPeak,
+        ];
     }
 
     public function planningTime() : ?float

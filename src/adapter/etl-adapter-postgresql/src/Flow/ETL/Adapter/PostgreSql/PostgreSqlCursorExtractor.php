@@ -61,10 +61,15 @@ final class PostgreSqlCursorExtractor implements Extractor
 
             while (true) {
                 $cursor = $this->client->cursor(fetch($cursorName)->forward($this->fetchSize));
-                $hasRows = false;
+                $rowCount = $cursor->count();
+
+                if ($rowCount === 0) {
+                    $cursor->free();
+
+                    break;
+                }
 
                 foreach ($cursor->iterate() as $row) {
-                    $hasRows = true;
                     $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
                     if ($signal === Signal::STOP) {
@@ -84,7 +89,7 @@ final class PostgreSqlCursorExtractor implements Extractor
 
                 $cursor->free();
 
-                if (!$hasRows) {
+                if ($rowCount < $this->fetchSize) {
                     break;
                 }
             }
