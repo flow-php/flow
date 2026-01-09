@@ -1513,16 +1513,16 @@
         },
         {
             "name": "openspout/openspout",
-            "version": "v5.2.0",
+            "version": "v5.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openspout/openspout.git",
-                "reference": "22ba807c918484efc27e80d67d30c36ac28ff8dc"
+                "reference": "6ce24398c5f176ebb8ed6131dfb081bd5361d8df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openspout/openspout/zipball/22ba807c918484efc27e80d67d30c36ac28ff8dc",
-                "reference": "22ba807c918484efc27e80d67d30c36ac28ff8dc",
+                "url": "https://api.github.com/repos/openspout/openspout/zipball/6ce24398c5f176ebb8ed6131dfb081bd5361d8df",
+                "reference": "6ce24398c5f176ebb8ed6131dfb081bd5361d8df",
                 "shasum": ""
             },
             "require": {
@@ -1535,8 +1535,8 @@
             },
             "require-dev": {
                 "ext-zlib": "*",
-                "friendsofphp/php-cs-fixer": "^3.92.3",
-                "infection/infection": "^0.31.9",
+                "friendsofphp/php-cs-fixer": "^3.92.4",
+                "infection/infection": "^0.32.2",
                 "phpbench/phpbench": "^1.4.3",
                 "phpstan/phpstan": "^2.1.33",
                 "phpstan/phpstan-phpunit": "^2.0.11",
@@ -1589,7 +1589,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openspout/openspout/issues",
-                "source": "https://github.com/openspout/openspout/tree/v5.2.0"
+                "source": "https://github.com/openspout/openspout/tree/v5.2.1"
             },
             "funding": [
                 {
@@ -1601,7 +1601,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-19T13:28:49+00:00"
+            "time": "2026-01-08T08:17:35+00:00"
         },
         {
             "name": "packaged/thrift",
