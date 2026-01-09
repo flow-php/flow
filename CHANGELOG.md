@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-08
+## [Unreleased] - 2026-01-09
 
 ### Added
 - [#2136](https://github.com/flow-php/flow/pull/2136) - **Added normalize() and fromArray() methods to PostgreSQL Explain Plan classes (Cost, Timing, Buffers, PlanNode, Plan, ExplainConfig) for serialization/deserialization support** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +19,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2131](https://github.com/flow-php/flow/pull/2131) - **Update Homebrew TAP formula: flow-php to version: 0.30.0** - [@norberttech](https://github.com/norberttech)
 - [#2136](https://github.com/flow-php/flow/pull/2136) - **Optimized PostgreSqlCursorExtractor to break cursor loop early when fetched rows are less than fetch size, avoiding unnecessary database round-trips** - [@norberttech](https://github.com/norberttech)
 - [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainConfig::withoutAnalyze() auto-disables buffers, timing, and wal options** - [@norberttech](https://github.com/norberttech)
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
