@@ -3,7 +3,7 @@ on:
 
 jobs:
   benchmark-tests:
-    runs-on: ${{ matrix.operating-system }}
+    runs-on: flow-php-runner
     strategy:
       fail-fast: false
       matrix:
@@ -11,8 +11,6 @@ jobs:
           - "locked"
         php-version:
           - "8.3"
-        operating-system:
-          - "ubuntu-latest"
 
     services:
       postgres:
