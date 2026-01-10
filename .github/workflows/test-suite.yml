@@ -56,6 +56,3 @@ jobs:
 
   mutation-tests:
     uses: ./.github/workflows/job-mutation-tests.yml
-
-  benchmark-tests:
-    uses: ./.github/workflows/job-benchmark-tests.yml

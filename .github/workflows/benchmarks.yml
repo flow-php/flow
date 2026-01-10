@@ -1,9 +1,15 @@
+name: Benchmark Tests
+
 on:
-  workflow_call:
+  workflow_dispatch:
+  pull_request_target:
+    paths:
+      - 'src/**'
+      - 'phpbench.json.dist'
 
 jobs:
   benchmark-tests:
-    runs-on: ${{ matrix.operating-system }}
+    runs-on: flow-php-runner
     strategy:
       fail-fast: false
       matrix:
@@ -11,8 +17,6 @@ jobs:
           - "locked"
         php-version:
           - "8.3"
-        operating-system:
-          - "ubuntu-latest"
 
     services:
       postgres:
@@ -28,6 +32,8 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v5"
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: "Setup PHP Environment"
         uses: "./.github/actions/setup-php-env"
