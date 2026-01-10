@@ -33,9 +33,11 @@ Baseline generation is triggered by:
 
 ### Pull Request Comparison
 
-When a pull request is opened, benchmarks run on the same dedicated runner and compare results against the stored `1.x`
-baseline. This comparison is posted as a summary in the PR, allowing reviewers to identify any performance regressions
-or improvements.
+When a pull request is opened, benchmarks run on the dedicated runner and compare results against the stored `1.x`
+baseline. The comparison is posted as a job summary.
+
+The workflow uses `pull_request_target` trigger, which means the workflow code always comes from the `1.x` branch.
+This prevents attackers from modifying the workflow file in their PR to execute malicious code on the self-hosted runner.
 
 ## Benchmark Categories
 
