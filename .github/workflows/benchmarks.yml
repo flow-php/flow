@@ -1,4 +1,4 @@
-name: Benchmark Tests
+name: Benchmarks
 
 on:
   workflow_dispatch:

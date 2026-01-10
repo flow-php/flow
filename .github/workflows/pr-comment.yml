@@ -1,6 +1,6 @@
 on:
   workflow_run:
-    workflows: ["Test Suite"]
+    workflows: ["Benchmarks"]
     types:
       - completed
 
