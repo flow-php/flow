@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-10
+## [Unreleased] - 2026-01-11
 
 ### Added
 - [#2140](https://github.com/flow-php/flow/pull/2140) - **Benchmark documentation explaining infrastructure, workflow, and how to run benchmarks** - [@norberttech](https://github.com/norberttech)
@@ -20,6 +20,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2143](https://github.com/flow-php/flow/pull/2143) - **Adjust `Parameter::asNumber()` behaviour to match closer the PHP one** - [@stloyd](https://github.com/stloyd)
 - [#2140](https://github.com/flow-php/flow/pull/2140) - **GitHub Actions benchmarks now run on dedicated self-hosted runner (flow-php-runner) for consistent results** - [@norberttech](https://github.com/norberttech)
 - [#2131](https://github.com/flow-php/flow/pull/2131) - **Update Homebrew TAP formula: flow-php to version: 0.30.0** - [@norberttech](https://github.com/norberttech)
 - [#2136](https://github.com/flow-php/flow/pull/2136) - **Optimized PostgreSqlCursorExtractor to break cursor loop early when fetched rows are less than fetch size, avoiding unnecessary database round-trips** - [@norberttech](https://github.com/norberttech)
