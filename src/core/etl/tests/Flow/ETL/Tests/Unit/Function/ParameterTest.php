@@ -67,6 +67,10 @@ final class ParameterTest extends FlowTestCase
         yield 'zero' => [0, null, 0];
         yield 'negative integer' => [-42, null, -42];
         yield 'negative float' => [-3.14, null, -3.14];
+        yield 'integer as string' => ['99', null, 99];
+        yield 'float as string' => ['99.5', null, 99.5];
+        yield 'negative integer as string' => ['-42', null, -42];
+        yield 'negative float as string' => ['-3.14', null, -3.14];
         yield 'string with default' => ['not numeric', 99, 99];
         yield 'string with float default' => ['not numeric', 99.5, 99.5];
         yield 'boolean with default' => [true, 99, 99];

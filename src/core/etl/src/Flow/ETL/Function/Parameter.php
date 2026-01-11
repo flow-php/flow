@@ -153,11 +153,17 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        if (\is_string($result)) {
+        if (!\is_numeric($result)) {
             return $default;
         }
 
-        return \is_numeric($result) ? $result : $default;
+        return match (true) {
+            \is_int($result),
+            \is_float($result) => $result,
+            ($result == (int) $result) => (int) $result,
+            ($result == (float) $result) => (float) $result,
+            default => $default,
+        };
     }
 
     public function asObject(Row $row, FlowContext $context) : ?object
