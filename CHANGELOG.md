@@ -22,6 +22,9 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2152](https://github.com/flow-php/flow/pull/2152) - **SpanEvent timestamp changed from nanoseconds (int) to DateTimeImmutable for better type safety and consistency** - [@norberttech](https://github.com/norberttech)
+- [#2152](https://github.com/flow-php/flow/pull/2152) - **span_event() DSL function now requires explicit timestamp parameter** - [@norberttech](https://github.com/norberttech)
+- [#2152](https://github.com/flow-php/flow/pull/2152) - **Span::recordException() now requires explicit timestamp parameter** - [@norberttech](https://github.com/norberttech)
 - [#2143](https://github.com/flow-php/flow/pull/2143) - **Adjust `Parameter::asNumber()` behaviour to match closer the PHP one** - [@stloyd](https://github.com/stloyd)
 - [#2140](https://github.com/flow-php/flow/pull/2140) - **GitHub Actions benchmarks now run on dedicated self-hosted runner (flow-php-runner) for consistent results** - [@norberttech](https://github.com/norberttech)
 - [#2131](https://github.com/flow-php/flow/pull/2131) - **Update Homebrew TAP formula: flow-php to version: 0.30.0** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +33,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2152](https://github.com/flow-php/flow/pull/2152) - **Mermaid diagrams responsiveness on documentation pages - diagrams now scale properly and don't overlap** - [@norberttech](https://github.com/norberttech)
 - [b733f4](https://github.com/flow-php/flow/commit/b733f4c983d9023d3208765cb191b3108a4704d7) - **documentation tests on website** - [@norberttech](https://github.com/norberttech)
 - [99bb3b](https://github.com/flow-php/flow/commit/99bb3becf063e3452c6fa66720127b013f5ce1ab) - **telemetry library** - [@norberttech](https://github.com/norberttech)
 - [a71e6a](https://github.com/flow-php/flow/commit/a71e6a3f69338c1559fd25ff3f52303f694ce4db) - **pr-comment and monorepo-split workflows** - [@norberttech](https://github.com/norberttech)
@@ -37,6 +41,10 @@
 - [d14d49](https://github.com/flow-php/flow/commit/d14d4909a2e3a734ac148924cc9b762747ac17e5) - **trigger for pr-comment worfklow** - [@norberttech](https://github.com/norberttech)
 - [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainModifier now explicitly sets BUFFERS, TIMING, SUMMARY to OFF when disabled (PostgreSQL defaults could override user config)** - [@norberttech](https://github.com/norberttech)
 - [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainParser::parseBuffers() now detects Local Hit/Read Blocks for temporary tables** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2152](https://github.com/flow-php/flow/pull/2152) - **GenericEvent::now() method - use GenericEvent::create() with explicit timestamp instead** - [@norberttech](https://github.com/norberttech)
+- [#2152](https://github.com/flow-php/flow/pull/2152) - **Carrier::keys() method from propagation interface - unused in the codebase** - [@norberttech](https://github.com/norberttech)
 
 ## [0.30.0] - 2026-01-06
 
