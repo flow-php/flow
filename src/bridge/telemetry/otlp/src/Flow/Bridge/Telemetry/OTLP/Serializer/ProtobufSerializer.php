@@ -469,7 +469,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
     {
         $protoEvent = new Event();
         $protoEvent->setName($event->name());
-        $protoEvent->setTimeUnixNano($event->timestamp());
+        $protoEvent->setTimeUnixNano($this->toNanoseconds($event->timestamp()));
         $protoEvent->setAttributes($this->createKeyValues($event->attributes())); // @phpstan-ignore argument.type
 
         return $protoEvent;

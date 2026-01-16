@@ -60,40 +60,6 @@ final readonly class SuperglobalCarrier implements Carrier
         return null;
     }
 
-    /**
-     * @return array<string>
-     */
-    public function keys() : array
-    {
-        $keys = [];
-
-        foreach (\array_keys($_SERVER) as $key) {
-            if (\is_string($key) && \str_starts_with($key, 'HTTP_')) {
-                $keys[] = \str_replace('_', '-', \strtolower(\substr($key, 5)));
-            }
-        }
-
-        foreach (\array_keys($_GET) as $key) {
-            if (\is_string($key)) {
-                $keys[] = $key;
-            }
-        }
-
-        foreach (\array_keys($_POST) as $key) {
-            if (\is_string($key)) {
-                $keys[] = $key;
-            }
-        }
-
-        foreach (\array_keys($_COOKIE) as $key) {
-            if (\is_string($key)) {
-                $keys[] = $key;
-            }
-        }
-
-        return \array_unique($keys);
-    }
-
     public function set(string $key, string $value) : void
     {
         throw new RuntimeException('SuperglobalCarrier is read-only');

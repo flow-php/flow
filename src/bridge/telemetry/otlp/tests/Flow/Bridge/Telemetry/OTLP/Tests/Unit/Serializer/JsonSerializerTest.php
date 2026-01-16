@@ -445,7 +445,7 @@ final class JsonSerializerTest extends TestCase
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
         $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
-        $span->recordEvent(GenericEvent::now('cache.hit', ['key' => 'user:123']));
+        $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['key' => 'user:123']));
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */

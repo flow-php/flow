@@ -17,7 +17,7 @@ use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
  * ```php
  * $span = new Span('process-order', $context, SpanKind::INTERNAL, new \DateTimeImmutable());
  * $span->setAttribute('order.id', '12345')
- *      ->recordEvent(GenericEvent::now('validation.passed'))
+ *      ->recordEvent(GenericEvent::create('validation.passed', new \DateTimeImmutable()))
  *      ->setStatus(SpanStatus::ok())
  *      ->end();
  * ```
@@ -69,7 +69,7 @@ final class Span
      *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
-     *     events: array<array{name: string, timestamp: int, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
+     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
      *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
@@ -255,7 +255,7 @@ final class Span
      *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
-     *     events: array<array{name: string, timestamp: int, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
+     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
      *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
@@ -309,11 +309,12 @@ final class Span
      * Creates an event with OpenTelemetry semantic conventions for exceptions.
      *
      * @param \Throwable $exception The exception to record
+     * @param \DateTimeImmutable $timestamp The timestamp when the exception occurred
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Additional attributes
      *
      * @return $this
      */
-    public function recordException(\Throwable $exception, array $attributes = []) : self
+    public function recordException(\Throwable $exception, \DateTimeImmutable $timestamp, array $attributes = []) : self
     {
         $eventAttributes = \array_merge([
             'exception.type' => $exception::class,
@@ -321,7 +322,7 @@ final class Span
             'exception.stacktrace' => $exception->getTraceAsString(),
         ], $attributes);
 
-        $this->events[] = GenericEvent::now('exception', $eventAttributes);
+        $this->events[] = GenericEvent::create('exception', $timestamp, $eventAttributes);
 
         return $this;
     }

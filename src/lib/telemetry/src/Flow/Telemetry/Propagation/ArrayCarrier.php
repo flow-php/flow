@@ -45,11 +45,6 @@ final class ArrayCarrier implements Carrier
         return null;
     }
 
-    public function keys() : array
-    {
-        return \array_keys($this->data);
-    }
-
     public function set(string $key, string $value) : void
     {
         $this->data[$key] = $value;

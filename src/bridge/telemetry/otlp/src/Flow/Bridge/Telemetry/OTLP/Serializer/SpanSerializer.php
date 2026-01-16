@@ -74,7 +74,7 @@ final readonly class SpanSerializer
         foreach ($events as $event) {
             $result[] = [
                 'name' => $event->name(),
-                'timeUnixNano' => (string) $event->timestamp(),
+                'timeUnixNano' => $this->toNanoseconds($event->timestamp()),
                 'attributes' => $this->attributeSerializer->serialize($event->attributesObject()),
             ];
         }

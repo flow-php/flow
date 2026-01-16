@@ -470,7 +470,7 @@ final class JsonSerializer implements Serializer
         foreach ($events as $event) {
             $result[] = [
                 'name' => $event->name(),
-                'timeUnixNano' => (string) $event->timestamp(),
+                'timeUnixNano' => $this->toNanoseconds($event->timestamp()),
                 'attributes' => $this->serializeAttributes($event->attributes()),
             ];
         }

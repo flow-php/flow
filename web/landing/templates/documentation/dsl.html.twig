@@ -90,8 +90,8 @@
                             </div>
                             <div class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
                                 {% apply spaceless %}
-                                <pre class="overflow-auto !m-0">
-                                    <code id="code" class="language-php" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>
+                                <pre class="overflow-auto !m-0 language-php"  {{ stimulus_controller('syntax_highlight') }}  data-prismjs-no-auto-linker>>
+                                    <code id="code"
                                         {{- definition.toString | escape('html') -}}
                                     </code>
                                 </pre>

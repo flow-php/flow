@@ -158,36 +158,6 @@ final class SuperglobalCarrierTest extends TestCase
         self::assertSame('string-value', $carrier->get('array_value'));
     }
 
-    public function test_keys_returns_combined_keys() : void
-    {
-        $_SERVER['HTTP_TRACEPARENT'] = 'value';
-        $_SERVER['HTTP_TRACESTATE'] = 'value';
-        $_GET['page'] = '1';
-        $_POST['username'] = 'john';
-        $_COOKIE['session'] = 'abc';
-
-        $carrier = new SuperglobalCarrier();
-        $keys = $carrier->keys();
-
-        self::assertContains('traceparent', $keys);
-        self::assertContains('tracestate', $keys);
-        self::assertContains('page', $keys);
-        self::assertContains('username', $keys);
-        self::assertContains('session', $keys);
-    }
-
-    public function test_keys_returns_unique_values() : void
-    {
-        $_GET['key'] = 'from-get';
-        $_POST['key'] = 'from-post';
-
-        $carrier = new SuperglobalCarrier();
-        $keys = $carrier->keys();
-
-        $keyCount = \array_count_values($keys)['key'] ?? 0;
-        self::assertSame(1, $keyCount);
-    }
-
     public function test_set_throws_runtime_exception() : void
     {
         $carrier = new SuperglobalCarrier();

@@ -239,6 +239,33 @@ code {
     @apply z-0 !p-0;
 }
 
+/* Mermaid diagram responsiveness fixes */
+.mermaid-wrapper {
+    @apply overflow-visible w-full;
+}
+
+.mermaid-wrapper .mermaid {
+    @apply block w-full overflow-visible;
+}
+
+.mermaid-wrapper .mermaid svg {
+    @apply max-w-full h-auto;
+    width: 100% !important;
+    max-height: none !important;
+}
+
+.mermaid-wrapper .mermaid [role="graphics-document"] {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .mermaid-wrapper .mermaid {
+        @apply overflow-x-auto;
+    }
+}
+
 /* Foldable Table of Contents */
 .toc-wrapper {
     @apply rounded mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray overflow-hidden;

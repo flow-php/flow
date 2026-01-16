@@ -96,7 +96,7 @@ final readonly class ConsoleSpanExporter implements SpanExporter
         $lines[] = $this->output->bold('Events (' . \count($events) . '):');
 
         foreach ($events as $event) {
-            $timestamp = $this->formatNanosTimestamp($event->timestamp());
+            $timestamp = $this->formatTimestamp($event->timestamp());
             $attrs = $event->attributes();
             $attrStr = \count($attrs) > 0 ? ' ' . $this->output->dim($this->output->formatValue($attrs)) : '';
             $lines[] = '  ' . $this->output->gray($timestamp) . ' ' . $event->name() . $attrStr;
@@ -162,20 +162,6 @@ final readonly class ConsoleSpanExporter implements SpanExporter
         return \max(self::MIN_WIDTH, $maxLength + 4);
     }
 
-    private function formatNanosTimestamp(int $nanos) : string
-    {
-        $seconds = (int) ($nanos / 1_000_000_000);
-        $micros = (int) (($nanos % 1_000_000_000) / 1000);
-
-        try {
-            $dt = (new \DateTimeImmutable())->setTimestamp($seconds);
-
-            return $dt->format('H:i:s') . '.' . \str_pad((string) $micros, 6, '0', STR_PAD_LEFT);
-        } catch (\Exception) {
-            return (string) $nanos;
-        }
-    }
-
     private function formatResource(TelemetryResource $resource) : string
     {
         $parts = [];
@@ -207,6 +193,11 @@ final readonly class ConsoleSpanExporter implements SpanExporter
             SpanStatusCode::ERROR => $this->output->red('ERROR'),
             SpanStatusCode::UNSET => $this->output->yellow('UNSET'),
         };
+    }
+
+    private function formatTimestamp(\DateTimeImmutable $timestamp) : string
+    {
+        return $timestamp->format('H:i:s.u');
     }
 
     private function printSpan(Span $span) : void

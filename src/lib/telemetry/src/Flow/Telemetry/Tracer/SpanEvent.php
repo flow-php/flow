@@ -17,7 +17,7 @@ interface SpanEvent
     /**
      * Create a SpanEvent from a normalized array representation.
      *
-     * @param array{name: string, timestamp: int, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized event data
+     * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized event data
      */
     public static function fromArray(array $data) : self;
 
@@ -41,12 +41,12 @@ interface SpanEvent
     /**
      * Normalize the event to an array representation for serialization.
      *
-     * @return array{name: string, timestamp: int, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
+     * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
      */
     public function normalize() : array;
 
     /**
-     * Get the event timestamp in nanoseconds since Unix epoch.
+     * Get the event timestamp.
      */
-    public function timestamp() : int;
+    public function timestamp() : \DateTimeImmutable;
 }

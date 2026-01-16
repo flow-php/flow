@@ -137,7 +137,7 @@ final class SpanTest extends TestCase
         $result = $span
             ->setAttribute('key1', 'value1')
             ->setAttributes(['key2' => 'value2'])
-            ->recordEvent(GenericEvent::now('test.event'))
+            ->recordEvent(GenericEvent::create('test.event', new \DateTimeImmutable()))
             ->addLink(SpanLink::create($linkedContext))
             ->setStatus(SpanStatus::ok())
             ->rename('new-name')
@@ -213,7 +213,7 @@ final class SpanTest extends TestCase
 
         $original = new Span('test-span', $context, SpanKind::CLIENT, $startTime, ResourceMother::default(), $scope);
         $original->setAttribute('key', 'value');
-        $original->recordEvent(GenericEvent::create('event', 1000));
+        $original->recordEvent(GenericEvent::create('event', new \DateTimeImmutable('2024-01-01 12:00:00.500000')));
         $original->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()), ['link.attr' => 'test']));
         $original->setStatus(SpanStatus::error('Something failed'));
         $original->end($endTime);
@@ -247,7 +247,7 @@ final class SpanTest extends TestCase
 
         $span = new Span('test-span', $context, SpanKind::SERVER, $startTime, ResourceMother::default(), $scope);
         $span->setAttribute('http.method', 'GET');
-        $span->recordEvent(GenericEvent::create('request.start', 1000000));
+        $span->recordEvent(GenericEvent::create('request.start', new \DateTimeImmutable('2024-01-01 12:00:00.500000')));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
         $span->setStatus(SpanStatus::ok());
         $span->end($endTime);
@@ -268,7 +268,7 @@ final class SpanTest extends TestCase
     public function test_record_event_adds_event() : void
     {
         $span = $this->createSpan();
-        $event = GenericEvent::now('test.event', ['key' => 'value']);
+        $event = GenericEvent::create('test.event', new \DateTimeImmutable(), ['key' => 'value']);
 
         $result = $span->recordEvent($event);
 
@@ -281,14 +281,16 @@ final class SpanTest extends TestCase
     {
         $span = $this->createSpan();
         $exception = new \RuntimeException('Test exception message');
+        $timestamp = new \DateTimeImmutable();
 
-        $result = $span->recordException($exception);
+        $result = $span->recordException($exception, $timestamp);
 
         self::assertSame($span, $result);
         self::assertCount(1, $span->events());
 
         $event = $span->events()[0];
         self::assertSame('exception', $event->name());
+        self::assertSame($timestamp, $event->timestamp());
 
         $attributes = $event->attributes();
         self::assertSame(\RuntimeException::class, $attributes['exception.type']);
@@ -300,8 +302,9 @@ final class SpanTest extends TestCase
     {
         $span = $this->createSpan();
         $exception = new \RuntimeException('Error');
+        $timestamp = new \DateTimeImmutable();
 
-        $span->recordException($exception, ['custom.key' => 'custom.value']);
+        $span->recordException($exception, $timestamp, ['custom.key' => 'custom.value']);
 
         $event = $span->events()[0];
         $attributes = $event->attributes();
@@ -312,8 +315,8 @@ final class SpanTest extends TestCase
     public function test_record_multiple_events() : void
     {
         $span = $this->createSpan();
-        $event1 = GenericEvent::now('event1');
-        $event2 = GenericEvent::now('event2');
+        $event1 = GenericEvent::create('event1', new \DateTimeImmutable());
+        $event2 = GenericEvent::create('event2', new \DateTimeImmutable());
 
         $span->recordEvent($event1)->recordEvent($event2);
 
