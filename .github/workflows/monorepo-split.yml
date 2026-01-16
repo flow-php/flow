@@ -88,7 +88,7 @@ jobs:
             split_repository: 'openapi-specification-bridge'
           - local_path: 'src/bridge/symfony/http-foundation'
             split_repository: 'symfony-http-foundation-bridge'
-          - local_path: 'src/bridge/telemetry/telemetry-otlp'
+          - local_path: 'src/bridge/telemetry/otlp'
             split_repository: 'telemetry-otlp-bridge'
 
           - local_path: 'src/tools/homebrew'

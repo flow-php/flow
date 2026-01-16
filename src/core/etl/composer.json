@@ -13,6 +13,7 @@
         "ext-json": "*",
         "psr/clock": "^1.0",
         "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",
+        "flow-php/telemetry": "self.version",
         "flow-php/types": "self.version",
         "flow-php/array-dot": "self.version",
         "flow-php/filesystem": "self.version",
