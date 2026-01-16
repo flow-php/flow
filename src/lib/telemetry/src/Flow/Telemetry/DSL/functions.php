@@ -131,15 +131,16 @@ function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = 
 }
 
 /**
- * Create a SpanEvent (GenericEvent) with the current timestamp.
+ * Create a SpanEvent (GenericEvent) with an explicit timestamp.
  *
  * @param string $name Event name
+ * @param \DateTimeImmutable $timestamp Event timestamp
  * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Event attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_event(string $name, array $attributes = []) : GenericEvent
+function span_event(string $name, \DateTimeImmutable $timestamp, array $attributes = []) : GenericEvent
 {
-    return GenericEvent::now($name, $attributes);
+    return GenericEvent::create($name, $timestamp, $attributes);
 }
 
 /**

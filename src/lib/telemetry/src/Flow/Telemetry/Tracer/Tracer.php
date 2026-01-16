@@ -256,7 +256,7 @@ final class Tracer
 
             return $result;
         } catch (\Throwable $e) {
-            $span->recordException($e);
+            $span->recordException($e, $this->clock->now());
             $span->setStatus(SpanStatus::error($e->getMessage()));
 
             throw $e;

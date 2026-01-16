@@ -41,7 +41,7 @@ final class ConsoleSpanExporterTest extends TestCase
         $exporter = $this->createExporter($stream);
 
         $span = SpanMother::create('test-span');
-        $span->recordEvent(new GenericEvent('query.start', (int) (\microtime(true) * 1_000_000_000), Attributes::empty()));
+        $span->recordEvent(new GenericEvent('query.start', new \DateTimeImmutable(), Attributes::empty()));
         $span->end();
 
         $exporter->export([$span]);

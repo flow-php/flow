@@ -113,7 +113,7 @@ final class SpanSerializerTest extends TestCase
     public function test_serialize_span_with_events() : void
     {
         $span = $this->createSpan();
-        $span->recordEvent(GenericEvent::now('cache.hit', ['key' => 'user:123']));
+        $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['key' => 'user:123']));
 
         $result = $this->serializer->serialize($span);
 

@@ -168,16 +168,19 @@ final class FunctionsTest extends TestCase
 
     public function test_span_event_creates_event() : void
     {
-        $event = span_event('test.event');
+        $timestamp = new \DateTimeImmutable();
+        $event = span_event('test.event', $timestamp);
 
         self::assertInstanceOf(GenericEvent::class, $event);
         self::assertSame('test.event', $event->name());
+        self::assertSame($timestamp, $event->timestamp());
         self::assertSame([], $event->attributes());
     }
 
     public function test_span_event_with_attributes() : void
     {
-        $event = span_event('test.event', ['key' => 'value']);
+        $timestamp = new \DateTimeImmutable();
+        $event = span_event('test.event', $timestamp, ['key' => 'value']);
 
         self::assertSame(['key' => 'value'], $event->attributes());
     }

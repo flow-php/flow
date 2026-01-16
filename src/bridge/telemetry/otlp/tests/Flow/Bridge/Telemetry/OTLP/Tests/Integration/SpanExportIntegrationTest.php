@@ -88,8 +88,8 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
         $tracer = $telemetry->tracer('test-component');
 
         $span = $tracer->span('event-test');
-        $span->recordEvent(GenericEvent::now('cache.hit', ['cache.key' => 'user:123']));
-        $span->recordEvent(GenericEvent::now('db.query', ['db.statement' => 'SELECT * FROM users']));
+        $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['cache.key' => 'user:123']));
+        $span->recordEvent(GenericEvent::create('db.query', new \DateTimeImmutable(), ['db.statement' => 'SELECT * FROM users']));
         $tracer->complete($span);
 
         $telemetry->shutdown();

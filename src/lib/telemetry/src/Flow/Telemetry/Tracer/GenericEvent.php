@@ -10,12 +10,11 @@ use Flow\Telemetry\Attributes;
  * Default implementation of SpanEvent.
  *
  * GenericEvent provides a simple, immutable implementation for recording
- * events within a span. Events can be created with explicit timestamps
- * or automatically use the current time.
+ * events within a span. Events are created with explicit timestamps.
  *
  * Example usage:
  * ```php
- * $event = GenericEvent::now('user.login', ['user.id' => '12345']);
+ * $event = GenericEvent::create('user.login', $clock->now(), ['user.id' => '12345']);
  * echo $event->name(); // "user.login"
  * ```
  */
@@ -23,7 +22,7 @@ final readonly class GenericEvent implements SpanEvent
 {
     public function __construct(
         private string $name,
-        private int $timestamp,
+        private \DateTimeImmutable $timestamp,
         private Attributes $attributesObject = new Attributes(),
     ) {
     }
@@ -32,10 +31,10 @@ final readonly class GenericEvent implements SpanEvent
      * Create an event with an explicit timestamp.
      *
      * @param string $name Event name
-     * @param int $timestamp Timestamp in nanoseconds since Unix epoch
+     * @param \DateTimeImmutable $timestamp Event timestamp
      * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Event attributes
      */
-    public static function create(string $name, int $timestamp, array $attributes = []) : self
+    public static function create(string $name, \DateTimeImmutable $timestamp, array $attributes = []) : self
     {
         return new self($name, $timestamp, Attributes::create($attributes));
     }
@@ -43,26 +42,15 @@ final readonly class GenericEvent implements SpanEvent
     /**
      * Create a GenericEvent from a normalized array representation.
      *
-     * @param array{name: string, timestamp: int, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized event data
+     * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized event data
      */
     public static function fromArray(array $data) : self
     {
         return new self(
             $data['name'],
-            $data['timestamp'],
+            new \DateTimeImmutable($data['timestamp']),
             Attributes::fromArray($data['attributes']),
         );
-    }
-
-    /**
-     * Create an event with the current timestamp.
-     *
-     * @param string $name Event name
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Event attributes
-     */
-    public static function now(string $name, array $attributes = []) : self
-    {
-        return new self($name, \hrtime(true), Attributes::create($attributes));
     }
 
     /**
@@ -86,18 +74,18 @@ final readonly class GenericEvent implements SpanEvent
     /**
      * Normalize the GenericEvent to an array representation for serialization.
      *
-     * @return array{name: string, timestamp: int, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
+     * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
      */
     public function normalize() : array
     {
         return [
             'name' => $this->name,
-            'timestamp' => $this->timestamp,
+            'timestamp' => $this->timestamp->format('c'),
             'attributes' => $this->attributesObject->normalize(),
         ];
     }
 
-    public function timestamp() : int
+    public function timestamp() : \DateTimeImmutable
     {
         return $this->timestamp;
     }

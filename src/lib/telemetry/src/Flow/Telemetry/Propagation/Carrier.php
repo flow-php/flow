@@ -28,10 +28,6 @@ namespace Flow\Telemetry\Propagation;
  *         $this->request = $this->request->withHeader($key, $value);
  *     }
  *
- *     public function keys(): array
- *     {
- *         return array_keys($this->request->getHeaders());
- *     }
  * }
  * ```
  */
@@ -47,13 +43,6 @@ interface Carrier
      * @return null|string The value, or null if not found
      */
     public function get(string $key) : ?string;
-
-    /**
-     * Get all available keys.
-     *
-     * @return array<string> List of keys in the carrier
-     */
-    public function keys() : array;
 
     /**
      * Set a value.
