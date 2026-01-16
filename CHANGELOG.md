@@ -30,6 +30,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [b733f4](https://github.com/flow-php/flow/commit/b733f4c983d9023d3208765cb191b3108a4704d7) - **documentation tests on website** - [@norberttech](https://github.com/norberttech)
 - [99bb3b](https://github.com/flow-php/flow/commit/99bb3becf063e3452c6fa66720127b013f5ce1ab) - **telemetry library** - [@norberttech](https://github.com/norberttech)
 - [a71e6a](https://github.com/flow-php/flow/commit/a71e6a3f69338c1559fd25ff3f52303f694ce4db) - **pr-comment and monorepo-split workflows** - [@norberttech](https://github.com/norberttech)
 - [#2151](https://github.com/flow-php/flow/pull/2151) - **TransformerLoader** - [@norberttech](https://github.com/norberttech)
