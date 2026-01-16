@@ -30,6 +30,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [a71e6a](https://github.com/flow-php/flow/commit/a71e6a3f69338c1559fd25ff3f52303f694ce4db) - **pr-comment and monorepo-split workflows** - [@norberttech](https://github.com/norberttech)
 - [#2151](https://github.com/flow-php/flow/pull/2151) - **TransformerLoader** - [@norberttech](https://github.com/norberttech)
 - [d14d49](https://github.com/flow-php/flow/commit/d14d4909a2e3a734ac148924cc9b762747ac17e5) - **trigger for pr-comment worfklow** - [@norberttech](https://github.com/norberttech)
 - [#2134](https://github.com/flow-php/flow/pull/2134) - **ExplainModifier now explicitly sets BUFFERS, TIMING, SUMMARY to OFF when disabled (PostgreSQL defaults could override user config)** - [@norberttech](https://github.com/norberttech)
