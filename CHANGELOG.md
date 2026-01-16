@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-01-16
 
 ### Added
+- [#2150](https://github.com/flow-php/flow/pull/2150) - **flow-php/telemetry library** - [@norberttech](https://github.com/norberttech)
+- [#2150](https://github.com/flow-php/flow/pull/2150) - **flow-php/telemetry-otlp-bridge bridge** - [@norberttech](https://github.com/norberttech)
 - [#2140](https://github.com/flow-php/flow/pull/2140) - **Benchmark documentation explaining infrastructure, workflow, and how to run benchmarks** - [@norberttech](https://github.com/norberttech)
 - [#2136](https://github.com/flow-php/flow/pull/2136) - **Added normalize() and fromArray() methods to PostgreSQL Explain Plan classes (Cost, Timing, Buffers, PlanNode, Plan, ExplainConfig) for serialization/deserialization support** - [@norberttech](https://github.com/norberttech)
 - [#2136](https://github.com/flow-php/flow/pull/2136) - **Added PHPStan type aliases (PlanNodeShape, TimingShape, BuffersShape) for improved type documentation** - [@norberttech](https://github.com/norberttech)
