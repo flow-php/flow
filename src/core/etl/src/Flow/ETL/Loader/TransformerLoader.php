@@ -25,12 +25,10 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
     public function load(Rows $rows, FlowContext $context) : void
     {
         if ($this->transformer instanceof Transformer) {
-            $rows = $this->transformer->transform($rows, $context);
+            $this->loader->load($this->transformer->transform($rows, $context), $context);
         } else {
-            $rows = df()->from(from_rows($rows))->with($this->transformer)->fetch();
+            df($context->config)->from(from_rows($rows))->with($this->transformer)->load($this->loader)->run();
         }
-
-        $this->loader->load($rows, $context);
     }
 
     public function loaders() : array
