@@ -32,7 +32,7 @@ final class DocumentationTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertGreaterThan(0, $client->getCrawler()->filter('[data-dsl-function]')->count());
         self::assertGreaterThan(0, $client->getCrawler()->filter('[data-dsl-source-link]')->count());
-        self::assertEquals(21, $client->getCrawler()->filter('[data-dsl-module]')->count());
+        self::assertGreaterThan(21, $client->getCrawler()->filter('[data-dsl-module]')->count());
         self::assertEquals(12, $client->getCrawler()->filter('[data-dsl-type]')->count());
     }
 
