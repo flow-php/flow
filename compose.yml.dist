@@ -64,5 +64,16 @@ services:
             - DATA_DIR=/tmp/localstack/data
         volumes:
             - "./var/localstack:/tmp/localstack"
+    otel-collector:
+        image: otel/opentelemetry-collector-contrib:0.115.1
+        container_name: flow-php-otel-collector
+        command: ["--config=/etc/otel-collector-config.yaml"]
+        ports:
+            - "4317:4317"
+            - "4318:4318"
+            - "8888:8888"
+        volumes:
+            - "./docker/otel-collector-test-config.yaml:/etc/otel-collector-config.yaml:ro"
+            - "./var/otel:/var/otel"
 
 

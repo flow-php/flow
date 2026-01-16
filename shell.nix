@@ -6,6 +6,7 @@
     with-pg-query-ext ? true,
     with-terraform ? false,
     with-wasm ? false,
+    with-grpc ? true,
 }:
 
 let
@@ -39,7 +40,7 @@ let
 
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;
-        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext with-pcov with-xdebug with-blackfire with-pg-query-ext;
+        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext with-pcov with-xdebug with-blackfire with-pg-query-ext with-grpc;
     };
 in
 pkgs.mkShell {

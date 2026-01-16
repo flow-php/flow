@@ -1,0 +1,56 @@
+{
+    "name": "flow-php/telemetry-otlp-bridge",
+    "type": "library",
+    "description": "Flow PHP Telemetry - OTLP Exporter Bridge",
+    "keywords": [
+        "flow-php",
+        "telemetry",
+        "opentelemetry",
+        "otlp",
+        "tracing",
+        "metrics",
+        "logging",
+        "observability"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/telemetry": "self.version",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0"
+    },
+    "require-dev": {
+        "grpc/grpc": "^1.74",
+        "open-telemetry/gen-otlp-protobuf": "^1.8",
+        "google/protobuf": "^4.0",
+        "nyholm/psr7": "^1.8",
+        "symfony/http-client": "^6.4 || ^7.3 || ^8.0"
+    },
+    "suggest": {
+        "ext-grpc": "Required for gRPC transport",
+        "google/protobuf": "Required for gRPC transport with binary protobuf encoding",
+        "open-telemetry/gen-otlp-protobuf": "Generated PHP classes for OTLP protobuf messages (required for gRPC transport)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

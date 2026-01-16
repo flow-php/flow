@@ -1,0 +1,159 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Telemetry\Meter\Instrument;
+
+use Flow\Telemetry\Attributes;
+use Flow\Telemetry\{InstrumentationScope, Resource};
+use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricType};
+use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, ExemplarReservoir, SimpleFixedSizeExemplarReservoir, TraceBasedExemplarFilter};
+use Flow\Telemetry\Tracer\SpanContext;
+use Psr\Clock\ClockInterface;
+
+/**
+ * Counter instrument for recording non-negative increments.
+ *
+ * Counters are monotonically increasing - they only go up.
+ * Use for counting occurrences: requests, errors, items processed.
+ *
+ * Example usage:
+ * ```php
+ * $counter = $meter->createCounter('http.requests', 'requests', 'Total HTTP requests');
+ * $counter->add(1, ['http.method' => 'GET']);
+ * $counter->add(1, ['http.method' => 'POST']);
+ * ```
+ *
+ * @see https://opentelemetry.io/docs/specs/otel/metrics/api/#counter
+ */
+final class Counter implements Instrument
+{
+    /**
+     * Aggregations by attribute key.
+     *
+     * @var array<string, array{sum: float|int, attributes: array<string, bool|float|int|string>, reservoir: ExemplarReservoir}>
+     */
+    private array $aggregations = [];
+
+    /**
+     * @param string $name Instrument name
+     * @param resource $resource The resource context for this instrument
+     * @param InstrumentationScope $scope Instrumentation scope that created this instrument
+     * @param ClockInterface $clock Clock for timestamps
+     * @param AggregationTemporality $temporality Aggregation temporality
+     * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling
+     * @param null|string $unit Unit of measurement
+     * @param null|string $description Human-readable description
+     */
+    public function __construct(
+        private readonly string $name,
+        private readonly Resource $resource,
+        private readonly InstrumentationScope $scope,
+        private readonly ClockInterface $clock,
+        private readonly AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
+        private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
+        private readonly ?string $unit = null,
+        private readonly ?string $description = null,
+    ) {
+    }
+
+    /**
+     * Add a non-negative value to the counter.
+     *
+     * @param float|int $amount Amount to add (must be >= 0)
+     * @param array<string, bool|float|int|string> $attributes Categorization attributes
+     * @param null|SpanContext $context Optional span context for exemplar capture
+     *
+     * @throws \InvalidArgumentException If amount is negative
+     */
+    public function add(int|float $amount, array $attributes = [], ?SpanContext $context = null) : void
+    {
+        if ($amount < 0) {
+            throw new \InvalidArgumentException('Counter amount must be >= 0, got ' . $amount);
+        }
+
+        $key = $this->attributeKey($attributes);
+
+        if (!isset($this->aggregations[$key])) {
+            $this->aggregations[$key] = [
+                'sum' => 0,
+                'attributes' => $attributes,
+                'reservoir' => new SimpleFixedSizeExemplarReservoir(1),
+            ];
+        }
+
+        $this->aggregations[$key]['sum'] += $amount;
+
+        if ($context !== null && $this->exemplarFilter->shouldSample($context, $amount, $attributes)) {
+            $this->aggregations[$key]['reservoir']->offer(
+                $amount,
+                $attributes,
+                $context,
+                $this->clock->now(),
+            );
+        }
+    }
+
+    public function collect() : array
+    {
+        $metrics = [];
+
+        foreach ($this->aggregations as $data) {
+            $exemplars = $data['reservoir']->collect();
+
+            $metrics[] = new Metric(
+                name: $this->name,
+                type: MetricType::COUNTER,
+                value: $data['sum'],
+                attributes: Attributes::create($data['attributes']),
+                timestamp: $this->clock->now(),
+                resource: $this->resource,
+                scope: $this->scope,
+                unit: $this->unit,
+                description: $this->description,
+                temporality: $this->temporality,
+                exemplars: $exemplars,
+            );
+        }
+
+        $this->aggregations = [];
+
+        return $metrics;
+    }
+
+    public function description() : ?string
+    {
+        return $this->description;
+    }
+
+    public function name() : string
+    {
+        return $this->name;
+    }
+
+    public function unit() : ?string
+    {
+        return $this->unit;
+    }
+
+    /**
+     * Create a unique key from attributes for aggregation lookup.
+     *
+     * @param array<string, bool|float|int|string> $attributes
+     */
+    private function attributeKey(array $attributes) : string
+    {
+        if (\count($attributes) === 0) {
+            return '';
+        }
+
+        \ksort($attributes);
+        $parts = [];
+
+        foreach ($attributes as $key => $value) {
+            $parts[] = $key . '=' . (\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value);
+        }
+
+        return \implode('|', $parts);
+    }
+}

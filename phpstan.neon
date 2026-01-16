@@ -29,6 +29,7 @@ parameters:
         - src/bridge/monolog/http/src
         - src/bridge/openapi/specification/src
         - src/bridge/symfony/http-foundation/src
+        - src/bridge/telemetry/otlp/src
         - src/lib/array-dot/src
         - src/lib/azure-sdk/src
         - src/lib/doctrine-dbal-bulk/src
@@ -37,6 +38,7 @@ parameters:
         - src/lib/parquet/src
         - src/lib/parquet-viewer/src
         - src/lib/snappy/src
+        - src/lib/telemetry/src
         - src/lib/types/src
         - src/lib/postgresql/src
         - src/tools/documentation/src
@@ -61,6 +63,8 @@ parameters:
         - src/bridge/monolog/http/tests
         - src/bridge/openapi/specification/tests
         - src/bridge/symfony/http-foundation/tests
+        - src/bridge/telemetry/otlp/tests
+        - src/lib/telemetry/tests
 
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*

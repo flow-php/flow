@@ -71,13 +71,29 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
+      - name: "Start OpenTelemetry Collector"
+        run: |
+          docker run -d --name otel-collector \
+            -p 4317:4317 -p 4318:4318 -p 8888:8888 -p 13133:13133 \
+            -v ${{ github.workspace }}/docker/otel-collector-test-config.yaml:/etc/otelcol-contrib/config.yaml:ro \
+            otel/opentelemetry-collector-contrib:0.115.1
+          # Wait for container to be ready
+          for i in {1..30}; do
+            if curl -sf http://localhost:13133/ > /dev/null 2>&1; then
+              echo "OpenTelemetry Collector is ready"
+              break
+            fi
+            echo "Waiting for OpenTelemetry Collector... ($i/30)"
+            sleep 2
+          done
+
       - name: "Setup PHP Environment"
         uses: "./.github/actions/setup-php-env"
         with:
           php-version: "${{ matrix.php-version }}"
           dependencies: "${{ matrix.dependencies }}"
           coverage: 'pcov'
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
@@ -139,6 +155,9 @@ jobs:
           S3_REGION: "us-east-1"
           S3_ACCESS_KEY_ID: "test"
           S3_SECRET_ACCESS_KEY: "test"
+          OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
+          OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
+          OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
 
       - name: Upload to Codecov
         uses: ./.github/actions/codecov-report

@@ -25,6 +25,8 @@ enum Module : string
     case PG_QUERY = 'PG_QUERY';
     case POSTGRESQL = 'POSTGRESQL';
     case S3_FILESYSTEM = 'S3_FILESYSTEM';
+    case TELEMETRY = 'TELEMETRY';
+    case TELEMETRY_OTLP = 'TELEMETRY_OTLP';
     case TEXT = 'TEXT';
     case TYPES = 'TYPES';
     case XML = 'XML';

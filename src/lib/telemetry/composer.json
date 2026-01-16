@@ -1,0 +1,34 @@
+{
+    "name": "flow-php/telemetry",
+    "type": "library",
+    "description": "Flow PHP - Telemetry library for metrics and tracing",
+    "keywords": [
+        "php",
+        "telemetry",
+        "metrics",
+        "tracing"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "psr/clock": "^1.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
