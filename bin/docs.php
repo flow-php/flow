@@ -62,9 +62,11 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php',
             __DIR__ . '/../src/lib/types/src/Flow/Types/DSL/functions.php',
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php',
+            __DIR__ . '/../src/lib/telemetry/src/Flow/Telemetry/DSL/functions.php',
+            __DIR__ . '/../src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php',
             __DIR__ . '/../src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php',
             __DIR__ . '/../src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php',
-            __DIR__ . '/../src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php',
+            __DIR__ . '/../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php',
         ];
 
         $extractor = new FunctionsExtractor(
