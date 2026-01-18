@@ -91,7 +91,7 @@ jobs:
           overwrite: true
 
   benchmark-baseline:
-    runs-on: flow-php-benchmark-runner
+    runs-on: benchmark
 
     services:
       postgres:
