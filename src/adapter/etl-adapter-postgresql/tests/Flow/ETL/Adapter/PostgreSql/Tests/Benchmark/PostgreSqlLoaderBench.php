@@ -15,7 +15,7 @@ use PhpBench\Attributes\{BeforeMethods, Groups};
 #[Groups(['loader'])]
 final class PostgreSqlLoaderBench
 {
-    private const TABLE_NAME = 'benchmark_orders_loader';
+    private const string TABLE_NAME = 'benchmark_orders_loader';
 
     private Client $client;
 
@@ -25,11 +25,7 @@ final class PostgreSqlLoaderBench
 
     public function __construct()
     {
-        $dsn = \getenv('PGSQL_DATABASE_URL');
-
-        if (!$dsn) {
-            throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
-        }
+        $dsn = \getenv('PGSQL_DATABASE_URL') ?: throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
 
         if (!\extension_loaded('pgsql')) {
             throw new \RuntimeException('ext-pgsql is not available');
@@ -43,7 +39,7 @@ final class PostgreSqlLoaderBench
             pgsql_connection_dsn($dsn),
             mapper: pgsql_mapper(),
         );
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
         $this->context = flow_context();
     }
 
@@ -77,9 +73,9 @@ final class PostgreSqlLoaderBench
     }
 
     #[BeforeMethods('setUp')]
-    public function bench_load_10k() : void
+    public function bench_load_1k() : void
     {
-        foreach ($this->rows->chunks(1_000) as $chunk) {
+        foreach ($this->rows->chunks(100) as $chunk) {
             to_pgsql_table($this->client, self::TABLE_NAME)->load($chunk, $this->context);
         }
     }

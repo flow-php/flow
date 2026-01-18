@@ -31,7 +31,7 @@ final class RenameEachEntryTransformerBench
         $this->context = flow_context(config());
     }
 
-    public function bench_transform_10k_rows() : void
+    public function bench_transform_1k_rows() : void
     {
         (new RenameEachEntryTransformer(rename_style(StringStyles::KEBAB)))->transform($this->rows, $this->context);
     }

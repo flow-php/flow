@@ -22,7 +22,7 @@ final class CSVLoaderBench
     {
         $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_csv_loader_bench') . '.csv';
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
     }
 
     public function __destruct()
@@ -34,7 +34,7 @@ final class CSVLoaderBench
         \unlink($this->outputPath);
     }
 
-    public function bench_load_10k() : void
+    public function bench_load_1k() : void
     {
         to_csv($this->outputPath)->load($this->rows, $this->context);
     }

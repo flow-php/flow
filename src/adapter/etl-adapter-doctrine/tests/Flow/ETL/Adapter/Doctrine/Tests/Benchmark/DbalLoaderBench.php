@@ -15,7 +15,7 @@ use PhpBench\Attributes\{BeforeMethods, Groups};
 #[Groups(['loader'])]
 final class DbalLoaderBench
 {
-    private const TABLE_NAME = 'benchmark_orders_loader';
+    private const string TABLE_NAME = 'benchmark_orders_loader';
 
     private Connection $connection;
 
@@ -25,16 +25,12 @@ final class DbalLoaderBench
 
     public function __construct()
     {
-        $dsn = \getenv('PGSQL_DATABASE_URL');
-
-        if (!$dsn) {
-            throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
-        }
+        $dsn = \getenv('PGSQL_DATABASE_URL') ?: throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
 
         $params = (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse($dsn);
 
         $this->connection = DriverManager::getConnection($params);
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
         $this->context = flow_context();
     }
 
@@ -63,9 +59,9 @@ final class DbalLoaderBench
     }
 
     #[BeforeMethods('setUp')]
-    public function bench_load_10k() : void
+    public function bench_load_1k() : void
     {
-        foreach ($this->rows->chunks(1_000) as $chunk) {
+        foreach ($this->rows->chunks(100) as $chunk) {
             to_dbal_table_insert($this->connection, self::TABLE_NAME)->load($chunk, $this->context);
         }
     }

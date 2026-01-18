@@ -12,24 +12,14 @@ use PhpBench\Attributes\{BeforeMethods, Groups};
 #[Groups(['building_blocks'])]
 final class RowsBench
 {
-    private Rows $rows;
-
     private Rows $rows100;
 
     private Rows $rows1k;
 
     public function setUp() : void
     {
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
         $this->rows1k = (new FakeStaticOrdersExtractor(1_000))->toRows();
         $this->rows100 = (new FakeStaticOrdersExtractor(100))->toRows();
-    }
-
-    public function bench_chunk_1_000_on_10k() : void
-    {
-        foreach ($this->rows->chunks(1_000) as $chunk) {
-
-        }
     }
 
     public function bench_diff_left_100_on_1k() : void
@@ -91,7 +81,7 @@ final class RowsBench
 
     public function bench_schema_on_1k_identical_rows() : void
     {
-        $this->rows->schema();
+        $this->rows1k->schema();
     }
 
     public function bench_sort_asc_on_1k() : void

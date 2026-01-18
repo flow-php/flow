@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_key_set_qb, from_dbal_limit_offset_qb, pagination_key_asc, pagination_key_set, to_dbal_schema_table, to_dbal_table_insert};
 use function Flow\ETL\DSL\{config, df, flow_context};
-use Doctrine\DBAL\{DriverManager, ParameterType};
+use Doctrine\DBAL\{Connection, DriverManager, ParameterType};
 use Doctrine\DBAL\Tools\DsnParser;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use PhpBench\Attributes\Groups;
@@ -14,17 +14,13 @@ use PhpBench\Attributes\Groups;
 #[Groups(['extractor'])]
 final class DbalExtractorBench
 {
-    private const TABLE_NAME = 'benchmark_orders_extractor';
+    private const string TABLE_NAME = 'benchmark_orders_extractor';
 
-    private \Doctrine\DBAL\Connection $connection;
+    private Connection $connection;
 
     public function __construct()
     {
-        $dsn = \getenv('PGSQL_DATABASE_URL');
-
-        if (!$dsn) {
-            throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
-        }
+        $dsn = \getenv('PGSQL_DATABASE_URL') ?: throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
 
         $params = (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse($dsn);
 
@@ -44,7 +40,7 @@ final class DbalExtractorBench
         $this->connection->close();
     }
 
-    public function bench_extract_10k_keyset() : void
+    public function bench_extract_1k_keyset() : void
     {
         $context = flow_context(config());
 
@@ -60,7 +56,7 @@ final class DbalExtractorBench
         }
     }
 
-    public function bench_extract_10k_limit_offset() : void
+    public function bench_extract_1k_limit_offset() : void
     {
         $context = flow_context(config());
 
@@ -72,7 +68,6 @@ final class DbalExtractorBench
         foreach (from_dbal_limit_offset_qb(
             $this->connection,
             $queryBuilder,
-            page_size: 1000
         )->extract($context) as $rows) {
         }
     }
@@ -89,7 +84,7 @@ final class DbalExtractorBench
         $table->setPrimaryKey(['index']);
         $schemaManager->createTable($table);
 
-        $extractor = new FakeStaticOrdersExtractor(10_000);
+        $extractor = new FakeStaticOrdersExtractor(1_000);
 
         df()
             ->read($extractor)

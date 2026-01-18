@@ -14,17 +14,13 @@ use PhpBench\Attributes\Groups;
 #[Groups(['extractor'])]
 final class PostgreSqlExtractorBench
 {
-    private const TABLE_NAME = 'benchmark_orders_extractor';
+    private const string TABLE_NAME = 'benchmark_orders_extractor';
 
     private Client $client;
 
     public function __construct()
     {
-        $dsn = \getenv('PGSQL_DATABASE_URL');
-
-        if (!$dsn) {
-            throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
-        }
+        $dsn = \getenv('PGSQL_DATABASE_URL') ?: throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
 
         if (!\extension_loaded('pgsql')) {
             throw new \RuntimeException('ext-pgsql is not available');
@@ -50,18 +46,18 @@ final class PostgreSqlExtractorBench
         $this->client->close();
     }
 
-    public function bench_extract_10k_cursor() : void
+    public function bench_extract_1k_cursor() : void
     {
         $context = flow_context(config());
 
         foreach (from_pgsql_cursor(
             $this->client,
             select(star())->from(table(self::TABLE_NAME)),
-        )->withFetchSize(1000)->extract($context) as $rows) {
+        )->withFetchSize(100)->extract($context) as $rows) {
         }
     }
 
-    public function bench_extract_10k_keyset() : void
+    public function bench_extract_1k_keyset() : void
     {
         $context = flow_context(config());
 
@@ -69,18 +65,18 @@ final class PostgreSqlExtractorBench
             $this->client,
             select(star())->from(table(self::TABLE_NAME)),
             pgsql_pagination_key_set(pgsql_pagination_key_asc('index')),
-        )->withPageSize(1000)->extract($context) as $rows) {
+        )->withPageSize(100)->extract($context) as $rows) {
         }
     }
 
-    public function bench_extract_10k_limit_offset() : void
+    public function bench_extract_1k_limit_offset() : void
     {
         $context = flow_context(config());
 
         foreach (from_pgsql_limit_offset(
             $this->client,
             select(star())->from(table(self::TABLE_NAME))->orderBy(asc(col('index'))),
-        )->withPageSize(1000)->extract($context) as $rows) {
+        )->withPageSize(100)->extract($context) as $rows) {
         }
     }
 
@@ -104,11 +100,8 @@ final class PostgreSqlExtractorBench
                 ->column(column('items', data_type_jsonb()))
         );
 
-        $extractor = new FakeStaticOrdersExtractor(10_000);
-        $context = flow_context(config());
-
         df()
-            ->read($extractor)
+            ->read(new FakeStaticOrdersExtractor(1_000))
             ->write(to_pgsql_table($this->client, self::TABLE_NAME))
             ->run();
     }

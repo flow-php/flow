@@ -22,7 +22,7 @@ final class ParquetLoaderBench
     {
         $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet';
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
     }
 
     public function __destruct()
@@ -34,7 +34,7 @@ final class ParquetLoaderBench
         \unlink($this->outputPath);
     }
 
-    public function bench_load_10k() : void
+    public function bench_load_1k() : void
     {
         to_parquet($this->outputPath)->load($this->rows, $this->context);
     }
