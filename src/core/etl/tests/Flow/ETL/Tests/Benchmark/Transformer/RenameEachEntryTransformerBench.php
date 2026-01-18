@@ -25,13 +25,13 @@ final class RenameEachEntryTransformerBench
                 ['id' => 3, 'random text' => null, 'from' => 666],
                 ['id' => 4, 'random text' => null, 'from' => 666],
                 ['id' => 5, 'random text' => null, 'from' => 666],
-            ], \range(0, 1_000))),
+            ], \range(0, 199))),
             flow_context(config())->entryFactory(),
         );
         $this->context = flow_context(config());
     }
 
-    public function bench_transform_10k_rows() : void
+    public function bench_transform_1k_rows() : void
     {
         (new RenameEachEntryTransformer(rename_style(StringStyles::KEBAB)))->transform($this->rows, $this->context);
     }

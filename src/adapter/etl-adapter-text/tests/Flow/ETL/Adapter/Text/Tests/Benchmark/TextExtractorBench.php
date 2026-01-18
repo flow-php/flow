@@ -19,9 +19,9 @@ final readonly class TextExtractorBench
         $this->context = flow_context(config());
     }
 
-    public function bench_extract_10k() : void
+    public function bench_extract_1k() : void
     {
-        foreach (from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_text(__DIR__ . '/../Fixtures/orders_1k.csv')->extract($this->context) as $rows) {
         }
     }
 }

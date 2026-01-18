@@ -91,6 +91,10 @@ final class ParquetWriterBench
 
     public function bench_write_batch() : void
     {
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
+        }
+
         $writer = new Writer(Compressions::SNAPPY, new Options());
         $writer->open($this->outputPath, $this->schema);
         $writer->writeBatch($this->rows);
@@ -99,12 +103,20 @@ final class ParquetWriterBench
 
     public function bench_write_gzip() : void
     {
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
+        }
+
         $writer = new Writer(Compressions::GZIP, new Options());
         $writer->write($this->outputPath, $this->schema, $this->rows);
     }
 
     public function bench_write_row_by_row() : void
     {
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
+        }
+
         $writer = new Writer(Compressions::SNAPPY, new Options());
         $writer->open($this->outputPath, $this->schema);
 
@@ -117,12 +129,20 @@ final class ParquetWriterBench
 
     public function bench_write_snappy() : void
     {
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
+        }
+
         $writer = new Writer(Compressions::SNAPPY, new Options());
         $writer->write($this->outputPath, $this->schema, $this->rows);
     }
 
     public function bench_write_uncompressed() : void
     {
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
+        }
+
         $writer = new Writer(Compressions::UNCOMPRESSED, new Options());
         $writer->write($this->outputPath, $this->schema, $this->rows);
     }

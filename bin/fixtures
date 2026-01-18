@@ -1,0 +1,106 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\Adapter\Excel\DSL\to_excel;
+use function Flow\ETL\Adapter\JSON\to_json;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\Adapter\XML\to_xml;
+use function Flow\ETL\DSL\df;
+use Flow\ETL\Adapter\Excel\ExcelWriter;
+use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$rowCount = 1_000;
+
+echo "Generating benchmark fixtures with {$rowCount} rows...\n\n";
+
+$fixtures = [
+    'CSV' => [
+        'path' => __DIR__ . '/../src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Benchmark/Fixtures/orders_1k.csv',
+        'writer' => fn (string $path) => to_csv($path),
+    ],
+    'JSON' => [
+        'path' => __DIR__ . '/../src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Fixtures/orders_1k.json',
+        'writer' => fn (string $path) => to_json($path),
+    ],
+    'Parquet (adapter)' => [
+        'path' => __DIR__ . '/../src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Benchmark/Fixtures/orders_1k.parquet',
+        'writer' => fn (string $path) => to_parquet($path),
+    ],
+    'Parquet (lib)' => [
+        'path' => __DIR__ . '/../src/lib/parquet/tests/Flow/Parquet/Tests/Benchmark/Fixtures/orders_1k.parquet',
+        'writer' => fn (string $path) => to_parquet($path),
+    ],
+    'Excel XLSX' => [
+        'path' => __DIR__ . '/../src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Fixtures/orders_1k.xlsx',
+        'writer' => fn (string $path) => to_excel($path)->withWriter(ExcelWriter::XLSX),
+    ],
+    'Excel ODS' => [
+        'path' => __DIR__ . '/../src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Fixtures/orders_1k.ods',
+        'writer' => fn (string $path) => to_excel($path)->withWriter(ExcelWriter::ODS),
+    ],
+    'XML' => [
+        'path' => __DIR__ . '/../src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Fixtures/orders_1k.xml',
+        'writer' => fn (string $path) => to_xml($path, root_element_name: 'root', row_element_name: 'row'),
+    ],
+];
+
+foreach ($fixtures as $name => $config) {
+    $path = $config['path'];
+    $dir = dirname($path);
+
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+        echo "  Created directory: {$dir}\n";
+    }
+
+    if (file_exists($path)) {
+        unlink($path);
+    }
+
+    echo "  Generating {$name}... ";
+
+    $start = microtime(true);
+
+    df()
+        ->read(new FakeStaticOrdersExtractor($rowCount))
+        ->write($config['writer']($path))
+        ->run();
+
+    $elapsed = round((microtime(true) - $start) * 1000);
+    $size = file_exists($path) ? filesize($path) : 0;
+    $sizeFormatted = $size > 1024 * 1024
+        ? round($size / 1024 / 1024, 2) . ' MB'
+        : round($size / 1024, 2) . ' KB';
+
+    echo "done ({$elapsed}ms, {$sizeFormatted})\n";
+}
+
+$textPath = __DIR__ . '/../src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Fixtures/orders_1k.csv';
+$textDir = dirname($textPath);
+
+if (!is_dir($textDir)) {
+    mkdir($textDir, 0755, true);
+}
+
+echo "  Generating Text... ";
+$start = microtime(true);
+
+$lines = [];
+
+for ($i = 0; $i < $rowCount; $i++) {
+    $lines[] = "254d61c5-22c8-4407-83a2-76f1cab53af2,user-{$i}@example.com,John Doe {$i}";
+}
+
+file_put_contents($textPath, implode("\n", $lines));
+
+$elapsed = round((microtime(true) - $start) * 1000);
+$size = filesize($textPath);
+$sizeFormatted = round($size / 1024, 2) . ' KB';
+echo "done ({$elapsed}ms, {$sizeFormatted})\n";
+
+echo "\nAll fixtures generated successfully.\n";

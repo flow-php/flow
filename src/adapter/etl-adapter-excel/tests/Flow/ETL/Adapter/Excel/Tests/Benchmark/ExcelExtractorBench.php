@@ -19,17 +19,17 @@ final readonly class ExcelExtractorBench
         $this->context = flow_context(config());
     }
 
-    public function bench_extract_10k_ods() : void
+    public function bench_extract_1k_ods() : void
     {
         iterator_to_array(
-            from_excel(__DIR__ . '/../Fixtures/orders_flow.ods')->extract($this->context)
+            from_excel(__DIR__ . '/../Fixtures/orders_1k.ods')->extract($this->context)
         );
     }
 
-    public function bench_extract_10k_xlsx() : void
+    public function bench_extract_1k_xlsx() : void
     {
         iterator_to_array(
-            from_excel(__DIR__ . '/../Fixtures/orders_flow.xlsx')->extract($this->context)
+            from_excel(__DIR__ . '/../Fixtures/orders_1k.xlsx')->extract($this->context)
         );
     }
 }

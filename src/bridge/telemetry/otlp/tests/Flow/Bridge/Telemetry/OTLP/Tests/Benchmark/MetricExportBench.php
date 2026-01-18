@@ -25,7 +25,7 @@ final readonly class MetricExportBench
      * @param array{config: TransportConfiguration} $params
      */
     #[ParamProviders('provideTransports')]
-    public function bench_export_1k_counter_increments(array $params) : void
+    public function bench_export_100_counter_increments(array $params) : void
     {
         $config = $params['config'];
         $resource = Resource::empty();
@@ -35,7 +35,7 @@ final readonly class MetricExportBench
         $meter = $provider->meter($resource, 'benchmark', '1.0.0');
         $counter = $meter->createCounter('bench.counter');
 
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $counter->add(1, ['iteration' => $i]);
         }
     }
@@ -44,7 +44,7 @@ final readonly class MetricExportBench
      * @param array{config: TransportConfiguration} $params
      */
     #[ParamProviders('provideTransports')]
-    public function bench_export_1k_histogram_records(array $params) : void
+    public function bench_export_100_histogram_records(array $params) : void
     {
         $config = $params['config'];
         $resource = Resource::empty();
@@ -54,7 +54,7 @@ final readonly class MetricExportBench
         $meter = $provider->meter($resource, 'benchmark', '1.0.0');
         $histogram = $meter->createHistogram('bench.histogram', 'ms');
 
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $histogram->record((float) ($i % 100), ['iteration' => $i]);
         }
     }

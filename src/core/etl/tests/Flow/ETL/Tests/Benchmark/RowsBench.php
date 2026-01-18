@@ -14,79 +14,79 @@ final class RowsBench
 {
     private Rows $rows;
 
-    private Rows $rows100;
+    private Rows $rows10;
 
-    private Rows $rows1k;
+    private Rows $rows100;
 
     public function setUp() : void
     {
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
-        $this->rows1k = (new FakeStaticOrdersExtractor(1_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
         $this->rows100 = (new FakeStaticOrdersExtractor(100))->toRows();
+        $this->rows10 = (new FakeStaticOrdersExtractor(10))->toRows();
     }
 
-    public function bench_chunk_1_000_on_10k() : void
+    public function bench_chunk_100_on_1k() : void
     {
-        foreach ($this->rows->chunks(1_000) as $chunk) {
+        foreach ($this->rows->chunks(100) as $chunk) {
 
         }
     }
 
-    public function bench_diff_left_100_on_1k() : void
+    public function bench_diff_left_10_on_100() : void
     {
-        $this->rows1k->diffLeft($this->rows100);
+        $this->rows100->diffLeft($this->rows10);
     }
 
-    public function bench_diff_right_100_on_1k() : void
+    public function bench_diff_right_10_on_100() : void
     {
-        $this->rows1k->diffRight($this->rows100);
+        $this->rows100->diffRight($this->rows10);
     }
 
-    public function bench_drop_100_on_1k() : void
+    public function bench_drop_10_on_100() : void
     {
-        $this->rows1k->drop(100);
+        $this->rows100->drop(10);
     }
 
-    public function bench_drop_right_10_on_1k() : void
+    public function bench_drop_right_10_on_100() : void
     {
-        $this->rows1k->dropRight(100);
+        $this->rows100->dropRight(10);
     }
 
-    public function bench_entries_on_1k() : void
+    public function bench_entries_on_100() : void
     {
-        foreach ($this->rows1k->entries() as $entries) {
+        foreach ($this->rows100->entries() as $entries) {
 
         }
     }
 
-    public function bench_filter_on_1k() : void
+    public function bench_filter_on_100() : void
     {
-        $this->rows1k->filter(fn (Row $row) : bool => $row->valueOf('order_id') === true);
+        $this->rows100->filter(fn (Row $row) : bool => $row->valueOf('order_id') === true);
     }
 
-    public function bench_find_on_1k() : void
+    public function bench_find_on_100() : void
     {
-        $this->rows1k->find(fn (Row $row) : bool => $row->valueOf('order_id') === true);
+        $this->rows100->find(fn (Row $row) : bool => $row->valueOf('order_id') === true);
     }
 
-    public function bench_find_one_on_1k() : void
+    public function bench_find_one_on_100() : void
     {
-        $this->rows1k->findOne(fn (Row $row) : bool => $row->valueOf('order_id') === true);
+        $this->rows100->findOne(fn (Row $row) : bool => $row->valueOf('order_id') === true);
     }
 
-    public function bench_first_on_1k() : void
+    public function bench_first_on_100() : void
     {
-        $this->rows1k->first();
+        $this->rows100->first();
     }
 
-    public function bench_merge_100_on_1k() : void
+    public function bench_merge_10_on_100() : void
     {
-        $this->rows1k->merge($this->rows100);
+        $this->rows100->merge($this->rows10);
     }
 
-    public function bench_partition_by_on_1k() : void
+    public function bench_partition_by_on_100() : void
     {
-        $this->rows1k->partitionBy(ref('order_id'));
+        $this->rows100->partitionBy(ref('order_id'));
     }
 
     public function bench_schema_on_1k_identical_rows() : void
@@ -94,28 +94,28 @@ final class RowsBench
         $this->rows->schema();
     }
 
-    public function bench_sort_asc_on_1k() : void
+    public function bench_sort_asc_on_100() : void
     {
-        $this->rows1k->sortAscending(ref('order_id'));
+        $this->rows100->sortAscending(ref('order_id'));
     }
 
-    public function bench_sort_by_on_1k() : void
+    public function bench_sort_by_on_100() : void
     {
-        $this->rows1k->sortBy(ref('order_id'));
+        $this->rows100->sortBy(ref('order_id'));
     }
 
-    public function bench_sort_desc_on_1k() : void
+    public function bench_sort_desc_on_100() : void
     {
-        $this->rows1k->sortDescending(ref('order_id'));
+        $this->rows100->sortDescending(ref('order_id'));
     }
 
-    public function bench_sort_entries_on_1k() : void
+    public function bench_sort_entries_on_100() : void
     {
-        $this->rows1k->sortEntries();
+        $this->rows100->sortEntries();
     }
 
-    public function bench_unique_on_1k() : void
+    public function bench_unique_on_100() : void
     {
-        $this->rows1k->unique();
+        $this->rows100->unique();
     }
 }

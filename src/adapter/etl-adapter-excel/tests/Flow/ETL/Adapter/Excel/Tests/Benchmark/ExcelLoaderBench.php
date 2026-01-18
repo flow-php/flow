@@ -7,15 +7,13 @@ namespace Flow\ETL\Adapter\Excel\Tests\Benchmark;
 use function Flow\ETL\Adapter\Excel\DSL\to_excel;
 use function Flow\ETL\DSL\flow_context;
 use Flow\ETL\Adapter\Excel\ExcelWriter;
-use Flow\ETL\{FlowContext, Rows};
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
 final readonly class ExcelLoaderBench
 {
-    private FlowContext $context;
-
     private Rows $rows;
 
     private string $tempDir;
@@ -28,18 +26,21 @@ final readonly class ExcelLoaderBench
             \mkdir($this->tempDir, 0777, true);
         }
 
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
-        $this->context = flow_context();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
     }
 
-    public function bench_load_10k_ods() : void
+    public function bench_load_1k_ods() : void
     {
         $outputPath = $this->tempDir . '/output_bench.ods';
 
-        to_excel($outputPath)->withWriter(ExcelWriter::ODS)->load($this->rows, $this->context);
+        if (\file_exists($outputPath)) {
+            \unlink($outputPath);
+        }
+
+        to_excel($outputPath)->withWriter(ExcelWriter::ODS)->load($this->rows, flow_context());
     }
 
-    public function bench_load_10k_xlsx() : void
+    public function bench_load_1k_xlsx() : void
     {
         $outputPath = $this->tempDir . '/output_bench.xlsx';
 
@@ -47,6 +48,6 @@ final readonly class ExcelLoaderBench
             \unlink($outputPath);
         }
 
-        to_excel($outputPath)->withWriter(ExcelWriter::XLSX)->load($this->rows, $this->context);
+        to_excel($outputPath)->withWriter(ExcelWriter::XLSX)->load($this->rows, flow_context());
     }
 }
