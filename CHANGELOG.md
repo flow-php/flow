@@ -35,6 +35,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanAnalyzer::summary() now computes and passes join counts, buffer statistics, and row data to PlanSummary** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [493cce](https://github.com/flow-php/flow/commit/493cce2b09fed9f8815ae9b94be4335632731158) - **benchmarks runner label on github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#2152](https://github.com/flow-php/flow/pull/2152) - **Mermaid diagrams responsiveness on documentation pages - diagrams now scale properly and don't overlap** - [@norberttech](https://github.com/norberttech)
 - [b733f4](https://github.com/flow-php/flow/commit/b733f4c983d9023d3208765cb191b3108a4704d7) - **documentation tests on website** - [@norberttech](https://github.com/norberttech)
 - [99bb3b](https://github.com/flow-php/flow/commit/99bb3becf063e3452c6fa66720127b013f5ce1ab) - **telemetry library** - [@norberttech](https://github.com/norberttech)
