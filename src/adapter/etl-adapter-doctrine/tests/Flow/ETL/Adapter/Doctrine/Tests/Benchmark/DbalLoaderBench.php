@@ -10,7 +10,7 @@ use Doctrine\DBAL\{Connection, DriverManager};
 use Doctrine\DBAL\Tools\DsnParser;
 use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
-use PhpBench\Attributes\{BeforeMethods, Groups};
+use PhpBench\Attributes\{AfterMethods, BeforeMethods, Groups};
 
 #[Groups(['loader'])]
 final class DbalLoaderBench
@@ -34,7 +34,7 @@ final class DbalLoaderBench
         $params = (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse($dsn);
 
         $this->connection = DriverManager::getConnection($params);
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
         $this->context = flow_context();
     }
 
@@ -62,11 +62,25 @@ final class DbalLoaderBench
         $schemaManager->createTable($table);
     }
 
-    #[BeforeMethods('setUp')]
-    public function bench_load_10k() : void
+    public function tearDown() : void
     {
+        $schemaManager = $this->connection->createSchemaManager();
+
+        if ($schemaManager->tablesExist([self::TABLE_NAME])) {
+            $schemaManager->dropTable(self::TABLE_NAME);
+        }
+    }
+
+    #[BeforeMethods('setUp')]
+    #[AfterMethods('tearDown')]
+    public function bench_load_1k() : void
+    {
+        $this->connection->beginTransaction();
+
         foreach ($this->rows->chunks(1_000) as $chunk) {
             to_dbal_table_insert($this->connection, self::TABLE_NAME)->load($chunk, $this->context);
         }
+
+        $this->connection->rollBack();
     }
 }

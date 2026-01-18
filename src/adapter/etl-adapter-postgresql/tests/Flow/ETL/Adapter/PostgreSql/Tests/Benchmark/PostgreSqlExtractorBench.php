@@ -50,7 +50,7 @@ final class PostgreSqlExtractorBench
         $this->client->close();
     }
 
-    public function bench_extract_10k_cursor() : void
+    public function bench_extract_1k_cursor() : void
     {
         $context = flow_context(config());
 
@@ -61,7 +61,7 @@ final class PostgreSqlExtractorBench
         }
     }
 
-    public function bench_extract_10k_keyset() : void
+    public function bench_extract_1k_keyset() : void
     {
         $context = flow_context(config());
 
@@ -73,7 +73,7 @@ final class PostgreSqlExtractorBench
         }
     }
 
-    public function bench_extract_10k_limit_offset() : void
+    public function bench_extract_1k_limit_offset() : void
     {
         $context = flow_context(config());
 
@@ -104,7 +104,7 @@ final class PostgreSqlExtractorBench
                 ->column(column('items', data_type_jsonb()))
         );
 
-        $extractor = new FakeStaticOrdersExtractor(10_000);
+        $extractor = new FakeStaticOrdersExtractor(1_000);
         $context = flow_context(config());
 
         df()

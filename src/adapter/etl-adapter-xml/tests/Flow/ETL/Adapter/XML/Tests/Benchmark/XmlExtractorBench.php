@@ -19,9 +19,9 @@ final readonly class XmlExtractorBench
         $this->context = flow_context(config());
     }
 
-    public function bench_extract_10k() : void
+    public function bench_extract_1k() : void
     {
-        foreach (from_xml(__DIR__ . '/../Fixtures/flow_orders.xml', xml_node_path: 'root/row')->extract($this->context) as $rows) {
+        foreach (from_xml(__DIR__ . '/../Fixtures/orders_1k.xml', xml_node_path: 'root/row')->extract($this->context) as $rows) {
         }
     }
 }

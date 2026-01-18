@@ -25,13 +25,20 @@
     "src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Benchmark/",
     "src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Benchmark/",
     "src/core/etl/tests/Flow/ETL/Tests/Benchmark/",
-    "src/lib/parquet/tests/Flow/Parquet/Tests/Benchmark/"
+    "src/lib/parquet/tests/Flow/Parquet/Tests/Benchmark/",
+    "src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Benchmark/"
   ],
-  "runner.php_config": { "memory_limit": "2G" },
+  "runner.php_config": {
+    "memory_limit": "2G",
+    "opcache.enable": "1",
+    "opcache.enable_cli": "1",
+    "pcov.enabled": "0"
+  },
   "runner.php_env": {
     "PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11&charset=utf8"
   },
-  "runner.iterations": 2,
-  "runner.retry_threshold": 10,
+  "runner.iterations": 5,
+  "runner.retry_threshold": 5,
+  "runner.warmup": 1,
   "storage.xml_storage_path": "var/phpbench"
 }

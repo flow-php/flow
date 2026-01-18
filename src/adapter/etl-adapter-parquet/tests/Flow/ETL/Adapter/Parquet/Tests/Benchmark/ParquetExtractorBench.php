@@ -19,9 +19,9 @@ final readonly class ParquetExtractorBench
         $this->context = flow_context(config());
     }
 
-    public function bench_extract_10k() : void
+    public function bench_extract_1k() : void
     {
-        foreach (from_parquet(__DIR__ . '/Fixtures/orders_10k.parquet')->extract($this->context) as $rows) {
+        foreach (from_parquet(__DIR__ . '/Fixtures/orders_1k.parquet')->extract($this->context) as $rows) {
         }
     }
 }

@@ -44,7 +44,7 @@ final class DbalExtractorBench
         $this->connection->close();
     }
 
-    public function bench_extract_10k_keyset() : void
+    public function bench_extract_1k_keyset() : void
     {
         $context = flow_context(config());
 
@@ -60,7 +60,7 @@ final class DbalExtractorBench
         }
     }
 
-    public function bench_extract_10k_limit_offset() : void
+    public function bench_extract_1k_limit_offset() : void
     {
         $context = flow_context(config());
 
@@ -89,7 +89,7 @@ final class DbalExtractorBench
         $table->setPrimaryKey(['index']);
         $schemaManager->createTable($table);
 
-        $extractor = new FakeStaticOrdersExtractor(10_000);
+        $extractor = new FakeStaticOrdersExtractor(1_000);
 
         df()
             ->read($extractor)

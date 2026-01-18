@@ -144,7 +144,7 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
           coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
           cache-key-suffix: "-locked"
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"

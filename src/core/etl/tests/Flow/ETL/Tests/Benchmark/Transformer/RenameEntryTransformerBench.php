@@ -26,13 +26,13 @@ final class RenameEntryTransformerBench
                 ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
                 ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
                 ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
-            ], \range(0, 10_000))),
+            ], \range(0, 199))),
             flow_context(config())->entryFactory(),
         );
         $this->context = flow_context(config());
     }
 
-    public function bench_transform_10k_rows() : void
+    public function bench_transform_1k_rows() : void
     {
         (new RenameEntryTransformer('from', 'to'))->transform($this->rows, $this->context);
     }

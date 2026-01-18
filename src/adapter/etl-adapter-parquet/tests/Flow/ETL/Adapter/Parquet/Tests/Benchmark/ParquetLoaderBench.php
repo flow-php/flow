@@ -6,36 +6,35 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext, Rows, Tests\Double\FakeStaticOrdersExtractor};
+use Flow\ETL\{Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
 final class ParquetLoaderBench
 {
-    private readonly FlowContext $context;
-
     private readonly string $outputPath;
 
     private Rows $rows;
 
     public function __construct()
     {
-        $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet';
-        $this->rows = (new FakeStaticOrdersExtractor(10_000))->toRows();
+        $this->rows = (new FakeStaticOrdersExtractor(1_000))->toRows();
     }
 
     public function __destruct()
     {
-        if (!\file_exists($this->outputPath)) {
-            throw new \RuntimeException("Benchmark failed, \"{$this->outputPath}\" doesn't exist");
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
         }
-
-        \unlink($this->outputPath);
     }
 
-    public function bench_load_10k() : void
+    public function bench_load_1k() : void
     {
-        to_parquet($this->outputPath)->load($this->rows, $this->context);
+        if (\file_exists($this->outputPath)) {
+            \unlink($this->outputPath);
+        }
+
+        to_parquet($this->outputPath)->load($this->rows, flow_context(config()));
     }
 }
