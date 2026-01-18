@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-16
+## [Unreleased] - 2026-01-18
 
 ### Added
 - [#2150](https://github.com/flow-php/flow/pull/2150) - **flow-php/telemetry library** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +22,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [af53ce](https://github.com/flow-php/flow/commit/af53cea7880e07dfa9f14f938e3e2753dc9bf987) - **refactor: change runner for benchmark tests to flow-php-benchmark-runner** - [@norberttech](https://github.com/norberttech)
 - [#2152](https://github.com/flow-php/flow/pull/2152) - **SpanEvent timestamp changed from nanoseconds (int) to DateTimeImmutable for better type safety and consistency** - [@norberttech](https://github.com/norberttech)
 - [#2152](https://github.com/flow-php/flow/pull/2152) - **span_event() DSL function now requires explicit timestamp parameter** - [@norberttech](https://github.com/norberttech)
 - [#2152](https://github.com/flow-php/flow/pull/2152) - **Span::recordException() now requires explicit timestamp parameter** - [@norberttech](https://github.com/norberttech)
