@@ -22,6 +22,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [08dae8](https://github.com/flow-php/flow/commit/08dae88ad50b4f8a37bdfd5e7a1b3991066b37d0) - **refactor: change runner for benchmark-baseline job** - [@norberttech](https://github.com/norberttech)
 - [af53ce](https://github.com/flow-php/flow/commit/af53cea7880e07dfa9f14f938e3e2753dc9bf987) - **refactor: change runner for benchmark tests to flow-php-benchmark-runner** - [@norberttech](https://github.com/norberttech)
 - [#2152](https://github.com/flow-php/flow/pull/2152) - **SpanEvent timestamp changed from nanoseconds (int) to DateTimeImmutable for better type safety and consistency** - [@norberttech](https://github.com/norberttech)
 - [#2152](https://github.com/flow-php/flow/pull/2152) - **span_event() DSL function now requires explicit timestamp parameter** - [@norberttech](https://github.com/norberttech)
