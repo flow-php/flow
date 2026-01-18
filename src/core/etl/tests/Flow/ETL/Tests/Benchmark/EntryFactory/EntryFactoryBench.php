@@ -52,8 +52,6 @@ final class EntryFactoryBench
 
         yield '1k' => ['rows' => \array_map($callback, \range(1, 1000))];
 
-        yield '500' => ['rows' => \array_map($callback, \range(1, 500))];
-
         yield '100' => ['rows' => \array_map($callback, \range(1, 100))];
     }
 }

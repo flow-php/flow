@@ -37,7 +37,7 @@
   "runner.php_env": {
     "PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11&charset=utf8"
   },
-  "runner.iterations": 5,
+  "runner.iterations": 3,
   "runner.retry_threshold": 5,
   "runner.warmup": 1,
   "storage.xml_storage_path": "var/phpbench"
