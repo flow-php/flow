@@ -9,7 +9,7 @@ on:
 
 jobs:
   benchmark-tests:
-    runs-on: flow-php-runner
+    runs-on: flow-php-benchmark-runner
     strategy:
       fail-fast: false
       matrix:
