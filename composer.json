@@ -415,6 +415,9 @@
         "test:docs": [
             "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples --exclude=documentation ."
         ],
+        "benchmark:generate-fixtures": [
+            "php bin/fixtures"
+        ],
         "test:benchmark": [
             "@test:benchmark:building_blocks",
             "@test:benchmark:extractor",

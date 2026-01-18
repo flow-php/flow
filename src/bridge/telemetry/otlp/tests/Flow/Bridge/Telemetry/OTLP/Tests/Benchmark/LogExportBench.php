@@ -25,7 +25,7 @@ final readonly class LogExportBench
      * @param array{config: TransportConfiguration} $params
      */
     #[ParamProviders('provideTransports')]
-    public function bench_export_1k_logs(array $params) : void
+    public function bench_export_100_logs(array $params) : void
     {
         $config = $params['config'];
         $resource = Resource::empty();
@@ -34,7 +34,7 @@ final readonly class LogExportBench
         $provider = otlp_logger_provider($processor, new SystemClock());
         $logger = $provider->logger($resource, 'benchmark', '1.0.0');
 
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $logger->info('Benchmark log message ' . $i, ['iteration' => $i]);
         }
     }
