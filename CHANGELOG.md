@@ -1,6 +1,14 @@
 ## [Unreleased] - 2026-01-19
 
 ### Added
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **New flow-php/monolog-telemetry-bridge package - connects Monolog with Flow Telemetry for unified logging export** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **TelemetryHandler - Monolog handler that forwards logs to Flow Telemetry with automatic trace context propagation (trace_id/span_id)** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **LogRecordConverter - converts Monolog LogRecord to Telemetry LogRecord with attribute prefixing (context.*, extra.*)** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **SeverityMapper - maps Monolog levels to Telemetry severities with customizable mapping** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **ValueNormalizer - normalizes PHP values to Telemetry-compatible attribute types** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **DSL functions: telemetry_handler(), log_record_converter(), severity_mapper(), value_normalizer()** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **Automatic exception handling - Throwables in Monolog context are passed to Telemetry's setException()** - [@norberttech](https://github.com/norberttech)
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **Documentation for Monolog Telemetry Bridge** - [@norberttech](https://github.com/norberttech)
 - [#2150](https://github.com/flow-php/flow/pull/2150) - **flow-php/telemetry library** - [@norberttech](https://github.com/norberttech)
 - [#2150](https://github.com/flow-php/flow/pull/2150) - **flow-php/telemetry-otlp-bridge bridge** - [@norberttech](https://github.com/norberttech)
 - [#2140](https://github.com/flow-php/flow/pull/2140) - **Benchmark documentation explaining infrastructure, workflow, and how to run benchmarks** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +30,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2158](https://github.com/flow-php/flow/pull/2158) - **updated minimum version of monolog to V3 across monorepo** - [@norberttech](https://github.com/norberttech)
 - [#2157](https://github.com/flow-php/flow/pull/2157) - **Remove part of unnecessary recursion calls from `array_dot_get()` method** - [@stloyd](https://github.com/stloyd)
 - [#2154](https://github.com/flow-php/flow/pull/2154) - **refactor: stabilize benchmarks** - [@norberttech](https://github.com/norberttech)
 - [08dae8](https://github.com/flow-php/flow/commit/08dae88ad50b4f8a37bdfd5e7a1b3991066b37d0) - **refactor: change runner for benchmark-baseline job** - [@norberttech](https://github.com/norberttech)
