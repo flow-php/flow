@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-19
+## [0.31.0] - 2026-01-19
 
 ### Added
 - [#2158](https://github.com/flow-php/flow/pull/2158) - **New flow-php/monolog-telemetry-bridge package - connects Monolog with Flow Telemetry for unified logging export** - [@norberttech](https://github.com/norberttech)
