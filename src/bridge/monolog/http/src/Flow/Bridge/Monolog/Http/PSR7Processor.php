@@ -16,15 +16,9 @@ final readonly class PSR7Processor implements ProcessorInterface
     {
     }
 
-    /**
-     * @param array<string, mixed>|LogRecord $record
-     *
-     * @return array<string, mixed>|LogRecord
-     */
-    public function __invoke(LogRecord|array $record) : LogRecord|array
+    public function __invoke(LogRecord $record) : LogRecord
     {
-        $context = \is_array($record) ? $record['context'] : $record->context;
-        $context = type_array()->assert($context);
+        $context = type_array()->assert($record->context);
 
         foreach ($context as $key => $val) {
             if ($val instanceof RequestInterface) {
@@ -42,12 +36,6 @@ final readonly class PSR7Processor implements ProcessorInterface
                     unset($context[$key]);
                 }
             }
-        }
-
-        if (\is_array($record)) {
-            $record['context'] = $context;
-
-            return $record;
         }
 
         return $record->with(context: $context);

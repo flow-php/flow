@@ -21,6 +21,7 @@ enum Module : string
     case HTTP = 'HTTP';
     case JSON = 'JSON';
     case MEILI_SEARCH = 'MEILI_SEARCH';
+    case MONOLOG_TELEMETRY_BRIDGE = 'MONOLOG_TELEMETRY_BRIDGE';
     case PARQUET = 'PARQUET';
     case PG_QUERY = 'PG_QUERY';
     case POSTGRESQL = 'POSTGRESQL';

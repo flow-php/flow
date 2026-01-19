@@ -7,6 +7,7 @@
       "src/lib/filesystem/src",
       "src/lib/parquet/src",
       "src/lib/telemetry/src",
+      "src/bridge/monolog/telemetry/src",
       "src/bridge/telemetry/otlp/src"
     ],
     "excludes": [
@@ -24,7 +25,8 @@
       "Flow/Telemetry/Exception",
       "Flow/Telemetry/Provider/Void",
       "Flow/Telemetry/Provider/Console",
-      "Flow/Bridge/Telemetry/OTLP/Exception"
+      "Flow/Bridge/Telemetry/OTLP/Exception",
+      "Flow/Bridge/Monolog/Telemetry/Exception"
     ]
   },
   "logs": {
