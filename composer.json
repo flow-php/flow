@@ -30,7 +30,7 @@
         "google/protobuf": "^4.0",
         "halaxa/json-machine": "^1.1",
         "meilisearch/meilisearch-php": "^1.11",
-        "monolog/monolog": "^2.0||^3.0",
+        "monolog/monolog": "^3.0",
         "openspout/openspout": "^5.2",
         "packaged/thrift": "^0.15.0",
         "php-http/discovery": "^1.0",
@@ -92,6 +92,7 @@
         "flow-php/filesytem-async-aws-bridge": "self.version",
         "flow-php/filesytem-azure-bridge": "self.version",
         "flow-php/monolog-http-bridge": "self.version",
+        "flow-php/monolog-telemetry-bridge": "self.version",
         "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
@@ -125,6 +126,7 @@
                 "src/bridge/filesystem/async-aws/src/Flow",
                 "src/bridge/filesystem/azure/src/Flow",
                 "src/bridge/monolog/http/src/Flow",
+                "src/bridge/monolog/telemetry/src/Flow",
                 "src/bridge/openapi/specification/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
                 "src/bridge/telemetry/otlp/src/Flow",
@@ -168,6 +170,7 @@
             "src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php",
             "src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php",
             "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
+            "src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php",
             "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
             "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
             "src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php",
@@ -207,6 +210,7 @@
                 "src/bridge/filesystem/async-aws/tests/Flow",
                 "src/bridge/filesystem/azure/tests/Flow",
                 "src/bridge/monolog/http/tests/Flow",
+                "src/bridge/monolog/telemetry/tests/Flow",
                 "src/bridge/openapi/specification/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
                 "src/bridge/telemetry/otlp/tests/Flow",
@@ -276,6 +280,7 @@
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
+            "@test:bridge:monolog-telemetry",
             "@test:bridge:openapi-specification",
             "@test:bridge:symfony-http-foundation",
             "@test:bridge:telemetry-otlp"
@@ -347,6 +352,10 @@
         ],
         "test:bridge:monolog-http": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-http-unit --log-junit ./var/phpunit/logs/bridge-monolog-http-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-monolog-http-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-monolog-http-unit"
+        ],
+        "test:bridge:monolog-telemetry": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-telemetry-unit --log-junit ./var/phpunit/logs/bridge-monolog-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-monolog-telemetry-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-monolog-telemetry-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-telemetry-integration --log-junit ./var/phpunit/logs/bridge-monolog-telemetry-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-monolog-telemetry-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-monolog-telemetry-integration"
         ],
         "test:bridge:openapi-specification": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-openapi-specification-unit --log-junit ./var/phpunit/logs/bridge-openapi-specification-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-openapi-specification-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-openapi-specification-unit"

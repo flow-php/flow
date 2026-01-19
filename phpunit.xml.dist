@@ -107,6 +107,12 @@
         <testsuite name="bridge-monolog-http-unit">
             <directory>src/bridge/monolog/http/tests/Flow/Bridge/Monolog/Http/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="bridge-monolog-telemetry-unit">
+            <directory>src/bridge/monolog/telemetry/tests/Flow/Bridge/Monolog/Telemetry/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-monolog-telemetry-integration">
+            <directory>src/bridge/monolog/telemetry/tests/Flow/Bridge/Monolog/Telemetry/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-openapi-specification-unit">
             <directory>src/bridge/openapi/specification/tests/Flow/Bridge/OpenAPI/Specification/Tests/Unit</directory>
         </testsuite>

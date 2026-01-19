@@ -8,6 +8,7 @@ use function Flow\Bridge\Monolog\Http\DSL\mask;
 use Flow\Bridge\Monolog\Http\Config\{RequestConfig, ResponseConfig};
 use Flow\Bridge\Monolog\Http\{Config, PSR7Processor};
 use Flow\ETL\Tests\FlowTestCase;
+use Monolog\{Level, LogRecord};
 use Nyholm\Psr7\Factory\Psr17Factory;
 
 final class PSR7ProcessorSanitizationTest extends FlowTestCase
@@ -42,10 +43,16 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
             )
         ));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
+        $record = $processor(new LogRecord(
+            datetime: new \DateTimeImmutable(),
+            channel: 'http',
+            level: Level::Debug,
+            message: 'HTTP Request',
+            context: ['request' => $request],
+        ));
 
         /** @phpstan-ignore-next-line */
-        $requestData = json_decode((string) $record['context']['request']['body'], true);
+        $requestData = json_decode((string) $record->context['request']['body'], true);
         \assert(\is_array($requestData));
 
         self::assertEquals('john_doe', $requestData['username']);
@@ -86,10 +93,16 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
             )
         ));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
+        $record = $processor(new LogRecord(
+            datetime: new \DateTimeImmutable(),
+            channel: 'http',
+            level: Level::Debug,
+            message: 'HTTP Response',
+            context: ['response' => $response],
+        ));
 
         /** @phpstan-ignore-next-line */
-        $responseData = json_decode((string) $record['context']['response']['body'], true);
+        $responseData = json_decode((string) $record->context['response']['body'], true);
         \assert(\is_array($responseData));
 
         self::assertEquals('success', $responseData['status']);

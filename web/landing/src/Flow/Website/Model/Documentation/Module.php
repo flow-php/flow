@@ -20,6 +20,7 @@ enum Module : string
     case HTTP = 'HTTP';
     case JSON = 'JSON';
     case MEILI_SEARCH = 'Meili Search';
+    case MONOLOG_TELEMETRY_BRIDGE = 'Monolog Telemetry Bridge';
     case PARQUET = 'Parquet';
     case PG_QUERY = 'PG_QUERY';
     case POSTGRESQL = 'POSTGRESQL';
@@ -61,6 +62,7 @@ enum Module : string
             self::PG_QUERY => 19,
             self::TELEMETRY => 20,
             self::TELEMETRY_OTLP => 21,
+            self::MONOLOG_TELEMETRY_BRIDGE => 22,
             default => 99,
         };
     }

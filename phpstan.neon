@@ -27,6 +27,7 @@ parameters:
         - src/bridge/filesystem/azure/src
         - src/bridge/filesystem/async-aws/src
         - src/bridge/monolog/http/src
+        - src/bridge/monolog/telemetry/src
         - src/bridge/openapi/specification/src
         - src/bridge/symfony/http-foundation/src
         - src/bridge/telemetry/otlp/src
@@ -61,6 +62,7 @@ parameters:
         - src/bridge/filesystem/async-aws/tests
         - src/bridge/filesystem/azure/tests
         - src/bridge/monolog/http/tests
+        - src/bridge/monolog/telemetry/tests
         - src/bridge/openapi/specification/tests
         - src/bridge/symfony/http-foundation/tests
         - src/bridge/telemetry/otlp/tests
