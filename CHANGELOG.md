@@ -30,6 +30,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [4c5efc](https://github.com/flow-php/flow/commit/4c5efcd37a74124f99751ce794aa93998afcd80f) - **refactor: improve stabilit of benchmarks** - [@norberttech](https://github.com/norberttech)
 - [91a5d0](https://github.com/flow-php/flow/commit/91a5d065ee657116727a6a25292dd28aabe09719) - **refactor: optimize benchmarks on ci/cd** - [@norberttech](https://github.com/norberttech)
 - [#2158](https://github.com/flow-php/flow/pull/2158) - **updated minimum version of monolog to V3 across monorepo** - [@norberttech](https://github.com/norberttech)
 - [#2157](https://github.com/flow-php/flow/pull/2157) - **Remove part of unnecessary recursion calls from `array_dot_get()` method** - [@stloyd](https://github.com/stloyd)
