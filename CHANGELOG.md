@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-18
+## [Unreleased] - 2026-01-19
 
 ### Added
 - [#2150](https://github.com/flow-php/flow/pull/2150) - **flow-php/telemetry library** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +22,7 @@
 - [#2133](https://github.com/flow-php/flow/pull/2133) - **PlanSummaryTest - 3 test cases for PlanSummary::normalize() method** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2157](https://github.com/flow-php/flow/pull/2157) - **Remove part of unnecessary recursion calls from `array_dot_get()` method** - [@stloyd](https://github.com/stloyd)
 - [#2154](https://github.com/flow-php/flow/pull/2154) - **refactor: stabilize benchmarks** - [@norberttech](https://github.com/norberttech)
 - [08dae8](https://github.com/flow-php/flow/commit/08dae88ad50b4f8a37bdfd5e7a1b3991066b37d0) - **refactor: change runner for benchmark-baseline job** - [@norberttech](https://github.com/norberttech)
 - [af53ce](https://github.com/flow-php/flow/commit/af53cea7880e07dfa9f14f938e3e2753dc9bf987) - **refactor: change runner for benchmark tests to flow-php-benchmark-runner** - [@norberttech](https://github.com/norberttech)
