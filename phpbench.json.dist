@@ -38,7 +38,8 @@
     "PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11&charset=utf8"
   },
   "runner.iterations": 3,
-  "runner.retry_threshold": 5,
+  "runner.revs": 5,
+  "runner.retry_threshold": 3,
   "runner.warmup": 1,
   "storage.xml_storage_path": "var/phpbench"
 }

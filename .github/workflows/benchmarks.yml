@@ -61,58 +61,20 @@ jobs:
       - name: "Execute benchmarks"
         id: init_comment
         run: |
-          composer test:benchmark:extractor -- --ref=1.x --progress=none > ./var/phpbench/extractor.txt
-          composer test:benchmark:transformer -- --ref=1.x --progress=none > ./var/phpbench/transformer.txt
-          composer test:benchmark:loader -- --ref=1.x --progress=none > ./var/phpbench/loader.txt
-          composer test:benchmark:building_blocks -- --ref=1.x --progress=none > ./var/phpbench/building_blocks.txt
-          composer test:benchmark:parquet-library -- --ref=1.x --progress=none > ./var/phpbench/parquet.txt
+          tools/phpbench/vendor/bin/phpbench run \
+            --ref=1.x \
+            --progress=none \
+            --report=flow-report \
+            > ./var/phpbench/benchmarks.txt
 
-          # Build the summary file
           {
             echo '# Flow PHP - Benchmarks'
-            echo '<sup><sub>Results of the benchmarks from this PR are compared with the results from 1.x branch.</sub></sup>'
-            echo '  '
-            echo '<details><summary>Extractors</summary>'
-            echo '  '
-            echo '```shell'
-            cat ./var/phpbench/extractor.txt
+            echo '<sup><sub>Comparing PR against 1.x baseline</sub></sup>'
+            echo ''
             echo '```'
-            echo '  '
-            echo '</details>'
-            echo '  '
-            echo '<details><summary>Transformers</summary>'
-            echo '  '
-            echo '```shell'
-            cat ./var/phpbench/transformer.txt
+            cat ./var/phpbench/benchmarks.txt
             echo '```'
-            echo '  '
-            echo '</details>'
-            echo '  '
-            echo '<details><summary>Loaders</summary>'
-            echo '  '
-            echo '```shell'
-            cat ./var/phpbench/loader.txt
-            echo '```'
-            echo '  '
-            echo '</details>'
-            echo '  '
-            echo '<details><summary>Building Blocks</summary>'
-            echo '  '
-            echo '```shell'
-            cat ./var/phpbench/building_blocks.txt
-            echo '```'
-            echo '  '
-            echo '</details>'
-            echo '  '
-            echo '<details><summary>Parquet Library</summary>'
-            echo '  '
-            echo '```shell'
-            cat ./var/phpbench/parquet.txt
-            echo '```'
-            echo '  '
-            echo '</details>'
-            echo '  '
-          } >> "./var/phpbench/summary.txt"
+          } > "./var/phpbench/summary.txt"
 
       - uses: actions/upload-artifact@v6
         with:
