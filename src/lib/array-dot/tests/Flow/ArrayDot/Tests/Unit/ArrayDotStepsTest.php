@@ -45,7 +45,7 @@ final class ArrayDotStepsTest extends TestCase
     public function test_multimatch_not_closed() : void
     {
         $this->expectException(InvalidPathException::class);
-        $this->expectExceptionMessage('Multimatch syntax not closed');
+        $this->expectExceptionMessage('Multimatch must be used at the end of path');
 
         self::assertSame(
             ['foo', 'bar', '{bas, bai}'],
@@ -61,6 +61,14 @@ final class ArrayDotStepsTest extends TestCase
         self::assertSame(
             ['foo', 'bar', '{bas, bai}'],
             array_dot_steps('foo.bar.{bas, bai}.id')
+        );
+    }
+
+    public function test_simple_multimatch() : void
+    {
+        self::assertSame(
+            ['{foo}'],
+            array_dot_steps('{foo}')
         );
     }
 

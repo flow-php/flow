@@ -19,14 +19,8 @@ function array_dot_steps(string $path) : array
         throw new InvalidPathException("Path can't be empty.");
     }
 
-    if (\str_contains($path, '{')) {
-        if (!\str_contains($path, '}')) {
-            throw new InvalidPathException('Multimatch syntax not closed');
-        }
-
-        if (\strpos($path, '}') !== \strlen($path) - 1) {
-            throw new InvalidPathException('Multimatch must be used at the end of path');
-        }
+    if (\str_contains($path, '{') && !\str_ends_with($path, '}')) {
+        throw new InvalidPathException('Multimatch must be used at the end of path');
     }
 
     $path = \str_replace('\\.', '__ESCAPED_DOT__', $path);
@@ -45,8 +39,7 @@ function array_dot_steps(string $path) : array
         $pathSteps[$index] = \str_replace('__ESCAPED_DOT__', '.', $step);
 
         if ($step === '__MULTIMATCH_PATH__') {
-            /** @phpstan-ignore-next-line */
-            $pathSteps[$index] = $multiMatchPath[2];
+            $pathSteps[$index] = $multiMatchPath[2] ?? throw new InvalidPathException('Multimatch not found');
         }
     }
 
@@ -247,33 +240,29 @@ function array_dot_get(array $array, string $path) : mixed
 
         if (\in_array($step, ['*', '?*'], true)) {
             $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
+
+            if (!\count($stepsLeft)) {
+                return $arraySlice;
+            }
+
             $results = [];
 
-            foreach (\array_keys($arraySlice) as $key) {
-                if (!\count($stepsLeft)) {
-                    return $arraySlice;
+            foreach ($arraySlice as $value) {
+                if (!\is_array($value)) {
+                    $pathTaken = \implode('.', $takenSteps);
+                    $type = \gettype($value);
+
+                    throw new InvalidPathException("Expected array under path, \"{$pathTaken}\", but got: {$type}");
                 }
 
-                if ($step === '?*') {
-                    if (!\is_array($arraySlice[$key])) {
-                        $pathTaken = \implode('.', $takenSteps);
-                        $type = \gettype($arraySlice[$key]);
-
-                        throw new InvalidPathException("Expected array under path, \"{$pathTaken}\", but got: {$type}");
+                try {
+                    $results[] = array_dot_get($value, \implode('.', $stepsLeft));
+                } catch (InvalidPathException $e) {
+                    if ($step === '?*') {
+                        continue;
                     }
 
-                    if (array_dot_exists($arraySlice[$key], \implode('.', $stepsLeft))) {
-                        $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
-                    }
-                } else {
-                    if (!\is_array($arraySlice[$key])) {
-                        $pathTaken = \implode('.', $takenSteps);
-                        $type = \gettype($arraySlice[$key]);
-
-                        throw new InvalidPathException("Expected array under path, \"{$pathTaken}\", but got: {$type}");
-                    }
-
-                    $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
+                    throw $e;
                 }
             }
 
