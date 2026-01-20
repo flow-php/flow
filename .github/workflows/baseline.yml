@@ -155,6 +155,7 @@ jobs:
 
       - name: "Start OpenTelemetry Collector"
         run: |
+          docker rm -f otel-collector 2>/dev/null || true
           docker run -d --name otel-collector \
             -p 4317:4317 -p 4318:4318 -p 8888:8888 -p 13133:13133 \
             -v ${{ github.workspace }}/docker/otel-collector-test-config.yaml:/etc/otelcol-contrib/config.yaml:ro \
