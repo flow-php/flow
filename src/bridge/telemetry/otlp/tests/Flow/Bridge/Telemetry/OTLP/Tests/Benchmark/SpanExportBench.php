@@ -9,9 +9,11 @@ use function Flow\Telemetry\DSL\batching_span_processor;
 use Flow\Bridge\Telemetry\OTLP\Tests\Context\{OtelContext, TransportConfiguration};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Resource;
-use PhpBench\Attributes\{Groups, ParamProviders};
+use PhpBench\Attributes\{Groups, Iterations, ParamProviders, Revs};
 
 #[Groups(['telemetry'])]
+#[Iterations(5)]
+#[Revs(3)]
 final readonly class SpanExportBench
 {
     private OtelContext $ctx;

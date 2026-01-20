@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-01-20
 
 ### Changed
+- [2a9ed5](https://github.com/flow-php/flow/commit/2a9ed5706067da02bb47b7d206a4d55114d36be7) - **refactor: change number of iterations / revs in benchmarks** - [@norberttech](https://github.com/norberttech)
 - [16a977](https://github.com/flow-php/flow/commit/16a977a313bc6b3aa166191f186b7e978cbabe35) - **refactor: github benchmark workflows to not install php anymore on runner** - [@norberttech](https://github.com/norberttech)
 - [819d54](https://github.com/flow-php/flow/commit/819d543e7d26464d40cc9c92eefadd6a0353de0b) - **refactor: phpbench report** - [@norberttech](https://github.com/norberttech)
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
