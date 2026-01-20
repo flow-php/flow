@@ -153,7 +153,27 @@ jobs:
         run: |
           sed 's/127.0.0.1:5432/127.0.0.1:${{ job.services.postgres.ports[5432] }}/' phpbench.json.dist > phpbench.json
 
+      - name: "Start OpenTelemetry Collector"
+        run: |
+          docker run -d --name otel-collector \
+            -p 4317:4317 -p 4318:4318 -p 8888:8888 -p 13133:13133 \
+            -v ${{ github.workspace }}/docker/otel-collector-test-config.yaml:/etc/otelcol-contrib/config.yaml:ro \
+            otel/opentelemetry-collector-contrib:0.115.1
+          # Wait for container to be ready
+          for i in {1..30}; do
+            if curl -sf http://localhost:13133/ > /dev/null 2>&1; then
+              echo "OpenTelemetry Collector is ready"
+              break
+            fi
+            echo "Waiting for OpenTelemetry Collector... ($i/30)"
+            sleep 2
+          done
+
       - name: "Benchmark"
+        env:
+          OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
+          OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
+          OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
         run: |
           # Phase 1: Run with progress visible, store results
           tools/phpbench/vendor/bin/phpbench run \
