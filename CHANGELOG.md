@@ -4,6 +4,9 @@
 - [819d54](https://github.com/flow-php/flow/commit/819d543e7d26464d40cc9c92eefadd6a0353de0b) - **refactor: phpbench report** - [@norberttech](https://github.com/norberttech)
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [330da9](https://github.com/flow-php/flow/commit/330da95df9e446cca07c8a1c25868a1efc3414b6) - **added otel collector to baseline** - [@norberttech](https://github.com/norberttech)
+
 ## [0.31.0] - 2026-01-19
 
 ### Added
