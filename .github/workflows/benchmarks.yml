@@ -71,7 +71,7 @@ jobs:
             --store \
             --tag=pr_run \
             --assert="mode(variant.time.avg) <= mode(baseline.time.avg) +/- 10%" \
-            --assert="variant.mem.peak <= baseline.mem.peak +/- 10%" \
+            --assert="mode(variant.mem.peak) <= mode(baseline.mem.peak) +/- 10%" \
             --assert="rstdev(variant.time.avg) <= 5%"
 
           # Phase 2: Generate clean report from stored results
