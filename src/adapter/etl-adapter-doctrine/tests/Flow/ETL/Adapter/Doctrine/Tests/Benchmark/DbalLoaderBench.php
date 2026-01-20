@@ -12,7 +12,7 @@ use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use PhpBench\Attributes\{AfterMethods, BeforeMethods, Groups};
 
-#[Groups(['loader'])]
+#[Groups(['adapter-doctrine'])]
 final class DbalLoaderBench
 {
     private const TABLE_NAME = 'benchmark_orders_loader';

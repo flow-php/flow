@@ -35,17 +35,20 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: "Setup PHP Environment"
-        uses: "./.github/actions/setup-php-env"
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v4"
         with:
-          php-version: "${{ matrix.php-version }}"
-          dependencies: "locked"
-          coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
-          php-env: '{"SNAPPY_CONFIGURE_PREFIX_OPTS": "CXXFLAGS=-std=c++11"}'
-          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
-          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
-          cache-key-suffix: "-locked"
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-locked-composer-benchmark-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-locked-composer-benchmark-
+
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --no-progress"
 
       - name: "Download phpbench benchmarks artifact"
         uses: dawidd6/action-download-artifact@v12
@@ -61,9 +64,19 @@ jobs:
       - name: "Execute benchmarks"
         id: init_comment
         run: |
+          # Phase 1: Run with progress visible, store results, assert no regressions >10%
           tools/phpbench/vendor/bin/phpbench run \
             --ref=1.x \
-            --progress=none \
+            --progress=plain \
+            --store \
+            --tag=pr-run \
+            --assert="variant.mode <= baseline.mode +/- 10%" \
+            --assert="variant.mem.peak <= baseline.mem.peak +/- 10%" \
+            --assert="rstdev(variant.time.avg) <= 5%"
+
+          # Phase 2: Generate clean report from stored results
+          tools/phpbench/vendor/bin/phpbench report \
+            --ref=pr-run \
             --report=flow-report \
             > ./var/phpbench/benchmarks.txt
 

@@ -5,13 +5,19 @@
     "flow-report": {
       "generator": "expression",
       "cols": {
+        "package": null,
         "benchmark": null,
         "subject": null,
         "revs": null,
         "its": null,
         "mem_peak": null,
         "mode": null,
+        "total_time": null,
         "rstdev": null
+      },
+      "expressions": {
+        "package": "first(subject_groups)",
+        "total_time": "display_as_time(sum(result_time_net), \"milliseconds\", 2, \"time\")"
       }
     }
   },
@@ -38,7 +44,7 @@
     "PGSQL_DATABASE_URL": "pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11&charset=utf8"
   },
   "runner.iterations": 3,
-  "runner.retry_threshold": 5,
+  "runner.retry_threshold": 3,
   "runner.warmup": 1,
   "storage.xml_storage_path": "var/phpbench"
 }

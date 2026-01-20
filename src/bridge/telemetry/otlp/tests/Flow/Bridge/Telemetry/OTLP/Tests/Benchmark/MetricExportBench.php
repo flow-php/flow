@@ -38,6 +38,8 @@ final readonly class MetricExportBench
         for ($i = 0; $i < 100; $i++) {
             $counter->add(1, ['iteration' => $i]);
         }
+
+        $transport->shutdown();
     }
 
     /**
@@ -57,6 +59,8 @@ final readonly class MetricExportBench
         for ($i = 0; $i < 100; $i++) {
             $histogram->record((float) ($i % 100), ['iteration' => $i]);
         }
+
+        $transport->shutdown();
     }
 
     /**

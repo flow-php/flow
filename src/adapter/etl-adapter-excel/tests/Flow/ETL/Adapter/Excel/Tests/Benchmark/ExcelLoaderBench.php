@@ -11,7 +11,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use PhpBench\Attributes\Groups;
 
-#[Groups(['loader'])]
+#[Groups(['adapter-excel'])]
 final readonly class ExcelLoaderBench
 {
     private Rows $rows;

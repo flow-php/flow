@@ -428,12 +428,8 @@
             "php bin/fixtures"
         ],
         "test:benchmark": [
-            "@test:benchmark:building_blocks",
-            "@test:benchmark:extractor",
-            "@test:benchmark:loader",
-            "@test:benchmark:transformer",
-            "@test:benchmark:parquet-library",
-            "@test:benchmark:telemetry"
+            "Composer\\Config::disableProcessTimeout",
+            "./tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report"
         ],
         "test:website": [
             "composer test --working-dir=./web/landing"
@@ -441,23 +437,38 @@
         "test:examples": [
             "./examples/run.php"
         ],
-        "test:benchmark:building_blocks": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=building_blocks"
+        "test:benchmark:adapter-csv": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-csv"
         ],
-        "test:benchmark:extractor": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=extractor"
+        "test:benchmark:adapter-json": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-json"
         ],
-        "test:benchmark:loader": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=loader"
+        "test:benchmark:adapter-parquet": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-parquet"
         ],
-        "test:benchmark:transformer": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=transformer"
+        "test:benchmark:adapter-excel": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-excel"
         ],
-        "test:benchmark:parquet-library": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=parquet-library"
+        "test:benchmark:adapter-text": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-text"
+        ],
+        "test:benchmark:adapter-xml": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-xml"
+        ],
+        "test:benchmark:adapter-postgresql": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-postgresql"
+        ],
+        "test:benchmark:adapter-doctrine": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-doctrine"
+        ],
+        "test:benchmark:data-frame": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=data-frame"
+        ],
+        "test:benchmark:parquet": [
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=parquet"
         ],
         "test:benchmark:telemetry": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=telemetry"
+            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=telemetry"
         ],
         "test:mutation": [
             "Composer\\Config::disableProcessTimeout",

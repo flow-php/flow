@@ -12,7 +12,7 @@ use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\PostgreSql\Client\Client;
 use PhpBench\Attributes\{AfterMethods, BeforeMethods, Groups};
 
-#[Groups(['loader'])]
+#[Groups(['adapter-postgresql'])]
 final class PostgreSqlLoaderBench
 {
     private const TABLE_NAME = 'benchmark_orders_loader';

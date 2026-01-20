@@ -11,7 +11,7 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use PhpBench\Attributes\Groups;
 
-#[Groups(['extractor'])]
+#[Groups(['adapter-doctrine'])]
 final class DbalExtractorBench
 {
     private const TABLE_NAME = 'benchmark_orders_extractor';

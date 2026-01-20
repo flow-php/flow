@@ -138,28 +138,62 @@ jobs:
         with:
           ref: ${{ env.GIT_REF }}
 
-      - name: "Setup PHP Environment"
-        uses: "./.github/actions/setup-php-env"
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v4"
         with:
-          php-version: "${{ matrix.php-version }}"
-          dependencies: "locked"
-          coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
-          cache-key-suffix: "-locked"
-          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
-          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-locked-composer-benchmark-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-locked-composer-benchmark-
+
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --no-progress"
 
       - name: "Generate phpbench.json with dynamic port"
         run: |
           sed 's/127.0.0.1:5432/127.0.0.1:${{ job.services.postgres.ports[5432] }}/' phpbench.json.dist > phpbench.json
 
-      - name: "Benchmark"
+      - name: "Start OpenTelemetry Collector"
         run: |
+          docker rm -f otel-collector 2>/dev/null || true
+          docker run -d --name otel-collector \
+            -p 4317:4317 -p 4318:4318 -p 8888:8888 -p 13133:13133 \
+            -v ${{ github.workspace }}/docker/otel-collector-test-config.yaml:/etc/otelcol-contrib/config.yaml:ro \
+            otel/opentelemetry-collector-contrib:0.115.1
+          # Wait for container to be ready
+          for i in {1..30}; do
+            if curl -sf http://localhost:13133/ > /dev/null 2>&1; then
+              echo "OpenTelemetry Collector is ready"
+              break
+            fi
+            echo "Waiting for OpenTelemetry Collector... ($i/30)"
+            sleep 2
+          done
+
+      - name: "Benchmark"
+        env:
+          OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
+          OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
+          OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
+        run: |
+          # Phase 1: Run with progress visible, store results
+          tools/phpbench/vendor/bin/phpbench run \
+            --progress=plain \
+            --store \
+            --tag=${{ env.PHPBENCH_TAG }}
+
+          # Phase 2: Generate clean report from stored results
           echo '# Flow PHP - Benchmark - ${{ env.PHPBENCH_TAG }}' >> $GITHUB_STEP_SUMMARY
           echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '---' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          tools/phpbench/vendor/bin/phpbench run --report=flow-report --tag=${{ env.PHPBENCH_TAG }} --progress=none >> $GITHUB_STEP_SUMMARY
+          tools/phpbench/vendor/bin/phpbench report \
+            --ref=${{ env.PHPBENCH_TAG }} \
+            --report=flow-report >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Store Benchmark baseline"
