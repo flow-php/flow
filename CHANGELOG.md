@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-01-20
+
+### Changed
+- [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
+
 ## [0.31.0] - 2026-01-19
 
 ### Added
