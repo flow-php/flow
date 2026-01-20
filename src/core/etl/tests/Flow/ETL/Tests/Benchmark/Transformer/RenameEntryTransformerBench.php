@@ -7,10 +7,12 @@ namespace Flow\ETL\Tests\Benchmark\Transformer;
 use function Flow\ETL\DSL\{array_to_rows, config, flow_context};
 use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Transformer\RenameEntryTransformer;
-use PhpBench\Attributes\{BeforeMethods, Groups};
+use PhpBench\Attributes\{BeforeMethods, Groups, Iterations, Revs};
 
 #[BeforeMethods('setUp')]
-#[Groups(['transformer'])]
+#[Groups(['data-frame'])]
+#[Revs(10)]
+#[Iterations(10)]
 final class RenameEntryTransformerBench
 {
     private FlowContext $context;

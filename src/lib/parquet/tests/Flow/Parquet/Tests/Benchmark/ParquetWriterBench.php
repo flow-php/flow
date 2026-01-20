@@ -9,7 +9,7 @@ use Flow\Parquet\ParquetFile\{Compressions, Schema};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use PhpBench\Attributes\Groups;
 
-#[Groups(['parquet-library'])]
+#[Groups(['parquet'])]
 final class ParquetWriterBench
 {
     private readonly string $outputPath;

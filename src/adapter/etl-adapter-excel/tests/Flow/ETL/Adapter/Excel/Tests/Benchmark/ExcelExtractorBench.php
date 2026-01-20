@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
-#[Groups(['extractor'])]
+#[Groups(['adapter-excel'])]
 final readonly class ExcelExtractorBench
 {
     private FlowContext $context;

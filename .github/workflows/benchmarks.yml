@@ -61,9 +61,19 @@ jobs:
       - name: "Execute benchmarks"
         id: init_comment
         run: |
+          # Phase 1: Run with progress visible, store results, assert no regressions >10%
           tools/phpbench/vendor/bin/phpbench run \
             --ref=1.x \
-            --progress=none \
+            --progress=plain \
+            --store \
+            --tag=pr-run \
+            --assert="variant.mode <= baseline.mode +/- 10%" \
+            --assert="variant.mem.peak <= baseline.mem.peak +/- 10%" \
+            --assert="rstdev(variant.time.avg) <= 5%"
+
+          # Phase 2: Generate clean report from stored results
+          tools/phpbench/vendor/bin/phpbench report \
+            --ref=pr-run \
             --report=flow-report \
             > ./var/phpbench/benchmarks.txt
 

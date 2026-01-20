@@ -7,9 +7,9 @@ namespace Flow\Parquet\Tests\Benchmark;
 use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Parquet\{ByteOrder, Options, ParquetFile, ParquetFile\Data\DataConverter};
-use PhpBench\Attributes\Groups;
+use PhpBench\Attributes\{Groups, Revs};
 
-#[Groups(['parquet-library'])]
+#[Groups(['parquet'])]
 final readonly class ParquetReaderBench
 {
     private ParquetFile $parquetFile;
@@ -26,21 +26,12 @@ final readonly class ParquetReaderBench
         );
     }
 
+    #[Revs(10)]
     public function bench_page_headers() : void
     {
         foreach ($this->parquetFile->pageHeaders() as $pageHeader) {
             // Just iterate through page headers
         }
-    }
-
-    public function bench_read_metadata() : void
-    {
-        $this->parquetFile->metadata();
-    }
-
-    public function bench_read_schema() : void
-    {
-        $this->parquetFile->schema();
     }
 
     public function bench_read_values_all_columns() : void
@@ -50,6 +41,7 @@ final readonly class ParquetReaderBench
         }
     }
 
+    #[Revs(10)]
     public function bench_read_values_single_column() : void
     {
         $columns = $this->parquetFile->schema()->columns();

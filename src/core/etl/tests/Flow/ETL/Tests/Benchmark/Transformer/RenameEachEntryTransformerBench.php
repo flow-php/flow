@@ -9,7 +9,7 @@ use Flow\ETL\{FlowContext, Rows, String\StringStyles, Transformer\RenameEachEntr
 use PhpBench\Attributes\{BeforeMethods, Groups};
 
 #[BeforeMethods('setUp')]
-#[Groups(['transformer'])]
+#[Groups(['data-frame'])]
 final class RenameEachEntryTransformerBench
 {
     private FlowContext $context;

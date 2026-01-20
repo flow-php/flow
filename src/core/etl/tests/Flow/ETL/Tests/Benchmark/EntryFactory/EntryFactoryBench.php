@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Benchmark\EntryFactory;
 
 use function Flow\ETL\DSL\{array_to_rows, config, flow_context};
-use PhpBench\Attributes\{Groups, ParamProviders};
+use PhpBench\Attributes\{Groups, Iterations, ParamProviders, Revs};
 
-#[Groups(['building_blocks'])]
+#[Groups(['data-frame'])]
+#[Revs(5)]
+#[Iterations(10)]
 final class EntryFactoryBench
 {
     /**

@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\{Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
-#[Groups(['loader'])]
+#[Groups(['adapter-json'])]
 final class JsonLoaderBench
 {
     private readonly string $outputPath;

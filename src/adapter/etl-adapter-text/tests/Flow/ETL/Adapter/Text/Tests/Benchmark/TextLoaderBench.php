@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\{Row, Rows, Tests\Double\FakeStaticOrdersExtractor};
 use PhpBench\Attributes\Groups;
 
-#[Groups(['loader'])]
+#[Groups(['adapter-text'])]
 final class TextLoaderBench
 {
     private readonly string $outputPath;

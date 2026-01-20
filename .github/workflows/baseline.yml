@@ -155,11 +155,20 @@ jobs:
 
       - name: "Benchmark"
         run: |
+          # Phase 1: Run with progress visible, store results
+          tools/phpbench/vendor/bin/phpbench run \
+            --progress=plain \
+            --store \
+            --tag=${{ env.PHPBENCH_TAG }}
+
+          # Phase 2: Generate clean report from stored results
           echo '# Flow PHP - Benchmark - ${{ env.PHPBENCH_TAG }}' >> $GITHUB_STEP_SUMMARY
           echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '---' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          tools/phpbench/vendor/bin/phpbench run --report=flow-report --tag=${{ env.PHPBENCH_TAG }} --progress=none >> $GITHUB_STEP_SUMMARY
+          tools/phpbench/vendor/bin/phpbench report \
+            --ref=${{ env.PHPBENCH_TAG }} \
+            --report=flow-report >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Store Benchmark baseline"

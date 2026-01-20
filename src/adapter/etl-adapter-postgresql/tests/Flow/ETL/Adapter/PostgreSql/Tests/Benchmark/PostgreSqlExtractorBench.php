@@ -11,7 +11,7 @@ use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 use Flow\PostgreSql\Client\Client;
 use PhpBench\Attributes\Groups;
 
-#[Groups(['extractor'])]
+#[Groups(['adapter-postgresql'])]
 final class PostgreSqlExtractorBench
 {
     private const TABLE_NAME = 'benchmark_orders_extractor';

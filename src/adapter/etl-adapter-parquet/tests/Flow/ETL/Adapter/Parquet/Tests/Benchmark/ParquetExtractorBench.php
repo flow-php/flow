@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
-#[Groups(['extractor'])]
+#[Groups(['adapter-parquet'])]
 final readonly class ParquetExtractorBench
 {
     private FlowContext $context;

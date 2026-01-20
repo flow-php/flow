@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Benchmark;
 use function Flow\ETL\DSL\get_type;
 use PhpBench\Attributes\{Groups, ParamProviders};
 
-#[Groups(['building_blocks'])]
+#[Groups(['data-frame'])]
 final class TypeDetectorBench
 {
     /**
