@@ -10,8 +10,8 @@ use PhpBench\Attributes\{BeforeMethods, Groups, Iterations, Revs};
 
 #[BeforeMethods('setUp')]
 #[Groups(['data-frame'])]
-#[Revs(100)]
-#[Iterations(10)]
+#[Revs(10)]
+#[Iterations(3)]
 final class RowsBench
 {
     private Rows $rows;

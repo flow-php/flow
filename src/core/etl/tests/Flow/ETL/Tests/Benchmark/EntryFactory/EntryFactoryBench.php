@@ -8,8 +8,8 @@ use function Flow\ETL\DSL\{array_to_rows, config, flow_context};
 use PhpBench\Attributes\{Groups, Iterations, ParamProviders, Revs};
 
 #[Groups(['data-frame'])]
-#[Revs(5)]
-#[Iterations(10)]
+#[Revs(3)]
+#[Iterations(3)]
 final class EntryFactoryBench
 {
     /**

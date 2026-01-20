@@ -39,6 +39,8 @@ final readonly class SpanExportBench
             $span->setAttribute('iteration', $i);
             $tracer->complete($span);
         }
+
+        $transport->shutdown();
     }
 
     /**

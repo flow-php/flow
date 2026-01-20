@@ -37,6 +37,8 @@ final readonly class LogExportBench
         for ($i = 0; $i < 100; $i++) {
             $logger->info('Benchmark log message ' . $i, ['iteration' => $i]);
         }
+
+        $transport->shutdown();
     }
 
     /**
