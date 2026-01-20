@@ -6,6 +6,8 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [ca5c05](https://github.com/flow-php/flow/commit/ca5c05a5bacf3c8bcaa7f344d14eefcc9e87ee45) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
+- [0ce788](https://github.com/flow-php/flow/commit/0ce78834f5e5f081f229e3a4f7c0e209e0812fa7) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
 - [35be1d](https://github.com/flow-php/flow/commit/35be1d36b8d63d4f845d90f0af3338af4786d28c) - **benchmarks github actions workflow** - [@norberttech](https://github.com/norberttech)
 - [f23365](https://github.com/flow-php/flow/commit/f233651d9a82b2bc44ce310cd5f0bd13bb265a88) - **otel collector in baseline workflow** - [@norberttech](https://github.com/norberttech)
 - [b63538](https://github.com/flow-php/flow/commit/b63538e364f8638a622d7d4aa49216d7066f9011) - **telemetry shutdown in benchmarks** - [@norberttech](https://github.com/norberttech)
