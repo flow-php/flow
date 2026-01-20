@@ -17,6 +17,7 @@
       },
       "expressions": {
         "package": "first(subject_groups)",
+        "mode": "display_as_time(mode(partition['result_time_avg']), \"milliseconds\")",
         "total_time": "display_as_time(sum(result_time_net), \"milliseconds\", 2, \"time\")"
       }
     }
