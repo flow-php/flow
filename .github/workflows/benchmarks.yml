@@ -69,14 +69,14 @@ jobs:
             --ref=1.x \
             --progress=plain \
             --store \
-            --tag=pr-run \
+            --tag=pr_run \
             --assert="variant.mode <= baseline.mode +/- 10%" \
             --assert="variant.mem.peak <= baseline.mem.peak +/- 10%" \
             --assert="rstdev(variant.time.avg) <= 5%"
 
           # Phase 2: Generate clean report from stored results
           tools/phpbench/vendor/bin/phpbench report \
-            --ref=pr-run \
+            --ref=pr_run \
             --report=flow-report \
             > ./var/phpbench/benchmarks.txt
 
