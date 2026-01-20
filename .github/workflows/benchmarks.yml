@@ -70,7 +70,7 @@ jobs:
             --progress=plain \
             --store \
             --tag=pr_run \
-            --assert="variant.mode <= baseline.mode +/- 10%" \
+            --assert="mode(variant.time.avg) <= mode(baseline.time.avg) +/- 10%" \
             --assert="variant.mem.peak <= baseline.mem.peak +/- 10%" \
             --assert="rstdev(variant.time.avg) <= 5%"
 
