@@ -138,16 +138,20 @@ jobs:
         with:
           ref: ${{ env.GIT_REF }}
 
-      - name: "Setup PHP Environment"
-        uses: "./.github/actions/setup-php-env"
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v4"
         with:
-          php-version: "${{ matrix.php-version }}"
-          dependencies: "locked"
-          coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pgsql, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
-          cache-key-suffix: "-locked"
-          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
-          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-locked-composer-benchmark-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-locked-composer-benchmark-
+
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --no-progress"
 
       - name: "Generate phpbench.json with dynamic port"
         run: |
