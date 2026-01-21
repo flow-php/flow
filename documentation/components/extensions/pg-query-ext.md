@@ -19,6 +19,7 @@ interface with strongly-typed AST nodes, see the [pg-query library](/documentati
 - Split multiple SQL statements
 - Scan SQL into tokens
 - Generate query summaries for logging/monitoring
+- Check if queries contain utility/DDL statements (without full parsing)
 
 ## Requirements
 
@@ -35,11 +36,8 @@ interface with strongly-typed AST nodes, see the [pg-query library](/documentati
 [PIE](https://github.com/php/pie) is the modern PHP extension installer.
 
 ```bash
-# Simple installation (auto-downloads libpg_query for PostgreSQL 17)
+# Simple installation
 pie install flow-php/pg-query-ext
-
-# Install with a specific PostgreSQL grammar version (15, 16, or 17)
-pie install flow-php/pg-query-ext --with-pg-version=16
 ```
 
 The extension will automatically download and build the appropriate libpg_query version. Build dependencies (
@@ -49,7 +47,7 @@ The extension will automatically download and build the appropriate libpg_query 
 
 | PostgreSQL | libpg_query version |
 |------------|---------------------|
-| 17         | 17-6.1.0 (default)  |
+| 17         | 17-6.2.1 (default)  |
 | 16         | 16-5.2.0            |
 | 15         | 15-4.2.4            |
 
@@ -127,23 +125,31 @@ $sql = pg_query_deparse_opts(
 
 // Generate query summary (protobuf format, useful for logging)
 $summary = pg_query_summary('SELECT * FROM users WHERE id = 1');
+
+// Check if query contains utility statements (DDL) - fast, without full parsing
+$isUtility = pg_query_is_utility_stmt('CREATE TABLE users (id int)');
+// Returns: true
+
+$isUtility = pg_query_is_utility_stmt('SELECT * FROM users');
+// Returns: false
 ```
 
 ## Functions Reference
 
-| Function                                                     | Description                       | Returns             |
-|--------------------------------------------------------------|-----------------------------------|---------------------|
-| `pg_query_parse(string $sql)`                                | Parse SQL to JSON AST             | `string` (JSON)     |
-| `pg_query_parse_protobuf(string $sql)`                       | Parse SQL to protobuf AST         | `string` (protobuf) |
-| `pg_query_fingerprint(string $sql)`                          | Generate query fingerprint        | `string\|false`     |
-| `pg_query_normalize(string $sql)`                            | Normalize query with placeholders | `string\|false`     |
-| `pg_query_normalize_utility(string $sql)`                    | Normalize DDL/utility statements  | `string\|false`     |
-| `pg_query_parse_plpgsql(string $sql)`                        | Parse PL/pgSQL function           | `string` (JSON)     |
-| `pg_query_split(string $sql)`                                | Split multiple statements         | `array<string>`     |
-| `pg_query_scan(string $sql)`                                 | Scan SQL into tokens              | `string` (protobuf) |
-| `pg_query_deparse(string $protobuf)`                         | Convert protobuf AST back to SQL  | `string`            |
-| `pg_query_deparse_opts(...)`                                 | Deparse with formatting options   | `string`            |
-| `pg_query_summary(string $sql, int $options, int $truncate)` | Generate query summary            | `string` (protobuf) |
+| Function                                                     | Description                                    | Returns             |
+|--------------------------------------------------------------|------------------------------------------------|---------------------|
+| `pg_query_parse(string $sql)`                                | Parse SQL to JSON AST                          | `string` (JSON)     |
+| `pg_query_parse_protobuf(string $sql)`                       | Parse SQL to protobuf AST                      | `string` (protobuf) |
+| `pg_query_fingerprint(string $sql)`                          | Generate query fingerprint                     | `string\|false`     |
+| `pg_query_normalize(string $sql)`                            | Normalize query with placeholders              | `string\|false`     |
+| `pg_query_normalize_utility(string $sql)`                    | Normalize DDL/utility statements               | `string\|false`     |
+| `pg_query_parse_plpgsql(string $sql)`                        | Parse PL/pgSQL function                        | `string` (JSON)     |
+| `pg_query_split(string $sql)`                                | Split multiple statements                      | `array<string>`     |
+| `pg_query_scan(string $sql)`                                 | Scan SQL into tokens                           | `string` (protobuf) |
+| `pg_query_deparse(string $protobuf)`                         | Convert protobuf AST back to SQL               | `string`            |
+| `pg_query_deparse_opts(...)`                                 | Deparse with formatting options                | `string`            |
+| `pg_query_summary(string $sql, int $options, int $truncate)` | Generate query summary                         | `string` (protobuf) |
+| `pg_query_is_utility_stmt(string $sql)`                      | Check if query contains utility/DDL statements | `bool`              |
 
 ### pg_query_deparse_opts Parameters
 

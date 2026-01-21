@@ -109,13 +109,66 @@ if test "$PHP_PG_QUERY" != "no"; then
     AC_MSG_ERROR([libpg_query.a not found in $PG_QUERY_LIB_DIR])
   fi
 
-  dnl protobuf-c is bundled in libpg_query.a for static builds
+  dnl protobuf-c is required for shared builds (libpg_query.a needs it)
   if test "$ext_shared" = "yes"; then
-    PHP_ADD_LIBRARY(protobuf-c,, PG_QUERY_SHARED_LIBADD)
+    AC_MSG_CHECKING([for protobuf-c])
+
+    dnl Try pkg-config first (the standard way to find libraries)
+    if test -z "$PKG_CONFIG"; then
+      AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+    fi
+
+    if test "$PKG_CONFIG" != "no" && $PKG_CONFIG --exists libprotobuf-c 2>/dev/null; then
+      PROTOBUF_C_LIBS=$($PKG_CONFIG --libs libprotobuf-c)
+      PROTOBUF_C_LIBDIR=$($PKG_CONFIG --variable=libdir libprotobuf-c)
+      AC_MSG_RESULT([found via pkg-config])
+
+      if test -n "$PROTOBUF_C_LIBDIR"; then
+        PHP_ADD_LIBPATH($PROTOBUF_C_LIBDIR, PG_QUERY_SHARED_LIBADD)
+      fi
+      PHP_ADD_LIBRARY(protobuf-c,, PG_QUERY_SHARED_LIBADD)
+    else
+      dnl Fallback: search common paths (for systems without pkg-config)
+      PROTOBUF_C_SEARCH_PATHS="/opt/homebrew /usr/local /usr"
+      PROTOBUF_C_FOUND=""
+
+      for i in $PROTOBUF_C_SEARCH_PATHS; do
+        if test -r "$i/lib/libprotobuf-c.dylib" || test -r "$i/lib/libprotobuf-c.so"; then
+          PROTOBUF_C_FOUND=$i
+          break
+        fi
+      done
+
+      if test -n "$PROTOBUF_C_FOUND"; then
+        AC_MSG_RESULT([found in $PROTOBUF_C_FOUND])
+        PHP_ADD_LIBPATH($PROTOBUF_C_FOUND/lib, PG_QUERY_SHARED_LIBADD)
+        PHP_ADD_LIBRARY(protobuf-c,, PG_QUERY_SHARED_LIBADD)
+      else
+        AC_MSG_RESULT([not found, assuming system default])
+        PHP_ADD_LIBRARY(protobuf-c,, PG_QUERY_SHARED_LIBADD)
+      fi
+    fi
   fi
 
   PHP_SUBST(PG_QUERY_SHARED_LIBADD)
 
   dnl Define extension
   PHP_NEW_EXTENSION(pg_query, pg_query.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+
+  dnl macOS libtool fix for flat namespace issue
+  dnl libpg_query.a bundles its own copy of protobuf-c. On macOS, libtool defaults to
+  dnl -flat_namespace which pools all symbols together. If system protobuf-c is also loaded
+  dnl (e.g., via grpc extension), symbol conflicts cause segfaults. This fix keeps the
+  dnl two-level namespace so bundled symbols stay isolated.
+  dnl See: https://bugs.php.net/80393, https://github.com/protocolbuffers/protobuf/issues/7611
+  case $host_os in
+    darwin*)
+      AC_CONFIG_COMMANDS([libtool-macos-fix], [
+        if test -f libtool; then
+          sed -i.bak 's/.*flat_namespace.*suppress.*/allow_undefined_flag="-undefined dynamic_lookup"/' libtool
+          rm -f libtool.bak
+        fi
+      ])
+      ;;
+  esac
 fi

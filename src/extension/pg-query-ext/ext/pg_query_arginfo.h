@@ -50,6 +50,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pg_query_summary, 0, 1, IS_STRIN
     ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, truncate_limit, IS_LONG, 0, "0")
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pg_query_is_utility_stmt, 0, 1, _IS_BOOL, 0)
+    ZEND_ARG_TYPE_INFO(0, sql, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_FUNCTION(pg_query_parse);
 ZEND_FUNCTION(pg_query_parse_protobuf);
 ZEND_FUNCTION(pg_query_fingerprint);
@@ -61,6 +65,7 @@ ZEND_FUNCTION(pg_query_scan);
 ZEND_FUNCTION(pg_query_deparse);
 ZEND_FUNCTION(pg_query_deparse_opts);
 ZEND_FUNCTION(pg_query_summary);
+ZEND_FUNCTION(pg_query_is_utility_stmt);
 
 static const zend_function_entry ext_functions[] = {
     ZEND_FE(pg_query_parse, arginfo_pg_query_parse)
@@ -74,5 +79,6 @@ static const zend_function_entry ext_functions[] = {
     ZEND_FE(pg_query_deparse, arginfo_pg_query_deparse)
     ZEND_FE(pg_query_deparse_opts, arginfo_pg_query_deparse_opts)
     ZEND_FE(pg_query_summary, arginfo_pg_query_summary)
+    ZEND_FE(pg_query_is_utility_stmt, arginfo_pg_query_is_utility_stmt)
     ZEND_FE_END
 };

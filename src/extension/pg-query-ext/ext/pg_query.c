@@ -86,7 +86,7 @@ PHP_MINFO_FUNCTION(pg_query)
     php_info_print_table_start();
     php_info_print_table_header(2, "pg_query support", "enabled");
     php_info_print_table_row(2, "Version", PHP_PG_QUERY_VERSION);
-    php_info_print_table_row(2, "libpg_query version", "17-6.1.0");
+    php_info_print_table_row(2, "libpg_query version", "17-6.2.1");
     php_info_print_table_end();
 }
 
@@ -487,4 +487,32 @@ PHP_FUNCTION(pg_query_summary)
     pg_query_free_summary_parse_result(result);
 
     RETURN_STR(protobuf_data);
+}
+
+PHP_FUNCTION(pg_query_is_utility_stmt)
+{
+    char *sql;
+    size_t sql_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STRING(sql, sql_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    PgQueryIsUtilityResult result = pg_query_is_utility_stmt(sql);
+
+    if (result.error) {
+        pg_query_free_is_utility_result(result);
+        RETURN_FALSE;
+    }
+
+    bool has_utility = false;
+    for (int i = 0; i < result.length; i++) {
+        if (result.items[i]) {
+            has_utility = true;
+            break;
+        }
+    }
+
+    pg_query_free_is_utility_result(result);
+    RETURN_BOOL(has_utility);
 }
