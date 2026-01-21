@@ -95,8 +95,9 @@ jobs:
 
       - name: Install extension via PIE (from local)
         run: |
+          sudo pie repository:remove packagist.org
           sudo pie repository:add path ${{ github.workspace }}/src/extension/pg-query-ext
-          sudo pie install flow-php/pg-query-ext:1.x-dev
+          sudo pie install flow-php/pg-query-ext:dev-1.x
 
       - name: Verify extension is loaded
         run: |
