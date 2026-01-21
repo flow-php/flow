@@ -93,11 +93,21 @@ jobs:
           sudo chmod +x /usr/local/bin/pie
           pie --version
 
+      - name: Initialize temporary git repo for version detection
+        working-directory: src/extension/pg-query-ext
+        run: |
+          git init
+          git config user.email "ci@flow-php.com"
+          git config user.name "CI"
+          git add .
+          git commit -m "temp commit for PIE installation test"
+          git tag 0.0.9999
+
       - name: Install extension via PIE (from local)
         run: |
           sudo pie repository:remove packagist.org
           sudo pie repository:add path ${{ github.workspace }}/src/extension/pg-query-ext
-          sudo pie install flow-php/pg-query-ext:dev-1.x
+          sudo pie install flow-php/pg-query-ext:0.0.9999
 
       - name: Verify extension is loaded
         run: |
