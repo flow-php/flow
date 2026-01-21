@@ -93,15 +93,11 @@ jobs:
           sudo chmod +x /usr/local/bin/pie
           pie --version
 
-      - name: Initialize temporary git repo for version detection
+      - name: Prepare local package for PIE installation
         working-directory: src/extension/pg-query-ext
         run: |
-          git init
-          git config user.email "ci@flow-php.com"
-          git config user.name "CI"
-          git add .
-          git commit -m "temp commit for PIE installation test"
-          git tag 0.0.9999
+          jq '. + {"version": "0.0.9999"}' composer.json > composer.tmp.json
+          mv composer.tmp.json composer.json
 
       - name: Install extension via PIE (from local)
         run: |
