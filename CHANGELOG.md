@@ -15,6 +15,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [c6d9fe](https://github.com/flow-php/flow/commit/c6d9fe9347f5f56f23705b9d080ad4120337eda8) - **static analysis configuration** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **installation of the extension on macos** - [@norberttech](https://github.com/norberttech)
 - [ca5c05](https://github.com/flow-php/flow/commit/ca5c05a5bacf3c8bcaa7f344d14eefcc9e87ee45) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
 - [0ce788](https://github.com/flow-php/flow/commit/0ce78834f5e5f081f229e3a4f7c0e209e0812fa7) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
