@@ -118,4 +118,21 @@ if test "$PHP_PG_QUERY" != "no"; then
 
   dnl Define extension
   PHP_NEW_EXTENSION(pg_query, pg_query.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+
+  dnl macOS libtool fix for flat namespace issue
+  dnl libpg_query.a bundles its own copy of protobuf-c. On macOS, libtool defaults to
+  dnl -flat_namespace which pools all symbols together. If system protobuf-c is also loaded
+  dnl (e.g., via grpc extension), symbol conflicts cause segfaults. This fix keeps the
+  dnl two-level namespace so bundled symbols stay isolated.
+  dnl See: https://bugs.php.net/80393, https://github.com/protocolbuffers/protobuf/issues/7611
+  case $host_os in
+    darwin*)
+      AC_CONFIG_COMMANDS([libtool-macos-fix], [
+        if test -f libtool; then
+          sed -i.bak 's/.*flat_namespace.*suppress.*/allow_undefined_flag="-undefined dynamic_lookup"/' libtool
+          rm -f libtool.bak
+        fi
+      ])
+      ;;
+  esac
 fi

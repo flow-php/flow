@@ -35,11 +35,8 @@ interface with strongly-typed AST nodes, see the [pg-query library](/documentati
 [PIE](https://github.com/php/pie) is the modern PHP extension installer.
 
 ```bash
-# Simple installation (auto-downloads libpg_query for PostgreSQL 17)
+# Simple installation
 pie install flow-php/pg-query-ext
-
-# Install with a specific PostgreSQL grammar version (15, 16, or 17)
-pie install flow-php/pg-query-ext --with-pg-version=16
 ```
 
 The extension will automatically download and build the appropriate libpg_query version. Build dependencies (
