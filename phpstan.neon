@@ -3,7 +3,6 @@ parameters:
     treatPhpDocTypesAsCertain: false
     bootstrapFiles:
         - tools/phpunit/vendor/autoload.php
-        - tools/phpbench/vendor/autoload.php
         - vendor/autoload.php
     scanFiles:
         - src/lib/postgresql/src/stubs.php
