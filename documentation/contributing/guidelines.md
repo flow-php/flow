@@ -87,7 +87,6 @@ Tests are usually divided into:
 In some cases on that level, there might be some test helpers, like:
 
 - `Doubles` - mocks / stubs / fakses used across tests
-- `Benchark` - performance tests written using `phpbench` library
 
 ### Packages Dependencies
 
@@ -129,8 +128,6 @@ Most of them are available as Composer scripts, so you can run them using `compo
         - ...
         - `composer test:adapter:xml`
         - ...
-        - `composer test:benchmark` runs the benchmark tests to measure the performance of the certain parts of the
-          project.
         - `composer test:website` runs the tests for the website
         - `composer test:examples` runs all examples
         - `composer test:mutation` runs the mutation tests to check the quality of the tests.

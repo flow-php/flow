@@ -254,7 +254,6 @@
             "@test:examples",
             "@static:analyze",
             "@test",
-            "@test:benchmark",
             "@test:mutation"
         ],
         "test": [
@@ -424,51 +423,11 @@
         "test:docs": [
             "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples --exclude=documentation ."
         ],
-        "benchmark:generate-fixtures": [
-            "php bin/fixtures"
-        ],
-        "test:benchmark": [
-            "Composer\\Config::disableProcessTimeout",
-            "./tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report"
-        ],
         "test:website": [
             "composer test --working-dir=./web/landing"
         ],
         "test:examples": [
             "./examples/run.php"
-        ],
-        "test:benchmark:adapter-csv": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-csv"
-        ],
-        "test:benchmark:adapter-json": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-json"
-        ],
-        "test:benchmark:adapter-parquet": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-parquet"
-        ],
-        "test:benchmark:adapter-excel": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-excel"
-        ],
-        "test:benchmark:adapter-text": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-text"
-        ],
-        "test:benchmark:adapter-xml": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-xml"
-        ],
-        "test:benchmark:adapter-postgresql": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-postgresql"
-        ],
-        "test:benchmark:adapter-doctrine": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=adapter-doctrine"
-        ],
-        "test:benchmark:data-frame": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=data-frame"
-        ],
-        "test:benchmark:parquet": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=parquet"
-        ],
-        "test:benchmark:telemetry": [
-            "tools/phpbench/vendor/bin/phpbench run --progress=dots --report=flow-report --group=telemetry"
         ],
         "test:mutation": [
             "Composer\\Config::disableProcessTimeout",
@@ -571,7 +530,6 @@
             "composer install --working-dir=./tools/cs-fixer",
             "composer install --working-dir=./tools/infection",
             "composer install --working-dir=./tools/monorepo",
-            "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/phpunit",
             "composer install --working-dir=./tools/rector",
@@ -583,7 +541,6 @@
             "composer update --working-dir=./tools/cs-fixer",
             "composer update --working-dir=./tools/infection",
             "composer update --working-dir=./tools/monorepo",
-            "composer update --working-dir=./tools/phpbench",
             "composer update --working-dir=./tools/phpstan",
             "composer update --working-dir=./tools/phpunit",
             "composer update --working-dir=./tools/rector",
