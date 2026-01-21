@@ -1,6 +1,12 @@
 ## [Unreleased] - 2026-01-21
 
+### Added
+- [#2164](https://github.com/flow-php/flow/pull/2164) - **Added pg_query_is_utility_stmt(string $sql) : bool function** - [@norberttech](https://github.com/norberttech)
+- [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
+- [#2164](https://github.com/flow-php/flow/pull/2164) - **Updated libpg_query to latest version** - [@norberttech](https://github.com/norberttech)
+- [#2164](https://github.com/flow-php/flow/pull/2164) - **ci/cd workflow testing installation of the extension through pie** - [@norberttech](https://github.com/norberttech)
 - [6f98ff](https://github.com/flow-php/flow/commit/6f98ff4fbe2c550f007d2c0b2b9cc75ea028c3db) - **chore: set runner.time_unit to milliseconds in phpbench config** - [@norberttech](https://github.com/norberttech)
 - [d7b52a](https://github.com/flow-php/flow/commit/d7b52ade9b1e49e3dc54e844ccbf61692043870e) - **refactor: report mode in phpbench reports in milliseconds** - [@norberttech](https://github.com/norberttech)
 - [2a9ed5](https://github.com/flow-php/flow/commit/2a9ed5706067da02bb47b7d206a4d55114d36be7) - **refactor: change number of iterations / revs in benchmarks** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +15,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2164](https://github.com/flow-php/flow/pull/2164) - **installation of the extension on macos** - [@norberttech](https://github.com/norberttech)
 - [ca5c05](https://github.com/flow-php/flow/commit/ca5c05a5bacf3c8bcaa7f344d14eefcc9e87ee45) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
 - [0ce788](https://github.com/flow-php/flow/commit/0ce78834f5e5f081f229e3a4f7c0e209e0812fa7) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
 - [35be1d](https://github.com/flow-php/flow/commit/35be1d36b8d63d4f845d90f0af3338af4786d28c) - **benchmarks github actions workflow** - [@norberttech](https://github.com/norberttech)
