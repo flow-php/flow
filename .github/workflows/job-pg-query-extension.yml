@@ -107,7 +107,7 @@ jobs:
         run: |
           sudo pie repository:remove packagist.org
           sudo pie repository:add path ${{ github.workspace }}/src/extension/pg-query-ext
-          sudo pie install flow-php/pg-query-ext:0.0.9999
+          sudo pie install flow-php/pg-query-ext:0.0.9999@dev
 
       - name: Verify extension is loaded
         run: |
