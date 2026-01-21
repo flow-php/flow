@@ -9,13 +9,13 @@
 let
   libpg_query = stdenv.mkDerivation {
     pname = "libpg_query";
-    version = "17-latest";
+    version = "17-6.2.1";
 
     src = fetchFromGitHub {
       owner = "pganalyze";
       repo = "libpg_query";
-      rev = "03e2f436c999a1d22dbce439573e8cfabced5720"; # 17-latest branch as of 2025-11-28
-      hash = "sha256-0fnQF4KSIVpNqxzdvS0UtHnqUmLXgBKI/XRZjNrYLSo=";
+      rev = "b2217bfeac36b09eb053a65a315878586723df08"; # 17-6.2.1 tag
+      hash = "sha256-+7JR5rup+9ie6wUaU5cuTyVhaEkH7X1eC7kYn0NNVrc=";
     };
 
     buildPhase = ''

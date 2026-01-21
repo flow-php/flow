@@ -145,3 +145,15 @@ function pg_query_deparse_opts(
 function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0) : string
 {
 }
+
+/**
+ * Check if query contains utility statements (DDL like CREATE, ALTER, DROP)
+ * without full parsing. More efficient than full parse when only checking statement type.
+ *
+ * @param string $sql The SQL query to check
+ *
+ * @return bool True if the query contains utility statements, false otherwise
+ */
+function pg_query_is_utility_stmt(string $sql) : bool
+{
+}
