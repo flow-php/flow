@@ -96,7 +96,7 @@ jobs:
       - name: Install extension via PIE (from local)
         run: |
           sudo pie repository:add path ${{ github.workspace }}/src/extension/pg-query-ext
-          sudo pie install flow-php/pg-query-ext:dev-1.x
+          sudo pie install flow-php/pg-query-ext:1.x-dev
 
       - name: Verify extension is loaded
         run: |
