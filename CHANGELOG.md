@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-01-20
+## [Unreleased] - 2026-01-21
 
 ### Changed
+- [6f98ff](https://github.com/flow-php/flow/commit/6f98ff4fbe2c550f007d2c0b2b9cc75ea028c3db) - **chore: set runner.time_unit to milliseconds in phpbench config** - [@norberttech](https://github.com/norberttech)
 - [d7b52a](https://github.com/flow-php/flow/commit/d7b52ade9b1e49e3dc54e844ccbf61692043870e) - **refactor: report mode in phpbench reports in milliseconds** - [@norberttech](https://github.com/norberttech)
 - [2a9ed5](https://github.com/flow-php/flow/commit/2a9ed5706067da02bb47b7d206a4d55114d36be7) - **refactor: change number of iterations / revs in benchmarks** - [@norberttech](https://github.com/norberttech)
 - [16a977](https://github.com/flow-php/flow/commit/16a977a313bc6b3aa166191f186b7e978cbabe35) - **refactor: github benchmark workflows to not install php anymore on runner** - [@norberttech](https://github.com/norberttech)
