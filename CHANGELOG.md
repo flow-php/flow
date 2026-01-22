@@ -1,10 +1,17 @@
-## [Unreleased] - 2026-01-21
+## [Unreleased] - 2026-01-22
 
 ### Added
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **New flow-php/symfony-http-foundation-telemetry-bridge package for Symfony HttpFoundation telemetry context propagation** - [@norberttech](https://github.com/norberttech)
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **PHPStan generics support to Carrier interface** - [@norberttech](https://github.com/norberttech)
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **Unified unwrap() method to all Carrier implementations** - [@norberttech](https://github.com/norberttech)
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **Fluent chaining support for Carrier::set()** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **Added pg_query_is_utility_stmt(string $sql) : bool function** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] Carrier::set() return type changed from void to static** - [@norberttech](https://github.com/norberttech)
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] ArrayCarrier::toArray() replaced by unwrap()** - [@norberttech](https://github.com/norberttech)
+- [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] ResponseCarrier::getResponse() replaced by unwrap()** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **Updated libpg_query to latest version** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **ci/cd workflow testing installation of the extension through pie** - [@norberttech](https://github.com/norberttech)
 - [6f98ff](https://github.com/flow-php/flow/commit/6f98ff4fbe2c550f007d2c0b2b9cc75ea028c3db) - **chore: set runner.time_unit to milliseconds in phpbench config** - [@norberttech](https://github.com/norberttech)
