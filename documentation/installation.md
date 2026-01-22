@@ -15,7 +15,6 @@ seo_description: >
 
 - [Docker](installation/docker.md)
 - [PHAR with PHIVE](installation/phive.md)
-- [Homebrew](installation/homebrew.md)
 - [Quick Start](quick-start.md)
 
 ## Composer

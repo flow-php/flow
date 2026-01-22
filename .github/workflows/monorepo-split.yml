@@ -97,9 +97,6 @@ jobs:
           - local_path: 'src/bridge/telemetry/otlp'
             split_repository: 'telemetry-otlp-bridge'
 
-          - local_path: 'src/tools/homebrew'
-            split_repository: 'homebrew-flow'
-
           - local_path: 'src/extension/pg-query-ext'
             split_repository: 'pg-query-ext'
 
