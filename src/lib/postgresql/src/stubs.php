@@ -158,6 +158,21 @@ if (!\function_exists('pg_query_parse')) {
         throw new \RuntimeException('pg_query extension is not loaded');
     }
 
+    /**
+     * Check if SQL statement is a utility statement (DDL).
+     *
+     * Utility statements include DDL commands like CREATE, ALTER, DROP, GRANT, etc.
+     * as opposed to DML statements like SELECT, INSERT, UPDATE, DELETE.
+     *
+     * @param string $sql The SQL query to check
+     *
+     * @return bool TRUE if the statement is a utility statement, FALSE otherwise
+     */
+    function pg_query_is_utility_stmt(string $sql) : bool
+    {
+        throw new \RuntimeException('pg_query extension is not loaded');
+    }
+
     /* Parse mode constants */
     \define('PG_QUERY_PARSE_DEFAULT', 0);
     \define('PG_QUERY_PARSE_TYPE_NAME', 1);
