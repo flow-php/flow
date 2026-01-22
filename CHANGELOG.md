@@ -23,6 +23,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [df7b4a](https://github.com/flow-php/flow/commit/df7b4a2300fa8545b0cde0d89bf37cb4fd4427e0) - **added missingstup for pg_query_is_utility_stmt method of pg-query-extension** - [@norberttech](https://github.com/norberttech)
 - [c6d9fe](https://github.com/flow-php/flow/commit/c6d9fe9347f5f56f23705b9d080ad4120337eda8) - **static analysis configuration** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **installation of the extension on macos** - [@norberttech](https://github.com/norberttech)
 - [ca5c05](https://github.com/flow-php/flow/commit/ca5c05a5bacf3c8bcaa7f344d14eefcc9e87ee45) - **benchmarks github actions workflow assertions** - [@norberttech](https://github.com/norberttech)
