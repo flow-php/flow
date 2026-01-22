@@ -9,6 +9,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [f58d7e](https://github.com/flow-php/flow/commit/f58d7e3c898f183c0fad58d3fb71f5b1e458b0ff) - **refactor: remove homebrew formula and tap distribution** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] Carrier::set() return type changed from void to static** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] ArrayCarrier::toArray() replaced by unwrap()** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] ResponseCarrier::getResponse() replaced by unwrap()** - [@norberttech](https://github.com/norberttech)
