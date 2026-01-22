@@ -168,7 +168,7 @@ final class W3CTraceContextTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        $headers = $carrier->toArray();
+        $headers = $carrier->unwrap();
         self::assertArrayHasKey('traceparent', $headers);
         self::assertArrayNotHasKey('tracestate', $headers);
     }
@@ -181,7 +181,7 @@ final class W3CTraceContextTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertEmpty($carrier->toArray());
+        self::assertEmpty($carrier->unwrap());
     }
 
     public function test_inject_sets_traceparent_header() : void
@@ -200,7 +200,7 @@ final class W3CTraceContextTest extends TestCase
 
         self::assertSame(
             '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01',
-            $carrier->toArray()['traceparent'],
+            $carrier->unwrap()['traceparent'],
         );
     }
 
@@ -219,7 +219,7 @@ final class W3CTraceContextTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertSame('rojo=value', $carrier->toArray()['tracestate']);
+        self::assertSame('rojo=value', $carrier->unwrap()['tracestate']);
     }
 
     public function test_round_trip_preserves_context() : void
@@ -236,7 +236,7 @@ final class W3CTraceContextTest extends TestCase
         $carrier = new ArrayCarrier();
 
         $propagator->inject($ctx, $carrier);
-        $restored = $propagator->extract(new ArrayCarrier($carrier->toArray()));
+        $restored = $propagator->extract(new ArrayCarrier($carrier->unwrap()));
 
         self::assertNotNull($restored->spanContext);
         self::assertSame($original->traceId->toHex(), $restored->spanContext->traceId->toHex());

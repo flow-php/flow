@@ -116,6 +116,12 @@
         <testsuite name="bridge-openapi-specification-unit">
             <directory>src/bridge/openapi/specification/tests/Flow/Bridge/OpenAPI/Specification/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="bridge-psr7-telemetry-unit">
+            <directory>src/bridge/psr7/telemetry/tests/Flow/Bridge/Psr7/Telemetry/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-psr7-telemetry-integration">
+            <directory>src/bridge/psr7/telemetry/tests/Flow/Bridge/Psr7/Telemetry/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-http-foundation-unit">
             <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Unit
             </directory>
@@ -123,6 +129,12 @@
         <testsuite name="bridge-symfony-http-foundation-integration">
             <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Integration
             </directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-http-foundation-telemetry-unit">
+            <directory>src/bridge/symfony/http-foundation-telemetry/tests/Flow/Bridge/Symfony/HttpFoundationTelemetry/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-http-foundation-telemetry-integration">
+            <directory>src/bridge/symfony/http-foundation-telemetry/tests/Flow/Bridge/Symfony/HttpFoundationTelemetry/Tests/Integration</directory>
         </testsuite>
         <testsuite name="bridge-telemetry-otlp-unit">
             <directory>src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Unit</directory>

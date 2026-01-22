@@ -99,6 +99,8 @@
         "flow-php/postgresql": "self.version",
         "flow-php/snappy": "self.version",
         "flow-php/symfony-http-foundation-bridge": "self.version",
+        "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
+        "flow-php/psr7-telemetry-bridge": "self.version",
         "flow-php/telemetry": "self.version",
         "flow-php/telemetry-otlp-bridge": "self.version",
         "flow-php/types": "self.version"
@@ -128,7 +130,9 @@
                 "src/bridge/monolog/http/src/Flow",
                 "src/bridge/monolog/telemetry/src/Flow",
                 "src/bridge/openapi/specification/src/Flow",
+                "src/bridge/psr7/telemetry/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
+                "src/bridge/symfony/http-foundation-telemetry/src/Flow",
                 "src/bridge/telemetry/otlp/src/Flow",
                 "src/cli/src/Flow",
                 "src/core/etl/src/Flow",
@@ -172,7 +176,9 @@
             "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
             "src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php",
             "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
+            "src/bridge/psr7/telemetry/src/Flow/Bridge/Psr7/Telemetry/DSL/functions.php",
             "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
+            "src/bridge/symfony/http-foundation-telemetry/src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php",
             "src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php",
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
@@ -212,7 +218,9 @@
                 "src/bridge/monolog/http/tests/Flow",
                 "src/bridge/monolog/telemetry/tests/Flow",
                 "src/bridge/openapi/specification/tests/Flow",
+                "src/bridge/psr7/telemetry/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
+                "src/bridge/symfony/http-foundation-telemetry/tests/Flow",
                 "src/bridge/telemetry/otlp/tests/Flow",
                 "src/cli/tests/Flow",
                 "src/core/etl/tests/Flow",
@@ -281,7 +289,9 @@
             "@test:bridge:monolog-http",
             "@test:bridge:monolog-telemetry",
             "@test:bridge:openapi-specification",
+            "@test:bridge:psr7-telemetry",
             "@test:bridge:symfony-http-foundation",
+            "@test:bridge:symfony-http-foundation-telemetry",
             "@test:bridge:telemetry-otlp"
         ],
         "test:adapters": [
@@ -359,9 +369,17 @@
         "test:bridge:openapi-specification": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-openapi-specification-unit --log-junit ./var/phpunit/logs/bridge-openapi-specification-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-openapi-specification-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-openapi-specification-unit"
         ],
+        "test:bridge:psr7-telemetry": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-psr7-telemetry-unit --log-junit ./var/phpunit/logs/bridge-psr7-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-psr7-telemetry-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-psr7-telemetry-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-psr7-telemetry-integration --log-junit ./var/phpunit/logs/bridge-psr7-telemetry-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-psr7-telemetry-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-psr7-telemetry-integration"
+        ],
         "test:bridge:symfony-http-foundation": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-integration --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-integration"
+        ],
+        "test:bridge:symfony-http-foundation-telemetry": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-telemetry-unit --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-telemetry-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-telemetry-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-telemetry-integration --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-telemetry-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-telemetry-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-telemetry-integration"
         ],
         "test:bridge:telemetry-otlp": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-telemetry-otlp-unit --log-junit ./var/phpunit/logs/bridge-telemetry-otlp-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-telemetry-otlp-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-telemetry-otlp-unit",

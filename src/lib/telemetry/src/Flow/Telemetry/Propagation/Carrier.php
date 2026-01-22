@@ -11,25 +11,20 @@ namespace Flow\Telemetry\Propagation;
  * Implementations handle specific transport types (HTTP headers, gRPC
  * metadata, message queue headers, etc.).
  *
- * Example implementation for PSR-7:
+ * Example usage:
  * ```php
- * final class Psr7Carrier implements Carrier
- * {
- *     public function __construct(private RequestInterface $request) {}
+ * // Inject context into a carrier
+ * $carrier = new ResponseCarrier($response);
+ * $propagator->inject($context, $carrier);
+ * $modifiedResponse = $carrier->unwrap();
  *
- *     public function get(string $key): ?string
- *     {
- *         $values = $this->request->getHeader($key);
- *         return $values[0] ?? null;
- *     }
- *
- *     public function set(string $key, string $value): void
- *     {
- *         $this->request = $this->request->withHeader($key, $value);
- *     }
- *
- * }
+ * // With fluent chaining
+ * $response = (new ResponseCarrier($response))
+ *     ->set('X-Custom', 'value')
+ *     ->unwrap();
  * ```
+ *
+ * @template-covariant TWrapped
  */
 interface Carrier
 {
@@ -49,6 +44,15 @@ interface Carrier
      *
      * @param string $key The key to set
      * @param string $value The value to set
+     *
+     * @return static For fluent chaining
      */
-    public function set(string $key, string $value) : void;
+    public function set(string $key, string $value) : static;
+
+    /**
+     * Unwrap and return the underlying data structure.
+     *
+     * @return TWrapped The wrapped data structure
+     */
+    public function unwrap() : mixed;
 }

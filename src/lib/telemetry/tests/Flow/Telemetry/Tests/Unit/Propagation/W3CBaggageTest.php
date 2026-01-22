@@ -133,7 +133,7 @@ final class W3CBaggageTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertArrayNotHasKey('baggage', $carrier->toArray());
+        self::assertArrayNotHasKey('baggage', $carrier->unwrap());
     }
 
     public function test_inject_does_nothing_for_null_baggage() : void
@@ -144,7 +144,7 @@ final class W3CBaggageTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertArrayNotHasKey('baggage', $carrier->toArray());
+        self::assertArrayNotHasKey('baggage', $carrier->unwrap());
     }
 
     public function test_inject_multiple_entries() : void
@@ -155,7 +155,7 @@ final class W3CBaggageTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        $headers = $carrier->toArray();
+        $headers = $carrier->unwrap();
         self::assertArrayHasKey('baggage', $headers);
         $baggageHeader = $headers['baggage'];
         self::assertIsString($baggageHeader);
@@ -172,7 +172,7 @@ final class W3CBaggageTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertSame('key=value', $carrier->toArray()['baggage']);
+        self::assertSame('key=value', $carrier->unwrap()['baggage']);
     }
 
     public function test_inject_url_encodes_key_and_value() : void
@@ -183,7 +183,7 @@ final class W3CBaggageTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertSame('user-id=123%3A456', $carrier->toArray()['baggage']);
+        self::assertSame('user-id=123%3A456', $carrier->unwrap()['baggage']);
     }
 
     public function test_round_trip_preserves_baggage() : void
@@ -196,7 +196,7 @@ final class W3CBaggageTest extends TestCase
         $carrier = new ArrayCarrier();
 
         $propagator->inject($original, $carrier);
-        $restored = $propagator->extract(new ArrayCarrier($carrier->toArray()));
+        $restored = $propagator->extract(new ArrayCarrier($carrier->unwrap()));
 
         self::assertNotNull($restored->baggage);
         self::assertNotNull($original->baggage);

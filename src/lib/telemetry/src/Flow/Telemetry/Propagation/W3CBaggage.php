@@ -30,7 +30,7 @@ use Flow\Telemetry\Context\Baggage;
  * // Inject into outgoing request
  * $carrier = new ArrayCarrier();
  * $propagator->inject(new PropagationContext(baggage: $baggage), $carrier);
- * $headers = $carrier->toArray();
+ * $headers = $carrier->unwrap();
  * ```
  *
  * @see https://www.w3.org/TR/baggage/
@@ -39,6 +39,9 @@ final readonly class W3CBaggage implements Propagator
 {
     public const string HEADER_BAGGAGE = 'baggage';
 
+    /**
+     * @param Carrier<mixed> $carrier
+     */
     public function extract(Carrier $carrier) : PropagationContext
     {
         $baggageHeader = $carrier->get(self::HEADER_BAGGAGE);
@@ -90,6 +93,9 @@ final readonly class W3CBaggage implements Propagator
         return [self::HEADER_BAGGAGE];
     }
 
+    /**
+     * @param Carrier<mixed> $carrier
+     */
     public function inject(PropagationContext $context, Carrier $carrier) : void
     {
         if ($context->baggage === null || $context->baggage->isEmpty()) {
