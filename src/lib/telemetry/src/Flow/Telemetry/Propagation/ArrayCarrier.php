@@ -19,8 +19,10 @@ namespace Flow\Telemetry\Propagation;
  * // Inject into outgoing request
  * $carrier = new ArrayCarrier();
  * $propagator->inject($spanContext, $carrier);
- * $headers = $carrier->toArray();
+ * $headers = $carrier->unwrap();
  * ```
+ *
+ * @implements Carrier<array<string, string>>
  */
 final class ArrayCarrier implements Carrier
 {
@@ -45,17 +47,17 @@ final class ArrayCarrier implements Carrier
         return null;
     }
 
-    public function set(string $key, string $value) : void
+    public function set(string $key, string $value) : static
     {
         $this->data[$key] = $value;
+
+        return $this;
     }
 
     /**
-     * Get the carrier data as an array.
-     *
      * @return array<string, string>
      */
-    public function toArray() : array
+    public function unwrap() : array
     {
         return $this->data;
     }

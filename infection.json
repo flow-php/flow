@@ -8,6 +8,8 @@
       "src/lib/parquet/src",
       "src/lib/telemetry/src",
       "src/bridge/monolog/telemetry/src",
+      "src/bridge/psr7/telemetry/src",
+      "src/bridge/symfony/http-foundation-telemetry/src",
       "src/bridge/telemetry/otlp/src"
     ],
     "excludes": [
@@ -26,7 +28,9 @@
       "Flow/Telemetry/Provider/Void",
       "Flow/Telemetry/Provider/Console",
       "Flow/Bridge/Telemetry/OTLP/Exception",
-      "Flow/Bridge/Monolog/Telemetry/Exception"
+      "Flow/Bridge/Monolog/Telemetry/Exception",
+      "Flow/Bridge/Psr7/Telemetry/Exception",
+      "Flow/Bridge/Symfony/HttpFoundationTelemetry/Exception"
     ]
   },
   "logs": {

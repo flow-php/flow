@@ -26,42 +26,65 @@ use Flow\Telemetry\Exception\RuntimeException;
  * $carrier = new SuperglobalCarrier();
  * $ctx = $propagator->extract($carrier);
  * ```
+ *
+ * @implements Carrier<array<string, string>>
  */
 final readonly class SuperglobalCarrier implements Carrier
 {
-    public function get(string $key) : ?string
+    /**
+     * @var array<string, string>
+     */
+    private array $data;
+
+    public function __construct()
     {
-        $httpKey = 'HTTP_' . \strtoupper(\str_replace('-', '_', $key));
+        $data = [];
 
-        if (isset($_SERVER[$httpKey]) && \is_string($_SERVER[$httpKey])) {
-            return $_SERVER[$httpKey];
-        }
-
-        $lowerKey = \strtolower($key);
-
-        foreach ($_GET as $k => $v) {
-            if (\strtolower((string) $k) === $lowerKey && \is_string($v)) {
-                return $v;
+        foreach ($_COOKIE as $k => $v) {
+            if (\is_string($k) && \is_string($v)) {
+                $data[\strtolower($k)] = $v;
             }
         }
 
         foreach ($_POST as $k => $v) {
-            if (\strtolower((string) $k) === $lowerKey && \is_string($v)) {
-                return $v;
+            if (\is_string($k) && \is_string($v)) {
+                $data[\strtolower($k)] = $v;
             }
         }
 
-        foreach ($_COOKIE as $k => $v) {
-            if (\strtolower((string) $k) === $lowerKey && \is_string($v)) {
-                return $v;
+        foreach ($_GET as $k => $v) {
+            if (\is_string($k) && \is_string($v)) {
+                $data[\strtolower($k)] = $v;
             }
         }
 
-        return null;
+        foreach ($_SERVER as $key => $value) {
+            if (\is_string($key) && \str_starts_with($key, 'HTTP_') && \is_string($value)) {
+                $headerName = \strtolower(\str_replace('_', '-', \substr($key, 5)));
+                $data[$headerName] = $value;
+            }
+        }
+
+        $this->data = $data;
     }
 
-    public function set(string $key, string $value) : void
+    public function get(string $key) : ?string
+    {
+        $lowerKey = \strtolower($key);
+
+        return $this->data[$lowerKey] ?? null;
+    }
+
+    public function set(string $key, string $value) : static
     {
         throw new RuntimeException('SuperglobalCarrier is read-only');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function unwrap() : array
+    {
+        return $this->data;
     }
 }

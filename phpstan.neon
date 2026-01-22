@@ -28,7 +28,9 @@ parameters:
         - src/bridge/monolog/http/src
         - src/bridge/monolog/telemetry/src
         - src/bridge/openapi/specification/src
+        - src/bridge/psr7/telemetry/src
         - src/bridge/symfony/http-foundation/src
+        - src/bridge/symfony/http-foundation-telemetry/src
         - src/bridge/telemetry/otlp/src
         - src/lib/array-dot/src
         - src/lib/azure-sdk/src
@@ -63,7 +65,9 @@ parameters:
         - src/bridge/monolog/http/tests
         - src/bridge/monolog/telemetry/tests
         - src/bridge/openapi/specification/tests
+        - src/bridge/psr7/telemetry/tests
         - src/bridge/symfony/http-foundation/tests
+        - src/bridge/symfony/http-foundation-telemetry/tests
         - src/bridge/telemetry/otlp/tests
         - src/lib/telemetry/tests
 

@@ -29,7 +29,7 @@ use Flow\Telemetry\Tracer\SpanContext;
  * // Inject into outgoing request
  * $carrier = new ArrayCarrier();
  * $propagator->inject(new PropagationContext($spanContext), $carrier);
- * $headers = $carrier->toArray();
+ * $headers = $carrier->unwrap();
  * ```
  *
  * @see https://www.w3.org/TR/trace-context/
@@ -42,6 +42,9 @@ final readonly class W3CTraceContext implements Propagator
 
     private const string VERSION = '00';
 
+    /**
+     * @param Carrier<mixed> $carrier
+     */
     public function extract(Carrier $carrier) : PropagationContext
     {
         $traceparent = $carrier->get(self::HEADER_TRACEPARENT);
@@ -111,6 +114,9 @@ final readonly class W3CTraceContext implements Propagator
         return [self::HEADER_TRACEPARENT, self::HEADER_TRACESTATE];
     }
 
+    /**
+     * @param Carrier<mixed> $carrier
+     */
     public function inject(PropagationContext $context, Carrier $carrier) : void
     {
         if ($context->spanContext === null) {

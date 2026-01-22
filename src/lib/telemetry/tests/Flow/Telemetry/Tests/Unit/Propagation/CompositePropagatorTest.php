@@ -135,7 +135,7 @@ final class CompositePropagatorTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        $headers = $carrier->toArray();
+        $headers = $carrier->unwrap();
         self::assertArrayHasKey('traceparent', $headers);
         self::assertArrayHasKey('baggage', $headers);
         self::assertSame('00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01', $headers['traceparent']);
@@ -155,7 +155,7 @@ final class CompositePropagatorTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertEmpty($carrier->toArray());
+        self::assertEmpty($carrier->unwrap());
     }
 
     public function test_inject_with_only_baggage() : void
@@ -171,7 +171,7 @@ final class CompositePropagatorTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        $headers = $carrier->toArray();
+        $headers = $carrier->unwrap();
         self::assertArrayNotHasKey('traceparent', $headers);
         self::assertArrayHasKey('baggage', $headers);
     }
@@ -194,7 +194,7 @@ final class CompositePropagatorTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        $headers = $carrier->toArray();
+        $headers = $carrier->unwrap();
         self::assertArrayHasKey('traceparent', $headers);
         self::assertArrayNotHasKey('baggage', $headers);
     }
@@ -218,7 +218,7 @@ final class CompositePropagatorTest extends TestCase
         $carrier = new ArrayCarrier();
         $propagator->inject($original, $carrier);
 
-        $restored = $propagator->extract(new ArrayCarrier($carrier->toArray()));
+        $restored = $propagator->extract(new ArrayCarrier($carrier->unwrap()));
 
         self::assertNotNull($restored->spanContext);
         self::assertNotNull($restored->baggage);

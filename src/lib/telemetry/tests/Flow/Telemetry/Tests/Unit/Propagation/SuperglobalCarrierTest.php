@@ -167,4 +167,30 @@ final class SuperglobalCarrierTest extends TestCase
 
         $carrier->set('key', 'value');
     }
+
+    public function test_unwrap_returns_all_data() : void
+    {
+        $_SERVER['HTTP_TRACEPARENT'] = '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01';
+        $_GET['page'] = '1';
+        $_POST['username'] = 'john';
+        $_COOKIE['session_id'] = 'abc123';
+
+        $carrier = new SuperglobalCarrier();
+
+        $data = $carrier->unwrap();
+
+        self::assertSame('00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01', $data['traceparent']);
+        self::assertSame('1', $data['page']);
+        self::assertSame('john', $data['username']);
+        self::assertSame('abc123', $data['session_id']);
+    }
+
+    public function test_unwrap_returns_empty_array_when_no_data() : void
+    {
+        $carrier = new SuperglobalCarrier();
+
+        $data = $carrier->unwrap();
+
+        self::assertSame([], $data);
+    }
 }

@@ -22,7 +22,7 @@ namespace Flow\Telemetry\Propagation;
  * // Inject context into outgoing request headers
  * $carrier = new ArrayCarrier();
  * $propagator->inject($ctx, $carrier);
- * $headers = $carrier->toArray();
+ * $headers = $carrier->unwrap();
  * ```
  */
 interface Propagator
@@ -30,7 +30,7 @@ interface Propagator
     /**
      * Extract context from a carrier.
      *
-     * @param Carrier $carrier The carrier to extract from
+     * @param Carrier<mixed> $carrier The carrier to extract from
      *
      * @return PropagationContext The extracted context
      */
@@ -49,7 +49,7 @@ interface Propagator
      * Inject context into a carrier.
      *
      * @param PropagationContext $context The context to inject
-     * @param Carrier $carrier The carrier to inject into
+     * @param Carrier<mixed> $carrier The carrier to inject into
      */
     public function inject(PropagationContext $context, Carrier $carrier) : void;
 }
