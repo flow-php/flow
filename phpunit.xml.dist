@@ -208,10 +208,6 @@
         <testsuite name="adapter-logger-unit">
             <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Adapter/Logger/Tests/Unit</directory>
         </testsuite>
-        <testsuite name="adapter-meilisearch-integration">
-            <directory>src/adapter/etl-adapter-meilisearch/tests/Flow/ETL/Adapter/Meilisearch/Tests/Integration
-            </directory>
-        </testsuite>
         <testsuite name="adapter-parquet-unit">
             <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
         </testsuite>
@@ -259,7 +255,6 @@
             <file>src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php</file>
             <file>src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php</file>
             <file>src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php</file>
-            <file>src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php</file>
             <file>src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php</file>
             <file>src/adapter/etl-adapter-chartjs/src/Flow/ETL/Adapter/ChartJS/functions.php</file>
             <file>src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/DSL/functions.php</file>

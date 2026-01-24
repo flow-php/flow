@@ -127,10 +127,6 @@ component_management:
       name: adapter-logger
       paths:
         - src/adapter/etl-adapter-logger/**
-    - component_id: adapter-meilisearch
-      name: adapter-meilisearch
-      paths:
-        - src/adapter/etl-adapter-meilisearch/**
     - component_id: adapter-parquet
       name: adapter-parquet
       paths:

@@ -67,8 +67,6 @@ jobs:
             split_repository: 'etl-adapter-json'
           - local_path: 'src/adapter/etl-adapter-logger'
             split_repository: 'etl-adapter-logger'
-          - local_path: 'src/adapter/etl-adapter-meilisearch'
-            split_repository: 'etl-adapter-meilisearch'
           - local_path: 'src/adapter/etl-adapter-parquet'
             split_repository: 'etl-adapter-parquet'
           - local_path: 'src/adapter/etl-adapter-text'

@@ -57,11 +57,6 @@
       "type": "adapter"
     },
     {
-      "name" : "flow-php/etl-adapter-meilisearch",
-      "path": "src/adapter/etl-adapter-meilisearch",
-      "type": "adapter"
-    },
-    {
       "name" : "flow-php/etl-adapter-parquet",
       "path": "src/adapter/etl-adapter-parquet",
       "type": "adapter"

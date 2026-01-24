@@ -29,7 +29,6 @@
         "google/apiclient": "^2.13",
         "google/protobuf": "^4.0",
         "halaxa/json-machine": "^1.1",
-        "meilisearch/meilisearch-php": "^1.11",
         "monolog/monolog": "^3.0",
         "openspout/openspout": "^5.2",
         "packaged/thrift": "^0.15.0",
@@ -89,7 +88,6 @@
         "flow-php/etl-adapter-http": "self.version",
         "flow-php/etl-adapter-json": "self.version",
         "flow-php/etl-adapter-logger": "self.version",
-        "flow-php/etl-adapter-meilisearch": "self.version",
         "flow-php/etl-adapter-parquet": "self.version",
         "flow-php/etl-adapter-postgresql": "self.version",
         "flow-php/etl-adapter-text": "self.version",
@@ -131,7 +129,6 @@
                 "src/adapter/etl-adapter-http/src/Flow",
                 "src/adapter/etl-adapter-json/src/Flow",
                 "src/adapter/etl-adapter-logger/src/Flow",
-                "src/adapter/etl-adapter-meilisearch/src/Flow",
                 "src/adapter/etl-adapter-parquet/src/Flow",
                 "src/adapter/etl-adapter-postgresql/src/Flow",
                 "src/adapter/etl-adapter-text/src/Flow",
@@ -182,7 +179,6 @@
             "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php",
             "src/adapter/etl-adapter-http/src/Flow/ETL/Adapter/Http/DSL/functions.php",
             "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
-            "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
             "src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php",
             "src/adapter/etl-adapter-postgresql/src/Flow/ETL/Adapter/PostgreSql/functions.php",
             "src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php",
@@ -226,7 +222,6 @@
                 "src/adapter/etl-adapter-http/tests/Flow",
                 "src/adapter/etl-adapter-json/tests/Flow",
                 "src/adapter/etl-adapter-logger/tests/Flow",
-                "src/adapter/etl-adapter-meilisearch/tests/Flow",
                 "src/adapter/etl-adapter-parquet/tests/Flow",
                 "src/adapter/etl-adapter-postgresql/tests/Flow",
                 "src/adapter/etl-adapter-text/tests/Flow",
@@ -329,7 +324,6 @@
             "@test:adapter:http",
             "@test:adapter:json",
             "@test:adapter:logger",
-            "@test:adapter:meilisearch",
             "@test:adapter:parquet",
             "@test:adapter:text",
             "@test:adapter:xml",
@@ -453,9 +447,6 @@
         "test:adapter:logger": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-logger-unit --log-junit ./var/phpunit/logs/adapter-logger-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-logger-unit.coverage.xml"
         ],
-        "test:adapter:meilisearch": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-meilisearch-integration --log-junit ./var/phpunit/logs/adapter-meilisearch-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-meilisearch-integration.coverage.xml"
-        ],
         "test:adapter:parquet": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-unit --log-junit ./var/phpunit/logs/adapter-parquet-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-parquet-unit.coverage.xml",
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-integration --log-junit ./var/phpunit/logs/adapter-parquet-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-parquet-integration.coverage.xml"
@@ -547,7 +538,6 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.http.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.json.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.logger.xml",
-            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.meilisearch.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.parquet.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.text.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.xml.xml",

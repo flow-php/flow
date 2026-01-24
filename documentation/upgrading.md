@@ -7,6 +7,12 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.31.x to 0.32.x
+
+### 1) Removal of Meilisearch Adapter
+
+The Meilisearch adapter has been removed from Flow PHP. If you were using it, please migrate to Elasticsearch adapter.
+
 ## Upgrading from 0.28.x to 0.29.x
 
 ### 1) JsonType now uses Json value object instead of string
