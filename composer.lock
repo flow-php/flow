@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "81b7879210af801e3d41dc2a0806d911",
+    "content-hash": "7f857eaa375ae5daff4cea7bafb09532",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1518,16 +1518,16 @@
         },
         {
             "name": "openspout/openspout",
-            "version": "v5.2.1",
+            "version": "v5.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openspout/openspout.git",
-                "reference": "6ce24398c5f176ebb8ed6131dfb081bd5361d8df"
+                "reference": "95403917927ef252f7ae82d919c55286a642962a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openspout/openspout/zipball/6ce24398c5f176ebb8ed6131dfb081bd5361d8df",
-                "reference": "6ce24398c5f176ebb8ed6131dfb081bd5361d8df",
+                "url": "https://api.github.com/repos/openspout/openspout/zipball/95403917927ef252f7ae82d919c55286a642962a",
+                "reference": "95403917927ef252f7ae82d919c55286a642962a",
                 "shasum": ""
             },
             "require": {
@@ -1540,13 +1540,13 @@
             },
             "require-dev": {
                 "ext-zlib": "*",
-                "friendsofphp/php-cs-fixer": "^3.92.4",
-                "infection/infection": "^0.32.2",
+                "friendsofphp/php-cs-fixer": "^3.93.0",
+                "infection/infection": "^0.32.3",
                 "phpbench/phpbench": "^1.4.3",
-                "phpstan/phpstan": "^2.1.33",
-                "phpstan/phpstan-phpunit": "^2.0.11",
+                "phpstan/phpstan": "^2.1.37",
+                "phpstan/phpstan-phpunit": "^2.0.12",
                 "phpstan/phpstan-strict-rules": "^2.0.7",
-                "phpunit/phpunit": "^12.5.4"
+                "phpunit/phpunit": "^12.5.7"
             },
             "suggest": {
                 "ext-iconv": "To handle non UTF-8 CSV files (if \"php-mbstring\" is not already installed or is too limited)",
@@ -1594,7 +1594,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openspout/openspout/issues",
-                "source": "https://github.com/openspout/openspout/tree/v5.2.1"
+                "source": "https://github.com/openspout/openspout/tree/v5.2.2"
             },
             "funding": [
                 {
@@ -1606,7 +1606,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-01-08T08:17:35+00:00"
+            "time": "2026-01-26T07:19:07+00:00"
         },
         {
             "name": "packaged/thrift",
