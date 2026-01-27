@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-01-22
+## [Unreleased] - 2026-01-27
 
 ### Added
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **New flow-php/symfony-http-foundation-telemetry-bridge package for Symfony HttpFoundation telemetry context propagation** - [@norberttech](https://github.com/norberttech)
