@@ -64,7 +64,7 @@ use Flow\Types\Type\AutoCaster;
 
 final class DataFrame
 {
-    private FlowContext $context;
+    private readonly FlowContext $context;
 
     public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
     {
@@ -221,11 +221,9 @@ final class DataFrame
      */
     public function count() : int
     {
-        $clone = clone $this;
-
         $total = 0;
 
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             $total += $rows->count();
         }
 
@@ -254,12 +252,11 @@ final class DataFrame
      */
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
-        $clone = clone $this;
-        $clone->limit($limit);
+        $this->limit($limit);
 
         $output = '';
 
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             $output .= $formatter->format($rows, $truncate);
         }
 
@@ -327,15 +324,13 @@ final class DataFrame
      */
     public function fetch(?int $limit = null) : Rows
     {
-        $clone = clone $this;
-
         if ($limit !== null) {
-            $clone->limit($limit);
+            $this->limit($limit);
         }
 
         $rows = new Rows();
 
-        foreach ($clone->pipeline->process($clone->context) as $nextRows) {
+        foreach ($this->pipeline->process($this->context) as $nextRows) {
             $rows = $rows->merge($nextRows);
         }
 
@@ -404,8 +399,7 @@ final class DataFrame
      */
     public function forEach(?callable $callback = null) : void
     {
-        $clone = clone $this;
-        $clone->run($callback);
+        $this->run($callback);
     }
 
     /**
@@ -417,9 +411,7 @@ final class DataFrame
      */
     public function get() : \Generator
     {
-        $clone = clone $this;
-
-        return $clone->pipeline->process($clone->context);
+        return $this->pipeline->process($this->context);
     }
 
     /**
@@ -431,9 +423,7 @@ final class DataFrame
      */
     public function getAsArray() : \Generator
     {
-        $clone = clone $this;
-
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             yield $rows->toArray();
         }
     }
@@ -447,9 +437,7 @@ final class DataFrame
      */
     public function getEach() : \Generator
     {
-        $clone = clone $this;
-
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             foreach ($rows as $row) {
                 yield $row;
             }
@@ -465,9 +453,7 @@ final class DataFrame
      */
     public function getEachAsArray() : \Generator
     {
-        $clone = clone $this;
-
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             foreach ($rows as $row) {
                 yield $row->toArray();
             }
@@ -654,15 +640,13 @@ final class DataFrame
      */
     public function printRows(?int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
-        $clone = clone $this;
-
         if ($limit !== null) {
-            $clone->limit($limit);
+            $this->limit($limit);
         }
 
-        $clone->load(to_output($truncate, Output::rows, $formatter));
+        $this->load(to_output($truncate, Output::rows, $formatter));
 
-        $clone->run();
+        $this->run();
     }
 
     /**
@@ -670,14 +654,12 @@ final class DataFrame
      */
     public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()) : void
     {
-        $clone = clone $this;
-
         if ($limit !== null) {
-            $clone->limit($limit);
+            $this->limit($limit);
         }
-        $clone->load(to_output(false, Output::schema, schemaFormatter: $formatter));
+        $this->load(to_output(false, Output::schema, schemaFormatter: $formatter));
 
-        $clone->run();
+        $this->run();
     }
 
     /**
@@ -807,17 +789,17 @@ final class DataFrame
      */
     public function run(?callable $callback = null, bool|Analyze $analyze = false) : ?Report
     {
-        $clone = clone $this;
-
         if ($analyze === false) {
             $analyze = $this->context->config->analyze();
         }
 
+        dd($this->pipeline);
+
         $collector = new ReportCollector($analyze, $this->context->config->clock());
 
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             if ($callback !== null) {
-                $callback($rows, $clone->context);
+                $callback($rows, $this->context);
             }
 
             $collector->capture($rows);
