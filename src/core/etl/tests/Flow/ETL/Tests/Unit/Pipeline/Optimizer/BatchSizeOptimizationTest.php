@@ -4,91 +4,82 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{from_rows, ref, rows};
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
-use Flow\ETL\{GroupBy, Transformer};
 use Flow\ETL\Loader\StreamLoader;
-use Flow\ETL\Pipeline\{BatchingPipeline,
-    CollectingPipeline,
-    GroupByPipeline,
-    LinkedPipeline,
-    PartitioningPipeline,
-    SynchronousPipeline};
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
+use Flow\ETL\{Pipeline, Transformer};
+use Flow\ETL\Processor\{BatchingProcessor, CollectingProcessor, PartitioningProcessor};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class BatchSizeOptimizationTest extends FlowTestCase
 {
-    public function test_for_nested_pipeline_with_batching_pipeline() : void
+    public function test_for_pipeline_with_batching_processor() : void
     {
-        $pipeline = new LinkedPipeline(new BatchingPipeline(new SynchronousPipeline(), 10));
+        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline->add(new BatchingProcessor(10));
 
         self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
         );
     }
 
-    public function test_for_synchronous_pipeline_with_loader() : void
+    public function test_for_pipeline_with_loader() : void
     {
-        $pipeline = new SynchronousPipeline();
+        $pipeline = new Pipeline(from_rows(rows()));
 
         self::assertTrue(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
         );
     }
 
-    public function test_for_synchronous_pipeline_with_stream_loader() : void
+    public function test_for_pipeline_with_stream_loader() : void
     {
-        $pipeline = new SynchronousPipeline();
+        $pipeline = new Pipeline(from_rows(rows()));
 
         self::assertFalse(
             (new BatchSizeOptimization())->isFor(StreamLoader::output(), $pipeline)
         );
     }
 
-    public function test_for_synchronous_pipeline_without_loaders() : void
+    public function test_for_pipeline_without_loaders() : void
     {
-        $pipeline = new SynchronousPipeline();
+        $pipeline = new Pipeline(from_rows(rows()));
 
         self::assertFalse(
             (new BatchSizeOptimization())->isFor($this->createMock(Transformer::class), $pipeline)
         );
     }
 
-    public function test_is_for_already_batching_pipeline() : void
+    public function test_is_for_pipeline_with_collecting_processor() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(), 10);
+        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline->add(new CollectingProcessor());
 
         self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
         );
     }
 
-    public function test_is_for_already_deeply_nested_batching_pipeline() : void
+    public function test_is_for_pipeline_with_partitioning_processor() : void
     {
-        $pipeline = new LinkedPipeline(
-            new GroupByPipeline(
-                new GroupBy(),
-                new LinkedPipeline(
-                    new PartitioningPipeline(
-                        new LinkedPipeline(new BatchingPipeline(new SynchronousPipeline(), 100)),
-                        [ref('id')]
-                    )
-                ),
-            )
-        );
+        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline->add(new PartitioningProcessor([ref('group')]));
 
         self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
         );
     }
 
-    public function test_is_for_collecting_pipeline() : void
+    public function test_optimize_adds_batching_processor() : void
     {
-        $pipeline = new CollectingPipeline(new SynchronousPipeline());
+        $pipeline = new Pipeline(from_rows(rows()));
+        $loader = new DbalLoader('test', []);
 
-        self::assertFalse(
-            (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
-        );
+        $optimizedPipeline = (new BatchSizeOptimization(500))->optimize($loader, $pipeline);
+
+        self::assertCount(2, $optimizedPipeline->stages()->steps());
+        self::assertInstanceOf(BatchingProcessor::class, $optimizedPipeline->stages()->steps()[0]);
+        self::assertSame($loader, $optimizedPipeline->stages()->steps()[1]);
     }
 }

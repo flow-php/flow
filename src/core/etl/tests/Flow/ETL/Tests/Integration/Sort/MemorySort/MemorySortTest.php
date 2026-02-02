@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\Sort\MemorySort;
 
 use function Flow\ETL\DSL\{flow_context, from_array, ref, refs};
 use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\Pipeline\SynchronousPipeline;
+use Flow\ETL\Pipeline;
 use Flow\ETL\Sort\MemorySort;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -29,12 +29,15 @@ final class MemorySortTest extends FlowTestCase
             Unit::fromMb(1024)
         );
 
+        $context = flow_context();
+        $pipeline = new Pipeline(from_array($randomizedInput));
+
         $sortedOutput = \iterator_to_array(
-            $sort->sortBy(
-                new SynchronousPipeline(from_array($randomizedInput)),
-                flow_context(),
+            $sort->sortGenerator(
+                $pipeline->process($context),
+                $context,
                 refs(ref('id')->desc())
-            )->extract(flow_context())
+            )
         );
 
         self::assertEquals(

@@ -22,8 +22,7 @@ use function Flow\ETL\DSL\{array_to_rows,
     schema,
     str_schema,
     string_entry};
-use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Schema;
+use Flow\ETL\{Pipeline, Schema};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -168,7 +167,7 @@ final class SchemaTest extends FlowIntegrationTestCase
 
     public function test_taking_schema_from_pipeline() : void
     {
-        $pipeline = new SynchronousPipeline(
+        $pipeline = new Pipeline(
             $extractor = from_array(
                 [
                     ['string' => null, 'bool' => null, 'int' => null, 'float' => null],

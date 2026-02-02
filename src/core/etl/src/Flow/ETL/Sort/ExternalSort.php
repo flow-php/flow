@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort;
 
 use Flow\ETL\{Exception\InvalidArgumentException,
-    Extractor,
     FlowContext,
-    Pipeline,
-    Pipeline\BatchingPipeline,
+    Row,
     Row\References,
+    Rows,
     Sort\ExternalSort\Bucket,
     Sort\ExternalSort\Buckets,
     Sort\ExternalSort\BucketsCache};
-use Flow\ETL\Extractor\SortBucketsExtractor;
 
 /**
  * External sorting is explained here:.
@@ -38,57 +36,93 @@ final class ExternalSort implements SortingAlgorithm
         }
     }
 
-    public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor
+    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs) : \Generator
     {
         $sortedBuckets = [];
 
-        foreach ($this->createBuckets($pipeline, $context, $refs) as $buckets) {
+        foreach ($this->createBucketsFromGenerator($rows, $refs) as $buckets) {
             $sortedBuckets[] = $this->sortBuckets($buckets, $refs);
         }
 
-        return new SortBucketsExtractor($this->mergeBuckets($sortedBuckets, $refs), \abs($this->batchSize), $this->bucketsCache);
+        yield from $this->extractSortedBuckets($this->mergeBuckets($sortedBuckets, $refs));
     }
 
     /**
+     * @param \Generator<Rows> $generator
+     *
      * @return \Generator<int, Buckets>
      */
-    private function createBuckets(Pipeline $pipeline, FlowContext $context, References $refs) : \Generator
+    private function createBucketsFromGenerator(\Generator $generator, References $refs) : \Generator
     {
-        /**
-         * @var array<string, Bucket> $buckets
-         */
+        /** @var array<Bucket> $buckets */
         $buckets = [];
 
-        $generator = $pipeline->process($context);
+        /** @var array<Row> $buffer */
+        $buffer = [];
+        $minBatchSize = 500;
 
-        generator:
-        foreach ($generator as $rows) {
+        foreach ($generator as $batch) {
             if ($this->batchSize === -1) {
-                $this->batchSize = $rows->count();
-
-                /**
-                 * Batch size below 500 will generate too many buckets and will increase IO.
-                 */
-                if ($this->batchSize < 500) {
-                    $generator->rewind();
-                    $generator = (new BatchingPipeline($pipeline, 500))->process($context);
-
-                    goto generator;
-                }
+                $this->batchSize = $batch->count();
             }
 
-            $bucketId = \bin2hex(\random_bytes(16));
-            $this->bucketsCache->set($bucketId, $rows->sortBy(...$refs));
-            $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
+            foreach ($batch as $row) {
+                $buffer[] = $row;
 
-            if (\count($buckets) >= $this->bucketsCount) {
-                yield new Buckets($buckets);
-                $buckets = [];
+                if (\count($buffer) >= $minBatchSize) {
+                    $batchRows = new Rows(...$buffer);
+                    $buffer = [];
+
+                    $bucketId = \bin2hex(\random_bytes(16));
+                    $this->bucketsCache->set($bucketId, $batchRows->sortBy(...$refs));
+                    $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
+
+                    if (\count($buckets) >= $this->bucketsCount) {
+                        yield new Buckets($buckets);
+                        $buckets = [];
+                    }
+                }
             }
         }
 
-        if (\count($buckets) > 0) {
+        if ($buffer !== []) {
+            $batchRows = new Rows(...$buffer);
+            $bucketId = \bin2hex(\random_bytes(16));
+            $this->bucketsCache->set($bucketId, $batchRows->sortBy(...$refs));
+            $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
+        }
+
+        if ($buckets !== []) {
             yield new Buckets($buckets);
+        }
+    }
+
+    /**
+     * @param array<Bucket> $sortBuckets
+     *
+     * @return \Generator<Rows>
+     */
+    private function extractSortedBuckets(array $sortBuckets) : \Generator
+    {
+        $outputBatchSize = \max(1, \abs($this->batchSize));
+
+        foreach ($sortBuckets as $bucket) {
+            $rows = new Rows();
+
+            foreach ($bucket->rows as $row) {
+                $rows = $rows->add($row);
+
+                if ($rows->count() >= $outputBatchSize) {
+                    yield $rows;
+                    $rows = new Rows();
+                }
+            }
+
+            if ($rows->count() > 0) {
+                yield $rows;
+            }
+
+            $this->bucketsCache->remove($bucket->id);
         }
     }
 
@@ -114,10 +148,6 @@ final class ExternalSort implements SortingAlgorithm
         return $buckets;
     }
 
-    /**
-     * @param Buckets $sortBuckets
-     * @param References $refs
-     */
     private function sortBuckets(Buckets $sortBuckets, References $refs) : Bucket
     {
         $this->bucketsCache->set($nextBucketId = \bin2hex(\random_bytes(16)), $sortBuckets->sort(...$refs->all()));

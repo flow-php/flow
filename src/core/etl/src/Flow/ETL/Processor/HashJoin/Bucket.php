@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Pipeline\HashJoin;
+namespace Flow\ETL\Processor\HashJoin;
 
 use function Flow\ETL\DSL\rows;
 use Flow\ETL\Join\Expression;

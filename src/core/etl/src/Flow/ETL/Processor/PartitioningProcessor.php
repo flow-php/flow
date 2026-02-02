@@ -2,84 +2,51 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Pipeline;
+namespace Flow\ETL\Processor;
 
 use function Flow\ETL\DSL\{from_all, from_cache};
-use Flow\ETL\{Cache\CacheIndex,
-    Extractor,
-    FlowContext,
-    Hash\Algorithm,
-    Hash\NativePHPHash,
-    Loader,
-    Pipeline,
-    Rows,
-    Transformer};
+use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CollectingExtractor;
+use Flow\ETL\{Extractor, FlowContext, Processor, Rows};
+use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Row\Reference;
 use Flow\Filesystem\Partition;
 
-final readonly class PartitioningPipeline implements OverridingPipeline, Pipeline
+/**
+ * Partitions rows by column values and caches each partition.
+ *
+ * @internal
+ */
+final readonly class PartitioningProcessor implements Processor
 {
     private Algorithm $hashAlgorithm;
 
     /**
-     * @param Pipeline $pipeline
      * @param array<Reference> $partitionBy
      * @param array<Reference> $orderBy
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private Pipeline $pipeline,
         private array $partitionBy = [],
         private array $orderBy = [],
     ) {
         if (!\count($this->partitionBy)) {
-            throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');
+            throw new InvalidArgumentException('PartitioningProcessor requires at least one partitionBy entry');
         }
         $this->hashAlgorithm = new NativePHPHash();
     }
 
-    public function add(Loader|Transformer $pipe) : Pipeline
+    public function process(\Generator $rows, FlowContext $context) : \Generator
     {
-        $this->pipeline->add($pipe);
-
-        return $this;
-    }
-
-    public function has(string $transformerClass) : bool
-    {
-        return $this->pipeline->has($transformerClass);
-    }
-
-    /**
-     * @return array<Pipeline>
-     */
-    public function pipelines() : array
-    {
-        return [$this->pipeline];
-    }
-
-    public function pipes() : Pipes
-    {
-        return $this->pipeline->pipes();
-    }
-
-    /**
-     * @return \Generator<int, Rows>
-     */
-    public function process(FlowContext $context) : \Generator
-    {
-        /**
-         * @var array<CacheIndex> $partitionIndexes
-         */
+        /** @var array<string, CacheIndex> $partitionIndexes */
         $partitionIndexes = [];
 
-        foreach ($this->pipeline->process($context) as $rows) {
-            foreach ($rows->partitionBy(...$this->partitionBy) as $partitionedRows) {
+        foreach ($rows as $batch) {
+            foreach ($batch->partitionBy(...$this->partitionBy) as $partitionedRows) {
 
-                $rows = $partitionedRows->sortBy(...$this->orderBy);
+                $sortedRows = $partitionedRows->sortBy(...$this->orderBy);
 
                 $partitionId = $this->hashAlgorithm->hash($context->config->id() . '_' . \implode('_', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
@@ -90,7 +57,7 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
                     $partitionIndexes[$partitionId] = new CacheIndex($partitionId);
                 }
 
-                $context->cache()->set($rowsCacheId = \bin2hex(\random_bytes(16)), $rows);
+                $context->cache()->set($rowsCacheId = \bin2hex(\random_bytes(16)), $sortedRows);
                 $partitionIndexes[$partitionId]->add($rowsCacheId);
             }
         }
@@ -99,16 +66,11 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
             $context->cache()->set($partitionIndex->key, $partitionIndex);
         }
 
-        return from_all(
+        yield from from_all(
             ...\array_map(
                 static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, clear: true)),
                 \array_keys($partitionIndexes)
             )
         )->extract($context);
-    }
-
-    public function source() : Extractor
-    {
-        return $this->pipeline->source();
     }
 }

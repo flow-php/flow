@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use function Flow\ETL\DSL\{flow_context, from_array, ref, refs};
 use function Flow\Filesystem\DSL\path;
-use Flow\ETL\Pipeline\SynchronousPipeline;
+use Flow\ETL\Pipeline;
 use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -39,13 +39,14 @@ final class ExternalSortTest extends FlowIntegrationTestCase
             )
         );
 
+        $context = flow_context();
+        $pipeline = new Pipeline(from_array($randomizedInput));
+
         $sortedOutput = \iterator_to_array(
-            $sort->sortBy(
-                new SynchronousPipeline(from_array($randomizedInput)),
-                flow_context(),
+            $sort->sortGenerator(
+                $pipeline->process($context),
+                $context,
                 refs(ref('id')->desc())
-            )->extract(
-                flow_context()
             )
         );
 

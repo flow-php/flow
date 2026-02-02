@@ -4,34 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use Flow\ETL\{GroupBy, Loader, Tests\FlowTestCase, Transformer};
-use Flow\ETL\Pipeline\{CollectingPipeline, GroupByPipeline, SynchronousPipeline};
+use function Flow\ETL\DSL\{from_rows, rows};
+use Flow\ETL\{GroupBy, Loader, Pipeline, Tests\FlowTestCase, Transformer};
+use Flow\ETL\Processor\{CollectingProcessor, GroupByProcessor};
 
 final class PipelineTest extends FlowTestCase
 {
-    public function test_getting_pipes_from_nested_pipelines() : void
+    public function test_getting_steps_from_pipeline() : void
     {
-        $synchronous = new SynchronousPipeline();
-        $synchronous->add($transformer1 = $this->createMock(Transformer::class));
-        $synchronous->add($transformer2 = $this->createMock(Transformer::class));
-        $limiting = new GroupByPipeline(new GroupBy(), $synchronous);
-        $limiting->add($transformer3 = $this->createMock(Transformer::class));
-        $limiting->add($loader1 = $this->createMock(Loader::class));
-        $limiting->add($transformer4 = $this->createMock(Transformer::class));
-        $collecting = new CollectingPipeline($limiting);
-        $collecting->add($loader2 = $this->createMock(Loader::class));
+        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline->add($transformer1 = $this->createMock(Transformer::class));
+        $pipeline->add($groupBy = new GroupByProcessor(new GroupBy()));
+        $pipeline->add($transformer2 = $this->createMock(Transformer::class));
+        $pipeline->add($collecting = new CollectingProcessor());
+        $pipeline->add($loader = $this->createMock(Loader::class));
 
         self::assertSame(
             [
                 $transformer1,
+                $groupBy,
                 $transformer2,
-                $transformer3,
-                $loader1,
-                $transformer4,
-                $loader2,
+                $collecting,
+                $loader,
             ],
-            $collecting->pipes()->all()
+            $pipeline->stages()->steps()
         );
-
     }
 }

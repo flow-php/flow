@@ -2,57 +2,36 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Pipeline;
+namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Row, Rows, Transformer};
+use Flow\ETL\{FlowContext, Processor, Row, Rows};
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Schema\Definition;
 
-final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipeline
+/**
+ * Applies window functions over partitioned and ordered data.
+ *
+ * @internal
+ */
+final readonly class WindowProcessor implements Processor
 {
     /**
      * @param Definition<mixed>|string $entry
      */
     public function __construct(
-        private Pipeline $pipeline,
         private string|Definition $entry,
         private WindowFunction $function,
     ) {
     }
 
-    public function add(Loader|Transformer $pipe) : Pipeline
-    {
-        $this->pipeline->add($pipe);
-
-        return $this;
-    }
-
-    public function has(string $transformerClass) : bool
-    {
-        return $this->pipeline->has($transformerClass);
-    }
-
-    public function pipelines() : array
-    {
-        return [$this->pipeline];
-    }
-
-    public function pipes() : Pipes
-    {
-        return $this->pipeline->pipes();
-    }
-
-    /**
-     * @return \Generator<int, Rows>
-     */
-    public function process(FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context) : \Generator
     {
         $currentPartitionKey = null;
         $partitionRows = [];
 
-        foreach ($this->pipeline->process($context) as $rows) {
-            foreach ($rows as $row) {
+        foreach ($rows as $batch) {
+            foreach ($batch as $row) {
                 $partitionKey = $this->extractPartitionKey($row);
 
                 if ($currentPartitionKey !== null && $currentPartitionKey !== $partitionKey) {
@@ -77,11 +56,6 @@ final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipel
                 yield $processedRows;
             }
         }
-    }
-
-    public function source() : Extractor
-    {
-        return $this->pipeline->source();
     }
 
     private function extractPartitionKey(Row $row) : string

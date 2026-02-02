@@ -6,7 +6,6 @@ namespace Flow\ETL;
 
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Extractor\RowsExtractor;
-use Flow\ETL\Pipeline\SynchronousPipeline;
 
 final readonly class Flow
 {
@@ -29,7 +28,7 @@ final readonly class Flow
     public function extract(Extractor $extractor) : DataFrame
     {
         return new DataFrame(
-            (new SynchronousPipeline($extractor)),
+            new Pipeline($extractor),
             $this->config
         );
     }
@@ -42,7 +41,7 @@ final readonly class Flow
     public function process(Rows ...$rows) : DataFrame
     {
         return new DataFrame(
-            (new SynchronousPipeline(new RowsExtractor(...$rows))),
+            new Pipeline(new RowsExtractor(...$rows)),
             $this->config
         );
     }

@@ -6,7 +6,7 @@ namespace Flow\ETL\DataFrame;
 
 use Flow\ETL\{DataFrame, GroupBy};
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Pipeline\{GroupByPipeline, LinkedPipeline};
+use Flow\ETL\Processor\GroupByProcessor;
 use Flow\ETL\Row\Reference;
 
 final readonly class GroupedDataFrame
@@ -19,14 +19,14 @@ final readonly class GroupedDataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        $pipelineSetter = function (GroupBy $groupBy) : void {
+        $pipelineAdder = function (GroupBy $groupBy) : void {
             /**
              * @phpstan-ignore-next-line
              */
-            $this->pipeline = new LinkedPipeline(new GroupByPipeline($groupBy, $this->pipeline));
+            $this->pipeline->add(new GroupByProcessor($groupBy));
         };
 
-        $pipelineSetter->bindTo($this->df, $this->df)($this->groupBy);
+        $pipelineAdder->bindTo($this->df, $this->df)($this->groupBy);
 
         return $this->df;
     }

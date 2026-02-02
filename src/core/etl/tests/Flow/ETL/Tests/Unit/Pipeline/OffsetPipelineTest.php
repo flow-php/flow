@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use function Flow\ETL\DSL\{bool_entry, config, flow_context, from_rows, int_entry, lit, ref, row, rows};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor, FlowContext};
-use Flow\ETL\Pipeline\{OffsetPipeline, Pipes, SynchronousPipeline};
+use Flow\ETL\{Extractor, FlowContext, Pipeline};
+use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,95 +22,18 @@ final class OffsetPipelineTest extends FlowTestCase
         yield 'large offset' => [100];
     }
 
-    public function test_add_delegates_to_wrapped_pipeline() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
-        $transformer = new ScalarFunctionTransformer('test', lit('value'));
-
-        $returnedPipeline = $offsetPipeline->add($transformer);
-
-        self::assertSame($offsetPipeline, $returnedPipeline);
-        self::assertTrue($pipeline->has(ScalarFunctionTransformer::class));
-    }
-
     public function test_constructor_with_negative_offset_throws_exception() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0, given: -1');
 
         // @phpstan-ignore-next-line
-        new OffsetPipeline($pipeline, -1);
-    }
-
-    public function test_constructor_with_positive_offset() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-
-        $offsetPipeline = new OffsetPipeline($pipeline, 5);
-
-        self::assertInstanceOf(OffsetPipeline::class, $offsetPipeline);
-    }
-
-    public function test_constructor_with_zero_offset() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-
-        $offsetPipeline = new OffsetPipeline($pipeline, 0);
-
-        self::assertInstanceOf(OffsetPipeline::class, $offsetPipeline);
-    }
-
-    public function test_has_delegates_to_wrapped_pipeline() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-        $pipeline->add(new ScalarFunctionTransformer('test', lit('value')));
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
-
-        $result = $offsetPipeline->has(ScalarFunctionTransformer::class);
-
-        self::assertTrue($result);
-    }
-
-    public function test_has_returns_false_for_non_existent_transformer() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
-
-        $result = $offsetPipeline->has('NonExistentTransformer');
-
-        self::assertFalse($result);
-    }
-
-    public function test_pipelines_returns_wrapped_pipeline_in_array() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
-
-        $pipelines = $offsetPipeline->pipelines();
-
-        self::assertCount(1, $pipelines);
-        self::assertSame($pipeline, $pipelines[0]);
-    }
-
-    public function test_pipes_delegates_to_wrapped_pipeline() : void
-    {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-        $transformer = new ScalarFunctionTransformer('test', lit('value'));
-        $pipeline->add($transformer);
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
-
-        $pipes = $offsetPipeline->pipes();
-
-        self::assertInstanceOf(Pipes::class, $pipes);
-        self::assertTrue($pipes->has(ScalarFunctionTransformer::class));
+        new OffsetProcessor(-1);
     }
 
     public function test_process_maintains_row_structure_with_mixed_entry_types() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(
+        $pipeline = new Pipeline(from_rows(
             rows(
                 row(int_entry('id', 1), bool_entry('active', true)),
                 row(int_entry('id', 2), bool_entry('active', false)),
@@ -118,9 +41,9 @@ final class OffsetPipelineTest extends FlowTestCase
                 row(int_entry('id', 4), bool_entry('active', false))
             )
         ));
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
+        $pipeline->add(new OffsetProcessor(1));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(1, $result);
         self::assertCount(3, $result[0]);
@@ -136,17 +59,17 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_empty_pipeline() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(rows()));
-        $offsetPipeline = new OffsetPipeline($pipeline, 5);
+        $pipeline = new Pipeline(from_rows(rows()));
+        $pipeline->add(new OffsetProcessor(5));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(0, $result);
     }
 
     public function test_process_with_multiple_batches_offset_skips_entire_batches() : void
     {
-        $pipeline = new SynchronousPipeline(new class implements Extractor {
+        $pipeline = new Pipeline(new class implements Extractor {
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -163,9 +86,9 @@ final class OffsetPipelineTest extends FlowTestCase
                 );
             }
         });
-        $offsetPipeline = new OffsetPipeline($pipeline, 4);
+        $pipeline->add(new OffsetProcessor(4));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(1, $result);
         self::assertEquals(
@@ -179,7 +102,7 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_multiple_batches_offset_spanning_batches() : void
     {
-        $pipeline = new SynchronousPipeline(new class implements Extractor {
+        $pipeline = new Pipeline(new class implements Extractor {
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -196,9 +119,9 @@ final class OffsetPipelineTest extends FlowTestCase
                 );
             }
         });
-        $offsetPipeline = new OffsetPipeline($pipeline, 3);
+        $pipeline->add(new OffsetProcessor(3));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(2, $result);
         self::assertEquals(
@@ -218,7 +141,7 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_multiple_batches_offset_within_first_batch() : void
     {
-        $pipeline = new SynchronousPipeline(new class implements Extractor {
+        $pipeline = new Pipeline(new class implements Extractor {
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -232,9 +155,9 @@ final class OffsetPipelineTest extends FlowTestCase
                 );
             }
         });
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
+        $pipeline->add(new OffsetProcessor(1));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(2, $result);
         self::assertEquals(
@@ -255,38 +178,38 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_offset_equal_to_batch_size() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(
+        $pipeline = new Pipeline(from_rows(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2)),
                 row(int_entry('id', 3))
             )
         ));
-        $offsetPipeline = new OffsetPipeline($pipeline, 3);
+        $pipeline->add(new OffsetProcessor(3));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(0, $result);
     }
 
     public function test_process_with_offset_larger_than_batch_size() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(
+        $pipeline = new Pipeline(from_rows(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2))
             )
         ));
-        $offsetPipeline = new OffsetPipeline($pipeline, 5);
+        $pipeline->add(new OffsetProcessor(5));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(0, $result);
     }
 
     public function test_process_with_offset_resulting_in_empty_batch() : void
     {
-        $pipeline = new SynchronousPipeline(new class implements Extractor {
+        $pipeline = new Pipeline(new class implements Extractor {
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -299,9 +222,9 @@ final class OffsetPipelineTest extends FlowTestCase
                 );
             }
         });
-        $offsetPipeline = new OffsetPipeline($pipeline, 2);
+        $pipeline->add(new OffsetProcessor(2));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(1, $result);
         self::assertEquals(
@@ -314,7 +237,7 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_offset_smaller_than_batch_size() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(
+        $pipeline = new Pipeline(from_rows(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2)),
@@ -323,9 +246,9 @@ final class OffsetPipelineTest extends FlowTestCase
                 row(int_entry('id', 5))
             )
         ));
-        $offsetPipeline = new OffsetPipeline($pipeline, 2);
+        $pipeline->add(new OffsetProcessor(2));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(1, $result);
         self::assertCount(3, $result[0]);
@@ -339,9 +262,9 @@ final class OffsetPipelineTest extends FlowTestCase
         );
     }
 
-    public function test_process_with_transformer_applied_to_wrapped_pipeline() : void
+    public function test_process_with_transformer_before_offset() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(
+        $pipeline = new Pipeline(from_rows(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2)),
@@ -350,9 +273,9 @@ final class OffsetPipelineTest extends FlowTestCase
             )
         ));
         $pipeline->add(new ScalarFunctionTransformer('doubled', ref('id')->multiply(lit(2))));
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
+        $pipeline->add(new OffsetProcessor(1));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(1, $result);
         self::assertCount(3, $result[0]);
@@ -373,10 +296,10 @@ final class OffsetPipelineTest extends FlowTestCase
             $rowsData[] = row(int_entry('id', $i));
         }
 
-        $pipeline = new SynchronousPipeline(from_rows(rows(...$rowsData)));
-        $offsetPipeline = new OffsetPipeline($pipeline, $offset >= 0 ? $offset : 0);
+        $pipeline = new Pipeline(from_rows(rows(...$rowsData)));
+        $pipeline->add(new OffsetProcessor($offset >= 0 ? $offset : 0));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         $expectedCount = \max(0, 20 - $offset);
         $totalRows = \array_sum(\array_map(fn ($batch) => $batch->count(), $result));
@@ -391,16 +314,16 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_zero_offset_returns_all_data() : void
     {
-        $pipeline = new SynchronousPipeline(from_rows(
+        $pipeline = new Pipeline(from_rows(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2)),
                 row(int_entry('id', 3))
             )
         ));
-        $offsetPipeline = new OffsetPipeline($pipeline, 0);
+        $pipeline->add(new OffsetProcessor(0));
 
-        $result = \iterator_to_array($offsetPipeline->process(flow_context(config())));
+        $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         self::assertCount(1, $result);
         self::assertCount(3, $result[0]);
@@ -412,16 +335,5 @@ final class OffsetPipelineTest extends FlowTestCase
             ),
             $result[0]
         );
-    }
-
-    public function test_source_delegates_to_wrapped_pipeline() : void
-    {
-        $extractor = from_rows(rows());
-        $pipeline = new SynchronousPipeline($extractor);
-        $offsetPipeline = new OffsetPipeline($pipeline, 1);
-
-        $source = $offsetPipeline->source();
-
-        self::assertSame($extractor, $source);
     }
 }

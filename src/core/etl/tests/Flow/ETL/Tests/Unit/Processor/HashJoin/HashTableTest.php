@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Pipeline\HashJoin;
+namespace Flow\ETL\Tests\Unit\Processor\HashJoin;
 
 use function Flow\ETL\DSL\{int_entry, refs, row, str_entry};
 use Flow\ETL\Hash\PlainText;
-use Flow\ETL\Pipeline\HashJoin\HashTable;
+use Flow\ETL\Processor\HashJoin\HashTable;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class HashTableTest extends FlowTestCase
