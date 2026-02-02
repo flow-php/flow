@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-01-27
+## [Unreleased] - 2026-02-02
 
 ### Added
+- [#2193](https://github.com/flow-php/flow/pull/2193) - **Internal interface Processor** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **New flow-php/symfony-http-foundation-telemetry-bridge package for Symfony HttpFoundation telemetry context propagation** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **PHPStan generics support to Carrier interface** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **Unified unwrap() method to all Carrier implementations** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +10,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2193](https://github.com/flow-php/flow/pull/2193) - **Building DataFrame Pipeline as Stages** - [@norberttech](https://github.com/norberttech)
 - [f58d7e](https://github.com/flow-php/flow/commit/f58d7e3c898f183c0fad58d3fb71f5b1e458b0ff) - **refactor: remove homebrew formula and tap distribution** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] Carrier::set() return type changed from void to static** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] ArrayCarrier::toArray() replaced by unwrap()** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +36,8 @@
 - [330da9](https://github.com/flow-php/flow/commit/330da95df9e446cca07c8a1c25868a1efc3414b6) - **added otel collector to baseline** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2193](https://github.com/flow-php/flow/pull/2193) - **Internal interface Pipeline** - [@norberttech](https://github.com/norberttech)
+- [#2193](https://github.com/flow-php/flow/pull/2193) - **redundant clone usage from DataFrame** - [@norberttech](https://github.com/norberttech)
 - [abbbe5](https://github.com/flow-php/flow/commit/abbbe5321f26ebcd8c3332829776f05ee4a74066) - **phpbench** - [@norberttech](https://github.com/norberttech)
 
 ## [0.31.0] - 2026-01-19
