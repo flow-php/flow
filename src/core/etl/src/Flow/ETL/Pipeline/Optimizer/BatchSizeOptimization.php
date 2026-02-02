@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline\Optimizer;
 
-use Flow\ETL\{Loader, Pipeline, Transformer};
-use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, OverridingPipeline, PartitioningPipeline};
-use Flow\ETL\Pipeline\LinkedPipeline;
+use Flow\ETL\{Loader, Pipeline, Processor, Transformer};
+use Flow\ETL\Processor\{BatchingProcessor, CollectingProcessor, PartitioningProcessor};
 
 /**
  * The goal of this optimizer is to detect if there is a loader that supports batching and optimize pipeline to use it.
@@ -14,17 +13,19 @@ use Flow\ETL\Pipeline\LinkedPipeline;
  *
  * Be default all extractors are yielding rows one by one, in that case loaders like for example DbalLoader
  * would become a bottleneck because it would execute a single query for each row.
- * This optimization will detect that and will wrap the pipeline with a BatchingPipeline.
+ * This optimization will detect that and will add a BatchingProcessor to the pipeline.
  */
 final class BatchSizeOptimization implements Optimization
 {
     /**
-     * @var array<class-string<Pipeline>>
+     * Processor classes that already provide batching behavior.
+     *
+     * @var array<class-string<Processor>>
      */
-    private array $batchingPipelines = [
-        BatchingPipeline::class,
-        CollectingPipeline::class,
-        PartitioningPipeline::class,
+    private array $batchingProcessors = [
+        BatchingProcessor::class,
+        CollectingProcessor::class,
+        PartitioningProcessor::class,
     ];
 
     /**
@@ -53,15 +54,8 @@ final class BatchSizeOptimization implements Optimization
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
-        // Pipeline is already batching so we don't need to optimize it
-        if (\in_array($pipeline::class, $this->batchingPipelines, true)) {
+        if ($this->hasBatchingProcessor($pipeline)) {
             return false;
-        }
-
-        foreach ($this->allPipelines($pipeline) as $subPipeline) {
-            if (\in_array($subPipeline::class, $this->batchingPipelines, true)) {
-                return false;
-            }
         }
 
         if (\in_array($element::class, $this->supportedLoaders, true)) {
@@ -73,33 +67,28 @@ final class BatchSizeOptimization implements Optimization
 
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
     {
-        if ($pipeline instanceof BatchingPipeline) {
-            return $pipeline;
+        if ($this->hasBatchingProcessor($pipeline)) {
+            return $pipeline->add($element);
         }
 
-        $pipeline = new LinkedPipeline(new BatchingPipeline($pipeline, $this->batchSize));
+        $pipeline->add(new BatchingProcessor($this->batchSize));
         $pipeline->add($element);
 
         return $pipeline;
     }
 
-    /**
-     * @return array<Pipeline>
-     */
-    private function allPipelines(Pipeline $pipeline) : array
+    private function hasBatchingProcessor(Pipeline $pipeline) : bool
     {
-        $pipelines = [];
-
-        if ($pipeline instanceof OverridingPipeline) {
-            $pipelines[] = $pipeline;
-
-            foreach ($pipeline->pipelines() as $nextPipeline) {
-                $pipelines = [...$pipelines, ...$this->allPipelines($nextPipeline)];
+        foreach ($pipeline->stages()->steps() as $step) {
+            if ($step instanceof Processor) {
+                foreach ($this->batchingProcessors as $batchingProcessor) {
+                    if ($step instanceof $batchingProcessor) {
+                        return true;
+                    }
+                }
             }
-        } else {
-            $pipelines[] = $pipeline;
         }
 
-        return $pipelines;
+        return false;
     }
 }

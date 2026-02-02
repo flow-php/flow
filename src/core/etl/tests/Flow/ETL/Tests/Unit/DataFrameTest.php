@@ -525,7 +525,18 @@ final class DataFrameTest extends FlowTestCase
                  */
                 public function extract(FlowContext $context) : \Generator
                 {
-                    yield rows(row(integer_entry('id', 1)), row(integer_entry('id', 2)), row(integer_entry('id', 3)), row(integer_entry('id', 4)), row(integer_entry('id', 5)), row(integer_entry('id', 6)), row(integer_entry('id', 7)), row(integer_entry('id', 8)), row(integer_entry('id', 9)), row(integer_entry('id', 10)));
+                    yield rows(
+                        row(integer_entry('id', 1)),
+                        row(integer_entry('id', 2)),
+                        row(integer_entry('id', 3)),
+                        row(integer_entry('id', 4)),
+                        row(integer_entry('id', 5)),
+                        row(integer_entry('id', 6)),
+                        row(integer_entry('id', 7)),
+                        row(integer_entry('id', 8)),
+                        row(integer_entry('id', 9)),
+                        row(integer_entry('id', 10))
+                    );
                 }
             }
         )

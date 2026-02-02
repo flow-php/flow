@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{Extractor, FlowContext, Pipeline};
+use Flow\ETL\{FlowContext, Rows};
 use Flow\ETL\Row\References;
 
 /**
@@ -12,5 +12,12 @@ use Flow\ETL\Row\References;
  */
 interface SortingAlgorithm
 {
-    public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor;
+    /**
+     * Sort a generator of Rows batches.
+     *
+     * @param \Generator<Rows> $rows
+     *
+     * @return \Generator<Rows>
+     */
+    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs) : \Generator;
 }

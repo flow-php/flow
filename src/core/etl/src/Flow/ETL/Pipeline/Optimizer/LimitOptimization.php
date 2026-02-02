@@ -6,8 +6,8 @@ namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
-use Flow\ETL\{Loader, Pipeline, Transformer};
-use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, LinkedPipeline, SynchronousPipeline, VoidPipeline};
+use Flow\ETL\{Loader, Pipeline, Processor, Transformer};
+use Flow\ETL\Processor\{BatchingProcessor, CollectingProcessor, VoidProcessor};
 use Flow\ETL\Transformer\{CallbackRowTransformer,
     DropEntriesTransformer,
     EntryNameStyleConverterTransformer,
@@ -22,14 +22,14 @@ use Flow\ETL\Transformer\{CallbackRowTransformer,
 final class LimitOptimization implements Optimization
 {
     /**
-     * @var array<int, class-string>
+     * Processors that don't expand the number of rows.
+     *
+     * @var array<int, class-string<Processor>>
      */
-    private array $nonExpandingPipelines = [
-        SynchronousPipeline::class,
-        CollectingPipeline::class,
-        BatchingPipeline::class,
-        LinkedPipeline::class,
-        VoidPipeline::class,
+    private array $nonExpandingProcessors = [
+        CollectingProcessor::class,
+        BatchingProcessor::class,
+        VoidProcessor::class,
     ];
 
     /**
@@ -50,27 +50,33 @@ final class LimitOptimization implements Optimization
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
-        return $element instanceof LimitTransformer
-            && \in_array($pipeline::class, $this->nonExpandingPipelines, true)
-            && $pipeline->source() instanceof LimitableExtractor;
+        if (!$element instanceof LimitTransformer) {
+            return false;
+        }
+
+        if (!$pipeline->extractor() instanceof LimitableExtractor) {
+            return false;
+        }
+
+        return $this->hasOnlyNonExpandingSteps($pipeline);
     }
 
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
     {
         /** @var LimitableExtractor $extractor */
-        $extractor = $pipeline->source();
+        $extractor = $pipeline->extractor();
 
         if ($extractor->isLimited()) {
             return $pipeline->add($element);
         }
 
-        if ($element instanceof LimitTransformer && !\count($pipeline->pipes()->all())) {
+        if ($element instanceof LimitTransformer && !\count($pipeline->stages()->steps())) {
             $extractor->changeLimit($element->limit);
 
             return $pipeline;
         }
 
-        foreach ($pipeline->pipes()->all() as $pipelineElement) {
+        foreach ($pipeline->stages()->steps() as $pipelineElement) {
             if ($pipelineElement instanceof ScalarFunctionTransformer) {
                 if ($pipelineElement->function instanceof ExpandResults) {
                     break;
@@ -89,5 +95,28 @@ final class LimitOptimization implements Optimization
         }
 
         return $pipeline->add($element);
+    }
+
+    private function hasOnlyNonExpandingSteps(Pipeline $pipeline) : bool
+    {
+        foreach ($pipeline->stages()->steps() as $step) {
+            if ($step instanceof Processor) {
+                $isNonExpanding = false;
+
+                foreach ($this->nonExpandingProcessors as $nonExpandingProcessor) {
+                    if ($step instanceof $nonExpandingProcessor) {
+                        $isNonExpanding = true;
+
+                        break;
+                    }
+                }
+
+                if (!$isNonExpanding) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

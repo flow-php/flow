@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{
-    Dataset\Memory\Configuration,
+use Flow\ETL\{Dataset\Memory\Configuration,
     Dataset\Memory\Consumption,
     Dataset\Memory\Unit,
     Exception\OutOfMemoryException,
-    Extractor,
     FlowContext,
-    Pipeline,
     Row\References,
-    Rows
-};
-use Flow\ETL\Extractor\GeneratorExtractor;
+    Rows};
 
 final class MemorySort implements SortingAlgorithm
 {
@@ -34,21 +29,21 @@ final class MemorySort implements SortingAlgorithm
         }
     }
 
-    public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor
+    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs) : \Generator
     {
         $memoryConsumption = new Consumption();
         $mergedRows = new Rows();
         $maxSize = 1;
 
-        foreach ($pipeline->process($context) as $rows) {
-            $maxSize = \max($rows->count(), $maxSize);
-            $mergedRows = $mergedRows->merge($rows);
+        foreach ($rows as $batch) {
+            $maxSize = \max($batch->count(), $maxSize);
+            $mergedRows = $mergedRows->merge($batch);
 
             if ($memoryConsumption->currentDiff()->isGreaterThan($this->maximumMemory)) {
                 throw new OutOfMemoryException();
             }
         }
 
-        return new GeneratorExtractor($mergedRows->sortBy(...$refs->all())->chunks($maxSize));
+        yield from $mergedRows->sortBy(...$refs->all())->chunks($maxSize);
     }
 }

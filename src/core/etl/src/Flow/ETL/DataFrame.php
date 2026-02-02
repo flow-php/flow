@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{analyze, refs, to_output};
+use function Flow\ETL\DSL\{refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
@@ -20,19 +20,18 @@ use Flow\ETL\Function\{AggregatingFunction,
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Pipeline\{BatchingByPipeline,
-    BatchingPipeline,
-    CachingPipeline,
-    CollectingPipeline,
-    ConstrainedPipeline,
-    GroupByPipeline,
-    HashJoinPipeline,
-    LinkedPipeline,
-    OffsetPipeline,
-    PartitioningPipeline,
-    SortingPipeline,
-    VoidPipeline,
-    WindowFunctionPipeline};
+use Flow\ETL\Processor\{BatchingByProcessor,
+    BatchingProcessor,
+    CachingProcessor,
+    CollectingProcessor,
+    ConstrainedProcessor,
+    GroupByProcessor,
+    HashJoinProcessor,
+    OffsetProcessor,
+    PartitioningProcessor,
+    SortingProcessor,
+    VoidProcessor,
+    WindowProcessor};
 use Flow\ETL\Row\{EntryReference, Formatter\ASCIISchemaFormatter, Reference, References};
 use Flow\ETL\Schema\{Definition, SchemaFormatter};
 use Flow\ETL\Schema\Validator\StrictValidator;
@@ -57,14 +56,13 @@ use Flow\ETL\Transformer\{AutoCastTransformer,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
-    UntilTransformer
-};
+    UntilTransformer};
 use Flow\Filesystem\Path\Filter;
 use Flow\Types\Type\AutoCaster;
 
 final class DataFrame
 {
-    private FlowContext $context;
+    private readonly FlowContext $context;
 
     public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
     {
@@ -79,7 +77,7 @@ final class DataFrame
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        $this->pipeline = new LinkedPipeline(new GroupByPipeline($groupBy, $this->pipeline));
+        $this->pipeline->add(new GroupByProcessor($groupBy));
 
         return $this;
     }
@@ -108,7 +106,7 @@ final class DataFrame
      */
     public function batchBy(string|Reference $column, ?int $minSize = null) : self
     {
-        $this->pipeline = new LinkedPipeline(new BatchingByPipeline($this->pipeline, EntryReference::init($column), $minSize));
+        $this->pipeline->add(new BatchingByProcessor(EntryReference::init($column), $minSize));
 
         return $this;
     }
@@ -132,7 +130,7 @@ final class DataFrame
             return $this->collect();
         }
 
-        $this->pipeline = new LinkedPipeline(new BatchingPipeline($this->pipeline, $size));
+        $this->pipeline->add(new BatchingProcessor($size));
 
         return $this;
     }
@@ -160,10 +158,10 @@ final class DataFrame
         }
 
         if ($cacheBatchSize) {
-            $this->pipeline = new LinkedPipeline(new CachingPipeline(new BatchingPipeline($this->pipeline, $cacheBatchSize), $id));
-        } else {
-            $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id));
+            $this->pipeline->add(new BatchingProcessor($cacheBatchSize));
         }
+
+        $this->pipeline->add(new CachingProcessor($id));
 
         return $this;
     }
@@ -176,7 +174,7 @@ final class DataFrame
      */
     public function collect() : self
     {
-        $this->pipeline = new LinkedPipeline(new CollectingPipeline($this->pipeline));
+        $this->pipeline->add(new CollectingProcessor());
 
         return $this;
     }
@@ -210,7 +208,7 @@ final class DataFrame
     {
         $constraints = \array_merge([$constraint], $constraints);
 
-        $this->pipeline = new LinkedPipeline(new ConstrainedPipeline($this->pipeline, $constraints));
+        $this->pipeline->add(new ConstrainedProcessor($constraints));
 
         return $this;
     }
@@ -221,11 +219,9 @@ final class DataFrame
      */
     public function count() : int
     {
-        $clone = clone $this;
-
         $total = 0;
 
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             $total += $rows->count();
         }
 
@@ -254,12 +250,11 @@ final class DataFrame
      */
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
-        $clone = clone $this;
-        $clone->limit($limit);
+        $this->limit($limit);
 
         $output = '';
 
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             $output .= $formatter->format($rows, $truncate);
         }
 
@@ -327,15 +322,13 @@ final class DataFrame
      */
     public function fetch(?int $limit = null) : Rows
     {
-        $clone = clone $this;
-
         if ($limit !== null) {
-            $clone->limit($limit);
+            $this->limit($limit);
         }
 
         $rows = new Rows();
 
-        foreach ($clone->pipeline->process($clone->context) as $nextRows) {
+        foreach ($this->pipeline->process($this->context) as $nextRows) {
             $rows = $rows->merge($nextRows);
         }
 
@@ -359,7 +352,7 @@ final class DataFrame
      */
     public function filterPartitions(Filter|ScalarFunction $filter) : self
     {
-        $extractor = $this->pipeline->source();
+        $extractor = $this->pipeline->extractor();
 
         if (!$extractor instanceof FileExtractor) {
             throw new RuntimeException('filterPartitions can be used only with extractors that implement FileExtractor interface');
@@ -404,8 +397,7 @@ final class DataFrame
      */
     public function forEach(?callable $callback = null) : void
     {
-        $clone = clone $this;
-        $clone->run($callback);
+        $this->run($callback);
     }
 
     /**
@@ -417,9 +409,7 @@ final class DataFrame
      */
     public function get() : \Generator
     {
-        $clone = clone $this;
-
-        return $clone->pipeline->process($clone->context);
+        return $this->pipeline->process($this->context);
     }
 
     /**
@@ -431,9 +421,7 @@ final class DataFrame
      */
     public function getAsArray() : \Generator
     {
-        $clone = clone $this;
-
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             yield $rows->toArray();
         }
     }
@@ -447,9 +435,7 @@ final class DataFrame
      */
     public function getEach() : \Generator
     {
-        $clone = clone $this;
-
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             foreach ($rows as $row) {
                 yield $row;
             }
@@ -465,9 +451,7 @@ final class DataFrame
      */
     public function getEachAsArray() : \Generator
     {
-        $clone = clone $this;
-
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             foreach ($rows as $row) {
                 yield $row->toArray();
             }
@@ -491,7 +475,7 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        $this->pipeline = new LinkedPipeline(new HashJoinPipeline($this->pipeline, $dataFrame, $on, $type));
+        $this->pipeline->add(new HashJoinProcessor($dataFrame, $on, $type));
 
         return $this;
     }
@@ -611,7 +595,7 @@ final class DataFrame
             return $this;
         }
 
-        $this->pipeline = new LinkedPipeline(new OffsetPipeline($this->pipeline, $offset));
+        $this->pipeline->add(new OffsetProcessor($offset));
 
         return $this;
     }
@@ -633,18 +617,20 @@ final class DataFrame
     {
         \array_unshift($entries, $entry);
 
-        $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, References::init(...$entries)->all()));
+        $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
 
         return $this;
     }
 
     public function pivot(Reference $ref) : self
     {
-        if (!$this->pipeline instanceof GroupByPipeline) {
+        $processor = $this->pipeline->stages()->current()->processor();
+
+        if (!$processor instanceof GroupByProcessor) {
             throw new RuntimeException('Pivot can be used only after groupBy');
         }
 
-        $this->pipeline->groupBy->pivot($ref);
+        $processor->groupBy->pivot($ref);
 
         return $this;
     }
@@ -654,15 +640,13 @@ final class DataFrame
      */
     public function printRows(?int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
-        $clone = clone $this;
-
         if ($limit !== null) {
-            $clone->limit($limit);
+            $this->limit($limit);
         }
 
-        $clone->load(to_output($truncate, Output::rows, $formatter));
+        $this->load(to_output($truncate, Output::rows, $formatter));
 
-        $clone->run();
+        $this->run();
     }
 
     /**
@@ -670,14 +654,12 @@ final class DataFrame
      */
     public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()) : void
     {
-        $clone = clone $this;
-
         if ($limit !== null) {
-            $clone->limit($limit);
+            $this->limit($limit);
         }
-        $clone->load(to_output(false, Output::schema, schemaFormatter: $formatter));
+        $this->load(to_output(false, Output::schema, schemaFormatter: $formatter));
 
-        $clone->run();
+        $this->run();
     }
 
     /**
@@ -807,17 +789,15 @@ final class DataFrame
      */
     public function run(?callable $callback = null, bool|Analyze $analyze = false) : ?Report
     {
-        $clone = clone $this;
-
         if ($analyze === false) {
             $analyze = $this->context->config->analyze();
         }
 
         $collector = new ReportCollector($analyze, $this->context->config->clock());
 
-        foreach ($clone->pipeline->process($clone->context) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             if ($callback !== null) {
-                $callback($rows, $clone->context);
+                $callback($rows, $this->context);
             }
 
             $collector->capture($rows);
@@ -869,7 +849,7 @@ final class DataFrame
      */
     public function sortBy(Reference ...$entries) : self
     {
-        $this->pipeline = new LinkedPipeline(new SortingPipeline($this->pipeline, refs(...$entries)));
+        $this->pipeline->add(new SortingProcessor(refs(...$entries)));
 
         return $this;
     }
@@ -920,7 +900,7 @@ final class DataFrame
      */
     public function void() : self
     {
-        $this->pipeline = new VoidPipeline($this->pipeline);
+        $this->pipeline->add(new VoidProcessor());
 
         return $this;
     }
@@ -978,13 +958,10 @@ final class DataFrame
     {
         if ($reference instanceof WindowFunction) {
             if (\count($reference->window()->partitions())) {
-                // When there are partitions, use PartitioningPipeline to ensure all data
-                // from the same partition is grouped together before processing
-                $this->pipeline = new LinkedPipeline(
-                    new PartitioningPipeline($this->pipeline, $reference->window()->partitions(), $reference->window()->order())
+                $this->pipeline->add(
+                    new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order())
                 );
             } else {
-                // When there are no partitions, collect all data and sort if needed
                 $this->collect();
 
                 if (\count($reference->window()->order())) {
@@ -992,10 +969,7 @@ final class DataFrame
                 }
             }
 
-            // Now wrap in WindowFunctionPipeline to apply the window function
-            $this->pipeline = new LinkedPipeline(
-                new WindowFunctionPipeline($this->pipeline, $entry, $reference)
-            );
+            $this->pipeline->add(new WindowProcessor($entry, $reference));
         } else {
             $this->with(new ScalarFunctionTransformer($entry, $reference));
         }

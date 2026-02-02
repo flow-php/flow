@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Pipeline\HashJoin;
+namespace Flow\ETL\Processor\HashJoin;
 
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Row\References;

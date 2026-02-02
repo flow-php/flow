@@ -2,53 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Pipeline;
+namespace Flow\ETL\Processor;
 
-use function Flow\ETL\DSL\{from_rows, refs, row, rows, schema};
-use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Pipeline, Row, Rows, Transformer};
+use function Flow\ETL\DSL\{refs, row, rows, schema};
+use Flow\ETL\{DataFrame, FlowContext, Processor, Row, Rows};
 use Flow\ETL\Exception\{DuplicatedEntriesException, JoinException};
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Join\{Expression, Join};
-use Flow\ETL\Pipeline\HashJoin\HashTable;
+use Flow\ETL\Processor\HashJoin\HashTable;
 use Flow\ETL\Row\Entry;
 
-final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
+/**
+ * Performs hash join between upstream data and a DataFrame.
+ *
+ * @internal
+ */
+final readonly class HashJoinProcessor implements Processor
 {
-    private Extractor $extractor;
-
     public function __construct(
-        private Pipeline $left,
         private DataFrame $right,
         private Expression $expression,
         private Join $join,
     ) {
-
-        $this->extractor = from_rows(rows());
     }
 
-    public function add(Loader|Transformer $pipe) : Pipeline
-    {
-        $this->left->add($pipe);
-
-        return $this;
-    }
-
-    public function has(string $transformerClass) : bool
-    {
-        return $this->left->has($transformerClass);
-    }
-
-    public function pipelines() : array
-    {
-        return [$this->left];
-    }
-
-    public function pipes() : Pipes
-    {
-        return $this->left->pipes();
-    }
-
-    public function process(FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context) : \Generator
     {
         $leftReferences = refs(...$this->expression->left());
         $rightReferences = refs(...$this->expression->right());
@@ -75,15 +53,14 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
 
         $leftSchema = schema();
 
-        /** @var Rows $leftRows */
-        foreach ($this->left->process($context) as $leftRows) {
+        foreach ($rows as $leftRows) {
             foreach ($leftRows as $leftRow) {
                 $bucket = $hashTable->bucketFor($leftRow, $leftReferences);
 
                 if ($bucket === null) {
                     if ($this->join === Join::left) {
                         $rightEmptyRow = row(...$rightEntries);
-                        yield $this->createRows($leftRow, $rightEmptyRow);
+                        yield $this->createRows($leftRow, $rightEmptyRow, $context);
                     }
 
                     if ($this->join === Join::left_anti) {
@@ -100,7 +77,7 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
                 }
 
                 if ($rightRow !== null) {
-                    yield $this->createRows($leftRow, $rightRow);
+                    yield $this->createRows($leftRow, $rightRow, $context);
                 }
             }
 
@@ -114,17 +91,12 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
 
             foreach ($hashTable->unmatchedRows() as $unmatchedRow) {
                 $leftEmptyRow = row(...$leftEntries);
-                yield $this->createRows($leftEmptyRow, $unmatchedRow);
+                yield $this->createRows($leftEmptyRow, $unmatchedRow, $context);
             }
         }
     }
 
-    public function source() : Extractor
-    {
-        return $this->extractor;
-    }
-
-    private function createRows(Row $leftRow, Row $rightRow) : Rows
+    private function createRows(Row $leftRow, Row $rightRow, FlowContext $context) : Rows
     {
         try {
             return match ($this->join) {
@@ -133,7 +105,6 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
                 Join::right => rows($this->expression->dropDuplicateLeftEntries($leftRow)->merge($rightRow, $this->expression->prefix())),
                 Join::left_anti => rows(),
             };
-
         } catch (DuplicatedEntriesException $e) {
             throw new JoinException($e->getMessage() . ' try to use a different join prefix than: "' . $this->expression->prefix() . '"', $e->getCode(), $e);
         }

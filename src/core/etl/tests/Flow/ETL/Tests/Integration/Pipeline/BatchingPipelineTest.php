@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
 use function Flow\ETL\DSL\{config, flow_context, from_all, from_array};
-use Flow\ETL\Pipeline\{BatchingPipeline, SynchronousPipeline};
+use Flow\ETL\Pipeline;
+use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\{Rows, Tests\FlowTestCase};
 
 final class BatchingPipelineTest extends FlowTestCase
 {
     public function test_batching_rows() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
+        $pipeline = new Pipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -27,7 +28,8 @@ final class BatchingPipelineTest extends FlowTestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        )), size: 10);
+        ));
+        $pipeline->add(new BatchingProcessor(10));
 
         self::assertCount(
             1,
@@ -37,7 +39,7 @@ final class BatchingPipelineTest extends FlowTestCase
 
     public function test_that_rows_are_not_lost() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
+        $pipeline = new Pipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -50,7 +52,8 @@ final class BatchingPipelineTest extends FlowTestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        )), size: 7);
+        ));
+        $pipeline->add(new BatchingProcessor(7));
 
         self::assertEquals(
             [
@@ -78,7 +81,7 @@ final class BatchingPipelineTest extends FlowTestCase
 
     public function test_using_bigger_batch_size_than_total_number_of_rows() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
+        $pipeline = new Pipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -93,7 +96,8 @@ final class BatchingPipelineTest extends FlowTestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        )), size: 11);
+        ));
+        $pipeline->add(new BatchingProcessor(11));
 
         self::assertCount(
             1,
@@ -103,7 +107,7 @@ final class BatchingPipelineTest extends FlowTestCase
 
     public function test_using_smaller_batch_size_than_total_number_of_rows() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
+        $pipeline = new Pipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -116,7 +120,8 @@ final class BatchingPipelineTest extends FlowTestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        )), size: 5);
+        ));
+        $pipeline->add(new BatchingProcessor(5));
 
         self::assertCount(
             2,
