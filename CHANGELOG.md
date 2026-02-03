@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-02-02
+## [Unreleased] - 2026-02-03
 
 ### Added
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **Internal interface Processor** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2196](https://github.com/flow-php/flow/pull/2196) - **Stages are now called Segments** - [@norberttech](https://github.com/norberttech)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **Building DataFrame Pipeline as Stages** - [@norberttech](https://github.com/norberttech)
 - [f58d7e](https://github.com/flow-php/flow/commit/f58d7e3c898f183c0fad58d3fb71f5b1e458b0ff) - **refactor: remove homebrew formula and tap distribution** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **[BC] Carrier::set() return type changed from void to static** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +26,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2196](https://github.com/flow-php/flow/pull/2196) - **Autocast behavior when number is incorrectly detected as date to later be merged with float|int** - [@norberttech](https://github.com/norberttech)
 - [df7b4a](https://github.com/flow-php/flow/commit/df7b4a2300fa8545b0cde0d89bf37cb4fd4427e0) - **added missingstup for pg_query_is_utility_stmt method of pg-query-extension** - [@norberttech](https://github.com/norberttech)
 - [c6d9fe](https://github.com/flow-php/flow/commit/c6d9fe9347f5f56f23705b9d080ad4120337eda8) - **static analysis configuration** - [@norberttech](https://github.com/norberttech)
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **installation of the extension on macos** - [@norberttech](https://github.com/norberttech)
