@@ -85,6 +85,11 @@ final class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
+        /** @phpstan-ignore-next-line */
+        if (!\checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
+            return false;
+        }
+
         if (($dateParts['hour'] ?? false) !== false) {
             return false;
         }
@@ -124,6 +129,11 @@ final class StringTypeNarrower implements TypeNarrower
         }
 
         if ($dateParts['day'] === false) {
+            return false;
+        }
+
+        /** @phpstan-ignore-next-line */
+        if (!\checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
             return false;
         }
 

@@ -11,7 +11,7 @@ use Flow\ETL\{Loader, Processor, Transformer};
  *
  * @internal
  */
-final class Stages
+final class Segments
 {
     private Segment $currentSegment;
 
