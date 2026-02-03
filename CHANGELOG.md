@@ -10,6 +10,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [4be034](https://github.com/flow-php/flow/commit/4be0348fb07002f1a98a1bbe8ac54974d1a25eb3) - **update: dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2196](https://github.com/flow-php/flow/pull/2196) - **Stages are now called Segments** - [@norberttech](https://github.com/norberttech)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **Building DataFrame Pipeline as Stages** - [@norberttech](https://github.com/norberttech)
 - [f58d7e](https://github.com/flow-php/flow/commit/f58d7e3c898f183c0fad58d3fb71f5b1e458b0ff) - **refactor: remove homebrew formula and tap distribution** - [@norberttech](https://github.com/norberttech)
