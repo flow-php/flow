@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Pipeline\Stages;
+use Flow\ETL\Pipeline\Segments;
 
 /**
  * @internal
  */
 final readonly class Pipeline
 {
-    private Stages $stages;
+    private Segments $stages;
 
     public function __construct(private Extractor $extractor)
     {
-        $this->stages = new Stages();
+        $this->stages = new Segments();
     }
 
     public function add(Transformer|Loader|Processor $step) : self
@@ -68,7 +68,7 @@ final readonly class Pipeline
     /**
      * Get the pipeline stages.
      */
-    public function stages() : Stages
+    public function stages() : Segments
     {
         return $this->stages;
     }

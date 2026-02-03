@@ -146,6 +146,22 @@ final class DateTimeDefinition implements Definition
             );
         }
 
+        if ($definition instanceof FloatDefinition) {
+            return new FloatDefinition(
+                $this->ref,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata())
+            );
+        }
+
+        if ($definition instanceof IntegerDefinition) {
+            return new IntegerDefinition(
+                $this->ref,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata())
+            );
+        }
+
         throw new RuntimeException(\sprintf(
             'Cannot merge %s with %s',
             self::class,

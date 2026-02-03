@@ -146,6 +146,14 @@ final class IntegerDefinition implements Definition
             );
         }
 
+        if ($definition instanceof DateDefinition || $definition instanceof DateTimeDefinition) {
+            return new self(
+                $this->ref,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata())
+            );
+        }
+
         if ($definition instanceof StringDefinition) {
             return new StringDefinition(
                 $this->ref,
