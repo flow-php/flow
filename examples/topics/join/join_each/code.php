@@ -41,7 +41,7 @@ $dbDataFrameFactory = new class implements DataFrameFactory {
 
         return (new Rows(...$rowsFromDb))
             // this would be a database SQL query in real life
-            ->filter(fn (Row $row) => \in_array($row->valueOf('id'), $rows->reduceToArray('id'), true));
+            ->filter(static fn (Row $row) => \in_array($row->valueOf('id'), $rows->reduceToArray('id'), true));
     }
 };
 

@@ -131,7 +131,7 @@ final readonly class Path
     public function partitionsPaths() : array
     {
         return \array_map(
-            fn ($implPath) => new self($implPath),
+            static fn ($implPath) => new self($implPath),
             $this->implementation->partitionsPaths()
         );
     }

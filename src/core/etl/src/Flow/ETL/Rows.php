@@ -49,13 +49,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         if (\is_array($partitions)) {
             $allArePartitions = \count($partitions) > 0 && \array_reduce(
                 $partitions,
-                fn ($carry, $item) => $carry && $item instanceof Partition,
+                static fn ($carry, $item) => $carry && $item instanceof Partition,
                 true
             );
 
             if ($allArePartitions) {
                 // All elements are Partition objects, safe to spread
-                $partitions = new Partitions(...\array_filter($partitions, fn ($item) => $item instanceof Partition));
+                $partitions = new Partitions(...\array_filter($partitions, static fn ($item) => $item instanceof Partition));
             } else {
                 // Convert associative array to Partitions
                 /** @var array<string, string> $typedPartitions */
@@ -655,7 +655,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function reduceToArray(string|Reference $reference) : array
     {
         $result = $this->reduce(
-            function (mixed $ids, Row $row) use ($reference) : mixed {
+            static function (mixed $ids, Row $row) use ($reference) : mixed {
                 if (!\is_array($ids)) {
                     $ids = [];
                 }
@@ -733,7 +733,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function sortAscending(string|Reference $reference) : self
     {
         $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($reference) <=> $b->valueOf($reference));
+        \usort($rows, static fn (Row $a, Row $b) : int => $a->valueOf($reference) <=> $b->valueOf($reference));
 
         return self::partitioned($rows, $this->partitions);
     }
@@ -758,14 +758,14 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function sortDescending(string|Reference $reference) : self
     {
         $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($reference) <=> $b->valueOf($reference)));
+        \usort($rows, static fn (Row $a, Row $b) : int => -($a->valueOf($reference) <=> $b->valueOf($reference)));
 
         return self::partitioned($rows, $this->partitions);
     }
 
     public function sortEntries() : self
     {
-        return $this->map(fn (Row $row) : Row => $row->sortEntries());
+        return $this->map(static fn (Row $row) : Row => $row->sortEntries());
     }
 
     /**

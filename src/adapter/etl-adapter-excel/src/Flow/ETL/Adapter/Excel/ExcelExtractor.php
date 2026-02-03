@@ -165,7 +165,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                     $headersRaw = $this->createRowsFromCells($sheetRow);
                     // Convert headers to strings for array_combine compatibility
                     $headers = \array_map(
-                        fn ($header) => \is_scalar($header) ? (string) $header : '',
+                        static fn ($header) => \is_scalar($header) ? (string) $header : '',
                         $headersRaw
                     );
 

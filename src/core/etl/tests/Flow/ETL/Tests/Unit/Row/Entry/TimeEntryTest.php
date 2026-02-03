@@ -104,7 +104,7 @@ final class TimeEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (?\DateInterval $time) : ?\DateInterval => $time)
+            $entry->map(static fn (?\DateInterval $time) : ?\DateInterval => $time)
         );
     }
 

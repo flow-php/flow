@@ -67,7 +67,7 @@ final class ElasticsearchLoader implements Loader
         /**
          * @var array<int, array{body:array<string, mixed>,id:string}> $dataCollection
          */
-        $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
+        $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
             $factory->create($row),
             new JsonEntry('body', $row->toArray())
         ))->toArray();

@@ -127,8 +127,8 @@ final class MeterTest extends TestCase
         $metrics = $meter->collect();
         self::assertCount(2, $metrics);
 
-        $getMetrics = \array_filter($metrics, fn ($m) => $m->attributes->get('method') === 'GET');
-        $postMetrics = \array_filter($metrics, fn ($m) => $m->attributes->get('method') === 'POST');
+        $getMetrics = \array_filter($metrics, static fn ($m) => $m->attributes->get('method') === 'GET');
+        $postMetrics = \array_filter($metrics, static fn ($m) => $m->attributes->get('method') === 'POST');
 
         self::assertCount(1, $getMetrics);
         self::assertCount(1, $postMetrics);

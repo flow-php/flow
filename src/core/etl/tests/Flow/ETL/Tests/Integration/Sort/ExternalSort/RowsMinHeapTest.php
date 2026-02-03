@@ -31,7 +31,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 6],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row->toArray(),
+                static fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );
@@ -58,7 +58,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 1],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row->toArray(),
+                static fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );
@@ -85,7 +85,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 'f'],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row->toArray(),
+                static fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );
@@ -112,7 +112,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 'a'],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row->toArray(),
+                static fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );

@@ -24,7 +24,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
         $blockFactory = $this->createMock(BlockFactory::class);
         $blockFactory->method('create')
             ->willReturnCallback(
-                fn () => new Block($id = generate_random_string(), $blockSize, path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
+                static fn () => new Block($id = generate_random_string(), $blockSize, path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
             );
 
         $stream = AzureBlobDestinationStream::openBlank(
@@ -72,7 +72,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
         $blockFactory = $this->createMock(BlockFactory::class);
         $blockFactory->method('create')
             ->willReturnCallback(
-                fn () => new Block($id = generate_random_string(), $blockSize, path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
+                static fn () => new Block($id = generate_random_string(), $blockSize, path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
             );
         $stream = AzureBlobDestinationStream::openBlank(
             $blobService = $this->createMock(BlobServiceInterface::class),

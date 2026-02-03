@@ -15,7 +15,7 @@ final class NativePHPSerializerTest extends TestCase
     public function test_serializing_rows() : void
     {
         $rows = \Flow\ETL\DSL\rows(...\array_map(
-            fn () : Row => \Flow\ETL\DSL\row(int_entry('integer', 1), str_entry('string', 'string'), bool_entry('boolean', true), datetime_entry('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')), str_entry('null', null), float_entry('float', 0.12), struct_entry(
+            static fn () : Row => \Flow\ETL\DSL\row(int_entry('integer', 1), str_entry('string', 'string'), bool_entry('boolean', true), datetime_entry('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')), str_entry('null', null), float_entry('float', 0.12), struct_entry(
                 'struct',
                 ['integer' => 1, 'string' => 'string'],
                 type_structure([

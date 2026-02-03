@@ -66,7 +66,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         self::assertSame(4, $response['hits']['total']['value']);
 
-        $names = \array_map(fn (array $hit) : string => $hit['_source']['name'], $response['hits']['hits']);
+        $names = \array_map(static fn (array $hit) : string => $hit['_source']['name'], $response['hits']['hits']);
         \sort($names);
 
         self::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);
@@ -91,7 +91,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         self::assertSame(1, $response['hits']['total']['value']);
 
-        $json = \array_map(fn (array $hit) : array => $hit['_source']['json'], $response['hits']['hits']);
+        $json = \array_map(static fn (array $hit) : array => $hit['_source']['json'], $response['hits']['hits']);
 
         self::assertSame([['foo' => 'bar']], $json);
     }
@@ -119,7 +119,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         self::assertSame(1, $response['hits']['total']['value']);
 
-        $data = \array_map(fn (array $hit) : array => $hit['_source'], $response['hits']['hits']);
+        $data = \array_map(static fn (array $hit) : array => $hit['_source'], $response['hits']['hits']);
 
         self::assertSame(
             [
@@ -157,7 +157,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         self::assertSame(4, $response['hits']['total']['value']);
 
-        $names = \array_map(fn (array $hit) : string => $hit['_source']['name'], $response['hits']['hits']);
+        $names = \array_map(static fn (array $hit) : string => $hit['_source']['name'], $response['hits']['hits']);
         \sort($names);
 
         self::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);

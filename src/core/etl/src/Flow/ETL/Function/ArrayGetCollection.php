@@ -40,7 +40,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
                 return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function requires non-null array, index, and keys'));
             }
 
-            $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(fn (mixed $entryName) : string => '?' . (\is_scalar($entryName) ? (string) $entryName : \serialize($entryName)), $keys)));
+            $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(static fn (mixed $entryName) : string => '?' . (\is_scalar($entryName) ? (string) $entryName : \serialize($entryName)), $keys)));
 
             try {
                 $array = ($index === '0') ? \array_values($value) : $value;

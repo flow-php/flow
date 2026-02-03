@@ -100,7 +100,7 @@ function array_flatten(array $array) : array
 {
     $result = [];
 
-    $flatten = function (array $arr) use (&$result, &$flatten) : void {
+    $flatten = static function (array $arr) use (&$result, &$flatten) : void {
         foreach ($arr as $item) {
             if (\is_array($item)) {
                 $flatten($item);

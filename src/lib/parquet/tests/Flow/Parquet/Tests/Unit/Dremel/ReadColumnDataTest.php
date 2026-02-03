@@ -23,11 +23,11 @@ final class ReadColumnDataTest extends TestCase
         $keyColumn = $schema->get('m.key_value.key');
         $valueColumn = $schema->get('m.key_value.value');
 
-        $keyValuesGenerator = function () {
+        $keyValuesGenerator = static function () {
             yield 'a';
             yield 'b';
         };
-        $valueValuesGenerator = function () {
+        $valueValuesGenerator = static function () {
             yield 1;
             yield 2;
         };
@@ -61,7 +61,7 @@ final class ReadColumnDataTest extends TestCase
         /** @var FlatColumn $column */
         $column = Schema::with(FlatColumn::int32('int32'))->get('int32');
 
-        $valuesGenerator = function () {
+        $valuesGenerator = static function () {
             yield 1;
             yield 2;
             yield 3;
@@ -96,11 +96,11 @@ final class ReadColumnDataTest extends TestCase
         $keyColumn = $schema->get('m.key_value.key');
         $valueColumn = $schema->get('m.key_value.value');
 
-        $keyValuesGenerator = function () {
+        $keyValuesGenerator = static function () {
             yield 'a';
             yield 'b';
         };
-        $valueValuesGenerator = function () {
+        $valueValuesGenerator = static function () {
             yield 1;
             yield 2;
         };

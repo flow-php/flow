@@ -24,7 +24,7 @@ final readonly class LiteralParameter implements QueryParameter
     public function toQueryParam(Rows $rows) : array|bool|float|int|string|null
     {
         if (\is_array($this->value)) {
-            return \array_filter($this->value, fn ($item) => \is_scalar($item) || $item === null);
+            return \array_filter($this->value, static fn ($item) => \is_scalar($item) || $item === null);
         }
 
         return \is_scalar($this->value) || $this->value === null ? $this->value : null;

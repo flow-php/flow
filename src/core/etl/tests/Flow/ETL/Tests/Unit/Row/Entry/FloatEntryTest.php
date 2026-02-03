@@ -49,7 +49,7 @@ final class FloatEntryTest extends FlowTestCase
 
         self::assertEquals(
             $float,
-            $float->map(fn (?float $float) : ?float => $float)
+            $float->map(static fn (?float $float) : ?float => $float)
         );
     }
 

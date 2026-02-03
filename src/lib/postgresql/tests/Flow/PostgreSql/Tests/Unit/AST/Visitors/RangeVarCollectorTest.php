@@ -26,7 +26,7 @@ final class RangeVarCollectorTest extends TestCase
 
         self::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(fn (RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
+        $tableNames = \array_map(static fn (RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
         self::assertContains('users', $tableNames);
         self::assertContains('active', $tableNames);
     }
@@ -112,7 +112,7 @@ final class RangeVarCollectorTest extends TestCase
 
         self::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(fn (RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
+        $tableNames = \array_map(static fn (RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
         self::assertContains('users', $tableNames);
         self::assertContains('orders', $tableNames);
     }

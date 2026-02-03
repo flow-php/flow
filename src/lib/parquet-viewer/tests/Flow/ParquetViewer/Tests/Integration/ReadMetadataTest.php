@@ -31,7 +31,7 @@ final class ReadMetadataTest extends TestCase
         ]);
 
         $expected = $this->captureConsoleOutput(
-            fn (OutputStyle $io) => $io->error("File \"{$path}\" is not a valid parquet file")
+            static fn (OutputStyle $io) => $io->error("File \"{$path}\" is not a valid parquet file")
         );
 
         self::assertCommandOutputContains(self::normalizeCommandOutput($expected), $tester->getDisplay());

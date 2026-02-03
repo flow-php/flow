@@ -146,10 +146,10 @@ final class JsonEntryTest extends FlowTestCase
             ['item-id' => 2, 'name' => 'two'],
             ['item-id' => 3, 'name' => 'three'],
         ];
-        $entry = (json_entry('items', $items))->map(function (?Json $json) : array {
+        $entry = (json_entry('items', $items))->map(static function (?Json $json) : array {
             $value = $json?->toArray();
             type_array()->assert($value);
-            \array_walk_recursive($value, function (&$v) : void {
+            \array_walk_recursive($value, static function (&$v) : void {
                 if (\is_string($v)) {
                     $v = \trim($v);
                 }

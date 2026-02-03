@@ -48,8 +48,8 @@ final class SimpleTypesReadingTest extends TestCase
         $results = \array_merge_recursive(...\iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'];
         self::assertCount(100, $results);
         self::assertSame($file->metadata()->rowsNumber(), \count($results));
-        self::assertCount(50, \array_filter($results, fn ($value) => $value === null));
-        self::assertCount(50, \array_filter($results, fn ($value) => $value !== null));
+        self::assertCount(50, \array_filter($results, static fn ($value) => $value === null));
+        self::assertCount(50, \array_filter($results, static fn ($value) => $value !== null));
     }
 
     public function test_reading_bool_nullable_column_with_limit() : void
@@ -62,8 +62,8 @@ final class SimpleTypesReadingTest extends TestCase
 
         $results = \array_merge_recursive(...\iterator_to_array($file->values(['bool_nullable'], $limit = 50)))['bool_nullable'];
         self::assertCount($limit, $results);
-        self::assertCount($limit / 2, \array_filter($results, fn ($value) => $value === null));
-        self::assertCount($limit / 2, \array_filter($results, fn ($value) => $value !== null));
+        self::assertCount($limit / 2, \array_filter($results, static fn ($value) => $value === null));
+        self::assertCount($limit / 2, \array_filter($results, static fn ($value) => $value !== null));
     }
 
     public function test_reading_date_column() : void
@@ -185,9 +185,9 @@ final class SimpleTypesReadingTest extends TestCase
         self::assertContainsOnly('float', $floatValues);
 
         // Verify some sample values are reasonable
-        self::assertGreaterThan(0, count(array_filter($int32Values, fn ($v) => $v !== 0)));
-        self::assertGreaterThan(0, count(array_filter($int64Values, fn ($v) => $v !== 0)));
-        self::assertGreaterThan(0, count(array_filter($floatValues, fn ($v) => $v !== 0.0)));
+        self::assertGreaterThan(0, count(array_filter($int32Values, static fn ($v) => $v !== 0)));
+        self::assertGreaterThan(0, count(array_filter($int64Values, static fn ($v) => $v !== 0)));
+        self::assertGreaterThan(0, count(array_filter($floatValues, static fn ($v) => $v !== 0.0)));
     }
 
     public function test_reading_double_column() : void

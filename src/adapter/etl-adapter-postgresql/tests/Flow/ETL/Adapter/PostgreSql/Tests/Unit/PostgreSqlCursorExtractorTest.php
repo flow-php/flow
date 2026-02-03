@@ -261,7 +261,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             ->willReturn($count);
 
         $cursor->method('iterate')
-            ->willReturnCallback(function () use ($rows) : \Generator {
+            ->willReturnCallback(static function () use ($rows) : \Generator {
                 foreach ($rows as $row) {
                     yield $row;
                 }

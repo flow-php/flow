@@ -23,7 +23,7 @@ final class FlowBufferedResponseTest extends FlowTestCase
     {
         $extractor = $this->createMock(Extractor::class);
 
-        $extractor->expects(self::once())->method('extract')->willReturn((function () : \Generator {
+        $extractor->expects(self::once())->method('extract')->willReturn((static function () : \Generator {
             yield rows(row(int_entry('id', 1)));
         })());
 

@@ -30,7 +30,7 @@ final class HashIdFactory implements IdFactory
         return string_entry(
             'id',
             $this->hashAlgorithm->hash(
-                \implode(':', \array_map(function (string $name) use ($row) : string {
+                \implode(':', \array_map(static function (string $name) use ($row) : string {
                     $value = $row->valueOf($name);
 
                     return \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';

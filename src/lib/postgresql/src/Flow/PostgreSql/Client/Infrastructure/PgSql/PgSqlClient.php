@@ -68,7 +68,7 @@ final class PgSqlClient implements Client
         } else {
             $this->executeTransactionCommand(
                 savepoint($savepointName),
-                fn (string $error) => TransactionException::savepointFailed($savepointName, $error)
+                static fn (string $error) => TransactionException::savepointFailed($savepointName, $error)
             );
         }
     }
@@ -92,7 +92,7 @@ final class PgSqlClient implements Client
         } else {
             $this->executeTransactionCommand(
                 release_savepoint($savepointName),
-                fn (string $error) => TransactionException::releaseSavepointFailed($savepointName, $error)
+                static fn (string $error) => TransactionException::releaseSavepointFailed($savepointName, $error)
             );
         }
     }
@@ -181,7 +181,7 @@ final class PgSqlClient implements Client
         $mapper = $this->resolveMapper($mapper);
 
         return \array_map(
-            fn (array $row) => $mapper->map($class, $row),
+            static fn (array $row) => $mapper->map($class, $row),
             $rows,
         );
     }

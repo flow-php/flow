@@ -284,7 +284,7 @@ final readonly class ConsoleLogExporter implements LogExporter
 
         if (\is_array($value)) {
             return \array_map(
-                fn ($item) => $item instanceof \DateTimeImmutable
+                static fn ($item) => $item instanceof \DateTimeImmutable
                     ? $item->format(\DateTimeInterface::RFC3339_EXTENDED)
                     : $item,
                 $value

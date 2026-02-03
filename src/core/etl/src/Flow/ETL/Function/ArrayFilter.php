@@ -26,6 +26,6 @@ final class ArrayFilter extends ScalarFunctionChain
 
         $value = (new Parameter($this->value))->eval($row, $context);
 
-        return \array_filter($array, fn ($item) => $item !== $value);
+        return \array_filter($array, static fn ($item) => $item !== $value);
     }
 }

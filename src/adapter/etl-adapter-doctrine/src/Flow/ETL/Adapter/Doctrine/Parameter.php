@@ -44,7 +44,7 @@ final readonly class Parameter implements QueryParameter
     {
         $values = $rows->reduceToArray($this->ref);
 
-        return \array_filter($values, fn ($value) => \is_scalar($value) || $value === null);
+        return \array_filter($values, static fn ($value) => \is_scalar($value) || $value === null);
     }
 
     public function type() : int|ArrayParameterType

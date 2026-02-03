@@ -16,7 +16,7 @@ final class Base64SerializerTest extends TestCase
     {
         $rows = rows(
             ...\array_map(
-                fn () : Row => row(
+                static fn () : Row => row(
                     int_entry('integer', 1),
                     str_entry('string', 'string'),
                     bool_entry('boolean', true),

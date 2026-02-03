@@ -26,11 +26,11 @@ final readonly class DSLDefinitions
     public function all() : array
     {
         $definitions = \array_map(
-            fn (array $data) => new DSLDefinition($data),
+            static fn (array $data) => new DSLDefinition($data),
             $this->definitions
         );
 
-        \usort($definitions, fn (DSLDefinition $a, DSLDefinition $b) => \strnatcasecmp($a->name(), $b->name()));
+        \usort($definitions, static fn (DSLDefinition $a, DSLDefinition $b) => \strnatcasecmp($a->name(), $b->name()));
 
         return $definitions;
     }
@@ -83,7 +83,7 @@ final readonly class DSLDefinitions
             }
         }
 
-        uasort($modules, fn (Module $a, Module $b) => $a->priority() <=> $b->priority());
+        uasort($modules, static fn (Module $a, Module $b) => $a->priority() <=> $b->priority());
 
         return $modules;
     }
@@ -113,7 +113,7 @@ final readonly class DSLDefinitions
             }
         }
 
-        uasort($types, fn (Type $a, Type $b) => $a->priority() <=> $b->priority());
+        uasort($types, static fn (Type $a, Type $b) => $a->priority() <=> $b->priority());
 
         return $types;
     }

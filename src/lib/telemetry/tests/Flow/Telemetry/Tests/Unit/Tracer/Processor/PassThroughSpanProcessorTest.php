@@ -18,7 +18,7 @@ final class PassThroughSpanProcessorTest extends TestCase
         $exporter = $this->createMock(SpanExporter::class);
         $exporter->expects(self::exactly(3))
             ->method('export')
-            ->with(self::callback(fn (array $spans) => \count($spans) === 1))
+            ->with(self::callback(static fn (array $spans) => \count($spans) === 1))
             ->willReturn(true);
 
         $processor = new PassThroughSpanProcessor($exporter);
@@ -32,7 +32,7 @@ final class PassThroughSpanProcessorTest extends TestCase
         $exporter = $this->createMock(SpanExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $spans) => \count($spans) === 1))
+            ->with(self::callback(static fn (array $spans) => \count($spans) === 1))
             ->willReturn(true);
 
         $processor = new PassThroughSpanProcessor($exporter);

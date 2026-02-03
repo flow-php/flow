@@ -24,7 +24,7 @@ final class PassThroughLogProcessorTest extends TestCase
         $exporter = $this->createMock(LogExporter::class);
         $exporter->expects(self::exactly(3))
             ->method('export')
-            ->with(self::callback(fn (array $entries) => \count($entries) === 1))
+            ->with(self::callback(static fn (array $entries) => \count($entries) === 1))
             ->willReturn(true);
 
         $processor = new PassThroughLogProcessor($exporter);
@@ -39,7 +39,7 @@ final class PassThroughLogProcessorTest extends TestCase
         $exporter = $this->createMock(LogExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $entries) => \count($entries) === 1))
+            ->with(self::callback(static fn (array $entries) => \count($entries) === 1))
             ->willReturn(true);
 
         $processor = new PassThroughLogProcessor($exporter);

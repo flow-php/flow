@@ -298,7 +298,7 @@ final class ExcelExtractorTest extends FlowTestCase
                 $this->assertSame(
                     ['group'],
                     \array_map(
-                        fn (Partition $p) => $p->name,
+                        static fn (Partition $p) => $p->name,
                         $rows->partitions()->toArray()
                     )
                 );

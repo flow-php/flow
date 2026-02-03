@@ -25,7 +25,7 @@ final class FlowStreamedResponseTest extends FlowTestCase
             ])
         )
             ->config(Config::builder()->analyze(analyze()))
-            ->onComplete(http_on_complete(function (?Report $report) use (&$closureCalled, &$receivedReport) : void {
+            ->onComplete(http_on_complete(static function (?Report $report) use (&$closureCalled, &$receivedReport) : void {
                 $closureCalled = true;
                 $receivedReport = $report;
             }))
@@ -47,7 +47,7 @@ final class FlowStreamedResponseTest extends FlowTestCase
                 ['id' => 1, 'name' => 'test'],
             ])
         )
-            ->onComplete(http_on_complete(function (?Report $report) use (&$receivedReport) : void {
+            ->onComplete(http_on_complete(static function (?Report $report) use (&$receivedReport) : void {
                 $receivedReport = $report;
             }))
             ->streamedResponse(new JsonOutput());
@@ -68,7 +68,7 @@ final class FlowStreamedResponseTest extends FlowTestCase
             ])
         )
             ->config(Config::builder()->analyze(analyze()->withSchema()))
-            ->onComplete(http_on_complete(function (?Report $report) use (&$receivedReport) : void {
+            ->onComplete(http_on_complete(static function (?Report $report) use (&$receivedReport) : void {
                 $receivedReport = $report;
             }))
             ->streamedResponse(new JsonOutput());

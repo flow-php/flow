@@ -223,7 +223,7 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                fn (Rows $r) => $r->toArray(),
+                static fn (Rows $r) => $r->toArray(),
                 \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
             )
         );

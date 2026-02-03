@@ -116,7 +116,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
         $exemplars = $reservoir->collect();
         self::assertCount(2, $exemplars);
 
-        $values = \array_map(fn ($e) => $e->value, $exemplars);
+        $values = \array_map(static fn ($e) => $e->value, $exemplars);
         self::assertCount(2, \array_unique($values));
     }
 

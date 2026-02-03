@@ -18,7 +18,7 @@ final class OffsetTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_array(
                 \array_map(
-                    fn (int $id) : array => ['id' => $id],
+                    static fn (int $id) : array => ['id' => $id],
                     \range(1, 20)
                 )
             ))
@@ -53,7 +53,7 @@ final class OffsetTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_array(
                 \array_map(
-                    fn (int $id) : array => ['id' => $id],
+                    static fn (int $id) : array => ['id' => $id],
                     \range(1, 10)
                 )
             ))
@@ -221,7 +221,7 @@ final class OffsetTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_array(
                 \array_map(
-                    fn (int $id) : array => ['id' => $id],
+                    static fn (int $id) : array => ['id' => $id],
                     \range(1, 20)
                 )
             ))
@@ -285,7 +285,7 @@ final class OffsetTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_array(
                 \array_map(
-                    fn (int $id) : array => ['id' => $id, 'value' => $id * 2],
+                    static fn (int $id) : array => ['id' => $id, 'value' => $id * 2],
                     \range(1, 10)
                 )
             ))
@@ -333,7 +333,7 @@ final class OffsetTest extends FlowIntegrationTestCase
     public function test_pagination_scenario() : void
     {
         $data = \array_map(
-            fn (int $id) : array => ['id' => $id, 'name' => 'Item ' . $id],
+            static fn (int $id) : array => ['id' => $id, 'name' => 'Item ' . $id],
             \range(1, 100)
         );
 

@@ -18,7 +18,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_array(
                 \array_map(
-                    fn (int $id) : array => ['id' => $id],
+                    static fn (int $id) : array => ['id' => $id],
                     \range(1, 1000)
                 )
             ))
@@ -112,7 +112,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_array(
                 \array_map(
-                    fn (int $id) : array => ['id' => $id],
+                    static fn (int $id) : array => ['id' => $id],
                     \range(1, 10)
                 )
             ))

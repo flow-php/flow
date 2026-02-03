@@ -24,7 +24,7 @@ final class CallableTypeTest extends TestCase
         ];
 
         yield 'valid callable closure' => [
-            'value' => function () : void {},
+            'value' => static function () : void {},
             'exceptionClass' => null,
         ];
 
@@ -53,7 +53,7 @@ final class CallableTypeTest extends TestCase
         ];
 
         yield 'callable closure' => [
-            'value' => $closure = function () : void {},
+            'value' => $closure = static function () : void {},
             'expected' => $closure,
             'exceptionClass' => null,
         ];
@@ -79,7 +79,7 @@ final class CallableTypeTest extends TestCase
         ];
 
         yield 'valid callable closure' => [
-            'value' => function () : void {},
+            'value' => static function () : void {},
             'expected' => true,
         ];
 

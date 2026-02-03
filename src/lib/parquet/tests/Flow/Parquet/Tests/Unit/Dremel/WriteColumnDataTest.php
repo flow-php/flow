@@ -45,14 +45,14 @@ final class WriteColumnDataTest extends TestCase
     {
         yield 'empty column data' => [
             true,
-            function (WriteColumnData $columnData, FlatColumn $column) : void {
+            static function (WriteColumnData $columnData, FlatColumn $column) : void {
                 // No values added
             },
         ];
 
         yield 'column data with values' => [
             false,
-            function (WriteColumnData $columnData, FlatColumn $column) : void {
+            static function (WriteColumnData $columnData, FlatColumn $column) : void {
                 $columnData->addValue(new FlatValue($column, 0, 1, 1));
             },
         ];

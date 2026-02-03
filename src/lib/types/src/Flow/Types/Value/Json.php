@@ -112,7 +112,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
         }
 
         if (\array_is_list($array)) {
-            \usort($array, fn (mixed $a, mixed $b) : int => \serialize($a) <=> \serialize($b));
+            \usort($array, static fn (mixed $a, mixed $b) : int => \serialize($a) <=> \serialize($b));
         } else {
             \ksort($array);
         }

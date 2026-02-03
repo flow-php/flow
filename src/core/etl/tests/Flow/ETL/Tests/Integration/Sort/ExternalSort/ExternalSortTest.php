@@ -53,7 +53,7 @@ final class ExternalSortTest extends FlowIntegrationTestCase
         self::assertEquals(
             $input,
             \array_merge(...\array_map(
-                fn ($row) => $row->toArray(),
+                static fn ($row) => $row->toArray(),
                 $sortedOutput
             ))
         );

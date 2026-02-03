@@ -357,7 +357,7 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        $plainCount = array_count_values(array_map(fn ($e) => $e->value, $encodings))[Encodings::PLAIN->value] ?? 0;
+        $plainCount = array_count_values(array_map(static fn ($e) => $e->value, $encodings))[Encodings::PLAIN->value] ?? 0;
         self::assertSame(1, $plainCount);
     }
 

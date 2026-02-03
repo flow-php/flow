@@ -67,7 +67,7 @@ final readonly class Columns
     {
         return new self(
             ...$this->map(
-                fn (string $column) : string => $prefix . $column
+                static fn (string $column) : string => $prefix . $column
             )
         );
     }
@@ -76,7 +76,7 @@ final readonly class Columns
     {
         return new self(
             ...$this->map(
-                fn (string $column) : string => $column . $suffix
+                static fn (string $column) : string => $column . $suffix
             )
         );
     }

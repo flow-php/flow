@@ -24,7 +24,7 @@ final class BatchingLogProcessorTest extends TestCase
         $exporter = $this->createMock(LogExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $entries) => \count($entries) === 2))
+            ->with(self::callback(static fn (array $entries) => \count($entries) === 2))
             ->willReturn(true);
 
         $processor = new BatchingLogProcessor($exporter, 2);
@@ -38,7 +38,7 @@ final class BatchingLogProcessorTest extends TestCase
         $exporter = $this->createMock(LogExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $entries) => \count($entries) === 1))
+            ->with(self::callback(static fn (array $entries) => \count($entries) === 1))
             ->willReturn(true);
 
         $processor = new BatchingLogProcessor($exporter, 10);
@@ -68,7 +68,7 @@ final class BatchingLogProcessorTest extends TestCase
         $exporter = $this->createMock(LogExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(function (array $entries) use (&$exportedEntries) {
+            ->with(self::callback(static function (array $entries) use (&$exportedEntries) {
                 $exportedEntries = $entries;
 
                 return true;

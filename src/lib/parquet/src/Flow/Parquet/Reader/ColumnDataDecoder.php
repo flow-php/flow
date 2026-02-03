@@ -88,7 +88,7 @@ final readonly class ColumnDataDecoder
             $decoder = new DeltaBinaryPackedDecoder();
             $values = $decoder->decode($remainingData, $nonEmptyValuesCount);
 
-            $valuesGenerator = function () use ($values) {
+            $valuesGenerator = static function () use ($values) {
                 foreach ($values as $value) {
                     yield $value;
                 }
@@ -110,7 +110,7 @@ final readonly class ColumnDataDecoder
                     $nonEmptyValuesCount
                 );
 
-                $valuesGenerator = function () use ($indices, $dictionary) {
+                $valuesGenerator = static function () use ($indices, $dictionary) {
                     foreach ($indices as $index) {
                         yield $dictionary && \array_key_exists($index, $dictionary->values) ? $dictionary->values[$index] : null;
                     }
@@ -184,7 +184,7 @@ final readonly class ColumnDataDecoder
             $decoder = new DeltaBinaryPackedDecoder();
             $values = $decoder->decode($remainingData, $nonEmptyValuesCount);
 
-            $valuesGenerator = function () use ($values) {
+            $valuesGenerator = static function () use ($values) {
                 foreach ($values as $value) {
                     yield $value;
                 }
@@ -206,7 +206,7 @@ final readonly class ColumnDataDecoder
                     $nonEmptyValuesCount,
                 );
 
-                $valuesGenerator = function () use ($indices, $dictionary) {
+                $valuesGenerator = static function () use ($indices, $dictionary) {
                     foreach ($indices as $index) {
                         yield $dictionary?->values[$index];
                     }

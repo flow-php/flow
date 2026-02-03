@@ -33,7 +33,7 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
+        $this->value = $value !== null ? BigDecimal::of((string) $value)->toFloat() : null;
         $this->definition = new FloatDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 

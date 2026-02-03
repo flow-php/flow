@@ -302,7 +302,7 @@ final class OffsetPipelineTest extends FlowTestCase
         $result = \iterator_to_array($pipeline->process(flow_context(config())));
 
         $expectedCount = \max(0, 20 - $offset);
-        $totalRows = \array_sum(\array_map(fn ($batch) => $batch->count(), $result));
+        $totalRows = \array_sum(\array_map(static fn ($batch) => $batch->count(), $result));
 
         self::assertEquals($expectedCount, $totalRows);
 

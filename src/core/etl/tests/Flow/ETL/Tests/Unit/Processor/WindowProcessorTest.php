@@ -105,8 +105,8 @@ final class WindowProcessorTest extends FlowTestCase
 
         self::assertCount(4, $allRows);
 
-        $groupA = array_filter($allRows, fn ($r) => $r['group'] === 'a');
-        $groupB = array_filter($allRows, fn ($r) => $r['group'] === 'b');
+        $groupA = array_filter($allRows, static fn ($r) => $r['group'] === 'a');
+        $groupB = array_filter($allRows, static fn ($r) => $r['group'] === 'b');
 
         self::assertCount(2, $groupA);
         self::assertCount(2, $groupB);

@@ -32,7 +32,7 @@ final readonly class AttributesModel
     {
         return new self(
             array_map(
-                fn (\ReflectionAttribute $reflectionAttribute) : AttributeModel => AttributeModel::fromReflection($reflectionAttribute),
+                static fn (\ReflectionAttribute $reflectionAttribute) : AttributeModel => AttributeModel::fromReflection($reflectionAttribute),
                 $reflection->getAttributes()
             )
         );
@@ -57,6 +57,6 @@ final readonly class AttributesModel
      */
     public function normalize() : array
     {
-        return array_map(fn (AttributeModel $attribute) => $attribute->normalize(), $this->attributes);
+        return array_map(static fn (AttributeModel $attribute) => $attribute->normalize(), $this->attributes);
     }
 }

@@ -133,7 +133,7 @@ final class StructureEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (?array $entries) : ?array => $entries)
+            $entry->map(static fn (?array $entries) : ?array => $entries)
         );
     }
 

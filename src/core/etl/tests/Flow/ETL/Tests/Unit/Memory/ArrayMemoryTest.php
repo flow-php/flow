@@ -51,7 +51,7 @@ final class ArrayMemoryTest extends FlowTestCase
 
         self::assertSame(
             [1, 2],
-            $memory->map(fn (?array $data) : int => type_optional(type_integer())->assert($data['id'] ?? null))
+            $memory->map(static fn (?array $data) : int => type_optional(type_integer())->assert($data['id'] ?? null))
         );
     }
 

@@ -43,7 +43,7 @@ final class MemorySortTest extends FlowTestCase
         self::assertEquals(
             $input,
             \array_merge(...\array_map(
-                fn ($row) => $row->toArray(),
+                static fn ($row) => $row->toArray(),
                 $sortedOutput
             ))
         );

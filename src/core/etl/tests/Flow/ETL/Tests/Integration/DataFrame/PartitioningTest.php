@@ -164,7 +164,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
         df()
             ->read(from_array(
                 \array_merge(...\array_map(
-                    function (int $i) : array {
+                    static function (int $i) : array {
                         $data = [];
 
                         $maxItems = generate_random_int(2, 10);
@@ -192,7 +192,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                         'year', 'day', 'month', // order is changed on purpose
                     ],
                     \array_map(
-                        fn (Partition $p) => $p->name,
+                        static fn (Partition $p) => $p->name,
                         $rows->partitions()->toArray()
                     )
                 );

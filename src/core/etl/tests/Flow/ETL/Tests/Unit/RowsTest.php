@@ -296,13 +296,13 @@ final class RowsTest extends FlowTestCase
             $five = row(int_entry('number', 5), string_entry('name', 'five'))
         );
 
-        $evenRows = function (Row $row) : bool {
+        $evenRows = static function (Row $row) : bool {
             $value = $row->get('number')->value();
             \assert(\is_int($value));
 
             return $value % 2 === 0;
         };
-        $oddRows = function (Row $row) : bool {
+        $oddRows = static function (Row $row) : bool {
             $value = $row->get('number')->value();
             \assert(\is_int($value));
 
@@ -328,13 +328,13 @@ final class RowsTest extends FlowTestCase
                 $one,
                 $three
             ),
-            $rows->find(fn (Row $row) : bool => $row->valueOf('name') === 'one')
+            $rows->find(static fn (Row $row) : bool => $row->valueOf('name') === 'one')
         );
     }
 
     public function test_find_on_empty_rows() : void
     {
-        self::assertEquals(rows(), (rows())->find(fn (Row $row) => false));
+        self::assertEquals(rows(), (rows())->find(static fn (Row $row) => false));
     }
 
     public function test_find_one() : void
@@ -347,13 +347,13 @@ final class RowsTest extends FlowTestCase
             $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
-        self::assertSame($three, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
-        self::assertNotSame($three1, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
+        self::assertSame($three, $rows->findOne(static fn (Row $row) : bool => $row->valueOf('number') === 3));
+        self::assertNotSame($three1, $rows->findOne(static fn (Row $row) : bool => $row->valueOf('number') === 3));
     }
 
     public function test_find_one_on_empty_rows() : void
     {
-        self::assertNull((rows())->findOne(fn (Row $row) => false));
+        self::assertNull((rows())->findOne(static fn (Row $row) => false));
     }
 
     public function test_find_without_results() : void
@@ -366,7 +366,7 @@ final class RowsTest extends FlowTestCase
             $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
-        self::assertNull($rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 5));
+        self::assertNull($rows->findOne(static fn (Row $row) : bool => $row->valueOf('number') === 5));
     }
 
     public function test_first_on_empty_rows() : void
@@ -387,7 +387,7 @@ final class RowsTest extends FlowTestCase
             )
         );
 
-        $rows = $rows->flatMap(function (Row $row) : array {
+        $rows = $rows->flatMap(static function (Row $row) : array {
             $id = $row->valueOf('id');
             \assert(\is_int($id));
 
@@ -994,7 +994,7 @@ final class RowsTest extends FlowTestCase
             $four = row(int_entry('number', 4), string_entry('name', 'four')),
         );
 
-        $sort = $rows->sort(function (mixed $row, mixed $nextRow) : int {
+        $sort = $rows->sort(static function (mixed $row, mixed $nextRow) : int {
             \assert($row instanceof \Flow\ETL\Row);
             \assert($nextRow instanceof \Flow\ETL\Row);
 

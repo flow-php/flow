@@ -75,7 +75,7 @@ final class JsonObjectEntryTest extends FlowTestCase
     {
         $item = ['item-id' => 1, 'name' => 'one'];
         $entry = JsonEntry::object('item', $item);
-        $mappedEntry = $entry->map(fn (?Json $json) : array => ['item-id' => 1, 'name' => 'ONE']);
+        $mappedEntry = $entry->map(static fn (?Json $json) : array => ['item-id' => 1, 'name' => 'ONE']);
 
         self::assertEquals(JsonEntry::object('item', ['item-id' => 1, 'name' => 'ONE']), $mappedEntry);
     }

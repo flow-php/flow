@@ -36,9 +36,9 @@ final class MeilisearchLoader implements Loader
             return;
         }
 
-        $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
+        $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
             ...$row->map(
-                fn (Entry $entry) : Entry => $entry
+                static fn (Entry $entry) : Entry => $entry
             )->entries()
         ))->toArray();
 

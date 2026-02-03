@@ -56,7 +56,7 @@ final class StringEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (?string $value) : ?string => $value)
+            $entry->map(static fn (?string $value) : ?string => $value)
         );
     }
 

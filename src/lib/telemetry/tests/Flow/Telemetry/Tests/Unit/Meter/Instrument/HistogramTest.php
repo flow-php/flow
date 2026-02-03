@@ -220,7 +220,7 @@ final class HistogramTest extends TestCase
         self::assertCount(1, $metrics);
         self::assertCount(3, $metrics[0]->exemplars);
 
-        $values = \array_map(fn ($e) => $e->value, $metrics[0]->exemplars);
+        $values = \array_map(static fn ($e) => $e->value, $metrics[0]->exemplars);
         self::assertContains(5.0, $values);
         self::assertContains(75.0, $values);
         self::assertContains(150.0, $values);
@@ -325,8 +325,8 @@ final class HistogramTest extends TestCase
 
         self::assertCount(2, $metrics);
 
-        $getMetrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('method') === 'GET'));
-        $postMetrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('method') === 'POST'));
+        $getMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('method') === 'GET'));
+        $postMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('method') === 'POST'));
 
         self::assertCount(1, $getMetrics);
         self::assertCount(1, $postMetrics);

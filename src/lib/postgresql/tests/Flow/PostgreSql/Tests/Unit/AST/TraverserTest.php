@@ -405,7 +405,7 @@ final class TraverserTest extends TestCase
 
         self::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(fn ($rv) => $rv->getRelname(), $collector->getRangeVars());
+        $tableNames = \array_map(static fn ($rv) => $rv->getRelname(), $collector->getRangeVars());
         self::assertContains('users', $tableNames);
         self::assertContains('active', $tableNames);
     }

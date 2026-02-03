@@ -13,7 +13,7 @@ class CallbackRowTransformerTest extends FlowTestCase
     public function test_replacing_dashes_in_entry_name_with_str_replace_callback() : void
     {
         $callbackTransformer = new CallbackRowTransformer(
-            fn (Row $row) : Row => $row->remove('old-int')
+            static fn (Row $row) : Row => $row->remove('old-int')
         );
 
         $rows = $callbackTransformer->transform(

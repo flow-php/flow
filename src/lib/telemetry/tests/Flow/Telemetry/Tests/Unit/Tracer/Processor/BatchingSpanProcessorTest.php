@@ -27,7 +27,7 @@ final class BatchingSpanProcessorTest extends TestCase
         $exporter = $this->createMock(SpanExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $spans) => \count($spans) === 2))
+            ->with(self::callback(static fn (array $spans) => \count($spans) === 2))
             ->willReturn(true);
 
         $processor = new BatchingSpanProcessor($exporter, 2);
@@ -41,7 +41,7 @@ final class BatchingSpanProcessorTest extends TestCase
         $exporter = $this->createMock(SpanExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $spans) => \count($spans) === 1))
+            ->with(self::callback(static fn (array $spans) => \count($spans) === 1))
             ->willReturn(true);
 
         $processor = new BatchingSpanProcessor($exporter, 10);

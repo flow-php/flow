@@ -225,14 +225,14 @@ final class EntriesTest extends FlowTestCase
 
         self::assertEquals(
             ['integer', 'string', 'bool'],
-            $entries->map(fn (Entry $e) => $e->name())
+            $entries->map(static fn (Entry $e) => $e->name())
         );
 
         $entries = $entries->order('bool', 'string', 'integer');
 
         self::assertEquals(
             ['bool', 'string', 'integer'],
-            $entries->map(fn (Entry $e) => $e->name())
+            $entries->map(static fn (Entry $e) => $e->name())
         );
     }
 

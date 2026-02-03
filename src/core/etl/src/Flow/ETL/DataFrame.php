@@ -193,7 +193,7 @@ final class DataFrame
      */
     public function collectRefs(References $references) : self
     {
-        $this->with(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
+        $this->with(new CallbackRowTransformer(static function (Row $row) use ($references) : Row {
             foreach ($row->entries()->all() as $entry) {
                 $references->add($entry->ref());
             }

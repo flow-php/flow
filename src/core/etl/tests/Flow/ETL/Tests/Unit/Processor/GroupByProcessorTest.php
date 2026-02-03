@@ -37,7 +37,7 @@ final class GroupByProcessorTest extends FlowTestCase
         $resultArray = $result[0]->toArray();
         self::assertCount(2, $resultArray);
 
-        $categoryA = array_values(array_filter($resultArray, fn ($r) => $r['category'] === 'a'))[0];
+        $categoryA = array_values(array_filter($resultArray, static fn ($r) => $r['category'] === 'a'))[0];
 
         self::assertEquals(30, $categoryA['amount_sum']);
     }
@@ -64,8 +64,8 @@ final class GroupByProcessorTest extends FlowTestCase
         $resultArray = $result[0]->toArray();
         self::assertCount(2, $resultArray);
 
-        $categoryA = array_values(array_filter($resultArray, fn ($r) => $r['category'] === 'a'))[0];
-        $categoryB = array_values(array_filter($resultArray, fn ($r) => $r['category'] === 'b'))[0];
+        $categoryA = array_values(array_filter($resultArray, static fn ($r) => $r['category'] === 'a'))[0];
+        $categoryB = array_values(array_filter($resultArray, static fn ($r) => $r['category'] === 'b'))[0];
 
         self::assertEquals(30, $categoryA['amount_sum']);
         self::assertEquals(15, $categoryB['amount_sum']);

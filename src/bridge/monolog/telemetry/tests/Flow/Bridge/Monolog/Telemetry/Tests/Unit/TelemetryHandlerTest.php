@@ -105,7 +105,7 @@ final class TelemetryHandlerTest extends TestCase
 
     public function test_handler_converts_extra_to_prefixed_attributes() : void
     {
-        $this->monolog->pushProcessor(function ($record) {
+        $this->monolog->pushProcessor(static function ($record) {
             $record->extra['request_id'] = 'abc-123';
 
             return $record;

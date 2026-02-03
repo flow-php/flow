@@ -14,7 +14,7 @@ final class ArraySortByKey
     public function __invoke(array $array) : array
     {
         $array = \array_map(
-            fn ($value) => \is_array($value) ? (new self)($value) : $value,
+            static fn ($value) => \is_array($value) ? (new self)($value) : $value,
             $array
         );
 

@@ -17,7 +17,7 @@ final class BatchingMetricProcessorTest extends TestCase
         $exporter = $this->createMock(MetricExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $metrics) => \count($metrics) === 2))
+            ->with(self::callback(static fn (array $metrics) => \count($metrics) === 2))
             ->willReturn(true);
 
         $processor = new BatchingMetricProcessor($exporter, 2);
@@ -31,7 +31,7 @@ final class BatchingMetricProcessorTest extends TestCase
         $exporter = $this->createMock(MetricExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $metrics) => \count($metrics) === 1))
+            ->with(self::callback(static fn (array $metrics) => \count($metrics) === 1))
             ->willReturn(true);
 
         $processor = new BatchingMetricProcessor($exporter, 10);

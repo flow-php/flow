@@ -114,7 +114,7 @@ final readonly class WriteColumnData
         $readFlatValues = [];
 
         foreach ($this->flatValues as $flatValue) {
-            $valuesGenerator = function () use ($flatValue) {
+            $valuesGenerator = static function () use ($flatValue) {
                 foreach ($flatValue->values() as $value) {
                     yield $value;
                 }

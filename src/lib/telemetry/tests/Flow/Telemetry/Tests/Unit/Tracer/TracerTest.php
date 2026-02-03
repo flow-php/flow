@@ -145,7 +145,7 @@ final class TracerTest extends TestCase
     {
         $tracer = TracerMother::create();
 
-        $tracer->trace('test-span', function () : void {});
+        $tracer->trace('test-span', static function () : void {});
 
         self::assertNull($tracer->activeSpan());
     }
@@ -156,7 +156,7 @@ final class TracerTest extends TestCase
         $tracer = TracerMother::withInMemoryProcessor($processor);
 
         try {
-            $tracer->trace('test-span', function () : void {
+            $tracer->trace('test-span', static function () : void {
                 throw new \RuntimeException('Test error');
             });
         } catch (\RuntimeException) {
@@ -172,14 +172,14 @@ final class TracerTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Test error');
 
-        TracerMother::create()->trace('test-span', function () : void {
+        TracerMother::create()->trace('test-span', static function () : void {
             throw new \RuntimeException('Test error');
         });
     }
 
     public function test_trace_returns_callback_result() : void
     {
-        self::assertSame('success', TracerMother::create()->trace('test-span', fn () => 'success'));
+        self::assertSame('success', TracerMother::create()->trace('test-span', static fn () => 'success'));
     }
 
     public function test_trace_sets_error_status_on_exception() : void
@@ -188,7 +188,7 @@ final class TracerTest extends TestCase
         $tracer = TracerMother::withInMemoryProcessor($processor);
 
         try {
-            $tracer->trace('test-span', function () : void {
+            $tracer->trace('test-span', static function () : void {
                 throw new \RuntimeException('Error');
             });
         } catch (\RuntimeException) {
@@ -203,7 +203,7 @@ final class TracerTest extends TestCase
         $processor = TracerMother::createMemoryProcessor();
         $tracer = TracerMother::withInMemoryProcessor($processor);
 
-        $tracer->trace('test-span', fn () => 'ok');
+        $tracer->trace('test-span', static fn () => 'ok');
 
         self::assertNotNull($processor->endedSpans()[0]->status());
         self::assertTrue($processor->endedSpans()[0]->status()->isOk());

@@ -64,13 +64,13 @@ final class TransactionTest extends ClientTestCase
 
     public function test_deeply_nested_transactions() : void
     {
-        $this->client->transaction(function ($client) : void {
+        $this->client->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('level1')));
 
-            $client->transaction(function ($client) : void {
+            $client->transaction(static function ($client) : void {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('level2')));
 
-                $client->transaction(function ($client) : void {
+                $client->transaction(static function ($client) : void {
                     $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('level3')));
                 });
             });
@@ -102,7 +102,7 @@ final class TransactionTest extends ClientTestCase
 
     public function test_multiple_operations_in_transaction() : void
     {
-        $this->client->transaction(function ($client) : void {
+        $this->client->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('first')));
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('second')));
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('third')));
@@ -115,10 +115,10 @@ final class TransactionTest extends ClientTestCase
 
     public function test_nested_transaction_commits() : void
     {
-        $this->client->transaction(function ($client) : void {
+        $this->client->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('outer')));
 
-            $client->transaction(function ($client) : void {
+            $client->transaction(static function ($client) : void {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
             });
         });
@@ -129,11 +129,11 @@ final class TransactionTest extends ClientTestCase
 
     public function test_nested_transaction_inner_rollback() : void
     {
-        $this->client->transaction(function ($client) : void {
+        $this->client->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('outer')));
 
             try {
-                $client->transaction(function ($client) : void {
+                $client->transaction(static function ($client) : void {
                     $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
 
                     throw new \RuntimeException('Inner failure');
@@ -155,10 +155,10 @@ final class TransactionTest extends ClientTestCase
     public function test_nested_transaction_outer_rollback_includes_inner() : void
     {
         try {
-            $this->client->transaction(function ($client) : void {
+            $this->client->transaction(static function ($client) : void {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('outer')));
 
-                $client->transaction(function ($client) : void {
+                $client->transaction(static function ($client) : void {
                     $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
                 });
 
@@ -209,7 +209,7 @@ final class TransactionTest extends ClientTestCase
 
     public function test_transaction_can_query_within() : void
     {
-        $result = $this->client->transaction(function ($client) {
+        $result = $this->client->transaction(static function ($client) {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('query test')));
 
             return $client->fetchScalar(select(agg_count())->from(table('test_transaction')));
@@ -220,7 +220,7 @@ final class TransactionTest extends ClientTestCase
 
     public function test_transaction_commits_on_success() : void
     {
-        $this->client->transaction(function ($client) : void {
+        $this->client->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('committed')));
         });
 
@@ -231,7 +231,7 @@ final class TransactionTest extends ClientTestCase
 
     public function test_transaction_returns_callback_value() : void
     {
-        $result = $this->client->transaction(function ($client) {
+        $result = $this->client->transaction(static function ($client) {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('test')));
 
             return 'success';
@@ -243,7 +243,7 @@ final class TransactionTest extends ClientTestCase
     public function test_transaction_rollbacks_on_exception() : void
     {
         try {
-            $this->client->transaction(function ($client) : void {
+            $this->client->transaction(static function ($client) : void {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('will be rolled back')));
 
                 throw new \RuntimeException('Simulated failure');

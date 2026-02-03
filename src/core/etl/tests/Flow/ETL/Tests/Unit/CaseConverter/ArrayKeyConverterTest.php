@@ -13,7 +13,7 @@ final class ArrayKeyConverterTest extends FlowTestCase
     public function test_converts_all_keys_to_snake_case() : void
     {
         $transformer = new ArrayKeyConverter(
-            fn (string $key) : string => u($key)->snake()->toString()
+            static fn (string $key) : string => u($key)->snake()->toString()
         );
 
         self::assertEquals(

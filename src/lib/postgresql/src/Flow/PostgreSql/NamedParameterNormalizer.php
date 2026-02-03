@@ -18,7 +18,7 @@ final class NamedParameterNormalizer
 
         preg_replace_callback(
             '/(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)/',
-            function (array $matches) use (&$parameters, &$position) : string {
+            static function (array $matches) use (&$parameters, &$position) : string {
                 $name = $matches[1];
 
                 if (!\array_key_exists($name, $parameters)) {
@@ -43,7 +43,7 @@ final class NamedParameterNormalizer
 
         $converted = preg_replace_callback(
             '/(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)/',
-            function (array $matches) use (&$parameters, &$position) : string {
+            static function (array $matches) use (&$parameters, &$position) : string {
                 $name = $matches[1];
 
                 if (!\array_key_exists($name, $parameters)) {

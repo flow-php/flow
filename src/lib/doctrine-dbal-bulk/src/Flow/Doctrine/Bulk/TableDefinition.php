@@ -27,7 +27,7 @@ final class TableDefinition
     public function dbalColumn(string $columnName) : Column
     {
 
-        $dbColumnNames = \array_filter($this->getColumns(), fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
+        $dbColumnNames = \array_filter($this->getColumns(), static fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
 
         if (\count($dbColumnNames) !== 1) {
             throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");

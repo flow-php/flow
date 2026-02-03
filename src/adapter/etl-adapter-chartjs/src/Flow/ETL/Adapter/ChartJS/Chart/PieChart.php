@@ -72,7 +72,7 @@ final class PieChart implements Chart
             'data' => [
                 'labels' => $labels,
                 'datasets' => \array_values(\array_map(
-                    fn (array $dataset) : array => \array_merge($dataset, $options),
+                    static fn (array $dataset) : array => \array_merge($dataset, $options),
                     $this->data['datasets']
                 )),
             ],

@@ -54,7 +54,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
-        $monolog->pushProcessor(function ($record) {
+        $monolog->pushProcessor(static function ($record) {
             $record->extra['request_id'] = 'req-abc-123';
             $record->extra['server'] = 'web-01';
 

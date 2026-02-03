@@ -94,7 +94,7 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema() : void
     {
         $rows = array_to_rows(\array_map(
-            fn ($i) => [
+            static fn ($i) => [
                 'id' => $i,
                 'name' => 'name_' . $i,
                 'active' => $i % 2 === 0,
@@ -118,7 +118,7 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema_from_limited_rows() : void
     {
         $rows = array_to_rows(\array_map(
-            fn ($i) => [
+            static fn ($i) => [
                 'id' => $i,
                 'name' => 'name_' . $i,
                 'active' => $i % 2 === 0,

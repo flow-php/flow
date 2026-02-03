@@ -55,6 +55,6 @@ final readonly class ParametersModel
      */
     public function normalize() : array
     {
-        return array_map(fn (ParameterModel $argument) => $argument->normalize(), $this->arguments);
+        return array_map(static fn (ParameterModel $argument) => $argument->normalize(), $this->arguments);
     }
 }

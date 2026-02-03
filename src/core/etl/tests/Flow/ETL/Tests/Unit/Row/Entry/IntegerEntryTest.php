@@ -45,7 +45,7 @@ final class IntegerEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (?int $int) : ?int => $int)
+            $entry->map(static fn (?int $int) : ?int => $int)
         );
     }
 

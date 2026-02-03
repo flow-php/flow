@@ -30,7 +30,7 @@ final class MapTest extends FlowIntegrationTestCase
                 )
             )
             ->map(
-                fn (Row $row) : Row => $row->map(fn (Entry $e) => $e->value() === null && $e->is('tags') ? $e->withValue([]) : $e)
+                static fn (Row $row) : Row => $row->map(static fn (Entry $e) => $e->value() === null && $e->is('tags') ? $e->withValue([]) : $e)
             )
             ->fetch();
 
@@ -53,7 +53,7 @@ final class MapTest extends FlowIntegrationTestCase
                 ['id' => 3, 'name' => 'Doe'],
             ]))
             ->map(
-                fn (Row $row) : Row => $row->map(fn (Entry $e) => $e->value() === null && $e->is('name') ? $e->withValue('N/A') : $e)
+                static fn (Row $row) : Row => $row->map(static fn (Entry $e) => $e->value() === null && $e->is('name') ? $e->withValue('N/A') : $e)
             )
             ->fetch();
 

@@ -267,7 +267,7 @@ final class WindowsPathTest extends PathTestCase
     public function test_partition_logic(string $input, array $partitionData, string $expected) : void
     {
         $path = new WindowsPath($input);
-        $partitions = array_map(fn ($p) => partition($p['name'], $p['value']), $partitionData);
+        $partitions = array_map(static fn ($p) => partition($p['name'], $p['value']), $partitionData);
 
         $result = $path->addPartitions(...$partitions);
 

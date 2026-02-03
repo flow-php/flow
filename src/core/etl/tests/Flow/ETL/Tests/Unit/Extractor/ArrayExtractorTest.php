@@ -25,7 +25,7 @@ final class ArrayExtractorTest extends FlowTestCase
 
     public function test_generator_extraction() : void
     {
-        $generator = function () {
+        $generator = static function () {
             yield ['id' => 1, 'name' => 'Norbert'];
             yield ['id' => 2, 'name' => 'Michal'];
         };

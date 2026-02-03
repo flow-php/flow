@@ -191,7 +191,7 @@ final readonly class BulkData
         return \implode(
             ',',
             \array_map(
-                fn (array $row) : string => \sprintf(
+                static fn (array $row) : string => \sprintf(
                     '(:%s)',
                     \implode(',:', \array_keys($row))
                 ),

@@ -35,7 +35,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             ]))
             ->autoCast()
             ->collect()
-            ->run(function (Rows $rows, FlowContext $context) : void {
+            ->run(static function (Rows $rows, FlowContext $context) : void {
                 $clock = $context->config->clock();
 
                 if ($clock instanceof FakeClock) {
@@ -114,7 +114,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             ]))
             ->autoCast()
             ->collect()
-            ->run(function (Rows $rows, FlowContext $context) : void {
+            ->run(static function (Rows $rows, FlowContext $context) : void {
                 $clock = $context->config->clock();
 
                 if ($clock instanceof FakeClock) {
@@ -156,7 +156,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             ]))
             ->autoCast()
             ->collect()
-            ->run(function (Rows $rows, FlowContext $context) : void {
+            ->run(static function (Rows $rows, FlowContext $context) : void {
                 $clock = $context->config->clock();
 
                 if ($clock instanceof FakeClock) {

@@ -29,11 +29,11 @@ final class ParsedQueryTest extends TestCase
         $orderColumns = sql_query_columns($result)->forTable('o');
 
         self::assertCount(2, $userColumns);
-        $userColumnNames = \array_map(fn (Column $c) => $c->name(), $userColumns);
+        $userColumnNames = \array_map(static fn (Column $c) => $c->name(), $userColumns);
         self::assertContains('id', $userColumnNames);
 
         self::assertCount(2, $orderColumns);
-        $orderColumnNames = \array_map(fn (Column $c) => $c->name(), $orderColumns);
+        $orderColumnNames = \array_map(static fn (Column $c) => $c->name(), $orderColumns);
         self::assertContains('order_date', $orderColumnNames);
         self::assertContains('user_id', $orderColumnNames);
     }
@@ -46,7 +46,7 @@ final class ParsedQueryTest extends TestCase
 
         self::assertCount(2, $columns);
 
-        $columnNames = \array_map(fn (Column $c) => $c->name(), $columns);
+        $columnNames = \array_map(static fn (Column $c) => $c->name(), $columns);
         self::assertContains('id', $columnNames);
         self::assertContains('name', $columnNames);
     }
@@ -57,7 +57,7 @@ final class ParsedQueryTest extends TestCase
 
         $columns = sql_query_columns($result)->all();
 
-        $columnNames = \array_map(fn (Column $c) => $c->name(), $columns);
+        $columnNames = \array_map(static fn (Column $c) => $c->name(), $columns);
         self::assertContains('active', $columnNames);
         self::assertContains('name', $columnNames);
     }
@@ -113,7 +113,7 @@ final class ParsedQueryTest extends TestCase
 
         self::assertCount(2, $functions);
 
-        $functionNames = \array_map(fn (FunctionCall $f) => $f->name(), $functions);
+        $functionNames = \array_map(static fn (FunctionCall $f) => $f->name(), $functions);
         self::assertContains('count', $functionNames);
         self::assertContains('sum', $functionNames);
     }
@@ -126,7 +126,7 @@ final class ParsedQueryTest extends TestCase
 
         self::assertCount(2, $functions);
 
-        $functionNames = \array_map(fn (FunctionCall $f) => $f->name(), $functions);
+        $functionNames = \array_map(static fn (FunctionCall $f) => $f->name(), $functions);
         self::assertContains('upper', $functionNames);
         self::assertContains('concat', $functionNames);
     }
@@ -295,7 +295,7 @@ final class ParsedQueryTest extends TestCase
 
         self::assertCount(2, $tables);
 
-        $tableNames = \array_map(fn (Table $t) => $t->name(), $tables);
+        $tableNames = \array_map(static fn (Table $t) => $t->name(), $tables);
         self::assertContains('users', $tableNames);
         self::assertContains('active_users', $tableNames);
     }
@@ -328,7 +328,7 @@ final class ParsedQueryTest extends TestCase
 
         self::assertCount(2, $tables);
 
-        $tableNames = \array_map(fn (Table $t) => $t->name(), $tables);
+        $tableNames = \array_map(static fn (Table $t) => $t->name(), $tables);
         self::assertContains('users', $tableNames);
         self::assertContains('orders', $tableNames);
     }

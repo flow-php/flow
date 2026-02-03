@@ -25,7 +25,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
         $exemplars = $reservoir->collect();
         self::assertCount($bucketCount, $exemplars);
 
-        $values = \array_map(fn ($e) => $e->value, $exemplars);
+        $values = \array_map(static fn ($e) => $e->value, $exemplars);
         \sort($values);
         self::assertSame([0, 10, 20, 30, 40], $values);
     }
@@ -161,7 +161,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
         $exemplars = $reservoir->collect();
         self::assertCount(3, $exemplars);
 
-        $values = \array_map(fn ($e) => $e->value, $exemplars);
+        $values = \array_map(static fn ($e) => $e->value, $exemplars);
         self::assertContains(10, $values);
         self::assertContains(20, $values);
         self::assertContains(30, $values);

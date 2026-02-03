@@ -28,7 +28,7 @@ final class MathTest extends FlowTestCase
             )))
             ->aggregate(sum(ref('price')), sum(ref('weight')))
             ->run(
-                function (Rows $r) use (&$rows) : void {
+                static function (Rows $r) use (&$rows) : void {
                     $rows = $rows->merge($r);
                 },
                 analyze: analyze()->withSchema()
@@ -61,7 +61,7 @@ final class MathTest extends FlowTestCase
             ->withEntry('discount', ref('price')->multiply(-0.1))
             ->withEntry('total_weight', ref('weight')->multiply(ref('quantity')))
             ->run(
-                function (Rows $r) use (&$rows) : void {
+                static function (Rows $r) use (&$rows) : void {
                     $rows = $rows->merge($r);
                 },
                 analyze: analyze()->withSchema()

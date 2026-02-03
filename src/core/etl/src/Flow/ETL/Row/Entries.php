@@ -33,7 +33,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
             }
 
             if (\count($this->entries) !== \count($entries)) {
-                throw InvalidArgumentException::because(\sprintf('Entry names must be unique, given: [%s]', \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $entries))));
+                throw InvalidArgumentException::because(\sprintf('Entry names must be unique, given: [%s]', \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $entries))));
             }
         }
     }
@@ -57,8 +57,8 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
             throw InvalidArgumentException::because(
                 \sprintf(
                     'Added entries names must be unique, given: [%s] + [%s]',
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $newEntries)),
+                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
+                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $newEntries)),
                 )
             );
         }
@@ -189,8 +189,8 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
             throw new DuplicatedEntriesException(
                 \sprintf(
                     'Merged entries names must be unique, given: [%s] + [%s]',
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $entries->all())),
+                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
+                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $entries->all())),
                 )
             );
         }

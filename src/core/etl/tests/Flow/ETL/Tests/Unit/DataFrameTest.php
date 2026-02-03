@@ -299,7 +299,7 @@ final class DataFrameTest extends FlowTestCase
                 }
             }
         )
-            ->map(fn (Row $row) => $row->add(boolean_entry('odd', type_integer()->assert($row->valueOf('id')) % 2 === 0)))
+            ->map(static fn (Row $row) => $row->add(boolean_entry('odd', type_integer()->assert($row->valueOf('id')) % 2 === 0)))
             ->fetch();
 
         self::assertCount(10, $rows);
@@ -360,7 +360,7 @@ final class DataFrameTest extends FlowTestCase
             public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 return $rows->map(
-                    fn (Row $row) : Row => $row->set(string_entry('stamp', 'zero'))
+                    static fn (Row $row) : Row => $row->set(string_entry('stamp', 'zero'))
                 );
             }
         };
@@ -544,7 +544,7 @@ final class DataFrameTest extends FlowTestCase
                 new class implements Transformer {
                     public function transform(Rows $rows, FlowContext $context) : Rows
                     {
-                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
+                        return $rows->map(static fn (Row $row) => $row->rename('id', 'new_id'));
                     }
                 }
             )
@@ -581,7 +581,7 @@ final class DataFrameTest extends FlowTestCase
                 new class implements Transformer {
                     public function transform(Rows $rows, FlowContext $context) : Rows
                     {
-                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
+                        return $rows->map(static fn (Row $row) => $row->rename('id', 'new_id'));
                     }
                 }
             )

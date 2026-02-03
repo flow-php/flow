@@ -149,8 +149,8 @@ final class CounterTest extends TestCase
 
         self::assertCount(2, $metrics);
 
-        $getMetrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('method') === 'GET'));
-        $postMetrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('method') === 'POST'));
+        $getMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('method') === 'GET'));
+        $postMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('method') === 'POST'));
 
         self::assertCount(1, $getMetrics);
         self::assertCount(1, $postMetrics);

@@ -152,7 +152,7 @@ HTML);
 
         self::assertEquals(
             $entry,
-            $entry->map(fn ($value) => $value)
+            $entry->map(static fn ($value) => $value)
         );
     }
 

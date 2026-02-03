@@ -113,7 +113,7 @@ final class ListEntryTest extends FlowTestCase
     {
         self::assertEquals(
             list_entry('strings', ['one, two, three'], type_list(type_string())),
-            list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->map(fn (array $value) : array => [\implode(', ', $value)])
+            list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->map(static fn (array $value) : array => [\implode(', ', $value)])
         );
     }
 

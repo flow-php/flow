@@ -452,7 +452,7 @@ final class Schema implements \Countable
             throw new SchemaDefinitionNotUniqueException(\sprintf(
                 'Entry definitions must be unique, duplicated entries: [%s], all: [%s]',
                 \implode(', ', $duplicatedDefinitions),
-                \implode(', ', \array_map(fn (Definition $d) => $d->entry()->name(), $definitions)),
+                \implode(', ', \array_map(static fn (Definition $d) => $d->entry()->name(), $definitions)),
             ));
         }
 

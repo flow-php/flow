@@ -111,7 +111,7 @@ final class Row
     {
         return new self(
             $this->entries()->merge(
-                $row->map(fn (Entry $entry) : Entry => $entry->rename($prefix . $entry->name()))->entries()
+                $row->map(static fn (Entry $entry) : Entry => $entry->rename($prefix . $entry->name()))->entries()
             )
         );
     }

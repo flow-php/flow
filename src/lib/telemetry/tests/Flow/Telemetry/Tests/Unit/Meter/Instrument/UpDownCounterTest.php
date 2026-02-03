@@ -101,8 +101,8 @@ final class UpDownCounterTest extends TestCase
 
         self::assertCount(2, $metrics);
 
-        $tasksMetrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('queue') === 'tasks'));
-        $jobsMetrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('queue') === 'jobs'));
+        $tasksMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('queue') === 'tasks'));
+        $jobsMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('queue') === 'jobs'));
 
         self::assertCount(1, $tasksMetrics);
         self::assertCount(1, $jobsMetrics);

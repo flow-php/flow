@@ -28,7 +28,7 @@ final class ColumnChunkBuilders
                 $builders[$column->name()] = new NestedColumnChunkBuilder(
                     $column,
                     array_map(
-                        fn (FlatColumn $childColumn) => ColumnChunkBuilderFactory::createBuilder($childColumn, $options, $compressions),
+                        static fn (FlatColumn $childColumn) => ColumnChunkBuilderFactory::createBuilder($childColumn, $options, $compressions),
                         $column->childrenFlat()
                     )
                 );

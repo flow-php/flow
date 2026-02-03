@@ -127,7 +127,7 @@ final class DatabaseTableSchemaCommand extends Command
                 ?? $style->ask(
                     "FLOW_DB_CONNECTION_STRING env not found.\n Please provide database connection string, format:\n \"scheme://username:password@host:port/dbname?param1=value1&param2=value2&...\"",
                     null,
-                    fn ($value) => $value
+                    static fn ($value) => $value
                 );
             $connectionParameters = (new DsnParser())->parse($connectionString);
             $this->connection = DriverManager::getConnection($connectionParameters);

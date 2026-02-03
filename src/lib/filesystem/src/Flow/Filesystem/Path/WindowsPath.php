@@ -100,7 +100,7 @@ final readonly class WindowsPath
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
         $basename = $pathInfo['basename'] ?? '';
-        $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
+        $partitionsString = \implode('/', \array_map(static fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
 
         return match ($dirname) {
             '', '.', '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
@@ -222,7 +222,7 @@ final readonly class WindowsPath
 
         foreach ($partitions as $partition) {
             $currentPartitionsList[] = $partition;
-            $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, $currentPartitionsList));
+            $partitionsString = \implode('/', \array_map(static fn (Partition $p) => $p->name . '=' . $p->value, $currentPartitionsList));
 
             $paths[] = new self(
                 $this->protocol->scheme() . (($dirname === '' || $dirname === '.')

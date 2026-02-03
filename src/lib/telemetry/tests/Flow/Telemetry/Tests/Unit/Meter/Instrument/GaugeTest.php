@@ -46,8 +46,8 @@ final class GaugeTest extends TestCase
 
         self::assertCount(2, $metrics);
 
-        $server1Metrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('host') === 'server-1'));
-        $server2Metrics = \array_values(\array_filter($metrics, fn ($m) => $m->attributes->get('host') === 'server-2'));
+        $server1Metrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('host') === 'server-1'));
+        $server2Metrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('host') === 'server-2'));
 
         self::assertCount(1, $server1Metrics);
         self::assertCount(1, $server2Metrics);

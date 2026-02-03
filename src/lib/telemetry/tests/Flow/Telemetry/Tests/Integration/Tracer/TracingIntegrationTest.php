@@ -93,7 +93,7 @@ final class TracingIntegrationTest extends TestCase
         $exception = new \RuntimeException('Database connection failed');
 
         try {
-            $tracer->trace('database-operation', function () use ($exception) : void {
+            $tracer->trace('database-operation', static function () use ($exception) : void {
                 throw $exception;
             });
         } catch (\RuntimeException) {
@@ -164,7 +164,7 @@ final class TracingIntegrationTest extends TestCase
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
         $tracer = $provider->tracer($this->resource, 'test');
 
-        $result = $tracer->trace('calculate', fn () => 42);
+        $result = $tracer->trace('calculate', static fn () => 42);
 
         self::assertSame(42, $result);
         self::assertCount(1, $processor->endedSpans());

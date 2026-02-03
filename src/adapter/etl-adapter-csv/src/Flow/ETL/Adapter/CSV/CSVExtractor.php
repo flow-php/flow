@@ -202,7 +202,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         );
 
         return \array_map(
-            fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad(
+            static fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad(
                 (string) $index,
                 2,
                 '0',

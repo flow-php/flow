@@ -65,7 +65,7 @@ final class CacheTest extends FlowIntegrationTestCase
         df(config_builder()->cache($cache))
             ->read(
                 from_array(\array_map(
-                    fn (int $i) => ['id' => $i],
+                    static fn (int $i) => ['id' => $i],
                     \range(1, 100)
                 ))
             )
@@ -92,7 +92,7 @@ final class CacheTest extends FlowIntegrationTestCase
         df(config_builder()->cache($cache))
             ->read(
                 from_array(\array_map(
-                    fn (int $i) => ['id' => $i],
+                    static fn (int $i) => ['id' => $i],
                     \range(1, 100)
                 ))
             )

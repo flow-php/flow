@@ -17,7 +17,7 @@ final class PassThroughMetricProcessorTest extends TestCase
         $exporter = $this->createMock(MetricExporter::class);
         $exporter->expects(self::exactly(3))
             ->method('export')
-            ->with(self::callback(fn (array $metrics) => \count($metrics) === 1))
+            ->with(self::callback(static fn (array $metrics) => \count($metrics) === 1))
             ->willReturn(true);
 
         $processor = new PassThroughMetricProcessor($exporter);
@@ -31,7 +31,7 @@ final class PassThroughMetricProcessorTest extends TestCase
         $exporter = $this->createMock(MetricExporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(fn (array $metrics) => \count($metrics) === 1))
+            ->with(self::callback(static fn (array $metrics) => \count($metrics) === 1))
             ->willReturn(true);
 
         $processor = new PassThroughMetricProcessor($exporter);

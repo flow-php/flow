@@ -94,7 +94,7 @@ final readonly class DeltaBinaryPackedDecoder
                 $miniblockDeltas = $this->unpackMiniblock($packedData->toArray(), $bitWidth, $valuesToRead);
             }
 
-            $actualDeltas = array_map(function ($delta) use ($minDelta) {
+            $actualDeltas = array_map(static function ($delta) use ($minDelta) {
                 $result = $delta + $minDelta;
 
                 // Handle float overflow precisely using BCMath

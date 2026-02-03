@@ -161,7 +161,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $xmlAttributes = \implode(' ', \array_map(fn (string $key, string $value) => $key . '="' . $value . '"', \array_keys($this->xmlAttributes), \array_values($this->xmlAttributes)));
+            $xmlAttributes = \implode(' ', \array_map(static fn (string $key, string $value) => $key . '="' . $value . '"', \array_keys($this->xmlAttributes), \array_values($this->xmlAttributes)));
 
             $stream->append('<?xml ' . $xmlAttributes . "?>\n<" . $this->rootElementName . ">\n");
         } else {

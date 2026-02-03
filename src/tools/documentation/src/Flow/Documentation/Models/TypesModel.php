@@ -31,9 +31,9 @@ final readonly class TypesModel
     public static function fromReflection(\ReflectionType $reflectionType) : self
     {
         $types = match ($reflectionType::class) {
-            \ReflectionIntersectionType::class => array_map(fn (\ReflectionType $type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
+            \ReflectionIntersectionType::class => array_map(static fn (\ReflectionType $type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
             \ReflectionNamedType::class => [TypeModel::fromReflection($reflectionType)],
-            \ReflectionUnionType::class => array_map(fn (\ReflectionType $type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
+            \ReflectionUnionType::class => array_map(static fn (\ReflectionType $type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
             default => [],
         };
 
@@ -47,7 +47,7 @@ final readonly class TypesModel
      */
     public function normalize() : array
     {
-        return array_map(fn (TypeModel $type) => $type->normalize(), $this->types);
+        return array_map(static fn (TypeModel $type) => $type->normalize(), $this->types);
     }
 
     public function toString() : string

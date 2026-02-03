@@ -49,7 +49,7 @@ final class CSVLoader implements Closure, FileLoader, Loader
 
         $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
 
-        $headers = $rows->first()->entries()->map(fn (Entry $entry) => $entry->name());
+        $headers = $rows->first()->entries()->map(static fn (Entry $entry) => $entry->name());
 
         if ($rows->partitions()->count()) {
             $this->write($rows, $headers, $context, $rows->partitions()->toArray(), $normalizer);
