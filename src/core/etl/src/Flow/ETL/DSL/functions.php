@@ -47,6 +47,7 @@ use Flow\ETL\{Analyze,
     Cache\Implementation\FilesystemCache,
     Config,
     Config\ConfigBuilder,
+    Config\Telemetry\TelemetryOptions,
     Constraint\SortedByConstraint,
     Constraint\UniqueConstraint,
     DataFrame,
@@ -260,6 +261,19 @@ function df(Config|ConfigBuilder|null $config = null) : Flow
 function data_frame(Config|ConfigBuilder|null $config = null) : Flow
 {
     return new Flow($config);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function telemetry_options(
+    bool $trace_loading = false,
+    bool $trace_transformations = false,
+    bool $collect_metrics = false,
+) : TelemetryOptions {
+    return new TelemetryOptions(
+        $trace_loading,
+        $trace_transformations,
+        $collect_metrics
+    );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]

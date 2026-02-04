@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use function fopen;
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Formatter, Loader, Loader\StreamLoader\Type, Rows};
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -60,26 +61,36 @@ final class StreamLoader implements Closure, Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $stream = $this->getStream();
+        $context->telemetry()->loadingStarted($this, [TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->url]);
 
-        \fwrite(
-            $stream,
-            match ($this->output) {
-                Output::rows_count => 'Rows: ' . $rows->count() . "\n",
-                Output::column_count => 'Columns: ' . $rows->schema()->count() . "\n",
-                Output::rows_and_column_count => 'Rows: ' . $rows->count() . ', Columns: ' . $rows->schema()->count() . "\n",
-                Output::rows => $this->formatter->format($rows, $this->truncate),
-                Output::schema => $this->schemaFormatter->format($rows->schema()),
-                Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema()),
-            }
-        );
+        try {
+            $stream = $this->getStream();
 
-        match ($this->type) {
-            Type::output => $this->closeStream(),
-            Type::stderr => $this->closeStream(),
-            Type::stdout => $this->closeStream(),
-            Type::custom => null,
-        };
+            \fwrite(
+                $stream,
+                match ($this->output) {
+                    Output::rows_count => 'Rows: ' . $rows->count() . "\n",
+                    Output::column_count => 'Columns: ' . $rows->schema()->count() . "\n",
+                    Output::rows_and_column_count => 'Rows: ' . $rows->count() . ', Columns: ' . $rows->schema()->count() . "\n",
+                    Output::rows => $this->formatter->format($rows, $this->truncate),
+                    Output::schema => $this->schemaFormatter->format($rows->schema()),
+                    Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema()),
+                }
+            );
+
+            match ($this->type) {
+                Type::output => $this->closeStream(),
+                Type::stderr => $this->closeStream(),
+                Type::stdout => $this->closeStream(),
+                Type::custom => null,
+            };
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     private function closeStream() : void

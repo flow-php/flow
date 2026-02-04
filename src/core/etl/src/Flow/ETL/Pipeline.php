@@ -11,16 +11,16 @@ use Flow\ETL\Pipeline\Segments;
  */
 final readonly class Pipeline
 {
-    private Segments $stages;
+    private Segments $segments;
 
     public function __construct(private Extractor $extractor)
     {
-        $this->stages = new Segments();
+        $this->segments = new Segments();
     }
 
     public function add(Transformer|Loader|Processor $step) : self
     {
-        $this->stages->add($step);
+        $this->segments->add($step);
 
         return $this;
     }
@@ -40,7 +40,7 @@ final readonly class Pipeline
      */
     public function has(string $class) : bool
     {
-        return $this->stages->has($class);
+        return $this->segments->has($class);
     }
 
     /**
@@ -52,7 +52,7 @@ final readonly class Pipeline
     {
         $generator = $this->extractor->extract($context);
 
-        foreach ($this->stages->all() as $segment) {
+        foreach ($this->segments->all() as $segment) {
             $generator = $segment->execute($generator, $context);
 
             if ($segment->processor() !== null) {
@@ -68,8 +68,8 @@ final readonly class Pipeline
     /**
      * Get the pipeline stages.
      */
-    public function stages() : Segments
+    public function segments() : Segments
     {
-        return $this->stages;
+        return $this->segments;
     }
 }

@@ -24,6 +24,14 @@ final readonly class Optimizer
         return new self();
     }
 
+    /**
+     * @return array<Optimization>
+     */
+    public function optimizations() : array
+    {
+        return $this->optimizations;
+    }
+
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
     {
         if (!\count($this->optimizations)) {

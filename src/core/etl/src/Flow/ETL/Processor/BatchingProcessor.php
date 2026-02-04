@@ -32,6 +32,7 @@ final readonly class BatchingProcessor implements Processor
         $buffer = [];
 
         foreach ($rows as $batch) {
+            /** @var Rows $batch */
             foreach ($batch as $row) {
                 $buffer[] = $row;
 

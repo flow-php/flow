@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Excel;
 
 use Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
@@ -68,32 +69,48 @@ final class ExcelLoader implements Closure, FileLoader, Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $normalizer = new ExcelRowsNormalizer(
-            dateFormat: $this->dateFormat,
-            dateTimeFormat: $this->dateTimeFormat,
-            timeFormat: $this->timeFormat,
-        );
+        if (!$rows->count()) {
+            return;
+        }
 
-        $stream = $context->streams()->writeTo($this->path, $rows->partitions()->toArray());
+        $context->telemetry()->loadingStarted($this, [
+            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
+        ]);
 
-        $manager = $this->getWorkbookManager();
-        $manager->open($stream->path()->path());
+        try {
+            $normalizer = new ExcelRowsNormalizer(
+                dateFormat: $this->dateFormat,
+                dateTimeFormat: $this->dateTimeFormat,
+                timeFormat: $this->timeFormat,
+            );
 
-        foreach ($rows as $rowIndex => $row) {
-            $sheetName = $this->resolveSheetName($row);
+            $stream = $context->streams()->writeTo($this->path, $rows->partitions()->toArray());
 
-            $rowForExcel = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
-                ? $row->remove($this->sheetNameEntryName)
-                : $row;
+            $manager = $this->getWorkbookManager();
+            $manager->open($stream->path()->path());
 
-            if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
-                $headers = $normalizer->headers($rowForExcel);
-                $manager->writeHeader($sheetName, $headers, $this->headerStyle);
+            foreach ($rows as $rowIndex => $row) {
+                $sheetName = $this->resolveSheetName($row);
+
+                $rowForExcel = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
+                    ? $row->remove($this->sheetNameEntryName)
+                    : $row;
+
+                if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
+                    $headers = $normalizer->headers($rowForExcel);
+                    $manager->writeHeader($sheetName, $headers, $this->headerStyle);
+                }
+
+                $values = $normalizer->normalize($rowForExcel);
+                $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
+                $manager->writeRow($sheetName, $values, $styles);
             }
 
-            $values = $normalizer->normalize($rowForExcel);
-            $styles = $this->resolveCellStyles($rowForExcel, $rowIndex, $sheetName);
-            $manager->writeRow($sheetName, $values, $styles);
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
         }
     }
 

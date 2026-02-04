@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\{FlowContext, Processor};
+use Flow\ETL\{FlowContext, Processor, Rows};
 
 /**
  * Caches pipeline output for reuse.
@@ -35,6 +35,7 @@ final readonly class CachingProcessor implements Processor
         $index = new CacheIndex($id);
 
         foreach ($rows as $batch) {
+            /** @var Rows $batch */
             $cacheKey = \bin2hex(\random_bytes(16));
             $context->cache()->set($cacheKey, $batch);
             $index->add($cacheKey);

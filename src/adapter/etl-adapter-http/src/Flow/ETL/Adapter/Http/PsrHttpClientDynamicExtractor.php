@@ -63,18 +63,14 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                         )
                     )
                 );
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
             } else {
                 $signal = yield new Rows(
                     Row::create(...\array_merge($responseFactory->create($response)->all(), $requestFactory->create($nextRequest)->all()))
                 );
+            }
 
-                if ($signal === Signal::STOP) {
-                    return;
-                }
+            if ($signal === Signal::STOP) {
+                return;
             }
 
             $nextRequest = $this->requestFactory->create($response);

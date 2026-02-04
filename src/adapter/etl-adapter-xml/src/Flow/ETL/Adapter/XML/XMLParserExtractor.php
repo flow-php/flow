@@ -86,6 +86,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+            $uri = $stream->path()->uri();
 
             foreach ($stream->iterate($this->bufferSize) as $chunk) {
                 if (!xml_parse($this->parser(), $chunk)) {
@@ -101,7 +102,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                         if ($shouldPutInputIntoRows) {
                             $rowData = [
                                 'node' => $this->createDOMNode($element),
-                                '_input_file_uri' => $stream->path()->uri(),
+                                '_input_file_uri' => $uri,
                             ];
                         } else {
                             $rowData = ['node' => $this->createDOMNode($element)];
@@ -129,7 +130,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                     if ($shouldPutInputIntoRows) {
                         $rowData = [
                             'node' => $this->createDOMNode($element),
-                            '_input_file_uri' => $stream->path()->uri(),
+                            '_input_file_uri' => $uri,
                         ];
                     } else {
                         $rowData = ['node' => $this->createDOMNode($element)];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{DataFrame, FlowContext, Rows, Transformer};
 
 final class CrossJoinRowsTransformer implements Transformer
@@ -18,7 +19,22 @@ final class CrossJoinRowsTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        return $rows->joinCross($this->rows(), $this->prefix);
+        $context->telemetry()->transformationStarted($this);
+
+        try {
+            $result = $rows->joinCross($this->rows(), $this->prefix);
+
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+            ]);
+
+            return $result;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     private function rows() : Rows

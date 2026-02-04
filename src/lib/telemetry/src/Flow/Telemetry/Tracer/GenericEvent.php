@@ -17,6 +17,8 @@ use Flow\Telemetry\Attributes;
  * $event = GenericEvent::create('user.login', $clock->now(), ['user.id' => '12345']);
  * echo $event->name(); // "user.login"
  * ```
+ *
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class GenericEvent implements SpanEvent
 {
@@ -32,11 +34,11 @@ final readonly class GenericEvent implements SpanEvent
      *
      * @param string $name Event name
      * @param \DateTimeImmutable $timestamp Event timestamp
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Event attributes
+     * @param Attributes|TAttributeValueMap $attributes Event attributes
      */
-    public static function create(string $name, \DateTimeImmutable $timestamp, array $attributes = []) : self
+    public static function create(string $name, \DateTimeImmutable $timestamp, Attributes|array $attributes = []) : self
     {
-        return new self($name, $timestamp, Attributes::create($attributes));
+        return new self($name, $timestamp, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes));
     }
 
     /**

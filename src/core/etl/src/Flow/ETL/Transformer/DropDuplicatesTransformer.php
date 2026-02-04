@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Hash\Algorithm, Hash\NativePHPHash, Rows, Transformer};
 use Flow\ETL\Row\Reference;
@@ -33,27 +34,42 @@ final readonly class DropDuplicatesTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        $newRows = [];
+        $context->telemetry()->transformationStarted($this);
 
-        foreach ($rows as $row) {
-            $values = [];
+        try {
+            $newRows = [];
 
-            foreach ($this->entries as $entry) {
-                try {
-                    $values[] = $row->valueOf($entry);
-                } catch (InvalidArgumentException) {
-                    $values[] = null;
+            foreach ($rows as $row) {
+                $values = [];
+
+                foreach ($this->entries as $entry) {
+                    try {
+                        $values[] = $row->valueOf($entry);
+                    } catch (InvalidArgumentException) {
+                        $values[] = null;
+                    }
+                }
+
+                $hash = $this->hashAlgorithm->hash(\serialize($values));
+
+                if (!$this->deduplication->exists($hash)) {
+                    $newRows[] = $row;
+                    $this->deduplication->add($hash);
                 }
             }
 
-            $hash = $this->hashAlgorithm->hash(\serialize($values));
+            $result = new Rows(...$newRows);
 
-            if (!$this->deduplication->exists($hash)) {
-                $newRows[] = $row;
-                $this->deduplication->add($hash);
-            }
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+            ]);
+
+            return $result;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
         }
-
-        return new Rows(...$newRows);
     }
 }

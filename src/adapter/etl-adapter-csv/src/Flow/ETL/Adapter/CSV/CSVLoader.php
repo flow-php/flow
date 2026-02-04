@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\{Adapter\CSV\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\ETL\Row\Entry;
@@ -47,14 +48,27 @@ final class CSVLoader implements Closure, FileLoader, Loader
             return;
         }
 
-        $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
+        $context->telemetry()->loadingStarted(
+            $this,
+            [TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri()]
+        );
 
-        $headers = $rows->first()->entries()->map(static fn (Entry $entry) => $entry->name());
+        try {
+            $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
 
-        if ($rows->partitions()->count()) {
-            $this->write($rows, $headers, $context, $rows->partitions()->toArray(), $normalizer);
-        } else {
-            $this->write($rows, $headers, $context, [], $normalizer);
+            $headers = $rows->first()->entries()->map(static fn (Entry $entry) => $entry->name());
+
+            if ($rows->partitions()->count()) {
+                $this->write($rows, $headers, $context, $rows->partitions()->toArray(), $normalizer);
+            } else {
+                $this->write($rows, $headers, $context, [], $normalizer);
+            }
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
         }
     }
 

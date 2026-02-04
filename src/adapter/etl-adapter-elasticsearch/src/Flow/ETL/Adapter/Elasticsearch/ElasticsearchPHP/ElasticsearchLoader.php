@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Elasticsearch\{Client, ClientBuilder};
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
 use Flow\ETL\Row\Entry\JsonEntry;
 
@@ -60,37 +61,47 @@ final class ElasticsearchLoader implements Loader
             return;
         }
 
-        $factory = $this->idFactory;
-        $parameters = $this->parameters;
-        $parameters['body'] = [];
+        $context->telemetry()->loadingStarted($this);
 
-        /**
-         * @var array<int, array{body:array<string, mixed>,id:string}> $dataCollection
-         */
-        $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
-            $factory->create($row),
-            new JsonEntry('body', $row->toArray())
-        ))->toArray();
+        try {
+            $factory = $this->idFactory;
+            $parameters = $this->parameters;
+            $parameters['body'] = [];
 
-        foreach ($dataCollection as $data) {
-            $parameters['body'][] = [
-                $this->method => [
-                    '_id' => $data['id'],
-                    '_index' => $this->index,
-                ],
-            ];
+            /**
+             * @var array<int, array{body:array<string, mixed>,id:string}> $dataCollection
+             */
+            $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
+                $factory->create($row),
+                new JsonEntry('body', $row->toArray())
+            ))->toArray();
 
-            if ($this->method === 'update') {
-                $parameters['body'][] = ['doc' => $data['body']];
-            } else {
-                $parameters['body'][] = $data['body'];
+            foreach ($dataCollection as $data) {
+                $parameters['body'][] = [
+                    $this->method => [
+                        '_id' => $data['id'],
+                        '_index' => $this->index,
+                    ],
+                ];
+
+                if ($this->method === 'update') {
+                    $parameters['body'][] = ['doc' => $data['body']];
+                } else {
+                    $parameters['body'][] = $data['body'];
+                }
             }
-        }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
-        $this->client()->bulk($parameters);
+            /**
+             * @phpstan-ignore-next-line
+             */
+            $this->client()->bulk($parameters);
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     /**

@@ -26,8 +26,6 @@ final readonly class SortingProcessor implements Processor
 
     public function process(\Generator $rows, FlowContext $context) : \Generator
     {
-        // Memory sort requires a reasonable memory limit (at least 1MB)
-        // Otherwise, use external sort directly
         $minMemoryForMemorySort = Unit::fromMb(1);
 
         if ($context->config->sort->algorithm->useMemory() && $context->config->sort->memoryLimit->isGreaterThan($minMemoryForMemorySort)) {

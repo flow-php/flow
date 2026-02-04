@@ -18,6 +18,6 @@ final class OptimizerTest extends FlowTestCase
 
         $optimizedPipeline = (new Optimizer())->optimize(new SelectEntriesTransformer(ref('id')), $pipeline);
 
-        self::assertCount(1, $optimizedPipeline->stages()->steps());
+        self::assertCount(1, $optimizedPipeline->segments()->steps());
     }
 }

@@ -63,10 +63,6 @@ final class PsrHttpClientStaticExtractor implements Extractor
                         )
                     )
                 );
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
             } else {
                 $signal = yield new Rows(
                     Row::create(...\array_merge(
@@ -74,10 +70,10 @@ final class PsrHttpClientStaticExtractor implements Extractor
                         $requestFactory->create($request)->all()
                     ))
                 );
+            }
 
-                if ($signal === Signal::STOP) {
-                    return;
-                }
+            if ($signal === Signal::STOP) {
+                return;
             }
         }
     }

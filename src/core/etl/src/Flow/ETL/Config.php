@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfig;
+use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
@@ -32,6 +33,7 @@ final readonly class Config
 
     public function __construct(
         private string $id,
+        private string $version,
         private Serializer $serializer,
         private ClockInterface $clock,
         private FilesystemTable $filesystemTable,
@@ -41,7 +43,8 @@ final readonly class Config
         private EntryFactory $entryFactory,
         public CacheConfig $cache,
         public SortConfig $sort,
-        private ?Analyze $analyze = null,
+        private ?Analyze $analyze,
+        public TelemetryConfig $telemetry,
     ) {
     }
 
@@ -98,5 +101,10 @@ final readonly class Config
     public function shouldPutInputIntoRows() : bool
     {
         return $this->putInputIntoRows;
+    }
+
+    public function version() : string
+    {
+        return $this->version;
     }
 }

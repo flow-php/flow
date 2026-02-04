@@ -54,12 +54,14 @@ final readonly class HashJoinProcessor implements Processor
         $leftSchema = schema();
 
         foreach ($rows as $leftRows) {
+            /** @var Rows $leftRows */
             foreach ($leftRows as $leftRow) {
                 $bucket = $hashTable->bucketFor($leftRow, $leftReferences);
 
                 if ($bucket === null) {
                     if ($this->join === Join::left) {
                         $rightEmptyRow = row(...$rightEntries);
+
                         yield $this->createRows($leftRow, $rightEmptyRow, $context);
                     }
 

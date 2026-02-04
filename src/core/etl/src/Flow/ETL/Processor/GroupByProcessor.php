@@ -20,6 +20,7 @@ final readonly class GroupByProcessor implements Processor
     public function process(\Generator $rows, FlowContext $context) : \Generator
     {
         foreach ($rows as $batch) {
+            /** @var Rows $batch */
             $this->groupBy->group($batch, $context);
         }
 

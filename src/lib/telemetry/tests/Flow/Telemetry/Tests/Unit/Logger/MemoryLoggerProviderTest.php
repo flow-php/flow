@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger;
 
+use Flow\Telemetry\{Attributes, Resource};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{Logger, LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidLogExporter;
-use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
@@ -29,6 +29,18 @@ final class MemoryLoggerProviderTest extends TestCase
         $logger2 = $provider->logger($this->resource, 'service-a', '1.0');
 
         self::assertNotSame($logger1, $logger2);
+    }
+
+    public function test_logger_accepts_attributes_object() : void
+    {
+        $processor = $this->createProcessor();
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+
+        $logger->info('message with attributes', Attributes::create(['key' => 'value']));
+
+        self::assertCount(1, $processor->entries());
+        self::assertSame('value', $processor->entries()[0]->record->attributes->normalize()['key']);
     }
 
     public function test_logger_returns_logger_instance() : void

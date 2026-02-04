@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\{InvalidArgumentException, LimitReachedException};
 use Flow\ETL\{FlowContext, Rows, Transformer};
 
@@ -20,18 +21,40 @@ final class LimitTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        $this->rowsCount += $rows->count();
+        $inputRowCount = $rows->count();
 
-        if ($this->rowsCount > $this->limit) {
-            $rows = $rows->dropRight($this->rowsCount - $this->limit);
+        $context->telemetry()->transformationStarted($this);
 
-            if (\count($rows)) {
-                return $rows;
+        try {
+            $this->rowsCount += $rows->count();
+
+            if ($this->rowsCount > $this->limit) {
+                $rows = $rows->dropRight($this->rowsCount - $this->limit);
+
+                $context->telemetry()->transformationCompleted($this, [
+                    TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $inputRowCount,
+                    TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $rows->count(),
+                ]);
+
+                if (\count($rows)) {
+                    return $rows;
+                }
+
+                throw new LimitReachedException($this->limit);
             }
 
-            throw new LimitReachedException($this->limit);
-        }
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $inputRowCount,
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $rows->count(),
+            ]);
 
-        return $rows;
+            return $rows;
+        } catch (LimitReachedException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
+        }
     }
 }

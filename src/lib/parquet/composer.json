@@ -14,7 +14,7 @@
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "ext-bcmath": "*",
         "ext-zlib": "*",
-        "composer-runtime-api": "^2.1",
+        "composer-runtime-api": "^2.0",
         "flow-php/snappy": "self.version",
         "flow-php/filesystem": "self.version",
         "packaged/thrift": "^0.15.0"

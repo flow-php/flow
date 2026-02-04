@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{Exception\FailedRetryException, FlowContext, Loader, Rows};
 use Flow\ETL\Retry\DelayFactory\Fixed\FixedMilliseconds;
 use Flow\ETL\Retry\{DelayFactory, FailedRetry, RetriesRecord, RetryStrategy};
@@ -22,25 +23,35 @@ final readonly class RetryLoader implements Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $attemptNumber = 0;
-        $retriesRecord = new RetriesRecord();
+        $context->telemetry()->loadingStarted($this);
 
-        while (true) {
-            $attemptNumber++;
+        try {
+            $attemptNumber = 0;
+            $retriesRecord = new RetriesRecord();
 
-            try {
-                $this->loader->load($rows, $context);
+            while (true) {
+                $attemptNumber++;
 
-                return;
-            } catch (\Throwable $exception) {
-                $retriesRecord->add(FailedRetry::create($context->config->clock(), $exception, $attemptNumber));
+                try {
+                    $this->loader->load($rows, $context);
 
-                if (!$this->retryStrategy->shouldRetry($exception, $attemptNumber)) {
-                    throw new FailedRetryException($retriesRecord);
+                    $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+
+                    return;
+                } catch (\Throwable $exception) {
+                    $retriesRecord->add(FailedRetry::create($context->config->clock(), $exception, $attemptNumber));
+
+                    if (!$this->retryStrategy->shouldRetry($exception, $attemptNumber)) {
+                        throw new FailedRetryException($retriesRecord);
+                    }
+
+                    $this->sleep->for($this->delayFactory->delay($attemptNumber));
                 }
-
-                $this->sleep->for($this->delayFactory->delay($attemptNumber));
             }
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
         }
     }
 }

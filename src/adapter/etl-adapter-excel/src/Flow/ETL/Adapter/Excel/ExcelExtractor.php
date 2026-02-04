@@ -56,6 +56,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
                 // Ensure $row is an array before passing to array_to_rows
                 $signal = yield array_to_rows(\is_array($row) ? $row : [], $context->entryFactory(), $stream->path()->partitions(), schema: $this->schema);
+
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

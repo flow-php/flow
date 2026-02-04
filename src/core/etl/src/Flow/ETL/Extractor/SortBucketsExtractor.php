@@ -35,6 +35,7 @@ final readonly class SortBucketsExtractor implements Extractor
 
                 if ($rows->count() >= $this->batchSize) {
                     yield $rows;
+
                     $rows = new Rows();
                 }
             }

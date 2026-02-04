@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
 final readonly class HitsIntoRowsTransformer implements Transformer
@@ -15,38 +16,56 @@ final readonly class HitsIntoRowsTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        $newRows = [];
+        $context->telemetry()->transformationStarted(
+            $this,
+            []
+        );
 
-        foreach ($rows as $row) {
-            if (!$row->has('hits')) {
-                continue;
-            }
+        try {
+            $newRows = [];
 
-            /**
-             * @var array{hits: array<array{_source: array<string, mixed>, fields: array<string, mixed>}>} $hits
-             */
-            $hits = $row->get('hits')->value();
-
-            foreach ($hits['hits'] as $hit) {
-                $entries = [];
-
-                $source = match ($this->source) {
-                    DocumentDataSource::source => '_source',
-                    DocumentDataSource::fields => 'fields',
-                };
-
-                /**
-                 * @var string $key
-                 * @var mixed $value
-                 */
-                foreach ($hit[$source] as $key => $value) {
-                    $entries[] = $context->entryFactory()->create($key, $value);
+            foreach ($rows as $row) {
+                if (!$row->has('hits')) {
+                    continue;
                 }
 
-                $newRows[] = Row::create(...$entries);
-            }
-        }
+                /**
+                 * @var array{hits: array<array{_source: array<string, mixed>, fields: array<string, mixed>}>} $hits
+                 */
+                $hits = $row->get('hits')->value();
 
-        return new Rows(...$newRows);
+                foreach ($hits['hits'] as $hit) {
+                    $entries = [];
+
+                    $source = match ($this->source) {
+                        DocumentDataSource::source => '_source',
+                        DocumentDataSource::fields => 'fields',
+                    };
+
+                    /**
+                     * @var string $key
+                     * @var mixed $value
+                     */
+                    foreach ($hit[$source] as $key => $value) {
+                        $entries[] = $context->entryFactory()->create($key, $value);
+                    }
+
+                    $newRows[] = Row::create(...$entries);
+                }
+            }
+
+            $result = new Rows(...$newRows);
+
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+            ]);
+
+            return $result;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
+        }
     }
 }

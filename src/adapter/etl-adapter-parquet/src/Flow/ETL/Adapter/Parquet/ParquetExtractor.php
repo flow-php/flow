@@ -47,6 +47,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         foreach ($this->readers($context) as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
             $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
+            $uri = $fileData['stream']->path()->uri();
 
             if (count($this->columns)) {
                 $flowSchema = $flowSchema->keep(...$this->columns);
@@ -61,7 +62,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
             foreach ($fileData['file']->values($this->columns, $this->limit(), $fileOffset) as $row) {
                 if ($shouldPutInputIntoRows) {
-                    $row['_input_file_uri'] = $fileData['stream']->path()->uri();
+                    $row['_input_file_uri'] = $uri;
                 }
 
                 $signal = yield rows(array_to_row($row, $context->entryFactory(), $fileData['stream']->path()->partitions(), $flowSchema));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer, Transformer\Rename\RenameReplaceEntryStrategy};
 
 /**
@@ -22,12 +23,27 @@ final readonly class RenameStrReplaceAllEntriesTransformer implements Transforme
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        return $rows->map(function (Row $row) use ($context) : Row {
-            foreach ($row->entries()->all() as $entry) {
-                $row = $this->transformer->rename($row, $entry, $context);
-            }
+        $context->telemetry()->transformationStarted($this);
 
-            return $row;
-        });
+        try {
+            $result = $rows->map(function (Row $row) use ($context) : Row {
+                foreach ($row->entries()->all() as $entry) {
+                    $row = $this->transformer->rename($row, $entry, $context);
+                }
+
+                return $row;
+            });
+
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+            ]);
+
+            return $result;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
+        }
     }
 }

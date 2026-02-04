@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\XML\Loader;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Adapter\XML\{RowsNormalizer, XMLWriter};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
@@ -64,21 +65,37 @@ final class XMLLoader implements Closure, FileLoader, Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $normalizer = new RowsNormalizer(
-            new EntryNormalizer(
-                new PHPValueNormalizer(
-                    $this->attributePrefix,
-                    $this->dateTimeFormat,
-                    $this->listElementName,
-                    $this->mapElementName,
-                    $this->mapElementKeyName,
-                    $this->mapElementValueName
-                ),
-            ),
-            $this->rowElementName
-        );
+        if (!$rows->count()) {
+            return;
+        }
 
-        $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
+        $context->telemetry()->loadingStarted($this, [
+            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
+        ]);
+
+        try {
+            $normalizer = new RowsNormalizer(
+                new EntryNormalizer(
+                    new PHPValueNormalizer(
+                        $this->attributePrefix,
+                        $this->dateTimeFormat,
+                        $this->listElementName,
+                        $this->mapElementName,
+                        $this->mapElementKeyName,
+                        $this->mapElementValueName
+                    ),
+                ),
+                $this->rowElementName
+            );
+
+            $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     public function withAttributePrefix(string $attributePrefix) : self

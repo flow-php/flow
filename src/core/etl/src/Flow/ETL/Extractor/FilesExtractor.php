@@ -19,7 +19,6 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
 
     public function extract(FlowContext $context) : \Generator
     {
-
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
             $signal = yield array_to_rows([
                 'path' => $fileStatus->path->path(),

@@ -17,6 +17,28 @@ final class ConsoleMetricExporterTest extends TestCase
         self::assertTrue($this->createExporter()->export([]));
     }
 
+    public function test_export_outputs_attributes() : void
+    {
+        $stream = $this->createStream();
+        $exporter = $this->createExporter($stream);
+
+        $exporter->export([
+            new Metric(
+                name: 'test.metric',
+                type: MetricType::COUNTER,
+                value: 1,
+                attributes: Attributes::create(['source' => 'csv', 'pipeline' => 'main']),
+                timestamp: new \DateTimeImmutable(),
+                resource: ResourceMother::default(),
+                scope: InstrumentationScopeMother::default(),
+            ),
+        ]);
+
+        $output = $this->getOutput($stream);
+        self::assertStringContainsString('source=csv', $output);
+        self::assertStringContainsString('pipeline=main', $output);
+    }
+
     public function test_export_outputs_counter_with_icon() : void
     {
         $stream = $this->createStream();

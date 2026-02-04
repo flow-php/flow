@@ -28,9 +28,11 @@ final readonly class WindowProcessor implements Processor
     public function process(\Generator $rows, FlowContext $context) : \Generator
     {
         $currentPartitionKey = null;
+        /** @var array<Row> $partitionRows */
         $partitionRows = [];
 
         foreach ($rows as $batch) {
+            /** @var Rows $batch */
             foreach ($batch as $row) {
                 $partitionKey = $this->extractPartitionKey($row);
 

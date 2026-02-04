@@ -36,6 +36,7 @@ final class CacheExtractor implements Extractor
             foreach ($index->values() as $cacheKey) {
                 /** @var Rows $rows */
                 $rows = $context->cache()->get($cacheKey);
+
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {

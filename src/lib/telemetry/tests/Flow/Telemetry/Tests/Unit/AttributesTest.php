@@ -5,10 +5,97 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit;
 
 use Flow\Telemetry\Attributes;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class AttributesTest extends TestCase
 {
+    public static function id_provider() : \Generator
+    {
+        yield 'empty attributes' => [
+            [],
+            '',
+        ];
+
+        yield 'single string' => [
+            ['name' => 'Alice'],
+            'name=Alice',
+        ];
+
+        yield 'single int' => [
+            ['count' => 42],
+            'count=42',
+        ];
+
+        yield 'single float' => [
+            ['ratio' => 3.14],
+            'ratio=3.14',
+        ];
+
+        yield 'bool true' => [
+            ['enabled' => true],
+            'enabled=true',
+        ];
+
+        yield 'bool false' => [
+            ['enabled' => false],
+            'enabled=false',
+        ];
+
+        yield 'multiple scalars sorted by key' => [
+            ['z' => 'last', 'a' => 'first', 'm' => 'middle'],
+            'a=first|m=middle|z=last',
+        ];
+
+        yield 'mixed types sorted by key' => [
+            ['method' => 'GET', 'status' => 200, 'cached' => true],
+            'cached=true|method=GET|status=200',
+        ];
+
+        yield 'null values are excluded' => [
+            ['key' => 'value', 'empty' => null],
+            'key=value',
+        ];
+
+        yield 'array values are excluded' => [
+            ['tags' => ['a', 'b'], 'name' => 'test'],
+            'name=test',
+        ];
+
+        yield 'all non-scalar values excluded results in empty id' => [
+            ['tags' => ['a', 'b']],
+            '',
+        ];
+
+        yield 'datetime is formatted as ISO 8601' => [
+            ['ts' => new \DateTimeImmutable('2024-01-15T10:30:00+00:00')],
+            'ts=2024-01-15T10:30:00+00:00',
+        ];
+
+        yield 'throwable uses message' => [
+            ['error' => new \RuntimeException('something broke')],
+            'error=something broke',
+        ];
+
+        yield 'same keys different order produce same id' => [
+            ['b' => '2', 'a' => '1'],
+            'a=1|b=2',
+        ];
+    }
+
+    public function test_constructor_filters_null_values() : void
+    {
+        $attributes = Attributes::create([
+            'key1' => 'value1',
+            'key2' => null,
+            'key3' => 0,
+            'key4' => '',
+            'key5' => null,
+        ]);
+
+        self::assertSame(['key1' => 'value1', 'key3' => 0, 'key4' => ''], $attributes->normalize());
+    }
+
     public function test_count_returns_correct_number() : void
     {
         $attributes = Attributes::create(['a' => '1', 'b' => '2', 'c' => '3']);
@@ -84,6 +171,23 @@ final class AttributesTest extends TestCase
         $attributes = Attributes::create(['key' => 'value']);
 
         self::assertTrue($attributes->has('key'));
+    }
+
+    /**
+     * @param array<string, null|array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $values
+     */
+    #[DataProvider('id_provider')]
+    public function test_id(array $values, string $expectedId) : void
+    {
+        self::assertSame($expectedId, Attributes::create($values)->id());
+    }
+
+    public function test_id_is_stable_regardless_of_insertion_order() : void
+    {
+        $a = Attributes::create(['x' => '1', 'y' => '2', 'z' => '3']);
+        $b = Attributes::create(['z' => '3', 'x' => '1', 'y' => '2']);
+
+        self::assertSame($a->id(), $b->id());
     }
 
     public function test_is_empty_for_empty_attributes() : void

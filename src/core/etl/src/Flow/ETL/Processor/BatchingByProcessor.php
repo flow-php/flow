@@ -40,6 +40,7 @@ final readonly class BatchingByProcessor implements Processor
         $hasValue = false;
 
         foreach ($rows as $batch) {
+            /** @var Rows $batch */
             foreach ($batch as $row) {
                 $value = $row->valueOf($this->column);
 
@@ -49,7 +50,6 @@ final readonly class BatchingByProcessor implements Processor
                 }
 
                 if ($value !== $currentValue) {
-                    // Value changed - check if we should yield based on minSize
                     if ($this->minSize === null || \count($buffer) >= $this->minSize) {
                         if ($buffer !== []) {
                             yield new Rows(...$buffer);

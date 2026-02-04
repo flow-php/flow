@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
 use Flow\ETL\Row\Entry;
 use Meilisearch\Client;
@@ -36,14 +37,24 @@ final class MeilisearchLoader implements Loader
             return;
         }
 
-        $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
-            ...$row->map(
-                static fn (Entry $entry) : Entry => $entry
-            )->entries()
-        ))->toArray();
+        $context->telemetry()->loadingStarted($this);
 
-        $promise = $this->client()->index($this->index)->updateDocuments($dataCollection);
-        $this->client()->waitForTask($promise['taskUid']);
+        try {
+            $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
+                ...$row->map(
+                    static fn (Entry $entry) : Entry => $entry
+                )->entries()
+            ))->toArray();
+
+            $promise = $this->client()->index($this->index)->updateDocuments($dataCollection);
+            $this->client()->waitForTask($promise['taskUid']);
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     private function client() : Client

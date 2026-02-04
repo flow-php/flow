@@ -56,7 +56,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
         self::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
         self::assertFalse($pipeline->extractor()->isLimited());
-        self::assertCount(2, $optimizedPipeline->stages()->steps());
+        self::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
     public function test_optimization_for_a_pipeline_with_expanding_transformations() : void
@@ -68,7 +68,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
         self::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
         self::assertFalse($pipeline->extractor()->isLimited());
-        self::assertCount(2, $optimizedPipeline->stages()->steps());
+        self::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
     public function test_optimization_for_a_pipeline_with_limited_extractor() : void
@@ -82,8 +82,8 @@ final class LimitOptimizationTest extends FlowTestCase
 
         self::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
         self::assertTrue($pipeline->extractor()->isLimited());
-        self::assertCount(2, $optimizedPipeline->stages()->steps());
-        self::assertInstanceOf(LimitTransformer::class, $optimizedPipeline->stages()->steps()[1]);
+        self::assertCount(2, $optimizedPipeline->segments()->steps());
+        self::assertInstanceOf(LimitTransformer::class, $optimizedPipeline->segments()->steps()[1]);
     }
 
     public function test_optimization_for_a_pipeline_without_expanding_transformations() : void
@@ -95,7 +95,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
         self::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
         self::assertTrue($pipeline->extractor()->isLimited());
-        self::assertCount(1, $optimizedPipeline->stages()->steps());
+        self::assertCount(1, $optimizedPipeline->segments()->steps());
     }
 
     public function test_optimization_of_limit_on_empty_pipeline() : void
@@ -106,6 +106,6 @@ final class LimitOptimizationTest extends FlowTestCase
 
         self::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
         self::assertTrue($pipeline->extractor()->isLimited());
-        self::assertCount(0, $optimizedPipeline->stages()->steps());
+        self::assertCount(0, $optimizedPipeline->segments()->steps());
     }
 }

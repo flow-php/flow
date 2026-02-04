@@ -198,9 +198,12 @@ final class JsonSerializer implements Serializer
     private function createMetricDataPoint(Metric $metric) : array
     {
         $timestamp = $this->toNanoseconds($metric->timestamp);
+        $startTimestamp = $metric->startTimestamp !== null
+            ? $this->toNanoseconds($metric->startTimestamp)
+            : $timestamp;
 
         $dataPoint = [
-            'startTimeUnixNano' => $timestamp,
+            'startTimeUnixNano' => $startTimestamp,
             'timeUnixNano' => $timestamp,
             'attributes' => $this->serializeAttributes($metric->attributes->normalize()),
         ];
@@ -261,7 +264,7 @@ final class JsonSerializer implements Serializer
 
         foreach ($entries as $entry) {
             $scope = $entry->scope;
-            $key = $scope->name . '@' . $scope->version;
+            $key = $scope->name . '@' . $scope->version . '@' . $scope->attributes->id();
 
             if (!isset($grouped[$key])) {
                 $grouped[$key] = [
@@ -316,7 +319,7 @@ final class JsonSerializer implements Serializer
 
         foreach ($metrics as $metric) {
             $scope = $metric->scope;
-            $key = $scope->name . '@' . $scope->version;
+            $key = $scope->name . '@' . $scope->version . '@' . $scope->attributes->id();
 
             if (!isset($grouped[$key])) {
                 $grouped[$key] = [
@@ -371,7 +374,7 @@ final class JsonSerializer implements Serializer
 
         foreach ($spans as $span) {
             $scope = $span->scope();
-            $key = $scope->name . '@' . $scope->version;
+            $key = $scope->name . '@' . $scope->version . '@' . $scope->attributes->id();
 
             if (!isset($grouped[$key])) {
                 $grouped[$key] = [

@@ -125,12 +125,15 @@ final class Histogram implements Instrument
      * Record a value in the histogram.
      *
      * @param float|int $value Value to record
-     * @param array<string, bool|float|int|string> $attributes Categorization attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
-    public function record(int|float $value, array $attributes = [], ?SpanContext $context = null) : void
+    public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null) : void
     {
-        $key = $this->attributeKey($attributes);
+        $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
+        /** @var array<string, bool|float|int|string> $attrs */
+        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $key = Attributes::create($attrs)->id();
         $floatValue = (float) $value;
 
         if (!isset($this->aggregations[$key])) {
@@ -141,7 +144,7 @@ final class Histogram implements Instrument
                 'max' => $floatValue,
                 'bucketCounts' => \array_fill(0, \count($this->boundaries) + 1, 0),
                 'reservoir' => new AlignedHistogramBucketExemplarReservoir(\count($this->boundaries) + 1),
-                'attributes' => $attributes,
+                'attributes' => $attrs,
             ];
         }
 
@@ -153,10 +156,10 @@ final class Histogram implements Instrument
         $bucketIndex = $this->findBucketIndex($floatValue);
         $this->aggregations[$key]['bucketCounts'][$bucketIndex]++;
 
-        if ($context !== null && $this->exemplarFilter->shouldSample($context, $floatValue, $attributes)) {
+        if ($context !== null && $this->exemplarFilter->shouldSample($context, $floatValue, $attrs)) {
             $this->aggregations[$key]['reservoir']->offer(
                 $floatValue,
-                $attributes,
+                $attrs,
                 $context,
                 $this->clock->now(),
                 $bucketIndex,
@@ -167,27 +170,6 @@ final class Histogram implements Instrument
     public function unit() : ?string
     {
         return $this->unit;
-    }
-
-    /**
-     * Create a unique key from attributes for aggregation lookup.
-     *
-     * @param array<string, bool|float|int|string> $attributes
-     */
-    private function attributeKey(array $attributes) : string
-    {
-        if (\count($attributes) === 0) {
-            return '';
-        }
-
-        \ksort($attributes);
-        $parts = [];
-
-        foreach ($attributes as $key => $value) {
-            $parts[] = $key . '=' . (\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value);
-        }
-
-        return \implode('|', $parts);
     }
 
     /**

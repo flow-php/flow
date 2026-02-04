@@ -14,6 +14,7 @@ use function Flow\ETL\DSL\{array_to_rows,
     uuid_schema};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
 use Faker\Factory;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final readonly class FakeRandomOrdersExtractor implements Extractor
@@ -100,7 +101,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                 ) . ' days') : null;
             }
 
-            yield [
+            $signal = yield [
                 'order_id' => $faker->uuid,
                 'seller_id' => $sellers[\random_int(0, \count($sellers) - 1)],
                 'created_at' => $createdAt,
@@ -128,6 +129,10 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                     \range(1, $faker->numberBetween(1, 4))
                 ),
             ];
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 }

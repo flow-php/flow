@@ -24,6 +24,14 @@ final class FilesystemTable
         $this->fstab = $fstab;
     }
 
+    /**
+     * @return array<Filesystem>
+     */
+    public function filesystems() : array
+    {
+        return array_values($this->fstab);
+    }
+
     public function for(Path|Protocol $path) : Filesystem
     {
         $protocol = $path instanceof Path ? $path->protocol() : $path;

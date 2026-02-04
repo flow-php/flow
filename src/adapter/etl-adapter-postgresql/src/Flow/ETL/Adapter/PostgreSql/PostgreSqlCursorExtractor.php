@@ -43,6 +43,7 @@ final class PostgreSqlCursorExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $uri = 'postgresql://cursor';
         $cursorName = $this->cursorName ?? 'flow_cursor_' . \bin2hex(\random_bytes(8));
 
         $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
@@ -72,13 +73,13 @@ final class PostgreSqlCursorExtractor implements Extractor
                 foreach ($cursor->iterate() as $row) {
                     $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
+                    $totalFetched++;
+
                     if ($signal === Signal::STOP) {
                         $cursor->free();
 
                         return;
                     }
-
-                    $totalFetched++;
 
                     if ($this->maximum !== null && $totalFetched >= $this->maximum) {
                         $cursor->free();

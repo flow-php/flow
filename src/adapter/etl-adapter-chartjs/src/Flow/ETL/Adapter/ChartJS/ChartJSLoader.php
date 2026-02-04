@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\Closure;
 use Flow\Filesystem\Path;
@@ -64,7 +65,17 @@ final class ChartJSLoader implements Closure, Loader
             return;
         }
 
-        $this->type->collect($rows);
+        $context->telemetry()->loadingStarted($this);
+
+        try {
+            $this->type->collect($rows);
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     public function withOutputPath(Path $output) : self

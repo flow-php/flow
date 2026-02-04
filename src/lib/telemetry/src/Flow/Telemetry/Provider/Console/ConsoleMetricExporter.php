@@ -101,6 +101,15 @@ final readonly class ConsoleMetricExporter implements MetricExporter
             $line .= $value . '  ';
             $line .= $this->output->dim($unit);
 
+            if (!$metric->attributes->isEmpty()) {
+                $attrParts = [];
+
+                foreach ($metric->attributes->normalize() as $key => $attrValue) {
+                    $attrParts[] = $key . '=' . (\is_scalar($attrValue) ? (string) $attrValue : \json_encode($attrValue));
+                }
+                $line .= '  ' . $this->output->dim('{' . \implode(', ', $attrParts) . '}');
+            }
+
             if (\count($metric->exemplars) > 0) {
                 $exemplar = $metric->exemplars[0];
                 $traceIdShort = \substr($exemplar->traceId->toHex(), 0, 8);

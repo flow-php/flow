@@ -34,6 +34,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $uri = 'postgresql://keyset';
         $sql = $this->query instanceof SqlQuery ? $this->query->toSql() : $this->query;
 
         $totalFetched = 0;
@@ -53,13 +54,13 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
+                $totalFetched++;
+
                 if ($signal === Signal::STOP) {
                     $cursor->free();
 
                     return;
                 }
-
-                $totalFetched++;
 
                 if ($this->maximum !== null && $totalFetched >= $this->maximum) {
                     $cursor->free();

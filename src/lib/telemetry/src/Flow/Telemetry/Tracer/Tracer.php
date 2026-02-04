@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
+use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
 use Flow\Telemetry\Context\{Context, ContextStorage, SpanId, TraceFlags};
-use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
@@ -112,6 +112,14 @@ final class Tracer
     }
 
     /**
+     * Flush all pending spans to the exporter.
+     */
+    public function flush() : bool
+    {
+        return $this->processor->flush();
+    }
+
+    /**
      * Get the instrumentation scope.
      */
     public function instrumentationScope() : InstrumentationScope
@@ -143,21 +151,33 @@ final class Tracer
      *
      * @param string $name The span name
      * @param SpanKind $kind The span kind
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Initial attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Initial attributes
      * @param array<SpanLink> $links Links to other spans
+     * @param null|false|SpanContext $parentContext Explicit parent control:
+     *                                              - null (default): automatic detection from stack/context
+     *                                              - SpanContext: use as explicit parent
+     *                                              - false: create root span (no parent)
      */
     public function span(
         string $name,
         SpanKind $kind = SpanKind::INTERNAL,
-        array $attributes = [],
+        Attributes|array $attributes = [],
         array $links = [],
+        SpanContext|false|null $parentContext = null,
     ) : Span {
         $context = $this->contextStorage->current();
         $parentSpanId = null;
         $parentSpanContext = null;
         $parentIsRemote = false;
 
-        if (!$this->spanStack->isEmpty()) {
+        if ($parentContext === false) {
+            $parentSpanId = null;
+            $parentSpanContext = null;
+        } elseif ($parentContext !== null) {
+            $parentSpanContext = $parentContext;
+            $parentSpanId = $parentContext->spanId;
+            $parentIsRemote = $parentContext->isRemote;
+        } elseif (!$this->spanStack->isEmpty()) {
             $parentSpanContext = $this->spanStack->top();
             $parentSpanId = $parentSpanContext->spanId;
         } elseif ($context->activeSpanId() !== null) {
@@ -178,9 +198,8 @@ final class Tracer
         $startTime = $this->clock->now();
         $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording);
 
-        foreach ($attributes as $key => $value) {
-            $span->setAttribute($key, $value);
-        }
+        $attributesToSet = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
+        $span->setAttributes($attributesToSet);
 
         foreach ($links as $link) {
             $span->addLink($link);
@@ -198,9 +217,7 @@ final class Tracer
                 $traceState = $samplingResult->traceState;
             }
 
-            foreach ($samplingResult->attributes as $key => $value) {
-                $attributes[$key] = $value;
-            }
+            $attributesToSet = $attributesToSet->merge(Attributes::create($samplingResult->attributes));
 
             if (!$isRecording || !$samplingResult->decision->isSampled()) {
                 $spanContext = $parentIsRemote
@@ -208,10 +225,7 @@ final class Tracer
                     : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
                 $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording);
-
-                foreach ($attributes as $key => $value) {
-                    $span->setAttribute($key, $value);
-                }
+                $span->setAttributes($attributesToSet);
 
                 foreach ($links as $link) {
                     $span->addLink($link);
@@ -241,14 +255,15 @@ final class Tracer
      * @param string $name The span name
      * @param callable(): T $callback The callable to execute
      * @param SpanKind $kind The span kind
+     * @param null|false|SpanContext $parentContext Explicit parent control (see span() for details)
      *
      * @throws \Throwable Rethrows any exception from the callback
      *
      * @return T The callback result
      */
-    public function trace(string $name, callable $callback, SpanKind $kind = SpanKind::INTERNAL) : mixed
+    public function trace(string $name, callable $callback, SpanKind $kind = SpanKind::INTERNAL, SpanContext|false|null $parentContext = null) : mixed
     {
-        $span = $this->span($name, $kind);
+        $span = $this->span($name, $kind, [], [], $parentContext);
 
         try {
             $result = $callback();
