@@ -116,6 +116,8 @@ final class TelemetryContext
 
     public function dataFrameStarted(FlowContext $context) : void
     {
+        $this->dataFrameSpan = $this->tracer->span(DataFrame::class);
+
         $this->logger()->debug('Data frame processing started', [
             'dataframe_id' => $context->config->id(),
             'cache' => $context->cache()::class,
@@ -134,7 +136,6 @@ final class TelemetryContext
             $this->throughputRows = $this->meter->createThroughput('rows.processed.throughput', 'Rows Processed');
         }
 
-        $this->dataFrameSpan = $this->tracer->span(DataFrame::class);
         $this->dataFrameExecutionTime = HighResolutionTime::now();
         $this->totalRowsProcessed = 0;
     }
