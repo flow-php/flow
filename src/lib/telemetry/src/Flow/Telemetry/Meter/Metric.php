@@ -31,13 +31,14 @@ final readonly class Metric
      * @param MetricType $type Type of metric instrument
      * @param float|int $value Recorded value
      * @param Attributes $attributes Categorization attributes
-     * @param \DateTimeImmutable $timestamp When the measurement was recorded
+     * @param \DateTimeImmutable $timestamp When the measurement was recorded (end of measurement period)
      * @param resource $resource The resource context for this metric
      * @param InstrumentationScope $scope The instrumentation scope that created this metric
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description
      * @param AggregationTemporality $temporality How the metric is aggregated over time
      * @param array<Exemplar> $exemplars Sample measurements with trace context for drill-down
+     * @param null|\DateTimeImmutable $startTimestamp When the measurement period started (for rate/throughput metrics)
      */
     public function __construct(
         public string $name,
@@ -51,6 +52,7 @@ final readonly class Metric
         public ?string $description = null,
         public AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         public array $exemplars = [],
+        public ?\DateTimeImmutable $startTimestamp = null,
     ) {
     }
 

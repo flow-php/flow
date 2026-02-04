@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Sampler;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\TraceState;
 
 /**
@@ -27,15 +28,21 @@ use Flow\Telemetry\Context\TraceState;
 final readonly class SamplingResult
 {
     /**
+     * @var array<string, array<bool|float|int|string>|bool|float|int|string>
+     */
+    public array $attributes;
+
+    /**
      * @param SamplingDecision $decision The sampling decision
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Additional span attributes from the sampler
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Additional span attributes from the sampler
      * @param null|TraceState $traceState Updated trace state, or null to keep existing
      */
     public function __construct(
         public SamplingDecision $decision,
-        public array $attributes = [],
+        array|Attributes $attributes = [],
         public ?TraceState $traceState = null,
     ) {
+        $this->attributes = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
     }
 
     /**
@@ -49,9 +56,9 @@ final readonly class SamplingResult
     /**
      * Create a result indicating the span should be recorded and exported.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public static function recordAndSample(array $attributes = [], ?TraceState $traceState = null) : self
+    public static function recordAndSample(array|Attributes $attributes = [], ?TraceState $traceState = null) : self
     {
         return new self(SamplingDecision::RECORD_AND_SAMPLE, $attributes, $traceState);
     }
@@ -59,9 +66,9 @@ final readonly class SamplingResult
     /**
      * Create a result indicating the span should be recorded but not exported.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public static function recordOnly(array $attributes = [], ?TraceState $traceState = null) : self
+    public static function recordOnly(array|Attributes $attributes = [], ?TraceState $traceState = null) : self
     {
         return new self(SamplingDecision::RECORD_ONLY, $attributes, $traceState);
     }

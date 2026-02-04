@@ -78,8 +78,8 @@ final class BatchSizeOptimizationTest extends FlowTestCase
 
         $optimizedPipeline = (new BatchSizeOptimization(500))->optimize($loader, $pipeline);
 
-        self::assertCount(2, $optimizedPipeline->stages()->steps());
-        self::assertInstanceOf(BatchingProcessor::class, $optimizedPipeline->stages()->steps()[0]);
-        self::assertSame($loader, $optimizedPipeline->stages()->steps()[1]);
+        self::assertCount(2, $optimizedPipeline->segments()->steps());
+        self::assertInstanceOf(BatchingProcessor::class, $optimizedPipeline->segments()->steps()[0]);
+        self::assertSame($loader, $optimizedPipeline->segments()->steps()[1]);
     }
 }

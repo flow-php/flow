@@ -71,15 +71,17 @@ final readonly class InstrumentationScope
     /**
      * Create a new scope with additional attributes merged with existing ones.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public function withAttributes(array $attributes) : self
+    public function withAttributes(Attributes|array $attributes) : self
     {
+        $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
+
         return new self(
             $this->name,
             $this->version,
             $this->schemaUrl,
-            $this->attributes->merge(Attributes::create($attributes)),
+            $this->attributes->merge($attrs),
         );
     }
 

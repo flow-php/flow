@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\{Adapter\JSON\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
@@ -46,10 +47,24 @@ final class JsonLoader implements Closure, FileLoader, Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($rows->partitions()->count()) {
-            $this->write($rows, $rows->partitions()->toArray(), $context);
-        } else {
-            $this->write($rows, [], $context);
+        $context->telemetry()->loadingStarted($this, [
+            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
+        ]);
+
+        try {
+            if ($rows->partitions()->count()) {
+                $this->write($rows, $rows->partitions()->toArray(), $context);
+            } else {
+                $this->write($rows, [], $context);
+            }
+
+            $context->telemetry()->loadingCompleted($this, [
+                TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count(),
+            ]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
         }
     }
 

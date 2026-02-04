@@ -79,7 +79,7 @@ final class BatchSizeOptimization implements Optimization
 
     private function hasBatchingProcessor(Pipeline $pipeline) : bool
     {
-        foreach ($pipeline->stages()->steps() as $step) {
+        foreach ($pipeline->segments()->steps() as $step) {
             if ($step instanceof Processor) {
                 foreach ($this->batchingProcessors as $batchingProcessor) {
                     if ($step instanceof $batchingProcessor) {

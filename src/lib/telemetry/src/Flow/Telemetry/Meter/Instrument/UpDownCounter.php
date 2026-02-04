@@ -61,27 +61,30 @@ final class UpDownCounter implements Instrument
      * Add a value to the counter (can be negative).
      *
      * @param float|int $amount Amount to add (positive or negative)
-     * @param array<string, bool|float|int|string> $attributes Categorization attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
-    public function add(int|float $amount, array $attributes = [], ?SpanContext $context = null) : void
+    public function add(int|float $amount, array|Attributes $attributes = [], ?SpanContext $context = null) : void
     {
-        $key = $this->attributeKey($attributes);
+        $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
+        /** @var array<string, bool|float|int|string> $attrs */
+        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
             $this->aggregations[$key] = [
                 'sum' => 0,
-                'attributes' => $attributes,
+                'attributes' => $attrs,
                 'reservoir' => new SimpleFixedSizeExemplarReservoir(1),
             ];
         }
 
         $this->aggregations[$key]['sum'] += $amount;
 
-        if ($context !== null && $this->exemplarFilter->shouldSample($context, $amount, $attributes)) {
+        if ($context !== null && $this->exemplarFilter->shouldSample($context, $amount, $attrs)) {
             $this->aggregations[$key]['reservoir']->offer(
                 $amount,
-                $attributes,
+                $attrs,
                 $context,
                 $this->clock->now(),
             );
@@ -128,26 +131,5 @@ final class UpDownCounter implements Instrument
     public function unit() : ?string
     {
         return $this->unit;
-    }
-
-    /**
-     * Create a unique key from attributes for aggregation lookup.
-     *
-     * @param array<string, bool|float|int|string> $attributes
-     */
-    private function attributeKey(array $attributes) : string
-    {
-        if (\count($attributes) === 0) {
-            return '';
-        }
-
-        \ksort($attributes);
-        $parts = [];
-
-        foreach ($attributes as $key => $value) {
-            $parts[] = $key . '=' . (\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value);
-        }
-
-        return \implode('|', $parts);
     }
 }

@@ -37,6 +37,7 @@ final readonly class OffsetProcessor implements Processor
         $skippedRows = 0;
 
         foreach ($rows as $batch) {
+            /** @var Rows $batch */
             $currentBatchSize = $batch->count();
             $remainingToSkip = $this->offset - $skippedRows;
 

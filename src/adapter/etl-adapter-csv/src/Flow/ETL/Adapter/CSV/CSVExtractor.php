@@ -49,10 +49,11 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $separator = $this->separator ?? $option->separator;
             $enclosure = $this->enclosure ?? $option->enclosure;
             $escape = $this->escape ?? $option->escape;
+            $uri = $stream->path()->uri();
 
             $headers = [];
             $headersCount = 0;
-            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $streamUri = $shouldPutInputIntoRows ? $uri : null;
             $partitions = $stream->path()->partitions();
 
             $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM);
@@ -84,6 +85,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                 }
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), $partitions, $this->schema);
+
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

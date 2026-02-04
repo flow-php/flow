@@ -27,7 +27,7 @@ final class PipelineTest extends FlowTestCase
                 $collecting,
                 $loader,
             ],
-            $pipeline->stages()->steps()
+            $pipeline->segments()->steps()
         );
     }
 }

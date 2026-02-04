@@ -20,21 +20,29 @@ namespace Flow\Telemetry;
  *     'error' => $exception,
  * ]);
  * ```
+ *
+ * @phpstan-type TAttributeValue = array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
+ * @phpstan-type TAttributeValueMap = array<string, TAttributeValue>
  */
 final readonly class Attributes
 {
     /**
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $values
+     * @var TAttributeValueMap
      */
-    public function __construct(
-        private array $values = [],
-    ) {
+    private array $values;
+
+    /**
+     * @param array<string, null|TAttributeValue> $values
+     */
+    public function __construct(array $values = [])
+    {
+        $this->values = \array_filter($values, static fn ($v) => $v !== null);
     }
 
     /**
      * Create Attributes from key-value pairs.
      *
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $values
+     * @param array<string, null|TAttributeValue> $values
      */
     public static function create(array $values = []) : self
     {
@@ -52,7 +60,7 @@ final readonly class Attributes
     /**
      * Create Attributes from normalized array.
      *
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $data
+     * @param array<string, null|TAttributeValue> $data
      */
     public static function fromArray(array $data) : self
     {
@@ -70,7 +78,7 @@ final readonly class Attributes
     /**
      * Get a specific attribute value.
      *
-     * @return null|array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
+     * @return null|TAttributeValue
      */
     public function get(string $key) : string|int|float|bool|\DateTimeInterface|\Throwable|array|null
     {
@@ -83,6 +91,47 @@ final readonly class Attributes
     public function has(string $key) : bool
     {
         return \array_key_exists($key, $this->values);
+    }
+
+    /**
+     * Create a stable identity string from scalar attributes.
+     *
+     * Sorts attributes by key and joins them as key=value pairs separated by pipes.
+     * Useful for grouping/keying metrics by attribute set.
+     *
+     * Returns empty string for empty attributes.
+     */
+    public function id() : string
+    {
+        if (\count($this->values) === 0) {
+            return '';
+        }
+
+        $parts = [];
+
+        foreach ($this->values as $key => $value) {
+            if ($value === null || \is_array($value)) {
+                continue;
+            }
+
+            if ($value instanceof \DateTimeInterface) {
+                $parts[$key] = $key . '=' . $value->format('c');
+            } elseif ($value instanceof \Throwable) {
+                $parts[$key] = $key . '=' . $value->getMessage();
+            } elseif (\is_bool($value)) {
+                $parts[$key] = $key . '=' . ($value ? 'true' : 'false');
+            } else {
+                $parts[$key] = $key . '=' . (string) $value;
+            }
+        }
+
+        if (\count($parts) === 0) {
+            return '';
+        }
+
+        \ksort($parts);
+
+        return \implode('|', $parts);
     }
 
     /**
@@ -109,6 +158,7 @@ final readonly class Attributes
      *
      * DateTimeInterface values are converted to ISO 8601 strings.
      * Throwable values are converted to structured arrays with type, message, and stacktrace.
+     * Null values are excluded from the result.
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
@@ -117,6 +167,10 @@ final readonly class Attributes
         $result = [];
 
         foreach ($this->values as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+
             $result[$key] = $this->normalizeValue($value);
         }
 
@@ -128,7 +182,7 @@ final readonly class Attributes
      *
      * If the key already exists, its value will be replaced.
      *
-     * @param array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable $value
+     * @param TAttributeValue $value
      */
     public function with(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : self
     {
@@ -138,7 +192,7 @@ final readonly class Attributes
     /**
      * Normalize a single value.
      *
-     * @param array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable $value
+     * @param TAttributeValue $value
      *
      * @return array<bool|float|int|string>|bool|float|int|string
      */

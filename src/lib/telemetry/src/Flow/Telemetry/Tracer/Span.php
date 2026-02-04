@@ -23,6 +23,9 @@ use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
  * ```
  *
  * @see https://opentelemetry.io/docs/specs/otel/trace/api/#span
+ *
+ * @phpstan-import-type TAttributeValue from Attributes
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final class Span
 {
@@ -310,17 +313,18 @@ final class Span
      *
      * @param \Throwable $exception The exception to record
      * @param \DateTimeImmutable $timestamp The timestamp when the exception occurred
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Additional attributes
+     * @param Attributes|TAttributeValueMap $attributes Additional attributes
      *
      * @return $this
      */
-    public function recordException(\Throwable $exception, \DateTimeImmutable $timestamp, array $attributes = []) : self
+    public function recordException(\Throwable $exception, \DateTimeImmutable $timestamp, Attributes|array $attributes = []) : self
     {
-        $eventAttributes = \array_merge([
+        $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
+        $eventAttributes = Attributes::create([
             'exception.type' => $exception::class,
             'exception.message' => $exception->getMessage(),
             'exception.stacktrace' => $exception->getTraceAsString(),
-        ], $attributes);
+        ])->merge($attrs);
 
         $this->events[] = GenericEvent::create('exception', $timestamp, $eventAttributes);
 
@@ -358,7 +362,7 @@ final class Span
     /**
      * Set a single attribute.
      *
-     * @param array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable $value
+     * @param TAttributeValue $value
      *
      * @return $this
      */
@@ -372,13 +376,14 @@ final class Span
     /**
      * Set multiple attributes at once.
      *
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes
+     * @param Attributes|TAttributeValueMap $attributes
      *
      * @return $this
      */
-    public function setAttributes(array $attributes) : self
+    public function setAttributes(Attributes|array $attributes) : self
     {
-        $this->attributes = $this->attributes->merge(Attributes::create($attributes));
+        $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
+        $this->attributes = $this->attributes->merge($attrs);
 
         return $this;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use function Flow\ETL\DSL\ref;
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 use Flow\ETL\Row\Reference;
 use Flow\Serializer\Exception\SerializationException;
@@ -22,28 +23,43 @@ final readonly class UnserializeTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        $source = $this->source instanceof Reference ? $this->source : ref($this->source);
+        $context->telemetry()->transformationStarted($this);
 
-        return $rows->map(
-            function (Row $row) use ($source, $context) : Row {
-                if (!$row->has($source->name())) {
-                    return $row;
+        try {
+            $source = $this->source instanceof Reference ? $this->source : ref($this->source);
+
+            $result = $rows->map(
+                function (Row $row) use ($source, $context) : Row {
+                    if (!$row->has($source->name())) {
+                        return $row;
+                    }
+
+                    $serialized = $row->valueOf($source->name());
+
+                    if (!\is_string($serialized)) {
+                        return $row;
+                    }
+
+                    try {
+                        return $this->merge
+                            ? $row->merge($context->config->serializer()->unserialize($serialized, [Row::class]), $this->mergePrefix)
+                            : $context->config->serializer()->unserialize($serialized, [Row::class]);
+                    } catch (SerializationException) {
+                        return $row;
+                    }
                 }
+            );
 
-                $serialized = $row->valueOf($source->name());
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+            ]);
 
-                if (!\is_string($serialized)) {
-                    return $row;
-                }
+            return $result;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
 
-                try {
-                    return $this->merge
-                        ? $row->merge($context->config->serializer()->unserialize($serialized, [Row::class]), $this->mergePrefix)
-                        : $context->config->serializer()->unserialize($serialized, [Row::class]);
-                } catch (SerializationException) {
-                    return $row;
-                }
-            }
-        );
+            throw $e;
+        }
     }
 }

@@ -14,18 +14,28 @@ use Flow\ETL\Loader\Closure;
  *
  * @internal
  */
-final class Segment
+final readonly class Segment
 {
-    /** @var array<Loader|Transformer> */
-    private array $steps = [];
+    /** @var \SplObjectStorage<Loader|Transformer, null> */
+    private \SplObjectStorage $steps;
 
-    public function __construct(private readonly ?Processor $processor = null)
+    public function __construct(private ?Processor $processor = null)
     {
+        $this->steps = new \SplObjectStorage();
     }
 
     public function add(Transformer|Loader $step) : void
     {
-        $this->steps[] = $step;
+        $this->steps->attach($step);
+    }
+
+    public function contains(Transformer|Loader|Processor $step) : bool
+    {
+        if ($step instanceof Processor) {
+            return $this->processor === $step;
+        }
+
+        return $this->steps->contains($step);
     }
 
     /**
@@ -54,7 +64,8 @@ final class Segment
                     if ($step instanceof Transformer) {
                         try {
                             $rows = $step->transform($rows, $context);
-                        } catch (LimitReachedException) {
+                        } catch (LimitReachedException $e) {
+                            $context->telemetry()->logger()->debug('Limit reached, stopping the pipeline execution.', ['limit_exception' => $e]);
                             $rows = new Rows();
                             $input->send(Signal::STOP);
                         }
@@ -63,10 +74,14 @@ final class Segment
                     }
                 } catch (\Throwable $exception) {
                     if ($context->errorHandler()->throw($exception, $rows)) {
+                        $context->telemetry()->logger()->error('Error during ETL segment execution.', ['exception' => $exception]);
+
                         throw $exception;
                     }
 
                     if ($context->errorHandler()->skipRows($exception, $rows)) {
+                        $context->telemetry()->logger()->debug('Skipping rows due to error during ETL segment execution.', ['exception' => $exception]);
+
                         break;
                     }
                 }
@@ -114,13 +129,16 @@ final class Segment
      */
     public function steps() : array
     {
-        return $this->steps;
+        return iterator_to_array($this->steps);
     }
 
     public function withProcessor(Processor $processor) : self
     {
         $segment = new self($processor);
-        $segment->steps = $this->steps;
+
+        foreach ($this->steps as $step) {
+            $segment->steps->attach($step);
+        }
 
         return $segment;
     }

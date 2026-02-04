@@ -25,10 +25,11 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+            $uri = $stream->path()->uri();
 
             foreach ($stream->readLines() as $rowData) {
                 if ($shouldPutInputIntoRows) {
-                    $row = [['text' => \rtrim($rowData), '_input_file_uri' => $stream->path()->uri()]];
+                    $row = [['text' => \rtrim($rowData), '_input_file_uri' => $uri]];
                 } else {
                     $row = [['text' => \rtrim($rowData)]];
                 }

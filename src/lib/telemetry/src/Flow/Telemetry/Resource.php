@@ -35,11 +35,11 @@ final readonly class Resource
     /**
      * Create a new Resource with the given attributes.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public static function create(array $attributes = []) : self
+    public static function create(Attributes|array $attributes = []) : self
     {
-        return new self(Attributes::create($attributes));
+        return new self($attributes instanceof Attributes ? $attributes : Attributes::create($attributes));
     }
 
     /**

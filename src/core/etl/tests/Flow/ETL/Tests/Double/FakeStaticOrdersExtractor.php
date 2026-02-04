@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\{array_to_rows,
     structure_schema,
     uuid_schema};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Row\EntryFactory, Rows, Schema};
 
 final readonly class FakeStaticOrdersExtractor implements Extractor
@@ -74,7 +75,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         ];
 
         for ($i = 0; $i < $this->count; $i++) {
-            yield [
+            $signal = yield [
                 'index' => $i,
                 'order_id' => '254d61c5-22c8-4407-83a2-76f1cab53af2',
                 'created_at' => new \DateTimeImmutable('2025-01-01 12:00:00'),
@@ -106,6 +107,10 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
                     ],
                 ],
             ];
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 

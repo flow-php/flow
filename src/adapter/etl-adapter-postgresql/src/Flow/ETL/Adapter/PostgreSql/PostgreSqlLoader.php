@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\{DeleteOptions, InsertOptions, UpdateOptions};
 use Flow\ETL\Adapter\PostgreSql\QueryBuilder\{DeleteQueryBuilder, InsertQueryBuilder, UpdateQueryBuilder};
 use Flow\ETL\Adapter\PostgreSql\ValueConverter\{EnumConverter, XMLConverter};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\PostgreSql\Client\Client;
 
@@ -41,11 +42,21 @@ final class PostgreSqlLoader implements Loader
             return;
         }
 
-        match ($this->operation) {
-            Operation::INSERT => $this->insertRows($rows),
-            Operation::UPDATE => $this->updateRows($rows),
-            Operation::DELETE => $this->deleteRows($rows),
-        };
+        $context->telemetry()->loadingStarted($this);
+
+        try {
+            match ($this->operation) {
+                Operation::INSERT => $this->insertRows($rows),
+                Operation::UPDATE => $this->updateRows($rows),
+                Operation::DELETE => $this->deleteRows($rows),
+            };
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     public function withDeleteOptions(DeleteOptions $options) : self

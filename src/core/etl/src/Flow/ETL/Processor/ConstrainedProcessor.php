@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use Flow\ETL\{Constraint, FlowContext, Processor};
+use Flow\ETL\{Constraint, FlowContext, Processor, Rows};
 use Flow\ETL\Exception\{ConstraintViolationException, InvalidArgumentException};
 
 /**
@@ -32,6 +32,7 @@ final class ConstrainedProcessor implements Processor
 
     public function process(\Generator $rows, FlowContext $context) : \Generator
     {
+        /** @var Rows $batch */
         foreach ($rows as $batch) {
             foreach ($batch->all() as $row) {
                 foreach ($this->constraints as $constraint) {

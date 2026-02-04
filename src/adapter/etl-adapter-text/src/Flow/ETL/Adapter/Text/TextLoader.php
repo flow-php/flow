@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
@@ -34,26 +35,42 @@ final class TextLoader implements Closure, FileLoader, Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($rows->partitions()->count()) {
-            foreach ($rows as $row) {
-                if ($row->entries()->count() > 1) {
-                    throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
-                }
+        if (!$rows->count()) {
+            return;
+        }
 
-                $context->streams()->writeTo($this->path, $rows->partitions()->toArray())->append(
-                    $row->entries()->all()[0]->toString() . $this->newLineSeparator
-                );
-            }
-        } else {
-            foreach ($rows as $row) {
-                if ($row->entries()->count() > 1) {
-                    throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
-                }
+        $context->telemetry()->loadingStarted($this, [
+            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
+        ]);
 
-                $context->streams()->writeTo($this->path)->append(
-                    $row->entries()->all()[0]->toString() . $this->newLineSeparator
-                );
+        try {
+            if ($rows->partitions()->count()) {
+                foreach ($rows as $row) {
+                    if ($row->entries()->count() > 1) {
+                        throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
+                    }
+
+                    $context->streams()->writeTo($this->path, $rows->partitions()->toArray())->append(
+                        $row->entries()->all()[0]->toString() . $this->newLineSeparator
+                    );
+                }
+            } else {
+                foreach ($rows as $row) {
+                    if ($row->entries()->count() > 1) {
+                        throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
+                    }
+
+                    $context->streams()->writeTo($this->path)->append(
+                        $row->entries()->all()[0]->toString() . $this->newLineSeparator
+                    );
+                }
             }
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
         }
     }
 

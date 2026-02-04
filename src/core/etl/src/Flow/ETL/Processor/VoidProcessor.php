@@ -16,7 +16,6 @@ final readonly class VoidProcessor implements Processor
     public function process(\Generator $rows, FlowContext $context) : \Generator
     {
         foreach ($rows as $batch) {
-            // consume and discard
         }
 
         yield new Rows();

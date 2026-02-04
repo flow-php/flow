@@ -26,6 +26,9 @@ use Psr\Clock\ClockInterface;
  * $logger->info('Processing started', ['items.count' => 100]);
  * $logger->error('Processing failed', ['error.message' => $e->getMessage()]);
  * ```
+ *
+ * @phpstan-import-type TAttributeValue from Attributes
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final class Logger
 {
@@ -45,11 +48,11 @@ final class Logger
      * and debugging sessions.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Optional attributes
+     * @param Attributes|TAttributeValueMap $attributes Optional attributes
      */
-    public function debug(string $body, array $attributes = []) : void
+    public function debug(string $body, array|Attributes $attributes = []) : void
     {
-        $this->emit(new LogRecord(Severity::DEBUG, $body, Attributes::create($attributes)));
+        $this->emit(new LogRecord(Severity::DEBUG, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
     }
 
     /**
@@ -80,11 +83,11 @@ final class Logger
      * running.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Optional attributes
+     * @param Attributes|TAttributeValueMap $attributes Optional attributes
      */
-    public function error(string $body, array $attributes = []) : void
+    public function error(string $body, array|Attributes $attributes = []) : void
     {
-        $this->emit(new LogRecord(Severity::ERROR, $body, Attributes::create($attributes)));
+        $this->emit(new LogRecord(Severity::ERROR, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
     }
 
     /**
@@ -94,11 +97,19 @@ final class Logger
      * to terminate or become unusable.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Optional attributes
+     * @param Attributes|TAttributeValueMap $attributes Optional attributes
      */
-    public function fatal(string $body, array $attributes = []) : void
+    public function fatal(string $body, array|Attributes $attributes = []) : void
     {
-        $this->emit(new LogRecord(Severity::FATAL, $body, Attributes::create($attributes)));
+        $this->emit(new LogRecord(Severity::FATAL, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    }
+
+    /**
+     * Flush all pending logs to the exporter.
+     */
+    public function flush() : bool
+    {
+        return $this->processor->flush();
     }
 
     /**
@@ -108,11 +119,11 @@ final class Logger
      * normal behavior.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Optional attributes
+     * @param Attributes|TAttributeValueMap $attributes Optional attributes
      */
-    public function info(string $body, array $attributes = []) : void
+    public function info(string $body, array|Attributes $attributes = []) : void
     {
-        $this->emit(new LogRecord(Severity::INFO, $body, Attributes::create($attributes)));
+        $this->emit(new LogRecord(Severity::INFO, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
     }
 
     /**
@@ -138,11 +149,11 @@ final class Logger
      * enabled during development or troubleshooting.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Optional attributes
+     * @param Attributes|TAttributeValueMap $attributes Optional attributes
      */
-    public function trace(string $body, array $attributes = []) : void
+    public function trace(string $body, array|Attributes $attributes = []) : void
     {
-        $this->emit(new LogRecord(Severity::TRACE, $body, Attributes::create($attributes)));
+        $this->emit(new LogRecord(Severity::TRACE, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
     }
 
     /**
@@ -152,11 +163,11 @@ final class Logger
      * the application from functioning.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Optional attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Optional attributes
      */
-    public function warn(string $body, array $attributes = []) : void
+    public function warn(string $body, array|Attributes $attributes = []) : void
     {
-        $this->emit(new LogRecord(Severity::WARN, $body, Attributes::create($attributes)));
+        $this->emit(new LogRecord(Severity::WARN, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
     }
 
     /**

@@ -48,6 +48,11 @@ final readonly class HighResolutionTime implements \Stringable
         return [$this->seconds, $this->nanoseconds];
     }
 
+    public function toNanoseconds() : int
+    {
+        return ($this->seconds * 1_000_000_000) + $this->nanoseconds;
+    }
+
     public function toSeconds() : float
     {
         return $this->seconds + $this->nanoseconds / 1_000_000_000;

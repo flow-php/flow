@@ -19,6 +19,8 @@ use Flow\Telemetry\Attributes;
  * ```php
  * $link = SpanLink::create($otherSpanContext, ['reason' => 'batch']);
  * ```
+ *
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class SpanLink
 {
@@ -32,11 +34,11 @@ final readonly class SpanLink
      * Create a SpanLink with the given context and optional attributes.
      *
      * @param SpanContext $context The linked span's context
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Link attributes
+     * @param Attributes|TAttributeValueMap $attributes Link attributes
      */
-    public static function create(SpanContext $context, array $attributes = []) : self
+    public static function create(SpanContext $context, Attributes|array $attributes = []) : self
     {
-        return new self($context, Attributes::create($attributes));
+        return new self($context, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes));
     }
 
     /**

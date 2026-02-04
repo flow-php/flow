@@ -129,11 +129,11 @@ final class DbalKeySetExtractor implements Extractor
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
+                $totalFetched++;
+
                 if ($signal === Signal::STOP) {
                     return;
                 }
-
-                $totalFetched++;
 
                 if (null !== $this->maximum && $totalFetched >= $this->maximum) {
                     return;

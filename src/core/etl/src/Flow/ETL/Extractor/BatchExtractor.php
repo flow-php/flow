@@ -22,53 +22,40 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
      */
     public function extract(FlowContext $context) : \Generator
     {
-        $chunk = [];
+        $chunk = new Rows();
         $chunkSize = 0;
 
         foreach ($this->extractor->extract($context) as $rows) {
-            foreach ($rows->chunks($this->chunkSize) as $rowsChunk) {
-                $chunk[] = $rowsChunk->all();
-                $chunkSize += $rowsChunk->count();
+            foreach ($rows->all() as $row) {
+                $chunk = $chunk->add($row);
+                $chunkSize++;
 
                 if ($chunkSize === $this->chunkSize) {
-                    $signal = yield new Rows(
-                        ...\array_merge(
-                            ...$chunk
-                        )
-                    );
+
+                    $signal = yield $chunk;
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
                     $chunkSize = 0;
-                    $chunk = [];
+                    $chunk = new Rows();
                 }
 
                 if ($chunkSize > $this->chunkSize) {
-                    $allRows = new Rows(
-                        ...\array_merge(
-                            ...$chunk
-                        )
-                    );
 
-                    $signal = yield $allRows->dropRight($allRows->count() - $this->chunkSize);
+                    $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
-                    $leftover = $allRows->takeRight($allRows->count() - $this->chunkSize);
-                    $chunk = [$leftover->all()];
-                    $chunkSize = $leftover->count();
+                    $chunk = $chunk->takeRight($chunk->count() - $this->chunkSize);
+                    $chunkSize = $chunk->count();
                 }
             }
         }
 
         if ($chunkSize) {
-            yield new Rows(
-                ...\array_merge(
-                    ...$chunk
-                )
-            );
+            yield $chunk;
         }
     }
 

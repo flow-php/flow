@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\Execution\ReportCollector;
+use Flow\ETL\Execution\StatisticsCollector;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -67,6 +67,7 @@ final class DataFrame
     public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
     {
         $this->context = $context instanceof FlowContext ? $context : new FlowContext($context);
+        $this->context->telemetry()->dataFrameStarted($this->context);
     }
 
     /**
@@ -624,7 +625,7 @@ final class DataFrame
 
     public function pivot(Reference $ref) : self
     {
-        $processor = $this->pipeline->stages()->current()->processor();
+        $processor = $this->pipeline->segments()->current()->processor();
 
         if (!$processor instanceof GroupByProcessor) {
             throw new RuntimeException('Pivot can be used only after groupBy');
@@ -793,14 +794,22 @@ final class DataFrame
             $analyze = $this->context->config->analyze();
         }
 
-        $collector = new ReportCollector($analyze, $this->context->config->clock());
+        $collector = new StatisticsCollector($analyze, $this->context);
 
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            if ($callback !== null) {
-                $callback($rows, $this->context);
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                if ($callback !== null) {
+                    $callback($rows, $this->context);
+                }
+
+                $collector->capture($rows);
             }
 
-            $collector->capture($rows);
+            $collector->end();
+        } catch (\Throwable $e) {
+            $collector->end($e);
+
+            throw $e;
         }
 
         return $collector->report();

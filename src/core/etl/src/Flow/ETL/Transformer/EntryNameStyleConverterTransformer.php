@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext,
     Function\StyleConverter\StringStyles as OldStringStyles,
     Row,
@@ -27,12 +28,27 @@ final readonly class EntryNameStyleConverterTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        $rowTransformer = function (Row $row) : Row {
-            $valueMap = fn (Entry $entry) : Entry => $entry->rename($this->style->convert($entry->name()));
+        $context->telemetry()->transformationStarted($this);
 
-            return $row->map($valueMap);
-        };
+        try {
+            $rowTransformer = function (Row $row) : Row {
+                $valueMap = fn (Entry $entry) : Entry => $entry->rename($this->style->convert($entry->name()));
 
-        return $rows->map($rowTransformer);
+                return $row->map($valueMap);
+            };
+
+            $result = $rows->map($rowTransformer);
+
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $result->count(),
+            ]);
+
+            return $result;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
+        }
     }
 }

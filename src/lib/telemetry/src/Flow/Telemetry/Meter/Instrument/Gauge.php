@@ -95,27 +95,30 @@ final class Gauge implements Instrument
      * Record a gauge value.
      *
      * @param float|int $value Current value to record
-     * @param array<string, bool|float|int|string> $attributes Categorization attributes
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
-    public function record(int|float $value, array $attributes = [], ?SpanContext $context = null) : void
+    public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null) : void
     {
-        $key = $this->attributeKey($attributes);
+        $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
+        /** @var array<string, bool|float|int|string> $attrs */
+        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
             $this->aggregations[$key] = [
                 'value' => $value,
-                'attributes' => $attributes,
+                'attributes' => $attrs,
                 'reservoir' => new SimpleFixedSizeExemplarReservoir(1),
             ];
         } else {
             $this->aggregations[$key]['value'] = $value;
         }
 
-        if ($context !== null && $this->exemplarFilter->shouldSample($context, $value, $attributes)) {
+        if ($context !== null && $this->exemplarFilter->shouldSample($context, $value, $attrs)) {
             $this->aggregations[$key]['reservoir']->offer(
                 $value,
-                $attributes,
+                $attrs,
                 $context,
                 $this->clock->now(),
             );
@@ -125,26 +128,5 @@ final class Gauge implements Instrument
     public function unit() : ?string
     {
         return $this->unit;
-    }
-
-    /**
-     * Create a unique key from attributes for aggregation lookup.
-     *
-     * @param array<string, bool|float|int|string> $attributes
-     */
-    private function attributeKey(array $attributes) : string
-    {
-        if (\count($attributes) === 0) {
-            return '';
-        }
-
-        \ksort($attributes);
-        $parts = [];
-
-        foreach ($attributes as $key => $value) {
-            $parts[] = $key . '=' . (\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value);
-        }
-
-        return \implode('|', $parts);
     }
 }

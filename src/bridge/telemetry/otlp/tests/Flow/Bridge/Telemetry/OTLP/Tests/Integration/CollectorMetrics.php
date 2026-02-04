@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
+use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 
@@ -94,8 +95,8 @@ final readonly class CollectorMetrics
 
     private function waitForMetric(string $metricName, int $threshold, int $timeoutMs, int $pollIntervalMs) : int
     {
-        $startTime = \hrtime(true);
-        $timeoutNs = $timeoutMs * 1_000_000;
+        $startTime = HighResolutionTime::now();
+        $timeoutSeconds = $timeoutMs / 1000;
 
         while (true) {
             $value = $this->getMetricValue($metricName);
@@ -104,9 +105,9 @@ final readonly class CollectorMetrics
                 return $value;
             }
 
-            $elapsed = \hrtime(true) - $startTime;
+            $elapsedSeconds = $startTime->diff(HighResolutionTime::now())->toSeconds();
 
-            if ($elapsed >= $timeoutNs) {
+            if ($elapsedSeconds >= $timeoutSeconds) {
                 return $value;
             }
 

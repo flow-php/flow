@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\{Connection, DriverManager};
 use Flow\Doctrine\Bulk\{Bulk, BulkData, InsertOptions, UpdateOptions};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Loader, Rows};
 
@@ -63,15 +64,25 @@ final class DbalLoader implements Loader
             return;
         }
 
-        $sortedRows = $rows->sortEntries();
-        $normalizedData = (new RowsNormalizer())->normalize($sortedRows);
+        $context->telemetry()->loadingStarted($this);
 
-        $this->bulk()->{$this->operation}(
-            $this->connection(),
-            $this->tableName,
-            new BulkData($normalizedData, $this->typesMap()->flowRowTypes($sortedRows->first())),
-            $this->operationOptions
-        );
+        try {
+            $sortedRows = $rows->sortEntries();
+            $normalizedData = (new RowsNormalizer())->normalize($sortedRows);
+
+            $this->bulk()->{$this->operation}(
+                $this->connection(),
+                $this->tableName,
+                new BulkData($normalizedData, $this->typesMap()->flowRowTypes($sortedRows->first())),
+                $this->operationOptions
+            );
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     /**

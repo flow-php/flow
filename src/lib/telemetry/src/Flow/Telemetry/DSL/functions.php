@@ -8,8 +8,8 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\{Attributes, Resource, Telemetry};
 use Flow\Telemetry\Context\{Baggage, Context, ContextStorage, MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Logger\{LogExporter, LogProcessor, LoggerProvider};
-use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, PassThroughLogProcessor};
+use Flow\Telemetry\Logger\{LogExporter, LogProcessor, LoggerProvider, Severity};
+use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
 use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider, MetricExporter, MetricProcessor};
 use Flow\Telemetry\Meter\Exemplar\{AlwaysOffExemplarFilter, AlwaysOnExemplarFilter, ExemplarFilter, TraceBasedExemplarFilter};
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, PassThroughMetricProcessor};
@@ -109,10 +109,10 @@ function memory_context_storage(?Context $context = null) : MemoryContextStorage
 /**
  * Create a Resource.
  *
- * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
+ * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Resource attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function resource(array $attributes = []) : Resource
+function resource(array|Attributes $attributes = []) : Resource
 {
     return Resource::create($attributes);
 }
@@ -135,10 +135,10 @@ function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = 
  *
  * @param string $name Event name
  * @param \DateTimeImmutable $timestamp Event timestamp
- * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Event attributes
+ * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Event attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_event(string $name, \DateTimeImmutable $timestamp, array $attributes = []) : GenericEvent
+function span_event(string $name, \DateTimeImmutable $timestamp, array|Attributes $attributes = []) : GenericEvent
 {
     return GenericEvent::create($name, $timestamp, $attributes);
 }
@@ -147,10 +147,10 @@ function span_event(string $name, \DateTimeImmutable $timestamp, array $attribut
  * Create a SpanLink.
  *
  * @param SpanContext $context The linked span context
- * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Link attributes
+ * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Link attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_link(SpanContext $context, array $attributes = []) : SpanLink
+function span_link(SpanContext $context, array|Attributes $attributes = []) : SpanLink
 {
     return SpanLink::create($context, $attributes);
 }
@@ -516,6 +516,23 @@ function batching_log_processor(LogExporter $exporter, int $batchSize = 512) : B
 function pass_through_log_processor(LogExporter $exporter) : PassThroughLogProcessor
 {
     return new PassThroughLogProcessor($exporter);
+}
+
+/**
+ * Create a SeverityFilteringLogProcessor.
+ *
+ * Filters log entries based on minimum severity level. Only entries at or above
+ * the configured threshold are passed to the wrapped processor.
+ *
+ * @param LogProcessor $processor The processor to wrap
+ * @param Severity $minimumSeverity Minimum severity level (default: INFO)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function severity_filtering_log_processor(
+    LogProcessor $processor,
+    Severity $minimumSeverity = Severity::INFO,
+) : SeverityFilteringLogProcessor {
+    return new SeverityFilteringLogProcessor($processor, $minimumSeverity);
 }
 
 /**

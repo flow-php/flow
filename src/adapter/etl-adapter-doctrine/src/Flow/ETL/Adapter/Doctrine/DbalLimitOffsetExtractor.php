@@ -122,14 +122,14 @@ final class DbalLimitOffsetExtractor implements Extractor
             foreach ($pageResults as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
+                $totalFetched++;
+
                 if ($signal === Signal::STOP) {
                     return;
                 }
 
-                $totalFetched++;
-
                 if (null !== $this->maximum && $totalFetched >= $this->maximum) {
-                    break;
+                    return;
                 }
             }
         }

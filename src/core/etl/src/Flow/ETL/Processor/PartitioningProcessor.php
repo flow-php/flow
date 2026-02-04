@@ -43,6 +43,7 @@ final readonly class PartitioningProcessor implements Processor
         /** @var array<string, CacheIndex> $partitionIndexes */
         $partitionIndexes = [];
 
+        /** @var Rows $batch */
         foreach ($rows as $batch) {
             foreach ($batch->partitionBy(...$this->partitionBy) as $partitionedRows) {
 

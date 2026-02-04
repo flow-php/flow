@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Function\{ExecutionMode, Functions};
@@ -19,6 +20,8 @@ final class FlowContext
     private ErrorHandler $errorHandler;
 
     private readonly Functions $functions;
+
+    private ?TelemetryContext $telemetryContext = null;
 
     public function __construct(public readonly Config $config)
     {
@@ -61,5 +64,15 @@ final class FlowContext
     public function streams() : FilesystemStreams
     {
         return $this->config->filesystemStreams();
+    }
+
+    public function telemetry() : TelemetryContext
+    {
+        return $this->telemetryContext ??= new TelemetryContext(
+            $this->config->telemetry->telemetry->logger('flow-php', $this->config->version()),
+            $this->config->telemetry->telemetry->tracer('flow-php', $this->config->version()),
+            $this->config->telemetry->telemetry->meter('flow-php', $this->config->version()),
+            $this->config->telemetry->options,
+        );
     }
 }

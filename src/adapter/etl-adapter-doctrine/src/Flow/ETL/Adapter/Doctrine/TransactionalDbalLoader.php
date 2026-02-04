@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\{Connection, DriverManager, TransactionIsolationLevel};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Loader, Rows};
 
@@ -50,7 +51,21 @@ final class TransactionalDbalLoader implements Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $this->executeInTransaction($this->connection(), $rows, $context);
+        if ($rows->count() === 0) {
+            return;
+        }
+
+        $context->telemetry()->loadingStarted($this);
+
+        try {
+            $this->executeInTransaction($this->connection(), $rows, $context);
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
+        }
     }
 
     public function withIsolationLevel(TransactionIsolationLevel|int $level) : self

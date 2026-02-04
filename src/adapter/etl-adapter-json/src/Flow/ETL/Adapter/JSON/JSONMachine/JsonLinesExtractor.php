@@ -46,17 +46,17 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         };
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+            $uri = $stream->path()->uri();
 
             foreach ($stream->readLines() as $jsonLine) {
                 /**
                  * @var array<string, mixed>|object $rowData
                  */
                 foreach ($lineIterator($jsonLine) as $rowData) {
-
                     $row = (array) $rowData;
 
                     if ($shouldPutInputIntoRows) {
-                        $row['_input_file_uri'] = $stream->path()->uri();
+                        $row['_input_file_uri'] = $uri;
                     }
 
                     if ($this->pointer !== null && $this->pointerToEntryName) {
@@ -68,6 +68,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                     }
 
                     $signal = yield array_to_rows([$row], $context->entryFactory(), $stream->path()->partitions(), $this->schema);
+
                     $this->incrementReturnedRows();
 
                     if ($signal === Signal::STOP || $this->reachedLimit()) {
@@ -77,6 +78,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                     }
                 }
             }
+
             $stream->close();
         }
     }

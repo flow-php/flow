@@ -116,5 +116,8 @@ For detailed information about specific DataFrame operations, see the following 
 ### Reliability & Recovery
 - **[Retry Mechanisms](/documentation/components/core/retry.md)** - Automatic retry for transient failures
 
+### Observability
+- **[Telemetry](/documentation/components/core/telemetry.md)** - Distributed tracing, metrics, and logging integration
+
 ### Output & Display
 - **[Display](/documentation/components/core/display.md)** - Data visualization and output

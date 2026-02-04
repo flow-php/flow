@@ -25,23 +25,29 @@ use Flow\Telemetry\Attributes;
  *
  * $logger->emit($record);
  * ```
+ *
+ * @phpstan-import-type TAttributeValue from Attributes
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class LogRecord
 {
+    public Attributes $attributes;
+
     /**
      * @param Severity $severity The severity level
      * @param string $body The log message body
-     * @param Attributes $attributes Log record attributes
+     * @param Attributes|TAttributeValueMap $attributes Log record attributes
      * @param null|\DateTimeImmutable $timestamp When the event occurred
      * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
      */
     public function __construct(
         public Severity $severity = Severity::INFO,
         public string $body = '',
-        public Attributes $attributes = new Attributes(),
+        Attributes|array $attributes = new Attributes(),
         public ?\DateTimeImmutable $timestamp = null,
         public ?\DateTimeImmutable $observedTimestamp = null,
     ) {
+        $this->attributes = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
     }
 
     /**
@@ -50,7 +56,7 @@ final readonly class LogRecord
      * @param array{
      *     severity: int,
      *     body: string,
-     *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
+     *     attributes: TAttributeValueMap,
      *     timestamp: null|string,
      *     observedTimestamp: null|string
      * } $data Normalized LogRecord data
@@ -94,7 +100,7 @@ final readonly class LogRecord
      * Attributes provide additional context about the log event.
      *
      * @param string $key Attribute key
-     * @param array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable $value Attribute value
+     * @param TAttributeValue $value Attribute value
      *
      * @return self New instance with attribute set
      */
@@ -112,16 +118,18 @@ final readonly class LogRecord
     /**
      * Set multiple attributes at once.
      *
-     * @param array<string, array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Key-value attribute pairs
+     * @param Attributes|TAttributeValueMap $attributes Key-value attribute pairs
      *
      * @return self New instance with attributes set
      */
-    public function setAttributes(array $attributes) : self
+    public function setAttributes(Attributes|array $attributes) : self
     {
+        $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
+
         return new self(
             $this->severity,
             $this->body,
-            $this->attributes->merge(Attributes::create($attributes)),
+            $this->attributes->merge($attrs),
             $this->timestamp,
             $this->observedTimestamp,
         );

@@ -7,6 +7,7 @@ namespace Flow\Telemetry\Tests\Unit\Meter;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Meter\Instrument\{Counter, Gauge, Histogram, UpDownCounter};
 use Flow\Telemetry\Meter\{Meter, MetricType};
+use Flow\Telemetry\Provider\Memory\{MemoryMetricExporter, MemoryMetricProcessor};
 use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -66,6 +67,63 @@ final class MeterTest extends TestCase
 
         $secondCollect = $meter->collect();
         self::assertCount(0, $secondCollect);
+    }
+
+    public function test_complete_collects_metrics_and_passes_to_processor() : void
+    {
+        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $meter = new Meter(ResourceMother::default(), new InstrumentationScope('test-meter', '1.0.0'), $processor, ClockMother::frozen());
+
+        $counter = $meter->createCounter('requests.total', 'requests', 'Total requests');
+        $counter->add(10, ['method' => 'GET']);
+        $counter->add(5, ['method' => 'POST']);
+
+        $meter->complete($counter);
+
+        $processedMetrics = $processor->metrics();
+        self::assertCount(2, $processedMetrics);
+
+        $getMetrics = \array_filter($processedMetrics, static fn ($m) => $m->attributes->get('method') === 'GET');
+        $postMetrics = \array_filter($processedMetrics, static fn ($m) => $m->attributes->get('method') === 'POST');
+
+        self::assertCount(1, $getMetrics);
+        self::assertCount(1, $postMetrics);
+        self::assertSame(10, \array_values($getMetrics)[0]->value);
+        self::assertSame(5, \array_values($postMetrics)[0]->value);
+    }
+
+    public function test_complete_removes_instrument_from_cache() : void
+    {
+        $meter = new Meter(ResourceMother::default(), new InstrumentationScope('test-meter', '1.0.0'), new VoidMetricProcessor(), ClockMother::frozen());
+
+        $counter1 = $meter->createCounter('requests');
+        $counter1->add(100);
+
+        $meter->complete($counter1);
+
+        $counter2 = $meter->createCounter('requests');
+
+        self::assertNotSame($counter1, $counter2);
+    }
+
+    public function test_complete_with_instrument_not_created_by_this_meter() : void
+    {
+        $processorA = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processorB = new MemoryMetricProcessor(new MemoryMetricExporter());
+
+        $meterA = new Meter(ResourceMother::default(), new InstrumentationScope('meter-a', '1.0.0'), $processorA, ClockMother::frozen());
+        $meterB = new Meter(ResourceMother::default(), new InstrumentationScope('meter-b', '1.0.0'), $processorB, ClockMother::frozen());
+
+        $counterFromA = $meterA->createCounter('requests');
+        $counterFromA->add(50);
+
+        $meterB->complete($counterFromA);
+
+        self::assertCount(1, $processorB->metrics());
+        self::assertSame(50, $processorB->metrics()[0]->value);
+
+        $counterFromB = $meterB->createCounter('requests');
+        self::assertNotSame($counterFromA, $counterFromB);
     }
 
     #[DataProvider('validCounterAmountProvider')]

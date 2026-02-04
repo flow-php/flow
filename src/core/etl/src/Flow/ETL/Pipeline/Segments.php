@@ -73,6 +73,21 @@ final class Segments
         return $this->currentSegment->has($class);
     }
 
+    public function segmentFor(Transformer|Loader|Processor $step) : ?Segment
+    {
+        foreach ($this->segments as $segment) {
+            if ($segment->contains($step)) {
+                return $segment;
+            }
+        }
+
+        if ($this->currentSegment->contains($step)) {
+            return $this->currentSegment;
+        }
+
+        return null;
+    }
+
     /**
      * Get all steps (Transformers, Loaders, Processors) flattened.
      *

@@ -20,7 +20,7 @@
         "ext-xmlreader": "*",
         "ext-xmlwriter": "*",
         "ext-zlib": "*",
-        "composer-runtime-api": "^2.1",
+        "composer-runtime-api": "^2.0",
         "async-aws/s3": "^2.6",
         "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",
         "coduo/php-humanizer": "^5.0",

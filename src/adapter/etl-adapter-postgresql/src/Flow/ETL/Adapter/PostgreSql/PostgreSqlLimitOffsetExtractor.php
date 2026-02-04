@@ -32,6 +32,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $uri = 'postgresql://limit-offset';
         $sql = $this->query instanceof SqlQuery ? $this->query->toSql() : $this->query;
 
         if (!sql_query_order_by(sql_parse($sql))->hasOrderBy()) {
@@ -59,13 +60,13 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
             foreach ($cursor->iterate() as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
+                $totalFetched++;
+
                 if ($signal === Signal::STOP) {
                     $cursor->free();
 
                     return;
                 }
-
-                $totalFetched++;
 
                 if ($this->maximum !== null && $totalFetched >= $this->maximum) {
                     $cursor->free();

@@ -109,6 +109,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
             foreach ($rows as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), schema: $this->schema);
+
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

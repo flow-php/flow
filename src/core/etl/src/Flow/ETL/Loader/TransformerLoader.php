@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use function Flow\ETL\DSL\{df, from_rows};
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Loader, Rows, Transformation, Transformer};
 
 final readonly class TransformerLoader implements Closure, Loader, OverridingLoader
@@ -24,10 +25,20 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($this->transformer instanceof Transformer) {
-            $this->loader->load($this->transformer->transform($rows, $context), $context);
-        } else {
-            df($context->config)->from(from_rows($rows))->with($this->transformer)->load($this->loader)->run();
+        $context->telemetry()->loadingStarted($this);
+
+        try {
+            if ($this->transformer instanceof Transformer) {
+                $this->loader->load($this->transformer->transform($rows, $context), $context);
+            } else {
+                df($context->config)->from(from_rows($rows))->with($this->transformer)->load($this->loader)->run();
+            }
+
+            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
+        } catch (\Throwable $e) {
+            $context->telemetry()->loadingFailed($this, $e);
+
+            throw $e;
         }
     }
 

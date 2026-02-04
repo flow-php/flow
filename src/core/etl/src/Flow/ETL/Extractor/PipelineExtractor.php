@@ -20,6 +20,13 @@ final readonly class PipelineExtractor implements Extractor
      */
     public function extract(FlowContext $context) : \Generator
     {
-        return $this->pipeline->process($context);
+        foreach ($this->pipeline->process($context) as $rows) {
+            $signal = yield $rows;
+
+            if ($signal === Signal::STOP) {
+
+                return;
+            }
+        }
     }
 }

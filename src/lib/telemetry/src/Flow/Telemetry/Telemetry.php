@@ -48,34 +48,26 @@ final class Telemetry
     /**
      * Flush all pending telemetry data.
      *
-     * Collects metrics from all cached meters, then flushes all processors.
+     * Flushes all cached tracers, meters, and loggers.
      * Returns true only if all flush operations succeed.
      */
     public function flush() : bool
     {
-        $spanFlushed = true;
-        $metricFlushed = true;
-        $logFlushed = true;
-
-        foreach ($this->meters as $meter) {
-            foreach ($meter->collect() as $metric) {
-                $meter->processor()->process($metric);
-            }
-        }
+        $success = true;
 
         foreach ($this->tracers as $tracer) {
-            $spanFlushed = $spanFlushed && $tracer->processor()->flush();
+            $success = $tracer->flush() && $success;
         }
 
         foreach ($this->meters as $meter) {
-            $metricFlushed = $metricFlushed && $meter->processor()->flush();
+            $success = $meter->flush() && $success;
         }
 
         foreach ($this->loggers as $logger) {
-            $logFlushed = $logFlushed && $logger->processor()->flush();
+            $success = $logger->flush() && $success;
         }
 
-        return $spanFlushed && $metricFlushed && $logFlushed;
+        return $success;
     }
 
     /**
@@ -91,7 +83,7 @@ final class Telemetry
      */
     public function logger(string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Logger
     {
-        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes !== null ? \spl_object_id($attributes) : '');
+        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
         if (!\array_key_exists($key, $this->loggers)) {
             $this->loggers[$key] = $this->loggerProvider->logger($this->resource, $name, $version, $schemaUrl, $attributes);
@@ -113,7 +105,7 @@ final class Telemetry
      */
     public function meter(string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Meter
     {
-        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes !== null ? \spl_object_id($attributes) : '');
+        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
         if (!\array_key_exists($key, $this->meters)) {
             $this->meters[$key] = $this->meterProvider->meter($this->resource, $name, $version, $schemaUrl, $attributes);
@@ -190,7 +182,7 @@ final class Telemetry
      */
     public function tracer(string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Tracer
     {
-        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes !== null ? \spl_object_id($attributes) : '');
+        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
         if (!\array_key_exists($key, $this->tracers)) {
             $this->tracers[$key] = $this->tracerProvider->tracer($this->resource, $name, $version, $schemaUrl, $attributes);

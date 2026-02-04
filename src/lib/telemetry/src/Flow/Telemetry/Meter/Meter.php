@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Meter;
 
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, TraceBasedExemplarFilter};
-use Flow\Telemetry\Meter\Instrument\{Counter, Gauge, Histogram, Instrument, UpDownCounter};
+use Flow\Telemetry\Meter\Instrument\{Counter, Gauge, Histogram, Instrument, Throughput, UpDownCounter};
 use Psr\Clock\ClockInterface;
 
 /**
@@ -32,7 +32,7 @@ use Psr\Clock\ClockInterface;
 final class Meter
 {
     /**
-     * Cached instruments by key (name:type).
+     * Cached instruments by key (name:ClassName).
      *
      * @var array<string, Instrument>
      */
@@ -75,6 +75,26 @@ final class Meter
     }
 
     /**
+     * Complete an instrument and pass its metrics to the processor.
+     *
+     * Collects all aggregated metrics from the instrument, passes them
+     * to the processor, and removes the instrument from this meter.
+     * Use this for bounded operations where the instrument lifecycle
+     * is tied to a specific task (e.g., DataFrame processing).
+     *
+     * @param Instrument $instrument The instrument to complete
+     */
+    public function complete(Instrument $instrument) : void
+    {
+        foreach ($instrument->collect() as $metric) {
+            $this->processor->process($metric);
+        }
+
+        $key = $instrument->name() . ':' . $instrument::class;
+        unset($this->instruments[$key]);
+    }
+
+    /**
      * Create or get a Counter instrument.
      *
      * Counters are monotonically increasing - they only go up.
@@ -89,7 +109,7 @@ final class Meter
         ?string $unit = null,
         ?string $description = null,
     ) : Counter {
-        $key = $name . ':counter';
+        $key = $name . ':' . Counter::class;
 
         if (!array_key_exists($key, $this->instruments)) {
             $this->instruments[$key] = new Counter(
@@ -123,7 +143,7 @@ final class Meter
         ?string $unit = null,
         ?string $description = null,
     ) : Gauge {
-        $key = $name . ':gauge';
+        $key = $name . ':' . Gauge::class;
 
         if (!array_key_exists($key, $this->instruments)) {
             $this->instruments[$key] = new Gauge(
@@ -158,7 +178,7 @@ final class Meter
         ?string $description = null,
         ?array $boundaries = null,
     ) : Histogram {
-        $key = $name . ':histogram';
+        $key = $name . ':' . Histogram::class;
 
         if (!array_key_exists($key, $this->instruments)) {
             $this->instruments[$key] = new Histogram(
@@ -179,6 +199,47 @@ final class Meter
     }
 
     /**
+     * Create or get a Throughput instrument.
+     *
+     * Throughput tracks accumulated count and calculates rate (count/time unit).
+     * The timer starts from the first add() call for each attribute combination.
+     * Use for: rows processed per second, bytes transferred per second.
+     *
+     * @param string $name Metric name (e.g., 'dataframe_throughput', 'transfer_rate')
+     * @param null|string $unit Unit of measurement (e.g., 'rows', 'bytes')
+     * @param null|string $description Human-readable description
+     * @param null|int $ratePrecision Number of decimal places for rate calculation (default: 2, null for no rounding)
+     * @param TimeUnit $timeUnit Time unit for rate calculation (default: SECONDS)
+     */
+    public function createThroughput(
+        string $name,
+        ?string $unit = null,
+        ?string $description = null,
+        ?int $ratePrecision = 2,
+        TimeUnit $timeUnit = TimeUnit::SECONDS,
+    ) : Throughput {
+        $key = $name . ':' . Throughput::class;
+
+        if (!array_key_exists($key, $this->instruments)) {
+            $this->instruments[$key] = new Throughput(
+                $name,
+                $this->resource,
+                $this->scope,
+                $this->clock,
+                $this->temporality,
+                $this->exemplarFilter,
+                $unit,
+                $description,
+                $ratePrecision,
+                $timeUnit,
+            );
+        }
+
+        /** @var Throughput */
+        return $this->instruments[$key];
+    }
+
+    /**
      * Create or get an UpDownCounter instrument.
      *
      * UpDownCounters track values that can go both up and down.
@@ -193,7 +254,7 @@ final class Meter
         ?string $unit = null,
         ?string $description = null,
     ) : UpDownCounter {
-        $key = $name . ':updowncounter';
+        $key = $name . ':' . UpDownCounter::class;
 
         if (!array_key_exists($key, $this->instruments)) {
             $this->instruments[$key] = new UpDownCounter(
@@ -210,6 +271,18 @@ final class Meter
 
         /** @var UpDownCounter */
         return $this->instruments[$key];
+    }
+
+    /**
+     * Collect all metrics and flush to processor.
+     */
+    public function flush() : bool
+    {
+        foreach ($this->collect() as $metric) {
+            $this->processor->process($metric);
+        }
+
+        return $this->processor->flush();
     }
 
     /**

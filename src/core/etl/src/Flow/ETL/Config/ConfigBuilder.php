@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Config;
 
 use function Flow\Filesystem\DSL\fstab;
+use Composer\InstalledVersions;
 use Flow\Clock\SystemClock;
 use Flow\ETL\{Analyze, Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
+use Flow\ETL\Config\Telemetry\{TelemetryConfig, TelemetryOptions};
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
@@ -16,6 +18,7 @@ use Flow\ETL\Pipeline\Optimizer\{BatchSizeOptimization, LimitOptimization};
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
+use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
 
 final class ConfigBuilder
@@ -40,6 +43,10 @@ final class ConfigBuilder
 
     private ?Serializer $serializer;
 
+    private ?TelemetryConfig $telemetryConfig;
+
+    private readonly string $version;
+
     public function __construct()
     {
         $this->id = null;
@@ -52,6 +59,8 @@ final class ConfigBuilder
         $this->sort = new SortConfigBuilder();
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
+        $this->telemetryConfig = null;
+        $this->version = InstalledVersions::getPrettyVersion('flow-php/etl') ?: InstalledVersions::getPrettyVersion('flow-php/flow') ?? 'unknown';
     }
 
     public function analyze(Analyze $analyze) : self
@@ -73,6 +82,7 @@ final class ConfigBuilder
 
         return new Config(
             $this->id,
+            $this->version,
             $this->serializer,
             $this->clock,
             $this->fstab(),
@@ -83,6 +93,7 @@ final class ConfigBuilder
             $this->cache->build($this->fstab(), $this->serializer),
             $this->sort->build(),
             $this->analyze,
+            $this->telemetryConfig ?? TelemetryConfig::default($this->clock),
         );
     }
 
@@ -171,6 +182,13 @@ final class ConfigBuilder
     public function unmount(Filesystem $filesystem) : self
     {
         $this->fstab()->unmount($filesystem);
+
+        return $this;
+    }
+
+    public function withTelemetry(Telemetry $telemetry, TelemetryOptions $options = new TelemetryOptions()) : self
+    {
+        $this->telemetryConfig = new TelemetryConfig($telemetry, $options);
 
         return $this;
     }

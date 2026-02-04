@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\{FlowContext, Rows, Transformer, WithEntry};
 use Flow\ETL\Function\Parameter;
 
@@ -27,26 +28,41 @@ final readonly class DuplicateRowTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        $duplicatedRows = \Flow\ETL\DSL\rows();
+        $inputRowCount = $rows->count();
 
-        foreach ($rows->all() as $row) {
-            $condition = (new Parameter($this->condition))->asBoolean($row, $context);
+        $context->telemetry()->transformationStarted($this);
 
-            if ($condition) {
-                $duplicatedRow = \Flow\ETL\DSL\rows($row->duplicate());
+        try {
+            $duplicatedRows = \Flow\ETL\DSL\rows();
 
-                foreach ($this->entries as $entry) {
-                    $duplicatedRow = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform($duplicatedRow, $context);
+            foreach ($rows->all() as $row) {
+                $condition = (new Parameter($this->condition))->asBoolean($row, $context);
+
+                if ($condition) {
+                    $duplicatedRow = \Flow\ETL\DSL\rows($row->duplicate());
+
+                    foreach ($this->entries as $entry) {
+                        $duplicatedRow = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform($duplicatedRow, $context);
+                    }
+
+                    $duplicatedRows = $duplicatedRows->merge($duplicatedRow);
                 }
-
-                $duplicatedRows = $duplicatedRows->merge($duplicatedRow);
             }
-        }
 
-        if ($duplicatedRows->count()) {
-            $rows = $rows->merge($duplicatedRows);
-        }
+            if ($duplicatedRows->count()) {
+                $rows = $rows->merge($duplicatedRows);
+            }
 
-        return $rows;
+            $context->telemetry()->transformationCompleted($this, [
+                TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $inputRowCount,
+                TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $rows->count(),
+            ]);
+
+            return $rows;
+        } catch (\Throwable $e) {
+            $context->telemetry()->transformationFailed($this, $e);
+
+            throw $e;
+        }
     }
 }

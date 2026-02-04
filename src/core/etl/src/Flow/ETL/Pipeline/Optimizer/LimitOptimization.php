@@ -70,13 +70,13 @@ final class LimitOptimization implements Optimization
             return $pipeline->add($element);
         }
 
-        if ($element instanceof LimitTransformer && !\count($pipeline->stages()->steps())) {
+        if ($element instanceof LimitTransformer && !\count($pipeline->segments()->steps())) {
             $extractor->changeLimit($element->limit);
 
             return $pipeline;
         }
 
-        foreach ($pipeline->stages()->steps() as $pipelineElement) {
+        foreach ($pipeline->segments()->steps() as $pipelineElement) {
             if ($pipelineElement instanceof ScalarFunctionTransformer) {
                 if ($pipelineElement->function instanceof ExpandResults) {
                     break;
@@ -99,7 +99,7 @@ final class LimitOptimization implements Optimization
 
     private function hasOnlyNonExpandingSteps(Pipeline $pipeline) : bool
     {
-        foreach ($pipeline->stages()->steps() as $step) {
+        foreach ($pipeline->segments()->steps() as $step) {
             if ($step instanceof Processor) {
                 $isNonExpanding = false;
 
