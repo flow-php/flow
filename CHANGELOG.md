@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-02-03
+## [Unreleased] - 2026-02-04
 
 ### Added
+- [#2198](https://github.com/flow-php/flow/pull/2198) - **integration with flow-php/telemetry and flow-php/etl** - [@norberttech](https://github.com/norberttech)
+- [#2198](https://github.com/flow-php/flow/pull/2198) - **Throuhgput instrument in Telemetry** - [@norberttech](https://github.com/norberttech)
+- [#2198](https://github.com/flow-php/flow/pull/2198) - **Possibility to complete Meter Instruments on demand like spans** - [@norberttech](https://github.com/norberttech)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **Internal interface Processor** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **New flow-php/symfony-http-foundation-telemetry-bridge package for Symfony HttpFoundation telemetry context propagation** - [@norberttech](https://github.com/norberttech)
 - [#2167](https://github.com/flow-php/flow/pull/2167) - **PHPStan generics support to Carrier interface** - [@norberttech](https://github.com/norberttech)
