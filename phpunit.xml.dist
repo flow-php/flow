@@ -136,6 +136,12 @@
         <testsuite name="bridge-symfony-http-foundation-telemetry-integration">
             <directory>src/bridge/symfony/http-foundation-telemetry/tests/Flow/Bridge/Symfony/HttpFoundationTelemetry/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-symfony-telemetry-bundle-unit">
+            <directory>src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-telemetry-bundle-integration">
+            <directory>src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-telemetry-otlp-unit">
             <directory>src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Unit</directory>
         </testsuite>

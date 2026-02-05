@@ -27,6 +27,7 @@ enum Module : string
     case PSR7_TELEMETRY_BRIDGE = 'PSR-7 Telemetry Bridge';
     case S3_FILESYSTEM = 'S3 Filesystem';
     case SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE = 'Symfony HttpFoundation Telemetry Bridge';
+    case SYMFONY_TELEMETRY_BUNDLE = 'Symfony Telemetry Bundle';
     case TELEMETRY = 'Telemetry';
     case TELEMETRY_OTLP = 'Telemetry OTLP';
     case TEXT = 'Text';
@@ -66,7 +67,8 @@ enum Module : string
             self::TELEMETRY_OTLP => 21,
             self::MONOLOG_TELEMETRY_BRIDGE => 22,
             self::SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE => 23,
-            self::PSR7_TELEMETRY_BRIDGE => 24,
+            self::SYMFONY_TELEMETRY_BUNDLE => 24,
+            self::PSR7_TELEMETRY_BRIDGE => 25,
             default => 99,
         };
     }

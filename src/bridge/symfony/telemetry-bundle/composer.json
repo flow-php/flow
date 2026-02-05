@@ -1,0 +1,51 @@
+{
+    "name": "flow-php/symfony-telemetry-bundle",
+    "type": "symfony-bundle",
+    "description": "Flow PHP - Symfony Telemetry Bundle",
+    "keywords": [
+        "flow-php",
+        "symfony",
+        "telemetry",
+        "opentelemetry",
+        "tracing",
+        "metrics",
+        "logging",
+        "bundle"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/telemetry": "self.version",
+        "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
+        "psr/clock": "^1.0",
+        "symfony/config": "^6.4 || ^7.3 || ^8.0",
+        "symfony/console": "^6.4 || ^7.3 || ^8.0",
+        "symfony/dependency-injection": "^6.4 || ^7.3 || ^8.0",
+        "symfony/http-kernel": "^6.4 || ^7.3 || ^8.0"
+    },
+    "suggest": {
+        "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Bridge/Symfony/TelemetryBundle/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

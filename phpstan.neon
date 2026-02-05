@@ -31,6 +31,7 @@ parameters:
         - src/bridge/psr7/telemetry/src
         - src/bridge/symfony/http-foundation/src
         - src/bridge/symfony/http-foundation-telemetry/src
+        - src/bridge/symfony/telemetry-bundle/src
         - src/bridge/telemetry/otlp/src
         - src/lib/array-dot/src
         - src/lib/azure-sdk/src
@@ -68,6 +69,7 @@ parameters:
         - src/bridge/psr7/telemetry/tests
         - src/bridge/symfony/http-foundation/tests
         - src/bridge/symfony/http-foundation-telemetry/tests
+        - src/bridge/symfony/telemetry-bundle/tests
         - src/bridge/telemetry/otlp/tests
         - src/lib/telemetry/tests
 
