@@ -79,6 +79,48 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['instances']);
     }
 
+    public function test_instrumentation_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_kernel' => true,
+                'console' => true,
+                'messenger' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_kernel']);
+        self::assertTrue($config['instrumentation']['console']);
+        self::assertTrue($config['instrumentation']['messenger']);
+    }
+
+    public function test_instrumentation_defaults_to_all_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('instrumentation', $config);
+        self::assertFalse($config['instrumentation']['http_kernel']);
+        self::assertFalse($config['instrumentation']['console']);
+        self::assertFalse($config['instrumentation']['messenger']);
+    }
+
+    public function test_instrumentation_partial_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_kernel' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_kernel']);
+        self::assertFalse($config['instrumentation']['console']);
+        self::assertFalse($config['instrumentation']['messenger']);
+    }
+
     public function test_invalid_exporter_type_is_rejected() : void
     {
         $this->expectException(InvalidConfigurationException::class);

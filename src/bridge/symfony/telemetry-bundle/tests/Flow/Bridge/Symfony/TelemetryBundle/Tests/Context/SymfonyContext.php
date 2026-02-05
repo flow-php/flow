@@ -21,7 +21,7 @@ final class SymfonyContext
             $this->shutdown();
         }
 
-        $this->kernel = new TestKernel('test', true);
+        $this->kernel = new TestKernel('test', false);
 
         if (isset($options['config']) && \is_callable($options['config'])) {
             $options['config']($this->kernel);

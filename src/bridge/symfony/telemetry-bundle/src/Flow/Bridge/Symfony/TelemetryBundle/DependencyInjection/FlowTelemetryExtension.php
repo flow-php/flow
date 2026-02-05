@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\ConsoleEventSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\HttpKernelEventSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Messenger\TracingMiddleware;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, CompositeLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
@@ -20,6 +23,7 @@ use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBase
 use Flow\Telemetry\Tracer\TracerProvider;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 
 final class FlowTelemetryExtension extends Extension
 {
@@ -29,12 +33,13 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, instances?: array<string, array<string, mixed>>} $config */
+        /** @var array{service: array<string, mixed>, instances?: array<string, array<string, mixed>>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool}} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($container);
         $this->registerResource($config['service'], $container);
         $this->registerInstances($config['instances'] ?? [], $container);
+        $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
     }
 
     /**
@@ -714,6 +719,32 @@ final class FlowTelemetryExtension extends Extension
 
         foreach ($instances as $name => $config) {
             $this->registerTelemetryInstance($name, $config, $container);
+        }
+    }
+
+    /**
+     * @param array{http_kernel?: bool, console?: bool, messenger?: bool} $config
+     */
+    private function registerInstrumentation(array $config, ContainerBuilder $container) : void
+    {
+        if ($config['http_kernel'] ?? true) {
+            $definition = new Definition(HttpKernelEventSubscriber::class);
+            $definition->setArgument(0, new Reference(Telemetry::class));
+            $definition->addTag('kernel.event_subscriber');
+            $container->setDefinition('flow.telemetry.http_kernel.subscriber', $definition);
+        }
+
+        if ($config['console'] ?? true) {
+            $definition = new Definition(ConsoleEventSubscriber::class);
+            $definition->setArgument(0, new Reference(Telemetry::class));
+            $definition->addTag('kernel.event_subscriber');
+            $container->setDefinition('flow.telemetry.console.subscriber', $definition);
+        }
+
+        if (($config['messenger'] ?? true) && \interface_exists(MiddlewareInterface::class)) {
+            $definition = new Definition(TracingMiddleware::class);
+            $definition->setArgument(0, new Reference(Telemetry::class));
+            $container->setDefinition('flow.telemetry.messenger.middleware', $definition);
         }
     }
 
