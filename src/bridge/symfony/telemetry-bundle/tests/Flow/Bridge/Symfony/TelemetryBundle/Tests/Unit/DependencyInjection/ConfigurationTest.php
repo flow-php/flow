@@ -516,6 +516,46 @@ final class ConfigurationTest extends TestCase
         self::assertFalse($config['telemetry']['messenger']);
     }
 
+    public function test_telemetry_http_client_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'http_client' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['http_client']['enabled']);
+    }
+
+    public function test_telemetry_http_client_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('telemetry', $config);
+        self::assertArrayHasKey('http_client', $config['telemetry']);
+        self::assertFalse($config['telemetry']['http_client']['enabled']);
+        self::assertSame([], $config['telemetry']['http_client']['exclude_clients']);
+    }
+
+    public function test_telemetry_http_client_exclude_clients() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'http_client' => [
+                    'enabled' => true,
+                    'exclude_clients' => ['internal.http_client', '/^debug\\..*$/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['http_client']['enabled']);
+        self::assertSame(['internal.http_client', '/^debug\\..*$/'], $config['telemetry']['http_client']['exclude_clients']);
+    }
+
     public function test_telemetry_http_kernel_exclude_routes() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[

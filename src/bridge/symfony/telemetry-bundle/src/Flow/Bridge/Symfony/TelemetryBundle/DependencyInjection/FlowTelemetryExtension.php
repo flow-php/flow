@@ -36,7 +36,7 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, telemetry?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, telemetry?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($container);
@@ -719,7 +719,7 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}} $config
+     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}} $config
      */
     private function registerAutoTelemetry(array $config, ContainerBuilder $container) : void
     {
@@ -775,6 +775,16 @@ final class FlowTelemetryExtension extends Extension
             $definition->addTag('twig.extension');
             $container->setDefinition('flow.telemetry.twig.extension', $definition);
         }
+
+        $httpClientConfig = $config['http_client'] ?? [];
+        $container->setParameter(
+            'flow.telemetry.http_client.enabled',
+            $httpClientConfig['enabled'] ?? false
+        );
+        $container->setParameter(
+            'flow.telemetry.http_client.exclude_clients',
+            $httpClientConfig['exclude_clients'] ?? []
+        );
     }
 
     private function registerGlobalServices(ContainerBuilder $container) : void

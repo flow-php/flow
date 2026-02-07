@@ -20,6 +20,9 @@ final class TestKernel extends Kernel
     /** @var array<string> */
     private array $testConfigs = [];
 
+    /** @var array<callable(ContainerBuilder): void> */
+    private array $testContainerConfigurators = [];
+
     /** @var array<string, array<string, mixed>> */
     private array $testExtensionConfigs = [];
 
@@ -43,6 +46,14 @@ final class TestKernel extends Kernel
     public function addTestConfig(string $configPath) : void
     {
         $this->testConfigs[] = $configPath;
+    }
+
+    /**
+     * @param callable(ContainerBuilder): void $configurator
+     */
+    public function addTestContainerConfigurator(callable $configurator) : void
+    {
+        $this->testContainerConfigurators[] = $configurator;
     }
 
     /**
@@ -94,6 +105,10 @@ final class TestKernel extends Kernel
                 $container->loadFromExtension($extension, $config);
             }
 
+            foreach ($this->testContainerConfigurators as $configurator) {
+                $configurator($container);
+            }
+
             $container->setParameter('kernel.secret', 'test_secret_' . $this->testId);
         });
     }
@@ -106,7 +121,7 @@ final class TestKernel extends Kernel
             public function process(ContainerBuilder $container) : void
             {
                 foreach ($container->getDefinitions() as $id => $definition) {
-                    if (\str_starts_with($id, 'flow.telemetry')) {
+                    if (\str_starts_with($id, 'flow.telemetry') || \str_ends_with($id, '.flow_telemetry') || \str_starts_with($id, 'test.')) {
                         $definition->setPublic(true);
                     }
                 }

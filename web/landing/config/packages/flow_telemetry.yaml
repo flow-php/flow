@@ -22,7 +22,9 @@ flow_telemetry:
       trace_blocks: true
       trace_macros: true
       exclude_templates:
-        - '@WebProfiler/Profiler/toolbar.html.twig'
+        - '/\@WebProfiler*/'
+    http_client:
+      enabled: true
 
   tracer_provider:
     sampler:
