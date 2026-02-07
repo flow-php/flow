@@ -91,6 +91,8 @@ parameters:
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Telemetry/Messenger/TracingMiddleware.php
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Telemetry/Twig/TracingTwigExtension.php
         - src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Integration/Telemetry/Twig/TracingTwigExtensionTest.php
+        - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Telemetry/Doctrine/DBAL/V3/*
+        - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Telemetry/Doctrine/DBAL/V4/*
 
     tmpDir: var/phpstan/cache
 
@@ -128,6 +130,12 @@ parameters:
         -
             path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
             identifier: binaryOp.invalid
+        -
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/Compiler/DBALTelemetryPass.php
+            identifier: cast.int
+        -
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Telemetry/Doctrine/DBAL/TracingMiddleware.php
+            identifier: return.type
 
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon

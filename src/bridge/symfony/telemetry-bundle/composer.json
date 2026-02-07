@@ -26,6 +26,7 @@
         "symfony/http-kernel": "^6.4 || ^7.3 || ^8.0"
     },
     "require-dev": {
+        "doctrine/dbal": "^3.6 || ^4.0",
         "flow-php/telemetry-otlp-bridge": "self.version",
         "symfony/framework-bundle": "^6.4 || ^7.3 || ^8.0",
         "symfony/messenger": "^6.4 || ^7.3 || ^8.0",
@@ -33,6 +34,7 @@
         "twig/twig": "^3.0"
     },
     "suggest": {
+        "doctrine/dbal": "Required for Doctrine DBAL tracing (^3.6 or ^4.0)",
         "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
         "symfony/messenger": "Required for Messenger tracing middleware",
         "twig/twig": "Required for Twig template tracing"

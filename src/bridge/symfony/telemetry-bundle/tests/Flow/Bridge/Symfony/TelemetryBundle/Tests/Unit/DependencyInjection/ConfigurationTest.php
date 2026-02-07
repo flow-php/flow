@@ -504,6 +504,94 @@ final class ConfigurationTest extends TestCase
         self::assertSame(['cache:clear', 'debug:router'], $config['telemetry']['console']['exclude_commands']);
     }
 
+    public function test_telemetry_dbal_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'dbal' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['dbal']['enabled']);
+    }
+
+    public function test_telemetry_dbal_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('telemetry', $config);
+        self::assertArrayHasKey('dbal', $config['telemetry']);
+        self::assertFalse($config['telemetry']['dbal']['enabled']);
+        self::assertTrue($config['telemetry']['dbal']['log_sql']);
+        self::assertSame(1000, $config['telemetry']['dbal']['max_sql_length']);
+        self::assertSame([], $config['telemetry']['dbal']['exclude_connections']);
+    }
+
+    public function test_telemetry_dbal_exclude_connections() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'exclude_connections' => ['legacy', '/^debug_.*$/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['dbal']['enabled']);
+        self::assertSame(['legacy', '/^debug_.*$/'], $config['telemetry']['dbal']['exclude_connections']);
+    }
+
+    public function test_telemetry_dbal_log_sql_can_be_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'log_sql' => false,
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['dbal']['enabled']);
+        self::assertFalse($config['telemetry']['dbal']['log_sql']);
+    }
+
+    public function test_telemetry_dbal_max_sql_length_can_be_zero_for_unlimited() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'max_sql_length' => 0,
+                ],
+            ],
+        ]]);
+
+        self::assertSame(0, $config['telemetry']['dbal']['max_sql_length']);
+    }
+
+    public function test_telemetry_dbal_max_sql_length_configuration() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'max_sql_length' => 500,
+                ],
+            ],
+        ]]);
+
+        self::assertSame(500, $config['telemetry']['dbal']['max_sql_length']);
+    }
+
     public function test_telemetry_defaults_to_all_disabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
