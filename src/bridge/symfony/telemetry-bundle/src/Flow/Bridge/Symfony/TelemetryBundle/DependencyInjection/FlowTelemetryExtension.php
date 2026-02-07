@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\{ConsoleFlushSubscriber, ConsoleSpanSubscriber};
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Messenger\TracingMiddleware;
+use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, CompositeLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
@@ -33,13 +34,16 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool}} $config */
+        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($container);
         $this->registerResource($config['service'], $container);
         $this->registerTelemetry($config, $container);
         $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
+        $this->registerTracers($config['tracers'] ?? [], $container);
+        $this->registerMeters($config['meters'] ?? [], $container);
+        $this->registerLoggers($config['loggers'] ?? [], $container);
     }
 
     /**
@@ -755,6 +759,62 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
+     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     */
+    private function registerLoggers(array $config, ContainerBuilder $container) : void
+    {
+        foreach ($config as $name => $loggerConfig) {
+            $definition = new Definition(Logger::class);
+            $definition->setFactory([new Reference('flow.telemetry'), 'logger']);
+            $definition->setArgument(0, $name);
+            $definition->setArgument(1, $loggerConfig['version'] ?? 'unknown');
+            $definition->setArgument(2, $loggerConfig['schema_url'] ?? null);
+
+            $attributes = $loggerConfig['attributes'] ?? [];
+
+            if (\count($attributes) > 0) {
+                $attributesDefinition = new Definition(Attributes::class);
+                $attributesDefinition->setFactory([Attributes::class, 'create']);
+                $attributesDefinition->setArgument(0, $attributes);
+                $definition->setArgument(3, $attributesDefinition);
+            } else {
+                $definition->setArgument(3, null);
+            }
+
+            $definition->setPublic(true);
+            $container->setDefinition('flow.telemetry.' . $name . '.logger', $definition);
+        }
+    }
+
+    /**
+     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     */
+    private function registerMeters(array $config, ContainerBuilder $container) : void
+    {
+        foreach ($config as $name => $meterConfig) {
+            $definition = new Definition(Meter::class);
+            $definition->setFactory([new Reference('flow.telemetry'), 'meter']);
+            $definition->setArgument(0, $name);
+            $definition->setArgument(1, $meterConfig['version'] ?? 'unknown');
+            $definition->setArgument(2, $meterConfig['schema_url'] ?? null);
+
+            $attributes = $meterConfig['attributes'] ?? [];
+
+            if (\count($attributes) > 0) {
+                $attributesDefinition = new Definition(Attributes::class);
+                $attributesDefinition->setFactory([Attributes::class, 'create']);
+                $attributesDefinition->setArgument(0, $attributes);
+                $definition->setArgument(3, $attributesDefinition);
+            } else {
+                $definition->setArgument(3, null);
+            }
+
+            $definition->setPublic(true);
+            $container->setDefinition('flow.telemetry.' . $name . '.meter', $definition);
+        }
+    }
+
+    /**
      * @param array<string, mixed> $serviceConfig
      */
     private function registerResource(array $serviceConfig, ContainerBuilder $container) : void
@@ -798,5 +858,33 @@ final class FlowTelemetryExtension extends Extension
         $container->setDefinition($telemetryServiceId, $definition);
 
         $container->setAlias(Telemetry::class, $telemetryServiceId)->setPublic(true);
+    }
+
+    /**
+     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     */
+    private function registerTracers(array $config, ContainerBuilder $container) : void
+    {
+        foreach ($config as $name => $tracerConfig) {
+            $definition = new Definition(Tracer::class);
+            $definition->setFactory([new Reference('flow.telemetry'), 'tracer']);
+            $definition->setArgument(0, $name);
+            $definition->setArgument(1, $tracerConfig['version'] ?? 'unknown');
+            $definition->setArgument(2, $tracerConfig['schema_url'] ?? null);
+
+            $attributes = $tracerConfig['attributes'] ?? [];
+
+            if (\count($attributes) > 0) {
+                $attributesDefinition = new Definition(Attributes::class);
+                $attributesDefinition->setFactory([Attributes::class, 'create']);
+                $attributesDefinition->setArgument(0, $attributes);
+                $definition->setArgument(3, $attributesDefinition);
+            } else {
+                $definition->setArgument(3, null);
+            }
+
+            $definition->setPublic(true);
+            $container->setDefinition('flow.telemetry.' . $name . '.tracer', $definition);
+        }
     }
 }

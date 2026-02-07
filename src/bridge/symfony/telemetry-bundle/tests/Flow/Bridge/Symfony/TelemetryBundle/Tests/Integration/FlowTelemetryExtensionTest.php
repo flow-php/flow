@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\FlowTelemetryExtensi
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\{Logger\Logger, Meter\Meter, Resource, Telemetry, Tracer\Tracer};
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, CompositeLogProcessor, PassThroughLogProcessor};
 use Flow\Telemetry\Meter\MeterProvider;
@@ -17,7 +18,6 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
 use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
-use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler};
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -501,6 +501,120 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertInstanceOf(VoidLogProcessor::class, $container->get('flow.telemetry.logger_provider.processor'));
     }
 
+    public function test_multiple_named_services_of_same_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracers' => [
+                        'database' => [
+                            'version' => '1.0.0',
+                        ],
+                        'http_client' => [
+                            'version' => '2.0.0',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.database.tracer'));
+        self::assertTrue($container->has('flow.telemetry.http_client.tracer'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.database.tracer'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.http_client.tracer'));
+    }
+
+    public function test_named_logger_is_registered_as_service() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'loggers' => [
+                        'audit' => [
+                            'version' => '1.0.0',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.audit.logger'));
+        self::assertInstanceOf(Logger::class, $container->get('flow.telemetry.audit.logger'));
+    }
+
+    public function test_named_meter_is_registered_as_service() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meters' => [
+                        'etl_pipeline' => [
+                            'version' => '1.0.0',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.etl_pipeline.meter'));
+        self::assertInstanceOf(Meter::class, $container->get('flow.telemetry.etl_pipeline.meter'));
+    }
+
+    public function test_named_tracer_is_registered_as_service() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracers' => [
+                        'database' => [
+                            'version' => '2.0.0',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.database.tracer'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.database.tracer'));
+    }
+
+    public function test_named_tracer_with_attributes() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracers' => [
+                        'database' => [
+                            'version' => '2.0.0',
+                            'schema_url' => 'https://opentelemetry.io/schemas/1.20.0',
+                            'attributes' => [
+                                'db.system' => 'postgresql',
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        $tracer = $container->get('flow.telemetry.database.tracer');
+
+        self::assertInstanceOf(Tracer::class, $tracer);
+    }
+
     public function test_otlp_availability_pass_sets_parameter_when_otlp_not_configured() : void
     {
         $this->bootKernel([
@@ -553,6 +667,35 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $resource = $this->getContainer()->get('flow.telemetry.resource');
         self::assertSame('my-service', $resource->get('service.name'));
         self::assertSame('2.1.0', $resource->get('service.version'));
+    }
+
+    public function test_same_name_for_different_types_is_allowed() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracers' => [
+                        'database' => ['version' => '1.0.0'],
+                    ],
+                    'meters' => [
+                        'database' => ['version' => '1.0.0'],
+                    ],
+                    'loggers' => [
+                        'database' => ['version' => '1.0.0'],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.database.tracer'));
+        self::assertTrue($container->has('flow.telemetry.database.meter'));
+        self::assertTrue($container->has('flow.telemetry.database.logger'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.database.tracer'));
+        self::assertInstanceOf(Meter::class, $container->get('flow.telemetry.database.meter'));
+        self::assertInstanceOf(Logger::class, $container->get('flow.telemetry.database.logger'));
     }
 
     public function test_service_exporter_without_service_id_throws_exception() : void

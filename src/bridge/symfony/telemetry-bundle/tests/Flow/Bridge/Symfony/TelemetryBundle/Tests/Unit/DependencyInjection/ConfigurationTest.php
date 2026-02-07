@@ -47,6 +47,20 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_empty_tracers_meters_loggers_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracers' => [],
+            'meters' => [],
+            'loggers' => [],
+        ]]);
+
+        self::assertSame([], $config['tracers']);
+        self::assertSame([], $config['meters']);
+        self::assertSame([], $config['loggers']);
+    }
+
     public function test_exporter_defaults_to_void() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -166,6 +180,49 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_logger_configuration() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'loggers' => [
+                'audit' => [
+                    'version' => '1.0.0',
+                    'schema_url' => 'https://example.com/audit-schema/1.0',
+                    'attributes' => [
+                        'log.category' => 'audit',
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertArrayHasKey('loggers', $config);
+        self::assertArrayHasKey('audit', $config['loggers']);
+        self::assertSame('1.0.0', $config['loggers']['audit']['version']);
+        self::assertSame('https://example.com/audit-schema/1.0', $config['loggers']['audit']['schema_url']);
+        self::assertSame(['log.category' => 'audit'], $config['loggers']['audit']['attributes']);
+    }
+
+    public function test_meter_configuration() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'meters' => [
+                'etl_pipeline' => [
+                    'version' => '1.0.0',
+                    'attributes' => [
+                        'flow.pipeline' => 'daily_import',
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertArrayHasKey('meters', $config);
+        self::assertArrayHasKey('etl_pipeline', $config['meters']);
+        self::assertSame('1.0.0', $config['meters']['etl_pipeline']['version']);
+        self::assertNull($config['meters']['etl_pipeline']['schema_url']);
+        self::assertSame(['flow.pipeline' => 'daily_import'], $config['meters']['etl_pipeline']['attributes']);
+    }
+
     public function test_meter_provider_temporality_can_be_delta() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -205,6 +262,27 @@ final class ConfigurationTest extends TestCase
         self::assertSame('test-app', $config['service']['name']);
         self::assertNull($config['service']['version']);
         self::assertSame([], $config['service']['attributes']);
+    }
+
+    public function test_multiple_named_items_of_same_type() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracers' => [
+                'database' => [
+                    'version' => '1.0.0',
+                ],
+                'http_client' => [
+                    'version' => '2.0.0',
+                ],
+                'cache' => [],
+            ],
+        ]]);
+
+        self::assertCount(3, $config['tracers']);
+        self::assertSame('1.0.0', $config['tracers']['database']['version']);
+        self::assertSame('2.0.0', $config['tracers']['http_client']['version']);
+        self::assertSame('unknown', $config['tracers']['cache']['version']);
     }
 
     public function test_otlp_serializer_defaults_to_json() : void
@@ -434,5 +512,47 @@ final class ConfigurationTest extends TestCase
         self::assertSame('warn', $processor['minimum_severity']);
         self::assertSame('batching', $processor['inner_processor']['type']);
         self::assertSame('console', $processor['inner_processor']['exporter']['type']);
+    }
+
+    public function test_tracer_configuration_with_all_options() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracers' => [
+                'database' => [
+                    'version' => '2.0.0',
+                    'schema_url' => 'https://opentelemetry.io/schemas/1.20.0',
+                    'attributes' => [
+                        'db.system' => 'postgresql',
+                        'db.pool_size' => 10,
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertArrayHasKey('tracers', $config);
+        self::assertArrayHasKey('database', $config['tracers']);
+        self::assertSame('2.0.0', $config['tracers']['database']['version']);
+        self::assertSame('https://opentelemetry.io/schemas/1.20.0', $config['tracers']['database']['schema_url']);
+        self::assertSame([
+            'db.system' => 'postgresql',
+            'db.pool_size' => 10,
+        ], $config['tracers']['database']['attributes']);
+    }
+
+    public function test_tracer_configuration_with_defaults() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracers' => [
+                'http_client' => [],
+            ],
+        ]]);
+
+        self::assertArrayHasKey('tracers', $config);
+        self::assertArrayHasKey('http_client', $config['tracers']);
+        self::assertSame('unknown', $config['tracers']['http_client']['version']);
+        self::assertNull($config['tracers']['http_client']['schema_url']);
+        self::assertSame([], $config['tracers']['http_client']['attributes']);
     }
 }
