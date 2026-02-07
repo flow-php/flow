@@ -198,6 +198,57 @@ final class TracingTwigExtensionTest extends KernelTestCase
         self::assertNotContains('@Profiler/panel.html.twig', $templateNames, 'Profiler panel should not be traced');
     }
 
+    public function test_does_not_trace_templates_when_disabled() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'twig' => [
+                            'enabled' => true,
+                            'trace_templates' => false,
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TracingTwigExtension $extension */
+        $extension = $container->get('flow.telemetry.twig.extension');
+
+        $loader = new ArrayLoader([
+            'test.html.twig' => 'Hello {{ name }}!',
+        ]);
+
+        $twig = new Environment($loader);
+        $twig->addExtension($extension);
+
+        $result = $twig->render('test.html.twig', ['name' => 'World']);
+
+        self::assertSame('Hello World!', $result);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        foreach ($spans as $span) {
+            $attributes = $span->attributes();
+            self::assertNotSame('template', $attributes['twig.type'] ?? '', 'Template span should not be traced when trace_templates is false');
+        }
+    }
+
     public function test_excluded_template_cascades_to_children() : void
     {
         $this->bootKernel([
@@ -359,6 +410,66 @@ final class TracingTwigExtensionTest extends KernelTestCase
         }
 
         self::assertTrue($blockSpanFound, 'Expected block span was not found');
+    }
+
+    public function test_traces_macros_when_enabled() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'twig' => [
+                            'enabled' => true,
+                            'trace_macros' => true,
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TracingTwigExtension $extension */
+        $extension = $container->get('flow.telemetry.twig.extension');
+
+        $loader = new ArrayLoader([
+            'macros.html.twig' => '{% macro greet(name) %}Hello {{ name }}!{% endmacro %}',
+            'test.html.twig' => '{% import "macros.html.twig" as macros %}{{ macros.greet("World") }}',
+        ]);
+
+        $twig = new Environment($loader);
+        $twig->addExtension($extension);
+
+        $result = $twig->render('test.html.twig');
+
+        self::assertSame('Hello World!', $result);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $macroSpanFound = false;
+
+        foreach ($spans as $span) {
+            $attributes = $span->attributes();
+
+            if (($attributes['twig.type'] ?? '') === 'macro') {
+                $macroSpanFound = true;
+                self::assertSame('greet', $attributes['twig.name']);
+            }
+        }
+
+        self::assertTrue($macroSpanFound, 'Expected macro span was not found');
     }
 
     public function test_traces_template_rendering() : void
