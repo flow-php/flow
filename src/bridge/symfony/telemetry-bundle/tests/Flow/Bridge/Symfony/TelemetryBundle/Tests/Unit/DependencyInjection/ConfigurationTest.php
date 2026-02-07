@@ -15,27 +15,23 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'composite',
-                            'processors' => [
-                                [
-                                    'type' => 'memory',
-                                ],
-                                [
-                                    'type' => 'batching',
-                                    'batch_size' => 100,
-                                ],
-                            ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'composite',
+                    'processors' => [
+                        [
+                            'type' => 'memory',
+                        ],
+                        [
+                            'type' => 'batching',
+                            'batch_size' => 100,
                         ],
                     ],
                 ],
             ],
         ]]);
 
-        $processors = $config['instances']['default']['tracer_provider']['processor']['processors'];
+        $processors = $config['tracer_provider']['processor']['processors'];
         self::assertCount(2, $processors);
         self::assertSame('memory', $processors[0]['type']);
         self::assertSame('batching', $processors[1]['type']);
@@ -55,28 +51,14 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'batching',
-                        ],
-                    ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
                 ],
             ],
         ]]);
 
-        self::assertSame('void', $config['instances']['default']['tracer_provider']['processor']['exporter']['type']);
-    }
-
-    public function test_instances_key_is_present_when_omitted() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-        ]]);
-
-        self::assertArrayHasKey('instances', $config);
-        self::assertSame([], $config['instances']);
+        self::assertSame('void', $config['tracer_provider']['processor']['exporter']['type']);
     }
 
     public function test_instrumentation_can_be_enabled() : void
@@ -127,15 +109,11 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'batching',
-                            'exporter' => [
-                                'type' => 'invalid_exporter',
-                            ],
-                        ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => [
+                        'type' => 'invalid_exporter',
                     ],
                 ],
             ],
@@ -148,13 +126,9 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'invalid_processor',
-                        ],
-                    ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'invalid_processor',
                 ],
             ],
         ]]);
@@ -166,13 +140,9 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'sampler' => [
-                            'type' => 'invalid_sampler',
-                        ],
-                    ],
+            'tracer_provider' => [
+                'sampler' => [
+                    'type' => 'invalid_sampler',
                 ],
             ],
         ]]);
@@ -184,16 +154,12 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'logger_provider' => [
-                        'processor' => [
-                            'type' => 'severity_filtering',
-                            'minimum_severity' => 'invalid_level',
-                            'inner_processor' => [
-                                'type' => 'void',
-                            ],
-                        ],
+            'logger_provider' => [
+                'processor' => [
+                    'type' => 'severity_filtering',
+                    'minimum_severity' => 'invalid_level',
+                    'inner_processor' => [
+                        'type' => 'void',
                     ],
                 ],
             ],
@@ -204,30 +170,22 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'meter_provider' => [
-                        'temporality' => 'delta',
-                    ],
-                ],
+            'meter_provider' => [
+                'temporality' => 'delta',
             ],
         ]]);
 
-        self::assertSame('delta', $config['instances']['default']['meter_provider']['temporality']);
+        self::assertSame('delta', $config['meter_provider']['temporality']);
     }
 
     public function test_meter_provider_temporality_defaults_to_cumulative() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'meter_provider' => [],
-                ],
-            ],
+            'meter_provider' => [],
         ]]);
 
-        self::assertSame('cumulative', $config['instances']['default']['meter_provider']['temporality']);
+        self::assertSame('cumulative', $config['meter_provider']['temporality']);
     }
 
     public function test_minimal_config_requires_service_name() : void
@@ -249,47 +207,24 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['service']['attributes']);
     }
 
-    public function test_multiple_instances() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [],
-                'secondary' => [
-                    'tracer_provider' => [
-                        'sampler' => ['type' => 'always_off'],
-                    ],
-                ],
-            ],
-        ]]);
-
-        self::assertArrayHasKey('default', $config['instances']);
-        self::assertArrayHasKey('secondary', $config['instances']);
-        self::assertSame('always_off', $config['instances']['secondary']['tracer_provider']['sampler']['type']);
-    }
-
     public function test_otlp_serializer_defaults_to_json() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'batching',
-                            'exporter' => [
-                                'type' => 'otlp',
-                                'otlp' => [
-                                    'transport' => [],
-                                ],
-                            ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [],
                         ],
                     ],
                 ],
             ],
         ]]);
 
-        $serializer = $config['instances']['default']['tracer_provider']['processor']['exporter']['otlp']['transport']['serializer'];
+        $serializer = $config['tracer_provider']['processor']['exporter']['otlp']['transport']['serializer'];
         self::assertSame('json', $serializer['type']);
     }
 
@@ -297,24 +232,20 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'batching',
-                            'exporter' => [
-                                'type' => 'otlp',
-                                'otlp' => [
-                                    'transport' => [],
-                                ],
-                            ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [],
                         ],
                     ],
                 ],
             ],
         ]]);
 
-        $transport = $config['instances']['default']['tracer_provider']['processor']['exporter']['otlp']['transport'];
+        $transport = $config['tracer_provider']['processor']['exporter']['otlp']['transport'];
         self::assertSame('curl', $transport['type']);
         self::assertSame('http://localhost:4318', $transport['endpoint']);
         self::assertSame(30, $transport['timeout']);
@@ -326,18 +257,14 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'batching',
-                        ],
-                    ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
                 ],
             ],
         ]]);
 
-        self::assertSame(512, $config['instances']['default']['tracer_provider']['processor']['batch_size']);
+        self::assertSame(512, $config['tracer_provider']['processor']['batch_size']);
     }
 
     public function test_processor_batch_size_minimum_validation() : void
@@ -346,14 +273,10 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'batching',
-                            'batch_size' => 0,
-                        ],
-                    ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'batch_size' => 0,
                 ],
             ],
         ]]);
@@ -363,28 +286,34 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [],
-                ],
-            ],
+            'tracer_provider' => [],
         ]]);
 
-        self::assertSame('void', $config['instances']['default']['tracer_provider']['processor']['type']);
+        self::assertSame('void', $config['tracer_provider']['processor']['type']);
+    }
+
+    public function test_providers_have_defaults() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('tracer_provider', $config);
+        self::assertArrayHasKey('meter_provider', $config);
+        self::assertArrayHasKey('logger_provider', $config);
+        self::assertSame('void', $config['tracer_provider']['processor']['type']);
+        self::assertSame('void', $config['meter_provider']['processor']['type']);
+        self::assertSame('void', $config['logger_provider']['processor']['type']);
     }
 
     public function test_sampler_defaults_to_always_on() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [],
-                ],
-            ],
+            'tracer_provider' => [],
         ]]);
 
-        self::assertSame('always_on', $config['instances']['default']['tracer_provider']['sampler']['type']);
+        self::assertSame('always_on', $config['tracer_provider']['sampler']['type']);
     }
 
     public function test_sampler_ratio_maximum_validation() : void
@@ -393,14 +322,10 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'sampler' => [
-                            'type' => 'trace_id_ratio',
-                            'ratio' => 1.1,
-                        ],
-                    ],
+            'tracer_provider' => [
+                'sampler' => [
+                    'type' => 'trace_id_ratio',
+                    'ratio' => 1.1,
                 ],
             ],
         ]]);
@@ -412,14 +337,10 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'sampler' => [
-                            'type' => 'trace_id_ratio',
-                            'ratio' => -0.1,
-                        ],
-                    ],
+            'tracer_provider' => [
+                'sampler' => [
+                    'type' => 'trace_id_ratio',
+                    'ratio' => -0.1,
                 ],
             ],
         ]]);
@@ -429,19 +350,15 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'sampler' => [
-                            'type' => 'trace_id_ratio',
-                            'ratio' => 0.5,
-                        ],
-                    ],
+            'tracer_provider' => [
+                'sampler' => [
+                    'type' => 'trace_id_ratio',
+                    'ratio' => 0.5,
                 ],
             ],
         ]]);
 
-        self::assertSame(0.5, $config['instances']['default']['tracer_provider']['sampler']['ratio']);
+        self::assertSame(0.5, $config['tracer_provider']['sampler']['ratio']);
     }
 
     public function test_service_config_with_version_and_attributes() : void
@@ -471,13 +388,9 @@ final class ConfigurationTest extends TestCase
 
         (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'severity_filtering',
-                        ],
-                    ],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'severity_filtering',
                 ],
             ],
         ]]);
@@ -487,44 +400,36 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'logger_provider' => [
-                        'processor' => [
-                            'type' => 'severity_filtering',
-                            'inner_processor' => [
-                                'type' => 'void',
-                            ],
-                        ],
+            'logger_provider' => [
+                'processor' => [
+                    'type' => 'severity_filtering',
+                    'inner_processor' => [
+                        'type' => 'void',
                     ],
                 ],
             ],
         ]]);
 
-        self::assertSame('info', $config['instances']['default']['logger_provider']['processor']['minimum_severity']);
+        self::assertSame('info', $config['logger_provider']['processor']['minimum_severity']);
     }
 
     public function test_severity_filtering_processor_for_logs() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'service' => ['name' => 'test-app'],
-            'instances' => [
-                'default' => [
-                    'logger_provider' => [
-                        'processor' => [
-                            'type' => 'severity_filtering',
-                            'minimum_severity' => 'warn',
-                            'inner_processor' => [
-                                'type' => 'batching',
-                                'exporter' => ['type' => 'console'],
-                            ],
-                        ],
+            'logger_provider' => [
+                'processor' => [
+                    'type' => 'severity_filtering',
+                    'minimum_severity' => 'warn',
+                    'inner_processor' => [
+                        'type' => 'batching',
+                        'exporter' => ['type' => 'console'],
                     ],
                 ],
             ],
         ]]);
 
-        $processor = $config['instances']['default']['logger_provider']['processor'];
+        $processor = $config['logger_provider']['processor'];
         self::assertSame('severity_filtering', $processor['type']);
         self::assertSame('warn', $processor['minimum_severity']);
         self::assertSame('batching', $processor['inner_processor']['type']);

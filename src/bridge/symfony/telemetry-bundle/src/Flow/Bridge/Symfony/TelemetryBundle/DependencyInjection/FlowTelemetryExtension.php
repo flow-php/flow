@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\ConsoleEventSubscriber;
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\HttpKernelEventSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\{ConsoleFlushSubscriber, ConsoleSpanSubscriber};
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Messenger\TracingMiddleware;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
@@ -33,12 +33,12 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, instances?: array<string, array<string, mixed>>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool}} $config */
+        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool}} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($container);
         $this->registerResource($config['service'], $container);
-        $this->registerInstances($config['instances'] ?? [], $container);
+        $this->registerTelemetry($config, $container);
         $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
     }
 
@@ -135,7 +135,7 @@ final class FlowTelemetryExtension extends Extension
             case 'otlp':
                 $container->setParameter('flow.telemetry.otlp_configured', true);
                 $transportServiceId = $this->buildOTLPTransport($config['otlp']['transport'] ?? [], $exporterServiceId, $container);
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\LogExporter\\OTLPLogExporter');
+                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPLogExporter');
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
 
@@ -151,9 +151,9 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildLoggerProvider(array $config, string $instanceName, ContainerBuilder $container) : string
+    private function buildLoggerProvider(array $config, ContainerBuilder $container) : string
     {
-        $providerServiceId = 'flow.telemetry.' . $instanceName . '.logger_provider';
+        $providerServiceId = 'flow.telemetry.logger_provider';
 
         $processorServiceId = $this->buildLogProcessor($config['processor'] ?? [], $providerServiceId, $container);
 
@@ -251,9 +251,9 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildMeterProvider(array $config, string $instanceName, ContainerBuilder $container) : string
+    private function buildMeterProvider(array $config, ContainerBuilder $container) : string
     {
-        $providerServiceId = 'flow.telemetry.' . $instanceName . '.meter_provider';
+        $providerServiceId = 'flow.telemetry.meter_provider';
 
         $processorServiceId = $this->buildMetricProcessor($config['processor'] ?? [], $providerServiceId, $container);
 
@@ -307,7 +307,7 @@ final class FlowTelemetryExtension extends Extension
             case 'otlp':
                 $container->setParameter('flow.telemetry.otlp_configured', true);
                 $transportServiceId = $this->buildOTLPTransport($config['otlp']['transport'] ?? [], $exporterServiceId, $container);
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\MetricExporter\\OTLPMetricExporter');
+                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPMetricExporter');
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
 
@@ -456,21 +456,31 @@ final class FlowTelemetryExtension extends Extension
 
         switch ($type) {
             case 'curl':
+                $optionsServiceId = $transportServiceId . '.options';
+                $optionsDefinition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransportOptions');
+                $optionsDefinition->addMethodCall('withTimeout', [$timeout]);
+
+                foreach ($headers as $headerName => $headerValue) {
+                    $optionsDefinition->addMethodCall('withHeader', [(string) $headerName, (string) $headerValue]);
+                }
+                $container->setDefinition($optionsServiceId, $optionsDefinition);
+
                 $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransport');
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, new Reference($serializerServiceId));
-                $definition->setArgument(2, $timeout);
-                $definition->setArgument(3, $headers);
+                $definition->setArgument(2, new Reference($optionsServiceId));
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;
 
             case 'http':
                 $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\HttpTransport');
-                $definition->setArgument(0, $endpoint);
-                $definition->setArgument(1, new Reference($serializerServiceId));
-                $definition->setArgument(2, $timeout);
-                $definition->setArgument(3, $headers);
+                $definition->setArgument('$httpClient', new Reference('psr18.http_client'));
+                $definition->setArgument('$requestFactory', new Reference('psr17.request_factory'));
+                $definition->setArgument('$streamFactory', new Reference('psr17.stream_factory'));
+                $definition->setArgument('$endpoint', $endpoint);
+                $definition->setArgument('$serializer', new Reference($serializerServiceId));
+                $definition->setArgument('$headers', $headers);
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;
@@ -497,9 +507,9 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildSampler(array $config, string $instanceName, ContainerBuilder $container) : string
+    private function buildSampler(array $config, ContainerBuilder $container) : string
     {
-        $samplerServiceId = 'flow.telemetry.' . $instanceName . '.tracer_provider.sampler';
+        $samplerServiceId = 'flow.telemetry.tracer_provider.sampler';
         $type = $config['type'] ?? 'always_on';
 
         switch ($type) {
@@ -585,7 +595,7 @@ final class FlowTelemetryExtension extends Extension
             case 'otlp':
                 $container->setParameter('flow.telemetry.otlp_configured', true);
                 $transportServiceId = $this->buildOTLPTransport($config['otlp']['transport'] ?? [], $exporterServiceId, $container);
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\SpanExporter\\OTLPSpanExporter');
+                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPSpanExporter');
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
 
@@ -672,12 +682,12 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildTracerProvider(array $config, string $instanceName, ContainerBuilder $container) : string
+    private function buildTracerProvider(array $config, ContainerBuilder $container) : string
     {
-        $providerServiceId = 'flow.telemetry.' . $instanceName . '.tracer_provider';
+        $providerServiceId = 'flow.telemetry.tracer_provider';
 
         $processorServiceId = $this->buildSpanProcessor($config['processor'] ?? [], $providerServiceId, $container);
-        $samplerServiceId = $this->buildSampler($config['sampler'] ?? [], $instanceName, $container);
+        $samplerServiceId = $this->buildSampler($config['sampler'] ?? [], $container);
 
         $definition = new Definition(TracerProvider::class);
         $definition->setArgument(0, new Reference($processorServiceId));
@@ -709,36 +719,32 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, array<string, mixed>> $instances
-     */
-    private function registerInstances(array $instances, ContainerBuilder $container) : void
-    {
-        if (\count($instances) === 0) {
-            $instances = ['default' => []];
-        }
-
-        foreach ($instances as $name => $config) {
-            $this->registerTelemetryInstance($name, $config, $container);
-        }
-    }
-
-    /**
      * @param array{http_kernel?: bool, console?: bool, messenger?: bool} $config
      */
     private function registerInstrumentation(array $config, ContainerBuilder $container) : void
     {
         if ($config['http_kernel'] ?? true) {
-            $definition = new Definition(HttpKernelEventSubscriber::class);
-            $definition->setArgument(0, new Reference(Telemetry::class));
-            $definition->addTag('kernel.event_subscriber');
-            $container->setDefinition('flow.telemetry.http_kernel.subscriber', $definition);
+            $spanDefinition = new Definition(HttpKernelSpanSubscriber::class);
+            $spanDefinition->setArgument(0, new Reference(Telemetry::class));
+            $spanDefinition->addTag('kernel.event_subscriber');
+            $container->setDefinition('flow.telemetry.http_kernel.span_subscriber', $spanDefinition);
+
+            $flushDefinition = new Definition(HttpKernelFlushSubscriber::class);
+            $flushDefinition->setArgument(0, new Reference(Telemetry::class));
+            $flushDefinition->addTag('kernel.event_subscriber');
+            $container->setDefinition('flow.telemetry.http_kernel.flush_subscriber', $flushDefinition);
         }
 
         if ($config['console'] ?? true) {
-            $definition = new Definition(ConsoleEventSubscriber::class);
-            $definition->setArgument(0, new Reference(Telemetry::class));
-            $definition->addTag('kernel.event_subscriber');
-            $container->setDefinition('flow.telemetry.console.subscriber', $definition);
+            $spanDefinition = new Definition(ConsoleSpanSubscriber::class);
+            $spanDefinition->setArgument(0, new Reference(Telemetry::class));
+            $spanDefinition->addTag('kernel.event_subscriber');
+            $container->setDefinition('flow.telemetry.console.span_subscriber', $spanDefinition);
+
+            $flushDefinition = new Definition(ConsoleFlushSubscriber::class);
+            $flushDefinition->setArgument(0, new Reference(Telemetry::class));
+            $flushDefinition->addTag('kernel.event_subscriber');
+            $container->setDefinition('flow.telemetry.console.flush_subscriber', $flushDefinition);
         }
 
         if (($config['messenger'] ?? true) && \interface_exists(MiddlewareInterface::class)) {
@@ -776,13 +782,13 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function registerTelemetryInstance(string $name, array $config, ContainerBuilder $container) : void
+    private function registerTelemetry(array $config, ContainerBuilder $container) : void
     {
-        $tracerProviderServiceId = $this->buildTracerProvider($config['tracer_provider'] ?? [], $name, $container);
-        $meterProviderServiceId = $this->buildMeterProvider($config['meter_provider'] ?? [], $name, $container);
-        $loggerProviderServiceId = $this->buildLoggerProvider($config['logger_provider'] ?? [], $name, $container);
+        $tracerProviderServiceId = $this->buildTracerProvider($config['tracer_provider'] ?? [], $container);
+        $meterProviderServiceId = $this->buildMeterProvider($config['meter_provider'] ?? [], $container);
+        $loggerProviderServiceId = $this->buildLoggerProvider($config['logger_provider'] ?? [], $container);
 
-        $telemetryServiceId = 'flow.telemetry.' . $name;
+        $telemetryServiceId = 'flow.telemetry';
         $definition = new Definition(Telemetry::class);
         $definition->setArgument(0, new Reference('flow.telemetry.resource'));
         $definition->setArgument(1, new Reference($tracerProviderServiceId));
@@ -791,8 +797,6 @@ final class FlowTelemetryExtension extends Extension
         $definition->setPublic(true);
         $container->setDefinition($telemetryServiceId, $definition);
 
-        if ($name === 'default') {
-            $container->setAlias(Telemetry::class, $telemetryServiceId)->setPublic(true);
-        }
+        $container->setAlias(Telemetry::class, $telemetryServiceId)->setPublic(true);
     }
 }

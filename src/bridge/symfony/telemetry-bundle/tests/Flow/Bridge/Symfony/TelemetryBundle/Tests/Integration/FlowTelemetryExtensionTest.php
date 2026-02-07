@@ -34,16 +34,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'logger_provider' => [
-                                'processor' => [
-                                    'type' => 'composite',
-                                    'processors' => [
-                                        ['type' => 'memory', 'exporter' => ['type' => 'memory']],
-                                        ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
-                                    ],
-                                ],
+                    'logger_provider' => [
+                        'processor' => [
+                            'type' => 'composite',
+                            'processors' => [
+                                ['type' => 'memory', 'exporter' => ['type' => 'memory']],
+                                ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
                             ],
                         ],
                     ],
@@ -51,7 +47,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             },
         ]);
 
-        self::assertInstanceOf(CompositeLogProcessor::class, $this->getContainer()->get('flow.telemetry.default.logger_provider.processor'));
+        self::assertInstanceOf(CompositeLogProcessor::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor'));
     }
 
     public function test_composite_metric_processor() : void
@@ -60,16 +56,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'meter_provider' => [
-                                'processor' => [
-                                    'type' => 'composite',
-                                    'processors' => [
-                                        ['type' => 'memory', 'exporter' => ['type' => 'memory']],
-                                        ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
-                                    ],
-                                ],
+                    'meter_provider' => [
+                        'processor' => [
+                            'type' => 'composite',
+                            'processors' => [
+                                ['type' => 'memory', 'exporter' => ['type' => 'memory']],
+                                ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
                             ],
                         ],
                     ],
@@ -77,7 +69,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             },
         ]);
 
-        self::assertInstanceOf(CompositeMetricProcessor::class, $this->getContainer()->get('flow.telemetry.default.meter_provider.processor'));
+        self::assertInstanceOf(CompositeMetricProcessor::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor'));
     }
 
     public function test_composite_span_processor() : void
@@ -86,16 +78,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'composite',
-                                    'processors' => [
-                                        ['type' => 'memory', 'exporter' => ['type' => 'memory']],
-                                        ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
-                                    ],
-                                ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'composite',
+                            'processors' => [
+                                ['type' => 'memory', 'exporter' => ['type' => 'memory']],
+                                ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
                             ],
                         ],
                     ],
@@ -105,9 +93,9 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertInstanceOf(CompositeSpanProcessor::class, $container->get('flow.telemetry.default.tracer_provider.processor'));
-        self::assertInstanceOf(MemorySpanProcessor::class, $container->get('flow.telemetry.default.tracer_provider.processor.0.processor'));
-        self::assertInstanceOf(PassThroughSpanProcessor::class, $container->get('flow.telemetry.default.tracer_provider.processor.1.processor'));
+        self::assertInstanceOf(CompositeSpanProcessor::class, $container->get('flow.telemetry.tracer_provider.processor'));
+        self::assertInstanceOf(MemorySpanProcessor::class, $container->get('flow.telemetry.tracer_provider.processor.0.processor'));
+        self::assertInstanceOf(PassThroughSpanProcessor::class, $container->get('flow.telemetry.tracer_provider.processor.1.processor'));
     }
 
     public function test_custom_service_reference_for_exporter() : void
@@ -120,16 +108,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $extension->load([
             [
                 'service' => ['name' => 'test-app'],
-                'instances' => [
-                    'default' => [
-                        'tracer_provider' => [
-                            'processor' => [
-                                'type' => 'passthrough',
-                                'exporter' => [
-                                    'type' => 'service',
-                                    'service_id' => 'my.custom.span_exporter',
-                                ],
-                            ],
+                'tracer_provider' => [
+                    'processor' => [
+                        'type' => 'passthrough',
+                        'exporter' => [
+                            'type' => 'service',
+                            'service_id' => 'my.custom.span_exporter',
                         ],
                     ],
                 ],
@@ -141,7 +125,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         self::assertSame(
             $container->get('my.custom.span_exporter'),
-            $container->get('flow.telemetry.default.tracer_provider.processor.exporter')
+            $container->get('flow.telemetry.tracer_provider.processor.exporter')
         );
     }
 
@@ -155,14 +139,10 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $extension->load([
             [
                 'service' => ['name' => 'test-app'],
-                'instances' => [
-                    'default' => [
-                        'tracer_provider' => [
-                            'processor' => [
-                                'type' => 'service',
-                                'service_id' => 'my.custom.span_processor',
-                            ],
-                        ],
+                'tracer_provider' => [
+                    'processor' => [
+                        'type' => 'service',
+                        'service_id' => 'my.custom.span_processor',
                     ],
                 ],
             ],
@@ -173,7 +153,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         self::assertSame(
             $container->get('my.custom.span_processor'),
-            $container->get('flow.telemetry.default.tracer_provider.processor')
+            $container->get('flow.telemetry.tracer_provider.processor')
         );
     }
 
@@ -187,14 +167,10 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $extension->load([
             [
                 'service' => ['name' => 'test-app'],
-                'instances' => [
-                    'default' => [
-                        'tracer_provider' => [
-                            'sampler' => [
-                                'type' => 'service',
-                                'service_id' => 'my.custom.sampler',
-                            ],
-                        ],
+                'tracer_provider' => [
+                    'sampler' => [
+                        'type' => 'service',
+                        'service_id' => 'my.custom.sampler',
                     ],
                 ],
             ],
@@ -205,11 +181,11 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         self::assertSame(
             $container->get('my.custom.sampler'),
-            $container->get('flow.telemetry.default.tracer_provider.sampler')
+            $container->get('flow.telemetry.tracer_provider.sampler')
         );
     }
 
-    public function test_default_instance_is_aliased_to_telemetry_class() : void
+    public function test_flow_telemetry_is_aliased_to_telemetry_class() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
@@ -222,7 +198,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $container = $this->getContainer();
 
         self::assertTrue($container->has(Telemetry::class));
-        self::assertSame($container->get('flow.telemetry.default'), $container->get(Telemetry::class));
+        self::assertSame($container->get('flow.telemetry'), $container->get(Telemetry::class));
     }
 
     public function test_full_configuration_scenario() : void
@@ -237,32 +213,28 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                             'deployment.environment' => 'staging',
                         ],
                     ],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'sampler' => [
-                                    'type' => 'trace_id_ratio',
-                                    'ratio' => 0.75,
-                                ],
-                                'processor' => [
-                                    'type' => 'batching',
-                                    'batch_size' => 1024,
-                                    'exporter' => ['type' => 'console'],
-                                ],
-                            ],
-                            'meter_provider' => [
-                                'temporality' => 'delta',
-                                'processor' => [
-                                    'type' => 'passthrough',
-                                    'exporter' => ['type' => 'memory'],
-                                ],
-                            ],
-                            'logger_provider' => [
-                                'processor' => [
-                                    'type' => 'memory',
-                                    'exporter' => ['type' => 'console'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'sampler' => [
+                            'type' => 'trace_id_ratio',
+                            'ratio' => 0.75,
+                        ],
+                        'processor' => [
+                            'type' => 'batching',
+                            'batch_size' => 1024,
+                            'exporter' => ['type' => 'console'],
+                        ],
+                    ],
+                    'meter_provider' => [
+                        'temporality' => 'delta',
+                        'processor' => [
+                            'type' => 'passthrough',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'logger_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'console'],
                         ],
                     ],
                 ]);
@@ -277,115 +249,219 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertSame('3.0.0', $resource->get('service.version'));
         self::assertSame('staging', $resource->get('deployment.environment'));
 
-        self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry.default'));
+        self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry'));
 
-        self::assertInstanceOf(TracerProvider::class, $container->get('flow.telemetry.default.tracer_provider'));
-        self::assertInstanceOf(TraceIdRatioBasedSampler::class, $container->get('flow.telemetry.default.tracer_provider.sampler'));
-        self::assertInstanceOf(BatchingSpanProcessor::class, $container->get('flow.telemetry.default.tracer_provider.processor'));
-        self::assertInstanceOf(ConsoleSpanExporter::class, $container->get('flow.telemetry.default.tracer_provider.processor.exporter'));
+        self::assertInstanceOf(TracerProvider::class, $container->get('flow.telemetry.tracer_provider'));
+        self::assertInstanceOf(TraceIdRatioBasedSampler::class, $container->get('flow.telemetry.tracer_provider.sampler'));
+        self::assertInstanceOf(BatchingSpanProcessor::class, $container->get('flow.telemetry.tracer_provider.processor'));
+        self::assertInstanceOf(ConsoleSpanExporter::class, $container->get('flow.telemetry.tracer_provider.processor.exporter'));
 
-        self::assertInstanceOf(MeterProvider::class, $container->get('flow.telemetry.default.meter_provider'));
-        self::assertInstanceOf(PassThroughMetricProcessor::class, $container->get('flow.telemetry.default.meter_provider.processor'));
-        self::assertInstanceOf(MemoryMetricExporter::class, $container->get('flow.telemetry.default.meter_provider.processor.exporter'));
+        self::assertInstanceOf(MeterProvider::class, $container->get('flow.telemetry.meter_provider'));
+        self::assertInstanceOf(PassThroughMetricProcessor::class, $container->get('flow.telemetry.meter_provider.processor'));
+        self::assertInstanceOf(MemoryMetricExporter::class, $container->get('flow.telemetry.meter_provider.processor.exporter'));
 
-        self::assertInstanceOf(LoggerProvider::class, $container->get('flow.telemetry.default.logger_provider'));
-        self::assertInstanceOf(MemoryLogProcessor::class, $container->get('flow.telemetry.default.logger_provider.processor'));
-        self::assertInstanceOf(ConsoleLogExporter::class, $container->get('flow.telemetry.default.logger_provider.processor.exporter'));
+        self::assertInstanceOf(LoggerProvider::class, $container->get('flow.telemetry.logger_provider'));
+        self::assertInstanceOf(MemoryLogProcessor::class, $container->get('flow.telemetry.logger_provider.processor'));
+        self::assertInstanceOf(ConsoleLogExporter::class, $container->get('flow.telemetry.logger_provider.processor.exporter'));
     }
 
-    public function test_log_exporter_types() : void
+    public function test_log_exporter_console_type() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'with_void' => ['logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]]],
-                        'with_memory' => ['logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]]],
-                        'with_console' => ['logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]]],
-                    ],
+                    'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]],
                 ]);
             },
         ]);
 
-        $container = $this->getContainer();
-
-        self::assertInstanceOf(VoidLogExporter::class, $container->get('flow.telemetry.with_void.logger_provider.processor.exporter'));
-        self::assertInstanceOf(MemoryLogExporter::class, $container->get('flow.telemetry.with_memory.logger_provider.processor.exporter'));
-        self::assertInstanceOf(ConsoleLogExporter::class, $container->get('flow.telemetry.with_console.logger_provider.processor.exporter'));
+        self::assertInstanceOf(ConsoleLogExporter::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor.exporter'));
     }
 
-    public function test_log_processor_types() : void
+    public function test_log_exporter_memory_type() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'with_void' => ['logger_provider' => ['processor' => ['type' => 'void']]],
-                        'with_memory' => ['logger_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]]],
-                        'with_batching' => ['logger_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 256, 'exporter' => ['type' => 'void']]]],
-                        'with_passthrough' => ['logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]]],
-                    ],
+                    'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]],
                 ]);
             },
         ]);
 
-        $container = $this->getContainer();
-
-        self::assertInstanceOf(VoidLogProcessor::class, $container->get('flow.telemetry.with_void.logger_provider.processor'));
-        self::assertInstanceOf(MemoryLogProcessor::class, $container->get('flow.telemetry.with_memory.logger_provider.processor'));
-        self::assertInstanceOf(BatchingLogProcessor::class, $container->get('flow.telemetry.with_batching.logger_provider.processor'));
-        self::assertInstanceOf(PassThroughLogProcessor::class, $container->get('flow.telemetry.with_passthrough.logger_provider.processor'));
+        self::assertInstanceOf(MemoryLogExporter::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor.exporter'));
     }
 
-    public function test_metric_exporter_types() : void
+    public function test_log_exporter_void_type() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'with_void' => ['meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]]],
-                        'with_memory' => ['meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]]],
-                        'with_console' => ['meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]]],
-                    ],
+                    'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
         ]);
 
-        $container = $this->getContainer();
-
-        self::assertInstanceOf(VoidMetricExporter::class, $container->get('flow.telemetry.with_void.meter_provider.processor.exporter'));
-        self::assertInstanceOf(MemoryMetricExporter::class, $container->get('flow.telemetry.with_memory.meter_provider.processor.exporter'));
-        self::assertInstanceOf(ConsoleMetricExporter::class, $container->get('flow.telemetry.with_console.meter_provider.processor.exporter'));
+        self::assertInstanceOf(VoidLogExporter::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor.exporter'));
     }
 
-    public function test_metric_processor_types() : void
+    public function test_log_processor_batching_type() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'with_void' => ['meter_provider' => ['processor' => ['type' => 'void']]],
-                        'with_memory' => ['meter_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]]],
-                        'with_batching' => ['meter_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 200, 'exporter' => ['type' => 'void']]]],
-                        'with_passthrough' => ['meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]]],
-                    ],
+                    'logger_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 256, 'exporter' => ['type' => 'void']]],
                 ]);
             },
         ]);
 
-        $container = $this->getContainer();
-
-        self::assertInstanceOf(VoidMetricProcessor::class, $container->get('flow.telemetry.with_void.meter_provider.processor'));
-        self::assertInstanceOf(MemoryMetricProcessor::class, $container->get('flow.telemetry.with_memory.meter_provider.processor'));
-        self::assertInstanceOf(BatchingMetricProcessor::class, $container->get('flow.telemetry.with_batching.meter_provider.processor'));
-        self::assertInstanceOf(PassThroughMetricProcessor::class, $container->get('flow.telemetry.with_passthrough.meter_provider.processor'));
+        self::assertInstanceOf(BatchingLogProcessor::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor'));
     }
 
-    public function test_minimal_configuration_creates_default_instance_with_void_processors() : void
+    public function test_log_processor_memory_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'logger_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(MemoryLogProcessor::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor'));
+    }
+
+    public function test_log_processor_passthrough_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(PassThroughLogProcessor::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor'));
+    }
+
+    public function test_log_processor_void_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'logger_provider' => ['processor' => ['type' => 'void']],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(VoidLogProcessor::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor'));
+    }
+
+    public function test_metric_exporter_console_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(ConsoleMetricExporter::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor.exporter'));
+    }
+
+    public function test_metric_exporter_memory_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(MemoryMetricExporter::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor.exporter'));
+    }
+
+    public function test_metric_exporter_void_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(VoidMetricExporter::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor.exporter'));
+    }
+
+    public function test_metric_processor_batching_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 200, 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(BatchingMetricProcessor::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor'));
+    }
+
+    public function test_metric_processor_memory_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(MemoryMetricProcessor::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor'));
+    }
+
+    public function test_metric_processor_passthrough_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(PassThroughMetricProcessor::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor'));
+    }
+
+    public function test_metric_processor_void_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'meter_provider' => ['processor' => ['type' => 'void']],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(VoidMetricProcessor::class, $this->getContainer()->get('flow.telemetry.meter_provider.processor'));
+    }
+
+    public function test_minimal_configuration_creates_telemetry_with_void_processors() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
@@ -400,65 +476,29 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertTrue($container->has('flow.telemetry.clock'));
         self::assertTrue($container->has('flow.telemetry.context_storage'));
         self::assertTrue($container->has('flow.telemetry.resource'));
-        self::assertTrue($container->has('flow.telemetry.default'));
+        self::assertTrue($container->has('flow.telemetry'));
 
         self::assertInstanceOf(SystemClock::class, $container->get('flow.telemetry.clock'));
         self::assertInstanceOf(MemoryContextStorage::class, $container->get('flow.telemetry.context_storage'));
         self::assertInstanceOf(Resource::class, $container->get('flow.telemetry.resource'));
-        self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry.default'));
+        self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry'));
 
-        self::assertTrue($container->has('flow.telemetry.default.tracer_provider'));
-        self::assertTrue($container->has('flow.telemetry.default.meter_provider'));
-        self::assertTrue($container->has('flow.telemetry.default.logger_provider'));
+        self::assertTrue($container->has('flow.telemetry.tracer_provider'));
+        self::assertTrue($container->has('flow.telemetry.meter_provider'));
+        self::assertTrue($container->has('flow.telemetry.logger_provider'));
 
-        self::assertInstanceOf(TracerProvider::class, $container->get('flow.telemetry.default.tracer_provider'));
-        self::assertInstanceOf(MeterProvider::class, $container->get('flow.telemetry.default.meter_provider'));
-        self::assertInstanceOf(LoggerProvider::class, $container->get('flow.telemetry.default.logger_provider'));
+        self::assertInstanceOf(TracerProvider::class, $container->get('flow.telemetry.tracer_provider'));
+        self::assertInstanceOf(MeterProvider::class, $container->get('flow.telemetry.meter_provider'));
+        self::assertInstanceOf(LoggerProvider::class, $container->get('flow.telemetry.logger_provider'));
 
-        self::assertTrue($container->has('flow.telemetry.default.tracer_provider.processor'));
-        self::assertInstanceOf(VoidSpanProcessor::class, $container->get('flow.telemetry.default.tracer_provider.processor'));
+        self::assertTrue($container->has('flow.telemetry.tracer_provider.processor'));
+        self::assertInstanceOf(VoidSpanProcessor::class, $container->get('flow.telemetry.tracer_provider.processor'));
 
-        self::assertTrue($container->has('flow.telemetry.default.meter_provider.processor'));
-        self::assertInstanceOf(VoidMetricProcessor::class, $container->get('flow.telemetry.default.meter_provider.processor'));
+        self::assertTrue($container->has('flow.telemetry.meter_provider.processor'));
+        self::assertInstanceOf(VoidMetricProcessor::class, $container->get('flow.telemetry.meter_provider.processor'));
 
-        self::assertTrue($container->has('flow.telemetry.default.logger_provider.processor'));
-        self::assertInstanceOf(VoidLogProcessor::class, $container->get('flow.telemetry.default.logger_provider.processor'));
-    }
-
-    public function test_multiple_telemetry_instances() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'main' => [
-                            'tracer_provider' => [
-                                'processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']],
-                            ],
-                        ],
-                        'secondary' => [
-                            'tracer_provider' => [
-                                'processor' => ['type' => 'batching', 'exporter' => ['type' => 'memory']],
-                            ],
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        $container = $this->getContainer();
-
-        self::assertTrue($container->has('flow.telemetry.main'));
-        self::assertTrue($container->has('flow.telemetry.secondary'));
-
-        self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry.main'));
-        self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry.secondary'));
-
-        self::assertNotSame($container->get('flow.telemetry.main'), $container->get('flow.telemetry.secondary'));
-
-        self::assertInstanceOf(PassThroughSpanProcessor::class, $container->get('flow.telemetry.main.tracer_provider.processor'));
-        self::assertInstanceOf(BatchingSpanProcessor::class, $container->get('flow.telemetry.secondary.tracer_provider.processor'));
+        self::assertTrue($container->has('flow.telemetry.logger_provider.processor'));
+        self::assertInstanceOf(VoidLogProcessor::class, $container->get('flow.telemetry.logger_provider.processor'));
     }
 
     public function test_otlp_availability_pass_sets_parameter_when_otlp_not_configured() : void
@@ -524,14 +564,10 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'passthrough',
-                                    'exporter' => ['type' => 'service'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'passthrough',
+                            'exporter' => ['type' => 'service'],
                         ],
                     ],
                 ]);
@@ -548,12 +584,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => ['type' => 'service'],
-                            ],
-                        ],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'service'],
                     ],
                 ]);
             },
@@ -569,62 +601,110 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'sampler' => ['type' => 'service'],
-                            ],
-                        ],
+                    'tracer_provider' => [
+                        'sampler' => ['type' => 'service'],
                     ],
                 ]);
             },
         ]);
     }
 
-    public function test_span_exporter_types() : void
+    public function test_span_exporter_console_type() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'with_void' => ['tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]]],
-                        'with_memory' => ['tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]]],
-                        'with_console' => ['tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]]],
-                    ],
+                    'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]],
                 ]);
             },
         ]);
 
-        $container = $this->getContainer();
-
-        self::assertInstanceOf(VoidSpanExporter::class, $container->get('flow.telemetry.with_void.tracer_provider.processor.exporter'));
-        self::assertInstanceOf(MemorySpanExporter::class, $container->get('flow.telemetry.with_memory.tracer_provider.processor.exporter'));
-        self::assertInstanceOf(ConsoleSpanExporter::class, $container->get('flow.telemetry.with_console.tracer_provider.processor.exporter'));
+        self::assertInstanceOf(ConsoleSpanExporter::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor.exporter'));
     }
 
-    public function test_span_processor_types() : void
+    public function test_span_exporter_memory_type() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'with_void' => ['tracer_provider' => ['processor' => ['type' => 'void']]],
-                        'with_memory' => ['tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]]],
-                        'with_batching' => ['tracer_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 100, 'exporter' => ['type' => 'void']]]],
-                        'with_passthrough' => ['tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]]],
-                    ],
+                    'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]],
                 ]);
             },
         ]);
 
-        $container = $this->getContainer();
+        self::assertInstanceOf(MemorySpanExporter::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor.exporter'));
+    }
 
-        self::assertInstanceOf(VoidSpanProcessor::class, $container->get('flow.telemetry.with_void.tracer_provider.processor'));
-        self::assertInstanceOf(MemorySpanProcessor::class, $container->get('flow.telemetry.with_memory.tracer_provider.processor'));
-        self::assertInstanceOf(BatchingSpanProcessor::class, $container->get('flow.telemetry.with_batching.tracer_provider.processor'));
-        self::assertInstanceOf(PassThroughSpanProcessor::class, $container->get('flow.telemetry.with_passthrough.tracer_provider.processor'));
+    public function test_span_exporter_void_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(VoidSpanExporter::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor.exporter'));
+    }
+
+    public function test_span_processor_batching_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 100, 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(BatchingSpanProcessor::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor'));
+    }
+
+    public function test_span_processor_memory_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(MemorySpanProcessor::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor'));
+    }
+
+    public function test_span_processor_passthrough_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(PassThroughSpanProcessor::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor'));
+    }
+
+    public function test_span_processor_void_type() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => ['processor' => ['type' => 'void']],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(VoidSpanProcessor::class, $this->getContainer()->get('flow.telemetry.tracer_provider.processor'));
     }
 
     public function test_tracer_provider_with_always_off_sampler() : void
@@ -633,18 +713,14 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'sampler' => ['type' => 'always_off'],
-                            ],
-                        ],
+                    'tracer_provider' => [
+                        'sampler' => ['type' => 'always_off'],
                     ],
                 ]);
             },
         ]);
 
-        self::assertInstanceOf(AlwaysOffSampler::class, $this->getContainer()->get('flow.telemetry.default.tracer_provider.sampler'));
+        self::assertInstanceOf(AlwaysOffSampler::class, $this->getContainer()->get('flow.telemetry.tracer_provider.sampler'));
     }
 
     public function test_tracer_provider_with_always_on_sampler() : void
@@ -653,12 +729,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'sampler' => ['type' => 'always_on'],
-                            ],
-                        ],
+                    'tracer_provider' => [
+                        'sampler' => ['type' => 'always_on'],
                     ],
                 ]);
             },
@@ -666,8 +738,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertTrue($container->has('flow.telemetry.default.tracer_provider.sampler'));
-        self::assertInstanceOf(AlwaysOnSampler::class, $container->get('flow.telemetry.default.tracer_provider.sampler'));
+        self::assertTrue($container->has('flow.telemetry.tracer_provider.sampler'));
+        self::assertInstanceOf(AlwaysOnSampler::class, $container->get('flow.telemetry.tracer_provider.sampler'));
     }
 
     public function test_tracer_provider_with_parent_based_sampler() : void
@@ -676,18 +748,14 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'sampler' => ['type' => 'parent_based'],
-                            ],
-                        ],
+                    'tracer_provider' => [
+                        'sampler' => ['type' => 'parent_based'],
                     ],
                 ]);
             },
         ]);
 
-        self::assertInstanceOf(ParentBasedSampler::class, $this->getContainer()->get('flow.telemetry.default.tracer_provider.sampler'));
+        self::assertInstanceOf(ParentBasedSampler::class, $this->getContainer()->get('flow.telemetry.tracer_provider.sampler'));
     }
 
     public function test_tracer_provider_with_trace_id_ratio_sampler() : void
@@ -696,20 +764,16 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'sampler' => [
-                                    'type' => 'trace_id_ratio',
-                                    'ratio' => 0.5,
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'sampler' => [
+                            'type' => 'trace_id_ratio',
+                            'ratio' => 0.5,
                         ],
                     ],
                 ]);
             },
         ]);
 
-        self::assertInstanceOf(TraceIdRatioBasedSampler::class, $this->getContainer()->get('flow.telemetry.default.tracer_provider.sampler'));
+        self::assertInstanceOf(TraceIdRatioBasedSampler::class, $this->getContainer()->get('flow.telemetry.tracer_provider.sampler'));
     }
 }

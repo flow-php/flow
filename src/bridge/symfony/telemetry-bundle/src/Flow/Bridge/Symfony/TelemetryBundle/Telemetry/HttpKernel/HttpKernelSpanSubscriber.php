@@ -10,7 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\{ControllerEvent, ExceptionEvent, RequestEvent, ResponseEvent, TerminateEvent};
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final readonly class HttpKernelEventSubscriber implements EventSubscriberInterface
+final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterface
 {
     private const string SPAN_ATTRIBUTE = '_flow_telemetry_span';
 
@@ -53,7 +53,7 @@ final readonly class HttpKernelEventSubscriber implements EventSubscriberInterfa
         $controllerName = $this->resolveControllerName($controller);
 
         if ($controllerName !== null) {
-            $span->setAttribute('code.function', $controllerName);
+            $span->setAttribute('controller', $controllerName);
         }
     }
 

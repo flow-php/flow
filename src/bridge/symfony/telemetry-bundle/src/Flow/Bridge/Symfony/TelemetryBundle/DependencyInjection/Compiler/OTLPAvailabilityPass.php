@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class OTLPAvailabilityPass implements CompilerPassInterface
 {
-    private const string OTLP_BRIDGE_CLASS = 'Flow\\Bridge\\Telemetry\\OTLP\\SpanExporter\\OTLPSpanExporter';
+    private const string OTLP_BRIDGE_CLASS = 'Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPSpanExporter';
 
     public function process(ContainerBuilder $container) : void
     {

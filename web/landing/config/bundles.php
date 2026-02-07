@@ -10,4 +10,5 @@ return [
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
     \Twig\Extra\TwigExtraBundle\TwigExtraBundle::class => ['all' => true],
     \Presta\SitemapBundle\PrestaSitemapBundle::class => ['all' => true],
+    Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle::class => ['all' => true],
 ];

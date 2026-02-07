@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eba577c63444051a6ecdac007f116e5f",
+    "content-hash": "c4f6c4d36749461dfdcbe46e566327d3",
     "packages": [
         {
             "name": "brick/math",
-            "version": "0.14.4",
+            "version": "0.14.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "a8b53e6cc4d3a336543f042a4dfa0e3f2f2356a4"
+                "reference": "32498d5e1897e7642c0b961ace2df6d7dc9a3bc3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/a8b53e6cc4d3a336543f042a4dfa0e3f2f2356a4",
-                "reference": "a8b53e6cc4d3a336543f042a4dfa0e3f2f2356a4",
+                "url": "https://api.github.com/repos/brick/math/zipball/32498d5e1897e7642c0b961ace2df6d7dc9a3bc3",
+                "reference": "32498d5e1897e7642c0b961ace2df6d7dc9a3bc3",
                 "shasum": ""
             },
             "require": {
@@ -56,7 +56,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.4"
+                "source": "https://github.com/brick/math/tree/0.14.6"
             },
             "funding": [
                 {
@@ -64,7 +64,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-02T16:57:31+00:00"
+            "time": "2026-02-05T07:59:58+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -353,33 +353,31 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "0.31.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "7c0b7f16b12b6e5239ecf487908bfe78673d1f22"
-            },
+            "version": "1.x-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/7c0b7f16b12b6e5239ecf487908bfe78673d1f22",
-                "reference": "7c0b7f16b12b6e5239ecf487908bfe78673d1f22",
-                "shasum": ""
+                "type": "path",
+                "url": "../../src/lib/array-dot",
+                "reference": "043d107b6cc0e919d6100a84eb513d4b6b81bf55"
             },
             "require": {
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "src/Flow/ArrayDot/array_dot.php"
-                ],
                 "psr-4": {
                     "Flow\\": [
                         "src/Flow"
                     ]
+                },
+                "files": [
+                    "src/Flow/ArrayDot/array_dot.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -393,38 +391,22 @@
                 "load",
                 "transform"
             ],
-            "support": {
-                "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.31.0"
-            },
-            "funding": [
-                {
-                    "url": "https://flow-php.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/norberttech",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-01-19T09:55:20+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "flow-php/etl",
-            "version": "0.31.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl.git",
-                "reference": "34a6e48efe93801f2ac29fefcb2ef2f474f928c9"
-            },
+            "version": "1.x-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/34a6e48efe93801f2ac29fefcb2ef2f474f928c9",
-                "reference": "34a6e48efe93801f2ac29fefcb2ef2f474f928c9",
-                "shasum": ""
+                "type": "path",
+                "url": "../../src/core/etl",
+                "reference": "101fcb6bc740b481daec219ceacf87d0a66af0a4"
             },
             "require": {
                 "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",
+                "composer-runtime-api": "^2.0",
                 "ext-json": "*",
                 "flow-php/array-dot": "self.version",
                 "flow-php/filesystem": "self.version",
@@ -454,7 +436,11 @@
                     ]
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -465,35 +451,18 @@
                 "load",
                 "transform"
             ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/0.31.0"
-            },
-            "funding": [
-                {
-                    "url": "https://flow-php.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/norberttech",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-01-19T12:58:02+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "flow-php/etl-adapter-http",
-            "version": "0.31.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl-adapter-http.git",
-                "reference": "2353aae484d9f4eb07efae8f81c3acbfa006bdea"
-            },
+            "version": "1.x-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/2353aae484d9f4eb07efae8f81c3acbfa006bdea",
-                "reference": "2353aae484d9f4eb07efae8f81c3acbfa006bdea",
-                "shasum": ""
+                "type": "path",
+                "url": "../../src/adapter/etl-adapter-http",
+                "reference": "a653aa0bdc76bccd4fcf54f98ddea12af4b5ecf4"
             },
             "require": {
                 "ext-json": "*",
@@ -507,16 +476,20 @@
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "src/Flow/ETL/Adapter/Http/DSL/functions.php"
-                ],
                 "psr-4": {
                     "Flow\\": [
                         "src/Flow"
                     ]
+                },
+                "files": [
+                    "src/Flow/ETL/Adapter/Http/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -528,35 +501,18 @@
                 "load",
                 "transform"
             ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl-adapter-http/issues",
-                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.31.0"
-            },
-            "funding": [
-                {
-                    "url": "https://flow-php.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/norberttech",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-12-13T19:30:32+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.31.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/filesystem.git",
-                "reference": "9a92c442feb3ee3e5e266d7c64d331c7edb4654b"
-            },
+            "version": "1.x-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/9a92c442feb3ee3e5e266d7c64d331c7edb4654b",
-                "reference": "9a92c442feb3ee3e5e266d7c64d331c7edb4654b",
-                "shasum": ""
+                "type": "path",
+                "url": "../../src/lib/filesystem",
+                "reference": "41a8aae737a5591e07aefde6b83097ec04e8e7d4"
             },
             "require": {
                 "flow-php/types": "self.version",
@@ -565,16 +521,20 @@
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "src/Flow/Filesystem/DSL/functions.php"
-                ],
                 "psr-4": {
                     "Flow\\": [
                         "src/Flow"
                     ]
+                },
+                "files": [
+                    "src/Flow/Filesystem/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -590,35 +550,174 @@
                 "remote",
                 "transform"
             ],
-            "support": {
-                "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.31.0"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "flow-php/monolog-telemetry-bridge",
+            "version": "1.x-dev",
+            "dist": {
+                "type": "path",
+                "url": "../../src/bridge/monolog/telemetry",
+                "reference": "86126b365e7c90c52d5447928ef1765c622f504e"
             },
-            "funding": [
-                {
-                    "url": "https://flow-php.com/sponsor",
-                    "type": "custom"
+            "require": {
+                "flow-php/etl": "self.version",
+                "flow-php/telemetry": "self.version",
+                "monolog/monolog": "^3.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
                 },
-                {
-                    "url": "https://github.com/norberttech",
-                    "type": "github"
+                "files": [
+                    "src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
+            },
+            "license": [
+                "MIT"
             ],
-            "time": "2025-12-12T10:55:46+00:00"
+            "description": "Flow PHP - Monolog Telemetry Bridge",
+            "homepage": "https://github.com/flow-php/flow",
+            "keywords": [
+                "bridge",
+                "flow-php",
+                "monolog",
+                "telemetry"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "flow-php/symfony-http-foundation-telemetry-bridge",
+            "version": "1.x-dev",
+            "dist": {
+                "type": "path",
+                "url": "../../src/bridge/symfony/http-foundation-telemetry",
+                "reference": "1f5726349ffadda8d4c1d917cb3d21f5e1de4fd3"
+            },
+            "require": {
+                "flow-php/telemetry": "self.version",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "symfony/http-foundation": "^6.4 || ^7.3 || ^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                },
+                "files": [
+                    "src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Flow PHP - Symfony Http Foundation Telemetry Bridge",
+            "homepage": "https://github.com/flow-php/flow",
+            "keywords": [
+                "bridge",
+                "flow-php",
+                "http-foundation",
+                "symfony",
+                "telemetry"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "flow-php/symfony-telemetry-bundle",
+            "version": "1.x-dev",
+            "dist": {
+                "type": "path",
+                "url": "../../src/bridge/symfony/telemetry-bundle",
+                "reference": "d592dbe7011b8a3521cf0b1ccb6236ca9c4e553e"
+            },
+            "require": {
+                "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
+                "flow-php/telemetry": "self.version",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "psr/clock": "^1.0",
+                "symfony/config": "^6.4 || ^7.3 || ^8.0",
+                "symfony/console": "^6.4 || ^7.3 || ^8.0",
+                "symfony/dependency-injection": "^6.4 || ^7.3 || ^8.0",
+                "symfony/http-kernel": "^6.4 || ^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "flow-php/telemetry-otlp-bridge": "self.version",
+                "symfony/framework-bundle": "^6.4 || ^7.3 || ^8.0",
+                "symfony/messenger": "^6.4 || ^7.3 || ^8.0",
+                "symfony/routing": "^6.4 || ^7.3 || ^8.0"
+            },
+            "suggest": {
+                "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
+                "symfony/messenger": "Required for Messenger tracing middleware"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                },
+                "files": [
+                    "src/Flow/Bridge/Symfony/TelemetryBundle/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Flow PHP - Symfony Telemetry Bundle",
+            "homepage": "https://github.com/flow-php/flow",
+            "keywords": [
+                "bundle",
+                "flow-php",
+                "logging",
+                "metrics",
+                "opentelemetry",
+                "symfony",
+                "telemetry",
+                "tracing"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "flow-php/telemetry",
-            "version": "0.31.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/telemetry.git",
-                "reference": "32ff43a631896ba6295e674e300541eb65edc9ce"
-            },
+            "version": "1.x-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/telemetry/zipball/32ff43a631896ba6295e674e300541eb65edc9ce",
-                "reference": "32ff43a631896ba6295e674e300541eb65edc9ce",
-                "shasum": ""
+                "type": "path",
+                "url": "../../src/lib/telemetry",
+                "reference": "17ec7b5760d93ff7437551d74c73fc06607b5618"
             },
             "require": {
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
@@ -626,71 +725,124 @@
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "src/Flow/Telemetry/DSL/functions.php"
-                ],
                 "psr-4": {
                     "Flow\\": [
                         "src/Flow"
                     ]
+                },
+                "files": [
+                    "src/Flow/Telemetry/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Flow PHP - Telemetry library for metrics and tracing",
             "keywords": [
-                "Metrics",
+                "metrics",
                 "php",
                 "telemetry",
                 "tracing"
             ],
-            "support": {
-                "issues": "https://github.com/flow-php/telemetry/issues",
-                "source": "https://github.com/flow-php/telemetry/tree/0.31.0"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "flow-php/telemetry-otlp-bridge",
+            "version": "1.x-dev",
+            "dist": {
+                "type": "path",
+                "url": "../../src/bridge/telemetry/otlp",
+                "reference": "27c9acf702f6b246c32a9a838e3d36b1f549e8bb"
             },
-            "funding": [
-                {
-                    "url": "https://flow-php.com/sponsor",
-                    "type": "custom"
+            "require": {
+                "flow-php/telemetry": "self.version",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "psr/http-client": "^1.0",
+                "psr/http-factory": "^1.0"
+            },
+            "require-dev": {
+                "google/protobuf": "^4.0",
+                "grpc/grpc": "^1.74",
+                "nyholm/psr7": "^1.8",
+                "open-telemetry/gen-otlp-protobuf": "^1.8",
+                "symfony/http-client": "^6.4 || ^7.3 || ^8.0"
+            },
+            "suggest": {
+                "ext-grpc": "Required for gRPC transport",
+                "google/protobuf": "Required for gRPC transport with binary protobuf encoding",
+                "open-telemetry/gen-otlp-protobuf": "Generated PHP classes for OTLP protobuf messages (required for gRPC transport)"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
                 },
-                {
-                    "url": "https://github.com/norberttech",
-                    "type": "github"
+                "files": [
+                    "src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
+            },
+            "license": [
+                "MIT"
             ],
-            "time": "2026-01-16T22:44:33+00:00"
+            "description": "Flow PHP Telemetry - OTLP Exporter Bridge",
+            "homepage": "https://github.com/flow-php/flow",
+            "keywords": [
+                "flow-php",
+                "logging",
+                "metrics",
+                "observability",
+                "opentelemetry",
+                "otlp",
+                "telemetry",
+                "tracing"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "flow-php/types",
-            "version": "0.31.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/types.git",
-                "reference": "4af1b09a0a379ce33e251fe56c8a90fe39c67522"
-            },
+            "version": "1.x-dev",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/types/zipball/4af1b09a0a379ce33e251fe56c8a90fe39c67522",
-                "reference": "4af1b09a0a379ce33e251fe56c8a90fe39c67522",
-                "shasum": ""
+                "type": "path",
+                "url": "../../src/lib/types",
+                "reference": "08d95eb6cdc6fa8e1af02a3457a34ccbcac8dbb3"
             },
             "require": {
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "src/Flow/Types/DSL/functions.php"
-                ],
                 "psr-4": {
                     "Flow\\": [
                         "src/Flow"
                     ]
+                },
+                "files": [
+                    "src/Flow/Types/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -699,21 +851,10 @@
                 "php",
                 "types"
             ],
-            "support": {
-                "issues": "https://github.com/flow-php/types/issues",
-                "source": "https://github.com/flow-php/types/tree/0.31.0"
-            },
-            "funding": [
-                {
-                    "url": "https://flow-php.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/norberttech",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-12-20T17:43:26+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "league/commonmark",
@@ -1074,16 +1215,16 @@
         },
         {
             "name": "nette/utils",
-            "version": "v4.1.1",
+            "version": "v4.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/utils.git",
-                "reference": "c99059c0315591f1a0db7ad6002000288ab8dc72"
+                "reference": "f76b5dc3d6c6d3043c8d937df2698515b99cbaf5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/utils/zipball/c99059c0315591f1a0db7ad6002000288ab8dc72",
-                "reference": "c99059c0315591f1a0db7ad6002000288ab8dc72",
+                "url": "https://api.github.com/repos/nette/utils/zipball/f76b5dc3d6c6d3043c8d937df2698515b99cbaf5",
+                "reference": "f76b5dc3d6c6d3043c8d937df2698515b99cbaf5",
                 "shasum": ""
             },
             "require": {
@@ -1096,7 +1237,7 @@
             "require-dev": {
                 "jetbrains/phpstorm-attributes": "^1.2",
                 "nette/tester": "^2.5",
-                "phpstan/phpstan-nette": "^2.0@stable",
+                "phpstan/phpstan": "^2.0@stable",
                 "tracy/tracy": "^2.9"
             },
             "suggest": {
@@ -1157,9 +1298,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/utils/issues",
-                "source": "https://github.com/nette/utils/tree/v4.1.1"
+                "source": "https://github.com/nette/utils/tree/v4.1.2"
             },
-            "time": "2025-12-22T12:14:32+00:00"
+            "time": "2026-02-03T17:21:09+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -7045,11 +7186,14 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
+        "flow-php/etl": 20,
+        "flow-php/etl-adapter-http": 20,
+        "flow-php/symfony-telemetry-bundle": 20,
         "norberttech/static-content-generator-bundle": 20
     },
-    "prefer-stable": false,
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "8.3.*"

@@ -1,6 +1,10 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+    handlers:
+        telemetry:
+            type: service
+            id: Flow\Bridge\Monolog\Telemetry\TelemetryHandler
 
 when@dev:
     monolog:

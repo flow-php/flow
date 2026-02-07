@@ -10,7 +10,7 @@ use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\{ConsoleCommandEvent, ConsoleErrorEvent, ConsoleSignalEvent, ConsoleTerminateEvent};
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final class ConsoleEventSubscriber implements EventSubscriberInterface
+final class ConsoleSpanSubscriber implements EventSubscriberInterface
 {
     private ?Span $span = null;
 
@@ -39,11 +39,11 @@ final class ConsoleEventSubscriber implements EventSubscriberInterface
         $this->tracer = $this->telemetry->tracer('flow.symfony.console');
 
         $attributes = [
-            'code.function' => $commandName,
+            'command.name' => $commandName,
         ];
 
         if ($command !== null) {
-            $attributes['code.namespace'] = $command::class;
+            $attributes['command.class'] = $command::class;
         }
 
         $this->span = $this->tracer->span(

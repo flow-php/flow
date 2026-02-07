@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Telemetry\HttpKernel;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\HttpKernelEventSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\HttpKernelSpanSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller\TestController;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
@@ -15,9 +15,10 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\{Route, Router};
 
-#[CoversClass(HttpKernelEventSubscriber::class)]
-final class HttpKernelEventSubscriberTest extends KernelTestCase
+#[CoversClass(HttpKernelSpanSubscriber::class)]
+final class HttpKernelSpanSubscriberTest extends KernelTestCase
 {
+    #[\Override]
     protected function tearDown() : void
     {
         restore_exception_handler();
@@ -39,14 +40,10 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'memory',
-                                    'exporter' => ['type' => 'memory'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
                         ],
                     ],
                     'instrumentation' => [
@@ -70,7 +67,7 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
         $kernel->terminate($request, $response);
 
         /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.default.tracer_provider.processor');
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
         self::assertCount(0, $spans);
@@ -91,14 +88,10 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'memory',
-                                    'exporter' => ['type' => 'memory'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
                         ],
                     ],
                     'instrumentation' => [
@@ -124,7 +117,7 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
         self::assertSame(404, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.default.tracer_provider.processor');
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);
@@ -154,14 +147,10 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'memory',
-                                    'exporter' => ['type' => 'memory'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
                         ],
                     ],
                     'instrumentation' => [
@@ -187,7 +176,7 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
         self::assertSame(200, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.default.tracer_provider.processor');
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);
@@ -200,6 +189,6 @@ final class HttpKernelEventSubscriberTest extends KernelTestCase
         self::assertSame('GET', $attributes['http.method']);
         self::assertSame(200, $attributes['http.status_code']);
         self::assertSame('test_index', $attributes['http.route']);
-        self::assertSame(TestController::class . '::index', $attributes['code.function']);
+        self::assertSame(TestController::class . '::index', $attributes['controller']);
     }
 }

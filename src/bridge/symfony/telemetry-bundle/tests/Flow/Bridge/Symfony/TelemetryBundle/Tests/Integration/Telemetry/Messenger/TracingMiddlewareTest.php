@@ -73,14 +73,10 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'memory',
-                                    'exporter' => ['type' => 'memory'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
                         ],
                     ],
                     'instrumentation' => [
@@ -119,7 +115,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         self::assertTrue($handler->handled);
 
         /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.default.tracer_provider.processor');
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);
@@ -145,14 +141,10 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instances' => [
-                        'default' => [
-                            'tracer_provider' => [
-                                'processor' => [
-                                    'type' => 'memory',
-                                    'exporter' => ['type' => 'memory'],
-                                ],
-                            ],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
                         ],
                     ],
                     'instrumentation' => [
@@ -195,7 +187,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         self::assertTrue($exceptionThrown, 'Expected exception was not thrown');
 
         /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.default.tracer_provider.processor');
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);

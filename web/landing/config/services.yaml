@@ -72,3 +72,13 @@ services:
 
     twig.markdown.league_common_mark_converter_factory:
         class: Flow\Website\Service\Markdown\LeagueCommonMarkConverterFactory
+
+    flow.telemetry.monolog.logger:
+        class: Flow\Telemetry\Logger\Logger
+        factory: ['@Flow\Telemetry\Telemetry', 'logger']
+        arguments:
+            - 'monolog'
+
+    Flow\Bridge\Monolog\Telemetry\TelemetryHandler:
+        arguments:
+            - '@flow.telemetry.monolog.logger'

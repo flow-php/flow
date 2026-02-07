@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 674
+ * Total functions: 684
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -5388,6 +5388,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\logger_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ")"),
         boost: 10
     },        {
+        label: "log_record_converter",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">log_record_converter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SeverityMapper</span> <span class=\"fn-param\">$severityMapper</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ValueNormalizer</span> <span class=\"fn-param\">$valueNormalizer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LogRecordConverter</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a LogRecordConverter for converting Monolog LogRecord to Telemetry LogRecord.<br>The converter handles:<br>- Severity mapping from Monolog Level to Telemetry Severity<br>- Message body conversion<br>- Channel and level name as monolog.* attributes<br>- Context values as context.* attributes (Throwables use setException())<br>- Extra values as extra.* attributes<br>@param null|SeverityMapper $severityMapper Custom severity mapper (defaults to standard mapping)<br>@param null|ValueNormalizer $valueNormalizer Custom value normalizer (defaults to standard normalizer)<br>Example usage:<br>\`\`\`php<br>$converter = log_record_converter();<br>$telemetryRecord = $converter->convert($monologRecord);<br>\`\`\`<br>Example with custom mapper:<br>\`\`\`php<br>$converter = log_record_converter(<br>    severityMapper: severity_mapper([<br>        Level::Debug->value => Severity::TRACE,<br>    ])<br>);<br>\`\`\`
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\log_record_converter(" + "$" + "{" + "1:severityMapper" + "}" + ", " + "$" + "{" + "2:valueNormalizer" + "}" + ")"),
+        boost: 10
+    },        {
         label: "lower",
         type: "function",
         detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
@@ -7407,6 +7425,36 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\protocol(" + "$" + "{" + "1:protocol" + "}" + ")"),
         boost: 10
     },        {
+        label: "psr7_request_carrier",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">psr7_request_carrier</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ServerRequestInterface</span> <span class=\"fn-param\">$request</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RequestCarrier</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Psr7\\Telemetry\\DSL\\psr7_request_carrier(" + "$" + "{" + "1:request" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "psr7_response_carrier",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">psr7_response_carrier</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ResponseInterface</span> <span class=\"fn-param\">$response</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ResponseCarrier</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Psr7\\Telemetry\\DSL\\psr7_response_carrier(" + "$" + "{" + "1:response" + "}" + ")"),
+        boost: 10
+    },        {
         label: "random_string",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -7888,10 +7936,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">resource</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Resource</span>
+                    <span class=\"fn-name\">resource</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Resource</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a Resource.<br>@param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
+                    Create a Resource.<br>@param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Resource attributes
                 </div>
                             `
             return div
@@ -8520,6 +8568,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\set_transaction()"),
         boost: 10
     },        {
+        label: "severity_filtering_log_processor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">severity_filtering_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Severity</span> <span class=\"fn-param\">$minimumSeverity</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\Severity::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SeverityFilteringLogProcessor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SeverityFilteringLogProcessor.<br>Filters log entries based on minimum severity level. Only entries at or above<br>the configured threshold are passed to the wrapped processor.<br>@param LogProcessor $processor The processor to wrap<br>@param Severity $minimumSeverity Minimum severity level (default: INFO)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\severity_filtering_log_processor(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:minimumSeverity" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "severity_mapper",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">severity_mapper</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$customMapping</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SeverityMapper</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SeverityMapper for mapping Monolog levels to Telemetry severities.<br>@param null|array<int, Severity> $customMapping Optional custom mapping (Monolog Level value => Telemetry Severity)<br>Example with default mapping:<br>\`\`\`php<br>$mapper = severity_mapper();<br>\`\`\`<br>Example with custom mapping:<br>\`\`\`php<br>use Monolog\\Level;<br>use Flow\\Telemetry\\Logger\\Severity;<br>$mapper = severity_mapper([<br>    Level::Debug->value => Severity::DEBUG,<br>    Level::Info->value => Severity::INFO,<br>    Level::Notice->value => Severity::WARN,  // Custom: NOTICE → WARN instead of INFO<br>    Level::Warning->value => Severity::WARN,<br>    Level::Error->value => Severity::ERROR,<br>    Level::Critical->value => Severity::FATAL,<br>    Level::Alert->value => Severity::FATAL,<br>    Level::Emergency->value => Severity::FATAL,<br>]);<br>\`\`\`
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\severity_mapper(" + "$" + "{" + "1:customMapping" + "}" + ")"),
+        boost: 10
+    },        {
         label: "similar_to",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -8593,15 +8677,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">span_event</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GenericEvent</span>
+                    <span class=\"fn-name\">span_event</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeImmutable</span> <span class=\"fn-param\">$timestamp</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GenericEvent</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SpanEvent (GenericEvent) with the current timestamp.<br>@param string $name Event name<br>@param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Event attributes
+                    Create a SpanEvent (GenericEvent) with an explicit timestamp.<br>@param string $name Event name<br>@param \\DateTimeImmutable $timestamp Event timestamp<br>@param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Event attributes
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\span_event(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:attributes" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\span_event(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:timestamp" + "}" + ", " + "$" + "{" + "3:attributes" + "}" + ")"),
         boost: 10
     },        {
         label: "span_id",
@@ -8629,10 +8713,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">span_link</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanContext</span> <span class=\"fn-param\">$context</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SpanLink</span>
+                    <span class=\"fn-name\">span_link</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanContext</span> <span class=\"fn-param\">$context</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SpanLink</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SpanLink.<br>@param SpanContext $context The linked span context<br>@param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Link attributes
+                    Create a SpanLink.<br>@param SpanContext $context The linked span context<br>@param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Link attributes
                 </div>
                             `
             return div
@@ -9390,6 +9474,36 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\superglobal_carrier()"),
         boost: 10
     },        {
+        label: "symfony_request_carrier",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">symfony_request_carrier</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Request</span> <span class=\"fn-param\">$request</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RequestCarrier</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Symfony\\HttpFoundationTelemetry\\DSL\\symfony_request_carrier(" + "$" + "{" + "1:request" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "symfony_response_carrier",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">symfony_response_carrier</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Response</span> <span class=\"fn-param\">$response</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ResponseCarrier</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Symfony\\HttpFoundationTelemetry\\DSL\\symfony_response_carrier(" + "$" + "{" + "1:response" + "}" + ")"),
+        boost: 10
+    },        {
         label: "table",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -9460,6 +9574,39 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\telemetry(" + "$" + "{" + "1:resource" + "}" + ", " + "$" + "{" + "2:tracerProvider" + "}" + ", " + "$" + "{" + "3:meterProvider" + "}" + ", " + "$" + "{" + "4:loggerProvider" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "telemetry_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">telemetry_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Logger</span> <span class=\"fn-param\">$logger</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogRecordConverter</span> <span class=\"fn-param\">$converter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Monolog\\Telemetry\\LogRecordConverter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Level</span> <span class=\"fn-param\">$level</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Monolog\\Level::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$bubble</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TelemetryHandler for forwarding Monolog logs to Flow Telemetry.<br>@param Logger $logger The Flow Telemetry logger to forward logs to<br>@param LogRecordConverter $converter Converter to transform Monolog LogRecord to Telemetry LogRecord<br>@param Level $level The minimum logging level at which this handler will be triggered<br>@param bool $bubble Whether messages handled by this handler should bubble up to other handlers<br>Example usage:<br>\`\`\`php<br>use Monolog\\Logger as MonologLogger;<br>use function Flow\\Bridge\\Monolog\\Telemetry\\DSL\\telemetry_handler;<br>use function Flow\\Telemetry\\DSL\\telemetry;<br>$telemetry = telemetry();<br>$logger = $telemetry->logger(\'my-app\');<br>$monolog = new MonologLogger(\'channel\');<br>$monolog->pushHandler(telemetry_handler($logger));<br>$monolog->info(\'User logged in\', [\'user_id\' => 123]);<br>// → Forwarded to Flow Telemetry with INFO severity<br>\`\`\`<br>Example with custom converter:<br>\`\`\`php<br>$converter = log_record_converter(<br>    severityMapper: severity_mapper([<br>        Level::Debug->value => Severity::TRACE,<br>    ])<br>);<br>$monolog->pushHandler(telemetry_handler($logger, $converter));<br>\`\`\`
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\telemetry_handler(" + "$" + "{" + "1:logger" + "}" + ", " + "$" + "{" + "2:converter" + "}" + ", " + "$" + "{" + "3:level" + "}" + ", " + "$" + "{" + "4:bubble" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "telemetry_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_loading</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_transformations</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collect_metrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryOptions</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\telemetry_options(" + "$" + "{" + "1:trace_loading" + "}" + ", " + "$" + "{" + "2:trace_transformations" + "}" + ", " + "$" + "{" + "3:collect_metrics" + "}" + ")"),
         boost: 10
     },        {
         label: "text_search_match",
@@ -11125,6 +11272,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\values_table(" + "$" + "{" + "1:rows" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "value_normalizer",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">value_normalizer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ValueNormalizer</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a ValueNormalizer for converting arbitrary PHP values to Telemetry attribute types.<br>The normalizer handles:<br>- null → \'null\' string<br>- scalars (string, int, float, bool) → unchanged<br>- DateTimeInterface → unchanged<br>- Throwable → unchanged<br>- arrays → recursively normalized<br>- objects with __toString() → string cast<br>- objects without __toString() → class name<br>- other types → get_debug_type() result<br>Example usage:<br>\`\`\`php<br>$normalizer = value_normalizer();<br>$normalized = $normalizer->normalize($value);<br>\`\`\`
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\value_normalizer()"),
         boost: 10
     },        {
         label: "void_log_exporter",
