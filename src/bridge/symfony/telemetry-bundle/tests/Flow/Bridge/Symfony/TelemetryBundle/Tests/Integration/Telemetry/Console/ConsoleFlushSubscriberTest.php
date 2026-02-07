@@ -47,9 +47,9 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => true,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => true],
                         'messenger' => false,
                     ],
                 ]);
@@ -98,9 +98,9 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => false],
                         'messenger' => false,
                     ],
                 ]);

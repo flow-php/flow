@@ -11,7 +11,10 @@ flow_telemetry:
     processor:
       type: void
 
-  instrumentation:
-    http_kernel: false
-    console: false
-    twig: false
+  telemetry:
+    http_kernel:
+      enabled: false
+    console:
+      enabled: false
+    twig:
+      enabled: false

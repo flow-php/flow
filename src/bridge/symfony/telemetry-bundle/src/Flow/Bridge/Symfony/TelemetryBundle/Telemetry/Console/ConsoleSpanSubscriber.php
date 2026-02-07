@@ -16,8 +16,12 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
 
     private ?Tracer $tracer = null;
 
+    /**
+     * @param array<string> $excludeCommands
+     */
     public function __construct(
         private readonly Telemetry $telemetry,
+        private readonly array $excludeCommands = [],
     ) {
     }
 
@@ -35,6 +39,10 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
     {
         $command = $event->getCommand();
         $commandName = $command?->getName() ?? 'unknown';
+
+        if (!$this->shouldTrace($commandName)) {
+            return;
+        }
 
         $this->tracer = $this->telemetry->tracer('flow.symfony.console');
 
@@ -90,5 +98,25 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
 
         $this->span = null;
         $this->tracer = null;
+    }
+
+    private function matchesPattern(string $command, string $pattern) : bool
+    {
+        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
+            return (bool) \preg_match($pattern, $command);
+        }
+
+        return $command === $pattern;
+    }
+
+    private function shouldTrace(string $commandName) : bool
+    {
+        foreach ($this->excludeCommands as $pattern) {
+            if ($this->matchesPattern($commandName, $pattern)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -47,9 +47,9 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => false],
                         'messenger' => false,
                     ],
                 ]);
@@ -74,6 +74,112 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         self::assertCount(0, $spans);
     }
 
+    public function test_excludes_command_with_exact_match() : void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => [
+                            'enabled' => true,
+                            'exclude_commands' => ['test:command'],
+                        ],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $application = new Application($kernel);
+        $application->add(new TestCommand());
+        $application->setAutoExit(false);
+        $application->setCatchExceptions(false);
+
+        $input = new ArrayInput(['command' => 'test:command']);
+        $output = new BufferedOutput();
+
+        $application->run($input, $output);
+
+        $container = $this->getContainer();
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        self::assertCount(0, $spans);
+    }
+
+    public function test_excludes_command_with_regex_pattern() : void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => [
+                            'enabled' => true,
+                            'exclude_commands' => ['/^test:.*/'],
+                        ],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $application = new Application($kernel);
+        $application->add(new TestCommand());
+        $application->add(new FailingCommand());
+        $application->setAutoExit(false);
+        $application->setCatchExceptions(false);
+
+        $input = new ArrayInput(['command' => 'test:command']);
+        $output = new BufferedOutput();
+
+        $application->run($input, $output);
+
+        $input = new ArrayInput(['command' => 'test:failing']);
+        $application->run($input, $output);
+
+        $container = $this->getContainer();
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        self::assertCount(0, $spans, 'Both test:command and test:failing should be excluded by regex');
+    }
+
     public function test_traces_failing_console_command() : void
     {
         $kernel = $this->bootKernel([
@@ -95,9 +201,9 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => true,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => true],
                         'messenger' => false,
                     ],
                 ]);
@@ -155,9 +261,9 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => true,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => true],
                         'messenger' => false,
                     ],
                 ]);

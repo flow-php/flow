@@ -17,17 +17,33 @@ final class TracingTwigExtension extends AbstractExtension
      */
     private \SplObjectStorage $activeSpans;
 
+    private int $excludedDepth = 0;
+
+    /**
+     * @param array<string> $excludeTemplates
+     */
     public function __construct(
         private readonly Telemetry $telemetry,
         private readonly bool $traceTemplates = true,
         private readonly bool $traceBlocks = false,
         private readonly bool $traceMacros = false,
+        private readonly array $excludeTemplates = [],
     ) {
         $this->activeSpans = new \SplObjectStorage();
     }
 
     public function enter(Profile $profile) : void
     {
+        if ($profile->isTemplate() && $this->isTemplateExcluded($profile->getTemplate())) {
+            $this->excludedDepth++;
+
+            return;
+        }
+
+        if ($this->excludedDepth > 0) {
+            return;
+        }
+
         if (!$this->shouldTrace($profile)) {
             return;
         }
@@ -57,6 +73,12 @@ final class TracingTwigExtension extends AbstractExtension
 
     public function leave(Profile $profile) : void
     {
+        if ($profile->isTemplate() && $this->isTemplateExcluded($profile->getTemplate())) {
+            $this->excludedDepth--;
+
+            return;
+        }
+
         if (!$this->activeSpans->contains($profile)) {
             return;
         }
@@ -84,6 +106,26 @@ final class TracingTwigExtension extends AbstractExtension
             $profile->getType(),
             $profile->getName()
         );
+    }
+
+    private function isTemplateExcluded(string $template) : bool
+    {
+        foreach ($this->excludeTemplates as $pattern) {
+            if ($this->matchesPattern($template, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function matchesPattern(string $template, string $pattern) : bool
+    {
+        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
+            return (bool) \preg_match($pattern, $template);
+        }
+
+        return $template === $pattern;
     }
 
     private function shouldTrace(Profile $profile) : bool

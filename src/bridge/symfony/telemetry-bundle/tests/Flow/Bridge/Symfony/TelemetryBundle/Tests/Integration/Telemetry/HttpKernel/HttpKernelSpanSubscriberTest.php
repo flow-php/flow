@@ -46,9 +46,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => false],
                         'messenger' => false,
                     ],
                 ]);
@@ -94,9 +94,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => true,
-                        'console' => false,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
                         'messenger' => false,
                     ],
                 ]);
@@ -153,9 +153,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => true,
-                        'console' => false,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
                         'messenger' => false,
                     ],
                 ]);

@@ -37,9 +37,9 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
+                    'telemetry' => [
+                        'http_kernel' => ['enabled' => false],
+                        'console' => ['enabled' => false],
                         'messenger' => false,
                         'twig' => [
                             'enabled' => true,
@@ -77,13 +77,198 @@ final class TracingTwigExtensionTest extends KernelTestCase
         }
     }
 
+    public function test_does_not_trace_excluded_templates() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'twig' => [
+                            'enabled' => true,
+                            'exclude_templates' => ['excluded.html.twig'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TracingTwigExtension $extension */
+        $extension = $container->get('flow.telemetry.twig.extension');
+
+        $loader = new ArrayLoader([
+            'included.html.twig' => 'Included template',
+            'excluded.html.twig' => 'Excluded template',
+        ]);
+
+        $twig = new Environment($loader);
+        $twig->addExtension($extension);
+
+        $twig->render('included.html.twig');
+        $twig->render('excluded.html.twig');
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $templateNames = [];
+
+        foreach ($spans as $span) {
+            $attributes = $span->attributes();
+
+            if (($attributes['twig.type'] ?? '') === 'template') {
+                $templateNames[] = $attributes['twig.template'];
+            }
+        }
+
+        self::assertContains('included.html.twig', $templateNames, 'Included template should be traced');
+        self::assertNotContains('excluded.html.twig', $templateNames, 'Excluded template should not be traced');
+    }
+
+    public function test_does_not_trace_excluded_templates_with_regex() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'twig' => [
+                            'enabled' => true,
+                            'exclude_templates' => ['/^@Profiler.*/'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TracingTwigExtension $extension */
+        $extension = $container->get('flow.telemetry.twig.extension');
+
+        $loader = new ArrayLoader([
+            'included.html.twig' => 'Included template',
+            '@Profiler/toolbar.html.twig' => 'Profiler toolbar',
+            '@Profiler/panel.html.twig' => 'Profiler panel',
+        ]);
+
+        $twig = new Environment($loader);
+        $twig->addExtension($extension);
+
+        $twig->render('included.html.twig');
+        $twig->render('@Profiler/toolbar.html.twig');
+        $twig->render('@Profiler/panel.html.twig');
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $templateNames = [];
+
+        foreach ($spans as $span) {
+            $attributes = $span->attributes();
+
+            if (($attributes['twig.type'] ?? '') === 'template') {
+                $templateNames[] = $attributes['twig.template'];
+            }
+        }
+
+        self::assertContains('included.html.twig', $templateNames, 'Included template should be traced');
+        self::assertNotContains('@Profiler/toolbar.html.twig', $templateNames, 'Profiler toolbar should not be traced');
+        self::assertNotContains('@Profiler/panel.html.twig', $templateNames, 'Profiler panel should not be traced');
+    }
+
+    public function test_excluded_template_cascades_to_children() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'service' => ['name' => 'test-app'],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'telemetry' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'twig' => [
+                            'enabled' => true,
+                            'trace_blocks' => true,
+                            'exclude_templates' => ['excluded.html.twig'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TracingTwigExtension $extension */
+        $extension = $container->get('flow.telemetry.twig.extension');
+
+        $loader = new ArrayLoader([
+            'child.html.twig' => 'Child content',
+            'excluded.html.twig' => '{% block content %}Block content{% endblock %}{% include "child.html.twig" %}',
+        ]);
+
+        $twig = new Environment($loader);
+        $twig->addExtension($extension);
+
+        $twig->render('excluded.html.twig');
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $templateNames = [];
+        $blockNames = [];
+
+        foreach ($spans as $span) {
+            $attributes = $span->attributes();
+            $type = $attributes['twig.type'] ?? '';
+
+            if ($type === 'template') {
+                $templateNames[] = $attributes['twig.template'];
+            } elseif ($type === 'block') {
+                $blockNames[] = $attributes['twig.name'];
+            }
+        }
+
+        self::assertNotContains('excluded.html.twig', $templateNames, 'Excluded template should not be traced');
+        self::assertNotContains('child.html.twig', $templateNames, 'Child template should not be traced when parent is excluded');
+        self::assertNotContains('content', $blockNames, 'Block in excluded template should not be traced');
+    }
+
     public function test_extension_not_registered_when_disabled() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instrumentation' => [
+                    'telemetry' => [
                         'twig' => false,
                     ],
                 ]);
@@ -101,7 +286,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'instrumentation' => [
+                    'telemetry' => [
                         'twig' => true,
                     ],
                 ]);
@@ -126,7 +311,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
+                    'telemetry' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -188,7 +373,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'instrumentation' => [
+                    'telemetry' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,

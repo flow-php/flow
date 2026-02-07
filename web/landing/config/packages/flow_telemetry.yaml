@@ -4,6 +4,25 @@ flow_telemetry:
     version: "1.0.0"
     attributes:
       deployment.environment: "%kernel.environment%"
+  telemetry:
+    http_kernel:
+      enabled: true
+      exclude_routes:
+        - '_wdt'
+        - '_profiler'
+        - '/_profiler.*/'
+    console:
+      enabled: true
+      exclude_commands:
+        - 'cache:clear'
+        - 'debug:router'
+    twig:
+      enabled: true
+      trace_templates: true
+      trace_blocks: true
+      trace_macros: true
+      exclude_templates:
+        - '@WebProfiler/Profiler/toolbar.html.twig'
 
   tracer_provider:
     sampler:
@@ -47,12 +66,3 @@ flow_telemetry:
             timeout: 30
             serializer:
               type: json
-
-  instrumentation:
-    http_kernel: true
-    console: true
-    twig:
-      enabled: true
-      trace_templates: true
-      trace_blocks: true
-      trace_macros: true

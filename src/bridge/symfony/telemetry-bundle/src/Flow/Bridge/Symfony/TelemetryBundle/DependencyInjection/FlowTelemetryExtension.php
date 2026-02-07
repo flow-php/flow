@@ -36,13 +36,13 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, telemetry?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($container);
         $this->registerResource($config['service'], $container);
         $this->registerTelemetry($config, $container);
-        $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
+        $this->registerAutoTelemetry($config['telemetry'] ?? [], $container);
         $this->registerTracers($config['tracers'] ?? [], $container);
         $this->registerMeters($config['meters'] ?? [], $container);
         $this->registerLoggers($config['loggers'] ?? [], $container);
@@ -718,20 +718,17 @@ final class FlowTelemetryExtension extends Extension
         };
     }
 
-    private function registerGlobalServices(ContainerBuilder $container) : void
-    {
-        $container->setDefinition('flow.telemetry.clock', new Definition(SystemClock::class));
-        $container->setDefinition('flow.telemetry.context_storage', new Definition(MemoryContextStorage::class));
-    }
-
     /**
-     * @param array{http_kernel?: bool, console?: bool, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool}} $config
+     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}} $config
      */
-    private function registerInstrumentation(array $config, ContainerBuilder $container) : void
+    private function registerAutoTelemetry(array $config, ContainerBuilder $container) : void
     {
-        if ($config['http_kernel'] ?? true) {
+        $httpKernelConfig = $config['http_kernel'] ?? [];
+
+        if ($httpKernelConfig['enabled'] ?? false) {
             $spanDefinition = new Definition(HttpKernelSpanSubscriber::class);
             $spanDefinition->setArgument(0, new Reference(Telemetry::class));
+            $spanDefinition->setArgument(1, $httpKernelConfig['exclude_routes'] ?? []);
             $spanDefinition->addTag('kernel.event_subscriber');
             $container->setDefinition('flow.telemetry.http_kernel.span_subscriber', $spanDefinition);
 
@@ -741,9 +738,12 @@ final class FlowTelemetryExtension extends Extension
             $container->setDefinition('flow.telemetry.http_kernel.flush_subscriber', $flushDefinition);
         }
 
-        if ($config['console'] ?? true) {
+        $consoleConfig = $config['console'] ?? [];
+
+        if ($consoleConfig['enabled'] ?? false) {
             $spanDefinition = new Definition(ConsoleSpanSubscriber::class);
             $spanDefinition->setArgument(0, new Reference(Telemetry::class));
+            $spanDefinition->setArgument(1, $consoleConfig['exclude_commands'] ?? []);
             $spanDefinition->addTag('kernel.event_subscriber');
             $container->setDefinition('flow.telemetry.console.span_subscriber', $spanDefinition);
 
@@ -753,7 +753,7 @@ final class FlowTelemetryExtension extends Extension
             $container->setDefinition('flow.telemetry.console.flush_subscriber', $flushDefinition);
         }
 
-        if (($config['messenger'] ?? true) && \interface_exists(MiddlewareInterface::class)) {
+        if (($config['messenger'] ?? false) && \interface_exists(MiddlewareInterface::class)) {
             $definition = new Definition(TracingMiddleware::class);
             $definition->setArgument(0, new Reference(Telemetry::class));
             $container->setDefinition('flow.telemetry.messenger.middleware', $definition);
@@ -771,9 +771,16 @@ final class FlowTelemetryExtension extends Extension
             $definition->setArgument(1, $twigConfig['trace_templates'] ?? true);
             $definition->setArgument(2, $twigConfig['trace_blocks'] ?? false);
             $definition->setArgument(3, $twigConfig['trace_macros'] ?? false);
+            $definition->setArgument(4, $twigConfig['exclude_templates'] ?? []);
             $definition->addTag('twig.extension');
             $container->setDefinition('flow.telemetry.twig.extension', $definition);
         }
+    }
+
+    private function registerGlobalServices(ContainerBuilder $container) : void
+    {
+        $container->setDefinition('flow.telemetry.clock', new Definition(SystemClock::class));
+        $container->setDefinition('flow.telemetry.context_storage', new Definition(MemoryContextStorage::class));
     }
 
     /**

@@ -16,8 +16,12 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
     private const string TRACER_ATTRIBUTE = '_flow_telemetry_tracer';
 
+    /**
+     * @param array<string> $excludeRoutes
+     */
     public function __construct(
         private Telemetry $telemetry,
+        private array $excludeRoutes = [],
     ) {
     }
 
@@ -44,6 +48,13 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $route = $request->attributes->get('_route');
 
         if (\is_string($route)) {
+            if (!$this->shouldTrace($route)) {
+                $request->attributes->remove(self::SPAN_ATTRIBUTE);
+                $request->attributes->remove(self::TRACER_ATTRIBUTE);
+
+                return;
+            }
+
             $span->setAttribute('http.route', $route);
             $method = $request->getMethod();
             $span->rename("{$method} {$route}");
@@ -131,6 +142,15 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $request->attributes->remove(self::TRACER_ATTRIBUTE);
     }
 
+    private function matchesPattern(string $route, string $pattern) : bool
+    {
+        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
+            return (bool) \preg_match($pattern, $route);
+        }
+
+        return $route === $pattern;
+    }
+
     /**
      * @param array<int, object|string>|callable|object $controller
      */
@@ -158,5 +178,16 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
 
         return null;
+    }
+
+    private function shouldTrace(string $route) : bool
+    {
+        foreach ($this->excludeRoutes as $pattern) {
+            if ($this->matchesPattern($route, $pattern)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -15,7 +15,7 @@ flow_telemetry:
               serializer:
                 type: json
 
-  instrumentation:
+  telemetry:
     twig:
       trace_blocks: false
       trace_macros: false
