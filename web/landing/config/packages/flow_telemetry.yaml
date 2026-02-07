@@ -51,3 +51,8 @@ flow_telemetry:
   instrumentation:
     http_kernel: true
     console: true
+    twig:
+      enabled: true
+      trace_templates: true
+      trace_blocks: true
+      trace_macros: true

@@ -18,6 +18,7 @@ final class DSLExtension extends AbstractExtension
         return file_get_contents($this->dslPath);
     }
 
+    #[\Override]
     public function getFunctions()
     {
         return [

@@ -26,13 +26,15 @@
     },
     "require-dev": {
         "flow-php/telemetry-otlp-bridge": "self.version",
-        "symfony/messenger": "^6.4 || ^7.3 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.3 || ^8.0",
-        "symfony/routing": "^6.4 || ^7.3 || ^8.0"
+        "symfony/messenger": "^6.4 || ^7.3 || ^8.0",
+        "symfony/routing": "^6.4 || ^7.3 || ^8.0",
+        "twig/twig": "^3.0"
     },
     "suggest": {
         "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
-        "symfony/messenger": "Required for Messenger tracing middleware"
+        "symfony/messenger": "Required for Messenger tracing middleware",
+        "twig/twig": "Required for Twig template tracing"
     },
     "autoload": {
         "psr-4": {

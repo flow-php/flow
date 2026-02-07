@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\{ConsoleFlushSubscriber, ConsoleSpanSubscriber};
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Messenger\TracingMiddleware;
+use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Twig\TracingTwigExtension;
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
@@ -25,6 +26,7 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
+use Twig\Extension\AbstractExtension;
 
 final class FlowTelemetryExtension extends Extension
 {
@@ -34,7 +36,7 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: bool, console?: bool, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($container);
@@ -723,7 +725,7 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array{http_kernel?: bool, console?: bool, messenger?: bool} $config
+     * @param array{http_kernel?: bool, console?: bool, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool}} $config
      */
     private function registerInstrumentation(array $config, ContainerBuilder $container) : void
     {
@@ -755,6 +757,22 @@ final class FlowTelemetryExtension extends Extension
             $definition = new Definition(TracingMiddleware::class);
             $definition->setArgument(0, new Reference(Telemetry::class));
             $container->setDefinition('flow.telemetry.messenger.middleware', $definition);
+        }
+
+        $twigConfig = $config['twig'] ?? [];
+
+        if ($twigConfig['enabled'] ?? false) {
+            if (!\class_exists(AbstractExtension::class)) {
+                throw new RuntimeException('Twig instrumentation requires twig/twig package. Install it via composer: composer require twig/twig');
+            }
+
+            $definition = new Definition(TracingTwigExtension::class);
+            $definition->setArgument(0, new Reference(Telemetry::class));
+            $definition->setArgument(1, $twigConfig['trace_templates'] ?? true);
+            $definition->setArgument(2, $twigConfig['trace_blocks'] ?? false);
+            $definition->setArgument(3, $twigConfig['trace_macros'] ?? false);
+            $definition->addTag('twig.extension');
+            $container->setDefinition('flow.telemetry.twig.extension', $definition);
         }
     }
 

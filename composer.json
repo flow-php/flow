@@ -68,7 +68,8 @@
         "symfony/http-client": "^6.4 || ^7.3 || ^8.0",
         "symfony/messenger": "^6.4 || ^7.3 || ^8.0",
         "symfony/process": "^7.3 || ^8.0",
-        "symfony/routing": "^6.4 || ^7.3 || ^8.0"
+        "symfony/routing": "^6.4 || ^7.3 || ^8.0",
+        "twig/twig": "^3.0"
     },
     "replace": {
         "flow-php/array-dot": "self.version",
