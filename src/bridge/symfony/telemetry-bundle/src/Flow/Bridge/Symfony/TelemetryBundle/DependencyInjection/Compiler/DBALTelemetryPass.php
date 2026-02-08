@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Doctrine\DBAL\TracingMiddleware;
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Doctrine\DBAL\V3\TracingDriver as V3TracingDriver;
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Doctrine\DBAL\V4\TracingDriver as V4TracingDriver;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingMiddleware;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingDriver as V3TracingDriver;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingDriver as V4TracingDriver;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpClient\TracableHttpClient;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient\TracableHttpClient;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};

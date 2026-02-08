@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\{ConsoleFlushSubscriber, ConsoleSpanSubscriber};
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Messenger\TracingMiddleware;
-use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Twig\TracingTwigExtension;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\{ConsoleFlushSubscriber, ConsoleSpanSubscriber};
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig\TracingTwigExtension;
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
