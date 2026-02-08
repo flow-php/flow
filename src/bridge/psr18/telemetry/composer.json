@@ -12,7 +12,6 @@
     "license": "MIT",
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "composer-runtime-api": "^2.0",
         "flow-php/telemetry": "self.version",
         "psr/http-client": "^1.0",
         "psr/http-message": "^1.0 || ^2.0"

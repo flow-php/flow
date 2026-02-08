@@ -128,9 +128,6 @@ parameters:
             identifier: foreach.nonIterable
         -
             path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
-            identifier: notIdentical.alwaysTrue
-        -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
             identifier: binaryOp.invalid
         -
             path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/Compiler/DBALTelemetryPass.php

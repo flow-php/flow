@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console;
 
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\{ConsoleCommandEvent, ConsoleErrorEvent, ConsoleSignalEvent, ConsoleTerminateEvent};
@@ -44,7 +44,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->tracer = $this->telemetry->tracer('flow.symfony.console');
+        $this->tracer = $this->telemetry->tracer('flow.symfony.console', PackageVersion::get('symfony/console'));
 
         $attributes = [
             'command.name' => $commandName,

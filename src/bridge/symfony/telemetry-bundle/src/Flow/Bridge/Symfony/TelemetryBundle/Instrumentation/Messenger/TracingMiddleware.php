@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\{MiddlewareInterface, StackInterface};
@@ -19,7 +19,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
     public function handle(Envelope $envelope, StackInterface $stack) : Envelope
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.messenger');
+        $tracer = $this->telemetry->tracer('flow.symfony.messenger', PackageVersion::get('symfony/messenger'));
 
         $message = $envelope->getMessage();
         $messageClass = $message::class;

@@ -9,7 +9,7 @@ use Doctrine\DBAL\{Driver as DriverInterface, DriverManager};
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\Middleware\AbstractDriverMiddleware;
 use Doctrine\DBAL\Platforms\{AbstractMySQLPlatform, DB2Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SQLitePlatform};
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
 
 /**
@@ -35,7 +35,7 @@ final class TracingDriver extends AbstractDriverMiddleware
         #[\SensitiveParameter]
         array $params,
     ) : Connection {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span(
             'doctrine.dbal.connection',

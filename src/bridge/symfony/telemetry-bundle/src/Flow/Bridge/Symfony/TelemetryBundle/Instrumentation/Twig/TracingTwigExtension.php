@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig;
 
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{Span, SpanKind, Tracer};
 use Twig\Extension\AbstractExtension;
 use Twig\Profiler\NodeVisitor\ProfilerNodeVisitor;
@@ -48,7 +48,7 @@ final class TracingTwigExtension extends AbstractExtension
             return;
         }
 
-        $tracer = $this->telemetry->tracer('flow.symfony.twig');
+        $tracer = $this->telemetry->tracer('flow.symfony.twig', PackageVersion::get('twig/twig'));
 
         $spanName = $this->getSpanName($profile);
         $attributes = [

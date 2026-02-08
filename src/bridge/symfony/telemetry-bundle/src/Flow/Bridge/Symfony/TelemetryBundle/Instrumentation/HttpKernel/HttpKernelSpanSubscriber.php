@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\{ControllerEvent, ExceptionEvent, RequestEvent, ResponseEvent, TerminateEvent};
@@ -88,7 +88,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $method = $request->getMethod();
         $path = $request->getPathInfo();
 
-        $tracer = $this->telemetry->tracer('flow.symfony.http_kernel');
+        $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
         $span = $tracer->span(
             "{$method} {$path}",
             $kind,

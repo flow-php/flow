@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient;
 
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
 use Symfony\Contracts\HttpClient\{HttpClientInterface, ResponseInterface, ResponseStreamInterface};
 
@@ -26,7 +26,7 @@ final readonly class TracableHttpClient implements HttpClientInterface
         $scheme = $parsedUrl['scheme'] ?? 'http';
         $host = $parsedUrl['host'] ?? 'unknown';
 
-        $tracer = $this->telemetry->tracer('flow.symfony.http_client');
+        $tracer = $this->telemetry->tracer('flow.symfony.http_client', PackageVersion::get('symfony/http-client'));
 
         $span = $tracer->span(
             "{$method} {$host}",

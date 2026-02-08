@@ -208,7 +208,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => [
                         'name' => 'my-application',
-                        'version' => '3.0.0',
+                        'version' => ['type' => 'manual', 'value' => '3.0.0'],
                         'attributes' => [
                             'deployment.environment' => 'staging',
                         ],
@@ -245,8 +245,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         /** @var resource $resource */
         $resource = $container->get('flow.telemetry.resource');
-        self::assertSame('my-application', $resource->get('service.name'));
-        self::assertSame('3.0.0', $resource->get('service.version'));
+        self::assertSame('my-application', $resource->get('name'));
+        self::assertSame('3.0.0', $resource->get('version'));
         self::assertSame('staging', $resource->get('deployment.environment'));
 
         self::assertInstanceOf(Telemetry::class, $container->get('flow.telemetry'));
@@ -657,7 +657,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => [
                         'name' => 'my-service',
-                        'version' => '2.1.0',
+                        'version' => ['type' => 'manual', 'value' => '2.1.0'],
                     ],
                 ]);
             },
@@ -665,8 +665,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         /** @var resource $resource */
         $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('2.1.0', $resource->get('service.version'));
+        self::assertSame('my-service', $resource->get('name'));
+        self::assertSame('2.1.0', $resource->get('version'));
     }
 
     public function test_same_name_for_different_types_is_allowed() : void

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr18\Telemetry;
 
-use Composer\InstalledVersions;
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
@@ -20,7 +19,7 @@ final readonly class PSR18TraceableClient implements ClientInterface
     ) {
         $this->tracer = $telemetry->tracer(
             'flow.psr18.http_client',
-            self::resolveVersion(),
+            PackageVersion::get('flow-php/psr18-telemetry-bridge'),
         );
     }
 
@@ -64,18 +63,5 @@ final readonly class PSR18TraceableClient implements ClientInterface
         } finally {
             $this->tracer->complete($span);
         }
-    }
-
-    private static function resolveVersion() : string
-    {
-        if (InstalledVersions::isInstalled('flow-php/psr18-telemetry-bridge')) {
-            return InstalledVersions::getPrettyVersion('flow-php/psr18-telemetry-bridge') ?? 'unknown';
-        }
-
-        if (InstalledVersions::isInstalled('flow-php/flow')) {
-            return InstalledVersions::getPrettyVersion('flow-php/flow') ?? 'unknown';
-        }
-
-        return 'unknown';
     }
 }

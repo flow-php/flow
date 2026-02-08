@@ -1,9 +1,11 @@
 flow_telemetry:
   service:
     name: "flow-website"
-    version: "1.0.0"
+    version:
+      type: package
+      name: "flow-php/web"
     attributes:
-      deployment.environment: "%kernel.environment%"
+      environment: "%kernel.environment%"
   instrumentation:
     http_kernel:
       enabled: true

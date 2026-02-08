@@ -6,7 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
 
 use Doctrine\DBAL\Driver\Middleware\AbstractStatementMiddleware;
 use Doctrine\DBAL\Driver\{Result, Statement as StatementInterface};
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
 
 final class TracingStatement extends AbstractStatementMiddleware
@@ -24,7 +24,7 @@ final class TracingStatement extends AbstractStatementMiddleware
     #[\Override]
     public function execute($params = null) : Result
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.statement.execute', SpanKind::CLIENT);
 

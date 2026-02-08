@@ -12,7 +12,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig\TracingTwigExtensio
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
-use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
+use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, PackageVersion, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor,
@@ -54,7 +54,7 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{service: array{name: string, version?: null|array{type: string, value?: null|string, name?: null|string}, attributes?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($config, $container);
@@ -1048,11 +1048,21 @@ final class FlowTelemetryExtension extends Extension
     private function registerResource(array $serviceConfig, ContainerBuilder $container) : void
     {
         $attributes = [
-            'service.name' => $serviceConfig['name'],
+            'name' => $serviceConfig['name'],
         ];
 
-        if (isset($serviceConfig['version']) && $serviceConfig['version'] !== null) {
-            $attributes['service.version'] = $serviceConfig['version'];
+        $versionConfig = $serviceConfig['version'] ?? null;
+
+        if ($versionConfig !== null) {
+            $version = match ($versionConfig['type']) {
+                'manual' => $versionConfig['value'],
+                'package' => PackageVersion::get($versionConfig['name']),
+                default => null,
+            };
+
+            if ($version !== null) {
+                $attributes['version'] = $version;
+            }
         }
 
         $additionalAttributes = $serviceConfig['attributes'] ?? [];

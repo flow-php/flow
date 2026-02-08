@@ -6,7 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
 
 use Doctrine\DBAL\Driver\{Connection as ConnectionInterface, Result, Statement as DriverStatement};
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
 
 final class TracingConnection extends AbstractConnectionMiddleware
@@ -23,7 +23,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[\Override]
     public function beginTransaction() : bool
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.transaction.begin', SpanKind::CLIENT);
 
@@ -46,7 +46,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[\Override]
     public function commit() : bool
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.transaction.commit', SpanKind::CLIENT);
 
@@ -69,7 +69,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[\Override]
     public function exec(string $sql) : int
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $attributes = [];
 
@@ -98,7 +98,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[\Override]
     public function prepare(string $sql) : DriverStatement
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $attributes = [];
 
@@ -127,7 +127,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[\Override]
     public function query(string $sql) : Result
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $attributes = [];
 
@@ -156,7 +156,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     #[\Override]
     public function rollBack() : bool
     {
-        $tracer = $this->telemetry->tracer('flow.symfony.dbal');
+        $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.transaction.rollback', SpanKind::CLIENT);
 
