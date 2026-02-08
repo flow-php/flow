@@ -674,6 +674,46 @@ final class ConfigurationTest extends TestCase
         self::assertFalse($config['telemetry']['messenger']);
     }
 
+    public function test_telemetry_psr18_client_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'psr18_client' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['psr18_client']['enabled']);
+    }
+
+    public function test_telemetry_psr18_client_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('telemetry', $config);
+        self::assertArrayHasKey('psr18_client', $config['telemetry']);
+        self::assertFalse($config['telemetry']['psr18_client']['enabled']);
+        self::assertSame([], $config['telemetry']['psr18_client']['exclude_clients']);
+    }
+
+    public function test_telemetry_psr18_client_exclude_clients() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'telemetry' => [
+                'psr18_client' => [
+                    'enabled' => true,
+                    'exclude_clients' => ['internal.psr18_client', '/^debug\\..*$/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['telemetry']['psr18_client']['enabled']);
+        self::assertSame(['internal.psr18_client', '/^debug\\..*$/'], $config['telemetry']['psr18_client']['exclude_clients']);
+    }
+
     public function test_telemetry_twig_exclude_templates() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
