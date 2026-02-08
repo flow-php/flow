@@ -12,13 +12,26 @@ use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Twig\TracingTwigExtension;
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
-use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, CompositeLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
+use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor,
+    CompositeLogProcessor,
+    PassThroughLogProcessor,
+    SeverityFilteringLogProcessor};
 use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider};
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, CompositeMetricProcessor, PassThroughMetricProcessor};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
-use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryLogExporter,
+    MemoryLogProcessor,
+    MemoryMetricExporter,
+    MemoryMetricProcessor,
+    MemorySpanExporter,
+    MemorySpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidLogExporter,
+    VoidLogProcessor,
+    VoidMetricExporter,
+    VoidMetricProcessor,
+    VoidSpanExporter,
+    VoidSpanProcessor};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler};
@@ -73,7 +86,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildLogExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildLogExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(MemoryLogProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -81,7 +98,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildLogExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildLogExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(BatchingLogProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
@@ -90,7 +111,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildLogExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildLogExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(PassThroughLogProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -140,7 +165,11 @@ final class FlowTelemetryExtension extends Extension
 
             case 'otlp':
                 $container->setParameter('flow.telemetry.otlp_configured', true);
-                $transportServiceId = $this->buildOTLPTransport($config['otlp']['transport'] ?? [], $exporterServiceId, $container);
+                $transportServiceId = $this->buildOTLPTransport(
+                    $config['otlp']['transport'] ?? [],
+                    $exporterServiceId,
+                    $container
+                );
                 $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPLogExporter');
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
@@ -197,7 +226,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildLogExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildLogExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(MemoryLogProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -205,7 +238,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildLogExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildLogExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(BatchingLogProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
@@ -214,7 +251,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildLogExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildLogExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(PassThroughLogProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -227,7 +268,11 @@ final class FlowTelemetryExtension extends Extension
 
                 foreach ($processors as $idx => $processorConfig) {
                     /** @var array<string, mixed> $processorConfig */
-                    $subProcessorId = $this->buildLogProcessor($processorConfig, $processorServiceId . '.' . $idx, $container);
+                    $subProcessorId = $this->buildLogProcessor(
+                        $processorConfig,
+                        $processorServiceId . '.' . $idx,
+                        $container
+                    );
                     $processorRefs[] = new Reference($subProcessorId);
                 }
                 $definition = new Definition(CompositeLogProcessor::class);
@@ -238,7 +283,11 @@ final class FlowTelemetryExtension extends Extension
 
             case 'severity_filtering':
                 $innerProcessorConfig = $config['inner_processor'] ?? [];
-                $innerProcessorServiceId = $this->buildInnerLogProcessor($innerProcessorConfig, $processorServiceId . '.inner', $container);
+                $innerProcessorServiceId = $this->buildInnerLogProcessor(
+                    $innerProcessorConfig,
+                    $processorServiceId . '.inner',
+                    $container
+                );
                 $minimumSeverity = $this->mapSeverity($config['minimum_severity'] ?? 'info');
                 $definition = new Definition(SeverityFilteringLogProcessor::class);
                 $definition->setArgument(0, new Reference($innerProcessorServiceId));
@@ -312,7 +361,11 @@ final class FlowTelemetryExtension extends Extension
 
             case 'otlp':
                 $container->setParameter('flow.telemetry.otlp_configured', true);
-                $transportServiceId = $this->buildOTLPTransport($config['otlp']['transport'] ?? [], $exporterServiceId, $container);
+                $transportServiceId = $this->buildOTLPTransport(
+                    $config['otlp']['transport'] ?? [],
+                    $exporterServiceId,
+                    $container
+                );
                 $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPMetricExporter');
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
@@ -351,7 +404,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildMetricExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildMetricExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(MemoryMetricProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -359,7 +416,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildMetricExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildMetricExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(BatchingMetricProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
@@ -368,7 +429,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildMetricExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildMetricExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(PassThroughMetricProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -381,7 +446,11 @@ final class FlowTelemetryExtension extends Extension
 
                 foreach ($processors as $idx => $processorConfig) {
                     /** @var array<string, mixed> $processorConfig */
-                    $subProcessorId = $this->buildMetricProcessor($processorConfig, $processorServiceId . '.' . $idx, $container);
+                    $subProcessorId = $this->buildMetricProcessor(
+                        $processorConfig,
+                        $processorServiceId . '.' . $idx,
+                        $container
+                    );
                     $processorRefs[] = new Reference($subProcessorId);
                 }
                 $definition = new Definition(CompositeMetricProcessor::class);
@@ -600,7 +669,11 @@ final class FlowTelemetryExtension extends Extension
 
             case 'otlp':
                 $container->setParameter('flow.telemetry.otlp_configured', true);
-                $transportServiceId = $this->buildOTLPTransport($config['otlp']['transport'] ?? [], $exporterServiceId, $container);
+                $transportServiceId = $this->buildOTLPTransport(
+                    $config['otlp']['transport'] ?? [],
+                    $exporterServiceId,
+                    $container
+                );
                 $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPSpanExporter');
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
@@ -639,7 +712,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildSpanExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildSpanExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(MemorySpanProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -647,7 +724,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildSpanExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildSpanExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(BatchingSpanProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
@@ -656,7 +737,11 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildSpanExporter($config['exporter'] ?? [], $processorServiceId, $container);
+                $exporterServiceId = $this->buildSpanExporter(
+                    $config['exporter'] ?? [],
+                    $processorServiceId,
+                    $container
+                );
                 $definition = new Definition(PassThroughSpanProcessor::class);
                 $definition->setArgument(0, new Reference($exporterServiceId));
                 $container->setDefinition($processorServiceId, $definition);
@@ -669,7 +754,11 @@ final class FlowTelemetryExtension extends Extension
 
                 foreach ($processors as $idx => $processorConfig) {
                     /** @var array<string, mixed> $processorConfig */
-                    $subProcessorId = $this->buildSpanProcessor($processorConfig, $processorServiceId . '.' . $idx, $container);
+                    $subProcessorId = $this->buildSpanProcessor(
+                        $processorConfig,
+                        $processorServiceId . '.' . $idx,
+                        $container
+                    );
                     $processorRefs[] = new Reference($subProcessorId);
                 }
                 $definition = new Definition(CompositeSpanProcessor::class);

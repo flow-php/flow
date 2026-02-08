@@ -9,6 +9,7 @@
       "src/lib/telemetry/src",
       "src/bridge/monolog/telemetry/src",
       "src/bridge/psr7/telemetry/src",
+      "src/bridge/psr18/telemetry/src",
       "src/bridge/symfony/http-foundation-telemetry/src",
       "src/bridge/symfony/telemetry-bundle/src",
       "src/bridge/telemetry/otlp/src"
@@ -31,7 +32,8 @@
       "Flow/Bridge/Telemetry/OTLP/Exception",
       "Flow/Bridge/Monolog/Telemetry/Exception",
       "Flow/Bridge/Psr7/Telemetry/Exception",
-      "      "Flow/Bridge/Symfony/HttpFoundationTelemetry/Exception",
+      "Flow/Bridge/Psr18/Telemetry/Exception",
+      "Flow/Bridge/Symfony/HttpFoundationTelemetry/Exception",
       "Flow/Bridge/Symfony/TelemetryBundle/Exception""
     ]
   },

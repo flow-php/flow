@@ -122,6 +122,12 @@
         <testsuite name="bridge-psr7-telemetry-integration">
             <directory>src/bridge/psr7/telemetry/tests/Flow/Bridge/Psr7/Telemetry/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-psr18-telemetry-unit">
+            <directory>src/bridge/psr18/telemetry/tests/Flow/Bridge/Psr18/Telemetry/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-psr18-telemetry-integration">
+            <directory>src/bridge/psr18/telemetry/tests/Flow/Bridge/Psr18/Telemetry/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-http-foundation-unit">
             <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Unit
             </directory>

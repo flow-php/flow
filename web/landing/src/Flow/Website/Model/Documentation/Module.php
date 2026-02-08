@@ -24,6 +24,7 @@ enum Module : string
     case PARQUET = 'Parquet';
     case PG_QUERY = 'PG_QUERY';
     case POSTGRESQL = 'POSTGRESQL';
+    case PSR18_TELEMETRY_BRIDGE = 'PSR-18 Telemetry Bridge';
     case PSR7_TELEMETRY_BRIDGE = 'PSR-7 Telemetry Bridge';
     case S3_FILESYSTEM = 'S3 Filesystem';
     case SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE = 'Symfony HttpFoundation Telemetry Bridge';
@@ -69,6 +70,7 @@ enum Module : string
             self::SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE => 23,
             self::SYMFONY_TELEMETRY_BUNDLE => 24,
             self::PSR7_TELEMETRY_BRIDGE => 25,
+            self::PSR18_TELEMETRY_BRIDGE => 26,
             default => 99,
         };
     }

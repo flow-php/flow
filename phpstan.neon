@@ -29,6 +29,7 @@ parameters:
         - src/bridge/monolog/telemetry/src
         - src/bridge/openapi/specification/src
         - src/bridge/psr7/telemetry/src
+        - src/bridge/psr18/telemetry/src
         - src/bridge/symfony/http-foundation/src
         - src/bridge/symfony/http-foundation-telemetry/src
         - src/bridge/symfony/telemetry-bundle/src
@@ -67,6 +68,7 @@ parameters:
         - src/bridge/monolog/telemetry/tests
         - src/bridge/openapi/specification/tests
         - src/bridge/psr7/telemetry/tests
+        - src/bridge/psr18/telemetry/tests
         - src/bridge/symfony/http-foundation/tests
         - src/bridge/symfony/http-foundation-telemetry/tests
         - src/bridge/symfony/telemetry-bundle/tests
