@@ -46,7 +46,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => ['enabled' => false],
                         'console' => ['enabled' => false],
                         'messenger' => false,
@@ -94,7 +94,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => [
                             'enabled' => true,
                             'exclude_routes' => ['test_excluded'],
@@ -151,7 +151,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => [
                             'enabled' => true,
                             'exclude_routes' => ['/^_profiler.*/'],
@@ -213,7 +213,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => ['enabled' => true],
                         'console' => ['enabled' => false],
                         'messenger' => false,
@@ -272,7 +272,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => ['enabled' => true],
                         'console' => ['enabled' => false],
                         'messenger' => false,

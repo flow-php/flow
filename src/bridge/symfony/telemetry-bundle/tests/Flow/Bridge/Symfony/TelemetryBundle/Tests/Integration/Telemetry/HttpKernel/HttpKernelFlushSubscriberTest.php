@@ -46,7 +46,7 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => ['enabled' => true],
                         'console' => ['enabled' => false],
                         'messenger' => false,
@@ -100,7 +100,7 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => ['enabled' => false],
                         'console' => ['enabled' => false],
                         'messenger' => false,

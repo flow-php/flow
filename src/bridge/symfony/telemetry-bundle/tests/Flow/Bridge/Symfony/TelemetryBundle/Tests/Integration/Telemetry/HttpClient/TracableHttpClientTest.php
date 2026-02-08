@@ -46,7 +46,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -75,7 +75,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_client' => false,
                     ],
                 ]);
@@ -105,7 +105,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -147,7 +147,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -186,7 +186,7 @@ final class TracableHttpClientTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -237,7 +237,7 @@ final class TracableHttpClientTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -295,7 +295,7 @@ final class TracableHttpClientTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,

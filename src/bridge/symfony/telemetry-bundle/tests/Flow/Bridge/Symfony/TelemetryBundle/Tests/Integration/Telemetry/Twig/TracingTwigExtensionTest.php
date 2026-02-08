@@ -37,7 +37,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => ['enabled' => false],
                         'console' => ['enabled' => false],
                         'messenger' => false,
@@ -89,7 +89,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -148,7 +148,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -210,7 +210,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -261,7 +261,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -319,7 +319,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'twig' => false,
                     ],
                 ]);
@@ -337,7 +337,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'twig' => true,
                     ],
                 ]);
@@ -362,7 +362,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -424,7 +424,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,
@@ -484,7 +484,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => false,

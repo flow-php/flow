@@ -9,6 +9,9 @@ use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Console\{ConsoleFlushSubscribe
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Telemetry\Twig\TracingTwigExtension;
+use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
+use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
@@ -36,26 +39,28 @@ use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler};
 use Flow\Telemetry\Tracer\TracerProvider;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 use Symfony\Component\DependencyInjection\Extension\Extension;
-use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Twig\Extension\AbstractExtension;
 
 final class FlowTelemetryExtension extends Extension
 {
+    private const string MESSENGER_MIDDLEWARE_INTERFACE = 'Symfony\\Component\\Messenger\\Middleware\\MiddlewareInterface';
+
     /**
      * @param array<array-key, mixed> $configs
      */
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{service: array<string, mixed>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, telemetry?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{service: array<string, mixed>, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
-        $this->registerGlobalServices($container);
+        $this->registerGlobalServices($config, $container);
         $this->registerResource($config['service'], $container);
         $this->registerTelemetry($config, $container);
-        $this->registerAutoTelemetry($config['telemetry'] ?? [], $container);
+        $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
         $this->registerTracers($config['tracers'] ?? [], $container);
         $this->registerMeters($config['meters'] ?? [], $container);
         $this->registerLoggers($config['loggers'] ?? [], $container);
@@ -170,7 +175,7 @@ final class FlowTelemetryExtension extends Extension
                     $exporterServiceId,
                     $container
                 );
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPLogExporter');
+                $definition = new Definition(OTLPLogExporter::class);
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
 
@@ -366,7 +371,7 @@ final class FlowTelemetryExtension extends Extension
                     $exporterServiceId,
                     $container
                 );
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPMetricExporter');
+                $definition = new Definition(OTLPMetricExporter::class);
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
 
@@ -486,13 +491,13 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'json':
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Serializer\\JsonSerializer');
+                $definition = new Definition(JsonSerializer::class);
                 $container->setDefinition($serializerServiceId, $definition);
 
                 break;
 
             case 'protobuf':
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Serializer\\ProtobufSerializer');
+                $definition = new Definition(ProtobufSerializer::class);
                 $container->setDefinition($serializerServiceId, $definition);
 
                 break;
@@ -510,7 +515,7 @@ final class FlowTelemetryExtension extends Extension
     private function buildOTLPTransport(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
     {
         $transportServiceId = $serviceIdPrefix . '.transport';
-        $type = $config['type'] ?? 'curl';
+        $type = $config['type'];
 
         if ($type === 'service') {
             $customServiceId = $config['service_id'] ?? null;
@@ -523,24 +528,55 @@ final class FlowTelemetryExtension extends Extension
             return $transportServiceId;
         }
 
-        $endpoint = $config['endpoint'] ?? 'http://localhost:4318';
-        $timeout = $config['timeout'] ?? 30;
-        $headers = $config['headers'] ?? [];
+        $endpoint = $config['endpoint'];
+        $timeout = $config['timeout'];
+        $headers = $config['headers'];
 
-        $serializerServiceId = $this->buildOTLPSerializer($config['serializer'] ?? [], $transportServiceId, $container);
+        $serializerServiceId = $this->buildOTLPSerializer($config['serializer'], $transportServiceId, $container);
 
         switch ($type) {
             case 'curl':
                 $optionsServiceId = $transportServiceId . '.options';
-                $optionsDefinition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransportOptions');
+                $optionsDefinition = new Definition(CurlTransportOptions::class);
                 $optionsDefinition->addMethodCall('withTimeout', [$timeout]);
+                $optionsDefinition->addMethodCall('withConnectTimeout', [$config['connect_timeout']]);
 
                 foreach ($headers as $headerName => $headerValue) {
                     $optionsDefinition->addMethodCall('withHeader', [(string) $headerName, (string) $headerValue]);
                 }
+
+                if ($config['compression']) {
+                    $optionsDefinition->addMethodCall('withCompression', [true]);
+                }
+
+                $optionsDefinition->addMethodCall('withFollowRedirects', [
+                    $config['follow_redirects'],
+                    $config['max_redirects'],
+                ]);
+
+                if ($config['proxy'] !== null) {
+                    $optionsDefinition->addMethodCall('withProxy', [$config['proxy']]);
+                }
+
+                $optionsDefinition->addMethodCall('withSslVerification', [
+                    $config['ssl_verify_peer'],
+                    $config['ssl_verify_host'],
+                ]);
+
+                if ($config['ssl_cert_path'] !== null) {
+                    $optionsDefinition->addMethodCall('withSslCertificate', [
+                        $config['ssl_cert_path'],
+                        $config['ssl_key_path'],
+                    ]);
+                }
+
+                if ($config['ca_info_path'] !== null) {
+                    $optionsDefinition->addMethodCall('withCaInfo', [$config['ca_info_path']]);
+                }
+
                 $container->setDefinition($optionsServiceId, $optionsDefinition);
 
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransport');
+                $definition = new Definition(CurlTransport::class);
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, new Reference($serializerServiceId));
                 $definition->setArgument(2, new Reference($optionsServiceId));
@@ -549,10 +585,26 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'http':
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\HttpTransport');
-                $definition->setArgument('$httpClient', new Reference('psr18.http_client'));
-                $definition->setArgument('$requestFactory', new Reference('psr17.request_factory'));
-                $definition->setArgument('$streamFactory', new Reference('psr17.stream_factory'));
+                $httpClientServiceId = $config['http_client_service_id'] ?? null;
+                $requestFactoryServiceId = $config['request_factory_service_id'] ?? null;
+                $streamFactoryServiceId = $config['stream_factory_service_id'] ?? null;
+
+                if ($httpClientServiceId === null) {
+                    throw new RuntimeException('http_client_service_id is required when transport type is "http"');
+                }
+
+                if ($requestFactoryServiceId === null) {
+                    throw new RuntimeException('request_factory_service_id is required when transport type is "http"');
+                }
+
+                if ($streamFactoryServiceId === null) {
+                    throw new RuntimeException('stream_factory_service_id is required when transport type is "http"');
+                }
+
+                $definition = new Definition(HttpTransport::class);
+                $definition->setArgument('$httpClient', new Reference($httpClientServiceId));
+                $definition->setArgument('$requestFactory', new Reference($requestFactoryServiceId));
+                $definition->setArgument('$streamFactory', new Reference($streamFactoryServiceId));
                 $definition->setArgument('$endpoint', $endpoint);
                 $definition->setArgument('$serializer', new Reference($serializerServiceId));
                 $definition->setArgument('$headers', $headers);
@@ -561,8 +613,8 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'grpc':
-                $insecure = $config['insecure'] ?? true;
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Transport\\GrpcTransport');
+                $insecure = $config['insecure'];
+                $definition = new Definition(GrpcTransport::class);
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, new Reference($serializerServiceId));
                 $definition->setArgument(2, $timeout);
@@ -674,7 +726,7 @@ final class FlowTelemetryExtension extends Extension
                     $exporterServiceId,
                     $container
                 );
-                $definition = new Definition('Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPSpanExporter');
+                $definition = new Definition(OTLPSpanExporter::class);
                 $definition->setArgument(0, new Reference($transportServiceId));
                 $container->setDefinition($exporterServiceId, $definition);
 
@@ -808,9 +860,39 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
+     * @param array<string, mixed> $config
+     */
+    private function registerGlobalServices(array $config, ContainerBuilder $container) : void
+    {
+        $clockServiceId = $config['clock_service_id'] ?? null;
+
+        if ($clockServiceId !== null) {
+            $container->setAlias('flow.telemetry.clock', $clockServiceId);
+        } elseif ($container->has(ClockInterface::class)) {
+            $container->setAlias('flow.telemetry.clock', ClockInterface::class);
+        } else {
+            $container->setDefinition('flow.telemetry.clock', new Definition(SystemClock::class));
+        }
+
+        $contextStorageConfig = $config['context_storage'];
+        $contextStorageType = $contextStorageConfig['type'];
+
+        if ($contextStorageType === 'service') {
+            $customServiceId = $contextStorageConfig['service_id'] ?? null;
+
+            if ($customServiceId === null) {
+                throw new RuntimeException('service_id is required when context_storage type is "service"');
+            }
+            $container->setAlias('flow.telemetry.context_storage', $customServiceId);
+        } else {
+            $container->setDefinition('flow.telemetry.context_storage', new Definition(MemoryContextStorage::class));
+        }
+    }
+
+    /**
      * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}} $config
      */
-    private function registerAutoTelemetry(array $config, ContainerBuilder $container) : void
+    private function registerInstrumentation(array $config, ContainerBuilder $container) : void
     {
         $httpKernelConfig = $config['http_kernel'] ?? [];
 
@@ -842,7 +924,7 @@ final class FlowTelemetryExtension extends Extension
             $container->setDefinition('flow.telemetry.console.flush_subscriber', $flushDefinition);
         }
 
-        if (($config['messenger'] ?? false) && \interface_exists(MiddlewareInterface::class)) {
+        if (($config['messenger'] ?? false) && \interface_exists(self::MESSENGER_MIDDLEWARE_INTERFACE)) {
             $definition = new Definition(TracingMiddleware::class);
             $definition->setArgument(0, new Reference(Telemetry::class));
             $container->setDefinition('flow.telemetry.messenger.middleware', $definition);
@@ -902,12 +984,6 @@ final class FlowTelemetryExtension extends Extension
             'flow.telemetry.dbal.exclude_connections',
             $dbalConfig['exclude_connections'] ?? []
         );
-    }
-
-    private function registerGlobalServices(ContainerBuilder $container) : void
-    {
-        $container->setDefinition('flow.telemetry.clock', new Definition(SystemClock::class));
-        $container->setDefinition('flow.telemetry.context_storage', new Definition(MemoryContextStorage::class));
     }
 
     /**

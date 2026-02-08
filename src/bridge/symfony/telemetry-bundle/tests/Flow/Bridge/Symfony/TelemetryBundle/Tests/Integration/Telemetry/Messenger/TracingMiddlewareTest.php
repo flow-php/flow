@@ -36,7 +36,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'messenger' => false,
                     ],
                 ]);
@@ -54,7 +54,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'service' => ['name' => 'test-app'],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'messenger' => true,
                     ],
                 ]);
@@ -79,7 +79,7 @@ final class TracingMiddlewareTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => true,
@@ -147,7 +147,7 @@ final class TracingMiddlewareTest extends KernelTestCase
                             'exporter' => ['type' => 'memory'],
                         ],
                     ],
-                    'telemetry' => [
+                    'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
                         'messenger' => true,

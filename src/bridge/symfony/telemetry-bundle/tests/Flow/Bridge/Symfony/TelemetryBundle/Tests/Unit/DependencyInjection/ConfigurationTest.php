@@ -11,6 +11,26 @@ use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
 {
+    public function test_clock_service_id_can_be_configured() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'clock_service_id' => 'app.custom_clock',
+        ]]);
+
+        self::assertSame('app.custom_clock', $config['clock_service_id']);
+    }
+
+    public function test_clock_service_id_defaults_to_null() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('clock_service_id', $config);
+        self::assertNull($config['clock_service_id']);
+    }
+
     public function test_composite_processor_with_multiple_processors() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -36,6 +56,31 @@ final class ConfigurationTest extends TestCase
         self::assertSame('memory', $processors[0]['type']);
         self::assertSame('batching', $processors[1]['type']);
         self::assertSame(100, $processors[1]['batch_size']);
+    }
+
+    public function test_context_storage_can_use_custom_service() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'context_storage' => [
+                'type' => 'service',
+                'service_id' => 'app.custom_context_storage',
+            ],
+        ]]);
+
+        self::assertSame('service', $config['context_storage']['type']);
+        self::assertSame('app.custom_context_storage', $config['context_storage']['service_id']);
+    }
+
+    public function test_context_storage_defaults_to_memory() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('context_storage', $config);
+        self::assertSame('memory', $config['context_storage']['type']);
+        self::assertNull($config['context_storage']['service_id']);
     }
 
     public function test_empty_service_name_is_rejected() : void
@@ -73,6 +118,264 @@ final class ConfigurationTest extends TestCase
         ]]);
 
         self::assertSame('void', $config['tracer_provider']['processor']['exporter']['type']);
+    }
+
+    public function test_instrumentation_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_kernel' => ['enabled' => true],
+                'console' => ['enabled' => true],
+                'messenger' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_kernel']['enabled']);
+        self::assertTrue($config['instrumentation']['console']['enabled']);
+        self::assertTrue($config['instrumentation']['messenger']);
+    }
+
+    public function test_instrumentation_console_exclude_commands() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'console' => [
+                    'enabled' => true,
+                    'exclude_commands' => ['cache:clear', 'debug:router'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['console']['enabled']);
+        self::assertSame(['cache:clear', 'debug:router'], $config['instrumentation']['console']['exclude_commands']);
+    }
+
+    public function test_instrumentation_dbal_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'dbal' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['dbal']['enabled']);
+    }
+
+    public function test_instrumentation_dbal_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('instrumentation', $config);
+        self::assertArrayHasKey('dbal', $config['instrumentation']);
+        self::assertFalse($config['instrumentation']['dbal']['enabled']);
+        self::assertTrue($config['instrumentation']['dbal']['log_sql']);
+        self::assertSame(1000, $config['instrumentation']['dbal']['max_sql_length']);
+        self::assertSame([], $config['instrumentation']['dbal']['exclude_connections']);
+    }
+
+    public function test_instrumentation_dbal_exclude_connections() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'exclude_connections' => ['legacy', '/^debug_.*$/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['dbal']['enabled']);
+        self::assertSame(['legacy', '/^debug_.*$/'], $config['instrumentation']['dbal']['exclude_connections']);
+    }
+
+    public function test_instrumentation_dbal_log_sql_can_be_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'log_sql' => false,
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['dbal']['enabled']);
+        self::assertFalse($config['instrumentation']['dbal']['log_sql']);
+    }
+
+    public function test_instrumentation_dbal_max_sql_length_can_be_zero_for_unlimited() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'max_sql_length' => 0,
+                ],
+            ],
+        ]]);
+
+        self::assertSame(0, $config['instrumentation']['dbal']['max_sql_length']);
+    }
+
+    public function test_instrumentation_dbal_max_sql_length_configuration() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'dbal' => [
+                    'enabled' => true,
+                    'max_sql_length' => 500,
+                ],
+            ],
+        ]]);
+
+        self::assertSame(500, $config['instrumentation']['dbal']['max_sql_length']);
+    }
+
+    public function test_instrumentation_defaults_to_all_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('instrumentation', $config);
+        self::assertFalse($config['instrumentation']['http_kernel']['enabled']);
+        self::assertFalse($config['instrumentation']['console']['enabled']);
+        self::assertFalse($config['instrumentation']['messenger']);
+    }
+
+    public function test_instrumentation_http_client_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_client' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_client']['enabled']);
+    }
+
+    public function test_instrumentation_http_client_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('instrumentation', $config);
+        self::assertArrayHasKey('http_client', $config['instrumentation']);
+        self::assertFalse($config['instrumentation']['http_client']['enabled']);
+        self::assertSame([], $config['instrumentation']['http_client']['exclude_clients']);
+    }
+
+    public function test_instrumentation_http_client_exclude_clients() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_client' => [
+                    'enabled' => true,
+                    'exclude_clients' => ['internal.http_client', '/^debug\\..*$/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_client']['enabled']);
+        self::assertSame(['internal.http_client', '/^debug\\..*$/'], $config['instrumentation']['http_client']['exclude_clients']);
+    }
+
+    public function test_instrumentation_http_kernel_exclude_routes() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_kernel' => [
+                    'enabled' => true,
+                    'exclude_routes' => ['_wdt', '_profiler', '/_profiler.*/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_kernel']['enabled']);
+        self::assertSame(['_wdt', '_profiler', '/_profiler.*/'], $config['instrumentation']['http_kernel']['exclude_routes']);
+    }
+
+    public function test_instrumentation_partial_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'http_kernel' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['http_kernel']['enabled']);
+        self::assertFalse($config['instrumentation']['console']['enabled']);
+        self::assertFalse($config['instrumentation']['messenger']);
+    }
+
+    public function test_instrumentation_psr18_client_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'psr18_client' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['psr18_client']['enabled']);
+    }
+
+    public function test_instrumentation_psr18_client_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+        ]]);
+
+        self::assertArrayHasKey('instrumentation', $config);
+        self::assertArrayHasKey('psr18_client', $config['instrumentation']);
+        self::assertFalse($config['instrumentation']['psr18_client']['enabled']);
+        self::assertSame([], $config['instrumentation']['psr18_client']['exclude_clients']);
+    }
+
+    public function test_instrumentation_psr18_client_exclude_clients() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'psr18_client' => [
+                    'enabled' => true,
+                    'exclude_clients' => ['internal.psr18_client', '/^debug\\..*$/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['psr18_client']['enabled']);
+        self::assertSame(['internal.psr18_client', '/^debug\\..*$/'], $config['instrumentation']['psr18_client']['exclude_clients']);
+    }
+
+    public function test_instrumentation_twig_exclude_templates() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'instrumentation' => [
+                'twig' => [
+                    'enabled' => true,
+                    'exclude_templates' => ['@WebProfiler/Collector/time.html.twig', 'debug/exception.html.twig'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['twig']['enabled']);
+        self::assertSame(['@WebProfiler/Collector/time.html.twig', 'debug/exception.html.twig'], $config['instrumentation']['twig']['exclude_templates']);
     }
 
     public function test_invalid_exporter_type_is_rejected() : void
@@ -243,6 +546,106 @@ final class ConfigurationTest extends TestCase
         self::assertSame('unknown', $config['tracers']['cache']['version']);
     }
 
+    public function test_otlp_curl_transport_options() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [
+                                'type' => 'curl',
+                                'endpoint' => 'http://localhost:4318',
+                                'timeout' => 60,
+                                'connect_timeout' => 5,
+                                'compression' => true,
+                                'follow_redirects' => false,
+                                'max_redirects' => 5,
+                                'proxy' => 'http://proxy:8080',
+                                'ssl_verify_peer' => false,
+                                'ssl_verify_host' => false,
+                                'ssl_cert_path' => '/path/to/cert.pem',
+                                'ssl_key_path' => '/path/to/key.pem',
+                                'ca_info_path' => '/path/to/ca.pem',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        $transport = $config['tracer_provider']['processor']['exporter']['otlp']['transport'];
+        self::assertSame('curl', $transport['type']);
+        self::assertSame('http://localhost:4318', $transport['endpoint']);
+        self::assertSame(60, $transport['timeout']);
+        self::assertSame(5, $transport['connect_timeout']);
+        self::assertTrue($transport['compression']);
+        self::assertFalse($transport['follow_redirects']);
+        self::assertSame(5, $transport['max_redirects']);
+        self::assertSame('http://proxy:8080', $transport['proxy']);
+        self::assertFalse($transport['ssl_verify_peer']);
+        self::assertFalse($transport['ssl_verify_host']);
+        self::assertSame('/path/to/cert.pem', $transport['ssl_cert_path']);
+        self::assertSame('/path/to/key.pem', $transport['ssl_key_path']);
+        self::assertSame('/path/to/ca.pem', $transport['ca_info_path']);
+    }
+
+    public function test_otlp_endpoint_is_required() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('endpoint');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [
+                                'type' => 'curl',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_otlp_http_transport_with_psr_services() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'service' => ['name' => 'test-app'],
+            'tracer_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [
+                                'type' => 'http',
+                                'endpoint' => 'http://localhost:4318',
+                                'http_client_service_id' => 'app.http_client',
+                                'request_factory_service_id' => 'app.request_factory',
+                                'stream_factory_service_id' => 'app.stream_factory',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        $transport = $config['tracer_provider']['processor']['exporter']['otlp']['transport'];
+        self::assertSame('http', $transport['type']);
+        self::assertSame('app.http_client', $transport['http_client_service_id']);
+        self::assertSame('app.request_factory', $transport['request_factory_service_id']);
+        self::assertSame('app.stream_factory', $transport['stream_factory_service_id']);
+    }
+
     public function test_otlp_serializer_defaults_to_json() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -253,7 +656,9 @@ final class ConfigurationTest extends TestCase
                     'exporter' => [
                         'type' => 'otlp',
                         'otlp' => [
-                            'transport' => [],
+                            'transport' => [
+                                'endpoint' => 'http://localhost:4318',
+                            ],
                         ],
                     ],
                 ],
@@ -274,7 +679,9 @@ final class ConfigurationTest extends TestCase
                     'exporter' => [
                         'type' => 'otlp',
                         'otlp' => [
-                            'transport' => [],
+                            'transport' => [
+                                'endpoint' => 'http://localhost:4318',
+                            ],
                         ],
                     ],
                 ],
@@ -470,264 +877,6 @@ final class ConfigurationTest extends TestCase
         self::assertSame('warn', $processor['minimum_severity']);
         self::assertSame('batching', $processor['inner_processor']['type']);
         self::assertSame('console', $processor['inner_processor']['exporter']['type']);
-    }
-
-    public function test_telemetry_can_be_enabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'http_kernel' => ['enabled' => true],
-                'console' => ['enabled' => true],
-                'messenger' => true,
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['http_kernel']['enabled']);
-        self::assertTrue($config['telemetry']['console']['enabled']);
-        self::assertTrue($config['telemetry']['messenger']);
-    }
-
-    public function test_telemetry_console_exclude_commands() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'console' => [
-                    'enabled' => true,
-                    'exclude_commands' => ['cache:clear', 'debug:router'],
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['console']['enabled']);
-        self::assertSame(['cache:clear', 'debug:router'], $config['telemetry']['console']['exclude_commands']);
-    }
-
-    public function test_telemetry_dbal_can_be_enabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'dbal' => ['enabled' => true],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['dbal']['enabled']);
-    }
-
-    public function test_telemetry_dbal_defaults_to_disabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-        ]]);
-
-        self::assertArrayHasKey('telemetry', $config);
-        self::assertArrayHasKey('dbal', $config['telemetry']);
-        self::assertFalse($config['telemetry']['dbal']['enabled']);
-        self::assertTrue($config['telemetry']['dbal']['log_sql']);
-        self::assertSame(1000, $config['telemetry']['dbal']['max_sql_length']);
-        self::assertSame([], $config['telemetry']['dbal']['exclude_connections']);
-    }
-
-    public function test_telemetry_dbal_exclude_connections() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'dbal' => [
-                    'enabled' => true,
-                    'exclude_connections' => ['legacy', '/^debug_.*$/'],
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['dbal']['enabled']);
-        self::assertSame(['legacy', '/^debug_.*$/'], $config['telemetry']['dbal']['exclude_connections']);
-    }
-
-    public function test_telemetry_dbal_log_sql_can_be_disabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'dbal' => [
-                    'enabled' => true,
-                    'log_sql' => false,
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['dbal']['enabled']);
-        self::assertFalse($config['telemetry']['dbal']['log_sql']);
-    }
-
-    public function test_telemetry_dbal_max_sql_length_can_be_zero_for_unlimited() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'dbal' => [
-                    'enabled' => true,
-                    'max_sql_length' => 0,
-                ],
-            ],
-        ]]);
-
-        self::assertSame(0, $config['telemetry']['dbal']['max_sql_length']);
-    }
-
-    public function test_telemetry_dbal_max_sql_length_configuration() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'dbal' => [
-                    'enabled' => true,
-                    'max_sql_length' => 500,
-                ],
-            ],
-        ]]);
-
-        self::assertSame(500, $config['telemetry']['dbal']['max_sql_length']);
-    }
-
-    public function test_telemetry_defaults_to_all_disabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-        ]]);
-
-        self::assertArrayHasKey('telemetry', $config);
-        self::assertFalse($config['telemetry']['http_kernel']['enabled']);
-        self::assertFalse($config['telemetry']['console']['enabled']);
-        self::assertFalse($config['telemetry']['messenger']);
-    }
-
-    public function test_telemetry_http_client_can_be_enabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'http_client' => ['enabled' => true],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['http_client']['enabled']);
-    }
-
-    public function test_telemetry_http_client_defaults_to_disabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-        ]]);
-
-        self::assertArrayHasKey('telemetry', $config);
-        self::assertArrayHasKey('http_client', $config['telemetry']);
-        self::assertFalse($config['telemetry']['http_client']['enabled']);
-        self::assertSame([], $config['telemetry']['http_client']['exclude_clients']);
-    }
-
-    public function test_telemetry_http_client_exclude_clients() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'http_client' => [
-                    'enabled' => true,
-                    'exclude_clients' => ['internal.http_client', '/^debug\\..*$/'],
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['http_client']['enabled']);
-        self::assertSame(['internal.http_client', '/^debug\\..*$/'], $config['telemetry']['http_client']['exclude_clients']);
-    }
-
-    public function test_telemetry_http_kernel_exclude_routes() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'http_kernel' => [
-                    'enabled' => true,
-                    'exclude_routes' => ['_wdt', '_profiler', '/_profiler.*/'],
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['http_kernel']['enabled']);
-        self::assertSame(['_wdt', '_profiler', '/_profiler.*/'], $config['telemetry']['http_kernel']['exclude_routes']);
-    }
-
-    public function test_telemetry_partial_config() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'http_kernel' => ['enabled' => true],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['http_kernel']['enabled']);
-        self::assertFalse($config['telemetry']['console']['enabled']);
-        self::assertFalse($config['telemetry']['messenger']);
-    }
-
-    public function test_telemetry_psr18_client_can_be_enabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'psr18_client' => ['enabled' => true],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['psr18_client']['enabled']);
-    }
-
-    public function test_telemetry_psr18_client_defaults_to_disabled() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-        ]]);
-
-        self::assertArrayHasKey('telemetry', $config);
-        self::assertArrayHasKey('psr18_client', $config['telemetry']);
-        self::assertFalse($config['telemetry']['psr18_client']['enabled']);
-        self::assertSame([], $config['telemetry']['psr18_client']['exclude_clients']);
-    }
-
-    public function test_telemetry_psr18_client_exclude_clients() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'psr18_client' => [
-                    'enabled' => true,
-                    'exclude_clients' => ['internal.psr18_client', '/^debug\\..*$/'],
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['psr18_client']['enabled']);
-        self::assertSame(['internal.psr18_client', '/^debug\\..*$/'], $config['telemetry']['psr18_client']['exclude_clients']);
-    }
-
-    public function test_telemetry_twig_exclude_templates() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
-            'telemetry' => [
-                'twig' => [
-                    'enabled' => true,
-                    'exclude_templates' => ['@WebProfiler/Collector/time.html.twig', 'debug/exception.html.twig'],
-                ],
-            ],
-        ]]);
-
-        self::assertTrue($config['telemetry']['twig']['enabled']);
-        self::assertSame(['@WebProfiler/Collector/time.html.twig', 'debug/exception.html.twig'], $config['telemetry']['twig']['exclude_templates']);
     }
 
     public function test_tracer_configuration_with_all_options() : void
