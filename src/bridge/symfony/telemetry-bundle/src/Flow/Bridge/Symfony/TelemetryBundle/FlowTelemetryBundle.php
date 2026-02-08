@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle;
 
-use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{DBALTelemetryPass, HttpClientTelemetryPass, OTLPAvailabilityPass, Psr18ClientTelemetryPass};
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{CacheTelemetryPass, DBALTelemetryPass, HttpClientTelemetryPass, OTLPAvailabilityPass, Psr18ClientTelemetryPass};
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 final class FlowTelemetryBundle extends Bundle
 {
+    private const string CACHE_ADAPTER_INTERFACE = 'Symfony\\Component\\Cache\\Adapter\\AdapterInterface';
+
     private const string DBAL_MIDDLEWARE_INTERFACE = 'Doctrine\\DBAL\\Driver\\Middleware';
 
     private const string HTTP_CLIENT_INTERFACE = 'Symfony\\Contracts\\HttpClient\\HttpClientInterface';
@@ -34,6 +36,10 @@ final class FlowTelemetryBundle extends Bundle
 
         if (\interface_exists(self::DBAL_MIDDLEWARE_INTERFACE)) {
             $container->addCompilerPass(new DBALTelemetryPass());
+        }
+
+        if (\interface_exists(self::CACHE_ADAPTER_INTERFACE)) {
+            $container->addCompilerPass(new CacheTelemetryPass());
         }
     }
 }

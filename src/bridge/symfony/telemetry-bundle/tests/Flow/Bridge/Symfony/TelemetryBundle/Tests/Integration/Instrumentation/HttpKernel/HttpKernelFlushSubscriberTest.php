@@ -38,7 +38,7 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'batching',
@@ -92,7 +92,7 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'batching',

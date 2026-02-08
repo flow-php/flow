@@ -45,7 +45,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
@@ -74,7 +74,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'instrumentation' => [
                         'http_client' => false,
                     ],
@@ -104,7 +104,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
@@ -146,7 +146,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
@@ -179,7 +179,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -230,7 +230,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -288,7 +288,7 @@ final class TracableHttpClientTest extends KernelTestCase
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',

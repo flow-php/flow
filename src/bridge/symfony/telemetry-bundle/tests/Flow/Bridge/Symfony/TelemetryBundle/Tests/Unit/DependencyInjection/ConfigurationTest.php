@@ -14,7 +14,7 @@ final class ConfigurationTest extends TestCase
     public function test_clock_service_id_can_be_configured() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'clock_service_id' => 'app.custom_clock',
         ]]);
 
@@ -24,7 +24,7 @@ final class ConfigurationTest extends TestCase
     public function test_clock_service_id_defaults_to_null() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('clock_service_id', $config);
@@ -34,7 +34,7 @@ final class ConfigurationTest extends TestCase
     public function test_composite_processor_with_multiple_processors() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'composite',
@@ -61,7 +61,7 @@ final class ConfigurationTest extends TestCase
     public function test_context_storage_can_use_custom_service() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'context_storage' => [
                 'type' => 'service',
                 'service_id' => 'app.custom_context_storage',
@@ -75,7 +75,7 @@ final class ConfigurationTest extends TestCase
     public function test_context_storage_defaults_to_memory() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('context_storage', $config);
@@ -88,14 +88,14 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => ''],
+            'resource' => ['service' => ['name' => '']],
         ]]);
     }
 
     public function test_empty_tracers_meters_loggers_config() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracers' => [],
             'meters' => [],
             'loggers' => [],
@@ -109,7 +109,7 @@ final class ConfigurationTest extends TestCase
     public function test_exporter_defaults_to_void() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -120,10 +120,50 @@ final class ConfigurationTest extends TestCase
         self::assertSame('void', $config['tracer_provider']['processor']['exporter']['type']);
     }
 
+    public function test_instrumentation_cache_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => ['service' => ['name' => 'test-app']],
+            'instrumentation' => [
+                'cache' => ['enabled' => true],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['cache']['enabled']);
+    }
+
+    public function test_instrumentation_cache_defaults_to_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => ['service' => ['name' => 'test-app']],
+        ]]);
+
+        self::assertArrayHasKey('instrumentation', $config);
+        self::assertArrayHasKey('cache', $config['instrumentation']);
+        self::assertFalse($config['instrumentation']['cache']['enabled']);
+        self::assertSame([], $config['instrumentation']['cache']['exclude_pools']);
+    }
+
+    public function test_instrumentation_cache_exclude_pools() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => ['service' => ['name' => 'test-app']],
+            'instrumentation' => [
+                'cache' => [
+                    'enabled' => true,
+                    'exclude_pools' => ['cache.validator', 'cache.serializer', '/^cache\\.profiler\\..*/'],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['instrumentation']['cache']['enabled']);
+        self::assertSame(['cache.validator', 'cache.serializer', '/^cache\\.profiler\\..*/'], $config['instrumentation']['cache']['exclude_pools']);
+    }
+
     public function test_instrumentation_can_be_enabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'http_kernel' => ['enabled' => true],
                 'console' => ['enabled' => true],
@@ -139,7 +179,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_console_exclude_commands() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'console' => [
                     'enabled' => true,
@@ -155,7 +195,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_dbal_can_be_enabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'dbal' => ['enabled' => true],
             ],
@@ -167,7 +207,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_dbal_defaults_to_disabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('instrumentation', $config);
@@ -181,7 +221,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_dbal_exclude_connections() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'dbal' => [
                     'enabled' => true,
@@ -197,7 +237,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_dbal_log_sql_can_be_disabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'dbal' => [
                     'enabled' => true,
@@ -213,7 +253,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_dbal_max_sql_length_can_be_zero_for_unlimited() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'dbal' => [
                     'enabled' => true,
@@ -228,7 +268,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_dbal_max_sql_length_configuration() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'dbal' => [
                     'enabled' => true,
@@ -243,7 +283,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_defaults_to_all_disabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('instrumentation', $config);
@@ -255,7 +295,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_http_client_can_be_enabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'http_client' => ['enabled' => true],
             ],
@@ -267,7 +307,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_http_client_defaults_to_disabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('instrumentation', $config);
@@ -279,7 +319,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_http_client_exclude_clients() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'http_client' => [
                     'enabled' => true,
@@ -295,7 +335,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_http_kernel_exclude_routes() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'http_kernel' => [
                     'enabled' => true,
@@ -311,7 +351,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_partial_config() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'http_kernel' => ['enabled' => true],
             ],
@@ -325,7 +365,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_psr18_client_can_be_enabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'psr18_client' => ['enabled' => true],
             ],
@@ -337,7 +377,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_psr18_client_defaults_to_disabled() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('instrumentation', $config);
@@ -349,7 +389,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_psr18_client_exclude_clients() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'psr18_client' => [
                     'enabled' => true,
@@ -365,7 +405,7 @@ final class ConfigurationTest extends TestCase
     public function test_instrumentation_twig_exclude_templates() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'twig' => [
                     'enabled' => true,
@@ -383,7 +423,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -400,7 +440,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'invalid_processor',
@@ -414,7 +454,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'sampler' => [
                     'type' => 'invalid_sampler',
@@ -428,7 +468,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'logger_provider' => [
                 'processor' => [
                     'type' => 'severity_filtering',
@@ -444,7 +484,7 @@ final class ConfigurationTest extends TestCase
     public function test_logger_configuration() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'loggers' => [
                 'audit' => [
                     'version' => '1.0.0',
@@ -466,7 +506,7 @@ final class ConfigurationTest extends TestCase
     public function test_meter_configuration() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'meters' => [
                 'etl_pipeline' => [
                     'version' => '1.0.0',
@@ -487,7 +527,7 @@ final class ConfigurationTest extends TestCase
     public function test_meter_provider_temporality_can_be_delta() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'meter_provider' => [
                 'temporality' => 'delta',
             ],
@@ -499,17 +539,17 @@ final class ConfigurationTest extends TestCase
     public function test_meter_provider_temporality_defaults_to_cumulative() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'meter_provider' => [],
         ]]);
 
         self::assertSame('cumulative', $config['meter_provider']['temporality']);
     }
 
-    public function test_minimal_config_requires_service_name() : void
+    public function test_minimal_config_requires_resource_service_name() : void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('service');
+        $this->expectExceptionMessage('resource');
 
         (new Processor())->processConfiguration(new Configuration(), [[]]);
     }
@@ -517,18 +557,20 @@ final class ConfigurationTest extends TestCase
     public function test_minimal_config_with_service_name() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
-        self::assertSame('test-app', $config['service']['name']);
-        self::assertNull($config['service']['version']);
-        self::assertSame([], $config['service']['attributes']);
+        self::assertSame('test-app', $config['resource']['service']['name']);
+        self::assertArrayNotHasKey('version', $config['resource']['service']);
+        self::assertNull($config['resource']['service']['namespace']);
+        self::assertNull($config['resource']['service']['instance_id']);
+        self::assertSame([], $config['resource']['custom']);
     }
 
     public function test_multiple_named_items_of_same_type() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracers' => [
                 'database' => [
                     'version' => '1.0.0',
@@ -549,7 +591,7 @@ final class ConfigurationTest extends TestCase
     public function test_otlp_curl_transport_options() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -599,7 +641,7 @@ final class ConfigurationTest extends TestCase
         $this->expectExceptionMessage('endpoint');
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -619,7 +661,7 @@ final class ConfigurationTest extends TestCase
     public function test_otlp_http_transport_with_psr_services() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -649,7 +691,7 @@ final class ConfigurationTest extends TestCase
     public function test_otlp_serializer_defaults_to_json() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -672,7 +714,7 @@ final class ConfigurationTest extends TestCase
     public function test_otlp_transport_defaults() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -699,7 +741,7 @@ final class ConfigurationTest extends TestCase
     public function test_processor_batch_size_default() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -715,7 +757,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'batching',
@@ -728,7 +770,7 @@ final class ConfigurationTest extends TestCase
     public function test_processor_defaults_to_void() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [],
         ]]);
 
@@ -738,7 +780,7 @@ final class ConfigurationTest extends TestCase
     public function test_providers_have_defaults() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
         ]]);
 
         self::assertArrayHasKey('tracer_provider', $config);
@@ -749,10 +791,303 @@ final class ConfigurationTest extends TestCase
         self::assertSame('void', $config['logger_provider']['processor']['type']);
     }
 
+    public function test_resource_cloud_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'cloud' => [
+                    'provider' => 'aws',
+                    'account_id' => '123456789012',
+                    'region' => 'us-east-1',
+                    'availability_zone' => 'us-east-1a',
+                    'platform' => 'aws_ec2',
+                    'resource_id' => 'arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('aws', $config['resource']['cloud']['provider']);
+        self::assertSame('123456789012', $config['resource']['cloud']['account_id']);
+        self::assertSame('us-east-1', $config['resource']['cloud']['region']);
+        self::assertSame('us-east-1a', $config['resource']['cloud']['availability_zone']);
+        self::assertSame('aws_ec2', $config['resource']['cloud']['platform']);
+        self::assertSame('arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0', $config['resource']['cloud']['resource_id']);
+    }
+
+    public function test_resource_container_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'container' => [
+                    'id' => 'abc123def456',
+                    'name' => 'my-app-container',
+                    'command' => 'php-fpm',
+                    'command_line' => 'php-fpm -F',
+                    'image_name' => 'my-app:latest',
+                    'image_id' => 'sha256:abc123',
+                    'image_tags' => ['latest', 'v1.0.0'],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('abc123def456', $config['resource']['container']['id']);
+        self::assertSame('my-app-container', $config['resource']['container']['name']);
+        self::assertSame('php-fpm', $config['resource']['container']['command']);
+        self::assertSame('php-fpm -F', $config['resource']['container']['command_line']);
+        self::assertSame('my-app:latest', $config['resource']['container']['image_name']);
+        self::assertSame('sha256:abc123', $config['resource']['container']['image_id']);
+        self::assertSame(['latest', 'v1.0.0'], $config['resource']['container']['image_tags']);
+    }
+
+    public function test_resource_custom_attributes() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'custom' => [
+                    'my.custom.attribute' => 'custom-value',
+                    'another.attribute' => 123,
+                ],
+            ],
+        ]]);
+
+        self::assertSame([
+            'my.custom.attribute' => 'custom-value',
+            'another.attribute' => 123,
+        ], $config['resource']['custom']);
+    }
+
+    public function test_resource_deployment_environment() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'deployment' => [
+                    'environment' => 'production',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('production', $config['resource']['deployment']['environment']);
+    }
+
+    public function test_resource_host_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'host' => [
+                    'id' => 'host-123',
+                    'name' => 'web-server-01',
+                    'type' => 'm5.large',
+                    'arch' => 'amd64',
+                    'image' => [
+                        'id' => 'ami-123456',
+                        'name' => 'ubuntu-22.04',
+                        'version' => '22.04.3',
+                    ],
+                    'ip' => ['10.0.0.1', '192.168.1.1'],
+                    'mac' => ['00:11:22:33:44:55'],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('host-123', $config['resource']['host']['id']);
+        self::assertSame('web-server-01', $config['resource']['host']['name']);
+        self::assertSame('m5.large', $config['resource']['host']['type']);
+        self::assertSame('amd64', $config['resource']['host']['arch']);
+        self::assertSame('ami-123456', $config['resource']['host']['image']['id']);
+        self::assertSame('ubuntu-22.04', $config['resource']['host']['image']['name']);
+        self::assertSame('22.04.3', $config['resource']['host']['image']['version']);
+        self::assertSame(['10.0.0.1', '192.168.1.1'], $config['resource']['host']['ip']);
+        self::assertSame(['00:11:22:33:44:55'], $config['resource']['host']['mac']);
+    }
+
+    public function test_resource_k8s_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'k8s' => [
+                    'cluster' => [
+                        'name' => 'prod-cluster',
+                        'uid' => 'cluster-uid-123',
+                    ],
+                    'namespace' => [
+                        'name' => 'default',
+                    ],
+                    'node' => [
+                        'name' => 'node-01',
+                        'uid' => 'node-uid-123',
+                    ],
+                    'pod' => [
+                        'name' => 'my-app-pod-abc123',
+                        'uid' => 'pod-uid-123',
+                        'ip' => '10.0.0.50',
+                    ],
+                    'container' => [
+                        'name' => 'app',
+                        'restart_count' => 2,
+                    ],
+                    'deployment' => [
+                        'name' => 'my-app',
+                        'uid' => 'deployment-uid-123',
+                    ],
+                    'replicaset' => [
+                        'name' => 'my-app-rs-abc',
+                        'uid' => 'rs-uid-123',
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('prod-cluster', $config['resource']['k8s']['cluster']['name']);
+        self::assertSame('cluster-uid-123', $config['resource']['k8s']['cluster']['uid']);
+        self::assertSame('default', $config['resource']['k8s']['namespace']['name']);
+        self::assertSame('node-01', $config['resource']['k8s']['node']['name']);
+        self::assertSame('node-uid-123', $config['resource']['k8s']['node']['uid']);
+        self::assertSame('my-app-pod-abc123', $config['resource']['k8s']['pod']['name']);
+        self::assertSame('pod-uid-123', $config['resource']['k8s']['pod']['uid']);
+        self::assertSame('10.0.0.50', $config['resource']['k8s']['pod']['ip']);
+        self::assertSame('app', $config['resource']['k8s']['container']['name']);
+        self::assertSame(2, $config['resource']['k8s']['container']['restart_count']);
+        self::assertSame('my-app', $config['resource']['k8s']['deployment']['name']);
+        self::assertSame('deployment-uid-123', $config['resource']['k8s']['deployment']['uid']);
+        self::assertSame('my-app-rs-abc', $config['resource']['k8s']['replicaset']['name']);
+        self::assertSame('rs-uid-123', $config['resource']['k8s']['replicaset']['uid']);
+    }
+
+    public function test_resource_os_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'os' => [
+                    'type' => 'linux',
+                    'name' => 'Ubuntu',
+                    'version' => '22.04.3 LTS',
+                    'description' => 'Ubuntu 22.04.3 LTS (Jammy Jellyfish)',
+                    'build_id' => '22.04.3',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('linux', $config['resource']['os']['type']);
+        self::assertSame('Ubuntu', $config['resource']['os']['name']);
+        self::assertSame('22.04.3 LTS', $config['resource']['os']['version']);
+        self::assertSame('Ubuntu 22.04.3 LTS (Jammy Jellyfish)', $config['resource']['os']['description']);
+        self::assertSame('22.04.3', $config['resource']['os']['build_id']);
+    }
+
+    public function test_resource_process_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'process' => [
+                    'pid' => 1234,
+                    'parent_pid' => 1,
+                    'command' => 'php',
+                    'command_line' => 'php bin/console server:run',
+                    'owner' => 'www-data',
+                    'executable' => [
+                        'name' => 'php',
+                        'path' => '/usr/bin/php',
+                    ],
+                    'runtime' => [
+                        'name' => 'PHP',
+                        'version' => '8.3.0',
+                        'description' => 'PHP 8.3.0 with Zend Engine',
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame(1234, $config['resource']['process']['pid']);
+        self::assertSame(1, $config['resource']['process']['parent_pid']);
+        self::assertSame('php', $config['resource']['process']['command']);
+        self::assertSame('php bin/console server:run', $config['resource']['process']['command_line']);
+        self::assertSame('www-data', $config['resource']['process']['owner']);
+        self::assertSame('php', $config['resource']['process']['executable']['name']);
+        self::assertSame('/usr/bin/php', $config['resource']['process']['executable']['path']);
+        self::assertSame('PHP', $config['resource']['process']['runtime']['name']);
+        self::assertSame('8.3.0', $config['resource']['process']['runtime']['version']);
+        self::assertSame('PHP 8.3.0 with Zend Engine', $config['resource']['process']['runtime']['description']);
+    }
+
+    public function test_resource_service_namespace_and_instance_id() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => [
+                    'name' => 'test-app',
+                    'namespace' => 'my-namespace',
+                    'instance_id' => 'instance-abc-123',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('test-app', $config['resource']['service']['name']);
+        self::assertSame('my-namespace', $config['resource']['service']['namespace']);
+        self::assertSame('instance-abc-123', $config['resource']['service']['instance_id']);
+    }
+
+    public function test_resource_service_with_version() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => [
+                    'name' => 'test-app',
+                    'version' => [
+                        'type' => 'manual',
+                        'value' => '1.2.3',
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('test-app', $config['resource']['service']['name']);
+        self::assertSame('manual', $config['resource']['service']['version']['type']);
+        self::assertSame('1.2.3', $config['resource']['service']['version']['value']);
+    }
+
+    public function test_resource_telemetry_sdk_config() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+                'telemetry_sdk' => [
+                    'language' => 'php',
+                    'name' => 'flow-telemetry',
+                    'version' => '1.0.0',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('php', $config['resource']['telemetry_sdk']['language']);
+        self::assertSame('flow-telemetry', $config['resource']['telemetry_sdk']['name']);
+        self::assertSame('1.0.0', $config['resource']['telemetry_sdk']['version']);
+    }
+
+    public function test_resource_telemetry_sdk_defaults() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [
+                'service' => ['name' => 'test-app'],
+            ],
+        ]]);
+
+        self::assertSame('php', $config['resource']['telemetry_sdk']['language']);
+        self::assertSame('flow-php/telemetry', $config['resource']['telemetry_sdk']['name']);
+        self::assertNull($config['resource']['telemetry_sdk']['version']);
+    }
+
     public function test_sampler_defaults_to_always_on() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [],
         ]]);
 
@@ -764,7 +1099,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'sampler' => [
                     'type' => 'trace_id_ratio',
@@ -779,7 +1114,7 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'sampler' => [
                     'type' => 'trace_id_ratio',
@@ -792,7 +1127,7 @@ final class ConfigurationTest extends TestCase
     public function test_sampler_ratio_validation() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'sampler' => [
                     'type' => 'trace_id_ratio',
@@ -804,33 +1139,12 @@ final class ConfigurationTest extends TestCase
         self::assertSame(0.5, $config['tracer_provider']['sampler']['ratio']);
     }
 
-    public function test_service_config_with_version_and_attributes() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => [
-                'name' => 'test-app',
-                'version' => '1.2.3',
-                'attributes' => [
-                    'environment' => 'production',
-                    'region' => 'us-east-1',
-                ],
-            ],
-        ]]);
-
-        self::assertSame('test-app', $config['service']['name']);
-        self::assertSame('1.2.3', $config['service']['version']);
-        self::assertSame([
-            'environment' => 'production',
-            'region' => 'us-east-1',
-        ], $config['service']['attributes']);
-    }
-
     public function test_severity_filtering_is_only_available_for_log_processors() : void
     {
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracer_provider' => [
                 'processor' => [
                     'type' => 'severity_filtering',
@@ -842,7 +1156,7 @@ final class ConfigurationTest extends TestCase
     public function test_severity_filtering_minimum_severity_default() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'logger_provider' => [
                 'processor' => [
                     'type' => 'severity_filtering',
@@ -859,7 +1173,7 @@ final class ConfigurationTest extends TestCase
     public function test_severity_filtering_processor_for_logs() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'logger_provider' => [
                 'processor' => [
                     'type' => 'severity_filtering',
@@ -882,7 +1196,7 @@ final class ConfigurationTest extends TestCase
     public function test_tracer_configuration_with_all_options() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracers' => [
                 'database' => [
                     'version' => '2.0.0',
@@ -908,7 +1222,7 @@ final class ConfigurationTest extends TestCase
     public function test_tracer_configuration_with_defaults() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'service' => ['name' => 'test-app'],
+            'resource' => ['service' => ['name' => 'test-app']],
             'tracers' => [
                 'http_client' => [],
             ],

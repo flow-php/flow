@@ -93,6 +93,7 @@ parameters:
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Messenger/TracingMiddleware.php
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Twig/TracingTwigExtension.php
         - src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Integration/Instrumentation/Twig/TracingTwigExtensionTest.php
+        - src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Fixtures/Cache/*
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Doctrine/DBAL/V3/*
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Doctrine/DBAL/V4/*
 

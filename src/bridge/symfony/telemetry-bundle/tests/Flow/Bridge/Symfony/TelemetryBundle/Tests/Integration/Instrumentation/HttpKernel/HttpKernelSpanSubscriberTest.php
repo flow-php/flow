@@ -39,7 +39,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -87,7 +87,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -144,7 +144,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -206,7 +206,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -265,7 +265,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'service' => ['name' => 'test-app'],
+                    'resource' => ['service' => ['name' => 'test-app']],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
