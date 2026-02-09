@@ -34,7 +34,7 @@
       "Flow/Bridge/Psr7/Telemetry/Exception",
       "Flow/Bridge/Psr18/Telemetry/Exception",
       "Flow/Bridge/Symfony/HttpFoundationTelemetry/Exception",
-      "Flow/Bridge/Symfony/TelemetryBundle/Exception""
+      "Flow/Bridge/Symfony/TelemetryBundle/Exception"
     ]
   },
   "logs": {
@@ -116,7 +116,7 @@
     "CloneRemoval": {
       "ignore": [
         "Flow\\ETL\\DataFrame::count",
-        "Flow\\ETL\\DataFrame::fetch", 
+        "Flow\\ETL\\DataFrame::fetch",
         "Flow\\ETL\\DataFrame::run",
         "Flow\\ETL\\DataFrame::get*"
       ]
