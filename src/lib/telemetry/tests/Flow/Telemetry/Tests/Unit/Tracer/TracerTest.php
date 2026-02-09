@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
-use Flow\Telemetry\Context\{Context, SpanId};
+use Flow\Telemetry\Context\{Context, SpanId, TraceId};
 use Flow\Telemetry\Tests\Mother\TracerMother;
 use Flow\Telemetry\Tracer\{SpanKind, SpanProcessor};
 use PHPUnit\Framework\TestCase;
@@ -61,7 +61,7 @@ final class TracerTest extends TestCase
 
     public function test_context_returns_tracer_context() : void
     {
-        $context = Context::create();
+        $context = Context::withTraceId(TraceId::generate());
         $tracer = TracerMother::withContext($context);
 
         self::assertSame($context->traceId->toHex(), $tracer->context()->traceId->toHex());
@@ -120,7 +120,7 @@ final class TracerTest extends TestCase
     public function test_span_inherits_context_active_span_as_parent() : void
     {
         $activeSpan = SpanId::generate();
-        $context = Context::create()->withActiveSpan($activeSpan);
+        $context = Context::withTraceId(TraceId::generate())->withActiveSpan($activeSpan);
 
         $span = TracerMother::withContext($context)->span('child');
 
@@ -135,7 +135,7 @@ final class TracerTest extends TestCase
 
     public function test_span_uses_tracer_trace_id() : void
     {
-        $context = Context::create();
+        $context = Context::withTraceId(TraceId::generate());
         $span = TracerMother::withContext($context)->span('test-span');
 
         self::assertTrue($span->context()->traceId->equals($context->traceId));

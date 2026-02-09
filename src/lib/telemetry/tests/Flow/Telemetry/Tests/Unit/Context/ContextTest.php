@@ -54,21 +54,14 @@ final class ContextTest extends TestCase
         self::assertSame($entries, $context->baggage->all());
     }
 
-    public function test_create_generates_new_trace_id() : void
+    public function test_create_returns_context_with_invalid_trace_id() : void
     {
         $context = Context::create();
 
-        self::assertSame(32, \strlen($context->traceId->toHex()));
+        self::assertFalse($context->traceId->isValid());
+        self::assertSame(TraceId::INVALID, $context->traceId->toHex());
         self::assertTrue($context->baggage->isEmpty());
         self::assertNull($context->activeSpanId());
-    }
-
-    public function test_create_generates_unique_trace_ids() : void
-    {
-        $context1 = Context::create();
-        $context2 = Context::create();
-
-        self::assertFalse($context1->traceId->equals($context2->traceId));
     }
 
     public function test_default_baggage_is_empty() : void

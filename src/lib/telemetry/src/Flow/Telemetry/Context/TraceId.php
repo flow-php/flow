@@ -8,16 +8,22 @@ namespace Flow\Telemetry\Context;
  * A 16-byte (128-bit) trace identifier compatible with OpenTelemetry W3C Trace Context.
  *
  * TraceIds are used to correlate spans across service boundaries.
- * All-zero TraceIds are rejected at construction time per W3C spec.
+ * An all-zero TraceId is considered "invalid" and indicates no active trace.
  *
  * Example usage:
  * ```php
  * $traceId = TraceId::generate();
  * echo $traceId->toHex(); // "0af7651916cd43dd8448eb211c80319c"
+ *
+ * // Invalid trace ID (all zeros)
+ * $invalid = TraceId::invalid();
+ * echo $invalid->isValid(); // false
  * ```
  */
 final readonly class TraceId implements \Stringable
 {
+    public const string INVALID = '00000000000000000000000000000000';
+
     private const int BYTE_LENGTH = 16;
 
     private const int HEX_LENGTH = 32;
@@ -44,7 +50,7 @@ final readonly class TraceId implements \Stringable
      *
      * @param string $bytes 16 raw bytes
      *
-     * @throws \InvalidArgumentException if the byte string is not exactly 16 bytes or is all zeros
+     * @throws \InvalidArgumentException if the byte string is not exactly 16 bytes
      */
     public static function fromBytes(string $bytes) : self
     {
@@ -56,10 +62,6 @@ final readonly class TraceId implements \Stringable
             ));
         }
 
-        if ($bytes === \str_repeat("\0", self::BYTE_LENGTH)) {
-            throw new \InvalidArgumentException('TraceId cannot be all zeros');
-        }
-
         return new self($bytes);
     }
 
@@ -68,7 +70,7 @@ final readonly class TraceId implements \Stringable
      *
      * @param string $hex 32-character lowercase hexadecimal string
      *
-     * @throws \InvalidArgumentException if the hex string is invalid or represents all zeros
+     * @throws \InvalidArgumentException if the hex string is invalid
      */
     public static function fromHex(string $hex) : self
     {
@@ -90,10 +92,6 @@ final readonly class TraceId implements \Stringable
             throw new \InvalidArgumentException('Failed to decode TraceId hex string');
         }
 
-        if ($bytes === \str_repeat("\0", self::BYTE_LENGTH)) {
-            throw new \InvalidArgumentException('TraceId cannot be all zeros');
-        }
-
         return new self($bytes);
     }
 
@@ -103,6 +101,16 @@ final readonly class TraceId implements \Stringable
     public static function generate() : self
     {
         return new self(\random_bytes(self::BYTE_LENGTH));
+    }
+
+    /**
+     * Get an invalid TraceId (all zeros).
+     *
+     * Invalid TraceIds indicate no active trace context.
+     */
+    public static function invalid() : self
+    {
+        return new self(\str_repeat("\0", self::BYTE_LENGTH));
     }
 
     public function __toString() : string
@@ -116,6 +124,16 @@ final readonly class TraceId implements \Stringable
     public function equals(self $other) : bool
     {
         return $this->bytes === $other->bytes;
+    }
+
+    /**
+     * Check if this TraceId is valid (not all zeros).
+     *
+     * An all-zero TraceId indicates no active trace context.
+     */
+    public function isValid() : bool
+    {
+        return $this->bytes !== \str_repeat("\0", self::BYTE_LENGTH);
     }
 
     /**

@@ -187,7 +187,7 @@ final class Logger
         $context = $this->contextStorage->current();
         $activeSpanId = $context->activeSpanId();
 
-        if ($activeSpanId === null) {
+        if ($activeSpanId === null || !$context->traceId->isValid()) {
             return null;
         }
 

@@ -100,6 +100,19 @@ final readonly class SpanContext
     }
 
     /**
+     * Get an invalid SpanContext with all-zero trace and span IDs.
+     *
+     * Returns a context representing no active trace.
+     */
+    public static function getInvalid() : self
+    {
+        return new self(
+            TraceId::invalid(),
+            SpanId::invalid(),
+        );
+    }
+
+    /**
      * Check if this is a root span (no parent).
      */
     public function isRoot() : bool
@@ -111,12 +124,11 @@ final readonly class SpanContext
      * Check if this SpanContext has valid trace and span IDs.
      *
      * A SpanContext is valid when both the trace ID and span ID are non-zero.
-     * Note: SpanId and TraceId already reject all-zero values at construction,
-     * so any successfully created SpanContext is valid by construction.
+     * An invalid SpanContext indicates no active trace context.
      */
     public function isValid() : bool
     {
-        return true;
+        return $this->traceId->isValid() && $this->spanId->isValid();
     }
 
     /**

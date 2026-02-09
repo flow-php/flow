@@ -490,10 +490,16 @@ final class JsonSerializer implements Serializer
     {
         $result = [
             'timeUnixNano' => $this->toNanoseconds($exemplar->timestamp),
-            'traceId' => $exemplar->traceId->toHex(),
-            'spanId' => $exemplar->spanId->toHex(),
             'filteredAttributes' => $this->serializeAttributes($exemplar->filteredAttributes),
         ];
+
+        if ($exemplar->traceId->isValid()) {
+            $result['traceId'] = $exemplar->traceId->toHex();
+        }
+
+        if ($exemplar->spanId->isValid()) {
+            $result['spanId'] = $exemplar->spanId->toHex();
+        }
 
         if (\is_int($exemplar->value)) {
             $result['asInt'] = (string) $exemplar->value;
@@ -516,6 +522,10 @@ final class JsonSerializer implements Serializer
         $result = [];
 
         foreach ($links as $link) {
+            if (!$link->context->isValid()) {
+                continue;
+            }
+
             $result[] = [
                 'traceId' => $link->context->traceId->toHex(),
                 'spanId' => $link->context->spanId->toHex(),
@@ -542,7 +552,7 @@ final class JsonSerializer implements Serializer
             'attributes' => $this->serializeAttributes($entry->record->attributes->normalize()),
         ];
 
-        if ($entry->spanContext !== null) {
+        if ($entry->spanContext !== null && $entry->spanContext->isValid()) {
             $result['traceId'] = $entry->spanContext->traceId->toHex();
             $result['spanId'] = $entry->spanContext->spanId->toHex();
 

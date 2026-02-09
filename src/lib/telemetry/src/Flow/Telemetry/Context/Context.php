@@ -31,11 +31,15 @@ final class Context
     }
 
     /**
-     * Create a new Context with a fresh TraceId.
+     * Create a new Context with an invalid TraceId (all zeros).
+     *
+     * Use this when you want to create a context without starting a trace.
+     * Logs and spans emitted in this context will not have a trace ID until
+     * a trace is explicitly started.
      */
     public static function create() : self
     {
-        return new self(TraceId::generate());
+        return new self(TraceId::invalid());
     }
 
     /**

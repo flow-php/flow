@@ -316,7 +316,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         $logRecord->setAttributes($this->createKeyValues($entry->record->attributes->normalize())); // @phpstan-ignore argument.type
 
-        if ($entry->spanContext !== null) {
+        if ($entry->spanContext !== null && $entry->spanContext->isValid()) {
             $logRecord->setTraceId(\hex2bin($entry->spanContext->traceId->toHex()) ?: '');
             $logRecord->setSpanId(\hex2bin($entry->spanContext->spanId->toHex()) ?: '');
 
@@ -360,8 +360,15 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
     {
         $protoExemplar = new ProtoExemplar();
         $protoExemplar->setTimeUnixNano($this->toNanoseconds($exemplar->timestamp));
-        $protoExemplar->setTraceId(\hex2bin($exemplar->traceId->toHex()) ?: '');
-        $protoExemplar->setSpanId(\hex2bin($exemplar->spanId->toHex()) ?: '');
+
+        if ($exemplar->traceId->isValid()) {
+            $protoExemplar->setTraceId(\hex2bin($exemplar->traceId->toHex()) ?: '');
+        }
+
+        if ($exemplar->spanId->isValid()) {
+            $protoExemplar->setSpanId(\hex2bin($exemplar->spanId->toHex()) ?: '');
+        }
+
         $protoExemplar->setFilteredAttributes($this->createKeyValues($exemplar->filteredAttributes)); // @phpstan-ignore argument.type
 
         if (\is_int($exemplar->value)) {
@@ -441,7 +448,11 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $links = [];
 
         foreach ($span->links() as $link) {
-            $links[] = $this->createSpanLink($link);
+            $protoLink = $this->createSpanLink($link);
+
+            if ($protoLink !== null) {
+                $links[] = $protoLink;
+            }
         }
 
         $protoSpan->setLinks($links); // @phpstan-ignore argument.type
@@ -475,8 +486,12 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         return $protoEvent;
     }
 
-    private function createSpanLink(SpanLink $link) : Link
+    private function createSpanLink(SpanLink $link) : ?Link
     {
+        if (!$link->context->isValid()) {
+            return null;
+        }
+
         $protoLink = new Link();
         $protoLink->setTraceId(\hex2bin($link->context->traceId->toHex()) ?: '');
         $protoLink->setSpanId(\hex2bin($link->context->spanId->toHex()) ?: '');

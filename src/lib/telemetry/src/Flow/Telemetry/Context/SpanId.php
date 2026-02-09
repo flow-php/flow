@@ -8,16 +8,22 @@ namespace Flow\Telemetry\Context;
  * An 8-byte (64-bit) span identifier compatible with OpenTelemetry W3C Trace Context.
  *
  * SpanIds uniquely identify a span within a trace.
- * All-zero SpanIds are rejected at construction time per W3C spec.
+ * An all-zero SpanId is considered "invalid" and indicates no active span.
  *
  * Example usage:
  * ```php
  * $spanId = SpanId::generate();
  * echo $spanId->toHex(); // "00f067aa0ba902b7"
+ *
+ * // Invalid span ID (all zeros)
+ * $invalid = SpanId::invalid();
+ * echo $invalid->isValid(); // false
  * ```
  */
 final readonly class SpanId implements \Stringable
 {
+    public const string INVALID = '0000000000000000';
+
     private const int BYTE_LENGTH = 8;
 
     private const int HEX_LENGTH = 16;
@@ -44,7 +50,7 @@ final readonly class SpanId implements \Stringable
      *
      * @param string $bytes 8 raw bytes
      *
-     * @throws \InvalidArgumentException if the byte string is not exactly 8 bytes or is all zeros
+     * @throws \InvalidArgumentException if the byte string is not exactly 8 bytes
      */
     public static function fromBytes(string $bytes) : self
     {
@@ -56,10 +62,6 @@ final readonly class SpanId implements \Stringable
             ));
         }
 
-        if ($bytes === \str_repeat("\0", self::BYTE_LENGTH)) {
-            throw new \InvalidArgumentException('SpanId cannot be all zeros');
-        }
-
         return new self($bytes);
     }
 
@@ -68,7 +70,7 @@ final readonly class SpanId implements \Stringable
      *
      * @param string $hex 16-character lowercase hexadecimal string
      *
-     * @throws \InvalidArgumentException if the hex string is invalid or represents all zeros
+     * @throws \InvalidArgumentException if the hex string is invalid
      */
     public static function fromHex(string $hex) : self
     {
@@ -90,10 +92,6 @@ final readonly class SpanId implements \Stringable
             throw new \InvalidArgumentException('Failed to decode SpanId hex string');
         }
 
-        if ($bytes === \str_repeat("\0", self::BYTE_LENGTH)) {
-            throw new \InvalidArgumentException('SpanId cannot be all zeros');
-        }
-
         return new self($bytes);
     }
 
@@ -103,6 +101,16 @@ final readonly class SpanId implements \Stringable
     public static function generate() : self
     {
         return new self(\random_bytes(self::BYTE_LENGTH));
+    }
+
+    /**
+     * Get an invalid SpanId (all zeros).
+     *
+     * Invalid SpanIds indicate no active span context.
+     */
+    public static function invalid() : self
+    {
+        return new self(\str_repeat("\0", self::BYTE_LENGTH));
     }
 
     public function __toString() : string
@@ -116,6 +124,16 @@ final readonly class SpanId implements \Stringable
     public function equals(self $other) : bool
     {
         return $this->bytes === $other->bytes;
+    }
+
+    /**
+     * Check if this SpanId is valid (not all zeros).
+     *
+     * An all-zero SpanId indicates no active span context.
+     */
+    public function isValid() : bool
+    {
+        return $this->bytes !== \str_repeat("\0", self::BYTE_LENGTH);
     }
 
     /**
