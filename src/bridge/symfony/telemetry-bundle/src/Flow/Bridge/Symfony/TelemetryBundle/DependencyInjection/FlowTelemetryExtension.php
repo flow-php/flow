@@ -21,6 +21,7 @@ use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor,
     SeverityFilteringLogProcessor};
 use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider};
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, CompositeMetricProcessor, PassThroughMetricProcessor};
+use Flow\Telemetry\Propagation\{CompositePropagator, W3CBaggage, W3CTraceContext};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
 use Flow\Telemetry\Provider\Memory\{MemoryLogExporter,
@@ -54,10 +55,11 @@ final class FlowTelemetryExtension extends Extension
     public function load(array $configs, ContainerBuilder $container) : void
     {
         $configuration = new Configuration();
-        /** @var array{resource: array{service: array{name: string, version?: null|array{type: string, value?: null|string, name?: null|string}, namespace?: null|string, instance_id?: null|string}, deployment?: array{environment?: null|string, id?: null|string, name?: null|string, status?: null|string}, custom?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{resource: array{service: array{name: string, version?: null|array{type: string, value?: null|string, name?: null|string}, namespace?: null|string, instance_id?: null|string}, deployment?: array{environment?: null|string, id?: null|string, name?: null|string, status?: null|string}, custom?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($config, $container);
+        $this->registerPropagator($config['propagator'] ?? [], $container);
         $this->registerResource($config['resource'], $container);
         $this->registerTelemetry($config, $container);
         $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
@@ -911,7 +913,7 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: bool, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
+     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
      */
     private function registerInstrumentation(array $config, ContainerBuilder $container) : void
     {
@@ -945,9 +947,21 @@ final class FlowTelemetryExtension extends Extension
             $container->setDefinition('flow.telemetry.console.flush_subscriber', $flushDefinition);
         }
 
-        if (($config['messenger'] ?? false) && \interface_exists(self::MESSENGER_MIDDLEWARE_INTERFACE)) {
+        $messengerConfig = $config['messenger'] ?? [];
+
+        if ($messengerConfig['enabled'] ?? false) {
+            if (!\interface_exists(self::MESSENGER_MIDDLEWARE_INTERFACE)) {
+                throw new RuntimeException('Messenger instrumentation requires symfony/messenger package. Install it via composer: composer require symfony/messenger');
+            }
+
             $definition = new Definition(TracingMiddleware::class);
             $definition->setArgument(0, new Reference(Telemetry::class));
+
+            if ($messengerConfig['context_propagation'] ?? true) {
+                $definition->setArgument(1, new Reference('flow.telemetry.context_storage'));
+                $definition->setArgument(2, new Reference('flow.telemetry.propagator'));
+            }
+
             $container->setDefinition('flow.telemetry.messenger.middleware', $definition);
         }
 
@@ -1070,6 +1084,52 @@ final class FlowTelemetryExtension extends Extension
 
             $definition->setPublic(true);
             $container->setDefinition('flow.telemetry.' . $name . '.meter', $definition);
+        }
+    }
+
+    /**
+     * @param array{type?: string, service_id?: null|string} $config
+     */
+    private function registerPropagator(array $config, ContainerBuilder $container) : void
+    {
+        $type = $config['type'] ?? 'w3c';
+
+        switch ($type) {
+            case 'service':
+                $customServiceId = $config['service_id'] ?? null;
+
+                if ($customServiceId === null) {
+                    throw new RuntimeException('service_id is required when propagator type is "service"');
+                }
+                $container->setAlias('flow.telemetry.propagator', $customServiceId);
+
+                break;
+
+            case 'w3c':
+                $container->setDefinition('flow.telemetry.propagator.tracecontext', new Definition(W3CTraceContext::class));
+                $container->setDefinition('flow.telemetry.propagator.baggage', new Definition(W3CBaggage::class));
+
+                $compositeDefinition = new Definition(CompositePropagator::class);
+                $compositeDefinition->setArgument(0, [
+                    new Reference('flow.telemetry.propagator.tracecontext'),
+                    new Reference('flow.telemetry.propagator.baggage'),
+                ]);
+                $container->setDefinition('flow.telemetry.propagator', $compositeDefinition);
+
+                break;
+
+            case 'tracecontext':
+                $container->setDefinition('flow.telemetry.propagator', new Definition(W3CTraceContext::class));
+
+                break;
+
+            case 'baggage':
+                $container->setDefinition('flow.telemetry.propagator', new Definition(W3CBaggage::class));
+
+                break;
+
+            default:
+                throw new RuntimeException(\sprintf('Unknown propagator type: %s', (string) $type));
         }
     }
 

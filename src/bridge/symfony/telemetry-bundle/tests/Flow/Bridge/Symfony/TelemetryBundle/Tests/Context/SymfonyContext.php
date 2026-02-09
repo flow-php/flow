@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Context;
 
+use function Flow\ETL\DSL\type_instance_of;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Flow\Telemetry\Telemetry;
+use Symfony\Component\DependencyInjection\{ContainerBuilder, ContainerInterface};
+
 use Symfony\Component\Filesystem\Filesystem;
 
 final class SymfonyContext
@@ -48,6 +51,35 @@ final class SymfonyContext
         }
 
         return $this->kernel;
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $typeClass
+     *
+     * @return T
+     */
+    public function getService(string $serviceId, string $typeClass) : object
+    {
+        $service = $this->getContainer()->get($serviceId);
+
+        return type_instance_of($typeClass)->assert($service);
+    }
+
+    public function makeFlowServicesPublic(ContainerBuilder $container) : void
+    {
+        foreach ($container->getDefinitions() as $id => $definition) {
+            if (\str_starts_with($id, 'flow.telemetry')) {
+                $definition->setPublic(true);
+            }
+        }
+
+        foreach ($container->getAliases() as $id => $alias) {
+            if ($id === Telemetry::class || \str_starts_with($id, 'flow.telemetry')) {
+                $alias->setPublic(true);
+            }
+        }
     }
 
     public function shutdown() : void

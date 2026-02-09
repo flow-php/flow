@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, rename_replace, to_memory};
+use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, rename_replace, telemetry_options, to_memory};
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\Telemetry\Telemetry;
 use Flow\Website\Factory\Github\ContributorsRequestFactory;
 use Http\Client\Curl\Client;
 use Http\Discovery\Psr17Factory;
@@ -20,6 +21,7 @@ final readonly class Github
     public function __construct(
         private ContributorsRequestFactory $requestFactory,
         private ContainerBagInterface $parameters,
+        private Telemetry $telemetry,
     ) {
     }
 
@@ -43,7 +45,17 @@ final readonly class Github
         $from_github = new PsrHttpClientDynamicExtractor($client, $this->requestFactory);
 
         try {
-            df(config_builder()->cache($adapter))
+            df(
+                config_builder()
+                    ->cache($adapter)
+                    ->withTelemetry(
+                        $this->telemetry,
+                        telemetry_options()
+                            ->collectMetrics(true)
+                            ->traceLoading(true)
+                            ->traceTransformations(true)
+                    )
+            )
                 ->read(
                     from_cache(
                         'flow_github_contributors',

@@ -120,7 +120,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             ],
         ], $container);
 
-        $this->makeFlowServicesPublic($container);
+        $this->symfonyContext()->makeFlowServicesPublic($container);
         $container->compile();
 
         self::assertSame(
@@ -148,7 +148,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             ],
         ], $container);
 
-        $this->makeFlowServicesPublic($container);
+        $this->symfonyContext()->makeFlowServicesPublic($container);
         $container->compile();
 
         self::assertSame(
@@ -176,7 +176,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             ],
         ], $container);
 
-        $this->makeFlowServicesPublic($container);
+        $this->symfonyContext()->makeFlowServicesPublic($container);
         $container->compile();
 
         self::assertSame(

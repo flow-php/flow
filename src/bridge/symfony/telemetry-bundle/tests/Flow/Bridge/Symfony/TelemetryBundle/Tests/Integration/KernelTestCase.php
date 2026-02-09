@@ -6,9 +6,8 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Context\SymfonyContext;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
-use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, ContainerInterface};
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 abstract class KernelTestCase extends TestCase
 {
@@ -42,18 +41,8 @@ abstract class KernelTestCase extends TestCase
         return $this->context->getKernel();
     }
 
-    protected function makeFlowServicesPublic(ContainerBuilder $container) : void
+    protected function symfonyContext() : SymfonyContext
     {
-        foreach ($container->getDefinitions() as $id => $definition) {
-            if (\str_starts_with($id, 'flow.telemetry')) {
-                $definition->setPublic(true);
-            }
-        }
-
-        foreach ($container->getAliases() as $id => $alias) {
-            if ($id === Telemetry::class || \str_starts_with($id, 'flow.telemetry')) {
-                $alias->setPublic(true);
-            }
-        }
+        return $this->context;
     }
 }

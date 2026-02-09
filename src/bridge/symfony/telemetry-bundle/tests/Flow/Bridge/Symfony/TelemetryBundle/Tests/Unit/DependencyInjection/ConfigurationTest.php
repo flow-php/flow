@@ -173,7 +173,7 @@ final class ConfigurationTest extends TestCase
 
         self::assertTrue($config['instrumentation']['http_kernel']['enabled']);
         self::assertTrue($config['instrumentation']['console']['enabled']);
-        self::assertTrue($config['instrumentation']['messenger']);
+        self::assertTrue($config['instrumentation']['messenger']['enabled']);
     }
 
     public function test_instrumentation_console_exclude_commands() : void
@@ -289,7 +289,7 @@ final class ConfigurationTest extends TestCase
         self::assertArrayHasKey('instrumentation', $config);
         self::assertFalse($config['instrumentation']['http_kernel']['enabled']);
         self::assertFalse($config['instrumentation']['console']['enabled']);
-        self::assertFalse($config['instrumentation']['messenger']);
+        self::assertFalse($config['instrumentation']['messenger']['enabled']);
     }
 
     public function test_instrumentation_http_client_can_be_enabled() : void
@@ -359,7 +359,7 @@ final class ConfigurationTest extends TestCase
 
         self::assertTrue($config['instrumentation']['http_kernel']['enabled']);
         self::assertFalse($config['instrumentation']['console']['enabled']);
-        self::assertFalse($config['instrumentation']['messenger']);
+        self::assertFalse($config['instrumentation']['messenger']['enabled']);
     }
 
     public function test_instrumentation_psr18_client_can_be_enabled() : void
