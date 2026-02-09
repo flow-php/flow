@@ -5,10 +5,6 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\{ConsoleFlushSubscriber, ConsoleSpanSubscriber};
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\{HttpKernelFlushSubscriber, HttpKernelSpanSubscriber};
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig\TracingTwigExtension;
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
@@ -41,19 +37,25 @@ use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcess
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler};
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Twig\Extension\AbstractExtension;
 
 final class FlowTelemetryExtension extends Extension
 {
     private const string MESSENGER_MIDDLEWARE_INTERFACE = 'Symfony\\Component\\Messenger\\Middleware\\MiddlewareInterface';
 
+    /** @var array<string, bool> */
+    private array $configsEnabled = [];
+
     /**
      * @param array<array-key, mixed> $configs
      */
     public function load(array $configs, ContainerBuilder $container) : void
     {
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $configuration = new Configuration();
         /** @var array{resource: array{service: array{name: string, version?: null|array{type: string, value?: null|string, name?: null|string}, namespace?: null|string, instance_id?: null|string}, deployment?: array{environment?: null|string, id?: null|string, name?: null|string, status?: null|string}, custom?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
@@ -62,7 +64,7 @@ final class FlowTelemetryExtension extends Extension
         $this->registerPropagator($config['propagator'] ?? [], $container);
         $this->registerResource($config['resource'], $container);
         $this->registerTelemetry($config, $container);
-        $this->registerInstrumentation($config['instrumentation'] ?? [], $container);
+        $this->registerInstrumentation($config['instrumentation'] ?? [], $container, $loader);
         $this->registerTracers($config['tracers'] ?? [], $container);
         $this->registerMeters($config['meters'] ?? [], $container);
         $this->registerLoggers($config['loggers'] ?? [], $container);
@@ -885,6 +887,14 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
+    private function readConfigEnabled(string $path, ContainerBuilder $container, array $config) : bool
+    {
+        return $this->configsEnabled[$path] ??= parent::isConfigEnabled($container, $config);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
     private function registerGlobalServices(array $config, ContainerBuilder $container) : void
     {
         $clockServiceId = $config['clock_service_id'] ?? null;
@@ -915,120 +925,53 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
      */
-    private function registerInstrumentation(array $config, ContainerBuilder $container) : void
+    private function registerInstrumentation(array $config, ContainerBuilder $container, PhpFileLoader $loader) : void
     {
         $httpKernelConfig = $config['http_kernel'] ?? [];
 
-        if ($httpKernelConfig['enabled'] ?? false) {
-            $spanDefinition = new Definition(HttpKernelSpanSubscriber::class);
-            $spanDefinition->setArgument(0, new Reference(Telemetry::class));
-            $spanDefinition->setArgument(1, $httpKernelConfig['exclude_routes'] ?? []);
-            $spanDefinition->addTag('kernel.event_subscriber');
-            $container->setDefinition('flow.telemetry.http_kernel.span_subscriber', $spanDefinition);
-
-            $flushDefinition = new Definition(HttpKernelFlushSubscriber::class);
-            $flushDefinition->setArgument(0, new Reference(Telemetry::class));
-            $flushDefinition->addTag('kernel.event_subscriber');
-            $container->setDefinition('flow.telemetry.http_kernel.flush_subscriber', $flushDefinition);
+        if ($this->readConfigEnabled('instrumentation.http_kernel', $container, $httpKernelConfig)) {
+            $container->setParameter('flow.telemetry.http_kernel.exclude_routes', $httpKernelConfig['exclude_routes'] ?? []);
+            $loader->load('instrumentation/http_kernel.php');
         }
 
         $consoleConfig = $config['console'] ?? [];
 
-        if ($consoleConfig['enabled'] ?? false) {
-            $spanDefinition = new Definition(ConsoleSpanSubscriber::class);
-            $spanDefinition->setArgument(0, new Reference(Telemetry::class));
-            $spanDefinition->setArgument(1, $consoleConfig['exclude_commands'] ?? []);
-            $spanDefinition->addTag('kernel.event_subscriber');
-            $container->setDefinition('flow.telemetry.console.span_subscriber', $spanDefinition);
-
-            $flushDefinition = new Definition(ConsoleFlushSubscriber::class);
-            $flushDefinition->setArgument(0, new Reference(Telemetry::class));
-            $flushDefinition->addTag('kernel.event_subscriber');
-            $container->setDefinition('flow.telemetry.console.flush_subscriber', $flushDefinition);
+        if ($this->readConfigEnabled('instrumentation.console', $container, $consoleConfig)) {
+            $container->setParameter('flow.telemetry.console.exclude_commands', $consoleConfig['exclude_commands'] ?? []);
+            $loader->load('instrumentation/console.php');
         }
 
         $messengerConfig = $config['messenger'] ?? [];
 
-        if ($messengerConfig['enabled'] ?? false) {
+        if ($this->readConfigEnabled('instrumentation.messenger', $container, $messengerConfig)) {
             if (!\interface_exists(self::MESSENGER_MIDDLEWARE_INTERFACE)) {
                 throw new RuntimeException('Messenger instrumentation requires symfony/messenger package. Install it via composer: composer require symfony/messenger');
             }
 
-            $definition = new Definition(TracingMiddleware::class);
-            $definition->setArgument(0, new Reference(Telemetry::class));
+            $loader->load('instrumentation/messenger.php');
 
             if ($messengerConfig['context_propagation'] ?? true) {
+                $definition = $container->getDefinition('flow.telemetry.messenger.middleware');
                 $definition->setArgument(1, new Reference('flow.telemetry.context_storage'));
                 $definition->setArgument(2, new Reference('flow.telemetry.propagator'));
             }
-
-            $container->setDefinition('flow.telemetry.messenger.middleware', $definition);
         }
 
         $twigConfig = $config['twig'] ?? [];
 
-        if ($twigConfig['enabled'] ?? false) {
+        if ($this->readConfigEnabled('instrumentation.twig', $container, $twigConfig)) {
             if (!\class_exists(AbstractExtension::class)) {
                 throw new RuntimeException('Twig instrumentation requires twig/twig package. Install it via composer: composer require twig/twig');
             }
 
-            $definition = new Definition(TracingTwigExtension::class);
-            $definition->setArgument(0, new Reference(Telemetry::class));
-            $definition->setArgument(1, $twigConfig['trace_templates'] ?? true);
-            $definition->setArgument(2, $twigConfig['trace_blocks'] ?? false);
-            $definition->setArgument(3, $twigConfig['trace_macros'] ?? false);
-            $definition->setArgument(4, $twigConfig['exclude_templates'] ?? []);
-            $definition->addTag('twig.extension');
-            $container->setDefinition('flow.telemetry.twig.extension', $definition);
+            $container->setParameter('flow.telemetry.twig.trace_templates', $twigConfig['trace_templates'] ?? true);
+            $container->setParameter('flow.telemetry.twig.trace_blocks', $twigConfig['trace_blocks'] ?? false);
+            $container->setParameter('flow.telemetry.twig.trace_macros', $twigConfig['trace_macros'] ?? false);
+            $container->setParameter('flow.telemetry.twig.exclude_templates', $twigConfig['exclude_templates'] ?? []);
+            $loader->load('instrumentation/twig.php');
         }
 
-        $httpClientConfig = $config['http_client'] ?? [];
-        $container->setParameter(
-            'flow.telemetry.http_client.enabled',
-            $httpClientConfig['enabled'] ?? false
-        );
-        $container->setParameter(
-            'flow.telemetry.http_client.exclude_clients',
-            $httpClientConfig['exclude_clients'] ?? []
-        );
-
-        $psr18ClientConfig = $config['psr18_client'] ?? [];
-        $container->setParameter(
-            'flow.telemetry.psr18_client.enabled',
-            $psr18ClientConfig['enabled'] ?? false
-        );
-        $container->setParameter(
-            'flow.telemetry.psr18_client.exclude_clients',
-            $psr18ClientConfig['exclude_clients'] ?? []
-        );
-
-        $dbalConfig = $config['dbal'] ?? [];
-        $container->setParameter(
-            'flow.telemetry.dbal.enabled',
-            $dbalConfig['enabled'] ?? false
-        );
-        $container->setParameter(
-            'flow.telemetry.dbal.log_sql',
-            $dbalConfig['log_sql'] ?? true
-        );
-        $container->setParameter(
-            'flow.telemetry.dbal.max_sql_length',
-            $dbalConfig['max_sql_length'] ?? 1000
-        );
-        $container->setParameter(
-            'flow.telemetry.dbal.exclude_connections',
-            $dbalConfig['exclude_connections'] ?? []
-        );
-
-        $cacheConfig = $config['cache'] ?? [];
-        $container->setParameter(
-            'flow.telemetry.cache.enabled',
-            $cacheConfig['enabled'] ?? false
-        );
-        $container->setParameter(
-            'flow.telemetry.cache.exclude_pools',
-            $cacheConfig['exclude_pools'] ?? []
-        );
+        $this->registerParameterOnlyInstrumentation($config, $container);
     }
 
     /**
@@ -1085,6 +1028,60 @@ final class FlowTelemetryExtension extends Extension
             $definition->setPublic(true);
             $container->setDefinition('flow.telemetry.' . $name . '.meter', $definition);
         }
+    }
+
+    /**
+     * @param array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}} $config
+     */
+    private function registerParameterOnlyInstrumentation(array $config, ContainerBuilder $container) : void
+    {
+        $httpClientConfig = $config['http_client'] ?? [];
+        $container->setParameter(
+            'flow.telemetry.http_client.enabled',
+            $httpClientConfig['enabled'] ?? false
+        );
+        $container->setParameter(
+            'flow.telemetry.http_client.exclude_clients',
+            $httpClientConfig['exclude_clients'] ?? []
+        );
+
+        $psr18ClientConfig = $config['psr18_client'] ?? [];
+        $container->setParameter(
+            'flow.telemetry.psr18_client.enabled',
+            $psr18ClientConfig['enabled'] ?? false
+        );
+        $container->setParameter(
+            'flow.telemetry.psr18_client.exclude_clients',
+            $psr18ClientConfig['exclude_clients'] ?? []
+        );
+
+        $dbalConfig = $config['dbal'] ?? [];
+        $container->setParameter(
+            'flow.telemetry.dbal.enabled',
+            $dbalConfig['enabled'] ?? false
+        );
+        $container->setParameter(
+            'flow.telemetry.dbal.log_sql',
+            $dbalConfig['log_sql'] ?? true
+        );
+        $container->setParameter(
+            'flow.telemetry.dbal.max_sql_length',
+            $dbalConfig['max_sql_length'] ?? 1000
+        );
+        $container->setParameter(
+            'flow.telemetry.dbal.exclude_connections',
+            $dbalConfig['exclude_connections'] ?? []
+        );
+
+        $cacheConfig = $config['cache'] ?? [];
+        $container->setParameter(
+            'flow.telemetry.cache.enabled',
+            $cacheConfig['enabled'] ?? false
+        );
+        $container->setParameter(
+            'flow.telemetry.cache.exclude_pools',
+            $cacheConfig['exclude_pools'] ?? []
+        );
     }
 
     /**
