@@ -15,6 +15,9 @@ return static function (ContainerConfigurator $container) : void {
         ->args([
             service(Telemetry::class),
             '%flow.telemetry.http_kernel.exclude_routes%',
+            service('flow.telemetry.context_storage'),
+            service('flow.telemetry.propagator'),
+            '%flow.telemetry.http_kernel.context_propagation%',
         ])
         ->tag('kernel.event_subscriber');
 

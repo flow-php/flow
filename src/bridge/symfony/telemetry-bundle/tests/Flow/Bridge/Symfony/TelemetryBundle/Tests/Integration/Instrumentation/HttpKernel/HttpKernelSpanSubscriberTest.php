@@ -25,6 +25,68 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         parent::tearDown();
     }
 
+    public function test_does_not_extract_context_when_propagation_disabled() : void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => ['service' => ['name' => 'test-app']],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'context_propagation' => false,
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
+
+        $incomingTraceId = '0af7651916cd43dd8448eb211c80319c';
+        $incomingSpanId = 'b7ad6b7169203331';
+        $traceparent = "00-{$incomingTraceId}-{$incomingSpanId}-01";
+
+        $request = Request::create('/test', 'GET');
+        $request->headers->set('traceparent', $traceparent);
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        self::assertSame(200, $response->getStatusCode());
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        self::assertCount(1, $spans);
+
+        $span = $spans[0];
+        self::assertNotSame($incomingTraceId, $span->context()->traceId->toHex());
+        self::assertNull($span->context()->parentSpanId);
+    }
+
     public function test_does_not_trace_when_disabled() : void
     {
         $kernel = $this->bootKernel([
@@ -190,6 +252,125 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
 
         self::assertCount(1, $spans);
         self::assertSame('GET test_index', $spans[0]->name());
+    }
+
+    public function test_extracts_context_from_traceparent_header() : void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => ['service' => ['name' => 'test-app']],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'context_propagation' => true,
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
+
+        $incomingTraceId = '0af7651916cd43dd8448eb211c80319c';
+        $incomingSpanId = 'b7ad6b7169203331';
+        $traceparent = "00-{$incomingTraceId}-{$incomingSpanId}-01";
+
+        $request = Request::create('/test', 'GET');
+        $request->headers->set('traceparent', $traceparent);
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        self::assertSame(200, $response->getStatusCode());
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        self::assertCount(1, $spans);
+
+        $span = $spans[0];
+        self::assertSame($incomingTraceId, $span->context()->traceId->toHex());
+        self::assertSame($incomingSpanId, $span->context()->parentSpanId?->toHex());
+    }
+
+    public function test_handles_missing_trace_headers_gracefully() : void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => ['service' => ['name' => 'test-app']],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'context_propagation' => true,
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
+
+        $request = Request::create('/test', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        self::assertSame(200, $response->getStatusCode());
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        self::assertCount(1, $spans);
+
+        $span = $spans[0];
+        self::assertNotEmpty($span->context()->traceId->toHex());
+        self::assertNull($span->context()->parentSpanId);
     }
 
     public function test_traces_http_request_with_error_status() : void

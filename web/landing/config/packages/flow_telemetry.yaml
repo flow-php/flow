@@ -10,6 +10,7 @@ flow_telemetry:
   instrumentation:
     http_kernel:
       enabled: true
+      context_propagation: true
       exclude_routes:
         - '_wdt'
         - '_profiler'

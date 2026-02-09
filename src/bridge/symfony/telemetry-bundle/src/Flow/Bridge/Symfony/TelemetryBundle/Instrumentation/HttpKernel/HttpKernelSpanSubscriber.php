@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
+use Flow\Telemetry\Context\{Context, ContextStorage};
 use Flow\Telemetry\{PackageVersion, Telemetry};
+use Flow\Telemetry\Propagation\{ArrayCarrier, Propagator};
 use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\{ControllerEvent, ExceptionEvent, RequestEvent, ResponseEvent, TerminateEvent};
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -21,7 +24,10 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
      */
     public function __construct(
         private Telemetry $telemetry,
-        private array $excludeRoutes = [],
+        private array $excludeRoutes,
+        private ContextStorage $contextStorage,
+        private Propagator $propagator,
+        private bool $extractContext = true,
     ) {
     }
 
@@ -84,6 +90,10 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     {
         $request = $event->getRequest();
 
+        if ($event->isMainRequest() && $this->extractContext) {
+            $this->extractContextFromRequest($request);
+        }
+
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
         $method = $request->getMethod();
         $path = $request->getPathInfo();
@@ -140,6 +150,31 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $request->attributes->remove(self::SPAN_ATTRIBUTE);
         $request->attributes->remove(self::TRACER_ATTRIBUTE);
+    }
+
+    private function extractContextFromRequest(Request $request) : void
+    {
+        $headers = [];
+
+        foreach ($request->headers->all() as $key => $values) {
+            if (\is_array($values) && \count($values) > 0 && \is_string($values[0])) {
+                $headers[$key] = $values[0];
+            }
+        }
+
+        $carrier = new ArrayCarrier($headers);
+        $propagationContext = $this->propagator->extract($carrier);
+
+        if ($propagationContext->spanContext !== null) {
+            $context = Context::withTraceId($propagationContext->spanContext->traceId);
+            $context = $context->withActiveSpan($propagationContext->spanContext->spanId);
+
+            if ($propagationContext->baggage !== null) {
+                $context = $context->withBaggage($propagationContext->baggage);
+            }
+
+            $this->contextStorage->store($context);
+        }
     }
 
     private function matchesPattern(string $route, string $pattern) : bool
