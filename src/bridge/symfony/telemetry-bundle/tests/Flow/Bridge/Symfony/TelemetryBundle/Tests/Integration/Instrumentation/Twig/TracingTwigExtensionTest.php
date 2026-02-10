@@ -30,7 +30,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -82,7 +82,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -141,7 +141,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -203,7 +203,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -254,7 +254,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -318,7 +318,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'instrumentation' => [
                         'twig' => false,
                     ],
@@ -336,7 +336,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'instrumentation' => [
                         'twig' => true,
                     ],
@@ -355,7 +355,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -417,7 +417,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -477,7 +477,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',

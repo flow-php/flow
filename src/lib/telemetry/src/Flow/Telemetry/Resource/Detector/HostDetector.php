@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Resource\Detector;
 
 use Flow\Telemetry\Resource;
-use Flow\Telemetry\Resource\Attribute\{HostArchitecture, HostAttribute};
+use Flow\Telemetry\Resource\Attribute\HostAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
 /**
@@ -35,10 +35,10 @@ final readonly class HostDetector implements ResourceDetector
             $attributes[HostAttribute::NAME->value] = $hostname;
         }
 
-        $arch = HostArchitecture::detect();
+        $arch = $this->detectArchitecture();
 
         if ($arch !== null) {
-            $attributes[HostAttribute::ARCH->value] = $arch->value;
+            $attributes[HostAttribute::ARCH->value] = $arch;
         }
 
         $machineId = $this->detectMachineId();
@@ -48,6 +48,23 @@ final readonly class HostDetector implements ResourceDetector
         }
 
         return Resource::create($attributes);
+    }
+
+    private function detectArchitecture() : ?string
+    {
+        $machine = \strtolower(\php_uname('m'));
+
+        return match (true) {
+            $machine === 'x86_64' || $machine === 'amd64' => 'amd64',
+            $machine === 'aarch64' || $machine === 'arm64' => 'arm64',
+            \str_starts_with($machine, 'arm') => 'arm32',
+            $machine === 'i386' || $machine === 'i686' || $machine === 'x86' => 'x86',
+            $machine === 'ia64' => 'ia64',
+            $machine === 'ppc' || $machine === 'ppc32' || $machine === 'powerpc' => 'ppc32',
+            $machine === 'ppc64' || $machine === 'ppc64le' => 'ppc64',
+            $machine === 's390x' => 's390x',
+            default => null,
+        };
     }
 
     private function detectMachineId() : ?string

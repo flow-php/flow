@@ -29,15 +29,12 @@ final readonly class PathExclusionRule
             return false;
         }
 
-        return $this->matchesPath($path);
-    }
+        $result = @\preg_match($this->path, $path);
 
-    private function matchesPath(string $path) : bool
-    {
-        if (\str_starts_with($this->path, '/') && \str_ends_with($this->path, '/')) {
-            return (bool) \preg_match($this->path, $path);
+        if ($result !== false) {
+            return (bool) $result;
         }
 
-        return $path === $this->path;
+        return $this->path === $path;
     }
 }

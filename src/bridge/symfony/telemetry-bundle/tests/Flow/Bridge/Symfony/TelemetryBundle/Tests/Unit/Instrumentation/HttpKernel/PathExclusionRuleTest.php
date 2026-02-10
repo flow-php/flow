@@ -66,7 +66,7 @@ final class PathExclusionRuleTest extends TestCase
 
     public function test_regex_path_match_excludes_all_methods() : void
     {
-        $rule = new PathExclusionRule('/^\/_profiler.*/');
+        $rule = new PathExclusionRule('#^\/_profiler.*#');
 
         self::assertTrue($rule->matches('/_profiler', 'GET'));
         self::assertTrue($rule->matches('/_profiler/search', 'GET'));

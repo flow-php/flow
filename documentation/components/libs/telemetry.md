@@ -23,14 +23,15 @@ The `Telemetry` class is the main entry point for all observability operations.
 It manages providers for each signal type and provides access to Tracers, Meters, and Loggers.
 
 > **Note**: The core telemetry library provides contracts and basic exporters like Console, Memory, and Void.
-> To send telemetry to external backends, you need the either use the [OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md)
+> To send telemetry to external backends, you need the either use
+> the [OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md)
 > or implement custom exporters.
-> 
-> The whole point of this library is to provide a unified, consistent API for telemetry that comes with minimal dependencies,
+>
+> The whole point of this library is to provide a unified, consistent API for telemetry that comes with minimal
+> dependencies,
 > clean contracts, and zero magic.
 >
 > You can find our contracts [here](/documentation/components/libs/telemetry/contracts.md).
-
 
 ### Basic Setup with Memory Providers (Testing)
 
@@ -569,16 +570,16 @@ This returns a `Resource` with attributes from OS, host, process, Composer, and 
 
 #### Available Detectors
 
-| Detector | DSL Function | Detected Attributes |
-|----------|--------------|---------------------|
-| OsDetector | `os_detector()` | `os.type`, `os.name`, `os.version`, `os.description` |
-| HostDetector | `host_detector()` | `host.name`, `host.arch`, `host.id` |
-| ProcessDetector | `process_detector()` | `process.pid`, `process.executable.path`, `process.runtime.name`, `process.runtime.version`, `process.command`, `process.owner` |
-| ComposerDetector | `composer_detector()` | `service.name`, `service.version` |
-| EnvironmentDetector | `environment_detector()` | Reads `OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES` |
-| ManualDetector | `manual_detector($attributes)` | User-specified attributes |
-| CachingDetector | `caching_detector($detector, $path)` | Caches wrapped detector's result to file |
-| ChainDetector | `chain_detector(...$detectors)` | Combines multiple detectors |
+| Detector            | DSL Function                         | Detected Attributes                                                                                                             |
+|---------------------|--------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| OsDetector          | `os_detector()`                      | `os.type`, `os.name`, `os.version`, `os.description`                                                                            |
+| HostDetector        | `host_detector()`                    | `host.name`, `host.arch`, `host.id`                                                                                             |
+| ProcessDetector     | `process_detector()`                 | `process.pid`, `process.executable.path`, `process.runtime.name`, `process.runtime.version`, `process.command`, `process.owner` |
+| ComposerDetector    | `composer_detector()`                | `service.name`, `service.version`                                                                                               |
+| EnvironmentDetector | `environment_detector()`             | Reads `OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES`                                                                           |
+| ManualDetector      | `manual_detector($attributes)`       | User-specified attributes                                                                                                       |
+| CachingDetector     | `caching_detector($detector, $path)` | Caches wrapped detector's result to file                                                                                        |
+| ChainDetector       | `chain_detector(...$detectors)`      | Combines multiple detectors                                                                                                     |
 
 #### Custom Detection Chain
 

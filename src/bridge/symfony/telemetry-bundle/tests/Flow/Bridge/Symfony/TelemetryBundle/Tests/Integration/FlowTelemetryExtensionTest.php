@@ -33,7 +33,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => [
                         'processor' => [
                             'type' => 'composite',
@@ -55,7 +55,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => [
                         'processor' => [
                             'type' => 'composite',
@@ -77,7 +77,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'composite',
@@ -101,13 +101,16 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
     public function test_custom_service_reference_for_exporter() : void
     {
         $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', __DIR__);
+        $container->setParameter('kernel.cache_dir', \sys_get_temp_dir());
+        $container->setParameter('kernel.environment', 'test');
 
         $container->register('my.custom.span_exporter', MemorySpanExporter::class)->setPublic(true);
 
         $extension = new FlowTelemetryExtension();
         $extension->load([
             [
-                'resource' => ['service' => ['name' => 'test-app']],
+                'resource' => [],
                 'tracer_provider' => [
                     'processor' => [
                         'type' => 'passthrough',
@@ -132,13 +135,16 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
     public function test_custom_service_reference_for_processor() : void
     {
         $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', __DIR__);
+        $container->setParameter('kernel.cache_dir', \sys_get_temp_dir());
+        $container->setParameter('kernel.environment', 'test');
 
         $container->register('my.custom.span_processor', VoidSpanProcessor::class)->setPublic(true);
 
         $extension = new FlowTelemetryExtension();
         $extension->load([
             [
-                'resource' => ['service' => ['name' => 'test-app']],
+                'resource' => [],
                 'tracer_provider' => [
                     'processor' => [
                         'type' => 'service',
@@ -160,13 +166,16 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
     public function test_custom_service_reference_for_sampler() : void
     {
         $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', __DIR__);
+        $container->setParameter('kernel.cache_dir', \sys_get_temp_dir());
+        $container->setParameter('kernel.environment', 'test');
 
         $container->register('my.custom.sampler', AlwaysOffSampler::class)->setPublic(true);
 
         $extension = new FlowTelemetryExtension();
         $extension->load([
             [
-                'resource' => ['service' => ['name' => 'test-app']],
+                'resource' => [],
                 'tracer_provider' => [
                     'sampler' => [
                         'type' => 'service',
@@ -190,7 +199,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                 ]);
             },
         ]);
@@ -207,12 +216,10 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [
-                        'service' => [
-                            'name' => 'my-application',
-                            'version' => ['type' => 'manual', 'value' => '3.0.0'],
-                        ],
-                        'deployment' => [
-                            'environment' => 'staging',
+                        'custom' => [
+                            'service.name' => 'my-application',
+                            'service.version' => '3.0.0',
+                            'deployment.environment.name' => 'staging',
                         ],
                     ],
                     'tracer_provider' => [
@@ -272,7 +279,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]],
                 ]);
             },
@@ -286,7 +293,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]],
                 ]);
             },
@@ -300,7 +307,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -314,7 +321,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 256, 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -328,7 +335,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -342,7 +349,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -356,7 +363,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'logger_provider' => ['processor' => ['type' => 'void']],
                 ]);
             },
@@ -370,7 +377,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]],
                 ]);
             },
@@ -384,7 +391,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]],
                 ]);
             },
@@ -398,7 +405,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -412,7 +419,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 200, 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -426,7 +433,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -440,7 +447,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -454,7 +461,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meter_provider' => ['processor' => ['type' => 'void']],
                 ]);
             },
@@ -468,7 +475,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                 ]);
             },
         ]);
@@ -508,7 +515,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracers' => [
                         'database' => [
                             'version' => '1.0.0',
@@ -534,7 +541,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'loggers' => [
                         'audit' => [
                             'version' => '1.0.0',
@@ -555,7 +562,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'meters' => [
                         'etl_pipeline' => [
                             'version' => '1.0.0',
@@ -576,7 +583,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracers' => [
                         'database' => [
                             'version' => '2.0.0',
@@ -597,7 +604,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracers' => [
                         'database' => [
                             'version' => '2.0.0',
@@ -622,7 +629,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                 ]);
             },
         ]);
@@ -630,19 +637,37 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertTrue($this->getContainer()->hasParameter('flow.telemetry.otlp_available'));
     }
 
-    public function test_resource_contains_additional_attributes() : void
+    public function test_resource_caching_can_be_disabled() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [
-                        'service' => [
-                            'name' => 'my-service',
+                        'detectors' => [
+                            'static' => [
+                                'cache' => ['enabled' => false],
+                            ],
                         ],
-                        'deployment' => [
-                            'environment' => 'production',
-                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.resource.detector'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.static'));
+    }
+
+    public function test_resource_contains_custom_attributes() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [
                         'custom' => [
+                            'service.name' => 'my-service',
+                            'deployment.environment.name' => 'production',
                             'host.name' => 'server-01',
                         ],
                     ],
@@ -652,423 +677,93 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         /** @var resource $resource */
         $resource = $this->getContainer()->get('flow.telemetry.resource');
+        self::assertSame('my-service', $resource->get('service.name'));
         self::assertSame('production', $resource->get('deployment.environment.name'));
         self::assertSame('server-01', $resource->get('host.name'));
     }
 
-    public function test_resource_contains_cloud_attributes() : void
+    public function test_resource_detectors_are_enabled_by_default() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'cloud' => [
-                            'provider' => 'aws',
-                            'account_id' => '123456789012',
-                            'region' => 'us-east-1',
-                            'availability_zone' => 'us-east-1a',
-                            'platform' => 'aws_ec2',
-                            'resource_id' => 'arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0',
-                        ],
-                    ],
+                    'resource' => [],
                 ]);
             },
         ]);
 
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('flow.telemetry.resource.detector'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.static'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.dynamic'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.os'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.host'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.process'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.service'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.deployment'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.environment'));
+
         /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('aws', $resource->get('cloud.provider'));
-        self::assertSame('123456789012', $resource->get('cloud.account.id'));
-        self::assertSame('us-east-1', $resource->get('cloud.region'));
-        self::assertSame('us-east-1a', $resource->get('cloud.availability_zone'));
-        self::assertSame('aws_ec2', $resource->get('cloud.platform'));
-        self::assertSame('arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0', $resource->get('cloud.resource_id'));
+        $resource = $container->get('flow.telemetry.resource');
+        self::assertInstanceOf(Resource::class, $resource);
     }
 
-    public function test_resource_contains_container_attributes() : void
+    public function test_resource_detectors_can_be_disabled() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'container' => [
-                            'id' => 'abc123def456',
-                            'name' => 'my-app-container',
-                            'command' => 'php-fpm',
-                            'command_line' => 'php-fpm -F',
-                            'image_name' => 'my-app:latest',
-                            'image_id' => 'sha256:abc123',
-                            'image_tags' => ['latest', 'v1.0.0'],
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('abc123def456', $resource->get('container.id'));
-        self::assertSame('my-app-container', $resource->get('container.name'));
-        self::assertSame('php-fpm', $resource->get('container.command'));
-        self::assertSame('php-fpm -F', $resource->get('container.command_line'));
-        self::assertSame('my-app:latest', $resource->get('container.image.name'));
-        self::assertSame('sha256:abc123', $resource->get('container.image.id'));
-        self::assertSame(['latest', 'v1.0.0'], $resource->get('container.image.tags'));
-    }
-
-    public function test_resource_contains_host_attributes() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'host' => [
-                            'id' => 'host-123',
-                            'name' => 'web-server-01',
-                            'type' => 'm5.large',
-                            'arch' => 'amd64',
-                            'image' => [
-                                'id' => 'ami-123456',
-                                'name' => 'ubuntu-22.04',
-                                'version' => '22.04.3',
-                            ],
-                            'ip' => ['10.0.0.1', '192.168.1.1'],
-                            'mac' => ['00:11:22:33:44:55'],
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('host-123', $resource->get('host.id'));
-        self::assertSame('web-server-01', $resource->get('host.name'));
-        self::assertSame('m5.large', $resource->get('host.type'));
-        self::assertSame('amd64', $resource->get('host.arch'));
-        self::assertSame('ami-123456', $resource->get('host.image.id'));
-        self::assertSame('ubuntu-22.04', $resource->get('host.image.name'));
-        self::assertSame('22.04.3', $resource->get('host.image.version'));
-        self::assertSame(['10.0.0.1', '192.168.1.1'], $resource->get('host.ip'));
-        self::assertSame(['00:11:22:33:44:55'], $resource->get('host.mac'));
-    }
-
-    public function test_resource_contains_k8s_attributes() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'k8s' => [
-                            'cluster' => [
-                                'name' => 'prod-cluster',
-                                'uid' => 'cluster-uid-123',
-                            ],
-                            'namespace' => [
-                                'name' => 'default',
-                            ],
-                            'node' => [
-                                'name' => 'node-01',
-                                'uid' => 'node-uid-123',
-                            ],
-                            'pod' => [
-                                'name' => 'my-app-pod-abc123',
-                                'uid' => 'pod-uid-123',
-                                'ip' => '10.0.0.50',
-                            ],
-                            'container' => [
-                                'name' => 'app',
-                                'restart_count' => 2,
-                            ],
-                            'deployment' => [
-                                'name' => 'my-app',
-                                'uid' => 'deployment-uid-123',
-                            ],
-                            'replicaset' => [
-                                'name' => 'my-app-rs-abc',
-                                'uid' => 'rs-uid-123',
-                            ],
-                            'statefulset' => [
-                                'name' => 'my-statefulset',
-                                'uid' => 'ss-uid-123',
-                            ],
-                            'daemonset' => [
-                                'name' => 'my-daemonset',
-                                'uid' => 'ds-uid-123',
-                            ],
-                            'job' => [
-                                'name' => 'my-job',
-                                'uid' => 'job-uid-123',
-                            ],
-                            'cronjob' => [
-                                'name' => 'my-cronjob',
-                                'uid' => 'cj-uid-123',
-                            ],
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('prod-cluster', $resource->get('k8s.cluster.name'));
-        self::assertSame('cluster-uid-123', $resource->get('k8s.cluster.uid'));
-        self::assertSame('default', $resource->get('k8s.namespace.name'));
-        self::assertSame('node-01', $resource->get('k8s.node.name'));
-        self::assertSame('node-uid-123', $resource->get('k8s.node.uid'));
-        self::assertSame('my-app-pod-abc123', $resource->get('k8s.pod.name'));
-        self::assertSame('pod-uid-123', $resource->get('k8s.pod.uid'));
-        self::assertSame('10.0.0.50', $resource->get('k8s.pod.ip'));
-        self::assertSame('app', $resource->get('k8s.container.name'));
-        self::assertSame(2, $resource->get('k8s.container.restart_count'));
-        self::assertSame('my-app', $resource->get('k8s.deployment.name'));
-        self::assertSame('deployment-uid-123', $resource->get('k8s.deployment.uid'));
-        self::assertSame('my-app-rs-abc', $resource->get('k8s.replicaset.name'));
-        self::assertSame('rs-uid-123', $resource->get('k8s.replicaset.uid'));
-        self::assertSame('my-statefulset', $resource->get('k8s.statefulset.name'));
-        self::assertSame('ss-uid-123', $resource->get('k8s.statefulset.uid'));
-        self::assertSame('my-daemonset', $resource->get('k8s.daemonset.name'));
-        self::assertSame('ds-uid-123', $resource->get('k8s.daemonset.uid'));
-        self::assertSame('my-job', $resource->get('k8s.job.name'));
-        self::assertSame('job-uid-123', $resource->get('k8s.job.uid'));
-        self::assertSame('my-cronjob', $resource->get('k8s.cronjob.name'));
-        self::assertSame('cj-uid-123', $resource->get('k8s.cronjob.uid'));
-    }
-
-    public function test_resource_contains_os_attributes() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'os' => [
-                            'type' => 'linux',
-                            'name' => 'Ubuntu',
-                            'version' => '22.04.3 LTS',
-                            'description' => 'Ubuntu 22.04.3 LTS (Jammy Jellyfish)',
-                            'build_id' => '22.04.3',
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('linux', $resource->get('os.type'));
-        self::assertSame('Ubuntu', $resource->get('os.name'));
-        self::assertSame('22.04.3 LTS', $resource->get('os.version'));
-        self::assertSame('Ubuntu 22.04.3 LTS (Jammy Jellyfish)', $resource->get('os.description'));
-        self::assertSame('22.04.3', $resource->get('os.build_id'));
-    }
-
-    public function test_resource_contains_process_attributes() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'process' => [
-                            'pid' => 1234,
-                            'parent_pid' => 1,
-                            'command' => 'php',
-                            'command_line' => 'php bin/console server:run',
-                            'owner' => 'www-data',
-                            'executable' => [
-                                'name' => 'php',
-                                'path' => '/usr/bin/php',
-                            ],
-                            'runtime' => [
-                                'name' => 'PHP',
-                                'version' => '8.3.0',
-                                'description' => 'PHP 8.3.0 with Zend Engine',
-                            ],
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame(1234, $resource->get('process.pid'));
-        self::assertSame(1, $resource->get('process.parent_pid'));
-        self::assertSame('php', $resource->get('process.command'));
-        self::assertSame('php bin/console server:run', $resource->get('process.command_line'));
-        self::assertSame('www-data', $resource->get('process.owner'));
-        self::assertSame('php', $resource->get('process.executable.name'));
-        self::assertSame('/usr/bin/php', $resource->get('process.executable.path'));
-        self::assertSame('PHP', $resource->get('process.runtime.name'));
-        self::assertSame('8.3.0', $resource->get('process.runtime.version'));
-        self::assertSame('PHP 8.3.0 with Zend Engine', $resource->get('process.runtime.description'));
-    }
-
-    public function test_resource_contains_service_name_and_version() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => [
-                            'name' => 'my-service',
-                            'version' => ['type' => 'manual', 'value' => '2.1.0'],
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('2.1.0', $resource->get('service.version'));
-    }
-
-    public function test_resource_contains_service_namespace_and_instance_id() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => [
-                            'name' => 'my-service',
-                            'namespace' => 'my-namespace',
-                            'instance_id' => 'instance-123',
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('my-namespace', $resource->get('service.namespace'));
-        self::assertSame('instance-123', $resource->get('service.instance.id'));
-    }
-
-    public function test_resource_contains_telemetry_sdk_attributes() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => ['name' => 'test-app'],
-                        'telemetry_sdk' => [
-                            'language' => 'php',
-                            'name' => 'flow-telemetry',
-                            'version' => '1.0.0',
-                        ],
-                    ],
-                ]);
-            },
-        ]);
-
-        /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
-        self::assertSame('php', $resource->get('telemetry.sdk.language'));
-        self::assertSame('flow-telemetry', $resource->get('telemetry.sdk.name'));
-        self::assertSame('1.0.0', $resource->get('telemetry.sdk.version'));
-    }
-
-    public function test_resource_with_full_otel_configuration() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [
-                        'service' => [
-                            'name' => 'my-service',
-                            'version' => ['type' => 'manual', 'value' => '1.0.0'],
-                            'namespace' => 'production',
-                            'instance_id' => 'pod-abc123',
-                        ],
-                        'telemetry_sdk' => [
-                            'language' => 'php',
-                            'name' => 'flow-telemetry',
-                            'version' => '1.0.0',
-                        ],
-                        'deployment' => [
-                            'environment' => 'production',
-                        ],
-                        'host' => [
-                            'name' => 'worker-node-01',
-                            'arch' => 'arm64',
-                        ],
-                        'os' => [
-                            'type' => 'linux',
-                            'name' => 'Alpine',
-                        ],
-                        'process' => [
-                            'runtime' => [
-                                'name' => 'PHP',
-                                'version' => '8.3.0',
-                            ],
-                        ],
-                        'k8s' => [
-                            'cluster' => ['name' => 'prod-cluster'],
-                            'namespace' => ['name' => 'default'],
-                            'pod' => ['name' => 'my-service-abc123'],
-                        ],
-                        'cloud' => [
-                            'provider' => 'aws',
-                            'region' => 'us-west-2',
+                        'detectors' => [
+                            'enabled' => false,
                         ],
                         'custom' => [
-                            'custom.attribute' => 'custom-value',
+                            'service.name' => 'manual-service',
                         ],
                     ],
                 ]);
             },
         ]);
 
+        $container = $this->getContainer();
+
+        self::assertFalse($container->has('flow.telemetry.resource.detector'));
+        self::assertFalse($container->has('flow.telemetry.resource.detector.static'));
+        self::assertFalse($container->has('flow.telemetry.resource.detector.dynamic'));
+
         /** @var resource $resource */
-        $resource = $this->getContainer()->get('flow.telemetry.resource');
+        $resource = $container->get('flow.telemetry.resource');
+        self::assertSame('manual-service', $resource->get('service.name'));
+    }
 
-        // Service
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('1.0.0', $resource->get('service.version'));
-        self::assertSame('production', $resource->get('service.namespace'));
-        self::assertSame('pod-abc123', $resource->get('service.instance.id'));
+    public function test_resource_individual_detectors_can_be_disabled() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [
+                        'detectors' => [
+                            'static' => [
+                                'os' => ['enabled' => false],
+                            ],
+                            'dynamic' => [
+                                'process' => ['enabled' => false],
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
 
-        // Telemetry SDK
-        self::assertSame('php', $resource->get('telemetry.sdk.language'));
-        self::assertSame('flow-telemetry', $resource->get('telemetry.sdk.name'));
-        self::assertSame('1.0.0', $resource->get('telemetry.sdk.version'));
+        $container = $this->getContainer();
 
-        // Deployment
-        self::assertSame('production', $resource->get('deployment.environment.name'));
-
-        // Host
-        self::assertSame('worker-node-01', $resource->get('host.name'));
-        self::assertSame('arm64', $resource->get('host.arch'));
-
-        // OS
-        self::assertSame('linux', $resource->get('os.type'));
-        self::assertSame('Alpine', $resource->get('os.name'));
-
-        // Process
-        self::assertSame('PHP', $resource->get('process.runtime.name'));
-        self::assertSame('8.3.0', $resource->get('process.runtime.version'));
-
-        // K8s
-        self::assertSame('prod-cluster', $resource->get('k8s.cluster.name'));
-        self::assertSame('default', $resource->get('k8s.namespace.name'));
-        self::assertSame('my-service-abc123', $resource->get('k8s.pod.name'));
-
-        // Cloud
-        self::assertSame('aws', $resource->get('cloud.provider'));
-        self::assertSame('us-west-2', $resource->get('cloud.region'));
-
-        // Custom
-        self::assertSame('custom-value', $resource->get('custom.attribute'));
+        self::assertFalse($container->has('flow.telemetry.resource.detector.os'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.host'));
+        self::assertFalse($container->has('flow.telemetry.resource.detector.process'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.service'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.deployment'));
+        self::assertTrue($container->has('flow.telemetry.resource.detector.environment'));
     }
 
     public function test_same_name_for_different_types_is_allowed() : void
@@ -1076,7 +771,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracers' => [
                         'database' => ['version' => '1.0.0'],
                     ],
@@ -1108,7 +803,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'passthrough',
@@ -1128,7 +823,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => ['type' => 'service'],
                     ],
@@ -1145,7 +840,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'sampler' => ['type' => 'service'],
                     ],
@@ -1159,7 +854,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'console']]],
                 ]);
             },
@@ -1173,7 +868,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'memory']]],
                 ]);
             },
@@ -1187,7 +882,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -1201,7 +896,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'batching', 'batch_size' => 100, 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -1215,7 +910,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -1229,7 +924,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'passthrough', 'exporter' => ['type' => 'void']]],
                 ]);
             },
@@ -1243,7 +938,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => ['processor' => ['type' => 'void']],
                 ]);
             },
@@ -1257,7 +952,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'sampler' => ['type' => 'always_off'],
                     ],
@@ -1273,7 +968,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'sampler' => ['type' => 'always_on'],
                     ],
@@ -1292,7 +987,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'sampler' => ['type' => 'parent_based'],
                     ],
@@ -1308,7 +1003,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'sampler' => [
                             'type' => 'trace_id_ratio',

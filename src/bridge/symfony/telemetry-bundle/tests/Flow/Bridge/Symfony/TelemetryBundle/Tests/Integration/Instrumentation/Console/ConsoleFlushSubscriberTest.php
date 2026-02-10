@@ -39,7 +39,7 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'batching',
@@ -90,7 +90,7 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
                     'handle_all_throwables' => true,
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'batching',

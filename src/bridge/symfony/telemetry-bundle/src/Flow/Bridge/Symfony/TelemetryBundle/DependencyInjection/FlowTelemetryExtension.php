@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
-use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, PackageVersion, Tracer\Tracer};
+use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor,
@@ -32,6 +33,14 @@ use Flow\Telemetry\Provider\Void\{VoidLogExporter,
     VoidMetricProcessor,
     VoidSpanExporter,
     VoidSpanProcessor};
+use Flow\Telemetry\Resource\Detector\{CachingDetector,
+    ChainDetector,
+    ComposerDetector,
+    EnvironmentDetector,
+    HostDetector,
+    ManualDetector,
+    OsDetector,
+    ProcessDetector};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler};
@@ -57,7 +66,7 @@ final class FlowTelemetryExtension extends Extension
     {
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $configuration = new Configuration();
-        /** @var array{resource: array{service: array{name: string, version?: null|array{type: string, value?: null|string, name?: null|string}, namespace?: null|string, instance_id?: null|string}, deployment?: array{environment?: null|string, id?: null|string, name?: null|string, status?: null|string}, custom?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_routes?: array<string>}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $this->registerGlobalServices($config, $container);
@@ -68,27 +77,6 @@ final class FlowTelemetryExtension extends Extension
         $this->registerTracers($config['tracers'] ?? [], $container);
         $this->registerMeters($config['meters'] ?? [], $container);
         $this->registerLoggers($config['loggers'] ?? [], $container);
-    }
-
-    /**
-     * @param array<string, mixed> $attributes
-     * @param array<mixed> $value
-     */
-    private function addArrayAttributeIfSet(array &$attributes, string $key, array $value) : void
-    {
-        if (\count($value) > 0) {
-            $attributes[$key] = $value;
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    private function addAttributeIfSet(array &$attributes, string $key, mixed $value) : void
-    {
-        if ($value !== null) {
-            $attributes[$key] = $value;
-        }
     }
 
     /**
@@ -1132,177 +1120,119 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $resourceConfig
+     * @param array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>} $resourceConfig
      */
     private function registerResource(array $resourceConfig, ContainerBuilder $container) : void
     {
-        $attributes = [];
+        $detectorsConfig = $resourceConfig['detectors'] ?? [];
+        $detectorsEnabled = $detectorsConfig['enabled'] ?? true;
 
-        // Service attributes
-        $serviceConfig = $resourceConfig['service'];
-        $attributes['service.name'] = $serviceConfig['name'];
+        if (!$detectorsEnabled) {
+            $customAttributes = $resourceConfig['custom'] ?? [];
+            $definition = new Definition(Resource::class);
+            $definition->setFactory([Resource::class, 'create']);
+            $definition->setArgument(0, $customAttributes);
+            $container->setDefinition('flow.telemetry.resource', $definition);
 
-        $versionConfig = $serviceConfig['version'] ?? null;
-
-        if ($versionConfig !== null) {
-            $version = match ($versionConfig['type']) {
-                'manual' => $versionConfig['value'] ?? null,
-                'package' => PackageVersion::get($versionConfig['name'] ?? ''),
-                default => null,
-            };
-
-            if ($version !== null) {
-                $attributes['service.version'] = $version;
-            }
+            return;
         }
 
-        if (($serviceConfig['namespace'] ?? null) !== null) {
-            $attributes['service.namespace'] = $serviceConfig['namespace'];
-        }
-
-        if (($serviceConfig['instance_id'] ?? null) !== null) {
-            $attributes['service.instance.id'] = $serviceConfig['instance_id'];
-        }
-
-        // Telemetry SDK attributes
-        $sdkConfig = $resourceConfig['telemetry_sdk'] ?? [];
-
-        if (($sdkConfig['language'] ?? null) !== null) {
-            $attributes['telemetry.sdk.language'] = $sdkConfig['language'];
-        }
-
-        if (($sdkConfig['name'] ?? null) !== null) {
-            $attributes['telemetry.sdk.name'] = $sdkConfig['name'];
-        }
-
-        if (($sdkConfig['version'] ?? null) !== null) {
-            $attributes['telemetry.sdk.version'] = $sdkConfig['version'];
-        }
-
-        // Deployment attributes
-        $deploymentConfig = $resourceConfig['deployment'] ?? [];
-
-        if (($deploymentConfig['environment'] ?? null) !== null) {
-            $attributes['deployment.environment.name'] = $deploymentConfig['environment'];
-        }
-
-        // Host attributes
-        $hostConfig = $resourceConfig['host'] ?? [];
-        $this->addAttributeIfSet($attributes, 'host.id', $hostConfig['id'] ?? null);
-        $this->addAttributeIfSet($attributes, 'host.name', $hostConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'host.type', $hostConfig['type'] ?? null);
-        $this->addAttributeIfSet($attributes, 'host.arch', $hostConfig['arch'] ?? null);
-
-        $hostImageConfig = $hostConfig['image'] ?? [];
-        $this->addAttributeIfSet($attributes, 'host.image.id', $hostImageConfig['id'] ?? null);
-        $this->addAttributeIfSet($attributes, 'host.image.name', $hostImageConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'host.image.version', $hostImageConfig['version'] ?? null);
-
-        $this->addArrayAttributeIfSet($attributes, 'host.ip', $hostConfig['ip'] ?? []);
-        $this->addArrayAttributeIfSet($attributes, 'host.mac', $hostConfig['mac'] ?? []);
-
-        // OS attributes
-        $osConfig = $resourceConfig['os'] ?? [];
-        $this->addAttributeIfSet($attributes, 'os.type', $osConfig['type'] ?? null);
-        $this->addAttributeIfSet($attributes, 'os.name', $osConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'os.version', $osConfig['version'] ?? null);
-        $this->addAttributeIfSet($attributes, 'os.description', $osConfig['description'] ?? null);
-        $this->addAttributeIfSet($attributes, 'os.build_id', $osConfig['build_id'] ?? null);
-
-        // Process attributes
-        $processConfig = $resourceConfig['process'] ?? [];
-        $this->addAttributeIfSet($attributes, 'process.pid', $processConfig['pid'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.parent_pid', $processConfig['parent_pid'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.command', $processConfig['command'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.command_line', $processConfig['command_line'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.owner', $processConfig['owner'] ?? null);
-
-        $processExecutableConfig = $processConfig['executable'] ?? [];
-        $this->addAttributeIfSet($attributes, 'process.executable.name', $processExecutableConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.executable.path', $processExecutableConfig['path'] ?? null);
-
-        $processRuntimeConfig = $processConfig['runtime'] ?? [];
-        $this->addAttributeIfSet($attributes, 'process.runtime.name', $processRuntimeConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.runtime.version', $processRuntimeConfig['version'] ?? null);
-        $this->addAttributeIfSet($attributes, 'process.runtime.description', $processRuntimeConfig['description'] ?? null);
-
-        // Container attributes
-        $containerConfig = $resourceConfig['container'] ?? [];
-        $this->addAttributeIfSet($attributes, 'container.id', $containerConfig['id'] ?? null);
-        $this->addAttributeIfSet($attributes, 'container.name', $containerConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'container.command', $containerConfig['command'] ?? null);
-        $this->addAttributeIfSet($attributes, 'container.command_line', $containerConfig['command_line'] ?? null);
-        $this->addAttributeIfSet($attributes, 'container.image.name', $containerConfig['image_name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'container.image.id', $containerConfig['image_id'] ?? null);
-        $this->addArrayAttributeIfSet($attributes, 'container.image.tags', $containerConfig['image_tags'] ?? []);
-
-        // Kubernetes attributes
-        $k8sConfig = $resourceConfig['k8s'] ?? [];
-
-        $k8sClusterConfig = $k8sConfig['cluster'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.cluster.name', $k8sClusterConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.cluster.uid', $k8sClusterConfig['uid'] ?? null);
-
-        $k8sNamespaceConfig = $k8sConfig['namespace'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.namespace.name', $k8sNamespaceConfig['name'] ?? null);
-
-        $k8sNodeConfig = $k8sConfig['node'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.node.name', $k8sNodeConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.node.uid', $k8sNodeConfig['uid'] ?? null);
-
-        $k8sPodConfig = $k8sConfig['pod'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.pod.name', $k8sPodConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.pod.uid', $k8sPodConfig['uid'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.pod.ip', $k8sPodConfig['ip'] ?? null);
-
-        $k8sContainerConfig = $k8sConfig['container'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.container.name', $k8sContainerConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.container.restart_count', $k8sContainerConfig['restart_count'] ?? null);
-
-        $k8sDeploymentConfig = $k8sConfig['deployment'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.deployment.name', $k8sDeploymentConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.deployment.uid', $k8sDeploymentConfig['uid'] ?? null);
-
-        $k8sReplicasetConfig = $k8sConfig['replicaset'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.replicaset.name', $k8sReplicasetConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.replicaset.uid', $k8sReplicasetConfig['uid'] ?? null);
-
-        $k8sStatefulsetConfig = $k8sConfig['statefulset'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.statefulset.name', $k8sStatefulsetConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.statefulset.uid', $k8sStatefulsetConfig['uid'] ?? null);
-
-        $k8sDaemonsetConfig = $k8sConfig['daemonset'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.daemonset.name', $k8sDaemonsetConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.daemonset.uid', $k8sDaemonsetConfig['uid'] ?? null);
-
-        $k8sJobConfig = $k8sConfig['job'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.job.name', $k8sJobConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.job.uid', $k8sJobConfig['uid'] ?? null);
-
-        $k8sCronjobConfig = $k8sConfig['cronjob'] ?? [];
-        $this->addAttributeIfSet($attributes, 'k8s.cronjob.name', $k8sCronjobConfig['name'] ?? null);
-        $this->addAttributeIfSet($attributes, 'k8s.cronjob.uid', $k8sCronjobConfig['uid'] ?? null);
-
-        // Cloud attributes
-        $cloudConfig = $resourceConfig['cloud'] ?? [];
-        $this->addAttributeIfSet($attributes, 'cloud.provider', $cloudConfig['provider'] ?? null);
-        $this->addAttributeIfSet($attributes, 'cloud.account.id', $cloudConfig['account_id'] ?? null);
-        $this->addAttributeIfSet($attributes, 'cloud.region', $cloudConfig['region'] ?? null);
-        $this->addAttributeIfSet($attributes, 'cloud.availability_zone', $cloudConfig['availability_zone'] ?? null);
-        $this->addAttributeIfSet($attributes, 'cloud.platform', $cloudConfig['platform'] ?? null);
-        $this->addAttributeIfSet($attributes, 'cloud.resource_id', $cloudConfig['resource_id'] ?? null);
-
-        // Custom attributes
+        $staticConfig = $detectorsConfig['static'] ?? [];
+        $dynamicConfig = $detectorsConfig['dynamic'] ?? [];
         $customAttributes = $resourceConfig['custom'] ?? [];
 
-        foreach ($customAttributes as $key => $value) {
-            $attributes[(string) $key] = $value;
+        $staticDetectorRefs = [];
+
+        if ($staticConfig['os']['enabled'] ?? true) {
+            $container->setDefinition(
+                'flow.telemetry.resource.detector.os',
+                new Definition(OsDetector::class)
+            );
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.os');
         }
 
-        $definition = new Definition(Resource::class);
-        $definition->setFactory([Resource::class, 'create']);
-        $definition->setArgument(0, $attributes);
-        $container->setDefinition('flow.telemetry.resource', $definition);
+        if ($staticConfig['host']['enabled'] ?? true) {
+            $container->setDefinition(
+                'flow.telemetry.resource.detector.host',
+                new Definition(HostDetector::class)
+            );
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.host');
+        }
+
+        if ($staticConfig['service']['enabled'] ?? true) {
+            $composerDefinition = new Definition(ComposerDetector::class);
+            $composerDefinition->setArgument(0, '%kernel.project_dir%/composer.json');
+            $container->setDefinition('flow.telemetry.resource.detector.service', $composerDefinition);
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.service');
+        }
+
+        if ($staticConfig['deployment']['enabled'] ?? true) {
+            $deploymentDefinition = new Definition(SymfonyDeploymentDetector::class);
+            $deploymentDefinition->setArgument(0, '%kernel.environment%');
+            $container->setDefinition('flow.telemetry.resource.detector.deployment', $deploymentDefinition);
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.deployment');
+        }
+
+        if (\count($customAttributes) > 0) {
+            $manualDefinition = new Definition(ManualDetector::class);
+            $manualDefinition->setArgument(0, $customAttributes);
+            $container->setDefinition('flow.telemetry.resource.detector.custom', $manualDefinition);
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.custom');
+        }
+
+        if ($staticConfig['environment']['enabled'] ?? true) {
+            $container->setDefinition(
+                'flow.telemetry.resource.detector.environment',
+                new Definition(EnvironmentDetector::class)
+            );
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.environment');
+        }
+
+        $staticChainDefinition = new Definition(ChainDetector::class);
+        $staticChainDefinition->setArguments($staticDetectorRefs);
+        $container->setDefinition('flow.telemetry.resource.detector.static.chain', $staticChainDefinition);
+
+        $cacheConfig = $staticConfig['cache'] ?? [];
+        $cacheEnabled = $cacheConfig['enabled'] ?? true;
+
+        if ($cacheEnabled) {
+            $cachePath = $cacheConfig['path'] ?? '%kernel.cache_dir%/flow_telemetry_resource.cache';
+            $cachingDefinition = new Definition(CachingDetector::class);
+            $cachingDefinition->setArgument(0, new Reference('flow.telemetry.resource.detector.static.chain'));
+            $cachingDefinition->setArgument(1, $cachePath);
+            $container->setDefinition('flow.telemetry.resource.detector.static', $cachingDefinition);
+        } else {
+            $container->setAlias('flow.telemetry.resource.detector.static', 'flow.telemetry.resource.detector.static.chain');
+        }
+
+        $dynamicDetectorRefs = [];
+
+        if ($dynamicConfig['process']['enabled'] ?? true) {
+            $container->setDefinition(
+                'flow.telemetry.resource.detector.process',
+                new Definition(ProcessDetector::class)
+            );
+            $dynamicDetectorRefs[] = new Reference('flow.telemetry.resource.detector.process');
+        }
+
+        if (\count($dynamicDetectorRefs) > 0) {
+            $dynamicChainDefinition = new Definition(ChainDetector::class);
+            $dynamicChainDefinition->setArguments($dynamicDetectorRefs);
+            $container->setDefinition('flow.telemetry.resource.detector.dynamic', $dynamicChainDefinition);
+
+            $finalChainDefinition = new Definition(ChainDetector::class);
+            $finalChainDefinition->setArguments([
+                new Reference('flow.telemetry.resource.detector.static'),
+                new Reference('flow.telemetry.resource.detector.dynamic'),
+            ]);
+            $container->setDefinition('flow.telemetry.resource.detector', $finalChainDefinition);
+        } else {
+            $container->setAlias('flow.telemetry.resource.detector', 'flow.telemetry.resource.detector.static');
+        }
+
+        $resourceDefinition = new Definition(Resource::class);
+        $resourceDefinition->setFactory([new Reference('flow.telemetry.resource.detector'), 'detect']);
+        $container->setDefinition('flow.telemetry.resource', $resourceDefinition);
     }
 
     /**

@@ -38,7 +38,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -106,7 +106,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -172,7 +172,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -218,7 +218,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -274,7 +274,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'instrumentation' => [
                         'messenger' => [
                             'enabled' => false,
@@ -294,7 +294,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'instrumentation' => [
                         'messenger' => [
                             'enabled' => true,
@@ -315,7 +315,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -375,7 +375,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'propagator' => ['type' => 'baggage'],
                 ]);
             },
@@ -393,7 +393,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'propagator' => ['type' => 'tracecontext'],
                 ]);
             },
@@ -411,7 +411,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'propagator' => ['type' => 'w3c'],
                 ]);
             },
@@ -429,7 +429,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
@@ -497,7 +497,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => ['service' => ['name' => 'test-app']],
+                    'resource' => [],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',

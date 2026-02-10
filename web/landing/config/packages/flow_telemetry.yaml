@@ -1,19 +1,14 @@
 flow_telemetry:
   resource:
-    service:
-      name: "flow-website"
-      version:
-        type: package
-        name: "flow-php/web"
-    deployment:
-      environment: "%kernel.environment%"
+      custom:
+          service.name: flow-php.com
   instrumentation:
     http_kernel:
       enabled: true
       context_propagation: true
       exclude_paths:
-        - path: '/_wdt.*/'
-        - path: '/^\/_profiler.*/'
+        - path: '#\/_wdt.*#'
+        - path: '#^\/_profiler.*#'
     console:
       enabled: true
       exclude_commands:
