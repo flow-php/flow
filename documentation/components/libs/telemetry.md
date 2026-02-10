@@ -546,6 +546,104 @@ $resource = resource([
 The Resource is passed to the Telemetry instance and automatically attached to all spans, metrics, and logs.
 This allows APM backends to filter and group telemetry by service, environment, or any other attribute.
 
+### Resource Detectors
+
+Resource detectors automatically discover information about the entity producing telemetry.
+Instead of manually specifying resource attributes, detectors can inspect the environment
+to populate attributes like OS type, hostname, process ID, and service information.
+
+#### Default Detection
+
+The simplest way to detect resources is using the `resource_detector()` function, which provides
+a sensible default chain of detectors:
+
+```php
+<?php
+
+use function Flow\Telemetry\DSL\resource_detector;
+
+$resource = resource_detector()->detect();
+```
+
+This returns a `Resource` with attributes from OS, host, process, Composer, and environment variables.
+
+#### Available Detectors
+
+| Detector | DSL Function | Detected Attributes |
+|----------|--------------|---------------------|
+| OsDetector | `os_detector()` | `os.type`, `os.name`, `os.version`, `os.description` |
+| HostDetector | `host_detector()` | `host.name`, `host.arch`, `host.id` |
+| ProcessDetector | `process_detector()` | `process.pid`, `process.executable.path`, `process.runtime.name`, `process.runtime.version`, `process.command`, `process.owner` |
+| ComposerDetector | `composer_detector()` | `service.name`, `service.version` |
+| EnvironmentDetector | `environment_detector()` | Reads `OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES` |
+| ManualDetector | `manual_detector($attributes)` | User-specified attributes |
+| CachingDetector | `caching_detector($detector, $path)` | Caches wrapped detector's result to file |
+| ChainDetector | `chain_detector(...$detectors)` | Combines multiple detectors |
+
+#### Custom Detection Chain
+
+Use `chain_detector()` to combine specific detectors. Later detectors take precedence
+over earlier ones when there are conflicting attribute keys:
+
+```php
+<?php
+
+use function Flow\Telemetry\DSL\{chain_detector, os_detector, host_detector, manual_detector};
+
+$resource = chain_detector(
+    os_detector(),
+    host_detector(),
+    manual_detector(['service.name' => 'my-api', 'service.version' => '2.0.0']),
+)->detect();
+```
+
+#### Manual Attributes
+
+When you need full control over resource attributes:
+
+```php
+<?php
+
+use function Flow\Telemetry\DSL\manual_detector;
+
+$resource = manual_detector([
+    'service.name' => 'order-service',
+    'service.version' => '1.0.0',
+    'deployment.environment.name' => 'production',
+])->detect();
+```
+
+#### Caching Detection Results
+
+Resource detection can involve filesystem reads (e.g., `/etc/machine-id` for host ID).
+Use `caching_detector()` to cache results and avoid repeated detection:
+
+```php
+<?php
+
+use function Flow\Telemetry\DSL\{caching_detector, resource_detector};
+
+$resource = caching_detector(resource_detector())->detect();
+```
+
+The cache is stored in `sys_get_temp_dir()/flow_telemetry_resource.cache` by default.
+You can specify a custom path as the second argument.
+
+#### Environment Variables
+
+The `EnvironmentDetector` reads standard OpenTelemetry environment variables:
+
+- `OTEL_SERVICE_NAME` - Sets the `service.name` attribute
+- `OTEL_RESOURCE_ATTRIBUTES` - Sets additional attributes in `key=value,key2=value2` format
+
+```bash
+export OTEL_SERVICE_NAME=my-service
+export OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,deployment.environment.name=production
+```
+
+These environment variables take highest precedence in the default detector chain,
+allowing runtime configuration without code changes.
+
 ### InstrumentationScope
 
 An **InstrumentationScope** identifies the library or component that generates telemetry.

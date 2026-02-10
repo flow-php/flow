@@ -18,6 +18,8 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
 use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
+use Flow\Telemetry\Resource\Detector\{CachingDetector, ChainDetector, ComposerDetector, EnvironmentDetector, HostDetector, ManualDetector, OsDetector, ProcessDetector};
+use Flow\Telemetry\Resource\ResourceDetector;
 use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanExporter, SpanLink, SpanProcessor, TracerProvider};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
@@ -690,4 +692,140 @@ function w3c_baggage() : W3CBaggage
 function composite_propagator(Propagator ...$propagators) : CompositePropagator
 {
     return new CompositePropagator($propagators);
+}
+
+/**
+ * Create a ChainDetector.
+ *
+ * Combines multiple resource detectors into a chain. Detectors are executed
+ * in order and their results are merged. Later detectors take precedence
+ * over earlier ones when there are conflicting attribute keys.
+ *
+ * @param ResourceDetector ...$detectors The detectors to chain
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function chain_detector(ResourceDetector ...$detectors) : ChainDetector
+{
+    return new ChainDetector(...$detectors);
+}
+
+/**
+ * Create an OsDetector.
+ *
+ * Detects operating system information including os.type, os.name, os.version,
+ * and os.description using PHP's php_uname() function.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function os_detector() : OsDetector
+{
+    return new OsDetector();
+}
+
+/**
+ * Create a HostDetector.
+ *
+ * Detects host information including host.name, host.arch, and host.id
+ * (from /etc/machine-id on Linux or IOPlatformUUID on macOS).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function host_detector() : HostDetector
+{
+    return new HostDetector();
+}
+
+/**
+ * Create a ProcessDetector.
+ *
+ * Detects process information including process.pid, process.executable.path,
+ * process.runtime.name (PHP), process.runtime.version, process.command,
+ * and process.owner (on POSIX systems).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function process_detector() : ProcessDetector
+{
+    return new ProcessDetector();
+}
+
+/**
+ * Create an EnvironmentDetector.
+ *
+ * Detects resource attributes from OpenTelemetry standard environment variables:
+ * - OTEL_SERVICE_NAME: Sets service.name attribute
+ * - OTEL_RESOURCE_ATTRIBUTES: Sets additional attributes in key=value,key2=value2 format
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function environment_detector() : EnvironmentDetector
+{
+    return new EnvironmentDetector();
+}
+
+/**
+ * Create a ComposerDetector.
+ *
+ * Detects service.name and service.version from Composer's InstalledVersions
+ * using the root package information.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function composer_detector() : ComposerDetector
+{
+    return new ComposerDetector();
+}
+
+/**
+ * Create a ManualDetector.
+ *
+ * Returns manually specified resource attributes. Use this when you need
+ * to set attributes explicitly rather than detecting them automatically.
+ *
+ * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function manual_detector(array $attributes) : ManualDetector
+{
+    return new ManualDetector($attributes);
+}
+
+/**
+ * Create a CachingDetector.
+ *
+ * Wraps another detector and caches its results to a file. On subsequent
+ * calls, returns the cached resource instead of running detection again.
+ *
+ * @param ResourceDetector $detector The detector to wrap
+ * @param null|string $cachePath Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource.cache)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function caching_detector(ResourceDetector $detector, ?string $cachePath = null) : CachingDetector
+{
+    return new CachingDetector($detector, $cachePath);
+}
+
+/**
+ * Create a resource detector chain.
+ *
+ * When no detectors are provided, uses the default detector chain:
+ * 1. OsDetector - Operating system information
+ * 2. HostDetector - Host information
+ * 3. ProcessDetector - Process information
+ * 4. ComposerDetector - Service information from Composer
+ * 5. EnvironmentDetector - Environment variable overrides (highest precedence)
+ *
+ * When detectors are provided, uses only those detectors.
+ *
+ * @param array<ResourceDetector> $detectors Optional custom detectors (empty = use defaults)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function resource_detector(array $detectors = []) : ChainDetector
+{
+    if (\count($detectors) === 0) {
+        return new ChainDetector(
+            new OsDetector(),
+            new HostDetector(),
+            new ProcessDetector(),
+            new ComposerDetector(),
+            new EnvironmentDetector(),
+        );
+    }
+
+    return new ChainDetector(...$detectors);
 }
