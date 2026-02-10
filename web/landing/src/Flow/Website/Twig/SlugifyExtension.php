@@ -10,6 +10,7 @@ use Twig\TwigFilter;
 
 final class SlugifyExtension extends AbstractExtension
 {
+    #[\Override]
     public function getFilters() : array
     {
         return [

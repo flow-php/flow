@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Context;
 
-use Flow\Telemetry\Context\{Context, ContextStorage, MemoryContextStorage};
+use Flow\Telemetry\Context\{Context, ContextStorage, MemoryContextStorage, TraceId};
 use PHPUnit\Framework\TestCase;
 
 final class MemoryContextStorageTest extends TestCase
@@ -18,7 +18,7 @@ final class MemoryContextStorageTest extends TestCase
 
     public function test_current_returns_stored_context() : void
     {
-        $context = Context::create();
+        $context = Context::withTraceId(TraceId::generate());
         $storage = new MemoryContextStorage($context);
 
         self::assertSame($context->traceId->toHex(), $storage->current()->traceId->toHex());
@@ -34,7 +34,7 @@ final class MemoryContextStorageTest extends TestCase
         $storage = new MemoryContextStorage();
         $originalContext = $storage->current();
 
-        $newContext = Context::create();
+        $newContext = Context::withTraceId(TraceId::generate());
         $storage->store($newContext);
 
         self::assertFalse($originalContext->traceId->equals($storage->current()->traceId));
@@ -44,7 +44,7 @@ final class MemoryContextStorageTest extends TestCase
     public function test_store_updates_context_for_all_readers() : void
     {
         $storage = new MemoryContextStorage();
-        $newContext = Context::create();
+        $newContext = Context::withTraceId(TraceId::generate());
 
         $storage->store($newContext);
 

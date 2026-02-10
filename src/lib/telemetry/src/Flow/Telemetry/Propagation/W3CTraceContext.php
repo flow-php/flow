@@ -85,6 +85,10 @@ final readonly class W3CTraceContext implements Propagator
             return new PropagationContext();
         }
 
+        if (!$traceId->isValid() || !$spanId->isValid()) {
+            return new PropagationContext();
+        }
+
         $tracestateHeader = $carrier->get(self::HEADER_TRACESTATE);
         $traceState = TraceState::empty();
 
@@ -119,7 +123,7 @@ final readonly class W3CTraceContext implements Propagator
      */
     public function inject(PropagationContext $context, Carrier $carrier) : void
     {
-        if ($context->spanContext === null) {
+        if ($context->spanContext === null || !$context->spanContext->isValid()) {
             return;
         }
 

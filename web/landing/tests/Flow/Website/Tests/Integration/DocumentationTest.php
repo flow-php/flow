@@ -36,6 +36,7 @@ final class DocumentationTest extends WebTestCase
         self::assertEquals(12, $client->getCrawler()->filter('[data-dsl-type]')->count());
     }
 
+    #[\Override]
     protected static function getKernelClass() : string
     {
         return Kernel::class;

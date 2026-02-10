@@ -17,3 +17,4 @@ composer require flow-php/psr7-telemetry-bridge
 - [Documentation](https://flow-php.com/documentation/components/bridges/psr7-telemetry-bridge/)
 - [Installation](https://flow-php.com/documentation/installation/)
 - [Contributing](https://flow-php.com/documentation/contributing/)
+- [Upgrading](https://flow-php.com/documentation/upgrading/)

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tracer;
 
 use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
-use Flow\Telemetry\Context\{Context, ContextStorage, SpanId, TraceFlags};
+use Flow\Telemetry\Context\{Context, ContextStorage, SpanId, TraceFlags, TraceId};
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
@@ -186,6 +186,13 @@ final class Tracer
         }
 
         $traceId = $context->traceId;
+
+        if (!$traceId->isValid()) {
+            $traceId = TraceId::generate();
+            $context = Context::withTraceId($traceId);
+            $this->contextStorage->store($context);
+        }
+
         $spanId = SpanId::generate();
         $traceFlags = $parentSpanContext !== null ? $parentSpanContext->traceFlags : TraceFlags::sampled();
         $traceState = $parentSpanContext?->traceState;

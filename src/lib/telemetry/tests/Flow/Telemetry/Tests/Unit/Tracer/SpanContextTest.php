@@ -206,6 +206,15 @@ final class SpanContextTest extends TestCase
         self::assertSame('data', $context->traceState->get('vendor'));
     }
 
+    public function test_get_invalid_returns_invalid_context() : void
+    {
+        $context = SpanContext::getInvalid();
+
+        self::assertFalse($context->traceId->isValid());
+        self::assertFalse($context->spanId->isValid());
+        self::assertFalse($context->isValid());
+    }
+
     public function test_is_root_returns_false_when_parent_exists() : void
     {
         $context = SpanContext::create(
@@ -225,6 +234,33 @@ final class SpanContextTest extends TestCase
         );
 
         self::assertTrue($context->isRoot());
+    }
+
+    public function test_is_valid_returns_false_for_invalid_context() : void
+    {
+        $context = SpanContext::getInvalid();
+
+        self::assertFalse($context->isValid());
+    }
+
+    public function test_is_valid_returns_false_with_invalid_span_id() : void
+    {
+        $context = SpanContext::create(
+            TraceId::generate(),
+            SpanId::invalid(),
+        );
+
+        self::assertFalse($context->isValid());
+    }
+
+    public function test_is_valid_returns_false_with_invalid_trace_id() : void
+    {
+        $context = SpanContext::create(
+            TraceId::invalid(),
+            SpanId::generate(),
+        );
+
+        self::assertFalse($context->isValid());
     }
 
     public function test_is_valid_returns_true_for_valid_context() : void

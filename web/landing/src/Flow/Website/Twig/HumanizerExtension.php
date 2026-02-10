@@ -10,6 +10,7 @@ use Twig\TwigFilter;
 
 final class HumanizerExtension extends AbstractExtension
 {
+    #[\Override]
     public function getFilters()
     {
         return [

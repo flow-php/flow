@@ -9,6 +9,7 @@ use Twig\TwigFilter;
 
 final class FlowExtension extends AbstractExtension
 {
+    #[\Override]
     public function getFilters() : array
     {
         return [

@@ -8,6 +8,7 @@ import 'prismjs/components/prism-php.min.js';
 import 'prismjs/components/prism-bash.min.js';
 import 'prismjs/components/prism-json.min.js';
 import 'prismjs/components/prism-csv.min.js';
+import 'prismjs/components/prism-yaml.min.js';
 
 export default class extends Controller
 {

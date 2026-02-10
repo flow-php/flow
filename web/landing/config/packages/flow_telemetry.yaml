@@ -1,0 +1,70 @@
+flow_telemetry:
+  resource:
+      custom:
+          service.name: flow-php.com
+  instrumentation:
+    http_kernel:
+      enabled: true
+      context_propagation: true
+      exclude_paths:
+        - path: '#\/_wdt.*#'
+        - path: '#^\/_profiler.*#'
+    console:
+      enabled: true
+      exclude_commands:
+        - 'cache:clear'
+        - 'debug:router'
+    twig:
+      enabled: true
+      trace_templates: true
+      trace_blocks: true
+      trace_macros: true
+      exclude_templates:
+        - '/\@WebProfiler*/'
+    http_client:
+      enabled: true
+    cache:
+      enabled: true
+
+  tracer_provider:
+    sampler:
+      type: always_on
+    processor:
+      type: batching
+      batch_size: 512
+      exporter:
+        type: otlp
+        otlp:
+          transport:
+            type: curl
+            endpoint: "http://localhost:4318"
+            timeout: 30
+            serializer:
+              type: json
+
+  meter_provider:
+    temporality: cumulative
+    processor:
+      type: batching
+      exporter:
+        type: otlp
+        otlp:
+          transport:
+            type: curl
+            endpoint: "http://localhost:4318"
+            timeout: 30
+            serializer:
+              type: json
+
+  logger_provider:
+    processor:
+      type: batching
+      exporter:
+        type: otlp
+        otlp:
+          transport:
+            type: curl
+            endpoint: "http://localhost:4318"
+            timeout: 30
+            serializer:
+              type: json

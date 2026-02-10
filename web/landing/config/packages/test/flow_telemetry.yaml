@@ -1,0 +1,20 @@
+flow_telemetry:
+  tracer_provider:
+    processor:
+      type: void
+
+  meter_provider:
+    processor:
+      type: void
+
+  logger_provider:
+    processor:
+      type: void
+
+  instrumentation:
+    http_kernel:
+      enabled: false
+    console:
+      enabled: false
+    twig:
+      enabled: false

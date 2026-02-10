@@ -1,0 +1,66 @@
+{
+    "name": "flow-php/symfony-telemetry-bundle",
+    "type": "symfony-bundle",
+    "description": "Flow PHP - Symfony Telemetry Bundle",
+    "keywords": [
+        "flow-php",
+        "symfony",
+        "telemetry",
+        "opentelemetry",
+        "tracing",
+        "metrics",
+        "logging",
+        "bundle"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/telemetry": "self.version",
+        "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
+        "psr/clock": "^1.0",
+        "symfony/config": "^6.4 || ^7.3 || ^8.0",
+        "symfony/console": "^6.4 || ^7.3 || ^8.0",
+        "symfony/dependency-injection": "^6.4 || ^7.3 || ^8.0",
+        "symfony/http-client-contracts": "^3.0",
+        "symfony/http-kernel": "^6.4 || ^7.3 || ^8.0"
+    },
+    "require-dev": {
+        "doctrine/dbal": "^3.6 || ^4.0",
+        "flow-php/psr18-telemetry-bridge": "self.version",
+        "flow-php/telemetry-otlp-bridge": "self.version",
+        "nyholm/psr7": "^1.8",
+        "symfony/framework-bundle": "^6.4 || ^7.3 || ^8.0",
+        "symfony/messenger": "^6.4 || ^7.3 || ^8.0",
+        "symfony/routing": "^6.4 || ^7.3 || ^8.0",
+        "twig/twig": "^3.0"
+    },
+    "suggest": {
+        "doctrine/dbal": "Required for Doctrine DBAL tracing (^3.6 or ^4.0)",
+        "flow-php/psr18-telemetry-bridge": "Required for PSR-18 HTTP client tracing",
+        "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
+        "symfony/messenger": "Required for Messenger tracing middleware",
+        "twig/twig": "Required for Twig template tracing"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Bridge/Symfony/TelemetryBundle/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

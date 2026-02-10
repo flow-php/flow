@@ -21,6 +21,7 @@
       <directory>../../src/bridge/monolog/telemetry/tests/Flow/Bridge/Monolog/Telemetry/Tests/Unit</directory>
       <directory>../../src/bridge/symfony/http-foundation-telemetry/tests/Flow/Bridge/Symfony/HttpFoundationTelemetry/Tests/Unit</directory>
       <directory>../../src/bridge/psr7/telemetry/tests/Flow/Bridge/Psr7/Telemetry/Tests/Unit</directory>
+      <directory>../../src/bridge/psr18/telemetry/tests/Flow/Bridge/Psr18/Telemetry/Tests/Unit</directory>
       <directory>../../src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Unit</directory>
     </testsuite>
   </testsuites>
@@ -37,6 +38,7 @@
       <directory suffix=".php">../../src/bridge/monolog/telemetry/src</directory>
       <directory suffix=".php">../../src/bridge/symfony/http-foundation-telemetry/src</directory>
       <directory suffix=".php">../../src/bridge/psr7/telemetry/src</directory>
+      <directory suffix=".php">../../src/bridge/psr18/telemetry/src</directory>
       <directory suffix=".php">../../src/bridge/telemetry/otlp/src</directory>
     </include>
     <exclude>
@@ -52,6 +54,7 @@
       <directory suffix=".php">../../src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL</directory>
       <directory suffix=".php">../../src/bridge/symfony/http-foundation-telemetry/src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL</directory>
       <directory suffix=".php">../../src/bridge/psr7/telemetry/src/Flow/Bridge/Psr7/Telemetry/DSL</directory>
+      <directory suffix=".php">../../src/bridge/psr18/telemetry/src/Flow/Bridge/Psr18/Telemetry/DSL</directory>
       <directory suffix=".php">../../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL</directory>
     </exclude>
   </source>

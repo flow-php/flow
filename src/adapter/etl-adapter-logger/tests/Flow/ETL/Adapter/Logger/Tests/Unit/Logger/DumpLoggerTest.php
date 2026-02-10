@@ -15,6 +15,10 @@ final class DumpLoggerTest extends FlowTestCase
             self::markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
         }
 
+        if (\class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
+            self::markTestSkipped('Symfony VarDumper is loaded and it will affect DumpLogger output format');
+        }
+
         $logger = new DumpLogger();
 
         \ob_start();

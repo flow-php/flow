@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
-use Flow\Telemetry\Context\{Context, MemoryContextStorage};
+use Flow\Telemetry\Context\{Context, MemoryContextStorage, TraceId};
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidSpanExporter;
 use Flow\Telemetry\Resource;
@@ -23,7 +23,7 @@ final class MemoryTracerProviderTest extends TestCase
 
     public function test_context_storage_applies_to_new_tracers() : void
     {
-        $ctx = Context::create();
+        $ctx = Context::withTraceId(TraceId::generate());
         $storage = new MemoryContextStorage($ctx);
 
         $provider = new TracerProvider($this->createProcessor(), ClockMother::frozen(), $storage);

@@ -62,20 +62,20 @@ final class TraceIdTest extends TestCase
         self::assertSame($hex, $traceId->toHex());
     }
 
+    public function test_from_bytes_allows_all_zeros() : void
+    {
+        $traceId = TraceId::fromBytes(\str_repeat("\0", 16));
+
+        self::assertFalse($traceId->isValid());
+        self::assertSame(TraceId::INVALID, $traceId->toHex());
+    }
+
     public function test_from_bytes_creates_trace_id() : void
     {
         $bytes = \random_bytes(16);
         $traceId = TraceId::fromBytes($bytes);
 
         self::assertSame($bytes, $traceId->toBytes());
-    }
-
-    public function test_from_bytes_throws_on_all_zeros() : void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('TraceId cannot be all zeros');
-
-        TraceId::fromBytes(\str_repeat("\0", 16));
     }
 
     #[DataProvider('provideInvalidBytesLength')]
@@ -96,12 +96,12 @@ final class TraceIdTest extends TestCase
         self::assertSame(16, \strlen($traceId->toBytes()));
     }
 
-    public function test_from_hex_throws_on_all_zeros() : void
+    public function test_from_hex_allows_all_zeros() : void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('TraceId cannot be all zeros');
+        $traceId = TraceId::fromHex('00000000000000000000000000000000');
 
-        TraceId::fromHex('00000000000000000000000000000000');
+        self::assertFalse($traceId->isValid());
+        self::assertSame(TraceId::INVALID, $traceId->toHex());
     }
 
     #[DataProvider('provideInvalidHexStrings')]
@@ -127,6 +127,34 @@ final class TraceIdTest extends TestCase
         $traceId2 = TraceId::generate();
 
         self::assertFalse($traceId1->equals($traceId2));
+    }
+
+    public function test_invalid_constant_has_correct_value() : void
+    {
+        self::assertSame('00000000000000000000000000000000', TraceId::INVALID);
+        self::assertSame(32, \strlen(TraceId::INVALID));
+    }
+
+    public function test_invalid_returns_all_zeros_trace_id() : void
+    {
+        $traceId = TraceId::invalid();
+
+        self::assertSame(TraceId::INVALID, $traceId->toHex());
+        self::assertSame(\str_repeat("\0", 16), $traceId->toBytes());
+    }
+
+    public function test_is_valid_returns_false_for_invalid_trace_id() : void
+    {
+        $traceId = TraceId::invalid();
+
+        self::assertFalse($traceId->isValid());
+    }
+
+    public function test_is_valid_returns_true_for_generated_trace_id() : void
+    {
+        $traceId = TraceId::generate();
+
+        self::assertTrue($traceId->isValid());
     }
 
     public function test_normalize_from_array_round_trip() : void

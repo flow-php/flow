@@ -2,10 +2,67 @@
     "name": "flow-php/web",
     "description": "Flow PHP ETL - Web",
     "type": "project",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../src/core/etl",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/adapter/etl-adapter-http",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/lib/telemetry",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/lib/types",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/lib/array-dot",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/lib/filesystem",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/bridge/symfony/telemetry-bundle",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/bridge/symfony/http-foundation-telemetry",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/bridge/telemetry/otlp",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/bridge/monolog/telemetry",
+            "options": { "symlink": true }
+        }
+    ],
     "require": {
         "php": "8.3.*",
-        "flow-php/etl": ">=0.23.0",
-        "flow-php/etl-adapter-http": ">=0.23.0",
+        "flow-php/etl": "1.x-dev",
+        "flow-php/etl-adapter-http": "1.x-dev",
+        "flow-php/symfony-telemetry-bundle": "1.x-dev",
+        "flow-php/telemetry-otlp-bridge": "*",
+        "flow-php/monolog-telemetry-bridge": "*",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.3",
         "psr/http-client": "^1.0",
