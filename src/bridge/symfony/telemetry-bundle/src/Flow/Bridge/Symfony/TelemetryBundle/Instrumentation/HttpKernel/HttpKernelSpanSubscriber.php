@@ -19,16 +19,23 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
     private const string TRACER_ATTRIBUTE = '_flow_telemetry_tracer';
 
+    /** @var array<PathExclusionRule> */
+    private array $excludePathRules;
+
     /**
-     * @param array<string> $excludeRoutes
+     * @param array<array{path: string, method?: null|string}> $excludePaths
      */
     public function __construct(
         private Telemetry $telemetry,
-        private array $excludeRoutes,
+        array $excludePaths,
         private ContextStorage $contextStorage,
         private Propagator $propagator,
         private bool $extractContext = true,
     ) {
+        $this->excludePathRules = \array_map(
+            static fn (array $config) : PathExclusionRule => PathExclusionRule::fromConfig($config),
+            $excludePaths
+        );
     }
 
     public static function getSubscribedEvents() : array
@@ -54,13 +61,6 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $route = $request->attributes->get('_route');
 
         if (\is_string($route)) {
-            if (!$this->shouldTrace($route)) {
-                $request->attributes->remove(self::SPAN_ATTRIBUTE);
-                $request->attributes->remove(self::TRACER_ATTRIBUTE);
-
-                return;
-            }
-
             $span->setAttribute('http.route', $route);
             $method = $request->getMethod();
             $span->rename("{$method} {$route}");
@@ -89,14 +89,18 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public function onRequest(RequestEvent $event) : void
     {
         $request = $event->getRequest();
+        $method = $request->getMethod();
+        $path = $request->getPathInfo();
+
+        if (!$this->shouldTraceByPath($path, $method)) {
+            return;
+        }
 
         if ($event->isMainRequest() && $this->extractContext) {
             $this->extractContextFromRequest($request);
         }
 
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
-        $method = $request->getMethod();
-        $path = $request->getPathInfo();
 
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
         $span = $tracer->span(
@@ -177,15 +181,6 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
     }
 
-    private function matchesPattern(string $route, string $pattern) : bool
-    {
-        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
-            return (bool) \preg_match($pattern, $route);
-        }
-
-        return $route === $pattern;
-    }
-
     /**
      * @param array<int, object|string>|callable|object $controller
      */
@@ -215,10 +210,10 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         return null;
     }
 
-    private function shouldTrace(string $route) : bool
+    private function shouldTraceByPath(string $path, string $method) : bool
     {
-        foreach ($this->excludeRoutes as $pattern) {
-            if ($this->matchesPattern($route, $pattern)) {
+        foreach ($this->excludePathRules as $rule) {
+            if ($rule->matches($path, $method)) {
                 return false;
             }
         }

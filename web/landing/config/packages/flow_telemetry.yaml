@@ -11,10 +11,9 @@ flow_telemetry:
     http_kernel:
       enabled: true
       context_propagation: true
-      exclude_routes:
-        - '_wdt'
-        - '_profiler'
-        - '/_profiler.*/'
+      exclude_paths:
+        - path: '/_wdt.*/'
+        - path: '/^\/_profiler.*/'
     console:
       enabled: true
       exclude_commands:

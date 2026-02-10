@@ -14,7 +14,7 @@ return static function (ContainerConfigurator $container) : void {
     $services->set('flow.telemetry.http_kernel.span_subscriber', HttpKernelSpanSubscriber::class)
         ->args([
             service(Telemetry::class),
-            '%flow.telemetry.http_kernel.exclude_routes%',
+            '%flow.telemetry.http_kernel.exclude_paths%',
             service('flow.telemetry.context_storage'),
             service('flow.telemetry.propagator'),
             '%flow.telemetry.http_kernel.context_propagation%',

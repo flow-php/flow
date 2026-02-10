@@ -288,6 +288,7 @@ final class ConfigurationTest extends TestCase
 
         self::assertArrayHasKey('instrumentation', $config);
         self::assertFalse($config['instrumentation']['http_kernel']['enabled']);
+        self::assertSame([], $config['instrumentation']['http_kernel']['exclude_paths']);
         self::assertFalse($config['instrumentation']['console']['enabled']);
         self::assertFalse($config['instrumentation']['messenger']['enabled']);
     }
@@ -332,20 +333,28 @@ final class ConfigurationTest extends TestCase
         self::assertSame(['internal.http_client', '/^debug\\..*$/'], $config['instrumentation']['http_client']['exclude_clients']);
     }
 
-    public function test_instrumentation_http_kernel_exclude_routes() : void
+    public function test_instrumentation_http_kernel_exclude_paths() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'resource' => ['service' => ['name' => 'test-app']],
             'instrumentation' => [
                 'http_kernel' => [
                     'enabled' => true,
-                    'exclude_routes' => ['_wdt', '_profiler', '/_profiler.*/'],
+                    'exclude_paths' => [
+                        ['path' => '/_wdt'],
+                        ['path' => '/_profiler', 'method' => 'GET'],
+                        ['path' => '/^\/_profiler.*/'],
+                    ],
                 ],
             ],
         ]]);
 
         self::assertTrue($config['instrumentation']['http_kernel']['enabled']);
-        self::assertSame(['_wdt', '_profiler', '/_profiler.*/'], $config['instrumentation']['http_kernel']['exclude_routes']);
+        self::assertSame([
+            ['path' => '/_wdt', 'method' => null],
+            ['path' => '/_profiler', 'method' => 'GET'],
+            ['path' => '/^\/_profiler.*/', 'method' => null],
+        ], $config['instrumentation']['http_kernel']['exclude_paths']);
     }
 
     public function test_instrumentation_partial_config() : void

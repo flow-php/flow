@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\HttpKernel;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\{HttpKernelSpanSubscriber, PathExclusionRule};
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller\TestController;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\{Route, Router};
 
 #[CoversClass(HttpKernelSpanSubscriber::class)]
+#[CoversClass(PathExclusionRule::class)]
 final class HttpKernelSpanSubscriberTest extends KernelTestCase
 {
     #[\Override]
@@ -135,7 +136,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         self::assertCount(0, $spans);
     }
 
-    public function test_excludes_route_with_exact_match() : void
+    public function test_excludes_path_with_exact_match() : void
     {
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
@@ -159,7 +160,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'instrumentation' => [
                         'http_kernel' => [
                             'enabled' => true,
-                            'exclude_routes' => ['test_excluded'],
+                            'exclude_paths' => [
+                                ['path' => '/_wdt'],
+                            ],
                         ],
                         'console' => ['enabled' => false],
                         'messenger' => false,
@@ -174,13 +177,13 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $router = $container->get('router');
         $routes = $router->getRouteCollection();
         $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
-        $routes->add('test_excluded', new Route('/excluded', ['_controller' => TestController::class . '::index']));
+        $routes->add('wdt', new Route('/_wdt', ['_controller' => TestController::class . '::index']));
 
         $request = Request::create('/test', 'GET');
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
-        $request = Request::create('/excluded', 'GET');
+        $request = Request::create('/_wdt', 'GET');
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
@@ -192,7 +195,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         self::assertSame('GET test_index', $spans[0]->name());
     }
 
-    public function test_excludes_routes_with_regex_pattern() : void
+    public function test_excludes_path_with_method_filter() : void
     {
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
@@ -216,7 +219,68 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                     'instrumentation' => [
                         'http_kernel' => [
                             'enabled' => true,
-                            'exclude_routes' => ['/^_profiler.*/'],
+                            'exclude_paths' => [
+                                ['path' => '/_wdt', 'method' => 'GET'],
+                            ],
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
+        $routes->add('wdt', new Route('/_wdt', ['_controller' => TestController::class . '::index'], [], [], '', [], ['GET', 'POST']));
+
+        $request = Request::create('/_wdt', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        $request = Request::create('/_wdt', 'POST');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        self::assertCount(1, $spans);
+        self::assertSame('POST wdt', $spans[0]->name());
+    }
+
+    public function test_excludes_path_with_regex_pattern() : void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => ['service' => ['name' => 'test-app']],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'exclude_paths' => [
+                                ['path' => '/^\/_profiler.*/'],
+                            ],
                         ],
                         'console' => ['enabled' => false],
                         'messenger' => false,
