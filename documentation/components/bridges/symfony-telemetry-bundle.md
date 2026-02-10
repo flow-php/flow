@@ -1,10 +1,12 @@
 # Symfony Telemetry Bundle
 
-Flow Symfony Telemetry Bundle provides automatic telemetry integration for Symfony applications, including HTTP request/response tracing, console command instrumentation, and configurable exporters.
+Flow Symfony Telemetry Bundle provides automatic telemetry integration for Symfony applications, including HTTP
+request/response tracing, console command instrumentation, and configurable exporters through OpenTelemetry-compatible
+backends.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/symfony-telemetry-bundle)
-- [🐙GitHub](https://github.com/flow-php/symfony-telemetry-bundle)
+- [Back](/documentation/introduction.md)
+- [Packagist](https://packagist.org/packages/flow-php/symfony-telemetry-bundle)
+- [GitHub](https://github.com/flow-php/symfony-telemetry-bundle)
 
 [TOC]
 
@@ -16,48 +18,852 @@ composer require flow-php/symfony-telemetry-bundle:~--FLOW_PHP_VERSION--
 
 ## Overview
 
-This bundle integrates Flow PHP's Telemetry library with Symfony applications, providing:
+This bundle integrates Flow PHP's Telemetry library with Symfony applications. It provides:
 
-- Automatic HTTP request/response span creation
-- Console command tracing
-- Context propagation via W3C Trace Context and Baggage
-- Configurable exporters (console, memory, void, OTLP)
-- Full configuration through Symfony's config system
+- **Automatic resource detection** - Detects service name, version, environment, OS, host, and process information
+- **8 auto-instrumentation options** - HTTP kernel, console, messenger, Twig, HTTP client, PSR-18 client, Doctrine DBAL,
+  and cache
+- **Context propagation** - W3C TraceContext and Baggage support for distributed tracing
+- **Configurable exporters** - Console, memory, void, or OTLP with multiple transport options
+- **Full Symfony configuration** - Configure everything through Symfony's config system
 
-## Requirements
+## Configuration Reference
 
-- PHP 8.3+
-- flow-php/telemetry
-- flow-php/symfony-http-foundation-telemetry-bridge
-- symfony/http-kernel ^6.4 || ^7.3 || ^8.0
-- symfony/dependency-injection ^6.4 || ^7.3 || ^8.0
-- symfony/config ^6.4 || ^7.3 || ^8.0
-- symfony/console ^6.4 || ^7.3 || ^8.0
+### Resource Configuration
 
-## Configuration
+The `resource` node configures OpenTelemetry Resource attributes that identify your service.
+
+```yaml
+flow_telemetry:
+  resource:
+    detectors:
+      enabled: true  # Enable resource detectors (default: true)
+      static:
+        cache:
+          enabled: true  # Cache static attributes (default: true)
+          path: null     # Cache path (default: kernel cache dir)
+        os:
+          enabled: true  # Detect os.type, os.name, os.version, os.description
+        host:
+          enabled: true  # Detect host.name, host.arch, host.id
+        service:
+          enabled: true  # Detect service.name, service.version from composer.json
+        deployment:
+          enabled: true  # Detect deployment.environment.name from kernel environment
+        environment:
+          enabled: true  # Read OTEL_SERVICE_NAME and OTEL_RESOURCE_ATTRIBUTES
+      dynamic:
+        process:
+          enabled: true  # Detect process.pid, process.runtime.*, process.executable.*
+    custom:
+      service.name: 'my-app'
+      service.version: '1.0.0'
+      deployment.environment.name: 'production'
+```
+
+**Detector types:**
+
+| Type          | Class                       | Category | Attributes Detected                                               |
+|---------------|-----------------------------|----------|-------------------------------------------------------------------|
+| `os`          | `OsDetector`                | static   | `os.type`, `os.name`, `os.version`, `os.description`              |
+| `host`        | `HostDetector`              | static   | `host.name`, `host.arch`, `host.id`                               |
+| `service`     | `ComposerDetector`          | static   | `service.name`, `service.version` (from composer.json)            |
+| `deployment`  | `SymfonyDeploymentDetector` | static   | `deployment.environment.name` (from kernel environment)           |
+| `environment` | `EnvironmentDetector`       | static   | Reads `OTEL_SERVICE_NAME` and `OTEL_RESOURCE_ATTRIBUTES` env vars |
+| `process`     | `ProcessDetector`           | dynamic  | `process.pid`, `process.runtime.*`, `process.executable.*`        |
+
+Static detectors are cached by default. Dynamic detectors run on every request/command.
+
+Custom attributes override auto-detected values.
+
+### Clock Configuration
+
+- **type**: `string|null`
+- **default**: `null`
+
+Custom PSR-20 clock service ID. If not provided, uses the built-in SystemClock.
+
+```yaml
+flow_telemetry:
+  clock_service_id: 'app.clock'
+```
+
+### Context Storage
+
+- **type**: `enum`
+- **default**: `memory`
+
+Context storage for maintaining trace context across async operations.
+
+```yaml
+flow_telemetry:
+  context_storage:
+    type: memory  # memory|service
+    service_id: null  # Custom service ID (only for type: service)
+```
+
+### Propagator
+
+- **type**: `enum`
+- **default**: `w3c`
+
+Context propagator for distributed tracing. Determines how trace context is injected/extracted from HTTP headers.
+
+```yaml
+flow_telemetry:
+  propagator:
+    type: w3c  # w3c|tracecontext|baggage|service
+    service_id: null  # Custom service ID (only for type: service)
+```
+
+| Type           | Description                              |
+|----------------|------------------------------------------|
+| `w3c`          | W3C TraceContext + Baggage (recommended) |
+| `tracecontext` | W3C TraceContext only                    |
+| `baggage`      | W3C Baggage only                         |
+| `service`      | Custom propagator service                |
+
+### TracerProvider
+
+Configures the tracer provider for distributed tracing.
+
+```yaml
+flow_telemetry:
+  tracer_provider:
+    sampler:
+      type: always_on  # always_on|always_off|trace_id_ratio|parent_based|service
+      ratio: 1.0       # Sampling ratio (0.0-1.0, only for trace_id_ratio)
+      service_id: null # Custom sampler service (only for type: service)
+    processor:
+      type: void  # composite|memory|batching|passthrough|void|service
+      batch_size: 512
+      service_id: null
+      exporter:
+        type: void  # memory|console|void|otlp|service
+```
+
+**Sampler types:**
+
+| Type             | Description                             |
+|------------------|-----------------------------------------|
+| `always_on`      | Sample all traces (default)             |
+| `always_off`     | Sample no traces                        |
+| `trace_id_ratio` | Sample based on trace ID ratio          |
+| `parent_based`   | Respect parent span's sampling decision |
+| `service`        | Custom sampler service                  |
+
+### MeterProvider
+
+Configures the meter provider for metrics collection.
+
+```yaml
+flow_telemetry:
+  meter_provider:
+    temporality: cumulative  # cumulative|delta
+    processor:
+      type: void  # composite|memory|batching|passthrough|void|service
+      batch_size: 512
+      exporter:
+        type: void
+```
+
+### LoggerProvider
+
+Configures the logger provider for log export.
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    processor:
+      type: void  # composite|memory|batching|passthrough|void|severity_filtering|service
+      batch_size: 512
+      exporter:
+        type: void
+```
+
+**Severity filtering** (logs only):
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    processor:
+      type: severity_filtering
+      minimum_severity: info  # trace|debug|info|warn|error|fatal
+      inner_processor:
+        type: batching
+        exporter:
+          type: otlp
+          otlp:
+            transport:
+              endpoint: 'http://otel-collector:4318/v1/logs'
+```
+
+### Processor Configuration
+
+Processor types available for tracer_provider, meter_provider, and logger_provider.
+
+#### void (default)
+
+Discards all data. No additional options.
+
+```yaml
+processor:
+  type: void
+```
+
+#### passthrough
+
+Immediately exports each item.
+
+```yaml
+processor:
+  type: passthrough
+  exporter:
+    type: console
+```
+
+#### memory
+
+Stores in memory (for testing). No additional options.
+
+```yaml
+processor:
+  type: memory
+```
+
+#### batching
+
+Batches items before export.
+
+| Option       | Type    | Default | Description               |
+|--------------|---------|---------|---------------------------|
+| `batch_size` | integer | `512`   | Number of items per batch |
+
+```yaml
+processor:
+  type: batching
+  batch_size: 512
+  exporter:
+    type: otlp
+    otlp:
+      transport:
+        endpoint: 'http://otel-collector:4318/v1/traces'
+```
+
+#### composite
+
+Combines multiple processors.
+
+| Option       | Type  | Description               |
+|--------------|-------|---------------------------|
+| `processors` | array | List of processor configs |
+
+```yaml
+processor:
+  type: composite
+  processors:
+    - type: batching
+      exporter:
+        type: otlp
+        otlp:
+          transport:
+            endpoint: 'http://otel-collector:4318/v1/traces'
+    - type: memory
+```
+
+#### service
+
+Custom processor service.
+
+| Option       | Type   | Description                   |
+|--------------|--------|-------------------------------|
+| `service_id` | string | Symfony service ID (required) |
+
+```yaml
+processor:
+  type: service
+  service_id: 'app.custom_processor'
+```
+
+#### severity_filtering (logger_provider only)
+
+Filters logs by minimum severity level.
+
+| Option            | Type   | Default | Description                            |
+|-------------------|--------|---------|----------------------------------------|
+| `minimum_severity`| string | `info`  | trace\|debug\|info\|warn\|error\|fatal |
+| `inner_processor` | object | -       | Nested processor configuration         |
+
+```yaml
+processor:
+  type: severity_filtering
+  minimum_severity: info
+  inner_processor:
+    type: batching
+    exporter:
+      type: otlp
+      otlp:
+        transport:
+          endpoint: 'http://otel-collector:4318/v1/logs'
+```
+
+### Exporter Configuration
+
+Exporter types available for processor configurations.
+
+#### void (default)
+
+Discards all data. No additional options.
+
+```yaml
+exporter:
+  type: void
+```
+
+#### memory
+
+Stores in memory (for testing). No additional options.
+
+```yaml
+exporter:
+  type: memory
+```
+
+#### console
+
+Outputs to console. No additional options.
+
+```yaml
+exporter:
+  type: console
+```
+
+#### otlp
+
+Exports to OTLP-compatible backends (Jaeger, Tempo, etc.).
+
+| Option       | Type   | Description                        |
+|--------------|--------|------------------------------------|
+| `transport`  | object | Transport configuration (required) |
+| `serializer` | object | Serializer configuration           |
+
+```yaml
+exporter:
+  type: otlp
+  otlp:
+    transport:
+      type: curl
+      endpoint: 'http://otel-collector:4318/v1/traces'
+    serializer:
+      type: json
+```
+
+#### service
+
+Custom exporter service.
+
+| Option       | Type   | Description                   |
+|--------------|--------|-------------------------------|
+| `service_id` | string | Symfony service ID (required) |
+
+```yaml
+exporter:
+  type: service
+  service_id: 'app.custom_exporter'
+```
+
+### OTLP Transport Configuration
+
+Transport types for OTLP exporters.
+
+#### curl (default, recommended)
+
+| Option             | Type    | Default | Description                 |
+|--------------------|---------|---------|-----------------------------|
+| `endpoint`         | string  | -       | OTLP endpoint URL (required)|
+| `timeout`          | integer | `30`    | Request timeout in seconds  |
+| `connect_timeout`  | integer | `10`    | Connection timeout          |
+| `compression`      | boolean | `false` | Enable compression          |
+| `follow_redirects` | boolean | `true`  | Follow HTTP redirects       |
+| `max_redirects`    | integer | `3`     | Maximum redirects to follow |
+| `proxy`            | string  | `null`  | Proxy URL                   |
+| `ssl_verify_peer`  | boolean | `true`  | Verify SSL peer             |
+| `ssl_verify_host`  | boolean | `true`  | Verify SSL host             |
+| `ssl_cert_path`    | string  | `null`  | SSL certificate path        |
+| `ssl_key_path`     | string  | `null`  | SSL key path                |
+| `ca_info_path`     | string  | `null`  | CA info path                |
+| `headers`          | object  | `{}`    | Additional HTTP headers     |
+
+```yaml
+otlp:
+  transport:
+    type: curl
+    endpoint: 'http://otel-collector:4318/v1/traces'
+    timeout: 30
+    connect_timeout: 10
+    compression: false
+    follow_redirects: true
+    max_redirects: 3
+    proxy: null
+    ssl_verify_peer: true
+    ssl_verify_host: true
+    ssl_cert_path: null
+    ssl_key_path: null
+    ca_info_path: null
+    headers:
+      Authorization: 'Bearer token'
+```
+
+#### http
+
+PSR-18 HTTP transport.
+
+| Option                       | Type    | Default | Description                  |
+|------------------------------|---------|---------|------------------------------|
+| `endpoint`                   | string  | -       | OTLP endpoint URL (required) |
+| `timeout`                    | integer | `30`    | Request timeout in seconds   |
+| `http_client_service_id`     | string  | `null`  | PSR-18 client service        |
+| `request_factory_service_id` | string  | `null`  | PSR-17 request factory       |
+| `stream_factory_service_id`  | string  | `null`  | PSR-17 stream factory        |
+
+```yaml
+otlp:
+  transport:
+    type: http
+    endpoint: 'http://otel-collector:4318/v1/traces'
+    timeout: 30
+    http_client_service_id: null
+    request_factory_service_id: null
+    stream_factory_service_id: null
+```
+
+#### grpc
+
+gRPC transport.
+
+| Option     | Type    | Default | Description                  |
+|------------|---------|---------|------------------------------|
+| `endpoint` | string  | -       | OTLP endpoint URL (required) |
+| `timeout`  | integer | `30`    | Request timeout in seconds   |
+| `insecure` | boolean | `false` | Allow insecure connections   |
+
+```yaml
+otlp:
+  transport:
+    type: grpc
+    endpoint: 'http://otel-collector:4317'
+    timeout: 30
+    insecure: true
+```
+
+#### service
+
+Custom transport service.
+
+| Option       | Type   | Description                   |
+|--------------|--------|-------------------------------|
+| `service_id` | string | Symfony service ID (required) |
+
+```yaml
+otlp:
+  transport:
+    type: service
+    service_id: 'app.custom_transport'
+```
+
+### OTLP Serializer Configuration
+
+Serializer types for OTLP exporters.
+
+#### json (default)
+
+```yaml
+serializer:
+  type: json
+```
+
+#### protobuf
+
+```yaml
+serializer:
+  type: protobuf
+```
+
+#### service
+
+Custom serializer service.
+
+| Option       | Type   | Description                   |
+|--------------|--------|-------------------------------|
+| `service_id` | string | Symfony service ID (required) |
+
+```yaml
+serializer:
+  type: service
+  service_id: 'app.custom_serializer'
+```
+
+### Instrumentation
+
+Configure automatic instrumentation for various Symfony components.
+
+**All instrumentation is disabled by default.** You must explicitly set `enabled: true` for each component you want to
+instrument.
+
+#### HTTP Kernel
+
+Traces HTTP requests and responses.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    http_kernel:
+      enabled: true
+      context_propagation: true  # Extract context from incoming headers
+      exclude_paths:
+        - path: '/_profiler'
+        - path: '/_wdt'
+        - path: '/health'
+          method: GET
+        - path: '/^\/api\/internal\/.*/'  # Regex pattern
+```
+
+#### Console
+
+Traces console commands.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    console:
+      enabled: true
+      exclude_commands:
+        - 'cache:clear'
+        - 'assets:install'
+        - '/^debug:.*/'  # Regex: exclude all debug commands
+```
+
+#### Messenger
+
+Traces Symfony Messenger messages with context propagation across message boundaries.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    messenger:
+      enabled: true
+      context_propagation: true  # Propagate context across message boundaries
+```
+
+#### Twig
+
+Traces Twig template rendering.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    twig:
+      enabled: true
+      trace_templates: true   # Trace template rendering
+      trace_blocks: false     # Trace block rendering
+      trace_macros: false     # Trace macro execution
+      exclude_templates:
+        - '@WebProfiler'
+        - '/^@Debug\/.*/'
+```
+
+#### HTTP Client
+
+Traces Symfony HTTP Client requests.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    http_client:
+      enabled: true
+      exclude_clients:
+        - 'internal.client'
+        - '/^debug\..*/'
+```
+
+#### PSR-18 Client
+
+Traces PSR-18 HTTP client requests.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    psr18_client:
+      enabled: true
+      exclude_clients:
+        - 'app.internal_client'
+```
+
+#### Doctrine DBAL
+
+Traces database queries.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    dbal:
+      enabled: true
+      log_sql: true           # Include SQL in span attributes
+      max_sql_length: 1000    # Max SQL length (0 = no limit)
+      exclude_connections:
+        - 'legacy'
+        - '/^test_.*/'
+```
+
+#### Cache
+
+Traces Symfony Cache operations.
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    cache:
+      enabled: true
+      exclude_pools:
+        - 'cache.system'
+        - '/^cache\.validator.*/'
+```
+
+### Named Instruments
+
+Configure named tracers, meters, and loggers with custom instrumentation scope attributes.
+
+**Options:**
+
+| Option       | Type   | Default     | Description                         |
+|--------------|--------|-------------|-------------------------------------|
+| `version`    | string | `'unknown'` | Instrumentation scope version       |
+| `schema_url` | string | `null`      | Schema URL for semantic conventions |
+| `attributes` | object | `{}`        | Additional scope attributes         |
+
+```yaml
+flow_telemetry:
+  tracers:
+    my_tracer:
+      version: '1.0.0'  # default: 'unknown'
+      schema_url: 'https://opentelemetry.io/schemas/1.21.0'
+      attributes:
+        custom.attribute: 'value'
+
+  meters:
+    my_meter:
+      version: '1.0.0'  # default: 'unknown'
+      schema_url: null
+      attributes: { }
+
+  loggers:
+    my_logger:
+      version: '1.0.0'  # default: 'unknown'
+```
+
+## Pattern Matching
+
+Several configuration options support pattern matching for exclusion lists (paths, commands, templates, etc.).
+
+### Exact String Matching
+
+Patterns without regex delimiters match exactly:
+
+```yaml
+exclude_paths:
+  - path: '/_profiler'    # Matches exactly /_profiler
+  - path: '/health'       # Matches exactly /health
+```
+
+### Regex Matching
+
+Patterns enclosed in `/` delimiters are treated as regular expressions:
+
+```yaml
+exclude_paths:
+  - path: '/^\/api\/internal\/.*/'  # Regex: matches /api/internal/*
+exclude_commands:
+  - '/^debug:.*/'                   # Regex: matches debug:* commands
+exclude_templates:
+  - '/^@Debug\/.*/'                 # Regex: matches @Debug/* templates
+```
+
+## Usage
+
+### Accessing Telemetry in Services
+
+Inject the `Telemetry` service to create custom spans, metrics, and logs:
+
+```php
+<?php
+
+namespace App\Service;
+
+use Flow\Telemetry\Telemetry;
+
+final class OrderService
+{
+    public function __construct(
+        private readonly Telemetry $telemetry,
+    ) {
+    }
+
+    public function processOrder(int $orderId): void
+    {
+        $tracer = $this->telemetry->tracer('order-service');
+
+        $tracer->trace('process_order', function () use ($orderId) {
+            // Your order processing logic
+        }, [
+            'order.id' => $orderId,
+        ]);
+    }
+}
+```
+
+### Creating Custom Spans in Controllers
+
+```php
+<?php
+
+namespace App\Controller;
+
+use Flow\Telemetry\Telemetry;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+final class CheckoutController extends AbstractController
+{
+    public function __construct(
+        private readonly Telemetry $telemetry,
+    ) {
+    }
+
+    #[Route('/checkout', name: 'checkout')]
+    public function checkout(): Response
+    {
+        $tracer = $this->telemetry->tracer('checkout');
+
+        return $tracer->trace('checkout_page', function () {
+            // Nested span for cart validation
+            return $this->telemetry->tracer('checkout')->trace(
+                'validate_cart',
+                fn () => $this->render('checkout/index.html.twig')
+            );
+        });
+    }
+}
+```
+
+### Recording Metrics
+
+```php
+<?php
+
+$meter = $this->telemetry->meter('business-metrics');
+
+// Counter
+$meter->counter('orders_processed')
+    ->add(1, ['status' => 'completed']);
+
+// Histogram
+$meter->histogram('order_value')
+    ->record(99.99, ['currency' => 'USD']);
+
+// Gauge
+$meter->gauge('active_users')
+    ->record(42);
+```
+
+### Logging with Telemetry
+
+```php
+<?php
+
+$logger = $this->telemetry->logger('app');
+
+$logger->info('Order processed', [
+    'order_id' => 12345,
+    'amount' => 99.99,
+]);
+```
+
+## Complete Production Example
 
 ```yaml
 # config/packages/flow_telemetry.yaml
 flow_telemetry:
-    service_name: 'my-app'
-    service_version: '1.0.0'
-    environment: '%kernel.environment%'
+  resource:
+    custom:
+      service.name: 'my-app'
+      service.version: '%env(APP_VERSION)%'
 
-    exporter: 'console'  # console|void|memory|otlp
+  propagator:
+    type: w3c
 
-    tracing:
-        enabled: true
-        sampler: 'always_on'
+  tracer_provider:
+    sampler:
+      type: trace_id_ratio
+      ratio: 0.1  # Sample 10% of traces in production
+    processor:
+      type: batching
+      batch_size: 512
+      exporter:
+        type: otlp
+        otlp:
+          transport:
+            type: curl
+            endpoint: '%env(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)%'
+            timeout: 30
+            headers:
+              Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
 
-    metrics:
-        enabled: true
+  meter_provider:
+    temporality: cumulative
+    processor:
+      type: batching
+      exporter:
+        type: otlp
+        otlp:
+          transport:
+            endpoint: '%env(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)%'
 
-    logging:
-        enabled: true
+  logger_provider:
+    processor:
+      type: severity_filtering
+      minimum_severity: info
+      inner_processor:
+        type: batching
+        exporter:
+          type: otlp
+          otlp:
+            transport:
+              endpoint: '%env(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)%'
 
-    http:
-        enabled: true
-
+  instrumentation:
+    http_kernel:
+      enabled: true
+      exclude_paths:
+        - path: '/_profiler'
+        - path: '/_wdt'
+        - path: '/health'
+          method: GET
     console:
-        enabled: true
+      enabled: true
+      exclude_commands:
+        - 'cache:clear'
+        - 'cache:warmup'
+        - '/^debug:.*/'
+    messenger:
+      enabled: true
+      context_propagation: true
+    dbal:
+      enabled: true
+      log_sql: true
+      max_sql_length: 500
+    cache:
+      enabled: true
+      exclude_pools:
+        - 'cache.system'
 ```
