@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-02-04
+## [Unreleased] - 2026-02-10
 
 ### Added
+- [#2202](https://github.com/flow-php/flow/pull/2202) - **Flow PHP - Symfony Telemetry Bundle** - [@norberttech](https://github.com/norberttech)
 - [#2198](https://github.com/flow-php/flow/pull/2198) - **integration with flow-php/telemetry and flow-php/etl** - [@norberttech](https://github.com/norberttech)
 - [#2198](https://github.com/flow-php/flow/pull/2198) - **Throuhgput instrument in Telemetry** - [@norberttech](https://github.com/norberttech)
 - [#2198](https://github.com/flow-php/flow/pull/2198) - **Possibility to complete Meter Instruments on demand like spans** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +31,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2202](https://github.com/flow-php/flow/pull/2202) - **DSL documentation page** - [@norberttech](https://github.com/norberttech)
 - [#2196](https://github.com/flow-php/flow/pull/2196) - **Autocast behavior when number is incorrectly detected as date to later be merged with float|int** - [@norberttech](https://github.com/norberttech)
 - [df7b4a](https://github.com/flow-php/flow/commit/df7b4a2300fa8545b0cde0d89bf37cb4fd4427e0) - **added missingstup for pg_query_is_utility_stmt method of pg-query-extension** - [@norberttech](https://github.com/norberttech)
 - [c6d9fe](https://github.com/flow-php/flow/commit/c6d9fe9347f5f56f23705b9d080ad4120337eda8) - **static analysis configuration** - [@norberttech](https://github.com/norberttech)
