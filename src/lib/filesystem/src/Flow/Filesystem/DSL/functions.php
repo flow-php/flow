@@ -15,6 +15,8 @@ use Flow\Filesystem\{Filesystem,
     Protocol};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Options;
+use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
+use Flow\Telemetry\Telemetry;
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
@@ -131,4 +133,38 @@ function fstab(Filesystem ...$filesystems) : FilesystemTable
     }
 
     return new FilesystemTable(...$filesystems);
+}
+
+/**
+ * Wrap a filesystem with telemetry tracing support.
+ * All filesystem and stream operations will be traced according to the configuration.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function traceable_filesystem(
+    Filesystem $filesystem,
+    FilesystemTelemetryConfig $telemetryConfig,
+) : TraceableFilesystem {
+    return new TraceableFilesystem($filesystem, $telemetryConfig);
+}
+
+/**
+ * Create a telemetry configuration for the filesystem.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function filesystem_telemetry_config(
+    Telemetry $telemetry,
+    ?FilesystemTelemetryOptions $options = null,
+) : FilesystemTelemetryConfig {
+    return new FilesystemTelemetryConfig($telemetry, $options ?? new FilesystemTelemetryOptions());
+}
+
+/**
+ * Create options for filesystem telemetry.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function filesystem_telemetry_options(
+    bool $traceFilesystemOperations = true,
+    bool $traceStreamOperations = true,
+) : FilesystemTelemetryOptions {
+    return new FilesystemTelemetryOptions($traceFilesystemOperations, $traceStreamOperations);
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Config;
 
 use function Flow\Filesystem\DSL\fstab;
-use Composer\InstalledVersions;
 use Flow\Clock\SystemClock;
 use Flow\ETL\{Analyze, Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
@@ -18,7 +17,7 @@ use Flow\ETL\Pipeline\Optimizer\{BatchSizeOptimization, LimitOptimization};
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
-use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\{PackageVersion, Telemetry};
 use Psr\Clock\ClockInterface;
 
 final class ConfigBuilder
@@ -60,7 +59,7 @@ final class ConfigBuilder
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
         $this->telemetryConfig = null;
-        $this->version = InstalledVersions::getPrettyVersion('flow-php/etl') ?: InstalledVersions::getPrettyVersion('flow-php/flow') ?? 'unknown';
+        $this->version = PackageVersion::get('flow-php/etl') === 'unknown' ? PackageVersion::get('flow-php/flow') : PackageVersion::get('flow-php/etl');
     }
 
     public function analyze(Analyze $analyze) : self
