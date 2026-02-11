@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config;
 
-use function Flow\Filesystem\DSL\fstab;
+use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options, fstab};
 use Flow\Clock\SystemClock;
 use Flow\ETL\{Analyze, Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
@@ -41,6 +41,8 @@ final class ConfigBuilder
     private readonly RandomValueGenerator $randomValueGenerator;
 
     private ?Serializer $serializer;
+
+    private readonly ?TelemetryConfig $telemetry;
 
     private ?TelemetryConfig $telemetryConfig;
 
@@ -189,6 +191,18 @@ final class ConfigBuilder
     {
         $this->telemetryConfig = new TelemetryConfig($telemetry, $options);
 
+        if ($this->fstab !== null) {
+            $this->fstab->withTelemetry(
+                filesystem_telemetry_config(
+                    $telemetry,
+                    filesystem_telemetry_options(
+                        $options->traceFilesystem,
+                        $options->traceFilesystem,
+                    )
+                )
+            );
+        }
+
         return $this;
     }
 
@@ -196,8 +210,27 @@ final class ConfigBuilder
     {
         if ($this->fstab === null) {
             $this->fstab = fstab();
+
+            if ($this->telemetryConfig && $this->telemetryConfig->options->traceFilesystem) {
+                $this->fstab->withTelemetry(filesystem_telemetry_config(
+                    $this->telemetry()->telemetry,
+                    filesystem_telemetry_options(
+                        $this->telemetry()->options->traceFilesystem,
+                        $this->telemetry()->options->traceFilesystem,
+                    )
+                ));
+            }
         }
 
         return $this->fstab;
+    }
+
+    private function telemetry() : TelemetryConfig
+    {
+        if ($this->telemetryConfig === null) {
+            $this->telemetryConfig = TelemetryConfig::default($this->clock);
+        }
+
+        return $this->telemetryConfig;
     }
 }

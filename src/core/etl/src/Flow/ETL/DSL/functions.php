@@ -268,11 +268,13 @@ function telemetry_options(
     bool $trace_loading = false,
     bool $trace_transformations = false,
     bool $collect_metrics = false,
+    bool $trace_filesystem = false,
 ) : TelemetryOptions {
     return new TelemetryOptions(
         $trace_loading,
         $trace_transformations,
-        $collect_metrics
+        $collect_metrics,
+        $trace_filesystem
     );
 }
 
