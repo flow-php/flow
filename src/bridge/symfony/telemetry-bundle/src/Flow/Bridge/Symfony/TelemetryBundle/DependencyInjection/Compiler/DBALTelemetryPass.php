@@ -99,8 +99,10 @@ final class DBALTelemetryPass implements CompilerPassInterface
 
     private function matchesPattern(string $connectionName, string $pattern) : bool
     {
-        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
-            return (bool) \preg_match($pattern, $connectionName);
+        $result = @\preg_match($pattern, $connectionName);
+
+        if ($result !== false) {
+            return (bool) $result;
         }
 
         return $connectionName === $pattern;
