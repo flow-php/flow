@@ -57,7 +57,7 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new TestCommand());
+        $this->addCommand($application, new TestCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
@@ -108,7 +108,7 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new TestCommand());
+        $this->addCommand($application, new TestCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
@@ -159,8 +159,8 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new TestCommand());
-        $application->add(new FailingCommand());
+        $this->addCommand($application, new TestCommand());
+        $this->addCommand($application, new FailingCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
@@ -211,7 +211,7 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new FailingCommand());
+        $this->addCommand($application, new FailingCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
@@ -271,7 +271,7 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new TestCommand());
+        $this->addCommand($application, new TestCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
