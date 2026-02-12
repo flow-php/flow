@@ -328,7 +328,8 @@ final class TracingConnectionTest extends TestCase
                 };
             }
 
-            public function quote(string $value) : string
+            /** @phpstan-ignore missingType.parameter, missingType.parameter */
+            public function quote($value, $type = ParameterType::STRING) : string
             {
                 return "'{$value}'";
             }

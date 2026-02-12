@@ -49,10 +49,27 @@ final class Logger
      *
      * @param string $body The log message
      * @param Attributes|TAttributeValueMap $attributes Optional attributes
+     * @param null|\DateTimeImmutable $timestamp When the event occurred (defaults to current time)
+     * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function debug(string $body, array|Attributes $attributes = []) : void
-    {
-        $this->emit(new LogRecord(Severity::DEBUG, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    public function debug(
+        string $body,
+        array|Attributes $attributes = [],
+        ?\DateTimeImmutable $timestamp = null,
+        ?\DateTimeImmutable $observedTimestamp = null,
+        ?SpanContext $spanContext = null,
+    ) : void {
+        $this->emit(
+            new LogRecord(
+                Severity::DEBUG,
+                $body,
+                $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+                $timestamp,
+                $observedTimestamp,
+            ),
+            $spanContext,
+        );
     }
 
     /**
@@ -62,15 +79,16 @@ final class Logger
      * such as setting a custom timestamp or recording an exception.
      *
      * @param LogRecord $record The log record to emit
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function emit(LogRecord $record) : void
+    public function emit(LogRecord $record, ?SpanContext $spanContext = null) : void
     {
         $entry = new LogEntry(
             $record,
             $this->resource,
             $this->scope,
             $record->timestamp ?? $this->clock->now(),
-            $this->resolveSpanContext(),
+            $spanContext ?? $this->resolveSpanContext(),
         );
 
         $this->processor->process($entry);
@@ -84,10 +102,27 @@ final class Logger
      *
      * @param string $body The log message
      * @param Attributes|TAttributeValueMap $attributes Optional attributes
+     * @param null|\DateTimeImmutable $timestamp When the event occurred (defaults to current time)
+     * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function error(string $body, array|Attributes $attributes = []) : void
-    {
-        $this->emit(new LogRecord(Severity::ERROR, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    public function error(
+        string $body,
+        array|Attributes $attributes = [],
+        ?\DateTimeImmutable $timestamp = null,
+        ?\DateTimeImmutable $observedTimestamp = null,
+        ?SpanContext $spanContext = null,
+    ) : void {
+        $this->emit(
+            new LogRecord(
+                Severity::ERROR,
+                $body,
+                $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+                $timestamp,
+                $observedTimestamp,
+            ),
+            $spanContext,
+        );
     }
 
     /**
@@ -98,10 +133,27 @@ final class Logger
      *
      * @param string $body The log message
      * @param Attributes|TAttributeValueMap $attributes Optional attributes
+     * @param null|\DateTimeImmutable $timestamp When the event occurred (defaults to current time)
+     * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function fatal(string $body, array|Attributes $attributes = []) : void
-    {
-        $this->emit(new LogRecord(Severity::FATAL, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    public function fatal(
+        string $body,
+        array|Attributes $attributes = [],
+        ?\DateTimeImmutable $timestamp = null,
+        ?\DateTimeImmutable $observedTimestamp = null,
+        ?SpanContext $spanContext = null,
+    ) : void {
+        $this->emit(
+            new LogRecord(
+                Severity::FATAL,
+                $body,
+                $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+                $timestamp,
+                $observedTimestamp,
+            ),
+            $spanContext,
+        );
     }
 
     /**
@@ -120,10 +172,27 @@ final class Logger
      *
      * @param string $body The log message
      * @param Attributes|TAttributeValueMap $attributes Optional attributes
+     * @param null|\DateTimeImmutable $timestamp When the event occurred (defaults to current time)
+     * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function info(string $body, array|Attributes $attributes = []) : void
-    {
-        $this->emit(new LogRecord(Severity::INFO, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    public function info(
+        string $body,
+        array|Attributes $attributes = [],
+        ?\DateTimeImmutable $timestamp = null,
+        ?\DateTimeImmutable $observedTimestamp = null,
+        ?SpanContext $spanContext = null,
+    ) : void {
+        $this->emit(
+            new LogRecord(
+                Severity::INFO,
+                $body,
+                $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+                $timestamp,
+                $observedTimestamp,
+            ),
+            $spanContext,
+        );
     }
 
     /**
@@ -150,10 +219,27 @@ final class Logger
      *
      * @param string $body The log message
      * @param Attributes|TAttributeValueMap $attributes Optional attributes
+     * @param null|\DateTimeImmutable $timestamp When the event occurred (defaults to current time)
+     * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function trace(string $body, array|Attributes $attributes = []) : void
-    {
-        $this->emit(new LogRecord(Severity::TRACE, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    public function trace(
+        string $body,
+        array|Attributes $attributes = [],
+        ?\DateTimeImmutable $timestamp = null,
+        ?\DateTimeImmutable $observedTimestamp = null,
+        ?SpanContext $spanContext = null,
+    ) : void {
+        $this->emit(
+            new LogRecord(
+                Severity::TRACE,
+                $body,
+                $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+                $timestamp,
+                $observedTimestamp,
+            ),
+            $spanContext,
+        );
     }
 
     /**
@@ -163,11 +249,28 @@ final class Logger
      * the application from functioning.
      *
      * @param string $body The log message
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Optional attributes
+     * @param Attributes|TAttributeValueMap $attributes Optional attributes
+     * @param null|\DateTimeImmutable $timestamp When the event occurred (defaults to current time)
+     * @param null|\DateTimeImmutable $observedTimestamp When the log was observed by collection
+     * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function warn(string $body, array|Attributes $attributes = []) : void
-    {
-        $this->emit(new LogRecord(Severity::WARN, $body, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes)));
+    public function warn(
+        string $body,
+        array|Attributes $attributes = [],
+        ?\DateTimeImmutable $timestamp = null,
+        ?\DateTimeImmutable $observedTimestamp = null,
+        ?SpanContext $spanContext = null,
+    ) : void {
+        $this->emit(
+            new LogRecord(
+                Severity::WARN,
+                $body,
+                $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+                $timestamp,
+                $observedTimestamp,
+            ),
+            $spanContext,
+        );
     }
 
     /**

@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Logger;
 
 use Flow\Telemetry\{Attributes, Resource};
-use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\{MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\Logger\{Logger, LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidLogExporter;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
+use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 
 final class MemoryLoggerProviderTest extends TestCase
@@ -41,6 +42,73 @@ final class MemoryLoggerProviderTest extends TestCase
 
         self::assertCount(1, $processor->entries());
         self::assertSame('value', $processor->entries()[0]->record->attributes->normalize()['key']);
+    }
+
+    public function test_logger_accepts_custom_observed_timestamp() : void
+    {
+        $processor = $this->createProcessor();
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+        $observedTimestamp = new \DateTimeImmutable('2024-01-15 10:35:00');
+
+        $logger->info('message with observed timestamp', [], null, $observedTimestamp);
+
+        self::assertCount(1, $processor->entries());
+        self::assertEquals($observedTimestamp, $processor->entries()[0]->record->observedTimestamp);
+    }
+
+    public function test_logger_accepts_custom_span_context() : void
+    {
+        $processor = $this->createProcessor();
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+        $customSpanContext = SpanContext::create(
+            TraceId::generate(),
+            SpanId::generate(),
+        );
+
+        $logger->info('message with custom span context', [], null, null, $customSpanContext);
+
+        self::assertCount(1, $processor->entries());
+        self::assertSame($customSpanContext, $processor->entries()[0]->spanContext);
+    }
+
+    public function test_logger_accepts_custom_timestamp() : void
+    {
+        $processor = $this->createProcessor();
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+        $customTimestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+
+        $logger->info('message with custom timestamp', [], $customTimestamp);
+
+        self::assertCount(1, $processor->entries());
+        self::assertEquals($customTimestamp, $processor->entries()[0]->timestamp);
+    }
+
+    public function test_logger_passes_all_custom_parameters_for_all_severity_levels() : void
+    {
+        $processor = $this->createProcessor();
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $observedTimestamp = new \DateTimeImmutable('2024-01-15 10:35:00');
+        $spanContext = SpanContext::create(TraceId::generate(), SpanId::generate());
+
+        $logger->trace('trace msg', [], $timestamp, $observedTimestamp, $spanContext);
+        $logger->debug('debug msg', [], $timestamp, $observedTimestamp, $spanContext);
+        $logger->info('info msg', [], $timestamp, $observedTimestamp, $spanContext);
+        $logger->warn('warn msg', [], $timestamp, $observedTimestamp, $spanContext);
+        $logger->error('error msg', [], $timestamp, $observedTimestamp, $spanContext);
+        $logger->fatal('fatal msg', [], $timestamp, $observedTimestamp, $spanContext);
+
+        self::assertCount(6, $processor->entries());
+
+        foreach ($processor->entries() as $entry) {
+            self::assertEquals($timestamp, $entry->timestamp);
+            self::assertEquals($observedTimestamp, $entry->record->observedTimestamp);
+            self::assertSame($spanContext, $entry->spanContext);
+        }
     }
 
     public function test_logger_returns_logger_instance() : void
