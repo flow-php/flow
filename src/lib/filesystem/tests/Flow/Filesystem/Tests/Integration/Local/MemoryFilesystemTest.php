@@ -26,8 +26,10 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         $stream->append("This is second line\n");
         $stream->close();
 
-        self::assertTrue($fs->status($path)->isFile());
-        self::assertFalse($fs->status($path)->isDirectory());
+        $status = $fs->status($path);
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
+        self::assertFalse($status->isDirectory());
         self::assertSame(
             <<<'TXT'
 This is first line
@@ -46,8 +48,10 @@ TXT
         $fs = memory_filesystem();
         $fs->writeTo($path = path_memory('file'));
 
-        self::assertTrue($fs->status($path)->isFile());
-        self::assertFalse($fs->status($path)->isDirectory()); // there are no folders in memory
+        $status = $fs->status($path);
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
+        self::assertFalse($status->isDirectory());
         self::assertNull($fs->status(path_memory('/not_existing_directory')));
     }
 
@@ -55,9 +59,13 @@ TXT
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path_memory('/var/file.txt'))->fromResource(\fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(path_memory('/var/file.txt'))->fromResource($resource);
 
-        self::assertTrue($fs->status(path_memory('/var/file.txt'))->isFile());
+        $status = $fs->status(path_memory('/var/file.txt'));
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
         $fs->rm(path_memory('/var/file.txt'));
     }
 
@@ -79,7 +87,9 @@ TXT
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path_memory('/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(path_memory('/var/some_path_to/file.txt'))->fromResource($resource);
 
         self::assertNull($fs->status(path_memory('/var/some_path')));
     }
@@ -88,12 +98,19 @@ TXT
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path_memory('/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(path_memory('/var/some_path_to/file.txt'))->fromResource($resource);
 
-        self::assertTrue($fs->status(path_memory('/var/some_path_to/file.txt'))->isFile());
+        $status = $fs->status(path_memory('/var/some_path_to/file.txt'));
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
+
+        $patternStatus = $fs->status(path_memory('/var/some_path_to/*.txt'));
+        self::assertNotNull($patternStatus);
         self::assertSame(
             'memory://var/some_path_to/file.txt',
-            $fs->status(path_memory('/var/some_path_to/*.txt'))->path->uri()
+            $patternStatus->path->uri()
         );
     }
 
@@ -160,7 +177,9 @@ TXT
         $stream = $fs->writeTo(path_memory('/var/flow-fs-test/remove_file_when_exists.txt'));
         $stream->append('some data to make file not empty');
 
-        self::assertTrue($fs->status($stream->path())->isFile());
+        $status = $fs->status($stream->path());
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
 
         self::assertTrue($fs->rm($stream->path()));
 

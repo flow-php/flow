@@ -1,0 +1,139 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Filesystem\Telemetry;
+
+use Flow\Filesystem\{DestinationStream, Path};
+use Flow\Telemetry\Meter\Instrument\Counter;
+use Flow\Telemetry\Meter\Meter;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
+
+final class TraceableDestinationStream implements DestinationStream
+{
+    private ?Counter $bytesWrittenCounter = null;
+
+    private ?Meter $meter = null;
+
+    private ?Counter $operationsCounter = null;
+
+    private ?Span $span = null;
+
+    private int $totalBytesWritten = 0;
+
+    private ?Tracer $tracer = null;
+
+    public function __construct(
+        private readonly DestinationStream $stream,
+        private readonly FilesystemTelemetryConfig $telemetryConfig,
+    ) {
+        if ($this->telemetryConfig->options->traceStreams) {
+            $this->tracer = $telemetryConfig->telemetry->tracer(
+                'flow.filesystem',
+                PackageVersion::get('flow-php/filesystem'),
+            );
+
+            $this->span = $this->tracer->span(
+                'DestinationStream',
+                SpanKind::INTERNAL,
+                [
+                    FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
+                    FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                ]
+            );
+        }
+
+        if ($this->telemetryConfig->options->collectMetrics) {
+            $this->meter = $telemetryConfig->telemetry->meter(
+                'flow.filesystem',
+                PackageVersion::get('flow-php/filesystem'),
+            );
+            $this->bytesWrittenCounter = $this->meter->createCounter(
+                'filesystem.destination.bytes_written',
+                'bytes',
+                'Total bytes written to destination streams',
+            );
+            $this->operationsCounter = $this->meter->createCounter(
+                'filesystem.destination.operations',
+                'operations',
+                'Number of write operations',
+            );
+        }
+    }
+
+    public function append(string $data) : DestinationStream
+    {
+        $bytesWritten = \strlen($data);
+
+        $this->stream->append($data);
+        $this->totalBytesWritten += $bytesWritten;
+
+        $this->recordMetrics($bytesWritten);
+
+        return $this;
+    }
+
+    public function close() : void
+    {
+        try {
+            $this->stream->close();
+
+            if ($this->span !== null) {
+                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $this->span->setStatus(SpanStatus::ok());
+            }
+        } catch (\Throwable $e) {
+            if ($this->span !== null) {
+                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $this->span->recordException($e, $this->telemetryConfig->clock->now());
+                $this->span->setStatus(SpanStatus::error($e->getMessage()));
+            }
+
+            throw $e;
+        } finally {
+            if ($this->span !== null && $this->tracer !== null) {
+                $this->tracer->complete($this->span);
+                $this->span = null;
+            }
+        }
+    }
+
+    /**
+     * @param resource $resource
+     */
+    public function fromResource($resource) : DestinationStream
+    {
+        $startPos = \ftell($resource);
+
+        $this->stream->fromResource($resource);
+
+        $endPos = \ftell($resource);
+        $bytesWritten = ($startPos !== false && $endPos !== false) ? ($endPos - $startPos) : 0;
+        $this->totalBytesWritten += $bytesWritten;
+
+        $this->recordMetrics($bytesWritten);
+
+        return $this;
+    }
+
+    public function isOpen() : bool
+    {
+        return $this->stream->isOpen();
+    }
+
+    public function path() : Path
+    {
+        return $this->stream->path();
+    }
+
+    private function recordMetrics(int $bytesWritten) : void
+    {
+        if (!$this->telemetryConfig->options->collectMetrics) {
+            return;
+        }
+
+        $this->bytesWrittenCounter?->add($bytesWritten);
+        $this->operationsCounter?->add(1);
+    }
+}

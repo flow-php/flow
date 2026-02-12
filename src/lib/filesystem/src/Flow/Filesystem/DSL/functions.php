@@ -15,6 +15,9 @@ use Flow\Filesystem\{Filesystem,
     Protocol};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Options;
+use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
+use Flow\Telemetry\Telemetry;
+use Psr\Clock\ClockInterface;
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
@@ -131,4 +134,45 @@ function fstab(Filesystem ...$filesystems) : FilesystemTable
     }
 
     return new FilesystemTable(...$filesystems);
+}
+
+/**
+ * Wrap a filesystem with telemetry tracing support.
+ * All filesystem and stream operations will be traced according to the configuration.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function traceable_filesystem(
+    Filesystem $filesystem,
+    FilesystemTelemetryConfig $telemetryConfig,
+) : TraceableFilesystem {
+    return new TraceableFilesystem($filesystem, $telemetryConfig);
+}
+
+/**
+ * Create a telemetry configuration for the filesystem.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function filesystem_telemetry_config(
+    Telemetry $telemetry,
+    ClockInterface $clock,
+    ?FilesystemTelemetryOptions $options = null,
+) : FilesystemTelemetryConfig {
+    return new FilesystemTelemetryConfig($telemetry, $clock, $options ?? new FilesystemTelemetryOptions());
+}
+
+/**
+ * Create options for filesystem telemetry.
+ *
+ * @param bool $traceStreams Create a single span per stream lifecycle (default: ON)
+ * @param bool $collectMetrics Collect metrics for bytes/operation counts (default: ON)
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function filesystem_telemetry_options(
+    bool $traceStreams = true,
+    bool $collectMetrics = true,
+) : FilesystemTelemetryOptions {
+    return new FilesystemTelemetryOptions(
+        $traceStreams,
+        $collectMetrics,
+    );
 }

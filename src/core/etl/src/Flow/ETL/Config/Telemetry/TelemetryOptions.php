@@ -4,39 +4,55 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Telemetry;
 
+use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
+
 final readonly class TelemetryOptions
 {
     public function __construct(
         public bool $traceLoading = false,
         public bool $traceTransformations = false,
         public bool $collectMetrics = false,
+        public FilesystemTelemetryOptions $filesystem = new FilesystemTelemetryOptions(),
     ) {
     }
 
-    public function collectMetrics(bool $collect) : self
+    public function collectMetrics(bool $collect = true) : self
     {
         return new self(
             traceLoading: $this->traceLoading,
             traceTransformations: $this->traceTransformations,
-            collectMetrics: $collect
+            collectMetrics: $collect,
+            filesystem: $this->filesystem,
         );
     }
 
-    public function traceLoading(bool $trace) : self
+    public function filesystem(FilesystemTelemetryOptions $options) : self
+    {
+        return new self(
+            traceLoading: $this->traceLoading,
+            traceTransformations: $this->traceTransformations,
+            collectMetrics: $this->collectMetrics,
+            filesystem: $options,
+        );
+    }
+
+    public function traceLoading(bool $trace = true) : self
     {
         return new self(
             traceLoading: $trace,
             traceTransformations: $this->traceTransformations,
-            collectMetrics: $this->collectMetrics
+            collectMetrics: $this->collectMetrics,
+            filesystem: $this->filesystem,
         );
     }
 
-    public function traceTransformations(bool $trace) : self
+    public function traceTransformations(bool $trace = true) : self
     {
         return new self(
             traceLoading: $this->traceLoading,
             traceTransformations: $trace,
-            collectMetrics: $this->collectMetrics
+            collectMetrics: $this->collectMetrics,
+            filesystem: $this->filesystem,
         );
     }
 }

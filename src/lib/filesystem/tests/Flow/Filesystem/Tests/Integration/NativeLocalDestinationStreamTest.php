@@ -22,12 +22,17 @@ final class NativeLocalDestinationStreamTest extends NativeLocalFilesystemTestCa
     {
         $fs = new NativeLocalFilesystem();
 
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+
         $stream = $fs->writeTo(path(__DIR__ . '/var/orders.csv'));
-        $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $stream->fromResource($resource);
         $stream->close();
 
-        self::assertTrue($fs->status(path(__DIR__ . '/var/orders.csv'))->isFile());
-        self::assertFalse($fs->status(path(__DIR__ . '/var/orders.csv'))->isDirectory());
+        $status = $fs->status(path(__DIR__ . '/var/orders.csv'));
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
+        self::assertFalse($status->isDirectory());
         self::assertSame(\file_get_contents(__DIR__ . '/Fixtures/orders.csv'), $fs->readFrom(path(__DIR__ . '/var/orders.csv'))->content());
 
         $fs->rm(path(__DIR__ . '/var/orders.csv'));
@@ -41,8 +46,10 @@ final class NativeLocalDestinationStreamTest extends NativeLocalFilesystemTestCa
         $stream->append('Hello, World!');
         $stream->close();
 
-        self::assertTrue($fs->status(path(__DIR__ . '/var/file.txt'))->isFile());
-        self::assertFalse($fs->status(path(__DIR__ . '/var/file.txt'))->isDirectory());
+        $status = $fs->status(path(__DIR__ . '/var/file.txt'));
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
+        self::assertFalse($status->isDirectory());
         self::assertSame('Hello, World!', $fs->readFrom(path(__DIR__ . '/var/file.txt'))->content());
 
         $fs->rm(path(__DIR__ . '/var/file.txt'));

@@ -67,12 +67,12 @@ final class RealpathTest extends TestCase
 
     public function test_windows_relative_to_absolute_path() : void
     {
-        // Get current working directory
-        $cwd = \str_replace('\\', '/', \getcwd());
+        $currentDir = \getcwd();
+        self::assertIsString($currentDir);
+        $cwd = \str_replace('\\', '/', $currentDir);
 
         $relativePath = path_real('./test_file.txt');
 
-        // Should resolve to current working directory
         self::assertStringStartsWith($cwd, $relativePath->path());
         self::assertStringEndsWith('test_file.txt', $relativePath->path());
     }

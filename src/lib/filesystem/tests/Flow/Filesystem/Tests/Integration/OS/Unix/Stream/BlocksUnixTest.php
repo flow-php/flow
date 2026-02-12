@@ -27,7 +27,9 @@ final class BlocksUnixTest extends TestCase
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
         $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($file);
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        self::assertIsInt($fileSize);
 
         $blocks->fromResource($file);
 
@@ -40,7 +42,9 @@ final class BlocksUnixTest extends TestCase
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
         $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($file);
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        self::assertIsInt($fileSize);
 
         $blocks->append(\str_repeat('a', 100));
         $blocks->fromResource($file);
@@ -51,20 +55,20 @@ final class BlocksUnixTest extends TestCase
 
     public function test_unix_large_file_streaming() : void
     {
-        // Create a temporary large file
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
+        self::assertIsString($tempFile);
         $largeContent = \str_repeat("Large file test content\n", 1000);
         \file_put_contents($tempFile, $largeContent);
 
         $blocks = new Blocks(SizeUnits::kbToBytes(5));
         $file = \fopen($tempFile, 'rb');
+        self::assertIsResource($file);
 
         $blocks->fromResource($file);
 
         self::assertSame(\strlen($largeContent), $blocks->size());
         self::assertGreaterThan(1, \count($blocks->all()));
 
-        // Cleanup
         \unlink($tempFile);
     }
 
