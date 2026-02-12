@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-02-10
+## [Unreleased] - 2026-02-12
 
 ### Added
+- [#2210](https://github.com/flow-php/flow/pull/2210) - **Filesystem direct integration with Telemetry** - [@norberttech](https://github.com/norberttech)
 - [#2202](https://github.com/flow-php/flow/pull/2202) - **Flow PHP - Symfony Telemetry Bundle** - [@norberttech](https://github.com/norberttech)
 - [#2198](https://github.com/flow-php/flow/pull/2198) - **integration with flow-php/telemetry and flow-php/etl** - [@norberttech](https://github.com/norberttech)
 - [#2198](https://github.com/flow-php/flow/pull/2198) - **Throuhgput instrument in Telemetry** - [@norberttech](https://github.com/norberttech)
