@@ -62,8 +62,10 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
 
     private function matchesPattern(string $serviceId, string $pattern) : bool
     {
-        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
-            return (bool) \preg_match($pattern, $serviceId);
+        $result = @\preg_match($pattern, $serviceId);
+
+        if ($result !== false) {
+            return (bool) $result;
         }
 
         return $serviceId === $pattern;
