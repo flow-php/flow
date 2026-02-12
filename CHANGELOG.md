@@ -34,6 +34,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2212](https://github.com/flow-php/flow/pull/2212) - **Support any regex delimiter and modifiers in compiler pass pattern matching** - [@bendavies](https://github.com/bendavies)
 - [#2211](https://github.com/flow-php/flow/pull/2211) - **failing symfony telemetry bundle tests** - [@norberttech](https://github.com/norberttech)
 - [#2211](https://github.com/flow-php/flow/pull/2211) - **regex patterns to exclude commands/templates in telemetry bundle** - [@norberttech](https://github.com/norberttech)
 - [#2202](https://github.com/flow-php/flow/pull/2202) - **DSL documentation page** - [@norberttech](https://github.com/norberttech)
