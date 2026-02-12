@@ -31,7 +31,9 @@ final class BlocksUnixSpecificTest extends TestCase
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
         $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($file);
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        self::assertIsInt($fileSize);
 
         $blocks->fromResource($file);
 
@@ -44,7 +46,9 @@ final class BlocksUnixSpecificTest extends TestCase
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
         $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($file);
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        self::assertIsInt($fileSize);
 
         $blocks->append(\str_repeat('a', 100));
         $blocks->fromResource($file);
@@ -60,6 +64,7 @@ final class BlocksUnixSpecificTest extends TestCase
         }
 
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
+        self::assertIsString($tempFile);
         $content = \str_repeat("Permission test content\n", 100);
         \file_put_contents($tempFile, $content);
 
@@ -69,7 +74,7 @@ final class BlocksUnixSpecificTest extends TestCase
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
         $file = \fopen($tempFile, 'rb');
 
-        self::assertNotFalse($file, 'Should be able to open file with 644 permissions');
+        self::assertIsResource($file, 'Should be able to open file with 644 permissions');
 
         $blocks->fromResource($file);
         self::assertSame(\strlen($content), $blocks->size());
@@ -81,11 +86,13 @@ final class BlocksUnixSpecificTest extends TestCase
     {
         // Create a temporary large file
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
+        self::assertIsString($tempFile);
         $largeContent = \str_repeat("Large file test content\n", 1000);
         \file_put_contents($tempFile, $largeContent);
 
         $blocks = new Blocks(SizeUnits::kbToBytes(5));
         $file = \fopen($tempFile, 'rb');
+        self::assertIsResource($file);
 
         $blocks->fromResource($file);
 

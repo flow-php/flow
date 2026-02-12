@@ -5,83 +5,97 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Telemetry;
 
 use Flow\Filesystem\{DestinationStream, Path};
+use Flow\Telemetry\Meter\Instrument\Counter;
+use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
 
-final readonly class TraceableDestinationStream implements DestinationStream
+final class TraceableDestinationStream implements DestinationStream
 {
-    private Tracer $tracer;
+    private ?Counter $bytesWrittenCounter = null;
+
+    private ?Meter $meter = null;
+
+    private ?Counter $operationsCounter = null;
+
+    private ?Span $span = null;
+
+    private int $totalBytesWritten = 0;
+
+    private ?Tracer $tracer = null;
 
     public function __construct(
-        private DestinationStream $stream,
-        private FilesystemTelemetryConfig $telemetryConfig,
+        private readonly DestinationStream $stream,
+        private readonly FilesystemTelemetryConfig $telemetryConfig,
     ) {
-        $this->tracer = $telemetryConfig->telemetry->tracer(
-            'flow.filesystem',
-            PackageVersion::get('flow-php/filesystem'),
-        );
+        if ($this->telemetryConfig->options->traceStreams) {
+            $this->tracer = $telemetryConfig->telemetry->tracer(
+                'flow.filesystem',
+                PackageVersion::get('flow-php/filesystem'),
+            );
+
+            $this->span = $this->tracer->span(
+                'DestinationStream',
+                SpanKind::INTERNAL,
+                [
+                    FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
+                    FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                ]
+            );
+        }
+
+        if ($this->telemetryConfig->options->collectMetrics) {
+            $this->meter = $telemetryConfig->telemetry->meter(
+                'flow.filesystem',
+                PackageVersion::get('flow-php/filesystem'),
+            );
+            $this->bytesWrittenCounter = $this->meter->createCounter(
+                'filesystem.destination.bytes_written',
+                'bytes',
+                'Total bytes written to destination streams',
+            );
+            $this->operationsCounter = $this->meter->createCounter(
+                'filesystem.destination.operations',
+                'operations',
+                'Number of write operations',
+            );
+        }
     }
 
     public function append(string $data) : DestinationStream
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            $this->stream->append($data);
+        $bytesWritten = \strlen($data);
 
-            return $this;
-        }
+        $this->stream->append($data);
+        $this->totalBytesWritten += $bytesWritten;
 
-        $span = $this->tracer->span(
-            'DestinationStream::append',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-                FilesystemTelemetryAttributes::ATTR_BYTES_WRITTEN => \strlen($data),
-            ]
-        );
+        $this->recordMetrics($bytesWritten);
 
-        try {
-            $this->stream->append($data);
-            $span->setStatus(SpanStatus::ok());
-
-            return $this;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $this;
     }
 
     public function close() : void
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            $this->stream->close();
-
-            return;
-        }
-
-        $span = $this->tracer->span(
-            'DestinationStream::close',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
-
         try {
             $this->stream->close();
-            $span->setStatus(SpanStatus::ok());
+
+            if ($this->span !== null) {
+                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $this->span->setStatus(SpanStatus::ok());
+            }
         } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
+            if ($this->span !== null) {
+                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $this->span->recordException($e, $this->telemetryConfig->clock->now());
+                $this->span->setStatus(SpanStatus::error($e->getMessage()));
+            }
 
             throw $e;
         } finally {
-            $this->tracer->complete($span);
+            if ($this->span !== null && $this->tracer !== null) {
+                $this->tracer->complete($this->span);
+                $this->span = null;
+            }
         }
     }
 
@@ -90,34 +104,17 @@ final readonly class TraceableDestinationStream implements DestinationStream
      */
     public function fromResource($resource) : DestinationStream
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            $this->stream->fromResource($resource);
+        $startPos = \ftell($resource);
 
-            return $this;
-        }
+        $this->stream->fromResource($resource);
 
-        $span = $this->tracer->span(
-            'DestinationStream::fromResource',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
+        $endPos = \ftell($resource);
+        $bytesWritten = ($startPos !== false && $endPos !== false) ? ($endPos - $startPos) : 0;
+        $this->totalBytesWritten += $bytesWritten;
 
-        try {
-            $this->stream->fromResource($resource);
-            $span->setStatus(SpanStatus::ok());
+        $this->recordMetrics($bytesWritten);
 
-            return $this;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $this;
     }
 
     public function isOpen() : bool
@@ -128,5 +125,15 @@ final readonly class TraceableDestinationStream implements DestinationStream
     public function path() : Path
     {
         return $this->stream->path();
+    }
+
+    private function recordMetrics(int $bytesWritten) : void
+    {
+        if (!$this->telemetryConfig->options->collectMetrics) {
+            return;
+        }
+
+        $this->bytesWrittenCounter?->add($bytesWritten);
+        $this->operationsCounter?->add(1);
     }
 }

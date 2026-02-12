@@ -29,13 +29,19 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource($resource);
 
-        self::assertTrue($fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'))->isFile());
+        $status = $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'));
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
 
+        $statusForUri = $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'));
+        self::assertNotNull($statusForUri);
         self::assertSame(
             'file://' . ltrim(__DIR__, '/') . '/../var/some_path_to/file.txt',
-            $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
+            $statusForUri->path->uri()
         );
 
         $fs->rm(path(__DIR__ . '/../var/some_path_to'));
@@ -53,10 +59,13 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $fs = native_local_filesystem();
 
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        self::assertIsString($tempFile);
         \file_put_contents($tempFile, 'test content');
 
         $path = path($tempFile);
-        self::assertTrue($fs->status($path)->isFile());
+        $status = $fs->status($path);
+        self::assertNotNull($status);
+        self::assertTrue($status->isFile());
 
         self::assertStringStartsWith('file://', $path->uri());
         self::assertStringStartsWith('/', $path->path());
@@ -96,6 +105,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         }
 
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        self::assertIsString($tempFile);
         \file_put_contents($tempFile, 'test content');
 
         // Test file permissions on Unix
@@ -117,13 +127,16 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $fs = native_local_filesystem();
 
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        self::assertIsString($tempFile);
         $symlinkPath = $tempFile . '_symlink';
 
         \file_put_contents($tempFile, 'test content');
 
         if (\symlink($tempFile, $symlinkPath)) {
             $path = path($symlinkPath);
-            self::assertTrue($fs->status($path)->isFile());
+            $status = $fs->status($path);
+            self::assertNotNull($status);
+            self::assertTrue($status->isFile());
 
             \unlink($symlinkPath);
         }

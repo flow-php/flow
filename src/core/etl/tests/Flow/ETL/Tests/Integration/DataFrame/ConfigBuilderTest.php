@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{analyze, config_builder, telemetry_options};
-use function Flow\Filesystem\DSL\protocol;
+use function Flow\Filesystem\DSL\{filesystem_telemetry_options, protocol};
 use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Sort\SortAlgorithms;
@@ -83,7 +83,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $mockFilesystem->method('protocol')->willReturn(protocol('gcs'));
 
         $config = config_builder()
-            ->withTelemetry($telemetry, telemetry_options(trace_filesystem: true))
+            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: true)))
             ->mount($mockFilesystem)
             ->build();
 
@@ -92,12 +92,12 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         self::assertInstanceOf(TraceableFilesystem::class, $filesystem);
     }
 
-    public function test_with_telemetry_does_not_propagate_when_trace_filesystem_disabled() : void
+    public function test_with_telemetry_does_not_propagate_when_filesystem_telemetry_disabled() : void
     {
         $telemetry = $this->createTelemetry();
 
         $config = config_builder()
-            ->withTelemetry($telemetry, telemetry_options(trace_filesystem: false))
+            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: false, collectMetrics: false)))
             ->build();
 
         $filesystems = $config->fstab()->filesystems();
@@ -107,12 +107,12 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         }
     }
 
-    public function test_with_telemetry_propagates_to_filesystem_when_trace_filesystem_enabled() : void
+    public function test_with_telemetry_propagates_to_filesystem_when_filesystem_telemetry_enabled() : void
     {
         $telemetry = $this->createTelemetry();
 
         $config = config_builder()
-            ->withTelemetry($telemetry, telemetry_options(trace_filesystem: true))
+            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: true)))
             ->build();
 
         $filesystems = $config->fstab()->filesystems();

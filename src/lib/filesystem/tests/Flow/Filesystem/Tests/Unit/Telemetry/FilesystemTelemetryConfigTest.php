@@ -13,34 +13,37 @@ final class FilesystemTelemetryConfigTest extends TestCase
 {
     public function test_config_can_be_created_with_custom_options() : void
     {
-        $tel = $this->createTelemetry();
+        $clock = new SystemClock();
+        $tel = $this->createTelemetry($clock);
         $options = filesystem_telemetry_options(
-            traceFilesystemOperations: false,
-            traceStreamOperations: true,
+            traceStreams: false,
+            collectMetrics: false,
         );
 
-        $config = filesystem_telemetry_config($tel, $options);
+        $config = filesystem_telemetry_config($tel, $clock, $options);
 
         self::assertSame($tel, $config->telemetry);
+        self::assertSame($clock, $config->clock);
         self::assertSame($options, $config->options);
-        self::assertFalse($config->options->traceFilesystemOperations);
-        self::assertTrue($config->options->traceStreamOperations);
+        self::assertFalse($config->options->traceStreams);
+        self::assertFalse($config->options->collectMetrics);
     }
 
     public function test_config_can_be_created_with_default_options() : void
     {
-        $tel = $this->createTelemetry();
+        $clock = new SystemClock();
+        $tel = $this->createTelemetry($clock);
 
-        $config = filesystem_telemetry_config($tel);
+        $config = filesystem_telemetry_config($tel, $clock);
 
         self::assertSame($tel, $config->telemetry);
-        self::assertTrue($config->options->traceFilesystemOperations);
-        self::assertTrue($config->options->traceStreamOperations);
+        self::assertSame($clock, $config->clock);
+        self::assertTrue($config->options->traceStreams);
+        self::assertTrue($config->options->collectMetrics);
     }
 
-    private function createTelemetry() : \Flow\Telemetry\Telemetry
+    private function createTelemetry(SystemClock $clock) : \Flow\Telemetry\Telemetry
     {
-        $clock = new SystemClock();
         $contextStorage = memory_context_storage();
 
         return telemetry(

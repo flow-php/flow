@@ -17,6 +17,7 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
 use Flow\Telemetry\Telemetry;
+use Psr\Clock\ClockInterface;
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
@@ -153,18 +154,25 @@ function traceable_filesystem(
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function filesystem_telemetry_config(
     Telemetry $telemetry,
+    ClockInterface $clock,
     ?FilesystemTelemetryOptions $options = null,
 ) : FilesystemTelemetryConfig {
-    return new FilesystemTelemetryConfig($telemetry, $options ?? new FilesystemTelemetryOptions());
+    return new FilesystemTelemetryConfig($telemetry, $clock, $options ?? new FilesystemTelemetryOptions());
 }
 
 /**
  * Create options for filesystem telemetry.
+ *
+ * @param bool $traceStreams Create a single span per stream lifecycle (default: ON)
+ * @param bool $collectMetrics Collect metrics for bytes/operation counts (default: ON)
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function filesystem_telemetry_options(
-    bool $traceFilesystemOperations = true,
-    bool $traceStreamOperations = true,
+    bool $traceStreams = true,
+    bool $collectMetrics = true,
 ) : FilesystemTelemetryOptions {
-    return new FilesystemTelemetryOptions($traceFilesystemOperations, $traceStreamOperations);
+    return new FilesystemTelemetryOptions(
+        $traceStreams,
+        $collectMetrics,
+    );
 }

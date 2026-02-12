@@ -7,18 +7,18 @@ namespace Flow\Filesystem\Telemetry;
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
 
 final readonly class TraceableFilesystem implements Filesystem
 {
-    private Tracer $tracer;
+    private Logger $logger;
 
     public function __construct(
         private Filesystem $filesystem,
         private FilesystemTelemetryConfig $telemetryConfig,
     ) {
-        $this->tracer = $telemetryConfig->telemetry->tracer(
+        $this->logger = $telemetryConfig->telemetry->logger(
             'flow.filesystem',
             PackageVersion::get('flow-php/filesystem'),
         );
@@ -26,33 +26,14 @@ final readonly class TraceableFilesystem implements Filesystem
 
     public function appendTo(Path $path) : DestinationStream
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            return $this->wrapDestinationStream($this->filesystem->appendTo($path), $path);
+        $stream = $this->filesystem->appendTo($path);
+
+        if (!$this->telemetryConfig->options->traceStreams
+            && !$this->telemetryConfig->options->collectMetrics) {
+            return $stream;
         }
 
-        $span = $this->tracer->span(
-            'Filesystem::appendTo',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'appendTo',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
-            ]
-        );
-
-        try {
-            $stream = $this->filesystem->appendTo($path);
-            $span->setStatus(SpanStatus::ok());
-
-            return $this->wrapDestinationStream($stream, $path);
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return new TraceableDestinationStream($stream, $this->telemetryConfig);
     }
 
     public function getSystemTmpDir() : Path
@@ -65,66 +46,16 @@ final readonly class TraceableFilesystem implements Filesystem
      */
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            yield from $this->filesystem->list($path, $pathFilter);
+        $this->logOperation('list', $path);
 
-            return;
-        }
-
-        $span = $this->tracer->span(
-            'Filesystem::list',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'list',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
-                FilesystemTelemetryAttributes::ATTR_PATH_IS_PATTERN => $path->isPattern(),
-            ]
-        );
-
-        try {
-            yield from $this->filesystem->list($path, $pathFilter);
-            $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        yield from $this->filesystem->list($path, $pathFilter);
     }
 
     public function mv(Path $from, Path $to) : bool
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            return $this->filesystem->mv($from, $to);
-        }
+        $this->logOperation('mv', $from, $to);
 
-        $span = $this->tracer->span(
-            'Filesystem::mv',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'mv',
-                FilesystemTelemetryAttributes::ATTR_PATH_FROM => $from->uri(),
-                FilesystemTelemetryAttributes::ATTR_PATH_TO => $to->uri(),
-            ]
-        );
-
-        try {
-            $result = $this->filesystem->mv($from, $to);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $this->filesystem->mv($from, $to);
     }
 
     public function protocol() : Protocol
@@ -134,143 +65,54 @@ final readonly class TraceableFilesystem implements Filesystem
 
     public function readFrom(Path $path) : SourceStream
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            return $this->wrapSourceStream($this->filesystem->readFrom($path), $path);
+        $stream = $this->filesystem->readFrom($path);
+
+        if (!$this->telemetryConfig->options->traceStreams
+            && !$this->telemetryConfig->options->collectMetrics) {
+            return $stream;
         }
 
-        $span = $this->tracer->span(
-            'Filesystem::readFrom',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'readFrom',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
-            ]
-        );
-
-        try {
-            $stream = $this->filesystem->readFrom($path);
-            $span->setStatus(SpanStatus::ok());
-
-            return $this->wrapSourceStream($stream, $path);
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return new TraceableSourceStream($stream, $this->telemetryConfig);
     }
 
     public function rm(Path $path) : bool
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            return $this->filesystem->rm($path);
-        }
+        $this->logOperation('rm', $path);
 
-        $span = $this->tracer->span(
-            'Filesystem::rm',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'rm',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
-            ]
-        );
-
-        try {
-            $result = $this->filesystem->rm($path);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $this->filesystem->rm($path);
     }
 
     public function status(Path $path) : ?FileStatus
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            return $this->filesystem->status($path);
-        }
+        $this->logOperation('status', $path);
 
-        $span = $this->tracer->span(
-            'Filesystem::status',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'status',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
-            ]
-        );
-
-        try {
-            $result = $this->filesystem->status($path);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $this->filesystem->status($path);
     }
 
     public function writeTo(Path $path) : DestinationStream
     {
-        if (!$this->telemetryConfig->options->traceFilesystemOperations) {
-            return $this->wrapDestinationStream($this->filesystem->writeTo($path), $path);
-        }
+        $stream = $this->filesystem->writeTo($path);
 
-        $span = $this->tracer->span(
-            'Filesystem::writeTo',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
-                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => 'writeTo',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
-            ]
-        );
-
-        try {
-            $stream = $this->filesystem->writeTo($path);
-            $span->setStatus(SpanStatus::ok());
-
-            return $this->wrapDestinationStream($stream, $path);
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
-    }
-
-    private function wrapDestinationStream(DestinationStream $stream, Path $path) : DestinationStream
-    {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
+        if (!$this->telemetryConfig->options->traceStreams
+            && !$this->telemetryConfig->options->collectMetrics) {
             return $stream;
         }
 
         return new TraceableDestinationStream($stream, $this->telemetryConfig);
     }
 
-    private function wrapSourceStream(SourceStream $stream, Path $path) : SourceStream
+    private function logOperation(string $operation, Path $path, ?Path $toPath = null) : void
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            return $stream;
+        $attributes = [
+            FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
+            FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => $operation,
+            FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
+        ];
+
+        if ($toPath !== null) {
+            $attributes[FilesystemTelemetryAttributes::ATTR_PATH_TO] = $toPath->uri();
         }
 
-        return new TraceableSourceStream($stream, $this->telemetryConfig);
+        $this->logger->debug('Filesystem operation: ' . $operation, $attributes);
     }
 }

@@ -8,6 +8,10 @@ final class FilesystemTelemetryAttributes
 {
     public const string ATTR_BYTES_READ = 'bytes.read';
 
+    public const string ATTR_BYTES_TOTAL_READ = 'bytes.total_read';
+
+    public const string ATTR_BYTES_TOTAL_WRITTEN = 'bytes.total_written';
+
     public const string ATTR_BYTES_WRITTEN = 'bytes.written';
 
     public const string ATTR_FILESYSTEM_OPERATION = 'filesystem.operation';

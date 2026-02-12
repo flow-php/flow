@@ -10,6 +10,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
 {
+    /**
+     * @return \Generator<int, array{int<1, max>}>
+     */
     public static function line_lengths() : \Generator
     {
         yield [1];
@@ -60,6 +63,9 @@ TEXT;
         $stream->close();
     }
 
+    /**
+     * @param int<1, max> $lineLength
+     */
     #[DataProvider('line_lengths')]
     public function test_reading_lines_from_file(int $lineLength) : void
     {

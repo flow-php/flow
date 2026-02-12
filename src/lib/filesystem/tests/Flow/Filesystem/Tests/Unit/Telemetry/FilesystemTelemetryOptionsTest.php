@@ -9,52 +9,50 @@ use PHPUnit\Framework\TestCase;
 
 final class FilesystemTelemetryOptionsTest extends TestCase
 {
-    public function test_default_options_enable_all_tracing() : void
+    public function test_default_options_have_expected_values() : void
     {
         $options = filesystem_telemetry_options();
 
-        self::assertTrue($options->traceFilesystemOperations);
-        self::assertTrue($options->traceStreamOperations);
+        self::assertTrue($options->traceStreams);
+        self::assertTrue($options->collectMetrics);
     }
 
     public function test_fluent_interface_allows_chaining() : void
     {
         $options = filesystem_telemetry_options()
-            ->withFilesystemOperations(false)
-            ->withStreamOperations(false);
+            ->traceStreams(false)
+            ->collectMetrics(false);
 
-        self::assertFalse($options->traceFilesystemOperations);
-        self::assertFalse($options->traceStreamOperations);
+        self::assertFalse($options->traceStreams);
+        self::assertFalse($options->collectMetrics);
     }
 
     public function test_options_can_be_created_with_custom_values() : void
     {
         $options = filesystem_telemetry_options(
-            traceFilesystemOperations: false,
-            traceStreamOperations: true,
+            traceStreams: false,
+            collectMetrics: false,
         );
 
-        self::assertFalse($options->traceFilesystemOperations);
-        self::assertTrue($options->traceStreamOperations);
+        self::assertFalse($options->traceStreams);
+        self::assertFalse($options->collectMetrics);
     }
 
-    public function test_with_filesystem_operations_creates_new_instance() : void
+    public function test_with_collect_metrics_creates_new_instance() : void
     {
         $original = filesystem_telemetry_options();
-        $modified = $original->withFilesystemOperations(false);
+        $modified = $original->collectMetrics(false);
 
-        self::assertTrue($original->traceFilesystemOperations);
-        self::assertFalse($modified->traceFilesystemOperations);
-        self::assertTrue($modified->traceStreamOperations);
+        self::assertTrue($original->collectMetrics);
+        self::assertFalse($modified->collectMetrics);
     }
 
-    public function test_with_stream_operations_creates_new_instance() : void
+    public function test_with_trace_streams_creates_new_instance() : void
     {
         $original = filesystem_telemetry_options();
-        $modified = $original->withStreamOperations(false);
+        $modified = $original->traceStreams(false);
 
-        self::assertTrue($original->traceStreamOperations);
-        self::assertFalse($modified->traceStreamOperations);
-        self::assertTrue($modified->traceFilesystemOperations);
+        self::assertTrue($original->traceStreams);
+        self::assertFalse($modified->traceStreams);
     }
 }

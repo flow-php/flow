@@ -7,18 +7,24 @@ namespace Flow\Filesystem\Telemetry;
 final readonly class FilesystemTelemetryOptions
 {
     public function __construct(
-        public bool $traceFilesystemOperations = true,
-        public bool $traceStreamOperations = true,
+        public bool $traceStreams = true,
+        public bool $collectMetrics = true,
     ) {
     }
 
-    public function withFilesystemOperations(bool $trace = true) : self
+    public function collectMetrics(bool $collect = true) : self
     {
-        return new self($trace, $this->traceStreamOperations);
+        return new self(
+            $this->traceStreams,
+            $collect,
+        );
     }
 
-    public function withStreamOperations(bool $trace = true) : self
+    public function traceStreams(bool $trace = true) : self
     {
-        return new self($this->traceFilesystemOperations, $trace);
+        return new self(
+            $trace,
+            $this->collectMetrics,
+        );
     }
 }

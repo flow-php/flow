@@ -263,6 +263,9 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals($expectedScheme, $path->protocol()->name);
     }
 
+    /**
+     * @param array<int, array{name: string, value: string}> $partitionData
+     */
     #[DataProvider('partitionProvider')]
     public function test_partition_logic(string $input, array $partitionData, string $expected) : void
     {

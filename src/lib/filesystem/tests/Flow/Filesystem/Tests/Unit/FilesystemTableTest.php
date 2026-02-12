@@ -109,6 +109,6 @@ final class FilesystemTableTest extends TestCase
             logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
         );
 
-        return filesystem_telemetry_config($tel, filesystem_telemetry_options());
+        return filesystem_telemetry_config($tel, $clock, filesystem_telemetry_options());
     }
 }

@@ -212,6 +212,7 @@ use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameCompa
 use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStrategy};
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
 use Flow\Filesystem\Stream\Mode;
+use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use Flow\Serializer\{NativePHPSerializer, Serializer};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
@@ -268,13 +269,13 @@ function telemetry_options(
     bool $trace_loading = false,
     bool $trace_transformations = false,
     bool $collect_metrics = false,
-    bool $trace_filesystem = false,
+    ?FilesystemTelemetryOptions $filesystem = null,
 ) : TelemetryOptions {
     return new TelemetryOptions(
         $trace_loading,
         $trace_transformations,
         $collect_metrics,
-        $trace_filesystem
+        $filesystem ?? new FilesystemTelemetryOptions()
     );
 }
 

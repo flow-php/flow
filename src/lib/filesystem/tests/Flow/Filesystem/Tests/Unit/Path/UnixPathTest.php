@@ -465,6 +465,9 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/path/to/file.txt', $newPath->path());
     }
 
+    /**
+     * @param array<int, array{name: string, value: string}> $partitionData
+     */
     #[DataProvider('partitionProvider')]
     public function test_shared_partition_logic(string $input, array $partitionData, string $expected) : void
     {

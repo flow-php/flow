@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options, fstab};
+use function Flow\Filesystem\DSL\{filesystem_telemetry_config, fstab};
 use Flow\Clock\SystemClock;
 use Flow\ETL\{Analyze, Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
@@ -41,8 +41,6 @@ final class ConfigBuilder
     private readonly RandomValueGenerator $randomValueGenerator;
 
     private ?Serializer $serializer;
-
-    private readonly ?TelemetryConfig $telemetry;
 
     private ?TelemetryConfig $telemetryConfig;
 
@@ -195,10 +193,8 @@ final class ConfigBuilder
             $this->fstab->withTelemetry(
                 filesystem_telemetry_config(
                     $telemetry,
-                    filesystem_telemetry_options(
-                        $options->traceFilesystem,
-                        $options->traceFilesystem,
-                    )
+                    $this->clock ?? SystemClock::utc(),
+                    $options->filesystem
                 )
             );
         }
@@ -211,13 +207,13 @@ final class ConfigBuilder
         if ($this->fstab === null) {
             $this->fstab = fstab();
 
-            if ($this->telemetryConfig && $this->telemetryConfig->options->traceFilesystem) {
+            $filesystemOptions = $this->telemetryConfig?->options->filesystem;
+
+            if ($filesystemOptions !== null && ($filesystemOptions->traceStreams || $filesystemOptions->collectMetrics)) {
                 $this->fstab->withTelemetry(filesystem_telemetry_config(
                     $this->telemetry()->telemetry,
-                    filesystem_telemetry_options(
-                        $this->telemetry()->options->traceFilesystem,
-                        $this->telemetry()->options->traceFilesystem,
-                    )
+                    $this->clock ?? SystemClock::utc(),
+                    $filesystemOptions
                 ));
             }
         }
@@ -228,7 +224,7 @@ final class ConfigBuilder
     private function telemetry() : TelemetryConfig
     {
         if ($this->telemetryConfig === null) {
-            $this->telemetryConfig = TelemetryConfig::default($this->clock);
+            $this->telemetryConfig = TelemetryConfig::default($this->clock ?? SystemClock::utc());
         }
 
         return $this->telemetryConfig;

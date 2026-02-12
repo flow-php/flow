@@ -5,82 +5,97 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Telemetry;
 
 use Flow\Filesystem\{Path, SourceStream};
+use Flow\Telemetry\Meter\Instrument\Counter;
+use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
 
-final readonly class TraceableSourceStream implements SourceStream
+final class TraceableSourceStream implements SourceStream
 {
-    private Tracer $tracer;
+    private ?Counter $bytesReadCounter = null;
+
+    private ?Meter $meter = null;
+
+    private ?Counter $operationsCounter = null;
+
+    private ?Span $span = null;
+
+    private int $totalBytesRead = 0;
+
+    private ?Tracer $tracer = null;
 
     public function __construct(
-        private SourceStream $stream,
-        private FilesystemTelemetryConfig $telemetryConfig,
+        private readonly SourceStream $stream,
+        private readonly FilesystemTelemetryConfig $telemetryConfig,
     ) {
-        $this->tracer = $telemetryConfig->telemetry->tracer(
-            'flow.filesystem',
-            PackageVersion::get('flow-php/filesystem'),
-        );
+        if ($this->telemetryConfig->options->traceStreams) {
+            $this->tracer = $telemetryConfig->telemetry->tracer(
+                'flow.filesystem',
+                PackageVersion::get('flow-php/filesystem'),
+            );
+
+            $this->span = $this->tracer->span(
+                'SourceStream',
+                SpanKind::INTERNAL,
+                [
+                    FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
+                    FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                ]
+            );
+        }
+
+        if ($this->telemetryConfig->options->collectMetrics) {
+            $this->meter = $telemetryConfig->telemetry->meter(
+                'flow.filesystem',
+                PackageVersion::get('flow-php/filesystem'),
+            );
+            $this->bytesReadCounter = $this->meter->createCounter(
+                'filesystem.source.bytes_read',
+                'bytes',
+                'Total bytes read from source streams',
+            );
+            $this->operationsCounter = $this->meter->createCounter(
+                'filesystem.source.operations',
+                'operations',
+                'Number of read operations',
+            );
+        }
     }
 
     public function close() : void
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            $this->stream->close();
-
-            return;
-        }
-
-        $span = $this->tracer->span(
-            'SourceStream::close',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
-
         try {
             $this->stream->close();
-            $span->setStatus(SpanStatus::ok());
+
+            if ($this->span !== null) {
+                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $this->span->setStatus(SpanStatus::ok());
+            }
         } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
+            if ($this->span !== null) {
+                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $this->span->recordException($e, $this->telemetryConfig->clock->now());
+                $this->span->setStatus(SpanStatus::error($e->getMessage()));
+            }
 
             throw $e;
         } finally {
-            $this->tracer->complete($span);
+            if ($this->span !== null && $this->tracer !== null) {
+                $this->tracer->complete($this->span);
+                $this->span = null;
+            }
         }
     }
 
     public function content() : string
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            return $this->stream->content();
-        }
+        $result = $this->stream->content();
+        $bytesRead = \strlen($result);
+        $this->totalBytesRead += $bytesRead;
 
-        $span = $this->tracer->span(
-            'SourceStream::content',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
+        $this->recordMetrics($bytesRead);
 
-        try {
-            $result = $this->stream->content();
-            $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_READ, \strlen($result));
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $result;
     }
 
     public function isOpen() : bool
@@ -95,41 +110,17 @@ final readonly class TraceableSourceStream implements SourceStream
      */
     public function iterate(int $length = 1) : \Generator
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            yield from $this->stream->iterate($length);
+        $bytesReadInOperation = 0;
 
-            return;
+        foreach ($this->stream->iterate($length) as $chunk) {
+            $chunkSize = \strlen($chunk);
+            $bytesReadInOperation += $chunkSize;
+            $this->totalBytesRead += $chunkSize;
+
+            yield $chunk;
         }
 
-        $span = $this->tracer->span(
-            'SourceStream::iterate',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
-
-        $bytesRead = 0;
-
-        try {
-            foreach ($this->stream->iterate($length) as $chunk) {
-                $bytesRead += \strlen($chunk);
-
-                yield $chunk;
-            }
-
-            $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_READ, $bytesRead);
-            $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $e) {
-            $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_READ, $bytesRead);
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        $this->recordMetrics($bytesReadInOperation);
     }
 
     public function path() : Path
@@ -142,33 +133,13 @@ final readonly class TraceableSourceStream implements SourceStream
      */
     public function read(int $length, int $offset) : string
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            return $this->stream->read($length, $offset);
-        }
+        $result = $this->stream->read($length, $offset);
+        $bytesRead = \strlen($result);
+        $this->totalBytesRead += $bytesRead;
 
-        $span = $this->tracer->span(
-            'SourceStream::read',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
+        $this->recordMetrics($bytesRead);
 
-        try {
-            $result = $this->stream->read($length, $offset);
-            $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_READ, \strlen($result));
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        return $result;
     }
 
     /**
@@ -178,45 +149,31 @@ final readonly class TraceableSourceStream implements SourceStream
      */
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
-        if (!$this->telemetryConfig->options->traceStreamOperations) {
-            yield from $this->stream->readLines($separator, $length);
+        $bytesReadInOperation = 0;
 
-            return;
+        foreach ($this->stream->readLines($separator, $length) as $line) {
+            $lineSize = \strlen($line) + \strlen($separator);
+            $bytesReadInOperation += $lineSize;
+            $this->totalBytesRead += $lineSize;
+
+            yield $line;
         }
 
-        $span = $this->tracer->span(
-            'SourceStream::readLines',
-            SpanKind::INTERNAL,
-            [
-                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
-                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-            ]
-        );
-
-        $bytesRead = 0;
-
-        try {
-            foreach ($this->stream->readLines($separator, $length) as $line) {
-                $bytesRead += \strlen($line) + \strlen($separator);
-
-                yield $line;
-            }
-
-            $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_READ, $bytesRead);
-            $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $e) {
-            $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_READ, $bytesRead);
-            $span->recordException($e, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($e->getMessage()));
-
-            throw $e;
-        } finally {
-            $this->tracer->complete($span);
-        }
+        $this->recordMetrics($bytesReadInOperation);
     }
 
     public function size() : ?int
     {
         return $this->stream->size();
+    }
+
+    private function recordMetrics(int $bytesRead) : void
+    {
+        if (!$this->telemetryConfig->options->collectMetrics) {
+            return;
+        }
+
+        $this->bytesReadCounter?->add($bytesRead);
+        $this->operationsCounter?->add(1);
     }
 }

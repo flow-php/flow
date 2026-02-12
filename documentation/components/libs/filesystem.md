@@ -15,19 +15,26 @@
 composer require flow-php/filesystem:~--FLOW_PHP_VERSION--
 ```
 
-Flow Filesystem is a unified solution to store and retrieve data at remote and local filesystems. 
-What differentiates Flow Filesystem from other libraries is the ability to store data in Blocks and read 
-it by byte ranges. 
+Flow Filesystem is a unified solution to store and retrieve data at remote and local filesystems.
+What differentiates Flow Filesystem from other libraries is the ability to store data in Blocks and read
+it by byte ranges.
 
-This means, that while writing data to a large remote file, instead we can literally stream the data and based on the implementation
-of the filesystem, it will be saved in blocks. 
+This means, that while writing data to a large remote file, instead we can literally stream the data and based on the
+implementation
+of the filesystem, it will be saved in blocks.
 
-When reading, instead of iterating through the whole file to find the data you need, you can directly access the data you need by specifying the byte range.
+When reading, instead of iterating through the whole file to find the data you need, you can directly access the data
+you need by specifying the byte range.
 
 # Available Filesystems
 
-- Native Local Filesystem 
-- [Azure Blob Filesystem](https://github.com/flow-php/flow/blob/1.x/documentation/components/bridges/filesystem-azure-bridge.md)
+- [Native Local Filesystem](/src/lib/filesystem/src/Flow/Filesystem/Local/NativeLocalFilesystem.php)
+- [Memory Filesystem](/src/lib/filesystem/src/Flow/Filesystem/Local/MemoryFilesystem.php)
+- [StdOut Filesystem](/src/lib/filesystem/src/Flow/Filesystem/Local/StdOutFilesystem.php)
+- [Azure Blob Filesystem](/documentation/components/bridges/filesystem-azure-bridge) - [
+  `flow-php/filesystem-azure-bridge`](https://packagist.org/packages/flow-php/filesystem-azure-bridge)
+- [AWS S3 Filesystem](/documentation/components/bridges/filesystem-async-aws-bridge) - [
+  `flow-php/filesystem-async-aws-bridge`](https://packagist.org/packages/flow-php/filesystem-async-aws-bridge)
 
 # Building Blocks
 
@@ -50,7 +57,7 @@ DestinationStream::append(string $data) : self;
 DestinationStream::fromResource($resource) : self;
 ```
 
-- `Filesystem` - filesystem interface represents a remote/local filesystem 
+- `Filesystem` - filesystem interface represents a remote/local filesystem
 
 ```php
 <?php
@@ -106,4 +113,118 @@ $stream->append('1,norbert,true');
 $stream->append('2,john,true');
 $stream->append('3,jane,true');
 $stream->close();
+```
+
+## Telemetry
+
+Flow Filesystem supports OpenTelemetry-compatible tracing and metrics for observability of all filesystem operations.
+Flow Filesystem uses [Flow Telemetry](/documentation/components/libs/telemetry) library.
+
+In order to use telemetry, you need to create an instance of `TraceableFilesystem` which 
+wraps an existing filesystem and adds telemetry to it.
+
+Alternatively you can pass `FilesystemTelemetryConfig` to `FilesystemTable` and let it 
+automatically wrap all mounted filesystems with telemetry.
+
+### DSL Functions
+
+- `filesystem_telemetry_options()` - configure what to trace and measure
+- `filesystem_telemetry_config()` - create telemetry configuration from options
+- `traceable_filesystem()` - wrap an individual filesystem with telemetry
+
+### Configuration Options
+
+| Option           | Default | Description                                       |
+|------------------|---------|---------------------------------------------------|
+| `traceStreams`   | `true`  | Create spans for stream lifecycle (open to close) |
+| `collectMetrics` | `true`  | Collect bytes and operation counters              |
+
+### What Gets Traced
+
+**Spans:**
+
+- `SourceStream` - spans the lifecycle of a read stream from creation to close
+- `DestinationStream` - spans the lifecycle of a write stream from creation to close
+
+**Metrics:**
+
+- `filesystem.source.bytes_read` - total bytes read from source streams
+- `filesystem.source.operations` - number of read operations
+- `filesystem.destination.bytes_written` - total bytes written to destination streams
+- `filesystem.destination.operations` - number of write operations
+
+Metadata operations (list, status, rm, mv) are logged but do not create spans.
+
+### Examples
+
+**Wrap an individual filesystem:**
+
+```php
+<?php
+
+use function Flow\Filesystem\DSL\{
+    filesystem_telemetry_config,
+    filesystem_telemetry_options,
+    native_local_filesystem,
+    path,
+    traceable_filesystem
+};
+use function Flow\Telemetry\DSL\telemetry;
+use Psr\Clock\ClockInterface;
+
+$telemetry = telemetry(/* your configuration */);
+$clock = new class implements ClockInterface {
+    public function now(): \DateTimeImmutable {
+        return new \DateTimeImmutable();
+    }
+};
+
+$config = filesystem_telemetry_config(
+    $telemetry,
+    $clock,
+    filesystem_telemetry_options(traceStreams: true, collectMetrics: true)
+);
+
+$fs = traceable_filesystem(native_local_filesystem(), $config);
+
+// All operations on $fs are now traced
+$stream = $fs->readFrom(path('/path/to/file.csv'));
+```
+
+**Enable telemetry on FilesystemTable:**
+
+```php
+<?php
+
+use function Flow\Filesystem\DSL\{
+    filesystem_telemetry_config,
+    filesystem_telemetry_options,
+    fstab
+};
+
+$config = filesystem_telemetry_config($telemetry, $clock);
+$fstab = fstab();
+$fstab->withTelemetry($config);
+
+// All filesystems in the table are now wrapped with telemetry
+```
+
+**Disable specific features:**
+
+```php
+<?php
+
+use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+
+// Collect metrics only, no spans
+$options = filesystem_telemetry_options(
+    traceStreams: false,
+    collectMetrics: true
+);
+
+// Trace streams only, no metrics
+$options = filesystem_telemetry_options(
+    traceStreams: true,
+    collectMetrics: false
+);
 ```

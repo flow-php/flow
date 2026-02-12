@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Config\Telemetry;
 
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
+use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use PHPUnit\Framework\TestCase;
 
 final class TelemetryOptionsTest extends TestCase
 {
     public function test_builder_methods_preserve_other_flags() : void
     {
+        $filesystemOptions = new FilesystemTelemetryOptions(traceStreams: true, collectMetrics: true);
         $options = new TelemetryOptions(
             traceLoading: true,
             traceTransformations: true,
             collectMetrics: true,
-            traceFilesystem: true,
+            filesystem: $filesystemOptions,
         );
 
         $newOptions = $options->traceLoading(false);
@@ -23,7 +25,7 @@ final class TelemetryOptionsTest extends TestCase
         self::assertFalse($newOptions->traceLoading);
         self::assertTrue($newOptions->traceTransformations);
         self::assertTrue($newOptions->collectMetrics);
-        self::assertTrue($newOptions->traceFilesystem);
+        self::assertSame($filesystemOptions, $newOptions->filesystem);
     }
 
     public function test_collect_metrics_returns_new_instance_with_flag_enabled() : void
@@ -44,18 +46,18 @@ final class TelemetryOptionsTest extends TestCase
         self::assertFalse($options->traceLoading);
         self::assertFalse($options->traceTransformations);
         self::assertFalse($options->collectMetrics);
-        self::assertFalse($options->traceFilesystem);
+        self::assertInstanceOf(FilesystemTelemetryOptions::class, $options->filesystem);
     }
 
-    public function test_trace_filesystem_returns_new_instance_with_flag_enabled() : void
+    public function test_filesystem_returns_new_instance_with_options() : void
     {
         $options = new TelemetryOptions();
+        $filesystemOptions = new FilesystemTelemetryOptions(traceStreams: true, collectMetrics: true);
 
-        $newOptions = $options->traceFilesystem();
+        $newOptions = $options->filesystem($filesystemOptions);
 
         self::assertNotSame($options, $newOptions);
-        self::assertTrue($newOptions->traceFilesystem);
-        self::assertFalse($options->traceFilesystem);
+        self::assertSame($filesystemOptions, $newOptions->filesystem);
     }
 
     public function test_trace_loading_returns_new_instance_with_flag_enabled() : void
