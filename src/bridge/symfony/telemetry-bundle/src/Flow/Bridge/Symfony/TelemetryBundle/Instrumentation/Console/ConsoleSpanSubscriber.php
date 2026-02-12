@@ -102,8 +102,10 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
 
     private function matchesPattern(string $command, string $pattern) : bool
     {
-        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
-            return (bool) \preg_match($pattern, $command);
+        $result = @\preg_match($pattern, $command);
+
+        if ($result !== false) {
+            return (bool) $result;
         }
 
         return $command === $pattern;

@@ -69,12 +69,16 @@ final class TelemetryContext
             return;
         }
 
-        $this->logger()->debug('Data frame processing completed', [
-            'dataframe_id' => $context->config->id(),
-            'total_rows_processed' => $this->totalRowsProcessed,
-            'memory_min_mb' => $this->memory->min()->inMb(),
-            'memory_max_mb' => $this->memory->max()->inMb(),
-        ]);
+        $this->logger()->debug(
+            'Data frame processing completed',
+            [
+                'dataframe_id' => $context->config->id(),
+                'total_rows_processed' => $this->totalRowsProcessed,
+                'memory_min_mb' => $this->memory->min()->inMb(),
+                'memory_max_mb' => $this->memory->max()->inMb(),
+            ],
+            spanContext: $this->dataFrameSpan->context()
+        );
 
         $throughput = 0.0;
 
@@ -118,18 +122,22 @@ final class TelemetryContext
     {
         $this->dataFrameSpan = $this->tracer->span(DataFrame::class);
 
-        $this->logger()->debug('Data frame processing started', [
-            'dataframe_id' => $context->config->id(),
-            'cache' => $context->cache()::class,
-            'serializer' => $context->config->serializer()::class,
-            'optimizers' => \array_map(static fn (Optimization $optimization) => $optimization::class, $context->config->optimizer()->optimizations()),
-            'telemetry' => [
-                'trace_loading' => $this->options->traceLoading,
-                'trace_transformations' => $this->options->traceTransformations,
-                'collect_metrics' => $this->options->collectMetrics,
+        $this->logger()->debug(
+            'Data frame processing started',
+            [
+                'dataframe_id' => $context->config->id(),
+                'cache' => $context->cache()::class,
+                'serializer' => $context->config->serializer()::class,
+                'optimizers' => \array_map(static fn (Optimization $optimization) => $optimization::class, $context->config->optimizer()->optimizations()),
+                'telemetry' => [
+                    'trace_loading' => $this->options->traceLoading,
+                    'trace_transformations' => $this->options->traceTransformations,
+                    'collect_metrics' => $this->options->collectMetrics,
+                ],
+                'fstab' => \array_map(static fn (Filesystem $filesystem) => $filesystem::class, $context->config->fstab()->filesystems()),
             ],
-            'fstab' => \array_map(static fn (Filesystem $filesystem) => $filesystem::class, $context->config->fstab()->filesystems()),
-        ]);
+            spanContext: $this->dataFrameSpan->context()
+        );
 
         if ($this->options->collectMetrics) {
             $this->counterProcessedRows = $this->meter->createCounter('rows.processed.total', 'Rows Processed');

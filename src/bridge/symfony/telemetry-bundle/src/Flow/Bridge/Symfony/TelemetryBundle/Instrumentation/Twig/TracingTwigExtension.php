@@ -121,8 +121,10 @@ final class TracingTwigExtension extends AbstractExtension
 
     private function matchesPattern(string $template, string $pattern) : bool
     {
-        if (\str_starts_with($pattern, '/') && \str_ends_with($pattern, '/')) {
-            return (bool) \preg_match($pattern, $template);
+        $result = @\preg_match($pattern, $template);
+
+        if ($result !== false) {
+            return (bool) $result;
         }
 
         return $template === $pattern;
