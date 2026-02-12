@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-02-12
 
 ### Added
+- [#2211](https://github.com/flow-php/flow/pull/2211) - **more context to telemetry logger interface** - [@norberttech](https://github.com/norberttech)
 - [#2210](https://github.com/flow-php/flow/pull/2210) - **Filesystem direct integration with Telemetry** - [@norberttech](https://github.com/norberttech)
 - [#2202](https://github.com/flow-php/flow/pull/2202) - **Flow PHP - Symfony Telemetry Bundle** - [@norberttech](https://github.com/norberttech)
 - [#2198](https://github.com/flow-php/flow/pull/2198) - **integration with flow-php/telemetry and flow-php/etl** - [@norberttech](https://github.com/norberttech)
@@ -33,6 +34,8 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2211](https://github.com/flow-php/flow/pull/2211) - **failing symfony telemetry bundle tests** - [@norberttech](https://github.com/norberttech)
+- [#2211](https://github.com/flow-php/flow/pull/2211) - **regex patterns to exclude commands/templates in telemetry bundle** - [@norberttech](https://github.com/norberttech)
 - [#2202](https://github.com/flow-php/flow/pull/2202) - **DSL documentation page** - [@norberttech](https://github.com/norberttech)
 - [#2196](https://github.com/flow-php/flow/pull/2196) - **Autocast behavior when number is incorrectly detected as date to later be merged with float|int** - [@norberttech](https://github.com/norberttech)
 - [df7b4a](https://github.com/flow-php/flow/commit/df7b4a2300fa8545b0cde0d89bf37cb4fd4427e0) - **added missingstup for pg_query_is_utility_stmt method of pg-query-extension** - [@norberttech](https://github.com/norberttech)
