@@ -97,6 +97,7 @@ parameters:
         - src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Fixtures/Cache/*
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Doctrine/DBAL/V3/*
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Doctrine/DBAL/V4/*
+        - src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Unit/Instrumentation/Doctrine/DBAL/*
 
     tmpDir: var/phpstan/cache
 

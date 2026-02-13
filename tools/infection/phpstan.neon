@@ -1,0 +1,25 @@
+parameters:
+    level: 9
+    treatPhpDocTypesAsCertain: false
+    bootstrapFiles:
+        - ../../tools/phpunit/vendor/autoload.php
+        - ../../vendor/autoload.php
+    paths:
+        - ../../src/core/etl/src
+
+    excludePaths:
+        - ../../src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
+        - ../../src/core/etl/src/Flow/ETL/Sort/ExternalSort/RowsMinHeap.php
+
+    tmpDir: ../../var/infection/phpstan-cache
+
+    ignoreErrors:
+        -
+            message: '#Dom\\(CharacterData|HTMLDocument|HTMLElement|Element)#i'
+            identifier: class.notFound
+
+services:
+    -
+        class: Flow\Types\PHPStan\StructureTypeReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicFunctionReturnTypeExtension

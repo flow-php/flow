@@ -61,9 +61,9 @@ services:
         environment:
             - SERVICES=s3
             - DEBUG=1
-            - DATA_DIR=/tmp/localstack/data
+            - DATA_DIR=/var/localstack/data
         volumes:
-            - "./var/localstack:/tmp/localstack"
+            - "./var/localstack:/var/localstack"
     otel-collector:
         image: otel/opentelemetry-collector-contrib:0.115.1
         container_name: flow-php-otel-collector

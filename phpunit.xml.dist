@@ -30,8 +30,7 @@
         <env name="OTEL_COLLECTOR_HTTP_ENDPOINT" value="http://localhost:4318"/>
         <env name="OTEL_COLLECTOR_OUTPUT_DIR" value="./var/otel"/>
         <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
-        <env name="FLOW_PARQUET_TESTS_DEBUG"
-             value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
+        <env name="FLOW_PARQUET_TESTS_DEBUG" value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
     </php>
     <testsuites>
         <testsuite name="etl-unit">
@@ -229,15 +228,15 @@
     </testsuites>
     <source>
         <include>
-            <directory suffix=".php">src/adapter/**/src</directory>
-            <directory suffix=".php">src/bridge/**/**/src</directory>
-            <directory suffix=".php">src/core/**/src</directory>
-            <directory suffix=".php">src/cli/src</directory>
-            <directory suffix=".php">src/lib/**/src</directory>
+            <directory>src/adapter/**/src</directory>
+            <directory>src/bridge/**/**/src</directory>
+            <directory>src/core/**/src</directory>
+            <directory>src/cli/src</directory>
+            <directory>src/lib/**/src</directory>
         </include>
         <exclude>
-            <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>
-            <directory suffix=".php">src/lib/postgresql/src/Flow/PostgreSql/Protobuf</directory>
+            <directory>src/lib/parquet/src/Flow/Parquet/Thrift</directory>
+            <directory>src/lib/postgresql/src/Flow/PostgreSql/Protobuf</directory>
             <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
             <file>src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php</file>
             <file>src/functions.php</file>

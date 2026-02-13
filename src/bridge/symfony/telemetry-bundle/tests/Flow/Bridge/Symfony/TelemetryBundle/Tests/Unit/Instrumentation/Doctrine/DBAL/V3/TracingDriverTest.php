@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL;
+namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
 use Doctrine\DBAL\Driver\API\ExceptionConverter;
 use Doctrine\DBAL\Driver\{Connection, Result, Statement};
-use Doctrine\DBAL\{Driver, ServerVersionProvider, VersionAwarePlatformDriver};
-use Doctrine\DBAL\Platforms\{AbstractPlatform, DB2Platform, MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SQLitePlatform};
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingDriver;
+use Doctrine\DBAL\{Driver, VersionAwarePlatformDriver};
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Platforms\{AbstractPlatform, DB2Platform, MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SqlitePlatform};
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingDriver;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -25,8 +27,8 @@ final class TracingDriverTest extends TestCase
 {
     protected function setUp() : void
     {
-        if (\interface_exists(VersionAwarePlatformDriver::class)) {
-            self::markTestSkipped('Test requires Doctrine DBAL 4.x');
+        if (!\interface_exists(VersionAwarePlatformDriver::class)) {
+            self::markTestSkipped('Test requires Doctrine DBAL 3.x');
         }
     }
 
@@ -154,7 +156,7 @@ final class TracingDriverTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $platform = new SQLitePlatform();
+        $platform = new SqlitePlatform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
         $tracingDriver = new TracingDriver($telemetry, $driver, 'default', logSql: true, maxSqlLength: 100);
@@ -219,7 +221,7 @@ final class TracingDriverTest extends TestCase
 
     private function createMockDriverWithPlatform(AbstractPlatform $platform) : Driver
     {
-        return new readonly class($platform) implements Driver {
+        return new readonly class($platform) implements VersionAwarePlatformDriver {
             public function __construct(private AbstractPlatform $platform)
             {
             }
@@ -227,12 +229,14 @@ final class TracingDriverTest extends TestCase
             public function connect(array $params) : Connection
             {
                 return new class implements Connection {
-                    public function beginTransaction() : void
+                    public function beginTransaction() : bool
                     {
+                        return true;
                     }
 
-                    public function commit() : void
+                    public function commit() : bool
                     {
+                        return true;
                     }
 
                     public function exec(string $sql) : int
@@ -250,7 +254,8 @@ final class TracingDriverTest extends TestCase
                         return '1.0.0';
                     }
 
-                    public function lastInsertId() : int
+                    /** @phpstan-ignore missingType.parameter */
+                    public function lastInsertId($name = null) : string|int|false
                     {
                         return 0;
                     }
@@ -265,20 +270,33 @@ final class TracingDriverTest extends TestCase
                         throw new \RuntimeException('Not implemented');
                     }
 
-                    public function quote(string $value) : string
+                    /** @phpstan-ignore missingType.parameter, missingType.parameter */
+                    public function quote($value, $type = ParameterType::STRING) : mixed
                     {
                         return "'{$value}'";
                     }
 
-                    public function rollBack() : void
+                    public function rollBack() : bool
                     {
+                        return true;
                     }
                 };
             }
 
-            public function getDatabasePlatform(ServerVersionProvider $versionProvider) : AbstractPlatform
+            public function createDatabasePlatformForVersion($version) : AbstractPlatform
             {
                 return $this->platform;
+            }
+
+            public function getDatabasePlatform() : AbstractPlatform
+            {
+                return $this->platform;
+            }
+
+            /** @phpstan-ignore missingType.parameter */
+            public function getSchemaManager(\Doctrine\DBAL\Connection $conn, AbstractPlatform $platform) : AbstractSchemaManager
+            {
+                throw new \RuntimeException('Not implemented');
             }
 
             public function getExceptionConverter() : ExceptionConverter

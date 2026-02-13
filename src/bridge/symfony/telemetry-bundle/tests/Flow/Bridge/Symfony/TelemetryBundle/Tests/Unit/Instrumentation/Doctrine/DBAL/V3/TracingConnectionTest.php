@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL;
+namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
 use Doctrine\DBAL\Driver\{Connection as ConnectionInterface, Result, Statement as DriverStatement};
 use Doctrine\DBAL\{ParameterType, VersionAwarePlatformDriver};
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingConnection;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingConnection;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -23,8 +23,8 @@ final class TracingConnectionTest extends TestCase
 {
     protected function setUp() : void
     {
-        if (\interface_exists(VersionAwarePlatformDriver::class)) {
-            self::markTestSkipped('Test requires Doctrine DBAL 4.x');
+        if (!\interface_exists(VersionAwarePlatformDriver::class)) {
+            self::markTestSkipped('Test requires Doctrine DBAL 3.x');
         }
     }
 
@@ -178,12 +178,14 @@ final class TracingConnectionTest extends TestCase
     private function createMockConnection() : ConnectionInterface
     {
         return new class implements ConnectionInterface {
-            public function beginTransaction() : void
+            public function beginTransaction() : bool
             {
+                return true;
             }
 
-            public function commit() : void
+            public function commit() : bool
             {
+                return true;
             }
 
             public function exec(string $sql) : int
@@ -201,7 +203,8 @@ final class TracingConnectionTest extends TestCase
                 return '8.0.0';
             }
 
-            public function lastInsertId() : int
+            /** @phpstan-ignore missingType.parameter */
+            public function lastInsertId($name = null) : string|int|false
             {
                 return 0;
             }
@@ -209,11 +212,20 @@ final class TracingConnectionTest extends TestCase
             public function prepare(string $sql) : DriverStatement
             {
                 return new class implements DriverStatement {
-                    public function bindValue(int|string $param, mixed $value, ParameterType $type = ParameterType::STRING) : void
+                    /** @phpstan-ignore missingType.parameter */
+                    public function bindValue($param, $value, $type = ParameterType::STRING) : bool
                     {
+                        return true;
                     }
 
-                    public function execute() : Result
+                    /** @phpstan-ignore missingType.parameter */
+                    public function bindParam($param, &$variable, $type = ParameterType::STRING, $length = null) : bool
+                    {
+                        return true;
+                    }
+
+                    /** @phpstan-ignore missingType.parameter */
+                    public function execute($params = null) : Result
                     {
                         return new class implements Result {
                             public function columnCount() : int
@@ -335,13 +347,15 @@ final class TracingConnectionTest extends TestCase
                 };
             }
 
-            public function quote(string $value) : string
+            /** @phpstan-ignore missingType.parameter, missingType.parameter */
+            public function quote($value, $type = ParameterType::STRING) : mixed
             {
                 return "'{$value}'";
             }
 
-            public function rollBack() : void
+            public function rollBack() : bool
             {
+                return true;
             }
         };
     }

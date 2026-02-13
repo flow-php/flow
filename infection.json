@@ -1,145 +1,22 @@
 {
   "source": {
     "directories": [
-      "src/core/etl/src",
-      "src/lib/array-dot/src",
-      "src/lib/doctrine-dbal-bulk/src",
-      "src/lib/filesystem/src",
-      "src/lib/parquet/src",
-      "src/lib/telemetry/src",
-      "src/bridge/monolog/telemetry/src",
-      "src/bridge/psr7/telemetry/src",
-      "src/bridge/psr18/telemetry/src",
-      "src/bridge/symfony/http-foundation-telemetry/src",
-      "src/bridge/symfony/telemetry-bundle/src",
-      "src/bridge/telemetry/otlp/src"
+      "src/core/etl/src"
     ],
     "excludes": [
-      "{.*/DSL.*}",
-      "Flow/ETL/Attribute",
-      "Flow/Calculator/Exception",
-      "Flow/Serializer/Exception",
-      "Flow/ETL/Exception",
-      "Flow/Types/Exception",
-      "Flow/Doctrine/Bulk/Exception",
-      "Flow/Filesystem/Exception",
-      "Flow/Parquet/Exception",
-      "Flow/Parquet/ThriftModel",
-      "Flow/ArrayDot/Exception",
-      "Flow/Telemetry/Exception",
-      "Flow/Telemetry/Provider/Void",
-      "Flow/Telemetry/Provider/Console",
-      "Flow/Bridge/Telemetry/OTLP/Exception",
-      "Flow/Bridge/Monolog/Telemetry/Exception",
-      "Flow/Bridge/Psr7/Telemetry/Exception",
-      "Flow/Bridge/Psr18/Telemetry/Exception",
-      "Flow/Bridge/Symfony/HttpFoundationTelemetry/Exception",
-      "Flow/Bridge/Symfony/TelemetryBundle/Exception"
+      "{.*/DSL.*}"
     ]
   },
   "logs": {
     "text": "./var/infection/infection.log",
     "html": "./var/infection/infection.html",
     "summary": "./var/infection/infection_summary.log",
-    "debug": "./var/infection/infection_summary.log",
     "stryker": {
       "badge": "1.x"
     }
   },
   "mutators": {
-    "@default": true,
-    "ArrayItem": {
-      "ignore": [
-        "*::__serialize"
-      ]
-    },
-    "ArrayItemRemoval": {
-      "ignore": [
-        "*::__serialize",
-        "Flow\\ETL\\Adapter\\Logger\\Logger\\DumpLogger::log"
-      ]
-    },
-    "Throw_": {
-      "ignore": [
-        "Flow\\Doctrine\\Bulk\\QueryFactory\\DbalQueryFactory"
-      ]
-    },
-    "DecrementInteger": {
-      "ignore": [
-        "Flow\\ETL\\Extractor\\MemoryExtractor::extract",
-        "Flow\\Doctrine\\Bulk\\Exception\\RuntimeException::__construct",
-        "Flow\\Doctrine\\Bulk\\BulkData::toSqlParameters"
-      ]
-    },
-    "IncrementInteger": {
-      "ignore": [
-        "Flow\\ETL\\Extractor\\MemoryExtractor::extract",
-        "Flow\\Doctrine\\Bulk\\BulkData::toSqlParameters"
-      ]
-    },
-    "Identical": {
-      "ignore": [
-        "Flow\\Doctrine\\Bulk\\DbalPlatform"
-      ]
-    },
-    "UnwrapArrayFilter": {
-      "ignore": [
-        "Flow\\Doctrine\\Bulk\\BulkData"
-      ]
-    },
-    "UnwrapRtrim": {
-      "ignore": [
-        "Flow\\Calculator\\Calculator::*"
-      ]
-    },
-    "LogicalAnd": {
-      "ignore": [
-        "Flow\\ArrayComparison\\ArrayComparison::equals"
-      ]
-    },
-    "LogicalOr": {
-      "ignore": [
-        "Flow\\ArrayComparison\\ArrayComparison::equals"
-      ]
-    },
-    "AssignCoalesce": {
-      "ignore": [
-        "Flow\\ETL\\Config\\ConfigBuilder::build"
-      ]
-    },
-    "Coalesce": {
-      "ignore": [
-        "Flow\\ETL\\Cache\\Implementation\\FilesystemCache::__construct",
-        "Flow\\ETL\\Config\\Cache\\CacheConfigBuilder::build"
-      ]
-    },
-    "CloneRemoval": {
-      "ignore": [
-        "Flow\\ETL\\DataFrame::count",
-        "Flow\\ETL\\DataFrame::fetch",
-        "Flow\\ETL\\DataFrame::run",
-        "Flow\\ETL\\DataFrame::get*"
-      ]
-    },
-    "MethodCallRemoval": {
-      "ignore": [
-        "Flow\\ETL\\DataFrame::autoCast",
-        "Flow\\ETL\\DataFrame::aggregate",
-        "Flow\\ETL\\DataFrame::match"
-      ]
-    },
-    "BitwiseAnd": {
-      "ignore": [
-        "Flow\\Parquet\\Data\\*"
-      ]
-    },
-    "Assignment": {
-      "ignore": [
-        "Flow\\Parquet\\Writer\\*::addRow",
-        "Flow\\Parquet\\Writer\\*::addBytes",
-        "Flow\\Parquet\\Data\\*::*"
-      ]
-    }
+    "@default": true
   },
   "bootstrap": "vendor/autoload.php",
   "phpUnit": {
@@ -148,5 +25,10 @@
   },
   "tmpDir": "var/infection/cache",
   "minMsi": 30,
-  "minCoveredMsi": 70
+  "minCoveredMsi": 70,
+  "staticAnalysisTool" : "phpstan",
+  "phpStan": {
+    "configDir": "tools/infection",
+    "customPath": "tools/phpstan/vendor/bin/phpstan"
+  }
 }
