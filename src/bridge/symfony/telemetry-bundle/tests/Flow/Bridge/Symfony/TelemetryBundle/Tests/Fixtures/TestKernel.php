@@ -70,13 +70,13 @@ final class TestKernel extends Kernel
     #[\Override]
     public function getCacheDir() : string
     {
-        return __DIR__ . '/../../../../../../../var/flow_telemetry_bundle_test/' . $this->environment . '/cache';
+        return __DIR__ . '/../../../../../../../var/flow_telemetry_bundle_test/' . $this->environment . '/' . $this->testId . '/cache';
     }
 
     #[\Override]
     public function getLogDir() : string
     {
-        return __DIR__ . '/../../../../../../../var/flow_telemetry_bundle_test/' . $this->environment . '/log';
+        return __DIR__ . '/../../../../../../../var/flow_telemetry_bundle_test/' . $this->environment . '/' . $this->testId . '/log';
     }
 
     #[\Override]
