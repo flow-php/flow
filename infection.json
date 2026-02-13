@@ -25,5 +25,10 @@
   },
   "tmpDir": "var/infection/cache",
   "minMsi": 30,
-  "minCoveredMsi": 70
+  "minCoveredMsi": 70,
+  "staticAnalysisTool" : "phpstan",
+  "phpStan": {
+    "configDir": "tools/infection",
+    "customPath": "tools/phpstan/vendor/bin/phpstan"
+  }
 }
