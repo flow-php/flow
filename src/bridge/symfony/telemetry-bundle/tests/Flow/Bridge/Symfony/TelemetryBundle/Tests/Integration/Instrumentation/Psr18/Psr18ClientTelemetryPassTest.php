@@ -206,7 +206,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
         $span = $spans[0];
         self::assertSame('POST localhost', $span->name());
-        self::assertSame(500, $span->attributes()['http.status_code']);
+        self::assertSame(500, $span->attributes()['http.response.status_code']);
 
         $status = $span->status();
         self::assertNotNull($status);
@@ -259,11 +259,11 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('GET', $attributes['http.method']);
-        self::assertSame('https://api.example.com/users?page=1', $attributes['http.url']);
-        self::assertSame('https', $attributes['http.scheme']);
-        self::assertSame('api.example.com', $attributes['http.host']);
-        self::assertSame(200, $attributes['http.status_code']);
+        self::assertSame('GET', $attributes['http.request.method']);
+        self::assertSame('https://api.example.com/users?page=1', $attributes['url.full']);
+        self::assertSame('https', $attributes['url.scheme']);
+        self::assertSame('api.example.com', $attributes['server.address']);
+        self::assertSame(200, $attributes['http.response.status_code']);
 
         $status = $span->status();
         self::assertNotNull($status);

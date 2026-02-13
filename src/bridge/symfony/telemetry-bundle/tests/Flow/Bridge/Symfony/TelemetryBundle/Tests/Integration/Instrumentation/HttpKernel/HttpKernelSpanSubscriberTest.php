@@ -488,7 +488,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
 
         $span = $spans[0];
         $attributes = $span->attributes();
-        self::assertSame(404, $attributes['http.status_code']);
+        self::assertSame(404, $attributes['http.response.status_code']);
 
         $status = $span->status();
         self::assertNotNull($status);
@@ -550,8 +550,8 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         self::assertSame(SpanKind::SERVER, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('GET', $attributes['http.method']);
-        self::assertSame(200, $attributes['http.status_code']);
+        self::assertSame('GET', $attributes['http.request.method']);
+        self::assertSame(200, $attributes['http.response.status_code']);
         self::assertSame('test_index', $attributes['http.route']);
         self::assertSame(TestController::class . '::index', $attributes['controller']);
     }

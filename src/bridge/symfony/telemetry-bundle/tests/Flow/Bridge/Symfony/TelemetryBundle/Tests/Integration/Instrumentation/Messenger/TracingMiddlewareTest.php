@@ -483,9 +483,10 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $attributes = $span->attributes();
         self::assertSame('symfony_messenger', $attributes['messaging.system']);
-        self::assertSame('command.bus', $attributes['messaging.destination']);
+        self::assertSame('command.bus', $attributes['messaging.destination.name']);
         self::assertSame(TestMessage::class, $attributes['messaging.message.class']);
-        self::assertSame('send', $attributes['messaging.operation']);
+        self::assertSame('send', $attributes['messaging.operation.type']);
+        self::assertSame(TestMessage::class, $attributes['messaging.operation.name']);
 
         $status = $span->status();
         self::assertNotNull($status);

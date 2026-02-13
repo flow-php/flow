@@ -41,11 +41,11 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('GET', $attributes['http.method']);
-        self::assertSame('http://flow-php.com', $attributes['http.url']);
-        self::assertSame('http', $attributes['http.scheme']);
-        self::assertSame('flow-php.com', $attributes['http.host']);
-        self::assertArrayHasKey('http.status_code', $attributes);
+        self::assertSame('GET', $attributes['http.request.method']);
+        self::assertSame('http://flow-php.com', $attributes['url.full']);
+        self::assertSame('http', $attributes['url.scheme']);
+        self::assertSame('flow-php.com', $attributes['server.address']);
+        self::assertArrayHasKey('http.response.status_code', $attributes);
 
         self::assertNotNull($span->status());
         self::assertTrue($span->status()->isOk());
