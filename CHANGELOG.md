@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-02-12
+## [Unreleased] - 2026-02-13
 
 ### Added
+- [#2213](https://github.com/flow-php/flow/pull/2213) - **phpstan integration with infection** - [@norberttech](https://github.com/norberttech)
 - [#2211](https://github.com/flow-php/flow/pull/2211) - **more context to telemetry logger interface** - [@norberttech](https://github.com/norberttech)
 - [#2210](https://github.com/flow-php/flow/pull/2210) - **Filesystem direct integration with Telemetry** - [@norberttech](https://github.com/norberttech)
 - [#2202](https://github.com/flow-php/flow/pull/2202) - **Flow PHP - Symfony Telemetry Bundle** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +17,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2213](https://github.com/flow-php/flow/pull/2213) - **reduced mutation tests just to data frame library** - [@norberttech](https://github.com/norberttech)
 - [9aa918](https://github.com/flow-php/flow/commit/9aa918a7d93081c160c49b62a54702d0f1a1cb05) - **chore: updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [4be034](https://github.com/flow-php/flow/commit/4be0348fb07002f1a98a1bbe8ac54974d1a25eb3) - **update: dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2196](https://github.com/flow-php/flow/pull/2196) - **Stages are now called Segments** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +36,7 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2213](https://github.com/flow-php/flow/pull/2213) - **symfony telemetry bundle tests for lowest symfony versions** - [@norberttech](https://github.com/norberttech)
 - [#2212](https://github.com/flow-php/flow/pull/2212) - **Support any regex delimiter and modifiers in compiler pass pattern matching** - [@bendavies](https://github.com/bendavies)
 - [#2211](https://github.com/flow-php/flow/pull/2211) - **failing symfony telemetry bundle tests** - [@norberttech](https://github.com/norberttech)
 - [#2211](https://github.com/flow-php/flow/pull/2211) - **regex patterns to exclude commands/templates in telemetry bundle** - [@norberttech](https://github.com/norberttech)
