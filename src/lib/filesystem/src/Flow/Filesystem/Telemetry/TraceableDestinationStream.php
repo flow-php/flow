@@ -35,7 +35,7 @@ final class TraceableDestinationStream implements DestinationStream
             );
 
             $this->span = $this->tracer->span(
-                'DestinationStream',
+                'flow.filesystem.stream.write',
                 SpanKind::INTERNAL,
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
@@ -50,12 +50,12 @@ final class TraceableDestinationStream implements DestinationStream
                 PackageVersion::get('flow-php/filesystem'),
             );
             $this->bytesWrittenCounter = $this->meter->createCounter(
-                'filesystem.destination.bytes_written',
+                'flow.filesystem.write.size',
                 'bytes',
                 'Total bytes written to destination streams',
             );
             $this->operationsCounter = $this->meter->createCounter(
-                'filesystem.destination.operations',
+                'flow.filesystem.write.operations',
                 'operations',
                 'Number of write operations',
             );

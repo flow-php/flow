@@ -71,7 +71,7 @@ final class ConfigBuilder
 
     public function build(EntryFactory $entryFactory = new EntryFactory()) : Config
     {
-        $this->id ??= 'flow_php' . $this->randomValueGenerator->string(32);
+        $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
         $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(

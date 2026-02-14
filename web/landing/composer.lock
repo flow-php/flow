@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c4f6c4d36749461dfdcbe46e566327d3",
+    "content-hash": "db8759ea8c6df7113fd70e5f9452ebda",
     "packages": [
         {
             "name": "brick/math",
@@ -512,9 +512,10 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/lib/filesystem",
-                "reference": "41a8aae737a5591e07aefde6b83097ec04e8e7d4"
+                "reference": "50ed65020123dd5924db6425977f04f37a14d502"
             },
             "require": {
+                "flow-php/telemetry": "self.version",
                 "flow-php/types": "self.version",
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "webmozart/glob": "^3.0 || ^4.0"
@@ -594,6 +595,52 @@
                 "bridge",
                 "flow-php",
                 "monolog",
+                "telemetry"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "flow-php/psr18-telemetry-bridge",
+            "version": "1.x-dev",
+            "dist": {
+                "type": "path",
+                "url": "../../src/bridge/psr18/telemetry",
+                "reference": "16327e6a08df7eb8071b8136657879648ab15051"
+            },
+            "require": {
+                "flow-php/telemetry": "self.version",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "psr/http-client": "^1.0",
+                "psr/http-message": "^1.0 || ^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                },
+                "files": [
+                    "src/Flow/Bridge/Psr18/Telemetry/DSL/functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Flow\\": "tests/Flow"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Flow PHP - PSR-18 Telemetry Bridge",
+            "homepage": "https://github.com/flow-php/flow",
+            "keywords": [
+                "bridge",
+                "flow-php",
+                "psr-18",
                 "telemetry"
             ],
             "transport-options": {
@@ -1224,16 +1271,16 @@
         },
         {
             "name": "nette/utils",
-            "version": "v4.1.2",
+            "version": "v4.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/utils.git",
-                "reference": "f76b5dc3d6c6d3043c8d937df2698515b99cbaf5"
+                "reference": "bb3ea637e3d131d72acc033cfc2746ee893349fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/utils/zipball/f76b5dc3d6c6d3043c8d937df2698515b99cbaf5",
-                "reference": "f76b5dc3d6c6d3043c8d937df2698515b99cbaf5",
+                "url": "https://api.github.com/repos/nette/utils/zipball/bb3ea637e3d131d72acc033cfc2746ee893349fe",
+                "reference": "bb3ea637e3d131d72acc033cfc2746ee893349fe",
                 "shasum": ""
             },
             "require": {
@@ -1245,8 +1292,10 @@
             },
             "require-dev": {
                 "jetbrains/phpstorm-attributes": "^1.2",
+                "nette/phpstan-rules": "^1.0",
                 "nette/tester": "^2.5",
-                "phpstan/phpstan": "^2.0@stable",
+                "phpstan/extension-installer": "^1.4@stable",
+                "phpstan/phpstan": "^2.1@stable",
                 "tracy/tracy": "^2.9"
             },
             "suggest": {
@@ -1307,9 +1356,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/utils/issues",
-                "source": "https://github.com/nette/utils/tree/v4.1.2"
+                "source": "https://github.com/nette/utils/tree/v4.1.3"
             },
-            "time": "2026-02-03T17:21:09+00:00"
+            "time": "2026-02-13T03:05:33+00:00"
         },
         {
             "name": "nyholm/psr7",

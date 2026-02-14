@@ -47,6 +47,11 @@
         },
         {
             "type": "path",
+            "url": "../../src/bridge/psr18/telemetry",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
             "url": "../../src/bridge/telemetry/otlp",
             "options": { "symlink": true }
         },
@@ -63,6 +68,7 @@
         "flow-php/symfony-telemetry-bundle": "1.x-dev",
         "flow-php/telemetry-otlp-bridge": "*",
         "flow-php/monolog-telemetry-bridge": "*",
+        "flow-php/psr18-telemetry-bridge": "*",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.3",
         "psr/http-client": "^1.0",

@@ -34,7 +34,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
             $attributes['cache.prefix'] = $prefix;
         }
 
-        $span = $this->tracer->span('cache clear', SpanKind::CLIENT, $attributes);
+        $span = $this->tracer->span('cache.clear', SpanKind::CLIENT, $attributes);
 
         try {
             $result = $this->adapter->clear($prefix);
@@ -54,7 +54,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function commit() : bool
     {
         $span = $this->tracer->span(
-            'cache commit',
+            'cache.commit',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'commit',
@@ -84,7 +84,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
         }
 
         $span = $this->tracer->span(
-            'cache delete',
+            'cache.delete',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'delete',
@@ -111,7 +111,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function deleteItem(mixed $key) : bool
     {
         $span = $this->tracer->span(
-            'cache deleteItem',
+            'cache.delete_item',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'deleteItem',
@@ -141,7 +141,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function deleteItems(array $keys) : bool
     {
         $span = $this->tracer->span(
-            'cache deleteItems',
+            'cache.delete_items',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'deleteItems',
@@ -175,7 +175,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
         }
 
         $span = $this->tracer->span(
-            'cache get',
+            'cache.get',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'get',
@@ -210,7 +210,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function getItem(mixed $key) : CacheItem
     {
         $span = $this->tracer->span(
-            'cache getItem',
+            'cache.get_item',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'getItem',
@@ -243,7 +243,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function getItems(array $keys = []) : iterable
     {
         $span = $this->tracer->span(
-            'cache getItems',
+            'cache.get_items',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'getItems',
@@ -285,7 +285,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function hasItem(mixed $key) : bool
     {
         $span = $this->tracer->span(
-            'cache hasItem',
+            'cache.has_item',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'hasItem',
@@ -316,7 +316,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function invalidateTags(array $tags) : bool
     {
         $span = $this->tracer->span(
-            'cache invalidateTags',
+            'cache.invalidate_tags',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'invalidateTags',
@@ -348,7 +348,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
         }
 
         $span = $this->tracer->span(
-            'cache prune',
+            'cache.prune',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'prune',
@@ -378,7 +378,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
         }
 
         $span = $this->tracer->span(
-            'cache reset',
+            'cache.reset',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'reset',
@@ -402,7 +402,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function save(CacheItemInterface $item) : bool
     {
         $span = $this->tracer->span(
-            'cache save',
+            'cache.save',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'save',
@@ -429,7 +429,7 @@ final readonly class TagAwareTraceableCacheAdapter implements PruneableInterface
     public function saveDeferred(CacheItemInterface $item) : bool
     {
         $span = $this->tracer->span(
-            'cache saveDeferred',
+            'cache.save_deferred',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'saveDeferred',

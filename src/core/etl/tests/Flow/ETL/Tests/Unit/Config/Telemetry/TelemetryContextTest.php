@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Config\Telemetry;
 use function Flow\ETL\DSL\{config_builder, flow_context, telemetry_options};
 use function Flow\ETL\DSL\{int_entry, row, rows};
 use Flow\ETL\Config\Telemetry\{TelemetryContext, TelemetryOptions};
-use Flow\ETL\DataFrame;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\LimitTransformer;
@@ -66,7 +65,7 @@ final class TelemetryContextTest extends FlowTestCase
         $metrics = $metricProcessor->metrics();
         self::assertNotEmpty($metrics);
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows.processed.total');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.dataframe.rows');
         self::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         self::assertSame(3, $counterMetrics[0]->value);
     }
@@ -113,7 +112,7 @@ final class TelemetryContextTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame(DataFrame::class, $span->name());
+        self::assertSame('flow.dataframe', $span->name());
         self::assertNotNull($span->status());
         self::assertTrue($span->status()->isOk());
 
@@ -159,7 +158,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $startedSpans = $spanProcessor->startedSpans();
         self::assertCount(1, $startedSpans);
-        self::assertSame(DataFrame::class, $startedSpans[0]->name());
+        self::assertSame('flow.dataframe', $startedSpans[0]->name());
 
         $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
         self::assertCount(1, $debugLogs);
@@ -204,7 +203,8 @@ final class TelemetryContextTest extends FlowTestCase
         $endedSpans = $spanProcessor->endedSpans();
 
         self::assertCount(1, $endedSpans);
-        self::assertSame(StreamLoader::class, $endedSpans[0]->name());
+        self::assertSame('flow.dataframe.loader.stream_loader', $endedSpans[0]->name());
+        self::assertSame(StreamLoader::class, $endedSpans[0]->attributes()['loader.class']);
         self::assertNotNull($endedSpans[0]->status());
         self::assertTrue($endedSpans[0]->status()->isOk());
     }
@@ -291,7 +291,8 @@ final class TelemetryContextTest extends FlowTestCase
 
         $startedSpans = $spanProcessor->startedSpans();
         self::assertCount(2, $startedSpans);
-        self::assertSame(StreamLoader::class, $startedSpans[1]->name());
+        self::assertSame('flow.dataframe.loader.stream_loader', $startedSpans[1]->name());
+        self::assertSame(StreamLoader::class, $startedSpans[1]->attributes()['loader.class']);
     }
 
     public function test_loading_started_does_not_create_span_when_trace_loading_disabled() : void
@@ -329,7 +330,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $startedSpans = $spanProcessor->startedSpans();
         self::assertCount(1, $startedSpans);
-        self::assertSame(DataFrame::class, $startedSpans[0]->name());
+        self::assertSame('flow.dataframe', $startedSpans[0]->name());
     }
 
     public function test_metrics_collected_when_collect_metrics_enabled() : void
@@ -370,8 +371,8 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameCompleted($context);
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows.processed.total');
-        $throughputMetrics = $metricProcessor->metricsWithName('rows.processed.throughput');
+        $counterMetrics = $metricProcessor->metricsWithName('flow.dataframe.rows');
+        $throughputMetrics = $metricProcessor->metricsWithName('flow.dataframe.rows.throughput');
 
         self::assertNotEmpty($counterMetrics, 'Counter should be created when metrics enabled');
         self::assertNotEmpty($throughputMetrics, 'Throughput should be created when metrics enabled');
@@ -455,7 +456,8 @@ final class TelemetryContextTest extends FlowTestCase
         $endedSpans = $spanProcessor->endedSpans();
 
         self::assertCount(1, $endedSpans);
-        self::assertSame(LimitTransformer::class, $endedSpans[0]->name());
+        self::assertSame('flow.dataframe.transformer.limit_transformer', $endedSpans[0]->name());
+        self::assertSame(LimitTransformer::class, $endedSpans[0]->attributes()['transformer.class']);
         self::assertNotNull($endedSpans[0]->status());
         self::assertTrue($endedSpans[0]->status()->isOk());
     }
@@ -542,7 +544,8 @@ final class TelemetryContextTest extends FlowTestCase
 
         $startedSpans = $spanProcessor->startedSpans();
         self::assertCount(2, $startedSpans);
-        self::assertSame(LimitTransformer::class, $startedSpans[1]->name());
+        self::assertSame('flow.dataframe.transformer.limit_transformer', $startedSpans[1]->name());
+        self::assertSame(LimitTransformer::class, $startedSpans[1]->attributes()['transformer.class']);
     }
 
     public function test_transformation_started_does_not_create_span_when_trace_transformations_disabled() : void
@@ -580,7 +583,7 @@ final class TelemetryContextTest extends FlowTestCase
 
         $startedSpans = $spanProcessor->startedSpans();
         self::assertCount(1, $startedSpans);
-        self::assertSame(DataFrame::class, $startedSpans[0]->name());
+        self::assertSame('flow.dataframe', $startedSpans[0]->name());
     }
 
     private function createFrozenClock(\DateTimeImmutable $now = new \DateTimeImmutable()) : ClockInterface

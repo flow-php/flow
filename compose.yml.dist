@@ -1,3 +1,7 @@
+networks:
+    flow-php:
+        driver: bridge
+
 services:
     postgres:
         image: postgres:18-alpine
@@ -8,6 +12,8 @@ services:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=postgres
+        networks:
+            - flow-php
     mysql:
         image: mysql:8.0.31
         container_name: flow-php-mysql
@@ -18,6 +24,8 @@ services:
             MYSQL_PASSWORD: mysql
             MYSQL_DATABASE: mysql
             MYSQL_ROOT_PASSWORD: root
+        networks:
+            - flow-php
     elasticsearch:
         image: elasticsearch:7.17.2
         container_name: flow-php-elasticsearch
@@ -28,6 +36,8 @@ services:
             - discovery.type=single-node
             - bootstrap.memory_lock=true
             - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        networks:
+            - flow-php
     meilisearch:
         image: getmeili/meilisearch:latest
         container_name: flow-php-meilisearch
@@ -36,6 +46,8 @@ services:
         environment:
             - MEILI_MASTER_KEY=masterKey
             - MEILI_NO_ANALYTICS=true
+        networks:
+            - flow-php
     azurite:
         image: mcr.microsoft.com/azure-storage/azurite
         container_name: flow-php-azurite
@@ -48,11 +60,15 @@ services:
             - 10000:10000
         volumes:
             - ./var/azurite:/workspace
+        networks:
+            - flow-php
     redis:
         image: redis:latest
         container_name: flow-php-redis
         ports:
             - "6379:6379"
+        networks:
+            - flow-php
     localstack:
         image: localstack/localstack:latest
         container_name: flow-php-localstack
@@ -64,6 +80,19 @@ services:
             - DATA_DIR=/var/localstack/data
         volumes:
             - "./var/localstack:/var/localstack"
+        networks:
+            - flow-php
+    aspire:
+        image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+        container_name: flow-php-aspire
+        ports:
+            - "18888:18888"
+            - "18889:18889"
+        environment:
+            - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+            - ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL=http://0.0.0.0:18889
+        networks:
+            - flow-php
     otel-collector:
         image: otel/opentelemetry-collector-contrib:0.115.1
         container_name: flow-php-otel-collector
@@ -73,7 +102,11 @@ services:
             - "4318:4318"
             - "8888:8888"
         volumes:
-            - "./docker/otel-collector-test-config.yaml:/etc/otel-collector-config.yaml:ro"
+            - "./docker/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro"
             - "./var/otel:/var/otel"
+        depends_on:
+            - aspire
+        networks:
+            - flow-php
 
 

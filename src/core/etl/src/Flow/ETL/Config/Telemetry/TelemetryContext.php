@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Telemetry;
 
-use Flow\ETL\{DataFrame,
+use Flow\ETL\{
     Dataset\Memory\Consumption,
     Dataset\Statistics\HighResolutionTime,
     FlowContext,
@@ -13,7 +13,7 @@ use Flow\ETL\{DataFrame,
     Rows,
     Transformer};
 use Flow\Filesystem\Filesystem;
-use Flow\Telemetry\Attributes;
+use Flow\Telemetry\{Attributes, ObjectExtractor};
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\{Counter, Throughput};
 use Flow\Telemetry\Meter\Meter;
@@ -120,7 +120,7 @@ final class TelemetryContext
 
     public function dataFrameStarted(FlowContext $context) : void
     {
-        $this->dataFrameSpan = $this->tracer->span(DataFrame::class);
+        $this->dataFrameSpan = $this->tracer->span('flow.dataframe');
 
         $this->logger()->debug(
             'Data frame processing started',
@@ -140,8 +140,8 @@ final class TelemetryContext
         );
 
         if ($this->options->collectMetrics) {
-            $this->counterProcessedRows = $this->meter->createCounter('rows.processed.total', 'Rows Processed');
-            $this->throughputRows = $this->meter->createThroughput('rows.processed.throughput', 'Rows Processed');
+            $this->counterProcessedRows = $this->meter->createCounter('flow.dataframe.rows', 'Rows Processed');
+            $this->throughputRows = $this->meter->createThroughput('flow.dataframe.rows.throughput', 'Rows Processed');
         }
 
         $this->dataFrameExecutionTime = HighResolutionTime::now();
@@ -194,9 +194,9 @@ final class TelemetryContext
         }
 
         $this->loadingSpan = $this->tracer->span(
-            $loader::class,
+            'flow.dataframe.loader.' . ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
-            Attributes::create($attributes),
+            Attributes::create(\array_merge(['loader.class' => $loader::class], $attributes)),
             parentContext: $this->dataFrameSpan?->context()
         );
     }
@@ -251,9 +251,9 @@ final class TelemetryContext
         }
 
         $this->transformationSpan = $this->tracer->span(
-            $transformer::class,
+            'flow.dataframe.transformer.' . ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
-            Attributes::create($attributes),
+            Attributes::create(\array_merge(['transformer.class' => $transformer::class], $attributes)),
             parentContext: $this->dataFrameSpan?->context()
         );
     }

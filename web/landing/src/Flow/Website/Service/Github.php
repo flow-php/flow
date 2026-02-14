@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\Website\Service;
 
 use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, rename_replace, telemetry_options, to_memory};
+use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TraceableCacheAdapter;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
@@ -38,22 +41,21 @@ final readonly class Github
         }
 
         $factory = new Psr17Factory();
-        $client = new Client($factory, $factory);
-
-        $adapter = new PSRSimpleCache($this->cache('flow-github-contributors'));
+        $client = new PSR18TraceableClient(new Client($factory, $factory), $this->telemetry);
 
         $from_github = new PsrHttpClientDynamicExtractor($client, $this->requestFactory);
 
         try {
             df(
                 config_builder()
-                    ->cache($adapter)
+                    ->cache($this->cache('flow-github-contributors'))
                     ->withTelemetry(
                         $this->telemetry,
                         telemetry_options()
-                            ->collectMetrics(true)
-                            ->traceLoading(true)
-                            ->traceTransformations(true)
+                            ->collectMetrics()
+                            ->traceLoading()
+                            ->traceTransformations()
+                            ->filesystem(filesystem_telemetry_options()->collectMetrics()->traceStreams())
                     )
             )
                 ->read(
@@ -83,13 +85,19 @@ final readonly class Github
         }
     }
 
-    private function cache(string $directoryName) : Psr16Cache
+    private function cache(string $directoryName) : PSRSimpleCache
     {
-        return new Psr16Cache(
-            new FilesystemAdapter(
-                'flow-website',
-                3600 * 24,
-                directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
+        return new PSRSimpleCache(
+            new Psr16Cache(
+                new TraceableCacheAdapter(
+                    new FilesystemAdapter(
+                        'flow-website',
+                        3600 * 24,
+                        directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
+                    ),
+                    $this->telemetry,
+                    'flow-website'
+                )
             )
         );
     }

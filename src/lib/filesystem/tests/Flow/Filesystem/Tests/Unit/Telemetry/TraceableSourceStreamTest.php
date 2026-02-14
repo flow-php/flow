@@ -31,7 +31,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
         self::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         self::assertSame(\strlen($content), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
@@ -82,7 +82,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
         self::assertSame(0, $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
@@ -106,7 +106,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
         self::assertSame(\strlen($content), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
@@ -148,7 +148,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
         self::assertSame(\strlen(\implode('', $chunks)), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
@@ -211,7 +211,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
     }
 
     public function test_read_tracks_bytes_read() : void
@@ -234,7 +234,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
         self::assertSame(\strlen($content), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
@@ -271,7 +271,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('SourceStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.read', $spans[0]->name());
         self::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
     }

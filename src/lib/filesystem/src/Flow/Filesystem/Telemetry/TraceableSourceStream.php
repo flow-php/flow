@@ -35,7 +35,7 @@ final class TraceableSourceStream implements SourceStream
             );
 
             $this->span = $this->tracer->span(
-                'SourceStream',
+                'flow.filesystem.stream.read',
                 SpanKind::INTERNAL,
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
@@ -50,12 +50,12 @@ final class TraceableSourceStream implements SourceStream
                 PackageVersion::get('flow-php/filesystem'),
             );
             $this->bytesReadCounter = $this->meter->createCounter(
-                'filesystem.source.bytes_read',
+                'flow.filesystem.read.size',
                 'bytes',
                 'Total bytes read from source streams',
             );
             $this->operationsCounter = $this->meter->createCounter(
-                'filesystem.source.operations',
+                'flow.filesystem.read.operations',
                 'operations',
                 'Number of read operations',
             );

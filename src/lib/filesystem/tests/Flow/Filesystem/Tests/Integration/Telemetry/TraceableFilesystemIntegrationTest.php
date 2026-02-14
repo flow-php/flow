@@ -51,8 +51,8 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         $spanNames = \array_map(static fn ($span) => $span->name(), $spans);
 
-        self::assertContains('DestinationStream', $spanNames);
-        self::assertContains('SourceStream', $spanNames);
+        self::assertContains('flow.filesystem.stream.write', $spanNames);
+        self::assertContains('flow.filesystem.stream.read', $spanNames);
         self::assertCount(2, $spans);
 
         foreach ($spans as $span) {
@@ -60,11 +60,11 @@ final class TraceableFilesystemIntegrationTest extends TestCase
             self::assertTrue($span->status()->isOk());
         }
 
-        $destinationSpan = $this->findSpanByName($spans, 'DestinationStream');
+        $destinationSpan = $this->findSpanByName($spans, 'flow.filesystem.stream.write');
         self::assertNotNull($destinationSpan);
         self::assertSame(\strlen($content), $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
 
-        $sourceSpan = $this->findSpanByName($spans, 'SourceStream');
+        $sourceSpan = $this->findSpanByName($spans, 'flow.filesystem.stream.read');
         self::assertNotNull($sourceSpan);
         self::assertSame(\strlen($content), $sourceSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
@@ -107,7 +107,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         \fclose($resource);
 
         $spans = $spanProcessor->endedSpans();
-        $destinationSpan = $this->findSpanByName($spans, 'DestinationStream');
+        $destinationSpan = $this->findSpanByName($spans, 'flow.filesystem.stream.write');
 
         self::assertNotNull($destinationSpan);
         self::assertNotNull($destinationSpan->status());
@@ -137,7 +137,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         self::assertSame($content, \implode('', $chunks));
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpan = $this->findSpanByName($spans, 'SourceStream');
+        $sourceSpan = $this->findSpanByName($spans, 'flow.filesystem.stream.read');
 
         self::assertNotNull($sourceSpan);
         self::assertSame(
@@ -186,10 +186,10 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $metrics = $metricProcessor->metrics();
         $metricNames = \array_map(static fn ($m) => $m->name, $metrics);
 
-        self::assertContains('filesystem.destination.bytes_written', $metricNames);
-        self::assertContains('filesystem.destination.operations', $metricNames);
-        self::assertContains('filesystem.source.bytes_read', $metricNames);
-        self::assertContains('filesystem.source.operations', $metricNames);
+        self::assertContains('flow.filesystem.write.size', $metricNames);
+        self::assertContains('flow.filesystem.write.operations', $metricNames);
+        self::assertContains('flow.filesystem.read.size', $metricNames);
+        self::assertContains('flow.filesystem.read.operations', $metricNames);
     }
 
     public function test_multiple_appends_create_single_span_with_cumulative_metrics() : void
@@ -212,7 +212,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         self::assertCount(1, $spans);
 
         $destinationSpan = $spans[0];
-        self::assertSame('DestinationStream', $destinationSpan->name());
+        self::assertSame('flow.filesystem.stream.write', $destinationSpan->name());
         self::assertSame(\strlen($chunk) * 10, $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
     }
 
@@ -253,7 +253,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         self::assertCount(3, $lines);
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpan = $this->findSpanByName($spans, 'SourceStream');
+        $sourceSpan = $this->findSpanByName($spans, 'flow.filesystem.stream.read');
 
         self::assertNotNull($sourceSpan);
         self::assertNotNull($sourceSpan->status());

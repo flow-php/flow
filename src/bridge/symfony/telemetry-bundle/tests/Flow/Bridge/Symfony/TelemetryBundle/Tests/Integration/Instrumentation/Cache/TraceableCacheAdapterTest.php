@@ -208,7 +208,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $spans = $processor->endedSpans();
         $getItemSpan = $spans[\count($spans) - 1];
 
-        self::assertSame('cache getItem', $getItemSpan->name());
+        self::assertSame('cache.get_item', $getItemSpan->name());
         self::assertTrue($getItemSpan->attributes()['cache.hit']);
     }
 
@@ -258,7 +258,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $spans = $processor->endedSpans();
         $getItemsSpan = $spans[\count($spans) - 1];
 
-        self::assertSame('cache getItems', $getItemsSpan->name());
+        self::assertSame('cache.get_items', $getItemsSpan->name());
         self::assertSame(3, $getItemsSpan->attributes()['cache.key_count']);
         self::assertSame(2, $getItemsSpan->attributes()['cache.hits']);
         self::assertSame(1, $getItemsSpan->attributes()['cache.misses']);
@@ -332,7 +332,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache invalidateTags', $span->name());
+        self::assertSame('cache.invalidate_tags', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -383,7 +383,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache get', $span->name());
+        self::assertSame('cache.get', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();

@@ -34,7 +34,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('DestinationStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.write', $spans[0]->name());
         self::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         self::assertSame(\strlen($data), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
@@ -59,7 +59,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('DestinationStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.write', $spans[0]->name());
         self::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         self::assertSame(\strlen($data), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
@@ -110,7 +110,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('DestinationStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.write', $spans[0]->name());
         self::assertSame(0, $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
     }
 
@@ -135,7 +135,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('DestinationStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.write', $spans[0]->name());
         self::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         self::assertNotNull($spans[0]->status());
@@ -178,7 +178,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('DestinationStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.write', $spans[0]->name());
         self::assertSame(13, $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
     }
 
@@ -214,7 +214,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('DestinationStream', $spans[0]->name());
+        self::assertSame('flow.filesystem.stream.write', $spans[0]->name());
         self::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
     }

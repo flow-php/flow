@@ -9,6 +9,10 @@ receivers:
 exporters:
   debug:
     verbosity: basic
+  otlp/aspire:
+    endpoint: aspire:18889
+    tls:
+      insecure: true
 
 extensions:
   health_check:
@@ -27,10 +31,10 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [debug, otlp/aspire]
     metrics:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [debug, otlp/aspire]
     logs:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [debug, otlp/aspire]
