@@ -11,6 +11,7 @@ final readonly class TelemetryOptions
     public function __construct(
         public bool $traceLoading = false,
         public bool $traceTransformations = false,
+        public bool $traceCache = false,
         public bool $collectMetrics = false,
         public FilesystemTelemetryOptions $filesystem = new FilesystemTelemetryOptions(),
     ) {
@@ -21,6 +22,7 @@ final readonly class TelemetryOptions
         return new self(
             traceLoading: $this->traceLoading,
             traceTransformations: $this->traceTransformations,
+            traceCache: $this->traceCache,
             collectMetrics: $collect,
             filesystem: $this->filesystem,
         );
@@ -31,8 +33,20 @@ final readonly class TelemetryOptions
         return new self(
             traceLoading: $this->traceLoading,
             traceTransformations: $this->traceTransformations,
+            traceCache: $this->traceCache,
             collectMetrics: $this->collectMetrics,
             filesystem: $options,
+        );
+    }
+
+    public function traceCache(bool $trace = true) : self
+    {
+        return new self(
+            traceLoading: $this->traceLoading,
+            traceTransformations: $this->traceTransformations,
+            traceCache: $trace,
+            collectMetrics: $this->collectMetrics,
+            filesystem: $this->filesystem,
         );
     }
 
@@ -41,6 +55,7 @@ final readonly class TelemetryOptions
         return new self(
             traceLoading: $trace,
             traceTransformations: $this->traceTransformations,
+            traceCache: $this->traceCache,
             collectMetrics: $this->collectMetrics,
             filesystem: $this->filesystem,
         );
@@ -51,6 +66,7 @@ final readonly class TelemetryOptions
         return new self(
             traceLoading: $this->traceLoading,
             traceTransformations: $trace,
+            traceCache: $this->traceCache,
             collectMetrics: $this->collectMetrics,
             filesystem: $this->filesystem,
         );

@@ -7,7 +7,6 @@ namespace Flow\Website\Service;
 use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, rename_replace, telemetry_options, to_memory};
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TraceableCacheAdapter;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
@@ -54,6 +53,7 @@ final readonly class Github
                         telemetry_options()
                             ->collectMetrics()
                             ->traceLoading()
+                            ->traceCache()
                             ->traceTransformations()
                             ->filesystem(filesystem_telemetry_options()->collectMetrics()->traceStreams())
                     )
@@ -89,15 +89,11 @@ final readonly class Github
     {
         return new PSRSimpleCache(
             new Psr16Cache(
-                new TraceableCacheAdapter(
-                    new FilesystemAdapter(
-                        'flow-website',
-                        3600 * 24,
-                        directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
-                    ),
-                    $this->telemetry,
-                    'flow-website'
-                )
+                new FilesystemAdapter(
+                    'flow-website',
+                    3600 * 24,
+                    directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
+                ),
             )
         );
     }

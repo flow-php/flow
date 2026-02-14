@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache;
 
+use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\{PackageVersion, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
 use Psr\Cache\CacheItemInterface;
@@ -13,6 +14,10 @@ use Symfony\Contracts\Cache\{CacheInterface, ItemInterface};
 
 final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInterface, PruneableInterface, ResettableInterface
 {
+    private Counter $hitCounter;
+
+    private Counter $missCounter;
+
     private Tracer $tracer;
 
     public function __construct(
@@ -21,6 +26,9 @@ final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInt
         private string $poolName,
     ) {
         $this->tracer = $this->telemetry->tracer('flow.symfony.cache', PackageVersion::get('symfony/cache'));
+        $meter = $this->telemetry->meter('flow.symfony.cache', PackageVersion::get('symfony/cache'));
+        $this->hitCounter = $meter->createCounter('cache.hits', 'operations', 'Number of cache hits');
+        $this->missCounter = $meter->createCounter('cache.misses', 'operations', 'Number of cache misses');
     }
 
     public function clear(string $prefix = '') : bool
@@ -174,16 +182,6 @@ final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInt
             throw new \BadMethodCallException(\sprintf('The adapter "%s" does not implement "%s".', $this->adapter::class, CacheInterface::class));
         }
 
-        $span = $this->tracer->span(
-            'cache.get',
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'get',
-                'cache.pool' => $this->poolName,
-                'cache.key' => $key,
-            ]
-        );
-
         $hit = true;
         $wrappedCallback = static function (ItemInterface $item, bool &$save) use ($callback, &$hit) : mixed {
             $hit = false;
@@ -191,48 +189,28 @@ final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInt
             return $callback($item, $save);
         };
 
-        try {
-            $result = $this->adapter->get($key, $wrappedCallback, $beta, $metadata);
-            $span->setAttribute('cache.hit', $hit);
-            $span->setStatus(SpanStatus::ok());
+        $result = $this->adapter->get($key, $wrappedCallback, $beta, $metadata);
 
-            return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
-
-            throw $exception;
-        } finally {
-            $this->tracer->complete($span);
+        if ($hit) {
+            $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);
+        } else {
+            $this->missCounter->add(1, ['cache.pool' => $this->poolName]);
         }
+
+        return $result;
     }
 
     public function getItem(mixed $key) : CacheItem
     {
-        $span = $this->tracer->span(
-            'cache.get_item',
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'getItem',
-                'cache.pool' => $this->poolName,
-                'cache.key' => $key,
-            ]
-        );
+        $item = $this->adapter->getItem($key);
 
-        try {
-            $item = $this->adapter->getItem($key);
-            $span->setAttribute('cache.hit', $item->isHit());
-            $span->setStatus(SpanStatus::ok());
-
-            return $item;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
-
-            throw $exception;
-        } finally {
-            $this->tracer->complete($span);
+        if ($item->isHit()) {
+            $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);
+        } else {
+            $this->missCounter->add(1, ['cache.pool' => $this->poolName]);
         }
+
+        return $item;
     }
 
     /**
@@ -242,72 +220,42 @@ final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInt
      */
     public function getItems(array $keys = []) : iterable
     {
-        $span = $this->tracer->span(
-            'cache.get_items',
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'getItems',
-                'cache.pool' => $this->poolName,
-                'cache.key_count' => \count($keys),
-            ]
-        );
+        $items = $this->adapter->getItems($keys);
+        $itemsArray = \iterator_to_array($items);
 
-        try {
-            $items = $this->adapter->getItems($keys);
-            $itemsArray = \iterator_to_array($items);
+        $hits = 0;
+        $misses = 0;
 
-            $hits = 0;
-            $misses = 0;
-
-            foreach ($itemsArray as $item) {
-                if ($item->isHit()) {
-                    $hits++;
-                } else {
-                    $misses++;
-                }
+        foreach ($itemsArray as $item) {
+            if ($item->isHit()) {
+                $hits++;
+            } else {
+                $misses++;
             }
-
-            $span->setAttribute('cache.hits', $hits);
-            $span->setAttribute('cache.misses', $misses);
-            $span->setStatus(SpanStatus::ok());
-
-            return $itemsArray;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
-
-            throw $exception;
-        } finally {
-            $this->tracer->complete($span);
         }
+
+        if ($hits > 0) {
+            $this->hitCounter->add($hits, ['cache.pool' => $this->poolName]);
+        }
+
+        if ($misses > 0) {
+            $this->missCounter->add($misses, ['cache.pool' => $this->poolName]);
+        }
+
+        return $itemsArray;
     }
 
     public function hasItem(mixed $key) : bool
     {
-        $span = $this->tracer->span(
-            'cache.has_item',
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'hasItem',
-                'cache.pool' => $this->poolName,
-                'cache.key' => $key,
-            ]
-        );
+        $exists = $this->adapter->hasItem($key);
 
-        try {
-            $exists = $this->adapter->hasItem($key);
-            $span->setAttribute('cache.exists', $exists);
-            $span->setStatus(SpanStatus::ok());
-
-            return $exists;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
-
-            throw $exception;
-        } finally {
-            $this->tracer->complete($span);
+        if ($exists) {
+            $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);
+        } else {
+            $this->missCounter->add(1, ['cache.pool' => $this->poolName]);
         }
+
+        return $exists;
     }
 
     public function prune() : bool

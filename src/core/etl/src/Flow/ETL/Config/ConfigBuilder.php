@@ -73,7 +73,6 @@ final class ConfigBuilder
     {
         $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
-        $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(
             new LimitOptimization(),
             new BatchSizeOptimization(batchSize: 1000)
@@ -83,16 +82,16 @@ final class ConfigBuilder
             $this->id,
             $this->version,
             $this->serializer,
-            $this->clock,
+            $this->getClock(),
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cache->build($this->fstab(), $this->serializer),
+            $this->cache->build($this->fstab(), $this->serializer, $this->telemetryConfig),
             $this->sort->build(),
             $this->analyze,
-            $this->telemetryConfig ?? TelemetryConfig::default($this->clock),
+            $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
         );
     }
 
@@ -193,7 +192,7 @@ final class ConfigBuilder
             $this->fstab->withTelemetry(
                 filesystem_telemetry_config(
                     $telemetry,
-                    $this->clock ?? SystemClock::utc(),
+                    $this->getClock(),
                     $options->filesystem
                 )
             );
@@ -212,7 +211,7 @@ final class ConfigBuilder
             if ($filesystemOptions !== null && ($filesystemOptions->traceStreams || $filesystemOptions->collectMetrics)) {
                 $this->fstab->withTelemetry(filesystem_telemetry_config(
                     $this->telemetry()->telemetry,
-                    $this->clock ?? SystemClock::utc(),
+                    $this->getClock(),
                     $filesystemOptions
                 ));
             }
@@ -221,10 +220,20 @@ final class ConfigBuilder
         return $this->fstab;
     }
 
+    private function getClock() : ClockInterface
+    {
+        if ($this->clock === null) {
+            $this->clock = SystemClock::utc();
+        }
+
+        return $this->clock;
+
+    }
+
     private function telemetry() : TelemetryConfig
     {
         if ($this->telemetryConfig === null) {
-            $this->telemetryConfig = TelemetryConfig::default($this->clock ?? SystemClock::utc());
+            $this->telemetryConfig = TelemetryConfig::default($this->getClock());
         }
 
         return $this->telemetryConfig;
