@@ -12,6 +12,7 @@ use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
+use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableClient};
 use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverters};
 use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
 use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
@@ -177,6 +178,8 @@ use Flow\PostgreSql\QueryBuilder\Utility\{
     VacuumFinalStep
 };
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
+use Flow\Telemetry\Telemetry;
+use Psr\Clock\ClockInterface;
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function sql_parser() : Parser
@@ -2969,6 +2972,125 @@ function pgsql_client(
     ?RowMapper $mapper = null,
 ) : Client\Client {
     return PgSqlClient::connect($params, $valueConverters, $mapper);
+}
+
+/**
+ * Create telemetry options for PostgreSQL client instrumentation.
+ *
+ * Controls which telemetry signals (traces, metrics, logs) are enabled
+ * and how query information is captured.
+ *
+ * @param bool $traceQueries Create spans for query execution (default: true)
+ * @param bool $traceTransactions Create spans for transactions (default: true)
+ * @param bool $collectMetrics Collect duration and row count metrics (default: true)
+ * @param bool $logQueries Log executed queries (default: false)
+ * @param null|int $maxQueryLength Maximum query text length in telemetry (default: 1000, null = unlimited)
+ * @param bool $includeParameters Include query parameters in telemetry (default: false, security consideration)
+ *
+ * @example
+ * // Default options (traces and metrics enabled)
+ * $options = postgresql_telemetry_options();
+ *
+ * // Enable query logging
+ * $options = postgresql_telemetry_options(logQueries: true);
+ *
+ * // Disable all but metrics
+ * $options = postgresql_telemetry_options(
+ *     traceQueries: false,
+ *     traceTransactions: false,
+ *     collectMetrics: true,
+ * );
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function postgresql_telemetry_options(
+    bool $traceQueries = true,
+    bool $traceTransactions = true,
+    bool $collectMetrics = true,
+    bool $logQueries = false,
+    ?int $maxQueryLength = 1000,
+    bool $includeParameters = false,
+    ?int $maxParameters = 10,
+    ?int $maxParameterLength = 100,
+) : PostgreSqlTelemetryOptions {
+    return new PostgreSqlTelemetryOptions(
+        traceQueries: $traceQueries,
+        traceTransactions: $traceTransactions,
+        collectMetrics: $collectMetrics,
+        logQueries: $logQueries,
+        maxQueryLength: $maxQueryLength,
+        includeParameters: $includeParameters,
+        maxParameters: $maxParameters,
+        maxParameterLength: $maxParameterLength,
+    );
+}
+
+/**
+ * Create telemetry configuration for PostgreSQL client.
+ *
+ * Bundles telemetry instance, clock, and options needed to instrument a PostgreSQL client.
+ *
+ * @param Telemetry $telemetry The telemetry instance
+ * @param ClockInterface $clock Clock for timestamps
+ * @param null|PostgreSqlTelemetryOptions $options Telemetry options (default: all enabled)
+ *
+ * @example
+ * $config = postgresql_telemetry_config(
+ *     telemetry(resource(['service.name' => 'my-app'])),
+ *     new SystemClock(),
+ * );
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function postgresql_telemetry_config(
+    Telemetry $telemetry,
+    ClockInterface $clock,
+    ?PostgreSqlTelemetryOptions $options = null,
+) : PostgreSqlTelemetryConfig {
+    return new PostgreSqlTelemetryConfig(
+        telemetry: $telemetry,
+        clock: $clock,
+        options: $options ?? new PostgreSqlTelemetryOptions(),
+    );
+}
+
+/**
+ * Wrap a PostgreSQL client with telemetry instrumentation.
+ *
+ * Returns a decorator that adds spans, metrics, and logs to all
+ * query and transaction operations following OpenTelemetry conventions.
+ *
+ * @param Client\Client $client The PostgreSQL client to instrument
+ * @param PostgreSqlTelemetryConfig $telemetryConfig Telemetry configuration
+ *
+ * @example
+ * $client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
+ *
+ * $traceableClient = traceable_postgresql_client(
+ *     $client,
+ *     postgresql_telemetry_config(
+ *         telemetry(resource(['service.name' => 'my-app'])),
+ *         new SystemClock(),
+ *         postgresql_telemetry_options(
+ *             traceQueries: true,
+ *             traceTransactions: true,
+ *             collectMetrics: true,
+ *             logQueries: true,
+ *             maxQueryLength: 500,
+ *         ),
+ *     ),
+ * );
+ *
+ * // All operations now traced
+ * $traceableClient->transaction(function (Client $client) {
+ *     $user = $client->fetchOne('SELECT * FROM users WHERE id = $1', [123]);
+ *     $client->execute('UPDATE users SET last_login = NOW() WHERE id = $1', [123]);
+ * });
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function traceable_postgresql_client(
+    Client\Client $client,
+    PostgreSqlTelemetryConfig $telemetryConfig,
+) : TraceableClient {
+    return new TraceableClient($client, $telemetryConfig);
 }
 
 /**

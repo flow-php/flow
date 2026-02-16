@@ -55,6 +55,7 @@ final readonly class Github
                             ->traceLoading()
                             ->traceCache()
                             ->traceTransformations()
+                            ->traceCache()
                             ->filesystem(filesystem_telemetry_options()->collectMetrics()->traceStreams())
                     )
             )

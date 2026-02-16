@@ -261,6 +261,11 @@ interface Client
     public function lastInsertId(string $sequenceName) : int|string;
 
     /**
+     * Get the connection parameters used to establish this connection.
+     */
+    public function parameters() : ConnectionParameters;
+
+    /**
      * Roll back the current transaction.
      * If nested, rolls back to the savepoint.
      *

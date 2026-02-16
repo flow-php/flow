@@ -12,7 +12,9 @@
     ],
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "google/protobuf": "^4.0"
+        "flow-php/telemetry": "self.version",
+        "google/protobuf": "^4.0",
+        "psr/clock": "^1.0"
     },
     "require-dev": {
         "ext-pg_query": "*",
