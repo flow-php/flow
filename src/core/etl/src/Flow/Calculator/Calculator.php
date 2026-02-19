@@ -19,9 +19,9 @@ final class Calculator
      */
     public function add(int|float|string $a, int|float|string $b) : int|float
     {
-        $result = BigDecimal::of($a)->plus(BigDecimal::of($b));
+        $result = BigDecimal::of((string) $a)->plus(BigDecimal::of((string) $b));
 
-        if (\in_array(\rtrim($result->getFractionalPart(), '0'), ['0', ''], true)) {
+        if (!$result->hasNonZeroFractionalPart()) {
             return $result->toInt();
         }
 
@@ -39,34 +39,29 @@ final class Calculator
     {
         try {
             if ($scale === null && $rounding === null) {
-                $result = BigDecimal::of($a)->exactlyDividedBy(BigDecimal::of($b));
+                $result = BigDecimal::of($a)->dividedByExact(BigDecimal::of($b));
 
-                if (\in_array(\rtrim($result->getFractionalPart(), '0'), ['0', ''], true)) {
+                if (!$result->hasNonZeroFractionalPart()) {
                     return $result->toInt();
                 }
             }
 
-            if ($rounding === null) {
-                $brickMode = RoundingMode::UNNECESSARY;
-            } else {
+            $brickMode = match ($rounding) {
+                Rounding::UP => RoundingMode::Up,
+                Rounding::DOWN => RoundingMode::Down,
+                Rounding::CEILING => RoundingMode::Ceiling,
+                Rounding::FLOOR => RoundingMode::Floor,
+                Rounding::HALF_UP => RoundingMode::HalfUp,
+                Rounding::HALF_DOWN => RoundingMode::HalfDown,
+                Rounding::HALF_CEILING => RoundingMode::HalfCeiling,
+                Rounding::HALF_FLOOR => RoundingMode::HalfFloor,
+                Rounding::HALF_EVEN => RoundingMode::HalfEven,
+                default => RoundingMode::Unnecessary,
+            };
 
-                $brickMode = match ($rounding) {
-                    Rounding::UNNECESSARY => RoundingMode::UNNECESSARY,
-                    Rounding::UP => RoundingMode::UP,
-                    Rounding::DOWN => RoundingMode::DOWN,
-                    Rounding::CEILING => RoundingMode::CEILING,
-                    Rounding::FLOOR => RoundingMode::FLOOR,
-                    Rounding::HALF_UP => RoundingMode::HALF_UP,
-                    Rounding::HALF_DOWN => RoundingMode::HALF_DOWN,
-                    Rounding::HALF_CEILING => RoundingMode::HALF_CEILING,
-                    Rounding::HALF_FLOOR => RoundingMode::HALF_FLOOR,
-                    Rounding::HALF_EVEN => RoundingMode::HALF_EVEN,
-                };
-            }
+            $result = BigDecimal::of((string) $a)->dividedBy(BigDecimal::of((string) $b), $scale, $brickMode);
 
-            $result = BigDecimal::of($a)->dividedBy(BigDecimal::of($b), $scale, $brickMode);
-
-            if (\in_array(\rtrim($result->getFractionalPart(), '0'), ['0', ''], true)) {
+            if (!$result->hasNonZeroFractionalPart()) {
                 return $result->toInt();
             }
 
@@ -93,9 +88,9 @@ final class Calculator
      */
     public function multiply(int|float|string $a, int|float|string $b) : int|float
     {
-        $result = BigDecimal::of($a)->multipliedBy(BigDecimal::of($b));
+        $result = BigDecimal::of((string) $a)->multipliedBy(BigDecimal::of((string) $b));
 
-        if (\in_array(\rtrim($result->getFractionalPart(), '0'), ['0', ''], true)) {
+        if (!$result->hasNonZeroFractionalPart()) {
             return $result->toInt();
         }
 
@@ -108,9 +103,9 @@ final class Calculator
      */
     public function power(int|float|string $a, int|string $b) : int|float
     {
-        $result = BigDecimal::of($a)->power(BigInteger::of($b)->toInt());
+        $result = BigDecimal::of((string) $a)->power(BigInteger::of((string) $b)->toInt());
 
-        if (\in_array($result->getFractionalPart(), ['0', ''], true)) {
+        if (!$result->hasNonZeroFractionalPart()) {
             return $result->toInt();
         }
 
@@ -123,9 +118,9 @@ final class Calculator
      */
     public function subtract(int|float|string $a, int|float|string $b) : int|float
     {
-        $result = BigDecimal::of($a)->minus(BigDecimal::of($b));
+        $result = BigDecimal::of((string) $a)->minus(BigDecimal::of((string) $b));
 
-        if (\in_array(\rtrim($result->getFractionalPart(), '0'), ['0', ''], true)) {
+        if (!$result->hasNonZeroFractionalPart()) {
             return $result->toInt();
         }
 
