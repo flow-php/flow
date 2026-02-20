@@ -109,7 +109,7 @@ All query methods are traced with individual spans:
 - `execute()` - INSERT, UPDATE, DELETE operations
 - `explain()` - Query plan analysis
 
-Span names follow the pattern: `flow.postgresql.{OPERATION} {table}` (e.g., `flow.postgresql.SELECT users`)
+Span names follow the pattern: `{OPERATION} {table}` (e.g., `SELECT users`)
 
 ### Transaction Lifecycle
 
@@ -125,12 +125,12 @@ Transaction operations create hierarchical spans:
 
 // Creates a transaction span containing query spans
 $client->transaction(function ($client) {
-    // Span: flow.postgresql.BEGIN TRANSACTION
+    // Span: BEGIN TRANSACTION
     $client->execute('INSERT INTO users (name) VALUES ($1)', ['John']);
-    // Span: flow.postgresql.INSERT users
+    // Span: INSERT users
     $client->execute('INSERT INTO logs (user_id, action) VALUES ($1, $2)', [1, 'created']);
-    // Span: flow.postgresql.INSERT logs
-    // Span completion: flow.postgresql.COMMIT TRANSACTION (on success)
+    // Span: INSERT logs
+    // Span completion: COMMIT TRANSACTION (on success)
 });
 ```
 
@@ -142,7 +142,7 @@ Cursors create spans that track the entire iteration lifecycle:
 <?php
 
 $cursor = $client->cursor('SELECT * FROM large_table');
-// Span: flow.postgresql.SELECT large_table (cursor)
+// Span: SELECT large_table (cursor)
 
 foreach ($cursor->iterate() as $row) {
     processRow($row);
@@ -266,13 +266,13 @@ $orderId = $client->transaction(function ($client) use ($userId, $items) {
 This produces traces like:
 
 ```
-flow.postgresql.BEGIN TRANSACTION
-├── flow.postgresql.INSERT orders
-├── flow.postgresql.SELECT
-├── flow.postgresql.INSERT order_items
-├── flow.postgresql.INSERT order_items
-├── flow.postgresql.UPDATE products
-└── flow.postgresql.COMMIT TRANSACTION
+BEGIN TRANSACTION
+├── INSERT orders
+├── SELECT
+├── INSERT order_items
+├── INSERT order_items
+├── UPDATE products
+└── COMMIT TRANSACTION
 ```
 
 ### Error Handling

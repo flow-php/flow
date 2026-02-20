@@ -52,6 +52,7 @@ final class Tracer
         private readonly ClockInterface $clock,
         private readonly ContextStorage $contextStorage,
         private readonly ?Sampler $sampler = null,
+        private readonly SpanLimits $limits = new SpanLimits(),
     ) {
         /** @var \SplStack<SpanContext> $stack */
         $stack = new \SplStack();
@@ -203,7 +204,7 @@ final class Tracer
             : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
         $startTime = $this->clock->now();
-        $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording);
+        $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording, $this->limits);
 
         $attributesToSet = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
         $span->setAttributes($attributesToSet);
@@ -231,7 +232,7 @@ final class Tracer
                     ? SpanContext::createRemote($traceId, $spanId, $parentSpanId, $traceFlags, $traceState)
                     : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
-                $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording);
+                $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording, $this->limits);
                 $span->setAttributes($attributesToSet);
 
                 foreach ($links as $link) {

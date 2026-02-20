@@ -84,7 +84,7 @@ final class TraceableClientTest extends TestCase
         self::assertCount(2, $spans);
 
         $insertSpan = $spans[1];
-        self::assertSame('flow.postgresql.INSERT test_execute_span', $insertSpan->name());
+        self::assertSame('INSERT test_execute_span', $insertSpan->name());
         self::assertSame('postgresql', $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
         self::assertSame('INSERT', $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME]);
         self::assertSame('test_execute_span', $insertSpan->attributes()[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME]);
@@ -186,8 +186,8 @@ final class TraceableClientTest extends TestCase
         self::assertCount(2, $spans);
 
         $spanNames = \array_map(static fn ($s) => $s->name(), $spans);
-        self::assertContains('flow.postgresql.BEGIN TRANSACTION', $spanNames);
-        self::assertContains('flow.postgresql.BEGIN SAVEPOINT', $spanNames);
+        self::assertContains('BEGIN TRANSACTION', $spanNames);
+        self::assertContains('BEGIN SAVEPOINT', $spanNames);
     }
 
     public function test_parameters_are_included_when_enabled() : void
@@ -224,7 +224,7 @@ final class TraceableClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('flow.postgresql.BEGIN TRANSACTION', $spans[0]->name());
+        self::assertSame('BEGIN TRANSACTION', $spans[0]->name());
         self::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_TRANSACTION_NESTING_LEVEL]);
     }
 

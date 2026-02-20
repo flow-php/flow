@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Meter\Instrument;
 
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricType};
+use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricLimits, MetricType};
 use Flow\Telemetry\Meter\Exemplar\{AlignedHistogramBucketExemplarReservoir, ExemplarFilter, ExemplarReservoir, TraceBasedExemplarFilter};
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
@@ -44,12 +44,18 @@ final class Histogram implements Instrument
     private array $aggregations = [];
 
     /**
+     * Key for overflow aggregation.
+     */
+    private readonly string $overflowKey;
+
+    /**
      * @param string $name Instrument name
      * @param resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
      * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling
+     * @param MetricLimits $limits Cardinality limits for this instrument
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description
      * @param array<float> $boundaries Explicit bucket boundaries (strictly increasing)
@@ -61,10 +67,12 @@ final class Histogram implements Instrument
         private readonly ClockInterface $clock,
         private readonly AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
+        private readonly MetricLimits $limits = new MetricLimits(),
         private readonly ?string $unit = null,
         private readonly ?string $description = null,
         private readonly array $boundaries = self::DEFAULT_BOUNDARIES,
     ) {
+        $this->overflowKey = Attributes::create([MetricLimits::OVERFLOW_ATTRIBUTE => true])->id();
     }
 
     /**
@@ -135,6 +143,17 @@ final class Histogram implements Instrument
         $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
         $key = Attributes::create($attrs)->id();
         $floatValue = (float) $value;
+
+        if (!isset($this->aggregations[$key])) {
+            $nonOverflowCount = isset($this->aggregations[$this->overflowKey])
+                ? \count($this->aggregations) - 1
+                : \count($this->aggregations);
+
+            if ($nonOverflowCount >= $this->limits->cardinalityLimit) {
+                $key = $this->overflowKey;
+                $attrs = [MetricLimits::OVERFLOW_ATTRIBUTE => true];
+            }
+        }
 
         if (!isset($this->aggregations[$key])) {
             $this->aggregations[$key] = [

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
+use function Flow\Telemetry\DSL\span_limits;
 use Flow\Telemetry\Tracer\SpanLimits;
 use PHPUnit\Framework\TestCase;
 
@@ -53,7 +54,7 @@ final class SpanLimitsTest extends TestCase
 
     public function test_unlimited_creates_limits_with_max_values() : void
     {
-        $limits = SpanLimits::unlimited();
+        $limits = span_limits()->unlimited();
 
         self::assertSame(PHP_INT_MAX, $limits->attributeCountLimit);
         self::assertSame(PHP_INT_MAX, $limits->eventCountLimit);

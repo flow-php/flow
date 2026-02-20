@@ -28,6 +28,9 @@
         <env name="MEILISEARCH_API_KEY" value="masterKey"/>
         <env name="OTEL_COLLECTOR_HTTP_ENDPOINT" value="http://localhost:4318"/>
         <env name="OTEL_COLLECTOR_OUTPUT_DIR" value="./var/otel"/>
+        <env name="OTEL_RECEIVER_HTTP_ENDPOINT" value="http://localhost:4318"/>
+        <env name="OTEL_RECEIVER_GRPC_ENDPOINT" value="localhost:4317"/>
+        <env name="OTEL_COLLECTOR_METRICS_ENDPOINT" value="http://localhost:8888/metrics"/>
         <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
         <env name="FLOW_PARQUET_TESTS_DEBUG" value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
     </php>

@@ -94,7 +94,7 @@ services:
         networks:
             - flow-php
     otel-collector:
-        image: otel/opentelemetry-collector-contrib:0.115.1
+        image: otel/opentelemetry-collector-contrib:0.144.0
         container_name: flow-php-otel-collector
         command: ["--config=/etc/otel-collector-config.yaml"]
         ports:

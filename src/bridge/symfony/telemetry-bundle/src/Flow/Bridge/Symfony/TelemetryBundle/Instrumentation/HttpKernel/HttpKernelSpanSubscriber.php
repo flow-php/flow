@@ -62,8 +62,6 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         if (\is_string($route)) {
             $span->setAttribute('http.route', $route);
-            $method = $request->getMethod();
-            $span->rename("{$method} {$route}");
         }
 
         $controller = $event->getController();

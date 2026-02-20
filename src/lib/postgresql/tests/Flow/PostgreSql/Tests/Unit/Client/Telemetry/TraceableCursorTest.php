@@ -49,7 +49,7 @@ final class TraceableCursorTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('flow.postgresql.SELECT users (cursor)', $spans[0]->name());
+        self::assertSame('SELECT users (cursor)', $spans[0]->name());
         self::assertSame(2, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
@@ -288,7 +288,7 @@ final class TraceableCursorTest extends TestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('flow.postgresql.SELECT users (cursor)', $span->name());
+        self::assertSame('SELECT users (cursor)', $span->name());
         self::assertSame('postgresql', $span->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
         self::assertSame('testdb', $span->attributes()[PostgreSqlTelemetryAttributes::DB_NAMESPACE]);
         self::assertSame('localhost', $span->attributes()[PostgreSqlTelemetryAttributes::SERVER_ADDRESS]);

@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Tests\Unit\Logger;
 
 use Flow\Telemetry\{Attributes, Resource};
 use Flow\Telemetry\Context\{MemoryContextStorage, SpanId, TraceId};
-use Flow\Telemetry\Logger\{Logger, LoggerProvider, Severity};
+use Flow\Telemetry\Logger\{LogRecordLimits, Logger, LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidLogExporter;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
@@ -30,6 +30,77 @@ final class MemoryLoggerProviderTest extends TestCase
         $logger2 = $provider->logger($this->resource, 'service-a', '1.0');
 
         self::assertNotSame($logger1, $logger2);
+    }
+
+    public function test_limits_attribute_count_drops_excess_attributes() : void
+    {
+        $processor = $this->createProcessor();
+        $limits = new LogRecordLimits(attributeCountLimit: 2);
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage(), $limits);
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+
+        $logger->info('message', [
+            'key1' => 'value1',
+            'key2' => 'value2',
+            'key3' => 'value3',
+            'key4' => 'value4',
+        ]);
+
+        $entry = $processor->entries()[0];
+        self::assertCount(2, $entry->record->attributes->normalize());
+        self::assertSame(2, $entry->droppedAttributeCount);
+        self::assertArrayHasKey('key1', $entry->record->attributes->normalize());
+        self::assertArrayHasKey('key2', $entry->record->attributes->normalize());
+    }
+
+    public function test_limits_attribute_value_length_truncates_strings() : void
+    {
+        $processor = $this->createProcessor();
+        $limits = new LogRecordLimits(attributeValueLengthLimit: 10);
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage(), $limits);
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+
+        $logger->info('message', [
+            'short' => 'abc',
+            'long' => 'this-is-a-very-long-value',
+        ]);
+
+        $entry = $processor->entries()[0];
+        $attrs = $entry->record->attributes->normalize();
+        self::assertSame('abc', $attrs['short']);
+        self::assertSame('this-is-a-', $attrs['long']);
+    }
+
+    public function test_limits_dropped_count_in_normalized_output() : void
+    {
+        $processor = $this->createProcessor();
+        $limits = new LogRecordLimits(attributeCountLimit: 1);
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage(), $limits);
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+
+        $logger->info('message', ['key1' => 'v1', 'key2' => 'v2', 'key3' => 'v3']);
+
+        $entry = $processor->entries()[0];
+        $normalized = $entry->normalize();
+        self::assertSame(2, $normalized['droppedAttributeCount']);
+    }
+
+    public function test_limits_with_default_limits_no_truncation() : void
+    {
+        $processor = $this->createProcessor();
+        $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
+        $logger = $provider->logger($this->resource, 'service', '1.0');
+
+        $attrs = [];
+
+        for ($i = 0; $i < 100; $i++) {
+            $attrs["key{$i}"] = 'value';
+        }
+        $logger->info('message', $attrs);
+
+        $entry = $processor->entries()[0];
+        self::assertCount(100, $entry->record->attributes->normalize());
+        self::assertSame(0, $entry->droppedAttributeCount);
     }
 
     public function test_logger_accepts_attributes_object() : void

@@ -193,14 +193,14 @@ final class TraceableCursor implements Cursor
     private function buildSpanName() : string
     {
         if ($this->queryAttrs->operation !== null && $this->queryAttrs->target !== null) {
-            return 'flow.postgresql.' . $this->queryAttrs->operation . ' ' . $this->queryAttrs->target . ' (cursor)';
+            return $this->queryAttrs->operation . ' ' . $this->queryAttrs->target . ' (cursor)';
         }
 
-        if ($this->queryAttrs->target !== null) {
-            return 'flow.postgresql.' . $this->queryAttrs->target . ' (cursor)';
+        if ($this->queryAttrs->operation !== null) {
+            return $this->queryAttrs->operation . ' (cursor)';
         }
 
-        return 'flow.postgresql.cursor';
+        return 'cursor';
     }
 
     private function completeSpan(SpanStatus $status, ?\Throwable $exception = null) : void

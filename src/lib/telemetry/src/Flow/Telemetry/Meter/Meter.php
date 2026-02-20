@@ -45,6 +45,7 @@ final class Meter
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality for metrics
      * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling
+     * @param MetricLimits $limits Cardinality limits for instruments
      */
     public function __construct(
         private readonly Resource $resource,
@@ -53,6 +54,7 @@ final class Meter
         private readonly ClockInterface $clock,
         private readonly AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
+        private readonly MetricLimits $limits = new MetricLimits(),
     ) {
     }
 
@@ -119,6 +121,7 @@ final class Meter
                 $this->clock,
                 $this->temporality,
                 $this->exemplarFilter,
+                $this->limits,
                 $unit,
                 $description,
             );
@@ -152,6 +155,7 @@ final class Meter
                 $this->scope,
                 $this->clock,
                 $this->exemplarFilter,
+                $this->limits,
                 $unit,
                 $description,
             );
@@ -188,6 +192,7 @@ final class Meter
                 $this->clock,
                 $this->temporality,
                 $this->exemplarFilter,
+                $this->limits,
                 $unit,
                 $description,
                 $boundaries ?? Histogram::DEFAULT_BOUNDARIES,
@@ -228,6 +233,7 @@ final class Meter
                 $this->clock,
                 $this->temporality,
                 $this->exemplarFilter,
+                $this->limits,
                 $unit,
                 $description,
                 $ratePrecision,
@@ -264,6 +270,7 @@ final class Meter
                 $this->clock,
                 $this->temporality,
                 $this->exemplarFilter,
+                $this->limits,
                 $unit,
                 $description,
             );

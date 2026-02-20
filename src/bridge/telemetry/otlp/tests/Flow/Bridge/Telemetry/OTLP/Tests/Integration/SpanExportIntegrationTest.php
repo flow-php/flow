@@ -154,7 +154,7 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
         $telemetry = $this->otelContext->createTelemetry($config, Resource::create([
-            'service.name' => 'test-service',
+            'service.name' => 'flow-php-otlp-bridge-tests',
             'service.version' => '1.2.3',
             'deployment.environment' => 'testing',
         ]));

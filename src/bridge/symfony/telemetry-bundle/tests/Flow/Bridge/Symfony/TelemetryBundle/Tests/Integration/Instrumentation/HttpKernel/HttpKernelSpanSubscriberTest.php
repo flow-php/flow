@@ -192,7 +192,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);
-        self::assertSame('GET test_index', $spans[0]->name());
+        self::assertSame('GET /test', $spans[0]->name());
     }
 
     public function test_excludes_path_with_method_filter() : void
@@ -251,7 +251,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);
-        self::assertSame('POST wdt', $spans[0]->name());
+        self::assertSame('POST /_wdt', $spans[0]->name());
     }
 
     public function test_excludes_path_with_regex_pattern() : void
@@ -315,7 +315,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $spans = $processor->endedSpans();
 
         self::assertCount(1, $spans);
-        self::assertSame('GET test_index', $spans[0]->name());
+        self::assertSame('GET /test', $spans[0]->name());
     }
 
     public function test_extracts_context_from_traceparent_header() : void
@@ -546,7 +546,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('GET test_index', $span->name());
+        self::assertSame('GET /test', $span->name());
         self::assertSame(SpanKind::SERVER, $span->kind());
 
         $attributes = $span->attributes();

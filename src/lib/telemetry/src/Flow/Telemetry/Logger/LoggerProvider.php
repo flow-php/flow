@@ -37,6 +37,7 @@ final readonly class LoggerProvider
         private LogProcessor $processor,
         private ClockInterface $clock,
         private ContextStorage $contextStorage,
+        private LogRecordLimits $limits = new LogRecordLimits(),
     ) {
     }
 
@@ -60,6 +61,7 @@ final readonly class LoggerProvider
             $this->processor,
             $this->clock,
             $this->contextStorage,
+            $this->limits,
         );
     }
 }

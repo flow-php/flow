@@ -479,14 +479,14 @@ final class TraceableClient implements Client
     private function buildSpanName(QueryAttributes $queryAttrs) : string
     {
         if ($queryAttrs->operation !== null && $queryAttrs->target !== null) {
-            return 'flow.postgresql.' . $queryAttrs->operation . ' ' . $queryAttrs->target;
+            return $queryAttrs->operation . ' ' . $queryAttrs->target;
         }
 
-        if ($queryAttrs->target !== null) {
-            return 'flow.postgresql.' . $queryAttrs->target;
+        if ($queryAttrs->operation !== null) {
+            return $queryAttrs->operation;
         }
 
-        return 'flow.postgresql.query';
+        return 'query';
     }
 
     /**
@@ -517,10 +517,10 @@ final class TraceableClient implements Client
     private function buildTransactionSpanName(string $operation, int $nestingLevel) : string
     {
         if ($nestingLevel > 1) {
-            return 'flow.postgresql.' . $operation . ' SAVEPOINT';
+            return $operation . ' SAVEPOINT';
         }
 
-        return 'flow.postgresql.' . $operation . ' TRANSACTION';
+        return $operation . ' TRANSACTION';
     }
 
     private function completeAllTransactionSpans(int $fromLevel, SpanStatus $status, ?\Throwable $exception = null) : void

@@ -85,7 +85,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('flow.postgresql.BEGIN TRANSACTION', $spans[0]->name());
+        self::assertSame('BEGIN TRANSACTION', $spans[0]->name());
         self::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_TRANSACTION_NESTING_LEVEL]);
     }
 
@@ -163,7 +163,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('flow.postgresql.SELECT users', $spans[0]->name());
+        self::assertSame('SELECT users', $spans[0]->name());
     }
 
     public function test_fetch_all_into_creates_span_with_correct_row_count() : void
@@ -340,9 +340,9 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(2, $spans);
-        self::assertSame('flow.postgresql.BEGIN SAVEPOINT', $spans[0]->name());
+        self::assertSame('BEGIN SAVEPOINT', $spans[0]->name());
         self::assertSame('savepoint_1', $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_TRANSACTION_SAVEPOINT]);
-        self::assertSame('flow.postgresql.BEGIN TRANSACTION', $spans[1]->name());
+        self::assertSame('BEGIN TRANSACTION', $spans[1]->name());
     }
 
     public function test_queries_are_logged_when_logging_enabled() : void
@@ -466,8 +466,8 @@ final class TraceableClientTelemetryTest extends TestCase
         self::assertCount(2, $spans);
 
         $spanNames = \array_map(static fn ($s) => $s->name(), $spans);
-        self::assertContains('flow.postgresql.BEGIN TRANSACTION', $spanNames);
-        self::assertContains('flow.postgresql.INSERT users', $spanNames);
+        self::assertContains('BEGIN TRANSACTION', $spanNames);
+        self::assertContains('INSERT users', $spanNames);
     }
 
     private function collectMetrics(PostgreSqlTelemetryConfig $config) : void

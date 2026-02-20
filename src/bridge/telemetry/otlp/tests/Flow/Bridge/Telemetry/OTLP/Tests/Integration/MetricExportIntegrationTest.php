@@ -118,7 +118,7 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
         $telemetry = $this->otelContext->createTelemetry($config, Resource::create([
-            'service.name' => 'metric-test-service',
+            'service.name' => 'flow-php-otlp-bridge-tests',
             'service.version' => '2.0.0',
         ]));
         $meter = $telemetry->meter('test-meter');

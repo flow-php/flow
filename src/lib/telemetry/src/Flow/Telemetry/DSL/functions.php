@@ -8,9 +8,9 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\{Attributes, Resource, Telemetry};
 use Flow\Telemetry\Context\{Baggage, Context, ContextStorage, MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Logger\{LogExporter, LogProcessor, LoggerProvider, Severity};
+use Flow\Telemetry\Logger\{LogExporter, LogProcessor, LogRecordLimits, LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
-use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider, MetricExporter, MetricProcessor};
+use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider, MetricExporter, MetricLimits, MetricProcessor};
 use Flow\Telemetry\Meter\Exemplar\{AlwaysOffExemplarFilter, AlwaysOnExemplarFilter, ExemplarFilter, TraceBasedExemplarFilter};
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, PassThroughMetricProcessor};
 use Flow\Telemetry\Propagation\{ArrayCarrier, CompositePropagator, PropagationContext, Propagator, SuperglobalCarrier, W3CBaggage, W3CTraceContext};
@@ -20,7 +20,7 @@ use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, Memor
 use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
 use Flow\Telemetry\Resource\Detector\{CachingDetector, ChainDetector, ComposerDetector, EnvironmentDetector, HostDetector, ManualDetector, OsDetector, ProcessDetector};
 use Flow\Telemetry\Resource\ResourceDetector;
-use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanExporter, SpanLink, SpanProcessor, TracerProvider};
+use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanExporter, SpanLimits, SpanLink, SpanProcessor, TracerProvider};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
 use Psr\Clock\ClockInterface;
@@ -155,6 +155,81 @@ function span_event(string $name, \DateTimeImmutable $timestamp, array|Attribute
 function span_link(SpanContext $context, array|Attributes $attributes = []) : SpanLink
 {
     return SpanLink::create($context, $attributes);
+}
+
+/**
+ * Create SpanLimits configuration.
+ *
+ * SpanLimits controls the maximum amount of data a span can collect,
+ * preventing unbounded memory growth and ensuring reasonable span sizes.
+ *
+ * @param int $attributeCountLimit Maximum number of attributes per span
+ * @param int $eventCountLimit Maximum number of events per span
+ * @param int $linkCountLimit Maximum number of links per span
+ * @param int $attributePerEventCountLimit Maximum number of attributes per event
+ * @param int $attributePerLinkCountLimit Maximum number of attributes per link
+ * @param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function span_limits(
+    int $attributeCountLimit = 128,
+    int $eventCountLimit = 128,
+    int $linkCountLimit = 128,
+    int $attributePerEventCountLimit = 128,
+    int $attributePerLinkCountLimit = 128,
+    ?int $attributeValueLengthLimit = null,
+) : SpanLimits {
+    return new SpanLimits(
+        $attributeCountLimit,
+        $eventCountLimit,
+        $linkCountLimit,
+        $attributePerEventCountLimit,
+        $attributePerLinkCountLimit,
+        $attributeValueLengthLimit,
+    );
+}
+
+/**
+ * Create LogRecordLimits configuration.
+ *
+ * LogRecordLimits controls the maximum amount of data a log record can collect,
+ * preventing unbounded memory growth and ensuring reasonable log record sizes.
+ *
+ * @param int $attributeCountLimit Maximum number of attributes per log record
+ * @param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function log_record_limits(
+    int $attributeCountLimit = 128,
+    ?int $attributeValueLengthLimit = null,
+) : LogRecordLimits {
+    return new LogRecordLimits(
+        $attributeCountLimit,
+        $attributeValueLengthLimit,
+    );
+}
+
+/**
+ * Create MetricLimits configuration.
+ *
+ * MetricLimits controls the maximum cardinality (unique attribute combinations)
+ * per metric instrument, preventing memory exhaustion from high-cardinality attributes.
+ *
+ * When the cardinality limit is exceeded, new attribute combinations are aggregated
+ * into an overflow data point with `otel.metric.overflow: true` attribute.
+ *
+ * Note: Unlike spans and logs, metrics are EXEMPT from attribute count and value
+ * length limits per the OpenTelemetry specification. Only cardinality is limited.
+ *
+ * @param int $cardinalityLimit Maximum number of unique attribute combinations per instrument
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function metric_limits(
+    int $cardinalityLimit = 2000,
+) : MetricLimits {
+    return new MetricLimits(
+        $cardinalityLimit,
+    );
 }
 
 /**
@@ -321,6 +396,7 @@ function memory_log_processor(LogExporter $exporter) : MemoryLogProcessor
  * @param ClockInterface $clock The clock for timestamps
  * @param ContextStorage $contextStorage Storage for context propagation
  * @param Sampler $sampler Sampling strategy for spans
+ * @param SpanLimits $limits Limits for span attributes, events, and links
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function tracer_provider(
@@ -328,12 +404,14 @@ function tracer_provider(
     ClockInterface $clock,
     ContextStorage $contextStorage,
     Sampler $sampler = new AlwaysOnSampler(),
+    SpanLimits $limits = new SpanLimits(),
 ) : TracerProvider {
     return new TracerProvider(
         $processor,
         $clock,
         $contextStorage,
         $sampler,
+        $limits,
     );
 }
 
@@ -347,17 +425,20 @@ function tracer_provider(
  * @param LogProcessor $processor The processor for logs
  * @param ClockInterface $clock The clock for timestamps
  * @param ContextStorage $contextStorage Storage for span correlation
+ * @param LogRecordLimits $limits Limits for log record attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function logger_provider(
     LogProcessor $processor,
     ClockInterface $clock,
     ContextStorage $contextStorage,
+    LogRecordLimits $limits = new LogRecordLimits(),
 ) : LoggerProvider {
     return new LoggerProvider(
         $processor,
         $clock,
         $contextStorage,
+        $limits,
     );
 }
 
@@ -372,6 +453,7 @@ function logger_provider(
  * @param ClockInterface $clock The clock for timestamps
  * @param AggregationTemporality $temporality Aggregation temporality for metrics
  * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)
+ * @param MetricLimits $limits Cardinality limits for metric instruments
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function meter_provider(
@@ -379,12 +461,14 @@ function meter_provider(
     ClockInterface $clock,
     AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
     ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
+    MetricLimits $limits = new MetricLimits(),
 ) : MeterProvider {
     return new MeterProvider(
         $processor,
         $clock,
         $temporality,
         $exemplarFilter,
+        $limits,
     );
 }
 

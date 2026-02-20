@@ -9,7 +9,7 @@ receivers:
 exporters:
   debug:
     verbosity: basic
-  otlp/aspire:
+  otlp_grpc/aspire:
     endpoint: aspire:18889
     tls:
       insecure: true
@@ -21,20 +21,45 @@ extensions:
 service:
   extensions: [health_check]
   telemetry:
+    traces:
+      sampler:
+        trace_id_ratio_based:
+          ratio: 0.1
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: http://localhost:4318
     metrics:
+      level: detailed
       readers:
         - pull:
             exporter:
               prometheus:
                 host: '0.0.0.0'
                 port: 8888
+        - periodic:
+            exporter:
+              otlp:
+                protocol: grpc
+                endpoint: http://aspire:18889
+                insecure: true
+    logs:
+      level: warn
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: http://localhost:4318
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [debug, otlp/aspire]
+      exporters: [debug, otlp_grpc/aspire]
     metrics:
       receivers: [otlp]
-      exporters: [debug, otlp/aspire]
+      exporters: [debug, otlp_grpc/aspire]
     logs:
       receivers: [otlp]
-      exporters: [debug, otlp/aspire]
+      exporters: [debug, otlp_grpc/aspire]
