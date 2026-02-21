@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-02-20
+## [Unreleased] - 2026-02-21
 
 ### Added
 - [#2213](https://github.com/flow-php/flow/pull/2213) - **phpstan integration with infection** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +17,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2222](https://github.com/flow-php/flow/pull/2222) - **Adjust `GoogleSheetExtractor` row data extraction** - [@stloyd](https://github.com/stloyd)
 - [#2220](https://github.com/flow-php/flow/pull/2220) - **Prevent using deprecated `brick/math` functions** - [@stloyd](https://github.com/stloyd)
 - [#2213](https://github.com/flow-php/flow/pull/2213) - **reduced mutation tests just to data frame library** - [@norberttech](https://github.com/norberttech)
 - [9aa918](https://github.com/flow-php/flow/commit/9aa918a7d93081c160c49b62a54702d0f1a1cb05) - **chore: updated dependencies** - [@norberttech](https://github.com/norberttech)
