@@ -76,38 +76,31 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         while ([] !== $values) {
-            $rows = \array_map(
-                function (array $rowData) use ($headers, $headersCount, $shouldPutInputIntoRows) {
-                    $rowDataCount = \count($rowData);
+            foreach ($values as $rowData) {
+                $rowDataCount = \count($rowData);
 
-                    // Expand columns to the size of the previous row
-                    for ($i = $rowDataCount; $i < $headersCount; $i++) {
-                        $rowData[$i] = null;
+                // Expand columns to the size of the previous row
+                for ($i = $rowDataCount; $i < $headersCount; $i++) {
+                    $rowData[$i] = null;
+                }
+
+                if ($rowDataCount > $headersCount) {
+                    if (!$this->dropExtraColumns) {
+                        throw InvalidArgumentException::because('Row has more columns (%d) than headers (%d)', $rowDataCount, $headersCount);
                     }
 
-                    if ($rowDataCount > $headersCount) {
-                        if (!$this->dropExtraColumns) {
-                            throw InvalidArgumentException::because('Row has more columns (%d) than headers (%d)', $rowDataCount, $headersCount);
-                        }
+                    $rowData = \array_slice($rowData, 0, $headersCount);
+                }
 
-                        $rowData = \array_slice($rowData, 0, $headersCount);
-                    }
+                $row = \array_combine($headers, $rowData);
 
-                    $row = \array_combine($headers, $rowData);
+                if ($shouldPutInputIntoRows) {
+                    $row['_spread_sheet_id'] = $this->spreadsheetId;
+                    $row['_sheet_name'] = $this->columnRange->sheetName;
+                }
 
-                    if ($shouldPutInputIntoRows) {
-                        $row['_spread_sheet_id'] = $this->spreadsheetId;
-                        $row['_sheet_name'] = $this->columnRange->sheetName;
-                    }
+                $totalRows++;
 
-                    return $row;
-                },
-                $values
-            );
-
-            $totalRows += \count($rows);
-
-            foreach ($rows as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), schema: $this->schema);
 
                 $this->incrementReturnedRows();

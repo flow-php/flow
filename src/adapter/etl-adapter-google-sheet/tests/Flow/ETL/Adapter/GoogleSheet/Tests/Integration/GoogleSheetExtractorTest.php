@@ -19,6 +19,24 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->context = new GoogleSheetsContext();
     }
 
+    public function test_extract_expand_missing_columns() : void
+    {
+        $rows = df()
+            ->extract(
+                from_google_sheet(
+                    $this->context->sheets(__DIR__ . '/../Fixtures/missing-columns.json'),
+                    '1234567890',
+                    'Sheet',
+                )
+            )
+            ->fetch()
+            ->toArray();
+
+        foreach ($rows as $row) {
+            self::assertCount(3, $row);
+        }
+    }
+
     public function test_extract_puts_null_in_not_matching_schema_rows() : void
     {
         $rows = df()
@@ -58,6 +76,8 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
+        self::assertCount(10, $rows);
+
         foreach ($rows as $row) {
             self::assertNotSame([], $row);
         }
@@ -79,6 +99,23 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         foreach ($rows as $row) {
             self::assertNotNull($row);
         }
+    }
+
+    public function test_extract_with_limit() : void
+    {
+        $extractor = from_google_sheet(
+            $this->context->sheets(__DIR__ . '/../Fixtures/extra-columns.json'),
+            '1234567890',
+            'Sheet',
+        );
+        $extractor->changeLimit(2);
+
+        $rows = df()
+            ->extract($extractor)
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(2, $rows);
     }
 
     public function test_extract_without_cut_extra_columns() : void
