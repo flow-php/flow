@@ -19,6 +19,24 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->context = new GoogleSheetsContext();
     }
 
+    public function test_extract_expand_missing_columns() : void
+    {
+        $rows = df()
+            ->extract(
+                from_google_sheet(
+                    $this->context->sheets(__DIR__ . '/../Fixtures/missing-columns.json'),
+                    '1234567890',
+                    'Sheet',
+                )
+            )
+            ->fetch()
+            ->toArray();
+
+        foreach ($rows as $row) {
+            self::assertCount(3, $row);
+        }
+    }
+
     public function test_extract_puts_null_in_not_matching_schema_rows() : void
     {
         $rows = df()
