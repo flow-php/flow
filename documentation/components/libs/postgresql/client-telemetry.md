@@ -198,14 +198,14 @@ Query text is automatically truncated to `maxQueryLength` (default: 1000 charact
 
 When `collectMetrics` is enabled, two histograms are recorded:
 
-### `db.client.operation.duration`
+### `operation_duration`
 
 Duration of database operations in seconds.
 
 - **Unit**: `s` (seconds)
 - **Attributes**: `db.system.name`, `db.namespace`, `db.operation.name`, `server.address`
 
-### `db.client.response.returned_rows`
+### `response_returned_rows`
 
 Number of rows returned by database operations.
 

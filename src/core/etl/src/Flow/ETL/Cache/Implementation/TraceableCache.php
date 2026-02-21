@@ -23,16 +23,16 @@ final readonly class TraceableCache implements Cache
         private Cache $cache,
         Telemetry $telemetry,
     ) {
-        $this->tracer = $telemetry->tracer('flow.dataframe.cache', PackageVersion::get('flow-php/etl'));
-        $meter = $telemetry->meter('flow.dataframe.cache', PackageVersion::get('flow-php/etl'));
-        $this->hitCounter = $meter->createCounter('flow.dataframe.cache.hits', 'operations', 'Number of cache hits');
-        $this->missCounter = $meter->createCounter('flow.dataframe.cache.misses', 'operations', 'Number of cache misses');
+        $this->tracer = $telemetry->tracer('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
+        $meter = $telemetry->meter('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
+        $this->hitCounter = $meter->createCounter('cache_hits', 'operations', 'Number of cache hits');
+        $this->missCounter = $meter->createCounter('cache_misses', 'operations', 'Number of cache misses');
     }
 
     public function clear() : void
     {
         $span = $this->tracer->span(
-            'flow.dataframe.cache.clear',
+            'cache.clear',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'clear',
@@ -55,7 +55,7 @@ final readonly class TraceableCache implements Cache
     public function delete(string $key) : void
     {
         $span = $this->tracer->span(
-            'flow.dataframe.cache.delete',
+            'cache.delete',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'delete',
@@ -112,7 +112,7 @@ final readonly class TraceableCache implements Cache
         };
 
         $span = $this->tracer->span(
-            'flow.dataframe.cache.set',
+            'cache.set',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'set',

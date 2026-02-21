@@ -49,23 +49,23 @@ final class TraceableClient implements Client
 
         if ($this->telemetryConfig->options->traceQueries || $this->telemetryConfig->options->traceTransactions) {
             $this->tracer = $telemetryConfig->telemetry->tracer(
-                'flow.postgresql',
+                'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
             );
         }
 
         if ($this->telemetryConfig->options->collectMetrics) {
             $meter = $telemetryConfig->telemetry->meter(
-                'flow.postgresql',
+                'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
             );
             $this->operationDuration = $meter->createHistogram(
-                'db.client.operation.duration',
+                'operation_duration',
                 's',
                 'Duration of database client operations',
             );
             $this->returnedRows = $meter->createHistogram(
-                'db.client.response.returned_rows',
+                'response_returned_rows',
                 '{row}',
                 'Number of rows returned by database operations',
             );
@@ -73,7 +73,7 @@ final class TraceableClient implements Client
 
         if ($this->telemetryConfig->options->logQueries) {
             $this->logger = $telemetryConfig->telemetry->logger(
-                'flow.postgresql',
+                'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
             );
         }

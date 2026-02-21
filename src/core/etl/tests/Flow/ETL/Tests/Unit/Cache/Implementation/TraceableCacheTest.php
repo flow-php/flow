@@ -59,7 +59,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('flow.dataframe.cache.clear', $span->name());
+        self::assertSame('cache.clear', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -79,7 +79,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('flow.dataframe.cache.delete', $span->name());
+        self::assertSame('cache.delete', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -96,8 +96,8 @@ final class TraceableCacheTest extends FlowTestCase
         $cache->get('existing-key');
 
         $this->telemetry->flush();
-        $hitMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.hits');
-        $missMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.misses');
+        $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
+        $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
         self::assertCount(1, $hitMetrics);
         self::assertCount(0, $missMetrics);
@@ -115,8 +115,8 @@ final class TraceableCacheTest extends FlowTestCase
             $cache->get('non-existing-key');
         } finally {
             $this->telemetry->flush();
-            $hitMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.hits');
-            $missMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.misses');
+            $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
+            $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
             self::assertCount(0, $hitMetrics);
             self::assertCount(1, $missMetrics);
@@ -135,8 +135,8 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertTrue($exists);
 
         $this->telemetry->flush();
-        $hitMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.hits');
-        $missMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.misses');
+        $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
+        $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
         self::assertCount(1, $hitMetrics);
         self::assertCount(0, $missMetrics);
@@ -153,8 +153,8 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertFalse($exists);
 
         $this->telemetry->flush();
-        $hitMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.hits');
-        $missMetrics = $this->metricProcessor->metricsWithName('flow.dataframe.cache.misses');
+        $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
+        $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
         self::assertCount(0, $hitMetrics);
         self::assertCount(1, $missMetrics);
@@ -174,7 +174,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('flow.dataframe.cache.set', $span->name());
+        self::assertSame('cache.set', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -196,7 +196,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('flow.dataframe.cache.set', $span->name());
+        self::assertSame('cache.set', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -218,7 +218,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('flow.dataframe.cache.set', $span->name());
+        self::assertSame('cache.set', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();

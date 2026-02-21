@@ -56,7 +56,7 @@ final class TraceableClientTelemetryTest extends TestCase
         self::assertCount(2, $logProcessor->entries(), 'Expected 2 log entries for 2 queries');
         self::assertGreaterThan(0, $metricProcessor->countMetrics(), 'Expected metrics to be recorded');
 
-        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
+        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
         self::assertGreaterThanOrEqual(3, \count($durationMetrics), 'Expected at least 3 duration metrics');
     }
 
@@ -134,7 +134,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $this->collectMetrics($config);
 
-        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
+        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
         self::assertCount(1, $durationMetrics);
         self::assertSame(MetricType::HISTOGRAM, $durationMetrics[0]->type);
         self::assertGreaterThan(0, $durationMetrics[0]->value);
@@ -430,7 +430,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $this->collectMetrics($config);
 
-        $rowMetrics = $metricProcessor->metricsWithName('db.client.response.returned_rows');
+        $rowMetrics = $metricProcessor->metricsWithName('response_returned_rows');
         self::assertCount(1, $rowMetrics);
         self::assertSame(MetricType::HISTOGRAM, $rowMetrics[0]->type);
         self::assertSame(3.0, $rowMetrics[0]->value);
@@ -472,7 +472,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     private function collectMetrics(PostgreSqlTelemetryConfig $config) : void
     {
-        $meter = $config->telemetry->meter('flow.postgresql');
+        $meter = $config->telemetry->meter('flow_php_postgresql');
 
         foreach ($meter->collect() as $metric) {
             $meter->processor()->process($metric);

@@ -69,9 +69,9 @@ final class FlowContext
     public function telemetry() : TelemetryContext
     {
         return $this->telemetryContext ??= new TelemetryContext(
-            $this->config->telemetry->telemetry->logger('flow.dataframe', $this->config->version()),
-            $this->config->telemetry->telemetry->tracer('flow.dataframe', $this->config->version()),
-            $this->config->telemetry->telemetry->meter('flow.dataframe', $this->config->version()),
+            $this->config->telemetry->telemetry->logger('flow_php_dataframe', $this->config->version()),
+            $this->config->telemetry->telemetry->tracer('flow_php_dataframe', $this->config->version()),
+            $this->config->telemetry->telemetry->meter('flow_php_dataframe', $this->config->version()),
             $this->config->telemetry->options,
         );
     }

@@ -30,12 +30,12 @@ final class TraceableSourceStream implements SourceStream
     ) {
         if ($this->telemetryConfig->options->traceStreams) {
             $this->tracer = $telemetryConfig->telemetry->tracer(
-                'flow.filesystem',
+                'flow_php_filesystem',
                 PackageVersion::get('flow-php/filesystem'),
             );
 
             $this->span = $this->tracer->span(
-                'flow.filesystem.stream.read',
+                'stream.read',
                 SpanKind::INTERNAL,
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
@@ -46,16 +46,16 @@ final class TraceableSourceStream implements SourceStream
 
         if ($this->telemetryConfig->options->collectMetrics) {
             $this->meter = $telemetryConfig->telemetry->meter(
-                'flow.filesystem',
+                'flow_php_filesystem',
                 PackageVersion::get('flow-php/filesystem'),
             );
             $this->bytesReadCounter = $this->meter->createCounter(
-                'flow.filesystem.read.size',
+                'read_size',
                 'bytes',
                 'Total bytes read from source streams',
             );
             $this->operationsCounter = $this->meter->createCounter(
-                'flow.filesystem.read.operations',
+                'read_operations',
                 'operations',
                 'Number of read operations',
             );

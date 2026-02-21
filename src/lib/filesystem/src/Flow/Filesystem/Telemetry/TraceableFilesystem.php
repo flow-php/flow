@@ -19,7 +19,7 @@ final readonly class TraceableFilesystem implements Filesystem
         private FilesystemTelemetryConfig $telemetryConfig,
     ) {
         $this->logger = $telemetryConfig->telemetry->logger(
-            'flow.filesystem',
+            'flow_php_filesystem',
             PackageVersion::get('flow-php/filesystem'),
         );
     }

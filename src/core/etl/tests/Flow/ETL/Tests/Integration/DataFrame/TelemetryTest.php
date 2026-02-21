@@ -46,7 +46,7 @@ final class TelemetryTest extends FlowTestCase
 
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('flow.dataframe.rows');
+        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
         self::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         self::assertSame(3, $counterMetrics[0]->value);
     }
@@ -85,9 +85,9 @@ final class TelemetryTest extends FlowTestCase
         $loadingSpans = [];
 
         foreach ($endedSpans as $span) {
-            if ($span->name() === 'flow.dataframe') {
+            if ($span->name() === 'DataFrame flow_dataframe') {
                 $dataFrameSpan = $span;
-            } elseif (\str_starts_with($span->name(), 'flow.dataframe.loader.')) {
+            } elseif (\str_ends_with($span->name(), 'Loader')) {
                 $loadingSpans[] = $span;
             }
         }
@@ -132,7 +132,7 @@ final class TelemetryTest extends FlowTestCase
         self::assertCount(1, $endedSpans);
 
         $dataFrameSpan = $endedSpans[0];
-        self::assertSame('flow.dataframe', $dataFrameSpan->name());
+        self::assertSame('DataFrame flow_dataframe', $dataFrameSpan->name());
         self::assertNotNull($dataFrameSpan->status());
         self::assertTrue($dataFrameSpan->status()->isOk());
     }
@@ -258,9 +258,9 @@ final class TelemetryTest extends FlowTestCase
         $transformerSpans = [];
 
         foreach ($endedSpans as $span) {
-            if ($span->name() === 'flow.dataframe') {
+            if ($span->name() === 'DataFrame flow_dataframe') {
                 $dataFrameSpan = $span;
-            } elseif (\str_starts_with($span->name(), 'flow.dataframe.transformer.')) {
+            } elseif (\str_ends_with($span->name(), 'Transformer')) {
                 $transformerSpans[] = $span;
             }
         }

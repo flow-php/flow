@@ -50,7 +50,7 @@ final class TraceableCursor implements Cursor
 
         if ($this->telemetryConfig->options->traceQueries) {
             $this->tracer = $telemetryConfig->telemetry->tracer(
-                'flow.postgresql',
+                'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
             );
 
@@ -63,11 +63,11 @@ final class TraceableCursor implements Cursor
 
         if ($this->telemetryConfig->options->collectMetrics) {
             $this->meter = $telemetryConfig->telemetry->meter(
-                'flow.postgresql',
+                'flow_php_postgresql',
                 PackageVersion::get('flow-php/postgresql'),
             );
             $this->returnedRows = $this->meter->createHistogram(
-                'db.client.response.returned_rows',
+                'response_returned_rows',
                 '{row}',
                 'Number of rows returned by database operations',
             );

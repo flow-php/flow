@@ -120,7 +120,7 @@ final class TelemetryContext
 
     public function dataFrameStarted(FlowContext $context) : void
     {
-        $this->dataFrameSpan = $this->tracer->span('flow.dataframe');
+        $this->dataFrameSpan = $this->tracer->span('DataFrame ' . $context->config->name());
 
         $this->logger()->debug(
             'Data frame processing started',
@@ -140,8 +140,8 @@ final class TelemetryContext
         );
 
         if ($this->options->collectMetrics) {
-            $this->counterProcessedRows = $this->meter->createCounter('flow.dataframe.rows', 'Rows Processed');
-            $this->throughputRows = $this->meter->createThroughput('flow.dataframe.rows.throughput', 'Rows Processed');
+            $this->counterProcessedRows = $this->meter->createCounter('rows_processed', 'Rows Processed');
+            $this->throughputRows = $this->meter->createThroughput('rows_throughput', 'Rows Processed');
         }
 
         $this->dataFrameExecutionTime = HighResolutionTime::now();
@@ -194,7 +194,7 @@ final class TelemetryContext
         }
 
         $this->loadingSpan = $this->tracer->span(
-            'flow.dataframe.loader.' . ObjectExtractor::shortName($loader),
+            ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
             Attributes::create(\array_merge(['loader.class' => $loader::class], $attributes)),
             parentContext: $this->dataFrameSpan?->context()
@@ -251,7 +251,7 @@ final class TelemetryContext
         }
 
         $this->transformationSpan = $this->tracer->span(
-            'flow.dataframe.transformer.' . ObjectExtractor::shortName($transformer),
+            ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
             Attributes::create(\array_merge(['transformer.class' => $transformer::class], $attributes)),
             parentContext: $this->dataFrameSpan?->context()

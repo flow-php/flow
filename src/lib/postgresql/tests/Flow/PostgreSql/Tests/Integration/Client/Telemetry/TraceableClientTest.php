@@ -158,7 +158,7 @@ final class TraceableClientTest extends TestCase
 
         $this->collectMetrics($config);
 
-        $durationMetrics = $metricProcessor->metricsWithName('db.client.operation.duration');
+        $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
         self::assertCount(1, $durationMetrics);
         self::assertSame(MetricType::HISTOGRAM, $durationMetrics[0]->type);
         self::assertGreaterThan(0, $durationMetrics[0]->value);
@@ -230,7 +230,7 @@ final class TraceableClientTest extends TestCase
 
     private function collectMetrics($config) : void
     {
-        $meter = $config->telemetry->meter('flow.postgresql');
+        $meter = $config->telemetry->meter('flow_php_postgresql');
 
         foreach ($meter->collect() as $metric) {
             $meter->processor()->process($metric);

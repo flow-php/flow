@@ -47,6 +47,7 @@ final readonly class Github
         try {
             df(
                 config_builder()
+                    ->name('github_contributors')
                     ->cache($this->cache('flow-github-contributors'))
                     ->withTelemetry(
                         $this->telemetry,
@@ -56,7 +57,11 @@ final readonly class Github
                             ->traceCache()
                             ->traceTransformations()
                             ->traceCache()
-                            ->filesystem(filesystem_telemetry_options()->collectMetrics()->traceStreams())
+                            ->filesystem(
+                                filesystem_telemetry_options()
+                                    ->collectMetrics()
+                                    ->traceStreams()
+                            )
                     )
             )
                 ->read(

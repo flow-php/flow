@@ -14,10 +14,6 @@ final class ObjectExtractor
 
         $shortName = strrchr($object::class, '\\');
 
-        return strtolower((string) preg_replace(
-            '/([A-Z]+)([A-Z][a-z])/',
-            '$1_$2',
-            (string) preg_replace('/([a-z])([A-Z])/', '$1_$2', $shortName !== false ? substr($shortName, 1) : $object::class)
-        ));
+        return $shortName !== false ? substr($shortName, 1) : $object::class;
     }
 }

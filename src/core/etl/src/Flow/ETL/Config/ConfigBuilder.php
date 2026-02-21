@@ -34,6 +34,8 @@ final class ConfigBuilder
 
     private ?string $id;
 
+    private ?string $name;
+
     private ?Optimizer $optimizer;
 
     private bool $putInputIntoRows;
@@ -49,6 +51,7 @@ final class ConfigBuilder
     public function __construct()
     {
         $this->id = null;
+        $this->name = null;
         $this->serializer = null;
         $this->fstab = null;
         $this->putInputIntoRows = false;
@@ -80,6 +83,7 @@ final class ConfigBuilder
 
         return new Config(
             $this->id,
+            $this->name ?? 'flow_dataframe',
             $this->version,
             $this->serializer,
             $this->getClock(),
@@ -136,6 +140,13 @@ final class ConfigBuilder
     public function mount(Filesystem $filesystem) : self
     {
         $this->fstab()->mount($filesystem);
+
+        return $this;
+    }
+
+    public function name(string $name) : self
+    {
+        $this->name = $name;
 
         return $this;
     }
