@@ -71,15 +71,15 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
         foreach ($response->getValueRanges() as $valueRange) {
             foreach ($valueRange->getValues() as $rowData) {
-                // Skip empty rows
-                if ([] === $rowData) {
-                    continue;
-                }
-
                 $rowDataCount = \count($rowData);
 
                 if ($this->withHeader) {
                     if ([] === $headers) {
+                        // Skip empty rows at the beginning of a sheet
+                        if ([] === $rowData) {
+                            continue;
+                        }
+
                         /** @var array<string> $headers */
                         $headers = $rowData;
 
