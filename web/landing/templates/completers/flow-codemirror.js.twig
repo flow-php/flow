@@ -1,3 +1,4 @@
+{% import 'completers/_macros.twig' as macros %}
 /**
  * CodeMirror Completer for Flow PHP Flow Methods
  *
@@ -17,25 +18,27 @@ const flowFunctions = [
 // Flow methods
 const flowMethods = [
     {% for method in flow_methods %}
+    {% set params = method.parameters|to_array %}
+    {% set doc = method.doc_comment|format_doc_comment %}
     {
         label: "{{ method.name }}",
         type: "method",
-        detail: "{{ method.className|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'}) }}",
+        detail: "{{ method.class|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'}) }}",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
+                    {{ macros.highlighted_signature(method.name, method.parameters, method.return_type)|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
                 </div>
-                {% if method.docComment %}
+                {% if doc %}
                 <div style="color: #8b949e; font-size: 13px;">
-                    {{ method.docComment|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                    {{ doc|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
                 </div>
                 {% endif %}
             `
             return div
         },
-        apply: snippet("{{ method.name }}({% if method.hasParameters %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        apply: snippet("{{ method.name }}({% if params|length > 0 %}{% for param in params %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
         boost: 10
     }{% if not loop.last %},{% endif %}
     {% endfor %}

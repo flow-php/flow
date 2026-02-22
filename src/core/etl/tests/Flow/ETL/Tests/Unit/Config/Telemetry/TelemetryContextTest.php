@@ -126,6 +126,57 @@ final class TelemetryContextTest extends FlowTestCase
         self::assertGreaterThanOrEqual(2, \count($debugLogs));
     }
 
+    public function test_dataframe_failed_logs_error_and_sets_span_status() : void
+    {
+        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $clock = $this->createFrozenClock();
+        $contextStorage = new MemoryContextStorage();
+
+        $telemetry = new Telemetry(
+            Resource::create(['service.name' => 'flow-test']),
+            new TracerProvider($spanProcessor, $clock, $contextStorage),
+            new MeterProvider($metricProcessor, $clock),
+            new LoggerProvider($logProcessor, $clock, $contextStorage),
+        );
+
+        $telemetryContext = new TelemetryContext(
+            $telemetry->logger('flow-php'),
+            $telemetry->tracer('flow-php'),
+            $telemetry->meter('flow-php'),
+            new TelemetryOptions(),
+        );
+
+        $config = config_builder()
+            ->withTelemetry($telemetry)
+            ->build();
+
+        $context = flow_context($config);
+
+        $telemetryContext->dataFrameStarted($context);
+
+        $rows = rows(row(int_entry('id', 1)));
+        $telemetryContext->dataFrameBatchProcessed($rows, $context);
+
+        $exception = new \RuntimeException('Processing failed due to invalid data');
+        $telemetryContext->dataFrameFailed($context, $exception);
+
+        $errorLogs = $logProcessor->entriesWithSeverity(Severity::ERROR);
+        self::assertCount(1, $errorLogs);
+        self::assertStringContainsString('Data frame processing failed', $errorLogs[0]->record->body);
+
+        $endedSpans = $spanProcessor->endedSpans();
+        self::assertCount(1, $endedSpans);
+        self::assertNotNull($endedSpans[0]->status());
+        self::assertTrue($endedSpans[0]->status()->isError());
+        self::assertSame('Processing failed due to invalid data', $endedSpans[0]->status()->description);
+
+        $attributes = $endedSpans[0]->attributes();
+        self::assertArrayHasKey('rows.total', $attributes);
+        self::assertSame(1, $attributes['rows.total']);
+    }
+
     public function test_dataframe_started_creates_span_and_logs_debug_message() : void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());

@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, rename_replace, telemetry_options, to_memory};
-use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
+use function Flow\ETL\DSL\{df, from_cache, lit, not, ref, rename_replace, to_memory};
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
-use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\Telemetry\Telemetry;
 use Flow\Website\Factory\Github\ContributorsRequestFactory;
 use Http\Client\Curl\Client;
 use Http\Discovery\Psr17Factory;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 final readonly class Github
@@ -23,7 +18,7 @@ final readonly class Github
     public function __construct(
         private ContributorsRequestFactory $requestFactory,
         private ContainerBagInterface $parameters,
-        private Telemetry $telemetry,
+        private FlowConfigFactory $configFactory,
     ) {
     }
 
@@ -40,30 +35,12 @@ final readonly class Github
         }
 
         $factory = new Psr17Factory();
-        $client = new PSR18TraceableClient(new Client($factory, $factory), $this->telemetry);
+        $client = new PSR18TraceableClient(new Client($factory, $factory), $this->configFactory->telemetry());
 
-        $from_github = new PsrHttpClientDynamicExtractor($client, $this->requestFactory);
+        $from_github = from_dynamic_http_requests($client, $this->requestFactory);
 
         try {
-            df(
-                config_builder()
-                    ->name('github_contributors')
-                    ->cache($this->cache('flow-github-contributors'))
-                    ->withTelemetry(
-                        $this->telemetry,
-                        telemetry_options()
-                            ->collectMetrics()
-                            ->traceLoading()
-                            ->traceCache()
-                            ->traceTransformations()
-                            ->traceCache()
-                            ->filesystem(
-                                filesystem_telemetry_options()
-                                    ->collectMetrics()
-                                    ->traceStreams()
-                            )
-                    )
-            )
+            df($this->configFactory->configBuilderWithCache('github_contributors'))
                 ->read(
                     from_cache(
                         'flow_github_contributors',
@@ -89,18 +66,5 @@ final readonly class Github
         } catch (\Exception) {
             return [];
         }
-    }
-
-    private function cache(string $directoryName) : PSRSimpleCache
-    {
-        return new PSRSimpleCache(
-            new Psr16Cache(
-                new FilesystemAdapter(
-                    'flow-website',
-                    3600 * 24,
-                    directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
-                ),
-            )
-        );
     }
 }

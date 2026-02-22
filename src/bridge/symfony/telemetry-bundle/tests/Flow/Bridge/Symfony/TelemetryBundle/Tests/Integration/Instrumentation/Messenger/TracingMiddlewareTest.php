@@ -134,12 +134,12 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $traceId = TraceId::generate();
         $context = Context::withTraceId($traceId);
-        $contextStorage->store($context);
+        $contextStorage->attach($context);
 
         $tracer = $telemetry->tracer('test');
         $span = $tracer->span('parent-span');
         $context = $context->withActiveSpan($span->context()->spanId);
-        $contextStorage->store($context);
+        $contextStorage->attach($context);
 
         $handler = new TestMessageHandler();
         $capturingMiddleware = new CapturingMiddleware();

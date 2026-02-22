@@ -175,7 +175,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
                 $context = $context->withBaggage($propagationContext->baggage);
             }
 
-            $this->contextStorage->store($context);
+            $this->contextStorage->attach($context);
         }
     }
 

@@ -91,13 +91,7 @@ final class Tracer
             }
         }
 
-        $context = $this->contextStorage->current();
-
-        if ($this->spanStack->isEmpty()) {
-            $this->contextStorage->store($context->withoutActiveSpan());
-        } else {
-            $this->contextStorage->store($context->withActiveSpan($this->spanStack->top()->spanId));
-        }
+        $span->contextScope()?->detach();
 
         if ($span->isRecording()) {
             $this->processor->onEnd($span);
@@ -191,7 +185,7 @@ final class Tracer
         if (!$traceId->isValid()) {
             $traceId = TraceId::generate();
             $context = Context::withTraceId($traceId);
-            $this->contextStorage->store($context);
+            $this->contextStorage->attach($context);
         }
 
         $spanId = SpanId::generate();
@@ -242,7 +236,7 @@ final class Tracer
         }
 
         $this->spanStack->push($span->context());
-        $this->contextStorage->store($context->withActiveSpan($span->context()->spanId));
+        $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context()->spanId)));
 
         if ($span->isRecording()) {
             $this->processor->onStart($span);

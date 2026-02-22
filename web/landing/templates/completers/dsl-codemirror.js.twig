@@ -1,3 +1,4 @@
+{% import 'completers/_macros.twig' as macros %}
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
@@ -18,6 +19,8 @@ import { CompletionContext, snippet } from "@codemirror/autocomplete"
 // All DSL functions
 const dslFunctions = [
     {% for func in functions %}
+    {% set params = func.parameters|to_array %}
+    {% set doc = func.doc_comment|format_doc_comment %}
     {
         label: "{{ func.name }}",
         type: "function",
@@ -26,17 +29,17 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    {{ func.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
+                    {{ macros.highlighted_signature(func.name, func.parameters, func.return_type)|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
                 </div>
-                {% if func.docComment %}
+                {% if doc %}
                 <div style="color: #8b949e; font-size: 13px;">
-                    {{ func.docComment|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                    {{ doc|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
                 </div>
                 {% endif %}
             `
             return div
         },
-        apply: snippet("{{ func.fullName }}({% if func.parameters|length > 0 %}{% for param in func.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        apply: snippet("{{ func.fullName }}({% if params|length > 0 %}{% for param in params %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
         boost: 10
     }{% if not loop.last %},{% endif %}
     {% endfor %}

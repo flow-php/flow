@@ -17,8 +17,8 @@ flow_telemetry:
     twig:
       enabled: true
       trace_templates: true
-      trace_blocks: true
-      trace_macros: true
+      trace_blocks: false
+      trace_macros: false
       exclude_templates:
         - '/\@WebProfiler*/'
     http_client:

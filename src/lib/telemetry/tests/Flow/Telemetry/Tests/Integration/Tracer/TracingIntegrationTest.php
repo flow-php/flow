@@ -113,6 +113,33 @@ final class TracingIntegrationTest extends TestCase
         self::assertSame(\RuntimeException::class, $event->attributes()['exception.type']);
     }
 
+    public function test_multiple_tracers_completing_spans_independently_preserve_context() : void
+    {
+        $storage = new MemoryContextStorage();
+        $processor = $this->createProcessor();
+        $provider = new TracerProvider($processor, $this->clock(), $storage);
+
+        $tracerA = $provider->tracer($this->resource, 'tracer-a', '1.0.0');
+        $tracerB = $provider->tracer($this->resource, 'tracer-b', '1.0.0');
+
+        $spanA = $tracerA->span('span-a');
+
+        self::assertNotNull($storage->current()->activeSpanId());
+        self::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
+
+        $spanB = $tracerB->span('span-b');
+        self::assertTrue($spanB->context()->spanId->equals($storage->current()->activeSpanId()));
+
+        $tracerB->complete($spanB);
+
+        self::assertNotNull($storage->current()->activeSpanId());
+        self::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
+
+        $tracerA->complete($spanA);
+
+        self::assertNull($storage->current()->activeSpanId());
+    }
+
     public function test_multiple_tracers_share_trace_id() : void
     {
         $ctx = context();

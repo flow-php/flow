@@ -118,6 +118,58 @@ final class TelemetryContext
         $this->memory = new Consumption();
     }
 
+    /**
+     * @param TAttributeValueMap $attributes
+     */
+    public function dataFrameFailed(FlowContext $context, \Throwable $exception, array $attributes = []) : void
+    {
+        if ($this->dataFrameSpan === null) {
+            return;
+        }
+
+        $this->logger->error('Data frame processing failed', [
+            'exception' => $exception->getMessage(),
+            'dataframe_id' => $context->config->id(),
+        ]);
+
+        $throughput = 0.0;
+
+        if ($this->dataFrameExecutionTime !== null) {
+            $durationSeconds = HighResolutionTime::now()->diff($this->dataFrameExecutionTime)->toSeconds();
+            $throughput = $durationSeconds > 0 ? \round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
+        }
+
+        $this->tracer->complete(
+            $this->dataFrameSpan
+                ->setAttributes(\array_merge(
+                    $attributes,
+                    [
+                        'dataframe.id' => $context->config->id(),
+                        'rows.total' => $this->totalRowsProcessed,
+                        'rows.throughput.per_second' => $throughput,
+                        'memory.min.mb' => $this->memory->min()->inMb(),
+                        'memory.max.mb' => $this->memory->max()->inMb(),
+                    ]
+                ))
+                ->setStatus(SpanStatus::error($exception->getMessage()))
+        );
+
+        if ($this->counterProcessedRows !== null) {
+            $this->meter->complete($this->counterProcessedRows);
+            $this->counterProcessedRows = null;
+        }
+
+        if ($this->throughputRows !== null) {
+            $this->meter->complete($this->throughputRows);
+            $this->throughputRows = null;
+        }
+
+        $this->dataFrameExecutionTime = null;
+        $this->totalRowsProcessed = 0;
+        $this->dataFrameSpan = null;
+        $this->memory = new Consumption();
+    }
+
     public function dataFrameStarted(FlowContext $context) : void
     {
         $this->dataFrameSpan = $this->tracer->span('DataFrame ' . $context->config->name());

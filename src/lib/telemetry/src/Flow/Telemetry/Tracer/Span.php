@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tracer;
 
 use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\Context\Scope;
 
 /**
  * Represents a single operation within a trace.
@@ -30,6 +31,8 @@ use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes, InstrumentationScope, R
 final class Span
 {
     private Attributes $attributes;
+
+    private ?Scope $contextScope = null;
 
     private int $droppedAttributeCount = 0;
 
@@ -180,6 +183,14 @@ final class Span
     public function context() : SpanContext
     {
         return $this->context;
+    }
+
+    /**
+     * Get the context scope for this span.
+     */
+    public function contextScope() : ?Scope
+    {
+        return $this->contextScope;
     }
 
     /**
@@ -490,6 +501,18 @@ final class Span
 
         $this->attributes = $result->attributes;
         $this->droppedAttributeCount += $result->droppedAttributeCount;
+
+        return $this;
+    }
+
+    /**
+     * Set the context scope for this span.
+     *
+     * @return $this
+     */
+    public function setContextScope(Scope $scope) : self
+    {
+        $this->contextScope = $scope;
 
         return $this;
     }

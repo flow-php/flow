@@ -105,7 +105,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                 $context = $context->withBaggage($propagationContext->baggage);
             }
 
-            $this->contextStorage->store($context);
+            $this->contextStorage->attach($context);
         }
     }
 
