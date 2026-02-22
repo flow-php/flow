@@ -12,11 +12,9 @@ use GuzzleHttp\Psr7\Response;
 
 final readonly class GoogleSheetsContext
 {
-    private GoogleClient $client;
-
-    public function __construct()
-    {
-        $this->client = new GoogleClient();
+    public function __construct(
+        private GoogleClient $client = new GoogleClient(),
+    ) {
     }
 
     public function sheets(string $fixtureFile) : Sheets
@@ -33,6 +31,11 @@ final readonly class GoogleSheetsContext
                 'handler' => HandlerStack::create(
                     new MockHandler(
                         [
+                            new Response(
+                                200,
+                                ['Content-Type' => 'application/json'],
+                                file_get_contents(__DIR__ . '/Fixtures/spreadsheet.json') ?: throw new \RuntimeException('Failed to read the spreadsheet fixture'),
+                            ),
                             new Response(
                                 200,
                                 ['Content-Type' => 'application/json'],

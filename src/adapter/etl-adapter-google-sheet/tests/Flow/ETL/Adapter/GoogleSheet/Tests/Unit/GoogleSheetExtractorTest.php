@@ -15,32 +15,59 @@ use Google\Service\Sheets\ValueRange;
 
 final class GoogleSheetExtractorTest extends FlowTestCase
 {
+    public function test_its_fails_if_sheet_not_found() : void
+    {
+        $spreadsheet = $this->createMock(Sheets\Spreadsheet::class);
+        $spreadsheet->expects(self::once())
+            ->method('getSheets')
+            ->willReturn([]);
+
+        $resource = $this->createMock(Sheets\Resource\Spreadsheets::class);
+        $resource->expects(self::once())
+            ->method('get')
+            ->with('spread-id', ['ranges' => [], 'includeGridData' => false])
+            ->willReturn($spreadsheet);
+
+        $service = $this->createMock(Sheets::class);
+        $service->spreadsheets = $resource;
+
+        $extractor = from_google_sheet_columns($service, 'spread-id', 'sheet', 'A', 'B')
+            ->withHeader(true)
+            ->withRowsPerPage(2);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Max rows "0" must be greater than 0');
+
+        \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
+    }
+
     public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row() : void
     {
-        $extractor = from_google_sheet_columns(
-            $service = $this->createMock(Sheets::class),
-            $spreadSheetId = 'spread-id',
-            $sheetName = 'sheet',
-            'A',
-            'B',
-        )->withHeader(true)
+        $sheetName = 'sheet';
+
+        $service = $this->createGoogleService($sheetName);
+
+        $extractor = from_google_sheet_columns($service, $spreadSheetId = 'spread-id', $sheetName, 'A', 'B')
+            ->withHeader(true)
             ->withRowsPerPage(2);
+
+        $firstValueRangeMock = new ValueRange();
+        $firstValueRangeMock->setValues([['header'], ['row1']]);
+        $secondValueRangeMock = new ValueRange();
+        $secondValueRangeMock->setValues([['row2']]);
+
+        $response = new Sheets\BatchGetValuesResponse();
+        $response->setValueRanges([$firstValueRangeMock, $secondValueRangeMock]);
+
+        $spreadsheetsValues = $this->createMock(SpreadsheetsValues::class);
+        $spreadsheetsValues->expects(self::once())
+            ->method('batchGet')
+            ->willReturn($response);
+
+        $service->spreadsheets_values = $spreadsheetsValues;
+
         $spreadSheetIdEntry = string_entry('_spread_sheet_id', $spreadSheetId);
         $sheetNameEntry = string_entry('_sheet_name', $sheetName);
-        $firstValueRangeMock = $this->createMock(ValueRange::class);
-        $firstValueRangeMock->method('getValues')->willReturn([
-            ['header'],
-            ['row1'],
-        ]);
-        $secondValueRangeMock = $this->createMock(ValueRange::class);
-        $secondValueRangeMock->method('getValues')->willReturn([
-            ['row2'],
-        ]);
-        $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
-
-        $spreadsheetsValues->expects(self::exactly(2))
-            ->method('get')
-            ->willReturnOnConsecutiveCalls($firstValueRangeMock, $secondValueRangeMock);
 
         /** @var array<Rows> $rowsArray */
         $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
@@ -67,21 +94,56 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
     public function test_works_for_no_data() : void
     {
-        $extractor = from_google_sheet_columns(
-            $service = $this->createMock(Sheets::class),
-            'spread-id',
-            'sheet',
-            'A',
-            'B',
-        )->withHeader(true)
-            ->withRowsPerPage(20);
-        $ValueRangeMock = $this->createMock(ValueRange::class);
-        $ValueRangeMock->method('getValues')->willReturn(null);
+        $service = $this->createGoogleService('sheet');
 
-        $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
-        $spreadsheetsValues->method('get')->willReturn($ValueRangeMock);
+        $extractor = from_google_sheet_columns($service, 'spread-id', 'sheet', 'A', 'B')
+            ->withHeader(true)
+            ->withRowsPerPage(20);
+
+        $valueRangeMock = new ValueRange();
+        $valueRangeMock->setValues([]);
+
+        $response = new Sheets\BatchGetValuesResponse();
+        $response->setValueRanges([$valueRangeMock]);
+
+        $spreadsheetsValues = $this->createMock(SpreadsheetsValues::class);
+        $spreadsheetsValues->expects(self::once())
+            ->method('batchGet')
+            ->willReturn($response);
+
+        $service->spreadsheets_values = $spreadsheetsValues;
+
         /** @var array<Rows> $rowsArray */
         $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
         self::assertCount(0, $rowsArray);
+    }
+
+    private function createGoogleService(string $sheetName) : Sheets
+    {
+        $gridProperties = new Sheets\GridProperties();
+        $gridProperties->setRowCount(100);
+
+        $properties = new Sheets\SheetProperties();
+        $properties->title = $sheetName;
+        $properties->setGridProperties($gridProperties);
+
+        $sheet = new Sheets\Sheet();
+        $sheet->setProperties($properties);
+
+        $spreadsheet = $this->createMock(Sheets\Spreadsheet::class);
+        $spreadsheet->expects(self::once())
+            ->method('getSheets')
+            ->willReturn([$sheet]);
+
+        $resource = $this->createMock(Sheets\Resource\Spreadsheets::class);
+        $resource->expects(self::once())
+            ->method('get')
+            ->with('spread-id', ['ranges' => [], 'includeGridData' => false])
+            ->willReturn($spreadsheet);
+
+        $service = new Sheets();
+        $service->spreadsheets = $resource;
+
+        return $service;
     }
 }

@@ -8,22 +8,31 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final readonly class SheetRange
 {
+    public int $endRow;
+
     public function __construct(
         public Columns $columnRange,
         public int $startRow,
-        public int $endRow,
+        int $endRow,
+        private int $maxRows,
     ) {
         if ($this->startRow < 1) {
             throw new InvalidArgumentException(\sprintf('Start row "%d" must be greater than 0', $this->startRow));
         }
 
-        if ($this->endRow < 1) {
-            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater than 0', $this->endRow));
+        if ($endRow < 1) {
+            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater than 0', $endRow));
         }
 
-        if ($this->endRow < $this->startRow) {
-            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater or equal to start row "%d"', $this->endRow, $this->startRow));
+        if ($endRow < $this->startRow) {
+            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater or equal to start row "%d"', $endRow, $this->startRow));
         }
+
+        if ($this->maxRows < 1) {
+            throw new InvalidArgumentException(\sprintf('Max rows "%d" must be greater than 0', $this->maxRows));
+        }
+
+        $this->endRow = min($endRow, $this->maxRows);
     }
 
     public function nextRows(int $count) : self
@@ -34,8 +43,9 @@ final readonly class SheetRange
 
         return new self(
             $this->columnRange,
-            $this->endRow + 1,
-            $this->endRow + $count,
+            min($this->endRow + 1, $this->maxRows),
+            min($this->endRow + $count, $this->maxRows),
+            $this->maxRows,
         );
     }
 
@@ -47,7 +57,7 @@ final readonly class SheetRange
             $this->columnRange->startColumn,
             $this->startRow,
             $this->columnRange->endColumn,
-            $this->endRow
+            $this->endRow,
         );
     }
 }
