@@ -227,6 +227,9 @@
         <testsuite name="adapter-xml-integration">
             <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="tool-phpunit-telemetry-unit">
+            <directory>tools/phpunit/extension/telemetry/tests/Flow/Tool/PHPUnit/Telemetry/Tests/Unit</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -272,4 +275,14 @@
             <file>src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php</file>
         </exclude>
     </source>
+    <extensions>
+        <bootstrap class="Flow\Tool\PHPUnit\Telemetry\TelemetryExtension">
+            <parameter name="service_name" value="flow-php-test-suite"/>
+            <parameter name="otel_collector_url" value="http://localhost:4318"/>
+            <parameter name="emit_traces" value="true"/>
+            <parameter name="emit_metrics" value="true"/>
+            <parameter name="emit_test_spans" value="false"/>
+            <parameter name="emit_test_case_spans" value="false"/>
+        </bootstrap>
+    </extensions>
 </phpunit>

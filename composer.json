@@ -113,7 +113,8 @@
         "flow-php/symfony-telemetry-bundle": "self.version",
         "flow-php/telemetry": "self.version",
         "flow-php/telemetry-otlp-bridge": "self.version",
-        "flow-php/types": "self.version"
+        "flow-php/types": "self.version",
+        "flow-php/phpunit-telemetry": "self.version"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -166,6 +167,9 @@
             ],
             "Flow\\ETL\\Adapter\\Doctrine\\": [
                 "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine"
+            ],
+            "Flow\\Tool\\PHPUnit\\Telemetry\\": [
+                "tools/phpunit/extension/telemetry/src/Flow/Tool/PHPUnit/Telemetry"
             ]
         },
         "files": [
@@ -258,6 +262,9 @@
             ],
             "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
                 "src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests"
+            ],
+            "Flow\\Tool\\PHPUnit\\Telemetry\\Tests\\": [
+                "tools/phpunit/extension/telemetry/tests/Flow/Tool/PHPUnit/Telemetry/Tests"
             ]
         }
     },
@@ -463,6 +470,9 @@
         "test:adapter:postgresql": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-postgresql-unit --log-junit ./var/phpunit/logs/adapter-postgresql-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-postgresql-unit.coverage.xml",
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-postgresql-integration --log-junit ./var/phpunit/logs/adapter-postgresql-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-postgresql-integration.coverage.xml"
+        ],
+        "test:tool:phpunit-telemetry": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=tool-phpunit-telemetry-unit --log-junit ./var/phpunit/logs/tool-phpunit-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/tool-phpunit-telemetry-unit.coverage.xml"
         ],
         "test:docs": [
             "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples --exclude=documentation ."
