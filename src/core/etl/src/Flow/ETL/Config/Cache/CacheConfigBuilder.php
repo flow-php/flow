@@ -21,7 +21,7 @@ final class CacheConfigBuilder
      */
     private int $externalSortBucketsCount = 100;
 
-    public function build(FilesystemTable $fstab, Serializer $serializer, ?TelemetryConfig $telemetryConfig = null) : CacheConfig
+    public function build(FilesystemTable $fstab, Serializer $serializer, ?TelemetryConfig $telemetryConfig = null, string $dataframeName = 'flow_dataframe') : CacheConfig
     {
         $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
         $cachePath = path_real($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
@@ -33,7 +33,7 @@ final class CacheConfigBuilder
         );
 
         if ($telemetryConfig !== null && $telemetryConfig->options->traceCache) {
-            $cache = new TraceableCache($cache, $telemetryConfig->telemetry);
+            $cache = new TraceableCache($cache, $telemetryConfig->telemetry, $dataframeName);
         }
 
         return new CacheConfig(

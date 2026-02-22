@@ -57,8 +57,9 @@ final class TelemetryContext
         $this->memory->capture();
 
         if ($this->options->collectMetrics) {
-            $this->counterProcessedRows?->add($rows->count());
-            $this->throughputRows?->add($rows->count());
+            $attributes = ['dataframe.name' => $context->config->name()];
+            $this->counterProcessedRows?->add($rows->count(), $attributes);
+            $this->throughputRows?->add($rows->count(), $attributes);
         }
     }
 

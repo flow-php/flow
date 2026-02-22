@@ -122,9 +122,9 @@ final class CacheTest extends FlowIntegrationTestCase
         $telemetry->flush();
 
         $spans = $spanProcessor->endedSpans();
-        $setSpans = \array_filter($spans, static fn ($span) => $span->name() === 'cache.set');
+        $setSpans = \array_filter($spans, static fn ($span) => \str_starts_with((string) $span->name(), 'Cache Set '));
 
-        self::assertNotEmpty($setSpans, 'Expected cache.set spans to be recorded');
+        self::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
 
         $hitMetrics = $metricProcessor->metricsWithName('cache_hits');
         $missMetrics = $metricProcessor->metricsWithName('cache_misses');

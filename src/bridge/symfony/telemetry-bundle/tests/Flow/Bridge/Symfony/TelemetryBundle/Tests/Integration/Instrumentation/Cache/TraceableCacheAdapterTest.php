@@ -211,14 +211,12 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $hitMetrics = $processor->metricsWithName('cache.hits');
         $missMetrics = $processor->metricsWithName('cache.misses');
 
-        self::assertCount(1, $hitMetrics);
-        self::assertCount(1, $missMetrics);
+        $totalHits = \array_sum(\array_map(static fn ($m) => $m->value, $hitMetrics));
+        $totalMisses = \array_sum(\array_map(static fn ($m) => $m->value, $missMetrics));
 
-        self::assertSame(1, $hitMetrics[0]->value);
+        self::assertSame(1, $totalHits);
+        self::assertSame(2, $totalMisses);
         self::assertSame('test.cache.app', $hitMetrics[0]->attributes->get('cache.pool'));
-
-        self::assertSame(2, $missMetrics[0]->value);
-        self::assertSame('test.cache.app', $missMetrics[0]->attributes->get('cache.pool'));
     }
 
     public function test_get_items_records_metrics() : void
@@ -269,11 +267,11 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $hitMetrics = $processor->metricsWithName('cache.hits');
         $missMetrics = $processor->metricsWithName('cache.misses');
 
-        self::assertCount(1, $hitMetrics);
-        self::assertCount(1, $missMetrics);
+        $totalHits = \array_sum(\array_map(static fn ($m) => $m->value, $hitMetrics));
+        $totalMisses = \array_sum(\array_map(static fn ($m) => $m->value, $missMetrics));
 
-        self::assertSame(2, $hitMetrics[0]->value);
-        self::assertSame(3, $missMetrics[0]->value);
+        self::assertSame(2, $totalHits);
+        self::assertSame(3, $totalMisses);
     }
 
     public function test_get_records_hit_metric_on_cache_hit() : void
@@ -327,6 +325,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertSame('test.cache.app', $hitMetrics[0]->attributes->get('cache.pool'));
 
         self::assertSame(1, $missMetrics[0]->value);
+        self::assertSame('test.cache.app', $missMetrics[0]->attributes->get('cache.pool'));
     }
 
     public function test_get_records_miss_metric_on_cache_miss() : void
@@ -543,7 +542,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache.invalidate_tags', $span->name());
+        self::assertSame('Cache InvalidateTags test.cache.tags', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();

@@ -59,7 +59,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache.clear', $span->name());
+        self::assertSame('Cache Clear', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -79,7 +79,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache.delete', $span->name());
+        self::assertSame('Cache Delete test-key', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -90,7 +90,7 @@ final class TraceableCacheTest extends FlowTestCase
     public function test_get_increments_hit_counter_on_existing_key() : void
     {
         $innerCache = new InMemoryCache();
-        $cache = new TraceableCache($innerCache, $this->telemetry);
+        $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
         $innerCache->set('existing-key', row());
         $cache->get('existing-key');
@@ -102,12 +102,13 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $hitMetrics);
         self::assertCount(0, $missMetrics);
         self::assertSame(1, $hitMetrics[0]->value);
+        self::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
     }
 
     public function test_get_increments_miss_counter_and_throws_on_non_existing_key() : void
     {
         $innerCache = new InMemoryCache();
-        $cache = new TraceableCache($innerCache, $this->telemetry);
+        $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
         $this->expectException(KeyNotInCacheException::class);
 
@@ -121,13 +122,14 @@ final class TraceableCacheTest extends FlowTestCase
             self::assertCount(0, $hitMetrics);
             self::assertCount(1, $missMetrics);
             self::assertSame(1, $missMetrics[0]->value);
+            self::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
         }
     }
 
     public function test_has_increments_hit_counter_when_key_exists() : void
     {
         $innerCache = new InMemoryCache();
-        $cache = new TraceableCache($innerCache, $this->telemetry);
+        $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
         $innerCache->set('existing-key', row());
         $exists = $cache->has('existing-key');
@@ -141,12 +143,13 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $hitMetrics);
         self::assertCount(0, $missMetrics);
         self::assertSame(1, $hitMetrics[0]->value);
+        self::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
     }
 
     public function test_has_increments_miss_counter_when_key_does_not_exist() : void
     {
         $innerCache = new InMemoryCache();
-        $cache = new TraceableCache($innerCache, $this->telemetry);
+        $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
         $exists = $cache->has('non-existing-key');
 
@@ -159,6 +162,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(0, $hitMetrics);
         self::assertCount(1, $missMetrics);
         self::assertSame(1, $missMetrics[0]->value);
+        self::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
     }
 
     public function test_set_creates_span_with_cache_index_value_type() : void
@@ -174,7 +178,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache.set', $span->name());
+        self::assertSame('Cache Set test-key', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -196,7 +200,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache.set', $span->name());
+        self::assertSame('Cache Set test-key', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -218,7 +222,7 @@ final class TraceableCacheTest extends FlowTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache.set', $span->name());
+        self::assertSame('Cache Set test-key', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();

@@ -22,6 +22,7 @@ final readonly class TraceableCache implements Cache
     public function __construct(
         private Cache $cache,
         Telemetry $telemetry,
+        private string $dataframeName = 'flow_dataframe',
     ) {
         $this->tracer = $telemetry->tracer('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
         $meter = $telemetry->meter('flow_php_dataframe', PackageVersion::get('flow-php/etl'));
@@ -32,7 +33,7 @@ final readonly class TraceableCache implements Cache
     public function clear() : void
     {
         $span = $this->tracer->span(
-            'cache.clear',
+            'Cache Clear',
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'clear',
@@ -55,7 +56,7 @@ final readonly class TraceableCache implements Cache
     public function delete(string $key) : void
     {
         $span = $this->tracer->span(
-            'cache.delete',
+            "Cache Delete {$key}",
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'delete',
@@ -78,13 +79,15 @@ final readonly class TraceableCache implements Cache
 
     public function get(string $key) : Row|Rows|CacheIndex
     {
+        $attributes = ['dataframe.name' => $this->dataframeName];
+
         try {
             $result = $this->cache->get($key);
-            $this->hitCounter->add(1);
+            $this->hitCounter->add(1, $attributes);
 
             return $result;
         } catch (KeyNotInCacheException $exception) {
-            $this->missCounter->add(1);
+            $this->missCounter->add(1, $attributes);
 
             throw $exception;
         }
@@ -92,12 +95,13 @@ final readonly class TraceableCache implements Cache
 
     public function has(string $key) : bool
     {
+        $attributes = ['dataframe.name' => $this->dataframeName];
         $exists = $this->cache->has($key);
 
         if ($exists) {
-            $this->hitCounter->add(1);
+            $this->hitCounter->add(1, $attributes);
         } else {
-            $this->missCounter->add(1);
+            $this->missCounter->add(1, $attributes);
         }
 
         return $exists;
@@ -112,7 +116,7 @@ final readonly class TraceableCache implements Cache
         };
 
         $span = $this->tracer->span(
-            'cache.set',
+            "Cache Set {$key}",
             SpanKind::CLIENT,
             [
                 'cache.operation' => 'set',

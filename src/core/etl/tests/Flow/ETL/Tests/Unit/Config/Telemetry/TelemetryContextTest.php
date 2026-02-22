@@ -429,6 +429,57 @@ final class TelemetryContextTest extends FlowTestCase
         self::assertNotEmpty($throughputMetrics, 'Throughput should be created when metrics enabled');
     }
 
+    public function test_metrics_include_dataframe_name_attribute() : void
+    {
+        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $clock = $this->createFrozenClock();
+        $contextStorage = new MemoryContextStorage();
+
+        $telemetry = new Telemetry(
+            Resource::create(['service.name' => 'flow-test']),
+            new TracerProvider($spanProcessor, $clock, $contextStorage),
+            new MeterProvider($metricProcessor, $clock),
+            new LoggerProvider($logProcessor, $clock, $contextStorage),
+        );
+
+        $telemetryContext = new TelemetryContext(
+            $telemetry->logger('flow-php'),
+            $telemetry->tracer('flow-php'),
+            $telemetry->meter('flow-php'),
+            telemetry_options(collect_metrics: true),
+        );
+
+        $config = config_builder()
+            ->name('my_custom_dataframe')
+            ->withTelemetry($telemetry, telemetry_options(collect_metrics: true))
+            ->build();
+
+        $context = flow_context($config);
+
+        $telemetryContext->dataFrameStarted($context);
+
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+        $telemetryContext->dataFrameBatchProcessed($rows, $context);
+        $telemetryContext->dataFrameCompleted($context);
+        $telemetry->flush();
+
+        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
+        $throughputMetrics = $metricProcessor->metricsWithName('rows_throughput');
+
+        self::assertCount(1, $counterMetrics);
+        self::assertSame(3, $counterMetrics[0]->value);
+        self::assertSame('my_custom_dataframe', $counterMetrics[0]->attributes->get('dataframe.name'));
+
+        self::assertCount(1, $throughputMetrics);
+        self::assertSame('my_custom_dataframe', $throughputMetrics[0]->attributes->get('dataframe.name'));
+    }
+
     public function test_metrics_not_collected_when_collect_metrics_disabled() : void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());

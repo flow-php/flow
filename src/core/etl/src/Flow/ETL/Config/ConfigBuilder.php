@@ -81,9 +81,11 @@ final class ConfigBuilder
             new BatchSizeOptimization(batchSize: 1000)
         );
 
+        $dataframeName = $this->name ?? 'flow_dataframe';
+
         return new Config(
             $this->id,
-            $this->name ?? 'flow_dataframe',
+            $dataframeName,
             $this->version,
             $this->serializer,
             $this->getClock(),
@@ -92,7 +94,7 @@ final class ConfigBuilder
             $this->optimizer,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cache->build($this->fstab(), $this->serializer, $this->telemetryConfig),
+            $this->cache->build($this->fstab(), $this->serializer, $this->telemetryConfig, $dataframeName),
             $this->sort->build(),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
