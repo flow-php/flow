@@ -87,11 +87,13 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
                         continue;
                     }
+                } elseif (0 === $headersCount) {
+                    $headersCount = $rowDataCount;
+                }
 
-                    // Expand columns to the size of the previous row
-                    for ($i = $rowDataCount; $i < $headersCount; $i++) {
-                        $rowData[$i] = null;
-                    }
+                // Expand columns to the size of the previous row
+                for ($i = $rowDataCount; $i < $headersCount; $i++) {
+                    $rowData[$i] = null;
                 }
 
                 if ($rowDataCount > $headersCount) {
@@ -102,14 +104,16 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                     $rowData = \array_slice($rowData, 0, $headersCount);
                 }
 
-                $row = \array_combine($headers, $rowData);
-
-                if ($shouldPutInputIntoRows) {
-                    $row['_spread_sheet_id'] = $this->spreadsheetId;
-                    $row['_sheet_name'] = $this->columnRange->sheetName;
+                if ($this->withHeader) {
+                    $rowData = \array_combine($headers, $rowData);
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), schema: $this->schema);
+                if ($shouldPutInputIntoRows) {
+                    $rowData['_spread_sheet_id'] = $this->spreadsheetId;
+                    $rowData['_sheet_name'] = $this->columnRange->sheetName;
+                }
+
+                $signal = yield array_to_rows($rowData, $context->entryFactory(), schema: $this->schema);
 
                 $this->incrementReturnedRows();
 

@@ -59,7 +59,7 @@
         "index": 0,
         "sheetType": "GRID",
         "gridProperties": {
-          "rowCount": 100,
+          "rowCount": 20,
           "columnCount": 6
         }
       }
