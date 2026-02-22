@@ -37,47 +37,59 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsPerPage);
-        $headers = [];
-
-        $response = $this->service->spreadsheets_values->get(
+        $spreadsheet = $this->service->spreadsheets->get(
             $this->spreadsheetId,
-            $cellsRange->toString(),
-            $this->options
+            ['ranges' => [], 'includeGridData' => false]
         );
 
-        /**
-         * @var array<array<null|string>> $values
-         */
-        $values = $response->getValues() ?? [];
+        $maxRows = 0;
 
-        $totalRows = 0;
-
-        if ($this->withHeader && [] !== $values) {
-            foreach ($values as $index => $row) {
-                if ([] === $row) {
-                    // Remove empty rows at the beginning of a sheet
-                    unset($values[$index]);
-
-                    continue;
-                }
-
-                /** @var array<string> $headers */
-                $headers = $row;
-                unset($values[$index]);
-                $totalRows = 1;
+        foreach ($spreadsheet->getSheets() as $sheet) {
+            if ($sheet->getProperties()->title === $this->columnRange->sheetName) {
+                $maxRows = $sheet->getProperties()->getGridProperties()->getRowCount();
 
                 break;
             }
         }
 
-        $headersCount = \count($headers);
+        $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsPerPage, $maxRows);
+
+        $ranges = [];
+
+        for ($totalRows = 0; $totalRows < $cellsRange->endRow; $totalRows += $this->rowsPerPage) {
+            $ranges[] = $cellsRange->toString();
+
+            $cellsRange = $cellsRange->nextRows($this->rowsPerPage);
+        }
 
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        while ([] !== $values) {
-            foreach ($values as $rowData) {
+        $headers = [];
+        $headersCount = 0;
+
+        $response = $this->service->spreadsheets_values->batchGet($this->spreadsheetId, array_merge($this->options, ['ranges' => $ranges]));
+
+        foreach ($response->getValueRanges() as $valueRange) {
+            foreach ($valueRange->getValues() as $rowData) {
                 $rowDataCount = \count($rowData);
+
+                if ($this->withHeader) {
+                    if ([] === $headers) {
+                        // Skip empty rows at the beginning of a sheet
+                        if ([] === $rowData) {
+                            continue;
+                        }
+
+                        /** @var array<string> $headers */
+                        $headers = $rowData;
+
+                        $headersCount = $rowDataCount;
+
+                        continue;
+                    }
+                } elseif (0 === $headersCount) {
+                    $headersCount = $rowDataCount;
+                }
 
                 // Expand columns to the size of the previous row
                 for ($i = $rowDataCount; $i < $headersCount; $i++) {
@@ -92,16 +104,16 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                     $rowData = \array_slice($rowData, 0, $headersCount);
                 }
 
-                $row = \array_combine($headers, $rowData);
-
-                if ($shouldPutInputIntoRows) {
-                    $row['_spread_sheet_id'] = $this->spreadsheetId;
-                    $row['_sheet_name'] = $this->columnRange->sheetName;
+                if ($this->withHeader) {
+                    $rowData = \array_combine($headers, $rowData);
                 }
 
-                $totalRows++;
+                if ($shouldPutInputIntoRows) {
+                    $rowData['_spread_sheet_id'] = $this->spreadsheetId;
+                    $rowData['_sheet_name'] = $this->columnRange->sheetName;
+                }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), schema: $this->schema);
+                $signal = yield array_to_rows($rowData, $context->entryFactory(), schema: $this->schema);
 
                 $this->incrementReturnedRows();
 
@@ -109,18 +121,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                     return;
                 }
             }
-
-            if ($totalRows < $cellsRange->endRow) {
-                return;
-            }
-
-            $cellsRange = $cellsRange->nextRows($this->rowsPerPage);
-
-            $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
-            /**
-             * @var array<array<null|string>> $values
-             */
-            $values = $response->getValues() ?? [];
         }
     }
 

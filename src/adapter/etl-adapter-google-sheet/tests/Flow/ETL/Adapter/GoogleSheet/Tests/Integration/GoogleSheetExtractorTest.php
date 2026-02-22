@@ -83,6 +83,41 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         }
     }
 
+    public function test_extract_with_batches() : void
+    {
+        $extractor = from_google_sheet(
+            $this->context->sheets(__DIR__ . '/../Fixtures/batch.json'),
+            '1234567890',
+            'Sheet',
+        );
+        $extractor->withRowsPerPage(10);
+
+        $rows = df()
+            ->extract($extractor)
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(19, $rows);
+    }
+
+    public function test_extract_with_batches_without_header() : void
+    {
+        $extractor = from_google_sheet(
+            $this->context->sheets(__DIR__ . '/../Fixtures/batch.json'),
+            '1234567890',
+            'Sheet',
+        );
+        $extractor->withRowsPerPage(10);
+        $extractor->withHeader(false);
+
+        $rows = df()
+            ->extract($extractor)
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(20, $rows);
+    }
+
     public function test_extract_with_cut_extra_columns() : void
     {
         $rows = df()
