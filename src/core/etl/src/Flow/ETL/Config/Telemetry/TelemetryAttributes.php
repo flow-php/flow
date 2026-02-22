@@ -6,6 +6,8 @@ namespace Flow\ETL\Config\Telemetry;
 
 final class TelemetryAttributes
 {
+    public const string ATTR_DATAFRAME_NAME = 'dataframe.name';
+
     public const string ATTR_LOADER_DESTINATION_URI = 'destination.uri';
 
     public const string ATTR_LOADING_ROWS = 'loading.rows';
