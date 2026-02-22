@@ -35,11 +35,12 @@ final class TraceableSourceStream implements SourceStream
             );
 
             $this->span = $this->tracer->span(
-                'stream.read',
+                'Read ' . $this->stream->path()->basename(),
                 SpanKind::INTERNAL,
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
                     FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol()->name,
                 ]
             );
         }

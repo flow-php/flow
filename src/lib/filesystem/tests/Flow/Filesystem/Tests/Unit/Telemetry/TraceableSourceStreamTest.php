@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
 use Flow\Filesystem\{Path, SourceStream};
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryAttributes, FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableSourceStream};
-use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Filesystem\Telemetry\{FilesystemTelemetryAttributes, TraceableSourceStream};
+use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
 final class TraceableSourceStreamTest extends TestCase
@@ -17,7 +16,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_close_completes_lifecycle_span_with_final_attributes() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $content = 'Hello, World!';
 
@@ -31,7 +30,7 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
         self::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         self::assertSame(\strlen($content), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
@@ -42,7 +41,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_close_records_exception_and_rethrows() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $exception = new \RuntimeException('Close failed');
 
@@ -71,7 +70,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_close_without_operations_still_creates_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -82,14 +81,14 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
         self::assertSame(0, $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
     public function test_content_tracks_bytes_read() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $content = 'Hello, World!';
 
@@ -106,14 +105,14 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
         self::assertSame(\strlen($content), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
     public function test_is_open_delegates_without_affecting_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -129,7 +128,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_iterate_tracks_bytes_read_cumulatively() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $chunks = ['Hello', ', ', 'World', '!'];
 
@@ -148,14 +147,14 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
         self::assertSame(\strlen(\implode('', $chunks)), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
     public function test_multiple_operations_track_cumulative_bytes() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -177,7 +176,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_path_delegates_without_affecting_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -192,7 +191,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_read_lines_tracks_bytes_read() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $lines = ['line1', 'line2', 'line3'];
 
@@ -211,13 +210,13 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
     }
 
     public function test_read_tracks_bytes_read() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $content = 'Hello';
 
@@ -234,14 +233,14 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
         self::assertSame(\strlen($content), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
     public function test_size_delegates_without_affecting_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -257,7 +256,7 @@ final class TraceableSourceStreamTest extends TestCase
     public function test_span_created_in_constructor() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -271,15 +270,16 @@ final class TraceableSourceStreamTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('stream.read', $spans[0]->name());
+        self::assertSame('Read test.txt', $spans[0]->name());
         self::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         self::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
+        self::assertSame('file', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL]);
     }
 
     public function test_tracing_disabled_does_not_create_spans() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor, filesystem_telemetry_options(
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
             traceStreams: false,
             collectMetrics: false,
         ));
@@ -295,20 +295,5 @@ final class TraceableSourceStreamTest extends TestCase
 
         self::assertSame('Hello', $result);
         self::assertEmpty($spanProcessor->endedSpans());
-    }
-
-    private function createConfig(MemorySpanProcessor $spanProcessor, ?FilesystemTelemetryOptions $options = null) : FilesystemTelemetryConfig
-    {
-        $clock = new SystemClock();
-        $contextStorage = memory_context_storage();
-
-        $tel = telemetry(
-            resource(),
-            tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
-        );
-
-        return filesystem_telemetry_config($tel, $clock, $options ?? filesystem_telemetry_options());
     }
 }

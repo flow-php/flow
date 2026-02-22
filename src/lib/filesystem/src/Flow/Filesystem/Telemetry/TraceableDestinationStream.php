@@ -35,11 +35,12 @@ final class TraceableDestinationStream implements DestinationStream
             );
 
             $this->span = $this->tracer->span(
-                'stream.write',
+                'Write ' . $this->stream->path()->basename(),
                 SpanKind::INTERNAL,
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
                     FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol()->name,
                 ]
             );
         }
