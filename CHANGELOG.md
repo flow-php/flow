@@ -19,6 +19,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2227](https://github.com/flow-php/flow/pull/2227) - **Bump the lowest supported version of "brick/math"** - [@stloyd](https://github.com/stloyd)
 - [#2225](https://github.com/flow-php/flow/pull/2225) - **naming conventions across whole monorepo** - [@norberttech](https://github.com/norberttech)
 - [#2225](https://github.com/flow-php/flow/pull/2225) - **reorganized local dev telemetry resources** - [@norberttech](https://github.com/norberttech)
 - [#2224](https://github.com/flow-php/flow/pull/2224) - **Rework `GoogleSheetExtractor` to use batch get functionality** - [@stloyd](https://github.com/stloyd)
@@ -63,6 +64,7 @@
 - [330da9](https://github.com/flow-php/flow/commit/330da95df9e446cca07c8a1c25868a1efc3414b6) - **added otel collector to baseline** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2227](https://github.com/flow-php/flow/pull/2227) - **Removed support for "brick/math" `<0.14.2`** - [@stloyd](https://github.com/stloyd)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **Internal interface Pipeline** - [@norberttech](https://github.com/norberttech)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **redundant clone usage from DataFrame** - [@norberttech](https://github.com/norberttech)
 - [abbbe5](https://github.com/flow-php/flow/commit/abbbe5321f26ebcd8c3332829776f05ee4a74066) - **phpbench** - [@norberttech](https://github.com/norberttech)
