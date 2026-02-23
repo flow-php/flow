@@ -15,6 +15,9 @@ extensions:
     endpoint: 0.0.0.0:13133
 
 service:
+  telemetry:
+    metrics:
+      address: 0.0.0.0:8888
   extensions: [health_check]
   pipelines:
     traces:

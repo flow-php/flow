@@ -216,22 +216,21 @@ final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInt
     /**
      * @param array<string> $keys
      *
-     * @return iterable<string, CacheItem>
+     * @return \Generator<string, CacheItem>
      */
-    public function getItems(array $keys = []) : iterable
+    public function getItems(array $keys = []) : \Generator
     {
-        $items = $this->adapter->getItems($keys);
-        $itemsArray = \iterator_to_array($items);
-
         $hits = 0;
         $misses = 0;
 
-        foreach ($itemsArray as $item) {
+        foreach ($this->adapter->getItems($keys) as $key => $item) {
             if ($item->isHit()) {
                 $hits++;
             } else {
                 $misses++;
             }
+
+            yield $key => $item;
         }
 
         if ($hits > 0) {
@@ -241,8 +240,6 @@ final readonly class TraceableCacheAdapter implements AdapterInterface, CacheInt
         if ($misses > 0) {
             $this->missCounter->add($misses, ['cache.pool' => $this->poolName]);
         }
-
-        return $itemsArray;
     }
 
     public function hasItem(mixed $key) : bool
