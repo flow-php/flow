@@ -1,4 +1,4 @@
-cnetworks:
+networks:
     flow-php:
         driver: bridge
 
@@ -106,6 +106,9 @@ services:
             - "./var/otel:/var/otel"
         depends_on:
             - aspire
+            - postgres
+            - mysql
+            - redis
         networks:
             - flow-php
 
