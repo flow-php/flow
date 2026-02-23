@@ -165,5 +165,5 @@
     "platform-dev": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
