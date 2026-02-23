@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ecec462c8d5622df2748d67ac2c744b4",
+    "content-hash": "c1fde33f41fc909aaafcb2c555dff8c7",
     "packages": [
         {
             "name": "async-aws/core",
@@ -141,16 +141,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.14.8",
+            "version": "0.14.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "63422359a44b7f06cae63c3b429b59e8efcc0629"
+                "reference": "55c950aa71a2cabc1d8f2bec1f8a7020bd244aa2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/63422359a44b7f06cae63c3b429b59e8efcc0629",
-                "reference": "63422359a44b7f06cae63c3b429b59e8efcc0629",
+                "url": "https://api.github.com/repos/brick/math/zipball/55c950aa71a2cabc1d8f2bec1f8a7020bd244aa2",
+                "reference": "55c950aa71a2cabc1d8f2bec1f8a7020bd244aa2",
                 "shasum": ""
             },
             "require": {
@@ -189,7 +189,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.8"
+                "source": "https://github.com/brick/math/tree/0.14.2"
             },
             "funding": [
                 {
@@ -197,7 +197,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-10T14:33:43+00:00"
+            "time": "2026-01-30T14:03:11+00:00"
         },
         {
             "name": "coduo/php-humanizer",
@@ -6945,7 +6945,7 @@
     "minimum-stability": "dev",
     "stability-flags": {},
     "prefer-stable": true,
-    "prefer-lowest": false,
+    "prefer-lowest": true,
     "platform": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "ext-bcmath": "*",
@@ -6960,5 +6960,5 @@
         "composer-runtime-api": "^2.0"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
