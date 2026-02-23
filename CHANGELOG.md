@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-02-23
 
 ### Added
+- [#2228](https://github.com/flow-php/flow/pull/2228) - **Add "symfony/polyfill-mbstring" as requirement when needed** - [@stloyd](https://github.com/stloyd)
 - [#2225](https://github.com/flow-php/flow/pull/2225) - **telemetry attributes constraints** - [@norberttech](https://github.com/norberttech)
 - [#2225](https://github.com/flow-php/flow/pull/2225) - **DataFrame name** - [@norberttech](https://github.com/norberttech)
 - [#2213](https://github.com/flow-php/flow/pull/2213) - **phpstan integration with infection** - [@norberttech](https://github.com/norberttech)
