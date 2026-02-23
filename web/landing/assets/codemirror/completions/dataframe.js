@@ -907,7 +907,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">schema</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @return Schema
+                    @trigger<br>@return Schema
                 </div>
                             `
             return div

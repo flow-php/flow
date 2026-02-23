@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 697
+ * Total functions: 703
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -5503,15 +5503,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">logger_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LoggerProvider</span>
+                    <span class=\"fn-name\">logger_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogRecordLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\LogRecordLimits::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LoggerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a LoggerProvider.<br>Creates a provider that uses a LogProcessor for processing logs.<br>For void/disabled logging, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param LogProcessor $processor The processor for logs<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for span correlation
+                    Create a LoggerProvider.<br>Creates a provider that uses a LogProcessor for processing logs.<br>For void/disabled logging, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param LogProcessor $processor The processor for logs<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for span correlation<br>@param LogRecordLimits $limits Limits for log record attributes
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\logger_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\logger_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:limits" + "}" + ")"),
         boost: 10
     },                {
         label: "log_record_converter",
@@ -5530,6 +5530,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\log_record_converter(" + "$" + "{" + "1:severityMapper" + "}" + ", " + "$" + "{" + "2:valueNormalizer" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "log_record_limits",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">log_record_limits</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeValueLengthLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LogRecordLimits</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create LogRecordLimits configuration.<br>LogRecordLimits controls the maximum amount of data a log record can collect,<br>preventing unbounded memory growth and ensuring reasonable log record sizes.<br>@param int $attributeCountLimit Maximum number of attributes per log record<br>@param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\log_record_limits(" + "$" + "{" + "1:attributeCountLimit" + "}" + ", " + "$" + "{" + "2:attributeValueLengthLimit" + "}" + ")"),
         boost: 10
     },                {
         label: "lower",
@@ -5890,15 +5908,33 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">meter_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AggregationTemporality</span> <span class=\"fn-param\">$temporality</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\AggregationTemporality::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExemplarFilter</span> <span class=\"fn-param\">$exemplarFilter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\Exemplar\\TraceBasedExemplarFilter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MeterProvider</span>
+                    <span class=\"fn-name\">meter_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AggregationTemporality</span> <span class=\"fn-param\">$temporality</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\AggregationTemporality::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExemplarFilter</span> <span class=\"fn-param\">$exemplarFilter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\Exemplar\\TraceBasedExemplarFilter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MetricLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\MetricLimits::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MeterProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a MeterProvider.<br>Creates a provider that uses a MetricProcessor for processing metrics.<br>For void/disabled metrics, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param MetricProcessor $processor The processor for metrics<br>@param ClockInterface $clock The clock for timestamps<br>@param AggregationTemporality $temporality Aggregation temporality for metrics<br>@param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)
+                    Create a MeterProvider.<br>Creates a provider that uses a MetricProcessor for processing metrics.<br>For void/disabled metrics, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param MetricProcessor $processor The processor for metrics<br>@param ClockInterface $clock The clock for timestamps<br>@param AggregationTemporality $temporality Aggregation temporality for metrics<br>@param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)<br>@param MetricLimits $limits Cardinality limits for metric instruments
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\meter_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:temporality" + "}" + ", " + "$" + "{" + "4:exemplarFilter" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\meter_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:temporality" + "}" + ", " + "$" + "{" + "4:exemplarFilter" + "}" + ", " + "$" + "{" + "5:limits" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "metric_limits",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">metric_limits</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$cardinalityLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2000</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MetricLimits</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create MetricLimits configuration.<br>MetricLimits controls the maximum cardinality (unique attribute combinations)<br>per metric instrument, preventing memory exhaustion from high-cardinality attributes.<br>When the cardinality limit is exceeded, new attribute combinations are aggregated<br>into an overflow data point with \`otel.metric.overflow: true\` attribute.<br>Note: Unlike spans and logs, metrics are EXEMPT from attribute count and value<br>length limits per the OpenTelemetry specification. Only cardinality is limited.<br>@param int $cardinalityLimit Maximum number of unique attribute combinations per instrument
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\metric_limits(" + "$" + "{" + "1:cardinalityLimit" + "}" + ")"),
         boost: 10
     },                {
         label: "min",
@@ -7467,6 +7503,42 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\postgresql_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:constraint" + "}" + ", " + "$" + "{" + "3:conflict_columns" + "}" + ", " + "$" + "{" + "4:update_columns" + "}" + ")"),
         boost: 10
     },                {
+        label: "postgresql_telemetry_config",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">postgresql_telemetry_config</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Telemetry</span> <span class=\"fn-param\">$telemetry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PostgreSqlTelemetryOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlTelemetryConfig</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create telemetry configuration for PostgreSQL client.<br>Bundles telemetry instance, clock, and options needed to instrument a PostgreSQL client.<br>@param Telemetry $telemetry The telemetry instance<br>@param ClockInterface $clock Clock for timestamps<br>@param null|PostgreSqlTelemetryOptions $options Telemetry options (default: all enabled)<br>@example<br>$config = postgresql_telemetry_config(<br>    telemetry(resource([\'service.name\' => \'my-app\'])),<br>    new SystemClock(),<br>);
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\postgresql_telemetry_config(" + "$" + "{" + "1:telemetry" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "postgresql_telemetry_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">postgresql_telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$traceQueries</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$traceTransactions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collectMetrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$logQueries</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxQueryLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1000</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$includeParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxParameterLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PostgreSqlTelemetryOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create telemetry options for PostgreSQL client instrumentation.<br>Controls which telemetry signals (traces, metrics, logs) are enabled<br>and how query information is captured.<br>@param bool $traceQueries Create spans for query execution (default: true)<br>@param bool $traceTransactions Create spans for transactions (default: true)<br>@param bool $collectMetrics Collect duration and row count metrics (default: true)<br>@param bool $logQueries Log executed queries (default: false)<br>@param null|int $maxQueryLength Maximum query text length in telemetry (default: 1000, null = unlimited)<br>@param bool $includeParameters Include query parameters in telemetry (default: false, security consideration)<br>@example<br>// Default options (traces and metrics enabled)<br>$options = postgresql_telemetry_options();<br>// Enable query logging<br>$options = postgresql_telemetry_options(logQueries: true);<br>// Disable all but metrics<br>$options = postgresql_telemetry_options(<br>    traceQueries: false,<br>    traceTransactions: false,<br>    collectMetrics: true,<br>);
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\postgresql_telemetry_options(" + "$" + "{" + "1:traceQueries" + "}" + ", " + "$" + "{" + "2:traceTransactions" + "}" + ", " + "$" + "{" + "3:collectMetrics" + "}" + ", " + "$" + "{" + "4:logQueries" + "}" + ", " + "$" + "{" + "5:maxQueryLength" + "}" + ", " + "$" + "{" + "6:includeParameters" + "}" + ", " + "$" + "{" + "7:maxParameters" + "}" + ", " + "$" + "{" + "8:maxParameterLength" + "}" + ")"),
+        boost: 10
+    },                {
         label: "postgresql_update_options",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -8919,6 +8991,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\span_id(" + "$" + "{" + "1:hex" + "}" + ")"),
         boost: 10
     },                {
+        label: "span_limits",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">span_limits</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$eventCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$linkCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributePerEventCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributePerLinkCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeValueLengthLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SpanLimits</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create SpanLimits configuration.<br>SpanLimits controls the maximum amount of data a span can collect,<br>preventing unbounded memory growth and ensuring reasonable span sizes.<br>@param int $attributeCountLimit Maximum number of attributes per span<br>@param int $eventCountLimit Maximum number of events per span<br>@param int $linkCountLimit Maximum number of links per span<br>@param int $attributePerEventCountLimit Maximum number of attributes per event<br>@param int $attributePerLinkCountLimit Maximum number of attributes per link<br>@param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\span_limits(" + "$" + "{" + "1:attributeCountLimit" + "}" + ", " + "$" + "{" + "2:eventCountLimit" + "}" + ", " + "$" + "{" + "3:linkCountLimit" + "}" + ", " + "$" + "{" + "4:attributePerEventCountLimit" + "}" + ", " + "$" + "{" + "5:attributePerLinkCountLimit" + "}" + ", " + "$" + "{" + "6:attributeValueLengthLimit" + "}" + ")"),
+        boost: 10
+    },                {
         label: "span_link",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtype",
@@ -9814,12 +9904,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_loading</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_transformations</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collect_metrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FilesystemTelemetryOptions</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryOptions</span>
+                    <span class=\"fn-name\">telemetry_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_loading</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_transformations</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$trace_cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$collect_metrics</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FilesystemTelemetryOptions</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryOptions</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\telemetry_options(" + "$" + "{" + "1:trace_loading" + "}" + ", " + "$" + "{" + "2:trace_transformations" + "}" + ", " + "$" + "{" + "3:collect_metrics" + "}" + ", " + "$" + "{" + "4:filesystem" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\telemetry_options(" + "$" + "{" + "1:trace_loading" + "}" + ", " + "$" + "{" + "2:trace_transformations" + "}" + ", " + "$" + "{" + "3:trace_cache" + "}" + ", " + "$" + "{" + "4:collect_metrics" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "text_search_match",
@@ -10458,6 +10548,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\traceable_filesystem(" + "$" + "{" + "1:filesystem" + "}" + ", " + "$" + "{" + "2:telemetryConfig" + "}" + ")"),
         boost: 10
     },                {
+        label: "traceable_postgresql_client",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">traceable_postgresql_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PostgreSqlTelemetryConfig</span> <span class=\"fn-param\">$telemetryConfig</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TraceableClient</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Wrap a PostgreSQL client with telemetry instrumentation.<br>Returns a decorator that adds spans, metrics, and logs to all<br>query and transaction operations following OpenTelemetry conventions.<br>@param Client\\Client $client The PostgreSQL client to instrument<br>@param PostgreSqlTelemetryConfig $telemetryConfig Telemetry configuration<br>@example<br>$client = pgsql_client(pgsql_connection(\'host=localhost dbname=mydb\'));<br>$traceableClient = traceable_postgresql_client(<br>    $client,<br>    postgresql_telemetry_config(<br>        telemetry(resource([\'service.name\' => \'my-app\'])),<br>        new SystemClock(),<br>        postgresql_telemetry_options(<br>            traceQueries: true,<br>            traceTransactions: true,<br>            collectMetrics: true,<br>            logQueries: true,<br>            maxQueryLength: 500,<br>        ),<br>    ),<br>);<br>// All operations now traced<br>$traceableClient->transaction(function (Client $client) {<br>    $user = $client->fetchOne(\'SELECT * FROM users WHERE id = $1\', [123]);<br>    $client->execute(\'UPDATE users SET last_login = NOW() WHERE id = $1\', [123]);<br>});
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\traceable_postgresql_client(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:telemetryConfig" + "}" + ")"),
+        boost: 10
+    },                {
         label: "tracer_provider",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -10465,15 +10573,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
+                    <span class=\"fn-name\">tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SpanLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\SpanLimits::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a TracerProvider.<br>Creates a provider that uses a SpanProcessor for processing spans.<br>For void/disabled tracing, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param SpanProcessor $processor The processor for spans<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for context propagation<br>@param Sampler $sampler Sampling strategy for spans
+                    Create a TracerProvider.<br>Creates a provider that uses a SpanProcessor for processing spans.<br>For void/disabled tracing, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param SpanProcessor $processor The processor for spans<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for context propagation<br>@param Sampler $sampler Sampling strategy for spans<br>@param SpanLimits $limits Limits for span attributes, events, and links
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\tracer_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:sampler" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\tracer_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:sampler" + "}" + ", " + "$" + "{" + "5:limits" + "}" + ")"),
         boost: 10
     },                {
         label: "trace_based_exemplar_filter",
