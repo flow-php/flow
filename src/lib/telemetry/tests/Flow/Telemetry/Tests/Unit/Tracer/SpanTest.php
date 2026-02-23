@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
 use Flow\Telemetry\Context\{SpanId, TraceId};
-use Flow\Telemetry\{InstrumentationScope};
+use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{GenericEvent, Span, SpanContext, SpanKind, SpanLimits, SpanLink, SpanStatus};
 use PHPUnit\Framework\TestCase;

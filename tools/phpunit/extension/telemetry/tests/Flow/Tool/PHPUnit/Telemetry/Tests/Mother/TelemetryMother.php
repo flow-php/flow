@@ -10,7 +10,7 @@ use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
-use Flow\Telemetry\{Telemetry};
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\TracerProvider;
 
