@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c4abe22a44b3ad2c1379b6aad3547437",
+    "content-hash": "08edf2eed092c581c5e7709c6f572f87",
     "packages": [
         {
             "name": "async-aws/core",
@@ -80,16 +80,16 @@
         },
         {
             "name": "async-aws/s3",
-            "version": "2.10.0",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/async-aws/s3.git",
-                "reference": "9c826ab620dbdc99528f0ad0b728ef9d478714db"
+                "reference": "68664f2db5d990b7e8863624791366d6e8925398"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/async-aws/s3/zipball/9c826ab620dbdc99528f0ad0b728ef9d478714db",
-                "reference": "9c826ab620dbdc99528f0ad0b728ef9d478714db",
+                "url": "https://api.github.com/repos/async-aws/s3/zipball/68664f2db5d990b7e8863624791366d6e8925398",
+                "reference": "68664f2db5d990b7e8863624791366d6e8925398",
                 "shasum": ""
             },
             "require": {
@@ -98,12 +98,17 @@
                 "ext-filter": "*",
                 "ext-hash": "*",
                 "ext-simplexml": "*",
-                "php": "^7.2.5 || ^8.0"
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.5.42",
+                "symfony/error-handler": "^7.3.2 || ^8.0",
+                "symfony/phpunit-bridge": "^7.3.2 || ^8.0"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.10-dev"
+                    "dev-master": "3.1-dev"
                 }
             },
             "autoload": {
@@ -124,7 +129,7 @@
                 "sdk"
             ],
             "support": {
-                "source": "https://github.com/async-aws/s3/tree/2.10.0"
+                "source": "https://github.com/async-aws/s3/tree/3.1.0"
             },
             "funding": [
                 {
@@ -136,7 +141,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-08-11T10:03:27+00:00"
+            "time": "2026-02-16T10:24:54+00:00"
         },
         {
             "name": "brick/math",
