@@ -40,6 +40,7 @@ final readonly class TracerProvider
         private ClockInterface $clock,
         private ContextStorage $contextStorage,
         private Sampler $sampler = new AlwaysOnSampler(),
+        private SpanLimits $limits = new SpanLimits(),
     ) {
     }
 
@@ -64,6 +65,7 @@ final readonly class TracerProvider
             $this->clock,
             $this->contextStorage,
             $this->sampler,
+            $this->limits,
         );
     }
 }

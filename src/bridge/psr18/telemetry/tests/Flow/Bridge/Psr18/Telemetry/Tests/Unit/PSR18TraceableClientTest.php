@@ -76,7 +76,7 @@ final class PSR18TraceableClientTest extends TestCase
         self::assertNotNull($span->status());
         self::assertTrue($span->status()->isError());
         self::assertSame('HTTP 404', $span->status()->description);
-        self::assertSame(404, $span->attributes()['http.status_code']);
+        self::assertSame(404, $span->attributes()['http.response.status_code']);
     }
 
     public function test_request_with_5xx_status_creates_error_span() : void
@@ -99,7 +99,7 @@ final class PSR18TraceableClientTest extends TestCase
         self::assertNotNull($span->status());
         self::assertTrue($span->status()->isError());
         self::assertSame('HTTP 500', $span->status()->description);
-        self::assertSame(500, $span->attributes()['http.status_code']);
+        self::assertSame(500, $span->attributes()['http.response.status_code']);
     }
 
     public function test_span_has_correct_attributes() : void
@@ -120,11 +120,12 @@ final class PSR18TraceableClientTest extends TestCase
         $span = $spans[0];
 
         $attributes = $span->attributes();
-        self::assertSame('POST', $attributes['http.method']);
-        self::assertSame('https://api.example.com:8080/users?page=1', $attributes['http.url']);
-        self::assertSame('https', $attributes['http.scheme']);
-        self::assertSame('api.example.com', $attributes['http.host']);
-        self::assertSame(200, $attributes['http.status_code']);
+        self::assertSame('POST', $attributes['http.request.method']);
+        self::assertSame('https://api.example.com:8080/users?page=1', $attributes['url.full']);
+        self::assertSame('https', $attributes['url.scheme']);
+        self::assertSame('api.example.com', $attributes['server.address']);
+        self::assertSame(8080, $attributes['server.port']);
+        self::assertSame(200, $attributes['http.response.status_code']);
     }
 
     public function test_span_kind_is_client() : void

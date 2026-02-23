@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Meter\Instrument;
 
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricType, TimeUnit};
+use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricLimits, MetricType, TimeUnit};
 use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, ExemplarReservoir, SimpleFixedSizeExemplarReservoir, TraceBasedExemplarFilter};
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
@@ -36,12 +36,18 @@ final class Throughput implements Instrument
     private array $aggregations = [];
 
     /**
+     * Key for overflow aggregation.
+     */
+    private readonly string $overflowKey;
+
+    /**
      * @param string $name Instrument name
      * @param resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
      * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling
+     * @param MetricLimits $limits Cardinality limits for this instrument
      * @param null|string $unit Unit of measurement (e.g., 'rows', 'bytes')
      * @param null|string $description Human-readable description
      * @param null|int $ratePrecision Number of decimal places for rate calculation (default: 2, null for no rounding)
@@ -54,11 +60,13 @@ final class Throughput implements Instrument
         private readonly ClockInterface $clock,
         private readonly AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
+        private readonly MetricLimits $limits = new MetricLimits(),
         private readonly ?string $unit = null,
         private readonly ?string $description = null,
         private readonly ?int $ratePrecision = 2,
         private readonly TimeUnit $timeUnit = TimeUnit::SECONDS,
     ) {
+        $this->overflowKey = Attributes::create([MetricLimits::OVERFLOW_ATTRIBUTE => true])->id();
     }
 
     /**
@@ -74,6 +82,17 @@ final class Throughput implements Instrument
         /** @var array<string, bool|float|int|string> $attrs */
         $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
         $key = Attributes::create($attrs)->id();
+
+        if (!isset($this->aggregations[$key])) {
+            $nonOverflowCount = isset($this->aggregations[$this->overflowKey])
+                ? \count($this->aggregations) - 1
+                : \count($this->aggregations);
+
+            if ($nonOverflowCount >= $this->limits->cardinalityLimit) {
+                $key = $this->overflowKey;
+                $attrs = [MetricLimits::OVERFLOW_ATTRIBUTE => true];
+            }
+        }
 
         if (!isset($this->aggregations[$key])) {
             $this->aggregations[$key] = [

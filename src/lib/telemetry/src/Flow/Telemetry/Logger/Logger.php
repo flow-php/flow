@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-use Flow\Telemetry\Attributes;
+use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes};
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Tracer\SpanContext;
@@ -38,6 +38,7 @@ final class Logger
         private readonly LogProcessor $processor,
         private readonly ClockInterface $clock,
         private readonly ContextStorage $contextStorage,
+        private readonly LogRecordLimits $limits = new LogRecordLimits(),
     ) {
     }
 
@@ -83,12 +84,33 @@ final class Logger
      */
     public function emit(LogRecord $record, ?SpanContext $spanContext = null) : void
     {
+        $droppedAttributeCount = 0;
+
+        if ($record->attributes->count() > $this->limits->attributeCountLimit || $this->limits->attributeValueLengthLimit !== null) {
+            $enforcer = new AttributeLimitsEnforcer();
+            $result = $enforcer->enforce(
+                $record->attributes,
+                $this->limits->attributeCountLimit,
+                $this->limits->attributeValueLengthLimit,
+            );
+
+            $record = new LogRecord(
+                $record->severity,
+                $record->body,
+                $result->attributes,
+                $record->timestamp,
+                $record->observedTimestamp,
+            );
+            $droppedAttributeCount = $result->droppedAttributeCount;
+        }
+
         $entry = new LogEntry(
             $record,
             $this->resource,
             $this->scope,
             $record->timestamp ?? $this->clock->now(),
             $spanContext ?? $this->resolveSpanContext(),
+            $droppedAttributeCount,
         );
 
         $this->processor->process($entry);

@@ -26,6 +26,7 @@ final readonly class LogEntry
         public InstrumentationScope $scope,
         public \DateTimeImmutable $timestamp,
         public ?SpanContext $spanContext = null,
+        public int $droppedAttributeCount = 0,
     ) {
     }
 
@@ -37,7 +38,8 @@ final readonly class LogEntry
      *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     timestamp: string,
-     *     spanContext: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}
+     *     spanContext: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}},
+     *     droppedAttributeCount?: int
      * } $data Normalized LogEntry data
      */
     public static function fromArray(array $data) : self
@@ -48,6 +50,7 @@ final readonly class LogEntry
             InstrumentationScope::fromArray($data['scope']),
             new \DateTimeImmutable($data['timestamp']),
             $data['spanContext'] !== null ? SpanContext::fromArray($data['spanContext']) : null,
+            $data['droppedAttributeCount'] ?? 0,
         );
     }
 
@@ -59,7 +62,8 @@ final readonly class LogEntry
      *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     timestamp: string,
-     *     spanContext: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}
+     *     spanContext: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}},
+     *     droppedAttributeCount: int
      * }
      */
     public function normalize() : array
@@ -70,6 +74,7 @@ final readonly class LogEntry
             'scope' => $this->scope->normalize(),
             'timestamp' => $this->timestamp->format('c'),
             'spanContext' => $this->spanContext?->normalize(),
+            'droppedAttributeCount' => $this->droppedAttributeCount,
         ];
     }
 }

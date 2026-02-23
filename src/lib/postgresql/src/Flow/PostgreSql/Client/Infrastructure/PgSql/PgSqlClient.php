@@ -23,8 +23,12 @@ final class PgSqlClient implements Client
 
     private readonly TransactionContext $transactionContext;
 
-    private function __construct(private ?Connection $connection, private readonly ValueConverters $valueConverters, private readonly ?RowMapper $defaultMapper = null)
-    {
+    private function __construct(
+        private ?Connection $connection,
+        private readonly ConnectionParameters $connectionParameters,
+        private readonly ValueConverters $valueConverters,
+        private readonly ?RowMapper $defaultMapper = null,
+    ) {
         $this->resultCaster = new ResultCaster();
         $this->transactionContext = new TransactionContext();
     }
@@ -52,6 +56,7 @@ final class PgSqlClient implements Client
 
         return new self(
             $connection,
+            $params,
             $valueConverters ?? ValueConverters::create(),
             $mapper,
         );
@@ -346,6 +351,11 @@ final class PgSqlClient implements Client
 
         /** @var int|string $result */
         return $result;
+    }
+
+    public function parameters() : ConnectionParameters
+    {
+        return $this->connectionParameters;
     }
 
     public function rollBack() : void

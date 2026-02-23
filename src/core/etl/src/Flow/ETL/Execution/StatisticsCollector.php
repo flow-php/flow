@@ -80,10 +80,10 @@ final class StatisticsCollector
     public function end(?\Throwable $exception = null) : void
     {
         if ($exception !== null) {
-            $this->context->telemetry()->logger()->error('Data frame processing failed', ['exception' => $exception->getMessage()]);
+            $this->context->telemetry()->dataFrameFailed($this->context, $exception);
+        } else {
+            $this->context->telemetry()->dataFrameCompleted($this->context);
         }
-
-        $this->context->telemetry()->dataFrameCompleted($this->context);
     }
 
     /**

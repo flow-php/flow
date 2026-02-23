@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\{df, lit, ref};
+use function Flow\Filesystem\DSL\path;
+use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,6 +24,7 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
     public function __construct(
         private readonly Environment $twig,
         private readonly string $projectDir,
+        private readonly FlowConfigFactory $configFactory,
     ) {
         parent::__construct();
     }
@@ -33,49 +38,38 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
         $apiJsonPath = $this->projectDir . '/../../web/landing/resources/api.json';
         $dslJsonPath = $this->projectDir . '/../../web/landing/resources/dsl.json';
 
-        if (!\file_exists($apiJsonPath)) {
+        $fs = $this->configFactory->filesystem();
+
+        if ($fs->status(path($apiJsonPath)) === null) {
             $io->error("API JSON file not found: {$apiJsonPath}");
 
             return Command::FAILURE;
         }
 
-        if (!\file_exists($dslJsonPath)) {
+        if ($fs->status(path($dslJsonPath)) === null) {
             $io->error("DSL JSON file not found: {$dslJsonPath}");
 
             return Command::FAILURE;
         }
 
-        $apiMethods = \json_decode(\file_get_contents($apiJsonPath), true, 512, JSON_THROW_ON_ERROR);
-        $dslFunctions = \json_decode(\file_get_contents($dslJsonPath), true, 512, JSON_THROW_ON_ERROR);
+        $scalarFunctionChainFunctions = df($this->configFactory->configBuilder('scalar_function_chain_completer'))
+            ->read(from_json($dslJsonPath))
+            ->collect()
+            ->filter(ref('scalar_function_chain')->equals(lit(true)))
+            ->fetch()
+            ->reduceToArray('name');
 
-        if (!\is_array($apiMethods)) {
-            $io->error('Invalid API JSON structure');
-
-            return Command::FAILURE;
-        }
-
-        if (!\is_array($dslFunctions)) {
-            $io->error('Invalid DSL JSON structure');
-
-            return Command::FAILURE;
-        }
-
-        // Extract DSL functions that return ScalarFunctionChain
-        $scalarFunctionChainFunctions = $this->extractScalarFunctionChainFunctions($dslFunctions);
         $io->info(\sprintf('Found %d DSL functions with scalar_function_chain flag', \count($scalarFunctionChainFunctions)));
 
-        // Extract ScalarFunctionChain methods from API
-        $scalarFunctionChainMethods = \array_filter(
-            $apiMethods,
-            static fn (array $method) : bool => $method['class_slug'] === 'scalarfunctionchain'
-        );
+        $methodsData = df($this->configFactory->configBuilder('scalar_function_chain_completer'))
+            ->read(from_json($apiJsonPath))
+            ->collect()
+            ->filter(ref('class_slug')->equals(lit('scalarfunctionchain')))
+            ->select('name', 'class', 'class_slug', 'parameters', 'return_type', 'doc_comment')
+            ->fetch()
+            ->toArray();
 
-        $io->info(\sprintf('Found %d ScalarFunctionChain methods', \count($scalarFunctionChainMethods)));
-
-        $methodsData = \array_map(
-            fn (array $method) : array => $this->buildMethodData($method),
-            $scalarFunctionChainMethods
-        );
+        $io->info(\sprintf('Found %d ScalarFunctionChain methods', \count($methodsData)));
 
         $content = $this->twig->render('completers/scalarfunctionchain-codemirror.js.twig', [
             'scalarfunctionchain_methods' => $methodsData,
@@ -85,155 +79,13 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
         ]);
 
         $outputFile = $this->projectDir . '/assets/codemirror/completions/scalarfunctionchain.js';
-        $outputDir = \dirname($outputFile);
 
-        if (!\is_dir($outputDir)) {
-            \mkdir($outputDir, 0755, true);
-            $io->info("Created directory: {$outputDir}");
-        }
-
-        \file_put_contents($outputFile, $content);
+        $fs->writeTo(path($outputFile))->append($content)->close();
 
         $io->success("Generated ScalarFunctionChain completer: {$outputFile}");
         $io->info('ScalarFunctionChain methods: ' . \count($methodsData));
         $io->info('ScalarFunctionChain functions: ' . \count($scalarFunctionChainFunctions));
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * @param array{name: string, type?: array, has_default_value: bool, default_value?: ?string} $param
-     */
-    private function buildHighlightedParam(array $param) : string
-    {
-        $paramStr = '';
-
-        if (!empty($param['type'])) {
-            $paramStr .= '<span class="fn-type">' . $this->formatType($param['type']) . '</span> ';
-        }
-
-        $paramStr .= '<span class="fn-param">$' . $param['name'] . '</span>';
-
-        if ($param['has_default_value'] && isset($param['default_value'])) {
-            $paramStr .= ' <span class="fn-operator">=</span> <span class="fn-default">' . \htmlspecialchars($param['default_value']) . '</span>';
-        }
-
-        return $paramStr;
-    }
-
-    /**
-     * @param array<string, mixed> $method
-     */
-    private function buildHighlightedSignature(array $method) : string
-    {
-        $params = \array_map(
-            fn (array $param) : string => $this->buildHighlightedParam($param),
-            $method['parameters']
-        );
-
-        $signature = '<span class="fn-name">' . $method['name'] . '</span>'
-            . '<span class="fn-operator">(</span>'
-            . \implode('<span class="fn-operator">,</span> ', $params)
-            . '<span class="fn-operator">)</span>';
-
-        if (!empty($method['return_type'])) {
-            $signature .= ' <span class="fn-operator">:</span> '
-                . '<span class="fn-return">' . $this->formatType($method['return_type']) . '</span>';
-        }
-
-        return $signature;
-    }
-
-    /**
-     * @param array<string, mixed> $method
-     *
-     * @return array<string, mixed>
-     */
-    private function buildMethodData(array $method) : array
-    {
-        return [
-            'name' => $method['name'],
-            'snippet' => $this->buildSnippet($method),
-            'docComment' => $this->formatDocComment($method['doc_comment'] ?? null),
-            'highlightedSignature' => $this->buildHighlightedSignature($method),
-            'meta' => $method['class_slug'],
-            'className' => $method['class'],
-            'parameters' => $method['parameters'],
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $method
-     */
-    private function buildSnippet(array $method) : string
-    {
-        $params = $method['parameters'];
-        $methodName = $method['name'];
-
-        if (empty($params)) {
-            return $methodName . '()';
-        }
-
-        $snippetParams = [];
-        $tabstop = 1;
-
-        foreach ($params as $param) {
-            $typeHint = !empty($param['type'])
-                ? $this->formatType($param['type']) . ' '
-                : '';
-
-            $snippetParams[] = '${' . $tabstop . ':' . $typeHint . '$' . $param['name'] . '}';
-            $tabstop++;
-        }
-
-        return $methodName . '(' . \implode(', ', $snippetParams) . ')';
-    }
-
-    /**
-     * Extract function names that have scalar_function_chain flag from DSL functions.
-     *
-     * @param array<array<string, mixed>> $dslFunctions
-     *
-     * @return array<string>
-     */
-    private function extractScalarFunctionChainFunctions(array $dslFunctions) : array
-    {
-        $functions = [];
-
-        foreach ($dslFunctions as $function) {
-            if (isset($function['scalar_function_chain']) && $function['scalar_function_chain'] === true) {
-                $functions[] = $function['name'];
-            }
-        }
-
-        return $functions;
-    }
-
-    private function formatDocComment(?string $docComment) : string
-    {
-        if ($docComment === null) {
-            return '';
-        }
-
-        $decoded = \base64_decode($docComment, true);
-
-        if ($decoded === false) {
-            return '';
-        }
-
-        $docComment = \preg_replace('/^\/\*\*|\*\/$/', '', $decoded);
-        $lines = \explode("\n", (string) $docComment);
-        $lines = \array_map(static fn (string $line) : string => \preg_replace('/^\s*\*\s?/', '', $line), $lines);
-        $lines = \array_filter($lines, static fn (string $line) : bool => \trim($line) !== '');
-
-        return \implode('<br>', $lines);
-    }
-
-    /**
-     * @param array<array{name: string}> $types
-     */
-    private function formatType(array $types) : string
-    {
-        return \implode('|', \array_map(static fn (array $t) : string => $t['name'], $types));
     }
 }

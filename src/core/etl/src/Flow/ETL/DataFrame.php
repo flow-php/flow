@@ -222,8 +222,15 @@ final class DataFrame
     {
         $total = 0;
 
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            $total += $rows->count();
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                $total += $rows->count();
+            }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
 
         return $total;
@@ -255,8 +262,15 @@ final class DataFrame
 
         $output = '';
 
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            $output .= $formatter->format($rows, $truncate);
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                $output .= $formatter->format($rows, $truncate);
+            }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
 
         return $output;
@@ -329,8 +343,15 @@ final class DataFrame
 
         $rows = new Rows();
 
-        foreach ($this->pipeline->process($this->context) as $nextRows) {
-            $rows = $rows->merge($nextRows);
+        try {
+            foreach ($this->pipeline->process($this->context) as $nextRows) {
+                $rows = $rows->merge($nextRows);
+            }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
 
         return $rows;
@@ -410,7 +431,16 @@ final class DataFrame
      */
     public function get() : \Generator
     {
-        return $this->pipeline->process($this->context);
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                yield $rows;
+            }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
+        }
     }
 
     /**
@@ -422,8 +452,15 @@ final class DataFrame
      */
     public function getAsArray() : \Generator
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            yield $rows->toArray();
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                yield $rows->toArray();
+            }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
     }
 
@@ -436,10 +473,17 @@ final class DataFrame
      */
     public function getEach() : \Generator
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            foreach ($rows as $row) {
-                yield $row;
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                foreach ($rows as $row) {
+                    yield $row;
+                }
             }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
     }
 
@@ -452,10 +496,17 @@ final class DataFrame
      */
     public function getEachAsArray() : \Generator
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            foreach ($rows as $row) {
-                yield $row->toArray();
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                foreach ($rows as $row) {
+                    yield $row->toArray();
+                }
             }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
     }
 
@@ -827,16 +878,22 @@ final class DataFrame
 
     /**
      * @trigger
-     */
-    /**
+     *
      * @return Schema
      */
     public function schema() : Schema
     {
         $schema = new Schema();
 
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            $schema = $schema->merge($rows->schema());
+        try {
+            foreach ($this->pipeline->process($this->context) as $rows) {
+                $schema = $schema->merge($rows->schema());
+            }
+            $this->context->telemetry()->dataFrameCompleted($this->context);
+        } catch (\Throwable $e) {
+            $this->context->telemetry()->dataFrameFailed($this->context, $e);
+
+            throw $e;
         }
 
         return $schema;

@@ -29,24 +29,31 @@ final readonly class PSR18TraceableClient implements ClientInterface
         $method = $request->getMethod();
         $scheme = $uri->getScheme() ?: 'http';
         $host = $uri->getHost() ?: 'unknown';
+        $port = $uri->getPort();
         $url = (string) $uri;
+
+        $attributes = [
+            'http.request.method' => $method,
+            'url.full' => $url,
+            'url.scheme' => $scheme,
+            'server.address' => $host,
+        ];
+
+        if ($port !== null && $port !== 80 && $port !== 443) {
+            $attributes['server.port'] = $port;
+        }
 
         $span = $this->tracer->span(
             "{$method} {$host}",
             SpanKind::CLIENT,
-            [
-                'http.method' => $method,
-                'http.url' => $url,
-                'http.scheme' => $scheme,
-                'http.host' => $host,
-            ]
+            $attributes
         );
 
         try {
             $response = $this->client->sendRequest($request);
 
             $statusCode = $response->getStatusCode();
-            $span->setAttribute('http.status_code', $statusCode);
+            $span->setAttribute('http.response.status_code', $statusCode);
 
             if ($statusCode >= 400) {
                 $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));

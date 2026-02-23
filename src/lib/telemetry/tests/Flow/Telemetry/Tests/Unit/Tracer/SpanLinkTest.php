@@ -124,6 +124,7 @@ final class SpanLinkTest extends TestCase
         self::assertNull($normalized['context']['parentSpanId']);
         self::assertFalse($normalized['context']['isRemote']);
         self::assertSame(['type' => 'test'], $normalized['attributes']);
+        self::assertSame(0, $normalized['droppedAttributeCount']);
     }
 
     public function test_supports_various_attribute_types() : void

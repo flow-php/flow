@@ -44,7 +44,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('other_sql', $spans[0]->attributes()['db.system']);
+        self::assertSame('other_sql', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_db2() : void
@@ -61,7 +61,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('db2', $spans[0]->attributes()['db.system']);
+        self::assertSame('db2', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_mariadb_as_mysql() : void
@@ -78,7 +78,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('mysql', $spans[0]->attributes()['db.system']);
+        self::assertSame('mysql', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_mssql() : void
@@ -95,7 +95,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('mssql', $spans[0]->attributes()['db.system']);
+        self::assertSame('mssql', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_mysql() : void
@@ -112,7 +112,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('mysql', $spans[0]->attributes()['db.system']);
+        self::assertSame('mysql', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_oracle() : void
@@ -129,7 +129,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('oracle', $spans[0]->attributes()['db.system']);
+        self::assertSame('oracle', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_postgresql() : void
@@ -146,7 +146,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('postgresql', $spans[0]->attributes()['db.system']);
+        self::assertSame('postgresql', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_get_semantic_db_system_detects_sqlite() : void
@@ -163,7 +163,7 @@ final class TracingDriverTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('sqlite', $spans[0]->attributes()['db.system']);
+        self::assertSame('sqlite', $spans[0]->attributes()['db.system.name']);
     }
 
     public function test_span_defaults_db_namespace_to_default() : void

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options, path, protocol};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Filesystem\DSL\{filesystem_telemetry_options, path, protocol};
+use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, SourceStream};
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableDestinationStream, TraceableFilesystem, TraceableSourceStream};
-use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Filesystem\Telemetry\{TraceableDestinationStream, TraceableFilesystem, TraceableSourceStream};
+use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
 final class TraceableFilesystemTest extends TestCase
@@ -17,7 +16,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_all_telemetry_disabled_does_not_wrap_streams() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor, filesystem_telemetry_options(
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
             traceStreams: false,
             collectMetrics: false,
         ));
@@ -40,7 +39,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_append_to_rethrows_exception() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $exception = new \RuntimeException('Append failed');
 
@@ -59,7 +58,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_append_to_returns_traceable_destination_stream() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(DestinationStream::class);
@@ -78,7 +77,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_get_system_tmp_dir_delegates_to_underlying_filesystem() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $tmpPath = Path::realpath('/tmp');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
@@ -93,7 +92,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_list_delegates_to_underlying_filesystem() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = path('file://tmp/**/*.txt');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
@@ -111,7 +110,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_mv_delegates_to_underlying_filesystem() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $from = Path::realpath('/tmp/source.txt');
         $to = Path::realpath('/tmp/dest.txt');
 
@@ -129,7 +128,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_protocol_delegates_to_underlying_filesystem() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $protocol = protocol('s3');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
@@ -144,7 +143,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_read_from_rethrows_exception() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $exception = new \RuntimeException('Read failed');
 
@@ -163,7 +162,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_read_from_returns_traceable_source_stream() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -182,7 +181,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_rm_delegates_to_underlying_filesystem() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
@@ -199,7 +198,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_status_delegates_to_underlying_filesystem() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $fileStatus = new FileStatus($path, true);
 
@@ -217,7 +216,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_stream_tracing_enabled_wraps_streams() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor, filesystem_telemetry_options(
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
             traceStreams: true,
         ));
         $path = Path::realpath('/tmp/test.txt');
@@ -238,7 +237,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_write_to_rethrows_exception() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $exception = new \RuntimeException('Write failed');
 
@@ -257,7 +256,7 @@ final class TraceableFilesystemTest extends TestCase
     public function test_write_to_returns_traceable_destination_stream() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = $this->createConfig($spanProcessor);
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(DestinationStream::class);
@@ -271,20 +270,5 @@ final class TraceableFilesystemTest extends TestCase
         $stream = $fs->writeTo($path);
 
         self::assertInstanceOf(TraceableDestinationStream::class, $stream);
-    }
-
-    private function createConfig(MemorySpanProcessor $spanProcessor, ?FilesystemTelemetryOptions $options = null) : FilesystemTelemetryConfig
-    {
-        $clock = new SystemClock();
-        $contextStorage = memory_context_storage();
-
-        $tel = telemetry(
-            resource(),
-            tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
-        );
-
-        return filesystem_telemetry_config($tel, $clock, $options ?? filesystem_telemetry_options());
     }
 }

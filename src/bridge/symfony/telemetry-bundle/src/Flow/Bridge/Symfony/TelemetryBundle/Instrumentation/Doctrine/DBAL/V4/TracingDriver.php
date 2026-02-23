@@ -49,7 +49,7 @@ final class TracingDriver extends AbstractDriverMiddleware
         try {
             $connection = parent::connect($params);
 
-            $span->setAttribute('db.system', $this->getSemanticDbSystem($connection->getServerVersion()));
+            $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
             $span->setStatus(SpanStatus::ok());
 
             return new TracingConnection(

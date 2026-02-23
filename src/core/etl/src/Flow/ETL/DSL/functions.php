@@ -268,12 +268,14 @@ function data_frame(Config|ConfigBuilder|null $config = null) : Flow
 function telemetry_options(
     bool $trace_loading = false,
     bool $trace_transformations = false,
+    bool $trace_cache = false,
     bool $collect_metrics = false,
     ?FilesystemTelemetryOptions $filesystem = null,
 ) : TelemetryOptions {
     return new TelemetryOptions(
         $trace_loading,
         $trace_transformations,
+        $trace_cache,
         $collect_metrics,
         $filesystem ?? new FilesystemTelemetryOptions()
     );

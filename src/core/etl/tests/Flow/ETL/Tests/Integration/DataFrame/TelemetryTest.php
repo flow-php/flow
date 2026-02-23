@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{config_builder, df, from_array, ref, telemetry_options, to_array};
-use Flow\ETL\DataFrame;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
@@ -47,7 +46,7 @@ final class TelemetryTest extends FlowTestCase
 
         $telemetry->flush();
 
-        $counterMetrics = $metricProcessor->metricsWithName('rows.processed.total');
+        $counterMetrics = $metricProcessor->metricsWithName('rows_processed');
         self::assertNotEmpty($counterMetrics, 'Counter metrics should be collected');
         self::assertSame(3, $counterMetrics[0]->value);
     }
@@ -86,9 +85,9 @@ final class TelemetryTest extends FlowTestCase
         $loadingSpans = [];
 
         foreach ($endedSpans as $span) {
-            if ($span->name() === DataFrame::class) {
+            if ($span->name() === 'DataFrame flow_dataframe') {
                 $dataFrameSpan = $span;
-            } elseif (\str_contains($span->name(), 'Loader')) {
+            } elseif (\str_ends_with($span->name(), 'Loader')) {
                 $loadingSpans[] = $span;
             }
         }
@@ -99,6 +98,7 @@ final class TelemetryTest extends FlowTestCase
         foreach ($loadingSpans as $span) {
             self::assertNotNull($span->status());
             self::assertTrue($span->status()->isOk());
+            self::assertArrayHasKey('loader.class', $span->attributes());
         }
     }
 
@@ -132,7 +132,7 @@ final class TelemetryTest extends FlowTestCase
         self::assertCount(1, $endedSpans);
 
         $dataFrameSpan = $endedSpans[0];
-        self::assertSame(DataFrame::class, $dataFrameSpan->name());
+        self::assertSame('DataFrame flow_dataframe', $dataFrameSpan->name());
         self::assertNotNull($dataFrameSpan->status());
         self::assertTrue($dataFrameSpan->status()->isOk());
     }
@@ -258,9 +258,9 @@ final class TelemetryTest extends FlowTestCase
         $transformerSpans = [];
 
         foreach ($endedSpans as $span) {
-            if ($span->name() === DataFrame::class) {
+            if ($span->name() === 'DataFrame flow_dataframe') {
                 $dataFrameSpan = $span;
-            } elseif (\str_contains($span->name(), 'Transformer')) {
+            } elseif (\str_ends_with($span->name(), 'Transformer')) {
                 $transformerSpans[] = $span;
             }
         }
@@ -271,6 +271,7 @@ final class TelemetryTest extends FlowTestCase
         foreach ($transformerSpans as $span) {
             self::assertNotNull($span->status());
             self::assertTrue($span->status()->isOk());
+            self::assertArrayHasKey('transformer.class', $span->attributes());
         }
     }
 

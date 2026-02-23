@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\Context\Scope;
 
 /**
  * Represents a single operation within a trace.
@@ -31,6 +32,14 @@ final class Span
 {
     private Attributes $attributes;
 
+    private ?Scope $contextScope = null;
+
+    private int $droppedAttributeCount = 0;
+
+    private int $droppedEventsCount = 0;
+
+    private int $droppedLinksCount = 0;
+
     private ?\DateTimeImmutable $endTime = null;
 
     /**
@@ -53,6 +62,7 @@ final class Span
         private readonly Resource $resource,
         private readonly InstrumentationScope $scope,
         private readonly bool $isRecording = true,
+        private readonly SpanLimits $limits = new SpanLimits(),
     ) {
         $this->attributes = Attributes::empty();
     }
@@ -72,8 +82,11 @@ final class Span
      *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
-     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
-     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
+     *     droppedAttributeCount?: int,
+     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
+     *     droppedEventsCount?: int,
+     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
+     *     droppedLinksCount?: int,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
      * } $data Normalized Span data
@@ -91,14 +104,17 @@ final class Span
         );
 
         $span->attributes = Attributes::fromArray($data['attributes']);
+        $span->droppedAttributeCount = $data['droppedAttributeCount'] ?? 0;
 
         foreach ($data['events'] as $eventData) {
             $span->events[] = GenericEvent::fromArray($eventData);
         }
+        $span->droppedEventsCount = $data['droppedEventsCount'] ?? 0;
 
         foreach ($data['links'] as $linkData) {
             $span->links[] = SpanLink::fromArray($linkData);
         }
+        $span->droppedLinksCount = $data['droppedLinksCount'] ?? 0;
 
         if ($data['status'] !== null) {
             $span->status = SpanStatus::fromArray($data['status']);
@@ -114,11 +130,31 @@ final class Span
     /**
      * Add a link to another span.
      *
+     * If the link count limit is exceeded, the link is discarded.
+     * Link attributes are enforced against attributePerLinkCountLimit.
+     *
      * @return $this
      */
     public function addLink(SpanLink $link) : self
     {
-        $this->links[] = $link;
+        if (\count($this->links) >= $this->limits->linkCountLimit) {
+            $this->droppedLinksCount++;
+
+            return $this;
+        }
+
+        if ($link->attributes->count() > $this->limits->attributePerLinkCountLimit || $this->limits->attributeValueLengthLimit !== null) {
+            $enforcer = new AttributeLimitsEnforcer();
+            $result = $enforcer->enforce(
+                $link->attributes,
+                $this->limits->attributePerLinkCountLimit,
+                $this->limits->attributeValueLengthLimit,
+            );
+
+            $this->links[] = SpanLink::create($link->context, $result->attributes, $result->droppedAttributeCount);
+        } else {
+            $this->links[] = $link;
+        }
 
         return $this;
     }
@@ -147,6 +183,38 @@ final class Span
     public function context() : SpanContext
     {
         return $this->context;
+    }
+
+    /**
+     * Get the context scope for this span.
+     */
+    public function contextScope() : ?Scope
+    {
+        return $this->contextScope;
+    }
+
+    /**
+     * Get the count of attributes that were dropped due to limits.
+     */
+    public function droppedAttributeCount() : int
+    {
+        return $this->droppedAttributeCount;
+    }
+
+    /**
+     * Get the count of events that were dropped due to limits.
+     */
+    public function droppedEventsCount() : int
+    {
+        return $this->droppedEventsCount;
+    }
+
+    /**
+     * Get the count of links that were dropped due to limits.
+     */
+    public function droppedLinksCount() : int
+    {
+        return $this->droppedLinksCount;
     }
 
     /**
@@ -258,8 +326,11 @@ final class Span
      *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
      *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
-     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
-     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}>,
+     *     droppedAttributeCount: int,
+     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
+     *     droppedEventsCount: int,
+     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
+     *     droppedLinksCount: int,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
      * }
@@ -287,8 +358,11 @@ final class Span
             'resource' => $this->resource->normalize(),
             'scope' => $this->scope->normalize(),
             'attributes' => $this->attributes->normalize(),
+            'droppedAttributeCount' => $this->droppedAttributeCount,
             'events' => $events,
+            'droppedEventsCount' => $this->droppedEventsCount,
             'links' => $links,
+            'droppedLinksCount' => $this->droppedLinksCount,
             'status' => $this->status?->normalize(),
             'isRecording' => $this->isRecording,
         ];
@@ -297,11 +371,36 @@ final class Span
     /**
      * Record an event in this span.
      *
+     * If the event count limit is exceeded, the event is discarded.
+     * Event attributes are enforced against attributePerEventCountLimit.
+     *
      * @return $this
      */
     public function recordEvent(SpanEvent $event) : self
     {
-        $this->events[] = $event;
+        if (\count($this->events) >= $this->limits->eventCountLimit) {
+            $this->droppedEventsCount++;
+
+            return $this;
+        }
+
+        if ($event->attributesObject()->count() > $this->limits->attributePerEventCountLimit || $this->limits->attributeValueLengthLimit !== null) {
+            $enforcer = new AttributeLimitsEnforcer();
+            $result = $enforcer->enforce(
+                $event->attributesObject(),
+                $this->limits->attributePerEventCountLimit,
+                $this->limits->attributeValueLengthLimit,
+            );
+
+            $this->events[] = GenericEvent::create(
+                $event->name(),
+                $event->timestamp(),
+                $result->attributes,
+                $result->droppedAttributeCount,
+            );
+        } else {
+            $this->events[] = $event;
+        }
 
         return $this;
     }
@@ -362,12 +461,22 @@ final class Span
     /**
      * Set a single attribute.
      *
+     * If the attribute count limit is exceeded, the attribute is discarded.
+     * If the value is a string exceeding the length limit, it is truncated.
+     *
      * @param TAttributeValue $value
      *
      * @return $this
      */
     public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : self
     {
+        if (!$this->attributes->has($key) && $this->attributes->count() >= $this->limits->attributeCountLimit) {
+            $this->droppedAttributeCount++;
+
+            return $this;
+        }
+
+        $value = $this->truncateValue($value);
         $this->attributes = $this->attributes->with($key, $value);
 
         return $this;
@@ -376,6 +485,8 @@ final class Span
     /**
      * Set multiple attributes at once.
      *
+     * Attributes are added until the limit is reached. Excess attributes are discarded.
+     *
      * @param Attributes|TAttributeValueMap $attributes
      *
      * @return $this
@@ -383,7 +494,25 @@ final class Span
     public function setAttributes(Attributes|array $attributes) : self
     {
         $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
-        $this->attributes = $this->attributes->merge($attrs);
+        $enforcer = new AttributeLimitsEnforcer();
+
+        $merged = $this->attributes->merge($attrs);
+        $result = $enforcer->enforce($merged, $this->limits->attributeCountLimit, $this->limits->attributeValueLengthLimit);
+
+        $this->attributes = $result->attributes;
+        $this->droppedAttributeCount += $result->droppedAttributeCount;
+
+        return $this;
+    }
+
+    /**
+     * Set the context scope for this span.
+     *
+     * @return $this
+     */
+    public function setContextScope(Scope $scope) : self
+    {
+        $this->contextScope = $scope;
 
         return $this;
     }
@@ -414,5 +543,35 @@ final class Span
     public function status() : ?SpanStatus
     {
         return $this->status;
+    }
+
+    /**
+     * Truncate a value according to attribute value length limit.
+     *
+     * @param TAttributeValue $value
+     *
+     * @return TAttributeValue
+     */
+    private function truncateValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : string|int|float|bool|\DateTimeInterface|\Throwable|array
+    {
+        if ($this->limits->attributeValueLengthLimit === null) {
+            return $value;
+        }
+
+        if (\is_string($value) && \mb_strlen($value) > $this->limits->attributeValueLengthLimit) {
+            return \mb_substr($value, 0, $this->limits->attributeValueLengthLimit);
+        }
+
+        if (\is_array($value)) {
+            return \array_map(function ($item) {
+                if (\is_string($item) && \mb_strlen($item) > $this->limits->attributeValueLengthLimit) {
+                    return \mb_substr($item, 0, $this->limits->attributeValueLengthLimit);
+                }
+
+                return $item;
+            }, $value);
+        }
+
+        return $value;
     }
 }

@@ -34,6 +34,8 @@ final class ConfigBuilder
 
     private ?string $id;
 
+    private ?string $name;
+
     private ?Optimizer $optimizer;
 
     private bool $putInputIntoRows;
@@ -49,6 +51,7 @@ final class ConfigBuilder
     public function __construct()
     {
         $this->id = null;
+        $this->name = null;
         $this->serializer = null;
         $this->fstab = null;
         $this->putInputIntoRows = false;
@@ -71,28 +74,30 @@ final class ConfigBuilder
 
     public function build(EntryFactory $entryFactory = new EntryFactory()) : Config
     {
-        $this->id ??= 'flow_php' . $this->randomValueGenerator->string(32);
+        $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
-        $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(
             new LimitOptimization(),
             new BatchSizeOptimization(batchSize: 1000)
         );
 
+        $dataframeName = $this->name ?? 'flow_dataframe';
+
         return new Config(
             $this->id,
+            $dataframeName,
             $this->version,
             $this->serializer,
-            $this->clock,
+            $this->getClock(),
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cache->build($this->fstab(), $this->serializer),
+            $this->cache->build($this->fstab(), $this->serializer, $this->telemetryConfig, $dataframeName),
             $this->sort->build(),
             $this->analyze,
-            $this->telemetryConfig ?? TelemetryConfig::default($this->clock),
+            $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
         );
     }
 
@@ -137,6 +142,13 @@ final class ConfigBuilder
     public function mount(Filesystem $filesystem) : self
     {
         $this->fstab()->mount($filesystem);
+
+        return $this;
+    }
+
+    public function name(string $name) : self
+    {
+        $this->name = $name;
 
         return $this;
     }
@@ -193,7 +205,7 @@ final class ConfigBuilder
             $this->fstab->withTelemetry(
                 filesystem_telemetry_config(
                     $telemetry,
-                    $this->clock ?? SystemClock::utc(),
+                    $this->getClock(),
                     $options->filesystem
                 )
             );
@@ -212,7 +224,7 @@ final class ConfigBuilder
             if ($filesystemOptions !== null && ($filesystemOptions->traceStreams || $filesystemOptions->collectMetrics)) {
                 $this->fstab->withTelemetry(filesystem_telemetry_config(
                     $this->telemetry()->telemetry,
-                    $this->clock ?? SystemClock::utc(),
+                    $this->getClock(),
                     $filesystemOptions
                 ));
             }
@@ -221,10 +233,20 @@ final class ConfigBuilder
         return $this->fstab;
     }
 
+    private function getClock() : ClockInterface
+    {
+        if ($this->clock === null) {
+            $this->clock = SystemClock::utc();
+        }
+
+        return $this->clock;
+
+    }
+
     private function telemetry() : TelemetryConfig
     {
         if ($this->telemetryConfig === null) {
-            $this->telemetryConfig = TelemetryConfig::default($this->clock ?? SystemClock::utc());
+            $this->telemetryConfig = TelemetryConfig::default($this->getClock());
         }
 
         return $this->telemetryConfig;

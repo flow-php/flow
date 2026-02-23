@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{config_builder, df, from_array, from_cache};
+use function Flow\ETL\DSL\{config_builder, df, from_array, from_cache, telemetry_options};
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\{Extractor, FlowContext, Rows};
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Tracer\TracerProvider;
 
 final class CacheTest extends FlowIntegrationTestCase
 {
@@ -83,6 +91,45 @@ final class CacheTest extends FlowIntegrationTestCase
             self::assertInstanceOf(Rows::class, $rows);
             self::assertCount(20, $rows);
         }
+    }
+
+    public function test_cache_with_telemetry_collects_spans_and_metrics() : void
+    {
+        $clock = new SystemClock();
+        $contextStorage = new MemoryContextStorage();
+
+        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+
+        $telemetry = new Telemetry(
+            Resource::create(['service.name' => 'test-service']),
+            new TracerProvider($spanProcessor, $clock, $contextStorage),
+            new MeterProvider($metricProcessor, $clock),
+            new LoggerProvider($logProcessor, $clock, $contextStorage),
+        );
+
+        df(config_builder()->withTelemetry($telemetry, telemetry_options(trace_cache: true)))
+            ->read(
+                from_array([
+                    ['id' => 1],
+                    ['id' => 2],
+                ])
+            )
+            ->cache('telemetry_test')
+            ->run();
+
+        $telemetry->flush();
+
+        $spans = $spanProcessor->endedSpans();
+        $setSpans = \array_filter($spans, static fn ($span) => \str_starts_with((string) $span->name(), 'Cache Set '));
+
+        self::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
+
+        $hitMetrics = $metricProcessor->metricsWithName('cache_hits');
+        $missMetrics = $metricProcessor->metricsWithName('cache_misses');
+
+        self::assertNotEmpty($missMetrics, 'Expected cache miss metrics to be recorded (from has() checks)');
     }
 
     public function test_cache_without_previously_set_batch_size() : void

@@ -6,10 +6,11 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\
 
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\CacheTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\{TagAwareTraceableCacheAdapter, TraceableCacheAdapter};
-use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\{ArrayCacheAdapter, FailingCacheAdapter, TagAwareArrayCacheAdapter};
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache\{ArrayCacheAdapter, TagAwareArrayCacheAdapter};
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
-use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Provider\Memory\{MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
@@ -160,7 +161,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertInstanceOf(ArrayCacheAdapter::class, $container->get('test.cache.profiler.second'));
     }
 
-    public function test_get_item_records_hit_miss() : void
+    public function test_get_item_records_metrics() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
@@ -172,7 +173,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
-                    'tracer_provider' => [
+                    'meter_provider' => [
                         'processor' => [
                             'type' => 'memory',
                             'exporter' => ['type' => 'memory'],
@@ -198,21 +199,27 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
         $cache->get('existing-key', static fn () => 'value');
 
-        /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.tracer_provider.processor');
-        $processor->endedSpans();
-
         $existingItem = $cache->getItem('existing-key');
         self::assertTrue($existingItem->isHit());
 
-        $spans = $processor->endedSpans();
-        $getItemSpan = $spans[\count($spans) - 1];
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+        $telemetry->flush();
 
-        self::assertSame('cache getItem', $getItemSpan->name());
-        self::assertTrue($getItemSpan->attributes()['cache.hit']);
+        /** @var MemoryMetricProcessor $processor */
+        $processor = $container->get('flow.telemetry.meter_provider.processor');
+        $hitMetrics = $processor->metricsWithName('cache.hits');
+        $missMetrics = $processor->metricsWithName('cache.misses');
+
+        $totalHits = \array_sum(\array_map(static fn ($m) => $m->value, $hitMetrics));
+        $totalMisses = \array_sum(\array_map(static fn ($m) => $m->value, $missMetrics));
+
+        self::assertSame(1, $totalHits);
+        self::assertSame(2, $totalMisses);
+        self::assertSame('test.cache.app', $hitMetrics[0]->attributes->get('cache.pool'));
     }
 
-    public function test_get_items_records_hits_and_misses() : void
+    public function test_get_items_records_metrics() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
@@ -224,7 +231,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
-                    'tracer_provider' => [
+                    'meter_provider' => [
                         'processor' => [
                             'type' => 'memory',
                             'exporter' => ['type' => 'memory'],
@@ -248,20 +255,223 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $cache->get('key1', static fn () => 'value1');
         $cache->get('key2', static fn () => 'value2');
 
-        /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.tracer_provider.processor');
-        $processor->endedSpans();
-
         $items = $cache->getItems(['key1', 'key2', 'key3']);
         \iterator_to_array($items);
 
-        $spans = $processor->endedSpans();
-        $getItemsSpan = $spans[\count($spans) - 1];
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+        $telemetry->flush();
 
-        self::assertSame('cache getItems', $getItemsSpan->name());
-        self::assertSame(3, $getItemsSpan->attributes()['cache.key_count']);
-        self::assertSame(2, $getItemsSpan->attributes()['cache.hits']);
-        self::assertSame(1, $getItemsSpan->attributes()['cache.misses']);
+        /** @var MemoryMetricProcessor $processor */
+        $processor = $container->get('flow.telemetry.meter_provider.processor');
+        $hitMetrics = $processor->metricsWithName('cache.hits');
+        $missMetrics = $processor->metricsWithName('cache.misses');
+
+        $totalHits = \array_sum(\array_map(static fn ($m) => $m->value, $hitMetrics));
+        $totalMisses = \array_sum(\array_map(static fn ($m) => $m->value, $missMetrics));
+
+        self::assertSame(2, $totalHits);
+        self::assertSame(3, $totalMisses);
+    }
+
+    public function test_get_records_hit_metric_on_cache_hit() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'meter_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.app');
+        $cache->get('my-key', static fn () => 'my-value');
+        $cache->get('my-key', static fn () => 'should-not-be-called');
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+        $telemetry->flush();
+
+        /** @var MemoryMetricProcessor $processor */
+        $processor = $container->get('flow.telemetry.meter_provider.processor');
+        $hitMetrics = $processor->metricsWithName('cache.hits');
+        $missMetrics = $processor->metricsWithName('cache.misses');
+
+        self::assertCount(1, $hitMetrics);
+        self::assertCount(1, $missMetrics);
+
+        self::assertSame(1, $hitMetrics[0]->value);
+        self::assertSame('test.cache.app', $hitMetrics[0]->attributes->get('cache.pool'));
+
+        self::assertSame(1, $missMetrics[0]->value);
+        self::assertSame('test.cache.app', $missMetrics[0]->attributes->get('cache.pool'));
+    }
+
+    public function test_get_records_miss_metric_on_cache_miss() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'meter_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.app');
+        $cache->get('nonexistent-key', static fn () => 'new-value');
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+        $telemetry->flush();
+
+        /** @var MemoryMetricProcessor $processor */
+        $processor = $container->get('flow.telemetry.meter_provider.processor');
+        $missMetrics = $processor->metricsWithName('cache.misses');
+
+        self::assertCount(1, $missMetrics);
+        self::assertSame(1, $missMetrics[0]->value);
+        self::assertSame('test.cache.app', $missMetrics[0]->attributes->get('cache.pool'));
+    }
+
+    public function test_has_item_records_hit_metric_when_exists() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'meter_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.app');
+        $cache->get('existing-key', static fn () => 'value');
+        $exists = $cache->hasItem('existing-key');
+
+        self::assertTrue($exists);
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+        $telemetry->flush();
+
+        /** @var MemoryMetricProcessor $processor */
+        $processor = $container->get('flow.telemetry.meter_provider.processor');
+        $hitMetrics = $processor->metricsWithName('cache.hits');
+
+        self::assertCount(1, $hitMetrics);
+        self::assertSame(1, $hitMetrics[0]->value);
+        self::assertSame('test.cache.app', $hitMetrics[0]->attributes->get('cache.pool'));
+    }
+
+    public function test_has_item_records_miss_metric_when_not_exists() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('test.cache.app', ArrayCacheAdapter::class)
+                        ->addTag('cache.pool')
+                        ->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'meter_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => ['type' => 'memory'],
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'cache' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var TraceableCacheAdapter $cache */
+        $cache = $container->get('test.cache.app');
+        $exists = $cache->hasItem('nonexistent-key');
+
+        self::assertFalse($exists);
+
+        /** @var Telemetry $telemetry */
+        $telemetry = $container->get('flow.telemetry');
+        $telemetry->flush();
+
+        /** @var MemoryMetricProcessor $processor */
+        $processor = $container->get('flow.telemetry.meter_provider.processor');
+        $missMetrics = $processor->metricsWithName('cache.misses');
+
+        self::assertCount(1, $missMetrics);
+        self::assertSame(1, $missMetrics[0]->value);
+        self::assertSame('test.cache.app', $missMetrics[0]->attributes->get('cache.pool'));
     }
 
     public function test_tag_aware_adapters_are_wrapped_with_tag_aware_traceable() : void
@@ -332,7 +542,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('cache invalidateTags', $span->name());
+        self::assertSame('Cache InvalidateTags test.cache.tags', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
@@ -340,207 +550,5 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         self::assertSame('test.cache.tags', $attributes['cache.pool']);
         self::assertSame(['tag1', 'tag2', 'tag3'], $attributes['cache.tags']);
         self::assertSame(3, $attributes['cache.tag_count']);
-    }
-
-    public function test_wrapped_cache_creates_span_for_get_operation() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.cache.app', ArrayCacheAdapter::class)
-                        ->addTag('cache.pool')
-                        ->setPublic(true);
-                });
-
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
-                        ],
-                    ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => false,
-                        'cache' => true,
-                    ],
-                ]);
-            },
-        ]);
-
-        $container = $this->getContainer();
-
-        /** @var TraceableCacheAdapter $cache */
-        $cache = $container->get('test.cache.app');
-        $cache->get('my-key', static fn () => 'my-value');
-
-        /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.tracer_provider.processor');
-        $spans = $processor->endedSpans();
-
-        self::assertCount(1, $spans);
-
-        $span = $spans[0];
-        self::assertSame('cache get', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
-
-        $attributes = $span->attributes();
-        self::assertSame('get', $attributes['cache.operation']);
-        self::assertSame('test.cache.app', $attributes['cache.pool']);
-        self::assertSame('my-key', $attributes['cache.key']);
-    }
-
-    public function test_wrapped_cache_records_cache_hit() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.cache.app', ArrayCacheAdapter::class)
-                        ->addTag('cache.pool')
-                        ->setPublic(true);
-                });
-
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
-                        ],
-                    ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => false,
-                        'cache' => true,
-                    ],
-                ]);
-            },
-        ]);
-
-        $container = $this->getContainer();
-
-        /** @var TraceableCacheAdapter $cache */
-        $cache = $container->get('test.cache.app');
-        $cache->get('my-key', static fn () => 'my-value');
-        $cache->get('my-key', static fn () => 'should-not-be-called');
-
-        /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.tracer_provider.processor');
-        $spans = $processor->endedSpans();
-
-        self::assertCount(2, $spans);
-
-        $firstSpan = $spans[0];
-        self::assertFalse($firstSpan->attributes()['cache.hit']);
-
-        $secondSpan = $spans[1];
-        self::assertTrue($secondSpan->attributes()['cache.hit']);
-    }
-
-    public function test_wrapped_cache_records_cache_miss() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.cache.app', ArrayCacheAdapter::class)
-                        ->addTag('cache.pool')
-                        ->setPublic(true);
-                });
-
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
-                        ],
-                    ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => false,
-                        'cache' => true,
-                    ],
-                ]);
-            },
-        ]);
-
-        $container = $this->getContainer();
-
-        /** @var TraceableCacheAdapter $cache */
-        $cache = $container->get('test.cache.app');
-        $cache->get('nonexistent-key', static fn () => 'new-value');
-
-        /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.tracer_provider.processor');
-        $spans = $processor->endedSpans();
-
-        self::assertCount(1, $spans);
-        self::assertFalse($spans[0]->attributes()['cache.hit']);
-    }
-
-    public function test_wrapped_cache_records_exception() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.cache.failing', FailingCacheAdapter::class)
-                        ->addArgument('Connection refused')
-                        ->addTag('cache.pool')
-                        ->setPublic(true);
-                });
-
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'tracer_provider' => [
-                        'processor' => [
-                            'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
-                        ],
-                    ],
-                    'instrumentation' => [
-                        'http_kernel' => false,
-                        'console' => false,
-                        'messenger' => false,
-                        'cache' => true,
-                    ],
-                ]);
-            },
-        ]);
-
-        $container = $this->getContainer();
-
-        /** @var TraceableCacheAdapter $cache */
-        $cache = $container->get('test.cache.failing');
-
-        $exceptionThrown = false;
-
-        try {
-            $cache->get('my-key', static fn () => 'value');
-        } catch (\RuntimeException $e) {
-            $exceptionThrown = true;
-            self::assertSame('Connection refused', $e->getMessage());
-        }
-
-        self::assertTrue($exceptionThrown, 'Expected exception was not thrown');
-
-        /** @var MemorySpanProcessor $processor */
-        $processor = $container->get('flow.telemetry.tracer_provider.processor');
-        $spans = $processor->endedSpans();
-
-        self::assertCount(1, $spans);
-
-        $span = $spans[0];
-        $status = $span->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isError());
-        self::assertSame('Connection refused', $status->description);
-
-        $events = $span->events();
-        self::assertCount(1, $events);
-        self::assertSame('exception', $events[0]->name());
     }
 }

@@ -358,6 +358,90 @@ $logger->error('Payment failed', [
 $logger->debug('Cache hit', ['key' => 'user:123', 'ttl' => 3600]);
 ```
 
+## Attribute and Cardinality Limits
+
+Flow Telemetry enforces limits on signals following the OpenTelemetry specification.
+This prevents unbounded memory growth and ensures telemetry data doesn't exceed collector size limits.
+
+### Default Limits
+
+| Signal Type | Attribute Count | Value Length | Events | Links | Cardinality |
+|-------------|-----------------|--------------|--------|-------|-------------|
+| Span        | 128             | unlimited    | 128    | 128   | N/A         |
+| Span Event  | 128             | unlimited    | -      | -     | N/A         |
+| Span Link   | 128             | unlimited    | -      | -     | N/A         |
+| LogRecord   | 128             | unlimited    | -      | -     | N/A         |
+| Metric      | exempt          | exempt       | -      | -     | 2000        |
+
+**Note:** Resource attributes are exempt from limits per the OTel specification. Metrics are exempt from attribute count
+and value length limits, but have cardinality limits (unique attribute combinations per instrument).
+
+### Configuring Limits
+
+```php
+<?php
+
+use function Flow\Telemetry\DSL\{span_limits, log_record_limits, metric_limits, tracer_provider, logger_provider, meter_provider};
+
+// Custom span limits
+$spanLimits = span_limits(
+    attributeCountLimit: 64,
+    eventCountLimit: 32,
+    linkCountLimit: 16,
+    attributeValueLengthLimit: 1024,  // truncate strings longer than 1024 chars
+);
+
+$tracerProvider = tracer_provider(
+    $processor,
+    $clock,
+    $contextStorage,
+    limits: $spanLimits,
+);
+
+// Custom log limits
+$logLimits = log_record_limits(
+    attributeCountLimit: 64,
+    attributeValueLengthLimit: 2048,
+);
+
+$loggerProvider = logger_provider(
+    $processor,
+    $clock,
+    $contextStorage,
+    limits: $logLimits,
+);
+
+// Custom metric limits (cardinality only)
+$metricLimits = metric_limits(
+    cardinalityLimit: 1000,  // max unique attribute combinations per instrument
+);
+
+$meterProvider = meter_provider(
+    $processor,
+    $clock,
+    limits: $metricLimits,
+);
+```
+
+### Enforcement Behavior
+
+- **Attribute count exceeded**: New attributes are discarded (first N kept)
+- **String value too long**: Values are truncated to the configured limit
+- **Array values**: Each string element is truncated individually
+
+Dropped attribute counts are tracked per signal and included in exported telemetry data
+for observability.
+
+### Metric Cardinality Overflow
+
+When a metric instrument exceeds its cardinality limit, new attribute combinations are
+redirected to an overflow aggregator. The overflow data point has a single attribute:
+`otel.metric.overflow: true`. All measurements that would create new attribute combinations
+beyond the limit are aggregated into this overflow data point.
+
+This follows the OpenTelemetry specification for metrics overflow handling - measurements
+are never dropped, they are aggregated into the overflow bucket for observability.
+
 ## Processors
 
 Processors handle the lifecycle of telemetry signals, determining when and how data is passed to exporters.

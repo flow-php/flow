@@ -1,0 +1,36 @@
+{#
+ # Macros for building CodeMirror completer data
+ #}
+
+{#
+ # Builds a single parameter with HTML spans
+ # @param object param - {name, type, has_default_value, default_value}
+ # @return string - HTML span elements for the parameter
+ #}
+{% macro build_param(param) %}
+{%- set types = param.type|to_array -%}
+{%- if types is not empty -%}
+<span class="fn-type">{{ types|format_type }}</span> {% endif -%}
+<span class="fn-param">${{ param.name }}</span>
+{%- if param.has_default_value and param.default_value is defined %} <span class="fn-operator">=</span> <span class="fn-default">{{ param.default_value }}</span>{% endif -%}
+{% endmacro %}
+
+{#
+ # Builds the full highlighted signature HTML
+ # @param string name - method/function name
+ # @param array parameters - array of parameter objects
+ # @param array return_type - array of return type objects (optional)
+ # @return string - Complete HTML signature
+ #}
+{% macro highlighted_signature(name, parameters, return_type) %}
+{%- import _self as macros -%}
+{%- set params = parameters|to_array -%}
+{%- set ret_type = return_type|to_array -%}
+<span class="fn-name">{{ name }}</span><span class="fn-operator">(</span>
+{%- for param in params -%}
+{{ macros.build_param(param) }}
+{%- if not loop.last -%}<span class="fn-operator">,</span> {% endif -%}
+{%- endfor -%}
+<span class="fn-operator">)</span>
+{%- if ret_type is not empty %} <span class="fn-operator">:</span> <span class="fn-return">{{ ret_type|format_type }}</span>{% endif -%}
+{% endmacro %}

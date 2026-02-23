@@ -6,7 +6,8 @@ namespace Flow\ETL\Config\Cache;
 
 use function Flow\Filesystem\DSL\{path_real, protocol};
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Cache\Implementation\{FilesystemCache, TraceableCache};
+use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
@@ -20,17 +21,23 @@ final class CacheConfigBuilder
      */
     private int $externalSortBucketsCount = 100;
 
-    public function build(FilesystemTable $fstab, Serializer $serializer) : CacheConfig
+    public function build(FilesystemTable $fstab, Serializer $serializer, ?TelemetryConfig $telemetryConfig = null, string $dataframeName = 'flow_dataframe') : CacheConfig
     {
         $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
         $cachePath = path_real($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
 
+        $cache = $this->cache ?? new FilesystemCache(
+            $fstab->for(protocol('file')),
+            $serializer,
+            cacheDir: $cachePath
+        );
+
+        if ($telemetryConfig !== null && $telemetryConfig->options->traceCache) {
+            $cache = new TraceableCache($cache, $telemetryConfig->telemetry, $dataframeName);
+        }
+
         return new CacheConfig(
-            cache: $this->cache ?? new FilesystemCache(
-                $fstab->for(protocol('file')),
-                $serializer,
-                cacheDir: $cachePath
-            ),
+            cache: $cache,
             localFilesystemCacheDir: $cachePath,
             externalSortBucketsCount: $this->externalSortBucketsCount
         );

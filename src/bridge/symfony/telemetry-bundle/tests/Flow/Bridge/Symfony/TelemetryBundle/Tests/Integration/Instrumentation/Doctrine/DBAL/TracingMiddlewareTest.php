@@ -82,7 +82,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         }
 
         self::assertNotNull($connectionSpan, 'Connection span should exist');
-        self::assertSame('sqlite', $connectionSpan->attributes()['db.system']);
+        self::assertSame('sqlite', $connectionSpan->attributes()['db.system.name']);
         self::assertSame('default', $connectionSpan->attributes()['db.connection.name']);
     }
 

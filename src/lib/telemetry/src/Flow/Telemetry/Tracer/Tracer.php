@@ -52,6 +52,7 @@ final class Tracer
         private readonly ClockInterface $clock,
         private readonly ContextStorage $contextStorage,
         private readonly ?Sampler $sampler = null,
+        private readonly SpanLimits $limits = new SpanLimits(),
     ) {
         /** @var \SplStack<SpanContext> $stack */
         $stack = new \SplStack();
@@ -90,13 +91,7 @@ final class Tracer
             }
         }
 
-        $context = $this->contextStorage->current();
-
-        if ($this->spanStack->isEmpty()) {
-            $this->contextStorage->store($context->withoutActiveSpan());
-        } else {
-            $this->contextStorage->store($context->withActiveSpan($this->spanStack->top()->spanId));
-        }
+        $span->contextScope()?->detach();
 
         if ($span->isRecording()) {
             $this->processor->onEnd($span);
@@ -190,7 +185,7 @@ final class Tracer
         if (!$traceId->isValid()) {
             $traceId = TraceId::generate();
             $context = Context::withTraceId($traceId);
-            $this->contextStorage->store($context);
+            $this->contextStorage->attach($context);
         }
 
         $spanId = SpanId::generate();
@@ -203,7 +198,7 @@ final class Tracer
             : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
         $startTime = $this->clock->now();
-        $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording);
+        $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording, $this->limits);
 
         $attributesToSet = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
         $span->setAttributes($attributesToSet);
@@ -231,7 +226,7 @@ final class Tracer
                     ? SpanContext::createRemote($traceId, $spanId, $parentSpanId, $traceFlags, $traceState)
                     : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
-                $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording);
+                $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording, $this->limits);
                 $span->setAttributes($attributesToSet);
 
                 foreach ($links as $link) {
@@ -241,7 +236,7 @@ final class Tracer
         }
 
         $this->spanStack->push($span->context());
-        $this->contextStorage->store($context->withActiveSpan($span->context()->spanId));
+        $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context()->spanId)));
 
         if ($span->isRecording()) {
             $this->processor->onStart($span);

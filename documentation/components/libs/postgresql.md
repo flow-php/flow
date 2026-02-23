@@ -350,6 +350,7 @@ See [Type System](/documentation/components/libs/postgresql/client-types.md) for
 - [Type System](/documentation/components/libs/postgresql/client-types.md) - Value converters, TypedValue, custom types
 - [Query Plan Analysis](/documentation/components/libs/postgresql/client-explain.md) - EXPLAIN ANALYZE, plan insights,
   performance debugging
+- [Telemetry](/documentation/components/libs/postgresql/client-telemetry.md) - OpenTelemetry tracing and metrics
 
 ---
 

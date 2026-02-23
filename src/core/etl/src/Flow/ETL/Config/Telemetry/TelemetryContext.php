@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Telemetry;
 
-use Flow\ETL\{DataFrame,
+use Flow\ETL\{
     Dataset\Memory\Consumption,
     Dataset\Statistics\HighResolutionTime,
     FlowContext,
@@ -13,7 +13,7 @@ use Flow\ETL\{DataFrame,
     Rows,
     Transformer};
 use Flow\Filesystem\Filesystem;
-use Flow\Telemetry\Attributes;
+use Flow\Telemetry\{Attributes, ObjectExtractor};
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\{Counter, Throughput};
 use Flow\Telemetry\Meter\Meter;
@@ -24,6 +24,8 @@ use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
  */
 final class TelemetryContext
 {
+    private ?FlowContext $context = null;
+
     private ?Counter $counterProcessedRows = null;
 
     private ?HighResolutionTime $dataFrameExecutionTime = null;
@@ -55,8 +57,9 @@ final class TelemetryContext
         $this->memory->capture();
 
         if ($this->options->collectMetrics) {
-            $this->counterProcessedRows?->add($rows->count());
-            $this->throughputRows?->add($rows->count());
+            $attributes = ['dataframe.name' => $context->config->name()];
+            $this->counterProcessedRows?->add($rows->count(), $attributes);
+            $this->throughputRows?->add($rows->count(), $attributes);
         }
     }
 
@@ -73,6 +76,7 @@ final class TelemetryContext
             'Data frame processing completed',
             [
                 'dataframe_id' => $context->config->id(),
+                'dataframe_name' => $context->config->name(),
                 'total_rows_processed' => $this->totalRowsProcessed,
                 'memory_min_mb' => $this->memory->min()->inMb(),
                 'memory_max_mb' => $this->memory->max()->inMb(),
@@ -93,6 +97,7 @@ final class TelemetryContext
                     $attributes,
                     [
                         'dataframe.id' => $context->config->id(),
+                        'dataframe.name' => $context->config->name(),
                         'rows.total' => $this->totalRowsProcessed,
                         'rows.throughput.per_second' => $throughput,
                         'memory.min.mb' => $this->memory->min()->inMb(),
@@ -112,6 +117,62 @@ final class TelemetryContext
             $this->throughputRows = null;
         }
 
+        $this->context = null;
+        $this->dataFrameExecutionTime = null;
+        $this->totalRowsProcessed = 0;
+        $this->dataFrameSpan = null;
+        $this->memory = new Consumption();
+    }
+
+    /**
+     * @param TAttributeValueMap $attributes
+     */
+    public function dataFrameFailed(FlowContext $context, \Throwable $exception, array $attributes = []) : void
+    {
+        if ($this->dataFrameSpan === null) {
+            return;
+        }
+
+        $this->logger->error('Data frame processing failed', [
+            'exception' => $exception->getMessage(),
+            'dataframe_id' => $context->config->id(),
+            'dataframe_name' => $context->config->name(),
+        ]);
+
+        $throughput = 0.0;
+
+        if ($this->dataFrameExecutionTime !== null) {
+            $durationSeconds = HighResolutionTime::now()->diff($this->dataFrameExecutionTime)->toSeconds();
+            $throughput = $durationSeconds > 0 ? \round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
+        }
+
+        $this->tracer->complete(
+            $this->dataFrameSpan
+                ->setAttributes(\array_merge(
+                    $attributes,
+                    [
+                        'dataframe.id' => $context->config->id(),
+                        'dataframe.name' => $context->config->name(),
+                        'rows.total' => $this->totalRowsProcessed,
+                        'rows.throughput.per_second' => $throughput,
+                        'memory.min.mb' => $this->memory->min()->inMb(),
+                        'memory.max.mb' => $this->memory->max()->inMb(),
+                    ]
+                ))
+                ->setStatus(SpanStatus::error($exception->getMessage()))
+        );
+
+        if ($this->counterProcessedRows !== null) {
+            $this->meter->complete($this->counterProcessedRows);
+            $this->counterProcessedRows = null;
+        }
+
+        if ($this->throughputRows !== null) {
+            $this->meter->complete($this->throughputRows);
+            $this->throughputRows = null;
+        }
+
+        $this->context = null;
         $this->dataFrameExecutionTime = null;
         $this->totalRowsProcessed = 0;
         $this->dataFrameSpan = null;
@@ -120,12 +181,21 @@ final class TelemetryContext
 
     public function dataFrameStarted(FlowContext $context) : void
     {
-        $this->dataFrameSpan = $this->tracer->span(DataFrame::class);
+        $this->context = $context;
+        $this->dataFrameSpan = $this->tracer->span(
+            'DataFrame ' . $context->config->name(),
+            SpanKind::INTERNAL,
+            Attributes::create([
+                'dataframe.id' => $context->config->id(),
+                'dataframe.name' => $context->config->name(),
+            ])
+        );
 
         $this->logger()->debug(
             'Data frame processing started',
             [
                 'dataframe_id' => $context->config->id(),
+                'dataframe_name' => $context->config->name(),
                 'cache' => $context->cache()::class,
                 'serializer' => $context->config->serializer()::class,
                 'optimizers' => \array_map(static fn (Optimization $optimization) => $optimization::class, $context->config->optimizer()->optimizations()),
@@ -140,8 +210,16 @@ final class TelemetryContext
         );
 
         if ($this->options->collectMetrics) {
-            $this->counterProcessedRows = $this->meter->createCounter('rows.processed.total', 'Rows Processed');
-            $this->throughputRows = $this->meter->createThroughput('rows.processed.throughput', 'Rows Processed');
+            $this->counterProcessedRows = $this->meter->createCounter(
+                'rows_processed',
+                'rows',
+                'Total number of rows processed by the DataFrame'
+            );
+            $this->throughputRows = $this->meter->createThroughput(
+                'rows_throughput',
+                'rows/s',
+                'Rows processed per second'
+            );
         }
 
         $this->dataFrameExecutionTime = HighResolutionTime::now();
@@ -194,9 +272,12 @@ final class TelemetryContext
         }
 
         $this->loadingSpan = $this->tracer->span(
-            $loader::class,
+            ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
-            Attributes::create($attributes),
+            Attributes::create(\array_merge([
+                'loader.class' => $loader::class,
+                'dataframe.name' => $this->context?->config->name(),
+            ], $attributes)),
             parentContext: $this->dataFrameSpan?->context()
         );
     }
@@ -251,9 +332,12 @@ final class TelemetryContext
         }
 
         $this->transformationSpan = $this->tracer->span(
-            $transformer::class,
+            ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
-            Attributes::create($attributes),
+            Attributes::create(\array_merge([
+                'transformer.class' => $transformer::class,
+                'dataframe.name' => $this->context?->config->name(),
+            ], $attributes)),
             parentContext: $this->dataFrameSpan?->context()
         );
     }

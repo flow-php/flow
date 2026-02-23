@@ -7,7 +7,7 @@ namespace Flow\Telemetry\Tests\Unit\Tracer;
 use Flow\Telemetry\Context\{SpanId, TraceId};
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
-use Flow\Telemetry\Tracer\{GenericEvent, Span, SpanContext, SpanKind, SpanLink, SpanStatus};
+use Flow\Telemetry\Tracer\{GenericEvent, Span, SpanContext, SpanKind, SpanLimits, SpanLink, SpanStatus};
 use PHPUnit\Framework\TestCase;
 
 final class SpanTest extends TestCase
@@ -192,6 +192,169 @@ final class SpanTest extends TestCase
         self::assertEmpty($span->attributes());
         self::assertEmpty($span->events());
         self::assertEmpty($span->links());
+    }
+
+    public function test_limits_attribute_count_allows_overwriting_existing() : void
+    {
+        $limits = new SpanLimits(attributeCountLimit: 2);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->setAttribute('key1', 'value1');
+        $span->setAttribute('key2', 'value2');
+        $span->setAttribute('key1', 'updated');
+
+        self::assertCount(2, $span->attributes());
+        self::assertSame(0, $span->droppedAttributeCount());
+        self::assertSame('updated', $span->attributes()['key1']);
+    }
+
+    public function test_limits_attribute_count_drops_excess_attributes() : void
+    {
+        $limits = new SpanLimits(attributeCountLimit: 3);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->setAttributes([
+            'key1' => 'value1',
+            'key2' => 'value2',
+            'key3' => 'value3',
+            'key4' => 'value4',
+            'key5' => 'value5',
+        ]);
+
+        self::assertCount(3, $span->attributes());
+        self::assertSame(2, $span->droppedAttributeCount());
+        self::assertArrayHasKey('key1', $span->attributes());
+        self::assertArrayHasKey('key2', $span->attributes());
+        self::assertArrayHasKey('key3', $span->attributes());
+        self::assertArrayNotHasKey('key4', $span->attributes());
+    }
+
+    public function test_limits_attribute_count_drops_single_attribute() : void
+    {
+        $limits = new SpanLimits(attributeCountLimit: 2);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->setAttribute('key1', 'value1');
+        $span->setAttribute('key2', 'value2');
+        $span->setAttribute('key3', 'value3');
+
+        self::assertCount(2, $span->attributes());
+        self::assertSame(1, $span->droppedAttributeCount());
+    }
+
+    public function test_limits_attribute_value_length_truncates_array_strings() : void
+    {
+        $limits = new SpanLimits(attributeValueLengthLimit: 5);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->setAttribute('tags', ['short', 'this-is-long']);
+
+        self::assertSame(['short', 'this-'], $span->attributes()['tags']);
+    }
+
+    public function test_limits_attribute_value_length_truncates_strings() : void
+    {
+        $limits = new SpanLimits(attributeValueLengthLimit: 10);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->setAttribute('short', 'abc');
+        $span->setAttribute('long', 'this-is-a-very-long-string');
+
+        self::assertSame('abc', $span->attributes()['short']);
+        self::assertSame('this-is-a-', $span->attributes()['long']);
+    }
+
+    public function test_limits_dropped_counts_in_normalize() : void
+    {
+        $limits = new SpanLimits(
+            attributeCountLimit: 2,
+            eventCountLimit: 1,
+            linkCountLimit: 1,
+        );
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->setAttributes(['k1' => 'v1', 'k2' => 'v2', 'k3' => 'v3']);
+        $span->recordEvent(GenericEvent::create('e1', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('e2', new \DateTimeImmutable()));
+        $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
+        $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
+
+        $normalized = $span->normalize();
+
+        self::assertSame(1, $normalized['droppedAttributeCount']);
+        self::assertSame(1, $normalized['droppedEventsCount']);
+        self::assertSame(1, $normalized['droppedLinksCount']);
+    }
+
+    public function test_limits_event_attributes_are_enforced() : void
+    {
+        $limits = new SpanLimits(attributePerEventCountLimit: 2, attributeValueLengthLimit: 10);
+        $span = $this->createSpanWithLimits($limits);
+
+        $event = GenericEvent::create('test.event', new \DateTimeImmutable(), [
+            'key1' => 'short',
+            'key2' => 'this-is-a-very-long-value',
+            'key3' => 'dropped',
+        ]);
+        $span->recordEvent($event);
+
+        $recordedEvent = $span->events()[0];
+        $attrs = $recordedEvent->attributes();
+        self::assertCount(2, $attrs);
+        self::assertSame('short', $attrs['key1']);
+        self::assertSame('this-is-a-', $attrs['key2']);
+        self::assertSame(1, $recordedEvent->droppedAttributeCount());
+    }
+
+    public function test_limits_event_count_drops_excess_events() : void
+    {
+        $limits = new SpanLimits(eventCountLimit: 2);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->recordEvent(GenericEvent::create('event1', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event2', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event3', new \DateTimeImmutable()));
+
+        self::assertCount(2, $span->events());
+        self::assertSame(1, $span->droppedEventsCount());
+        self::assertSame('event1', $span->events()[0]->name());
+        self::assertSame('event2', $span->events()[1]->name());
+    }
+
+    public function test_limits_link_attributes_are_enforced() : void
+    {
+        $limits = new SpanLimits(attributePerLinkCountLimit: 2, attributeValueLengthLimit: 10);
+        $span = $this->createSpanWithLimits($limits);
+
+        $link = SpanLink::create(
+            SpanContext::create(TraceId::generate(), SpanId::generate()),
+            [
+                'key1' => 'short',
+                'key2' => 'this-is-a-very-long-value',
+                'key3' => 'dropped',
+            ],
+        );
+        $span->addLink($link);
+
+        $recordedLink = $span->links()[0];
+        $attrs = $recordedLink->attributes->normalize();
+        self::assertCount(2, $attrs);
+        self::assertSame('short', $attrs['key1']);
+        self::assertSame('this-is-a-', $attrs['key2']);
+        self::assertSame(1, $recordedLink->droppedAttributeCount);
+    }
+
+    public function test_limits_link_count_drops_excess_links() : void
+    {
+        $limits = new SpanLimits(linkCountLimit: 2);
+        $span = $this->createSpanWithLimits($limits);
+
+        $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
+        $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
+        $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
+
+        self::assertCount(2, $span->links());
+        self::assertSame(1, $span->droppedLinksCount());
     }
 
     public function test_links_returns_empty_array_initially() : void
@@ -441,6 +604,20 @@ final class SpanTest extends TestCase
             new \DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
+        );
+    }
+
+    private function createSpanWithLimits(SpanLimits $limits, string $name = 'test-span') : Span
+    {
+        return new Span(
+            $name,
+            SpanContext::create(TraceId::generate(), SpanId::generate()),
+            SpanKind::INTERNAL,
+            new \DateTimeImmutable(),
+            ResourceMother::default(),
+            new InstrumentationScope('test', '1.0.0'),
+            true,
+            $limits,
         );
     }
 }

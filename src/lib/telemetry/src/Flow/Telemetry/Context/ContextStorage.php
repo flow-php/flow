@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Context;
 
 interface ContextStorage
 {
-    public function current() : Context;
+    public function attach(Context $context) : Scope;
 
-    public function store(Context $context) : void;
+    public function current() : Context;
 }

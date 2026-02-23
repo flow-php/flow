@@ -4,38 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Telemetry;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options, native_local_filesystem, path};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryAttributes, FilesystemTelemetryOptions, TraceableFilesystem};
-use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Telemetry;
+use function Flow\Filesystem\DSL\{filesystem_telemetry_options, native_local_filesystem, path};
+use function Flow\Telemetry\DSL\{memory_metric_processor, memory_span_processor, void_metric_exporter, void_span_exporter};
+use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
+use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
 final class TraceableFilesystemIntegrationTest extends TestCase
 {
-    private string $testDir;
-
-    protected function setUp() : void
-    {
-        $this->testDir = __DIR__ . '/var';
-
-        if (!\file_exists($this->testDir)) {
-            \mkdir($this->testDir, 0777, true);
-        }
-    }
-
     protected function tearDown() : void
     {
-        $this->removeDirectory($this->testDir);
+        $testDir = path(__DIR__ . '/var');
+        $localFs = native_local_filesystem();
+
+        if ($localFs->status($testDir) !== null) {
+            $localFs->rm($testDir);
+        }
     }
 
     public function test_complete_read_write_workflow_produces_lifecycle_spans() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/test_file.txt');
+        $testFile = path(__DIR__ . '/var/test_file.txt');
         $content = 'Hello, World!';
 
         $writeStream = $fs->writeTo($testFile);
@@ -51,8 +43,8 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         $spanNames = \array_map(static fn ($span) => $span->name(), $spans);
 
-        self::assertContains('DestinationStream', $spanNames);
-        self::assertContains('SourceStream', $spanNames);
+        self::assertContains('Write test_file.txt', $spanNames);
+        self::assertContains('Read test_file.txt', $spanNames);
         self::assertCount(2, $spans);
 
         foreach ($spans as $span) {
@@ -60,21 +52,21 @@ final class TraceableFilesystemIntegrationTest extends TestCase
             self::assertTrue($span->status()->isOk());
         }
 
-        $destinationSpan = $this->findSpanByName($spans, 'DestinationStream');
-        self::assertNotNull($destinationSpan);
-        self::assertSame(\strlen($content), $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
+        $destinationSpans = \array_values(\array_filter($spans, static fn ($span) => $span->name() === 'Write test_file.txt'));
+        self::assertCount(1, $destinationSpans);
+        self::assertSame(\strlen($content), $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
 
-        $sourceSpan = $this->findSpanByName($spans, 'SourceStream');
-        self::assertNotNull($sourceSpan);
-        self::assertSame(\strlen($content), $sourceSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
+        $sourceSpans = \array_values(\array_filter($spans, static fn ($span) => $span->name() === 'Read test_file.txt'));
+        self::assertCount(1, $sourceSpans);
+        self::assertSame(\strlen($content), $sourceSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]);
     }
 
     public function test_filesystem_operations_do_not_create_spans() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/no_fs_trace.txt');
+        $testFile = path(__DIR__ . '/var/no_fs_trace.txt');
 
         $fs->writeTo($testFile)->append('content')->close();
         $spanProcessor->reset();
@@ -88,16 +80,16 @@ final class TraceableFilesystemIntegrationTest extends TestCase
     public function test_from_resource_tracks_bytes_in_lifecycle_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $sourceFile = __DIR__ . '/../Fixtures/orders.csv';
+        $sourceFilePath = __DIR__ . '/../Fixtures/orders.csv';
 
-        if (!\file_exists($sourceFile)) {
+        if (native_local_filesystem()->status(path($sourceFilePath)) === null) {
             self::markTestSkipped('Test fixture file not found');
         }
 
-        $testFile = path($this->testDir . '/from_resource_test.txt');
-        $resource = \fopen($sourceFile, 'rb');
+        $testFile = path(__DIR__ . '/var/from_resource_test.txt');
+        $resource = \fopen($sourceFilePath, 'rb');
         self::assertIsResource($resource);
 
         $writeStream = $fs->writeTo($testFile);
@@ -107,20 +99,20 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         \fclose($resource);
 
         $spans = $spanProcessor->endedSpans();
-        $destinationSpan = $this->findSpanByName($spans, 'DestinationStream');
+        $destinationSpans = \array_values(\array_filter($spans, static fn ($span) => $span->name() === 'Write from_resource_test.txt'));
 
-        self::assertNotNull($destinationSpan);
-        self::assertNotNull($destinationSpan->status());
-        self::assertTrue($destinationSpan->status()->isOk());
-        self::assertSame('destination', $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
+        self::assertCount(1, $destinationSpans);
+        self::assertNotNull($destinationSpans[0]->status());
+        self::assertTrue($destinationSpans[0]->status()->isOk());
+        self::assertSame('destination', $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
     }
 
     public function test_iterate_tracks_total_bytes_in_lifecycle_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/iterate_test.txt');
+        $testFile = path(__DIR__ . '/var/iterate_test.txt');
         $content = "Line 1\nLine 2\nLine 3";
 
         $fs->writeTo($testFile)->append($content)->close();
@@ -137,25 +129,27 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         self::assertSame($content, \implode('', $chunks));
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpan = $this->findSpanByName($spans, 'SourceStream');
+        $sourceSpans = \array_values(\array_filter($spans, static fn ($span) => $span->name() === 'Read iterate_test.txt'));
 
-        self::assertNotNull($sourceSpan);
+        self::assertCount(1, $sourceSpans);
         self::assertSame(
             \strlen($content),
-            $sourceSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]
+            $sourceSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ]
         );
     }
 
     public function test_list_operation_does_not_create_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $fs->writeTo(path($this->testDir . '/file1.txt'))->append('content1')->close();
-        $fs->writeTo(path($this->testDir . '/file2.txt'))->append('content2')->close();
+        $testDir = __DIR__ . '/var';
+
+        $fs->writeTo(path($testDir . '/file1.txt'))->append('content1')->close();
+        $fs->writeTo(path($testDir . '/file2.txt'))->append('content2')->close();
         $spanProcessor->reset();
 
-        $files = \iterator_to_array($fs->list(path($this->testDir . '/*.txt')));
+        $files = \iterator_to_array($fs->list(path($testDir . '/*.txt')));
 
         self::assertCount(2, $files);
 
@@ -167,9 +161,9 @@ final class TraceableFilesystemIntegrationTest extends TestCase
     {
         $metricProcessor = memory_metric_processor(void_metric_exporter());
         $spanProcessor = memory_span_processor(void_span_exporter());
-        [$fs, $telemetry] = $this->createTraceableFilesystemWithTelemetry($spanProcessor, null, $metricProcessor);
+        [$fs, $telemetry] = FilesystemTelemetryConfigMother::createTraceableFilesystemWithTelemetry($spanProcessor, null, $metricProcessor);
 
-        $testFile = path($this->testDir . '/metrics_test.txt');
+        $testFile = path(__DIR__ . '/var/metrics_test.txt');
         $content = 'Test content for metrics';
 
         $writeStream = $fs->writeTo($testFile);
@@ -186,18 +180,18 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $metrics = $metricProcessor->metrics();
         $metricNames = \array_map(static fn ($m) => $m->name, $metrics);
 
-        self::assertContains('filesystem.destination.bytes_written', $metricNames);
-        self::assertContains('filesystem.destination.operations', $metricNames);
-        self::assertContains('filesystem.source.bytes_read', $metricNames);
-        self::assertContains('filesystem.source.operations', $metricNames);
+        self::assertContains('write_size', $metricNames);
+        self::assertContains('write_operations', $metricNames);
+        self::assertContains('read_size', $metricNames);
+        self::assertContains('read_operations', $metricNames);
     }
 
     public function test_multiple_appends_create_single_span_with_cumulative_metrics() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/multiple_appends.txt');
+        $testFile = path(__DIR__ . '/var/multiple_appends.txt');
         $chunk = 'data chunk;';
 
         $writeStream = $fs->writeTo($testFile);
@@ -212,17 +206,18 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         self::assertCount(1, $spans);
 
         $destinationSpan = $spans[0];
-        self::assertSame('DestinationStream', $destinationSpan->name());
+        self::assertSame('Write multiple_appends.txt', $destinationSpan->name());
         self::assertSame(\strlen($chunk) * 10, $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN]);
     }
 
     public function test_mv_operation_does_not_create_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $sourceFile = path($this->testDir . '/source.txt');
-        $destFile = path($this->testDir . '/dest.txt');
+        $testDir = __DIR__ . '/var';
+        $sourceFile = path($testDir . '/source.txt');
+        $destFile = path($testDir . '/dest.txt');
 
         $fs->writeTo($sourceFile)->append('content')->close();
         $spanProcessor->reset();
@@ -238,9 +233,9 @@ final class TraceableFilesystemIntegrationTest extends TestCase
     public function test_read_lines_tracks_bytes_in_lifecycle_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/lines_test.txt');
+        $testFile = path(__DIR__ . '/var/lines_test.txt');
         $content = "Line 1\nLine 2\nLine 3";
 
         $fs->writeTo($testFile)->append($content)->close();
@@ -253,19 +248,19 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         self::assertCount(3, $lines);
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpan = $this->findSpanByName($spans, 'SourceStream');
+        $sourceSpans = \array_values(\array_filter($spans, static fn ($span) => $span->name() === 'Read lines_test.txt'));
 
-        self::assertNotNull($sourceSpan);
-        self::assertNotNull($sourceSpan->status());
-        self::assertTrue($sourceSpan->status()->isOk());
+        self::assertCount(1, $sourceSpans);
+        self::assertNotNull($sourceSpans[0]->status());
+        self::assertTrue($sourceSpans[0]->status()->isOk());
     }
 
     public function test_rm_operation_does_not_create_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/to_remove.txt');
+        $testFile = path(__DIR__ . '/var/to_remove.txt');
         $fs->writeTo($testFile)->append('content')->close();
         $spanProcessor->reset();
 
@@ -280,9 +275,9 @@ final class TraceableFilesystemIntegrationTest extends TestCase
     public function test_status_operation_does_not_create_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor);
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
-        $testFile = path($this->testDir . '/status_test.txt');
+        $testFile = path(__DIR__ . '/var/status_test.txt');
         $fs->writeTo($testFile)->append('content')->close();
         $spanProcessor->reset();
 
@@ -298,11 +293,11 @@ final class TraceableFilesystemIntegrationTest extends TestCase
     public function test_stream_lifecycle_tracing_can_be_disabled() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
-        $fs = $this->createTraceableFilesystem($spanProcessor, filesystem_telemetry_options(
+        $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor, filesystem_telemetry_options(
             traceStreams: false,
         ));
 
-        $testFile = path($this->testDir . '/no_stream_trace.txt');
+        $testFile = path(__DIR__ . '/var/no_stream_trace.txt');
 
         $writeStream = $fs->writeTo($testFile);
         $writeStream->append('content');
@@ -311,75 +306,5 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spans = $spanProcessor->endedSpans();
 
         self::assertCount(0, $spans);
-    }
-
-    private function createTraceableFilesystem(
-        MemorySpanProcessor $spanProcessor,
-        ?FilesystemTelemetryOptions $options = null,
-        ?MemoryMetricProcessor $metricProcessor = null,
-        ?MemoryLogProcessor $logProcessor = null,
-    ) : TraceableFilesystem {
-        [$fs] = $this->createTraceableFilesystemWithTelemetry($spanProcessor, $options, $metricProcessor, $logProcessor);
-
-        return $fs;
-    }
-
-    /**
-     * @return array{0: TraceableFilesystem, 1: Telemetry}
-     */
-    private function createTraceableFilesystemWithTelemetry(
-        MemorySpanProcessor $spanProcessor,
-        ?FilesystemTelemetryOptions $options = null,
-        ?MemoryMetricProcessor $metricProcessor = null,
-        ?MemoryLogProcessor $logProcessor = null,
-    ) : array {
-        $clock = new SystemClock();
-        $contextStorage = memory_context_storage();
-
-        $tel = telemetry(
-            resource(),
-            tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider($metricProcessor ?? memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider($logProcessor ?? memory_log_processor(void_log_exporter()), $clock, $contextStorage),
-        );
-
-        $config = filesystem_telemetry_config($tel, $clock, $options ?? filesystem_telemetry_options());
-
-        return [new TraceableFilesystem(native_local_filesystem(), $config), $tel];
-    }
-
-    /**
-     * @param array<\Flow\Telemetry\Tracer\Span> $spans
-     */
-    private function findSpanByName(array $spans, string $name) : ?\Flow\Telemetry\Tracer\Span
-    {
-        foreach ($spans as $span) {
-            if ($span->name() === $name) {
-                return $span;
-            }
-        }
-
-        return null;
-    }
-
-    private function removeDirectory(string $dir) : void
-    {
-        if (!\file_exists($dir)) {
-            return;
-        }
-
-        $files = \array_diff(\scandir($dir), ['.', '..']);
-
-        foreach ($files as $file) {
-            $path = $dir . '/' . $file;
-
-            if (\is_dir($path)) {
-                $this->removeDirectory($path);
-            } else {
-                \unlink($path);
-            }
-        }
-
-        \rmdir($dir);
     }
 }

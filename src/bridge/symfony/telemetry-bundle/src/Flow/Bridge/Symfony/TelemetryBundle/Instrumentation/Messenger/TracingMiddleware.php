@@ -47,9 +47,10 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
         $attributes = [
             'messaging.system' => 'symfony_messenger',
-            'messaging.destination' => $busName,
+            'messaging.destination.name' => $busName,
             'messaging.message.class' => $messageClass,
-            'messaging.operation' => $operation,
+            'messaging.operation.type' => $operation,
+            'messaging.operation.name' => $messageClass,
         ];
 
         if ($receivedStamp instanceof ReceivedStamp) {
@@ -104,7 +105,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                 $context = $context->withBaggage($propagationContext->baggage);
             }
 
-            $this->contextStorage->store($context);
+            $this->contextStorage->attach($context);
         }
     }
 

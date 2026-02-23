@@ -7,25 +7,17 @@ namespace Flow\Telemetry\Tests\Unit\Meter;
 use Flow\Telemetry\Meter\{Meter, MeterProvider};
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Void\VoidMetricExporter;
-use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class MemoryMeterProviderTest extends TestCase
 {
-    private Resource $resource;
-
-    protected function setUp() : void
-    {
-        $this->resource = ResourceMother::default();
-    }
-
     public function test_creates_new_meter_each_time() : void
     {
         $provider = new MeterProvider($this->createProcessor(), ClockMother::frozen());
 
-        $meter1 = $provider->meter($this->resource, 'test', '1.0.0');
-        $meter2 = $provider->meter($this->resource, 'test', '1.0.0');
+        $meter1 = $provider->meter(ResourceMother::default(), 'test', '1.0.0');
+        $meter2 = $provider->meter(ResourceMother::default(), 'test', '1.0.0');
 
         self::assertNotSame($meter1, $meter2);
         self::assertSame($meter1->name(), $meter2->name());
@@ -37,14 +29,11 @@ final class MemoryMeterProviderTest extends TestCase
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, ClockMother::frozen());
 
-        $meter = $provider->meter($this->resource, 'test');
+        $meter = $provider->meter(ResourceMother::default(), 'test');
         $counter = $meter->createCounter('requests.total');
         $counter->add(5);
 
-        foreach ($meter->collect() as $metric) {
-            $meter->processor()->process($metric);
-        }
-        $processor->flush();
+        $meter->flush();
 
         self::assertCount(1, $processor->metrics());
         self::assertSame('requests.total', $processor->metrics()[0]->name);
@@ -55,7 +44,7 @@ final class MemoryMeterProviderTest extends TestCase
     {
         self::assertInstanceOf(
             Meter::class,
-            (new MeterProvider($this->createProcessor(), ClockMother::frozen()))->meter($this->resource, 'test-lib', '1.0.0')
+            (new MeterProvider($this->createProcessor(), ClockMother::frozen()))->meter(ResourceMother::default(), 'test-lib', '1.0.0')
         );
     }
 
@@ -64,7 +53,7 @@ final class MemoryMeterProviderTest extends TestCase
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, ClockMother::frozen());
 
-        $meter = $provider->meter($this->resource, 'test');
+        $meter = $provider->meter(ResourceMother::default(), 'test');
         $counter = $meter->createCounter('requests.total');
         $counter->add(5);
 
@@ -82,7 +71,7 @@ final class MemoryMeterProviderTest extends TestCase
     {
         $provider = new MeterProvider($this->createProcessor(), ClockMother::frozen());
 
-        $meter = $provider->meter($this->resource, 'test');
+        $meter = $provider->meter(ResourceMother::default(), 'test');
         self::assertSame('unknown', $meter->version());
     }
 

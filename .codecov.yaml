@@ -43,6 +43,18 @@ component_management:
       name: lib-snappy
       paths:
         - src/lib/snappy/**
+    - component_id: lib-dremel
+      name: lib-dremel
+      paths:
+        - src/lib/dremel/**
+    - component_id: lib-postgresql
+      name: lib-postgresql
+      paths:
+        - src/lib/postgresql/**
+    - component_id: lib-telemetry
+      name: lib-telemetry
+      paths:
+        - src/lib/telemetry/**
     - component_id: bridge-filesystem-async-aws
       name: bridge-filesystem-async-aws
       paths:
@@ -63,6 +75,26 @@ component_management:
       name: symfony-http-foundation
       paths:
         - src/bridge/symfony/http-foundation/**
+    - component_id: bridge-psr18-telemetry
+      name: bridge-psr18-telemetry
+      paths:
+        - src/bridge/psr18/telemetry/**
+    - component_id: bridge-psr7-telemetry
+      name: bridge-psr7-telemetry
+      paths:
+        - src/bridge/psr7/telemetry/**
+    - component_id: bridge-telemetry-otlp
+      name: bridge-telemetry-otlp
+      paths:
+        - src/bridge/telemetry/otlp/**
+    - component_id: bridge-symfony-http-foundation-telemetry
+      name: bridge-symfony-http-foundation-telemetry
+      paths:
+        - src/bridge/symfony/http-foundation-telemetry/**
+    - component_id: bridge-symfony-telemetry-bundle
+      name: bridge-symfony-telemetry-bundle
+      paths:
+        - src/bridge/symfony/telemetry-bundle/**
     - component_id: adapter-chartjs
       name: adapter-chartjs
       paths:
@@ -111,3 +143,15 @@ component_management:
       name: adapter-xml
       paths:
         - src/adapter/etl-adapter-xml/**
+    - component_id: adapter-avro
+      name: adapter-avro
+      paths:
+        - src/adapter/etl-adapter-avro/**
+    - component_id: adapter-excel
+      name: adapter-excel
+      paths:
+        - src/adapter/etl-adapter-excel/**
+    - component_id: adapter-postgresql
+      name: adapter-postgresql
+      paths:
+        - src/adapter/etl-adapter-postgresql/**

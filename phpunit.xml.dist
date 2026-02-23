@@ -20,8 +20,7 @@
         <env name="S3_BUCKET" value="flowphpbucket01"/>
         <env name="REDIS_HOST" value="localhost"/>
         <env name="REDIS_PORT" value="6379"/>
-        <env name="PGSQL_DATABASE_URL"
-             value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
+        <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
         <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
         <env name="SQLITE_DATABASE_PATH" value="./var/db/sqlite/test.db"/>
         <env name="ELASTICSEARCH_URL" value="localhost:9200"/>
@@ -29,6 +28,9 @@
         <env name="MEILISEARCH_API_KEY" value="masterKey"/>
         <env name="OTEL_COLLECTOR_HTTP_ENDPOINT" value="http://localhost:4318"/>
         <env name="OTEL_COLLECTOR_OUTPUT_DIR" value="./var/otel"/>
+        <env name="OTEL_RECEIVER_HTTP_ENDPOINT" value="http://localhost:4318"/>
+        <env name="OTEL_RECEIVER_GRPC_ENDPOINT" value="localhost:4317"/>
+        <env name="OTEL_COLLECTOR_METRICS_ENDPOINT" value="http://localhost:8888/metrics"/>
         <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
         <env name="FLOW_PARQUET_TESTS_DEBUG" value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
     </php>
@@ -225,6 +227,9 @@
         <testsuite name="adapter-xml-integration">
             <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="tool-phpunit-telemetry-unit">
+            <directory>tools/phpunit/extension/telemetry/tests/Flow/Tool/PHPUnit/Telemetry/Tests/Unit</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -270,4 +275,14 @@
             <file>src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php</file>
         </exclude>
     </source>
+    <extensions>
+        <bootstrap class="Flow\Tool\PHPUnit\Telemetry\TelemetryExtension">
+            <parameter name="service_name" value="flow-php-test-suite"/>
+            <parameter name="otel_collector_url" value="http://localhost:4318"/>
+            <parameter name="emit_traces" value="true"/>
+            <parameter name="emit_metrics" value="true"/>
+            <parameter name="emit_test_spans" value="false"/>
+            <parameter name="emit_test_case_spans" value="false"/>
+        </bootstrap>
+    </extensions>
 </phpunit>

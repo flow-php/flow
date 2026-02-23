@@ -62,8 +62,6 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         if (\is_string($route)) {
             $span->setAttribute('http.route', $route);
-            $method = $request->getMethod();
-            $span->rename("{$method} {$route}");
         }
 
         $controller = $event->getController();
@@ -107,11 +105,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             "{$method} {$path}",
             $kind,
             [
-                'http.method' => $method,
-                'http.url' => $request->getUri(),
-                'http.target' => $request->getRequestUri(),
-                'http.scheme' => $request->getScheme(),
-                'http.host' => $request->getHost(),
+                'http.request.method' => $method,
+                'url.full' => $request->getUri(),
+                'url.path' => $request->getRequestUri(),
+                'url.scheme' => $request->getScheme(),
+                'server.address' => $request->getHost(),
             ],
         );
 
@@ -131,7 +129,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $response = $event->getResponse();
         $statusCode = $response->getStatusCode();
 
-        $span->setAttribute('http.status_code', $statusCode);
+        $span->setAttribute('http.response.status_code', $statusCode);
 
         if ($statusCode >= 400) {
             $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
@@ -177,7 +175,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
                 $context = $context->withBaggage($propagationContext->baggage);
             }
 
-            $this->contextStorage->store($context);
+            $this->contextStorage->attach($context);
         }
     }
 

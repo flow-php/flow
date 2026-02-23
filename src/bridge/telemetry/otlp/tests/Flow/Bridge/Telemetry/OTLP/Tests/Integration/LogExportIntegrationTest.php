@@ -40,7 +40,7 @@ final class LogExportIntegrationTest extends IntegrationTestCase
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
 
         $telemetry = $this->otelContext->createTelemetry($config, Resource::create([
-            'service.name' => 'log-test-service',
+            'service.name' => 'flow-php-otlp-bridge-tests',
             'service.version' => '3.0.0',
             'deployment.environment' => 'integration-test',
         ]));

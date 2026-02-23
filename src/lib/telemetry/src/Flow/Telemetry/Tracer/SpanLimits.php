@@ -63,7 +63,7 @@ final readonly class SpanLimits
     /**
      * Create SpanLimits with unlimited values (for development/debugging).
      */
-    public static function unlimited() : self
+    public function unlimited() : self
     {
         return new self(
             attributeCountLimit: PHP_INT_MAX,

@@ -32,7 +32,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('unknown', $spans[0]->attributes()['http.host']);
+        self::assertSame('unknown', $spans[0]->attributes()['server.address']);
     }
 
     public function test_request_defaults_scheme_to_http_when_missing() : void
@@ -47,7 +47,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('http', $spans[0]->attributes()['http.scheme']);
+        self::assertSame('http', $spans[0]->attributes()['url.scheme']);
     }
 
     public function test_request_extracts_host_from_url() : void
@@ -62,7 +62,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('api.example.com', $spans[0]->attributes()['http.host']);
+        self::assertSame('api.example.com', $spans[0]->attributes()['server.address']);
     }
 
     public function test_request_extracts_scheme_from_url() : void
@@ -126,7 +126,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
-        self::assertSame('https', $spans[0]->attributes()['http.scheme']);
+        self::assertSame('https', $spans[0]->attributes()['url.scheme']);
     }
 
     public function test_request_includes_client_name_attribute() : void
@@ -156,7 +156,7 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame(200, $spans[0]->attributes()['http.status_code']);
+        static::assertSame(200, $spans[0]->attributes()['http.response.status_code']);
     }
 
     public function test_request_includes_method_and_url_attributes() : void
@@ -171,8 +171,8 @@ final class TracableHttpClientTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertSame('POST', $spans[0]->attributes()['http.method']);
-        static::assertSame('https://api.example.com/users', $spans[0]->attributes()['http.url']);
+        static::assertSame('POST', $spans[0]->attributes()['http.request.method']);
+        static::assertSame('https://api.example.com/users', $spans[0]->attributes()['url.full']);
     }
 
     public function test_request_records_exception_on_failure() : void

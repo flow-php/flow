@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_log_exporter, otlp_metric_exporter, otlp_span_exporter};
-use function Flow\Telemetry\DSL\{batching_log_processor, batching_metric_processor, batching_span_processor, logger_provider, meter_provider, telemetry, tracer_provider};
+use function Flow\Telemetry\DSL\{batching_log_processor, batching_metric_processor, batching_span_processor, logger_provider, meter_provider, resource, telemetry, tracer_provider};
 use Flow\Bridge\Telemetry\OTLP\Tests\Integration\CollectorMetrics;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Provider\Clock\SystemClock;
@@ -40,10 +40,24 @@ final class OtelContext
         $this->httpClient = new Psr18Client();
         $this->psr17Factory = new Psr17Factory();
 
-        $this->httpEndpoint = \getenv('OTEL_RECEIVER_HTTP_ENDPOINT') ?: 'http://localhost:4318';
-        $this->grpcEndpoint = \getenv('OTEL_RECEIVER_GRPC_ENDPOINT') ?: 'localhost:4317';
+        $httpEndpoint = \getenv('OTEL_RECEIVER_HTTP_ENDPOINT');
+        $grpcEndpoint = \getenv('OTEL_RECEIVER_GRPC_ENDPOINT');
+        $metricsEndpoint = \getenv('OTEL_COLLECTOR_METRICS_ENDPOINT');
 
-        $metricsEndpoint = \getenv('OTEL_COLLECTOR_METRICS_ENDPOINT') ?: 'http://localhost:8888/metrics';
+        if ($httpEndpoint === false) {
+            throw new \RuntimeException('Missing required environment variable: OTEL_RECEIVER_HTTP_ENDPOINT');
+        }
+
+        if ($grpcEndpoint === false) {
+            throw new \RuntimeException('Missing required environment variable: OTEL_RECEIVER_GRPC_ENDPOINT');
+        }
+
+        if ($metricsEndpoint === false) {
+            throw new \RuntimeException('Missing required environment variable: OTEL_COLLECTOR_METRICS_ENDPOINT');
+        }
+
+        $this->httpEndpoint = $httpEndpoint;
+        $this->grpcEndpoint = $grpcEndpoint;
 
         $this->collectorMetrics = new CollectorMetrics(
             $this->httpClient,
@@ -83,7 +97,11 @@ final class OtelContext
      */
     public function createTelemetry(TransportConfiguration $config, ?Resource $resource = null) : Telemetry
     {
-        $resource ??= Resource::empty();
+        $resource ??= resource([
+            'service.name' => 'flow-php-otlp-bridge-tests',
+            'service.namespace' => 'flow-php',
+            'deployment.environment' => 'test',
+        ]);
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
         $batchSize = 1;

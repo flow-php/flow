@@ -26,6 +26,7 @@ final readonly class GenericEvent implements SpanEvent
         private string $name,
         private \DateTimeImmutable $timestamp,
         private Attributes $attributesObject = new Attributes(),
+        private int $droppedAttributeCount = 0,
     ) {
     }
 
@@ -35,16 +36,17 @@ final readonly class GenericEvent implements SpanEvent
      * @param string $name Event name
      * @param \DateTimeImmutable $timestamp Event timestamp
      * @param Attributes|TAttributeValueMap $attributes Event attributes
+     * @param int $droppedAttributeCount Number of attributes dropped due to limits
      */
-    public static function create(string $name, \DateTimeImmutable $timestamp, Attributes|array $attributes = []) : self
+    public static function create(string $name, \DateTimeImmutable $timestamp, Attributes|array $attributes = [], int $droppedAttributeCount = 0) : self
     {
-        return new self($name, $timestamp, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes));
+        return new self($name, $timestamp, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes), $droppedAttributeCount);
     }
 
     /**
      * Create a GenericEvent from a normalized array representation.
      *
-     * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized event data
+     * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int} $data Normalized event data
      */
     public static function fromArray(array $data) : self
     {
@@ -52,6 +54,7 @@ final readonly class GenericEvent implements SpanEvent
             $data['name'],
             new \DateTimeImmutable($data['timestamp']),
             Attributes::fromArray($data['attributes']),
+            $data['droppedAttributeCount'] ?? 0,
         );
     }
 
@@ -68,6 +71,11 @@ final readonly class GenericEvent implements SpanEvent
         return $this->attributesObject;
     }
 
+    public function droppedAttributeCount() : int
+    {
+        return $this->droppedAttributeCount;
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -76,7 +84,7 @@ final readonly class GenericEvent implements SpanEvent
     /**
      * Normalize the GenericEvent to an array representation for serialization.
      *
-     * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
+     * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}
      */
     public function normalize() : array
     {
@@ -84,6 +92,7 @@ final readonly class GenericEvent implements SpanEvent
             'name' => $this->name,
             'timestamp' => $this->timestamp->format('c'),
             'attributes' => $this->attributesObject->normalize(),
+            'droppedAttributeCount' => $this->droppedAttributeCount,
         ];
     }
 

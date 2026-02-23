@@ -1,2 +1,3 @@
-otel-collector-dev-config.yaml
+otel-collector-*-config.yaml
+!otel-collector-test-config.yaml
 signoz/

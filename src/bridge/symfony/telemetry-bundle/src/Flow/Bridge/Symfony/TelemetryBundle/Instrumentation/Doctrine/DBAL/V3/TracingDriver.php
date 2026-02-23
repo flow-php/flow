@@ -40,7 +40,7 @@ final class TracingDriver extends AbstractDriverMiddleware
             'doctrine.dbal.connection',
             SpanKind::CLIENT,
             [
-                'db.system' => $this->getSemanticDbSystem(),
+                'db.system.name' => $this->getSemanticDbSystem(),
                 'db.namespace' => $params['dbname'] ?? 'default',
                 'db.connection.name' => $this->connectionName,
             ]

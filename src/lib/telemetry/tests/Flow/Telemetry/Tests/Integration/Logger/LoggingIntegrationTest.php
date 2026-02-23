@@ -141,7 +141,7 @@ final class LoggingIntegrationTest extends TestCase
 
         $contextStorage = new MemoryContextStorage();
         $context = Context::withTraceId($traceId)->withActiveSpan($spanId);
-        $contextStorage->store($context);
+        $contextStorage->attach($context);
 
         $processor = $this->createProcessor();
         $provider = new LoggerProvider($processor, $this->clock, $contextStorage);

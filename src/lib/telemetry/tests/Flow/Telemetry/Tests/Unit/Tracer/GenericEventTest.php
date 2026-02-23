@@ -93,6 +93,7 @@ final class GenericEventTest extends TestCase
             'name' => 'test.event',
             'timestamp' => '2024-01-01T12:00:00+00:00',
             'attributes' => ['key' => 'value'],
+            'droppedAttributeCount' => 0,
         ], $event->normalize());
     }
 

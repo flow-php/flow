@@ -40,6 +40,7 @@ final readonly class MeterProvider
         private ClockInterface $clock = new SystemClock(),
         private AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         private ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
+        private MetricLimits $limits = new MetricLimits(),
     ) {
     }
 
@@ -64,6 +65,7 @@ final readonly class MeterProvider
             $this->clock,
             $this->temporality,
             $this->exemplarFilter,
+            $this->limits,
         );
     }
 }

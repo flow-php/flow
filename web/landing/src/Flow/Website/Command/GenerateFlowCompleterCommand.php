@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\{df, lit, ref};
+use function Flow\Filesystem\DSL\path;
+use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,6 +24,7 @@ final class GenerateFlowCompleterCommand extends Command
     public function __construct(
         private readonly Environment $twig,
         private readonly string $projectDir,
+        private readonly FlowConfigFactory $configFactory,
     ) {
         parent::__construct();
     }
@@ -33,51 +38,44 @@ final class GenerateFlowCompleterCommand extends Command
         $apiJsonPath = $this->projectDir . '/../../web/landing/resources/api.json';
         $dslJsonPath = $this->projectDir . '/../../web/landing/resources/dsl.json';
 
-        if (!\file_exists($apiJsonPath)) {
+        $fs = $this->configFactory->filesystem();
+
+        if ($fs->status(path($apiJsonPath)) === null) {
             $io->error("API JSON file not found: {$apiJsonPath}");
 
             return Command::FAILURE;
         }
 
-        if (!\file_exists($dslJsonPath)) {
+        if ($fs->status(path($dslJsonPath)) === null) {
             $io->error("DSL JSON file not found: {$dslJsonPath}");
 
             return Command::FAILURE;
         }
 
-        $apiMethods = \json_decode(\file_get_contents($apiJsonPath), true, 512, JSON_THROW_ON_ERROR);
-        $dslFunctions = \json_decode(\file_get_contents($dslJsonPath), true, 512, JSON_THROW_ON_ERROR);
+        $flowReturningFunctions = df($this->configFactory->configBuilder('flow_completer'))
+            ->read(from_json($dslJsonPath))
+            ->collect()
+            ->filter(ref('return_type')->isNotNull())
+            ->withEntry('has_flow_return', ref('return_type')->onEach(
+                ref('element')->arrayGet('name')->equals(lit('Flow'))
+                    ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL')))
+            )->arrayKeep(true)->size()->greaterThan(lit(0)))
+            ->filter(ref('has_flow_return')->equals(lit(true)))
+            ->fetch()
+            ->reduceToArray('name');
 
-        if (!\is_array($apiMethods)) {
-            $io->error('Invalid API JSON structure');
-
-            return Command::FAILURE;
-        }
-
-        if (!\is_array($dslFunctions)) {
-            $io->error('Invalid DSL JSON structure');
-
-            return Command::FAILURE;
-        }
-
-        // Extract DSL functions that return Flow (df, data_frame)
-        $flowReturningFunctions = $this->extractFlowReturningFunctions($dslFunctions);
         $io->info(\sprintf('Found %d DSL functions returning Flow', \count($flowReturningFunctions)));
 
-        // Filter only Flow methods
-        $flowMethods = \array_filter(
-            $apiMethods,
-            static fn (array $method) : bool => $method['class_slug'] === 'flow'
-        );
+        $methodsData = df($this->configFactory->configBuilder('flow_completer'))
+            ->read(from_json($apiJsonPath))
+            ->collect()
+            ->filter(ref('class_slug')->equals(lit('flow')))
+            ->select('name', 'class', 'class_slug', 'parameters', 'return_type', 'doc_comment')
+            ->fetch()
+            ->toArray();
 
-        $io->info(\sprintf('Found %d Flow methods', \count($flowMethods)));
+        $io->info(\sprintf('Found %d Flow methods', \count($methodsData)));
 
-        $methodsData = \array_map(
-            fn (array $method) : array => $this->buildMethodData($method),
-            $flowMethods
-        );
-
-        // Generate CodeMirror completer
         $codeMirrorContent = $this->twig->render('completers/flow-codemirror.js.twig', [
             'flow_methods' => $methodsData,
             'flow_functions' => $flowReturningFunctions,
@@ -86,165 +84,13 @@ final class GenerateFlowCompleterCommand extends Command
         ]);
 
         $codeMirrorOutputFile = $this->projectDir . '/assets/codemirror/completions/flow.js';
-        $codeMirrorOutputDir = \dirname($codeMirrorOutputFile);
 
-        if (!\is_dir($codeMirrorOutputDir)) {
-            \mkdir($codeMirrorOutputDir, 0755, true);
-            $io->info("Created directory: {$codeMirrorOutputDir}");
-        }
-
-        \file_put_contents($codeMirrorOutputFile, $codeMirrorContent);
+        $fs->writeTo(path($codeMirrorOutputFile))->append($codeMirrorContent)->close();
 
         $io->success("Generated Flow completer: {$codeMirrorOutputFile}");
         $io->info('Flow methods: ' . \count($methodsData));
         $io->info('Flow-returning functions: ' . \count($flowReturningFunctions));
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * @param array{name: string, type?: array, has_default_value: bool, default_value?: ?string} $param
-     */
-    private function buildHighlightedParam(array $param) : string
-    {
-        $paramStr = '';
-
-        if (!empty($param['type'])) {
-            $paramStr .= '<span class="fn-type">' . $this->formatType($param['type']) . '</span> ';
-        }
-
-        $paramStr .= '<span class="fn-param">$' . $param['name'] . '</span>';
-
-        if ($param['has_default_value'] && isset($param['default_value'])) {
-            $paramStr .= ' <span class="fn-operator">=</span> <span class="fn-default">' . \htmlspecialchars($param['default_value']) . '</span>';
-        }
-
-        return $paramStr;
-    }
-
-    /**
-     * @param array<string, mixed> $method
-     */
-    private function buildHighlightedSignature(array $method) : string
-    {
-        $params = \array_map(
-            fn (array $param) : string => $this->buildHighlightedParam($param),
-            $method['parameters']
-        );
-
-        $signature = '<span class="fn-name">' . $method['name'] . '</span>'
-            . '<span class="fn-operator">(</span>'
-            . \implode('<span class="fn-operator">,</span> ', $params)
-            . '<span class="fn-operator">)</span>';
-
-        if (!empty($method['return_type'])) {
-            $signature .= ' <span class="fn-operator">:</span> '
-                . '<span class="fn-return">' . $this->formatType($method['return_type']) . '</span>';
-        }
-
-        return $signature;
-    }
-
-    /**
-     * @param array<string, mixed> $method
-     *
-     * @return array<string, mixed>
-     */
-    private function buildMethodData(array $method) : array
-    {
-        return [
-            'name' => $method['name'],
-            'snippet' => $this->buildSnippet($method),
-            'docComment' => $this->formatDocComment($method['doc_comment'] ?? null),
-            'highlightedSignature' => $this->buildHighlightedSignature($method),
-            'meta' => $method['class_slug'],
-            'className' => $method['class'],
-            'parameters' => $method['parameters'],
-            'hasParameters' => !empty($method['parameters']),
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $method
-     */
-    private function buildSnippet(array $method) : string
-    {
-        $params = $method['parameters'];
-        $methodName = $method['name'];
-
-        if (empty($params)) {
-            return $methodName . '()';
-        }
-
-        $snippetParams = [];
-        $tabstop = 1;
-
-        foreach ($params as $param) {
-            $typeHint = !empty($param['type'])
-                ? $this->formatType($param['type']) . ' '
-                : '';
-
-            $snippetParams[] = '${' . $tabstop . ':' . $typeHint . '$' . $param['name'] . '}';
-            $tabstop++;
-        }
-
-        return $methodName . '(' . \implode(', ', $snippetParams) . ')';
-    }
-
-    /**
-     * Extract function names that return Flow from DSL functions.
-     *
-     * @param array<array<string, mixed>> $dslFunctions
-     *
-     * @return array<string>
-     */
-    private function extractFlowReturningFunctions(array $dslFunctions) : array
-    {
-        $flowFunctions = [];
-
-        foreach ($dslFunctions as $function) {
-            if (empty($function['return_type'])) {
-                continue;
-            }
-
-            foreach ($function['return_type'] as $returnType) {
-                // Check if return type is Flow (Flow\ETL\Flow)
-                if ($returnType['name'] === 'Flow' && $returnType['namespace'] === 'Flow\\ETL') {
-                    $flowFunctions[] = $function['name'];
-
-                    break;
-                }
-            }
-        }
-
-        return $flowFunctions;
-    }
-
-    private function formatDocComment(?string $docComment) : string
-    {
-        if ($docComment === null) {
-            return '';
-        }
-
-        $decoded = \base64_decode($docComment, true);
-
-        if ($decoded === false) {
-            return '';
-        }
-
-        $docComment = \preg_replace('/^\/\*\*|\*\/$/', '', $decoded);
-        $lines = \explode("\n", (string) $docComment);
-        $lines = \array_map(static fn (string $line) : string => \preg_replace('/^\s*\*\s?/', '', $line), $lines);
-        $lines = \array_filter($lines, static fn (string $line) : bool => \trim($line) !== '');
-
-        return \implode('<br>', $lines);
-    }
-
-    /**
-     * @param array<array{name: string}> $types
-     */
-    private function formatType(array $types) : string
-    {
-        return \implode('|', \array_map(static fn (array $t) : string => $t['name'], $types));
     }
 }
