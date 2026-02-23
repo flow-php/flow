@@ -30,14 +30,13 @@ final class BatchSizeOptimization implements Optimization
 
     /**
      * We can't use DbalLoader::class here because that would create a circular dependency between ETL and Adapters.
-     * All adapters requires ETL, but ELT does not require a single adapter to be present.
+     * All adapters require ETL, but ELT does not require a single adapter to be present.
      *
      * @var array<class-string<Loader>>
      */
     private array $supportedLoaders = [
         'Flow\ETL\Adapter\Doctrine\DbalLoader',
         'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
-        'Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader',
         'Flow\ETL\Adapter\PostgreSql\PostgreSqlLoader',
     ];
 

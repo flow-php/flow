@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 703
+ * Total functions: 699
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -4113,24 +4113,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },                {
-        label: "from_meilisearch",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_meilisearch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$config</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$params</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MeilisearchExtractor</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array{url: string, apiKey: string} $config<br>@param array{q: string, limit?: ?int, offset?: ?int, attributesToRetrieve?: ?array<string>, sort?: ?array<string>} $params
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\from_meilisearch(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:params" + "}" + ", " + "$" + "{" + "3:index" + "}" + ")"),
-        boost: 10
-    },                {
         label: "from_memory",
         type: "function",
         detail: "flow\u002Ddsl\u002Dextractors",
@@ -5719,24 +5701,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\max(" + "$" + "{" + "1:ref" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "meilisearch_hits_to_rows",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">meilisearch_hits_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HitsIntoRowsTransformer</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Transforms Meilisearch results into clear Flow Rows.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\meilisearch_hits_to_rows()"),
         boost: 10
     },                {
         label: "memory_context_storage",
@@ -10333,42 +10297,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "to_meilisearch_bulk_index",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dloaders",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_meilisearch_bulk_index</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$config</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Loader</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\to_meilisearch_bulk_index(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "to_meilisearch_bulk_update",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dloaders",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_meilisearch_bulk_update</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$config</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Loader</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\to_meilisearch_bulk_update(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
         boost: 10
     },                {
         label: "to_memory",

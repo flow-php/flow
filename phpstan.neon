@@ -18,7 +18,6 @@ parameters:
         - src/adapter/etl-adapter-http/src
         - src/adapter/etl-adapter-json/src
         - src/adapter/etl-adapter-logger/src
-        - src/adapter/etl-adapter-meilisearch/src
         - src/adapter/etl-adapter-parquet/src
         - src/adapter/etl-adapter-text/src
         - src/adapter/etl-adapter-xml/src
@@ -59,7 +58,6 @@ parameters:
         - src/adapter/etl-adapter-http/tests
         - src/adapter/etl-adapter-json/tests
         - src/adapter/etl-adapter-logger/tests
-        - src/adapter/etl-adapter-meilisearch/tests
         - src/adapter/etl-adapter-parquet/tests
         - src/adapter/etl-adapter-text/tests
         - src/adapter/etl-adapter-xml/tests

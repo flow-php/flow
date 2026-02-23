@@ -203,7 +203,6 @@ return RectorConfig::configure()
             new NewObjectToFunction(PsrHttpClientStaticExtractor::class, 'Flow\ETL\Adapter\Http\from_static_http_requests'),
             new NewObjectToFunction(JsonExtractor::class, 'Flow\ETL\Adapter\JSON\from_json'),
             new NewObjectToFunction(JsonLinesExtractor::class, 'Flow\ETL\Adapter\JSON\from_json_lines'),
-            new NewObjectToFunction(MeilisearchExtractor::class, 'Flow\ETL\Adapter\Meilisearch\from_meilisearch'),
             new NewObjectToFunction(ParquetExtractor::class, 'Flow\ETL\Adapter\Parquet\from_parquet'),
             new NewObjectToFunction(TextExtractor::class, 'Flow\ETL\Adapter\Text\from_text'),
             new NewObjectToFunction(XMLParserExtractor::class, 'Flow\ETL\Adapter\XML\from_xml'),

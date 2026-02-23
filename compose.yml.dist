@@ -38,16 +38,6 @@ services:
             - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
         networks:
             - flow-php
-    meilisearch:
-        image: getmeili/meilisearch:latest
-        container_name: flow-php-meilisearch
-        ports:
-            - "7700:7700"
-        environment:
-            - MEILI_MASTER_KEY=masterKey
-            - MEILI_NO_ANALYTICS=true
-        networks:
-            - flow-php
     azurite:
         image: mcr.microsoft.com/azure-storage/azurite
         container_name: flow-php-azurite
@@ -111,5 +101,3 @@ services:
             - redis
         networks:
             - flow-php
-
-
