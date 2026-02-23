@@ -6,6 +6,38 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+  # PostgreSQL metrics receiver
+  # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/postgresqlreceiver
+  postgresql:
+    endpoint: postgres:5432
+    transport: tcp
+    username: postgres
+    password: postgres
+    databases:
+      - postgres
+    collection_interval: 10s
+    tls:
+      insecure: true
+
+  # MySQL metrics receiver
+  # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/mysqlreceiver
+  mysql:
+    endpoint: mysql:3306
+    username: root
+    password: root
+    database: mysql
+    collection_interval: 10s
+    tls:
+      insecure: true
+
+  # Redis metrics receiver
+  # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/redisreceiver
+  redis:
+    endpoint: redis:6379
+    collection_interval: 10s
+    tls:
+      insecure: true
+
 exporters:
   debug:
     verbosity: basic
@@ -13,6 +45,37 @@ exporters:
     endpoint: aspire:18889
     tls:
       insecure: true
+
+processors:
+  # Add service.name to PostgreSQL metrics
+  resource/postgresql:
+    attributes:
+      - key: service.name
+        value: postgresql
+        action: upsert
+      - key: service.namespace
+        value: flow-php
+        action: upsert
+
+  # Add service.name to MySQL metrics
+  resource/mysql:
+    attributes:
+      - key: service.name
+        value: mysql
+        action: upsert
+      - key: service.namespace
+        value: flow-php
+        action: upsert
+
+  # Add service.name to Redis metrics
+  resource/redis:
+    attributes:
+      - key: service.name
+        value: redis
+        action: upsert
+      - key: service.namespace
+        value: flow-php
+        action: upsert
 
 extensions:
   health_check:
@@ -59,6 +122,18 @@ service:
       exporters: [debug, otlp_grpc/aspire]
     metrics:
       receivers: [otlp]
+      exporters: [debug, otlp_grpc/aspire]
+    metrics/postgresql:
+      receivers: [postgresql]
+      processors: [resource/postgresql]
+      exporters: [debug, otlp_grpc/aspire]
+    metrics/mysql:
+      receivers: [mysql]
+      processors: [resource/mysql]
+      exporters: [debug, otlp_grpc/aspire]
+    metrics/redis:
+      receivers: [redis]
+      processors: [resource/redis]
       exporters: [debug, otlp_grpc/aspire]
     logs:
       receivers: [otlp]
