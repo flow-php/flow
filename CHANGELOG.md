@@ -64,6 +64,7 @@
 - [330da9](https://github.com/flow-php/flow/commit/330da95df9e446cca07c8a1c25868a1efc3414b6) - **added otel collector to baseline** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2171](https://github.com/flow-php/flow/pull/2171) - **Remove Meilisearch adapter** - [@stloyd](https://github.com/stloyd)
 - [#2227](https://github.com/flow-php/flow/pull/2227) - **Removed support for "brick/math" `<0.14.2`** - [@stloyd](https://github.com/stloyd)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **Internal interface Pipeline** - [@norberttech](https://github.com/norberttech)
 - [#2193](https://github.com/flow-php/flow/pull/2193) - **redundant clone usage from DataFrame** - [@norberttech](https://github.com/norberttech)
