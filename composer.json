@@ -45,6 +45,7 @@
         "symfony/event-dispatcher": "^6.4 || ^7.3 || ^8.0",
         "symfony/http-foundation": "^6.4 || ^7.3 || ^8.0",
         "symfony/http-kernel": "^6.4 || ^7.3 || ^8.0",
+        "symfony/polyfill-mbstring": "^1.33",
         "symfony/string": "^6.4 || ^7.3 || ^8.0",
         "symfony/uid": "^6.4 || ^7.3 || ^8.0",
         "webmozart/glob": "^3.0 || ^4.0"
