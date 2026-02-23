@@ -16,7 +16,8 @@
         "ext-xml": "*",
         "ext-xmlreader": "*",
         "ext-xmlwriter": "*",
-        "flow-php/etl": "self.version"
+        "flow-php/etl": "self.version",
+        "symfony/polyfill-mbstring": "^1.33"
     },
     "config": {
         "optimize-autoloader": true,
