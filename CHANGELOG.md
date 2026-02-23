@@ -19,6 +19,7 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [67f412](https://github.com/flow-php/flow/commit/67f412456c823cf6de5a25cccac4b793613fd952) - **chore: update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2227](https://github.com/flow-php/flow/pull/2227) - **Bump the lowest supported version of "brick/math"** - [@stloyd](https://github.com/stloyd)
 - [#2225](https://github.com/flow-php/flow/pull/2225) - **naming conventions across whole monorepo** - [@norberttech](https://github.com/norberttech)
 - [#2225](https://github.com/flow-php/flow/pull/2225) - **reorganized local dev telemetry resources** - [@norberttech](https://github.com/norberttech)
