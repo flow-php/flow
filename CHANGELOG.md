@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-02-22
+## [Unreleased] - 2026-02-23
 
 ### Added
+- [#2225](https://github.com/flow-php/flow/pull/2225) - **telemetry attributes constraints** - [@norberttech](https://github.com/norberttech)
+- [#2225](https://github.com/flow-php/flow/pull/2225) - **DataFrame name** - [@norberttech](https://github.com/norberttech)
 - [#2213](https://github.com/flow-php/flow/pull/2213) - **phpstan integration with infection** - [@norberttech](https://github.com/norberttech)
 - [#2211](https://github.com/flow-php/flow/pull/2211) - **more context to telemetry logger interface** - [@norberttech](https://github.com/norberttech)
 - [#2210](https://github.com/flow-php/flow/pull/2210) - **Filesystem direct integration with Telemetry** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +19,8 @@
 - [#2164](https://github.com/flow-php/flow/pull/2164) - **extension installation tests on macos on ci/cd** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2225](https://github.com/flow-php/flow/pull/2225) - **naming conventions across whole monorepo** - [@norberttech](https://github.com/norberttech)
+- [#2225](https://github.com/flow-php/flow/pull/2225) - **reorganized local dev telemetry resources** - [@norberttech](https://github.com/norberttech)
 - [#2224](https://github.com/flow-php/flow/pull/2224) - **Rework `GoogleSheetExtractor` to use batch get functionality** - [@stloyd](https://github.com/stloyd)
 - [#2222](https://github.com/flow-php/flow/pull/2222) - **Adjust `GoogleSheetExtractor` row data extraction** - [@stloyd](https://github.com/stloyd)
 - [#2220](https://github.com/flow-php/flow/pull/2220) - **Prevent using deprecated `brick/math` functions** - [@stloyd](https://github.com/stloyd)
@@ -39,6 +43,8 @@
 - [56c3ea](https://github.com/flow-php/flow/commit/56c3eaba586448681b9357b0c98add52c32940d3) - **refactor: increate retry_threshold for phpbench** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2225](https://github.com/flow-php/flow/pull/2225) - **tracers loosing context** - [@norberttech](https://github.com/norberttech)
+- [#2225](https://github.com/flow-php/flow/pull/2225) - **missing DataFrame telemetry coverage in trigger methods** - [@norberttech](https://github.com/norberttech)
 - [#2224](https://github.com/flow-php/flow/pull/2224) - **Fixed wrong handling of skipping the header row in `GoogleSheetExtractor`** - [@stloyd](https://github.com/stloyd)
 - [#2213](https://github.com/flow-php/flow/pull/2213) - **symfony telemetry bundle tests for lowest symfony versions** - [@norberttech](https://github.com/norberttech)
 - [#2212](https://github.com/flow-php/flow/pull/2212) - **Support any regex delimiter and modifiers in compiler pass pattern matching** - [@bendavies](https://github.com/bendavies)
