@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-02-23
+## [0.32.0] - 2026-02-23
 
 ### Added
 - [#2228](https://github.com/flow-php/flow/pull/2228) - **Add "symfony/polyfill-mbstring" as requirement when needed** - [@stloyd](https://github.com/stloyd)
