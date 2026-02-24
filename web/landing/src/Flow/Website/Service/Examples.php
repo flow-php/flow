@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Service;
 
 use function Flow\Types\DSL\type_string;
-use Flow\Website\Service\Example\Output;
+use Symfony\Component\Yaml\Yaml;
 
 final readonly class Examples
 {
@@ -37,35 +37,48 @@ final readonly class Examples
     }
 
     /**
-     * @throws \JsonException
+     * Returns the filesystem path for a data file in an example's input directory.
      */
-    public function composer(string $topic, string $example, ?string $option = null) : string
+    public function dataFilePath(string $topic, string $example, string $relativePath, ?string $option = null) : ?string
     {
-        if ($option !== null) {
-            $path = \sprintf('%s/topics/%s/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example, $option);
-        } elseif ($this->hasOptions($topic, $example)) {
-            $options = $this->options($topic, $example);
+        $basePath = $this->examplePath($topic, $example, $option);
+        $filePath = $basePath . '/' . $relativePath;
 
-            if (0 === \count($options)) {
-                throw new \RuntimeException(\sprintf('Example "%s" in topic "%s" has no valid options.', $example, $topic));
+        if (!\file_exists($filePath) || !\is_file($filePath)) {
+            return null;
+        }
+
+        return $filePath;
+    }
+
+    /**
+     * Returns a map of virtual paths to filesystem paths for data files in an example's input directory.
+     *
+     * @return array<string, string> Map of virtual path (e.g., 'input/dataset.csv') to relative filesystem path
+     */
+    public function dataFiles(string $topic, string $example, ?string $option = null) : array
+    {
+        $basePath = $this->examplePath($topic, $example, $option);
+        $inputDir = $basePath . '/input';
+
+        if (!\is_dir($inputDir)) {
+            return [];
+        }
+
+        $files = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($inputDir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isFile()) {
+                $virtualPath = \str_replace($basePath . '/', '', $file->getPathname());
+                $files[$virtualPath] = $virtualPath;
             }
-            $firstOption = \current($options);
-            $path = \sprintf('%s/topics/%s/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example, $firstOption);
-        } else {
-            $path = \sprintf('%s/topics/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example);
         }
 
-        if (false === \file_exists($path)) {
-            throw new \RuntimeException(\sprintf('Composer file doesn\'t exists, it should be located in path: "%s".', $path));
-        }
-
-        $composer = \json_decode(\file_get_contents($path), true, 512, \JSON_THROW_ON_ERROR);
-
-        if (\array_key_exists('archive', $composer)) {
-            unset($composer['archive']);
-        }
-
-        return \json_encode($composer, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES);
+        return $files;
     }
 
     public function description(string $topic, string $example, ?string $option = null) : ?string
@@ -102,7 +115,7 @@ final readonly class Examples
             throw new \RuntimeException(\sprintf('Topic "%s" doesn\'t exists, it should be located in path: "%s".', $topic, $path));
         }
 
-        $examples = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', 'priority.txt']));
+        $examples = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
 
         if (0 === \count($examples)) {
             throw new \RuntimeException(\sprintf('Topic "%s" doesn\'t have any example, there should be at least one example in path "%s".', $topic, $path));
@@ -111,21 +124,16 @@ final readonly class Examples
         $priorities = [];
 
         foreach ($examples as $example) {
-            $path = \sprintf('%s/topics/%s/%s/priority.txt', \realpath($this->examplesPath), $topic, $example);
-
-            if (false === \file_exists($path)) {
-                $priorities[$example] = 99;
-            } else {
-                $priorities[$example] = (int) \file_get_contents($path);
-            }
+            $meta = $this->readMeta(\sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example));
+            $priorities[$example] = $meta['priority'];
         }
 
         \asort($priorities);
 
         foreach (\array_keys($priorities) as $example) {
-            $isHidden = \file_exists(\sprintf('%s/topics/%s/%s/hidden.txt', \realpath($this->examplesPath), $topic, $example));
+            $meta = $this->readMeta(\sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example));
 
-            if ($isHidden) {
+            if ($meta['hidden']) {
                 unset($priorities[$example]);
             }
         }
@@ -202,7 +210,7 @@ final readonly class Examples
             return [];
         }
 
-        $items = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', 'priority.txt', 'hidden.txt']));
+        $items = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
         $options = [];
 
         foreach ($items as $item) {
@@ -220,16 +228,16 @@ final readonly class Examples
         $priorities = [];
 
         foreach ($options as $option) {
-            $priorityPath = \sprintf('%s/%s/priority.txt', $path, $option);
-            $priorities[$option] = \file_exists($priorityPath) ? (int) \file_get_contents($priorityPath) : 99;
+            $meta = $this->readMeta(\sprintf('%s/%s', $path, $option));
+            $priorities[$option] = $meta['priority'];
         }
 
         \asort($priorities);
 
         foreach (\array_keys($priorities) as $option) {
-            $isHidden = \file_exists(\sprintf('%s/%s/hidden.txt', $path, $option));
+            $meta = $this->readMeta(\sprintf('%s/%s', $path, $option));
 
-            if ($isHidden) {
+            if ($meta['hidden']) {
                 unset($priorities[$option]);
             }
         }
@@ -272,56 +280,29 @@ final readonly class Examples
         return $navigation;
     }
 
-    public function output(string $topic, string $example, ?string $option = null) : ?Output
+    /**
+     * @return array{name: string, arguments: array<string, string>}
+     */
+    public function playgroundUrl(string $topic, string $example, ?string $option = null) : array
     {
         if ($option !== null) {
-            $folder = \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $option);
-        } elseif ($this->hasOptions($topic, $example)) {
-            $options = $this->options($topic, $example);
-
-            if (0 === \count($options)) {
-                return null;
-            }
-            $firstOption = \current($options);
-            $folder = \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $firstOption);
-        } else {
-            $folder = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+            return [
+                'name' => 'example_option_playground',
+                'arguments' => [
+                    'topic' => $topic,
+                    'example' => $example,
+                    'option' => $option,
+                ],
+            ];
         }
 
-        $paths = \glob(
-            \sprintf(
-                '{%s/output.{txt,xml,csv,json},%s/output.*.{txt,xml,csv,json}}',
-                $folder,
-                $folder
-            ),
-            GLOB_BRACE
-        );
-
-        if (!\count($paths)) {
-            return null;
-        }
-
-        $content = '';
-
-        foreach ($paths as $path) {
-            $content .= \file_get_contents($path);
-
-            if (\count($paths) > 1) {
-                $content .= \PHP_EOL;
-            }
-        }
-
-        if (\count($paths) > 1) {
-            $extension = 'shell';
-        } else {
-            $extension = \pathinfo($paths[0], \PATHINFO_EXTENSION);
-
-            if ($extension === 'txt') {
-                $extension = 'shell';
-            }
-        }
-
-        return new Output($content, $extension);
+        return [
+            'name' => 'example_playground',
+            'arguments' => [
+                'topic' => $topic,
+                'example' => $example,
+            ],
+        ];
     }
 
     /**
@@ -344,21 +325,16 @@ final readonly class Examples
         $priorities = [];
 
         foreach ($topics as $topic) {
-            $path = \sprintf('%s/topics/%s/priority.txt', \realpath($this->examplesPath), $topic);
-
-            if (false === \file_exists($path)) {
-                $priorities[$topic] = 99;
-            } else {
-                $priorities[$topic] = (int) \file_get_contents($path);
-            }
+            $meta = $this->readMeta(\sprintf('%s/topics/%s', \realpath($this->examplesPath), $topic));
+            $priorities[$topic] = $meta['priority'];
         }
 
         \asort($priorities);
 
         foreach (\array_keys($priorities) as $topic) {
-            $isHidden = \file_exists(\sprintf('%s/topics/%s/hidden.txt', \realpath($this->examplesPath), $topic));
+            $meta = $this->readMeta(\sprintf('%s/topics/%s', \realpath($this->examplesPath), $topic));
 
-            if ($isHidden) {
+            if ($meta['hidden']) {
                 unset($priorities[$topic]);
             }
         }
@@ -390,6 +366,27 @@ final readonly class Examples
         return $navigation;
     }
 
+    private function examplePath(string $topic, string $example, ?string $option = null) : string
+    {
+        if ($option !== null) {
+            return \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $option);
+        }
+
+        if ($this->hasOptions($topic, $example)) {
+            $options = $this->options($topic, $example);
+
+            if (0 === \count($options)) {
+                throw new \RuntimeException(\sprintf('Example "%s" in topic "%s" has no valid options.', $example, $topic));
+            }
+
+            $firstOption = \current($options);
+
+            return \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $firstOption);
+        }
+
+        return \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+    }
+
     private function hasOptions(string $topic, string $example) : bool
     {
         $path = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
@@ -419,5 +416,27 @@ final readonly class Examples
         }
 
         return false;
+    }
+
+    /**
+     * Read _meta.yaml file and return priority and hidden values.
+     *
+     * @return array{priority: int, hidden: bool}
+     */
+    private function readMeta(string $path) : array
+    {
+        $metaPath = $path . '/_meta.yaml';
+
+        if (!\file_exists($metaPath)) {
+            return ['priority' => 99, 'hidden' => false];
+        }
+
+        $content = \file_get_contents($metaPath);
+        $meta = Yaml::parse($content);
+
+        return [
+            'priority' => $meta['priority'] ?? 99,
+            'hidden' => $meta['hidden'] ?? false,
+        ];
     }
 }

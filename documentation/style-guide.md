@@ -22,11 +22,11 @@
     </thead>
     <tbody>
         <tr>
-            <td><img src="assets/img/sunset_orange.png" alt="Sunset Orange" title="Sunset Orange" width="100px" height="100px"></td>
-            <td><img src="assets/img/light_slate_blue.png" alt="Light Slate Blue" title="Light Slate Blue" width="100px" height="100px"></td>
-            <td><img src="assets/img/warm_blue.png" alt="Warm Blue" title="Warm Blue" width="100px" height="100px"></td>
-            <td><img src="assets/img/daisy_bush.png" alt="Daisy Bush" title="Daisy Bush" width="100px" height="100px"></td>
-            <td><img src="assets/img/mirage.png" alt="Mirage" title="Warm Blue" width="100px" height="100px"></td>
+            <td><img src="documentation/assets/img/sunset_orange.png" alt="Sunset Orange" title="Sunset Orange" width="100px" height="100px"></td>
+            <td><img src="documentation/assets/img/light_slate_blue.png" alt="Light Slate Blue" title="Light Slate Blue" width="100px" height="100px"></td>
+            <td><img src="documentation/assets/img/warm_blue.png" alt="Warm Blue" title="Warm Blue" width="100px" height="100px"></td>
+            <td><img src="documentation/assets/img/daisy_bush.png" alt="Daisy Bush" title="Daisy Bush" width="100px" height="100px"></td>
+            <td><img src="documentation/assets/img/mirage.png" alt="Mirage" title="Warm Blue" width="100px" height="100px"></td>
         </tr>
         <tr>
             <td align="center"><code>#FF5547</code></td>

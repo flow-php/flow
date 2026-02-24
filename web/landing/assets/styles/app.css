@@ -328,6 +328,14 @@ code {
         .help-trigger {
             @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
         }
+
+        .back-link {
+            @apply inline-flex items-center gap-2 ml-4 text-sm text-stone-400 hover:text-white transition-colors no-underline;
+
+            img {
+                @apply inline-block;
+            }
+        }
     }
 
     #help-section {

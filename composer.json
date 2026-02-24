@@ -278,7 +278,6 @@
         "build": [
             "@test:docs",
             "@test:monorepo",
-            "@test:examples",
             "@static:analyze",
             "@test",
             "@test:mutation"
@@ -471,9 +470,6 @@
         ],
         "test:website": [
             "composer test --working-dir=./web/landing"
-        ],
-        "test:examples": [
-            "./examples/run.php"
         ],
         "test:mutation": [
             "Composer\\Config::disableProcessTimeout",

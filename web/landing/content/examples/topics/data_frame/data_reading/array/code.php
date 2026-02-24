@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+use function Flow\ETL\DSL\{data_frame, from_array, to_output};
+
+require __DIR__ . '/vendor/autoload.php';
+
+data_frame()
+    ->read(from_array([
+        ['id' => 1],
+        ['id' => 2],
+        ['id' => 3],
+        ['id' => 4],
+        ['id' => 5],
+    ]))
+    ->collect()
+    ->write(to_output(truncate: false))
+    ->run();

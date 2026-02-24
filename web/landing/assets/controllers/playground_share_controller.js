@@ -5,7 +5,8 @@ export default class extends Controller {
     static outlets = ["code-editor", "wasm", "turnstile", "playground-upload"]
     static values = {
         apiUrl: String,
-        snippetsUrl: String
+        snippetsUrl: String,
+        isExample: { type: Boolean, default: false }
     }
     #debug = false
     #snippetLoaded = false
@@ -13,6 +14,8 @@ export default class extends Controller {
     #wasmResourcesLoaded = false
     #pendingSnippetLoad = false
     #defaultFingerprint = null
+    #exampleCodeModified = false
+    #boundHandleExampleLoaded = null
 
     connect() {
         this.#debug = this.application.debug
@@ -21,12 +24,25 @@ export default class extends Controller {
 
         this.#boundHandleCodeChanged = this.#handleCodeChanged.bind(this)
         this.element.addEventListener('code-editor:code-changed', this.#boundHandleCodeChanged)
+
+        this.#boundHandleExampleLoaded = this.#handleExampleLoaded.bind(this)
+        this.element.addEventListener('playground-storage:loaded-from-example', this.#boundHandleExampleLoaded)
     }
 
     disconnect() {
         if (this.#boundHandleCodeChanged) {
             this.element.removeEventListener('code-editor:code-changed', this.#boundHandleCodeChanged)
         }
+        if (this.#boundHandleExampleLoaded) {
+            this.element.removeEventListener('playground-storage:loaded-from-example', this.#boundHandleExampleLoaded)
+        }
+    }
+
+    #handleExampleLoaded() {
+        // Reset the modified flag when example is initially loaded
+        // This prevents the initial setCode() call from marking example as modified
+        this.#exampleCodeModified = false
+        this.#log('Example loaded, reset exampleCodeModified flag')
     }
 
     async onWasmResourcesLoaded() {
@@ -228,17 +244,29 @@ export default class extends Controller {
         this.dispatch('action-started', { bubbles: true })
 
         try {
+            // First, wait only for code-editor and wasm (NOT turnstile yet)
             await Promise.all([
                 this.codeEditorOutlet.onLoad(),
-                this.wasmOutlet.onLoad(),
-                this.turnstileOutlet.onLoad()
+                this.wasmOutlet.onLoad()
             ])
+
+            const files = await this.#collectUploadedFiles()
+
+            // Check for unmodified example BEFORE requiring Turnstile
+            if (this.isExampleValue && !this.#exampleCodeModified && files.length === 0) {
+                const exampleUrl = `${window.location.origin}${window.location.pathname}`
+                await this.#copyToClipboard(exampleUrl)
+                this.#showNotification('Example link copied to clipboard!', 'success', exampleUrl)
+                return
+            }
+
+            // Only now wait for Turnstile (upload path)
+            await this.turnstileOutlet.onLoad()
 
             const code = this.codeEditorOutlet.getCode()
 
             await this.wasmOutlet.writeFile('/workspace/code.php', code)
 
-            const files = await this.#collectUploadedFiles()
             const fileBlobs = files.map(f => f.blob)
             const fingerprint = await createFingerprint(code, fileBlobs)
 
@@ -263,17 +291,8 @@ export default class extends Controller {
                     this.#snippetLoaded = true
                 }
 
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    try {
-                        await navigator.clipboard.writeText(shareUrl)
-                        this.#showNotification('Snippet already exists! Link copied to clipboard.', 'success', shareUrl)
-                    } catch (clipboardError) {
-                        this.#log('Clipboard write failed:', clipboardError)
-                        this.#showNotification(`Snippet already exists: ${shareUrl}`, 'success', shareUrl)
-                    }
-                } else {
-                    prompt('Copy this link:', shareUrl)
-                }
+                await this.#copyToClipboard(shareUrl)
+                this.#showNotification('Snippet already exists! Link copied to clipboard.', 'success', shareUrl)
                 return
             }
 
@@ -335,17 +354,8 @@ export default class extends Controller {
                 this.#snippetLoaded = true
             }
 
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                try {
-                    await navigator.clipboard.writeText(shareUrl)
-                    this.#showNotification('Share link copied to clipboard!', 'success', shareUrl)
-                } catch (clipboardError) {
-                    this.#log('Clipboard write failed (document not focused):', clipboardError)
-                    this.#showNotification(`Share link created: ${shareUrl}`, 'success', shareUrl)
-                }
-            } else {
-                prompt('Copy this link:', shareUrl)
-            }
+            await this.#copyToClipboard(shareUrl)
+            this.#showNotification('Share link copied to clipboard!', 'success', shareUrl)
         } catch (error) {
             console.error('[ShareCode] Upload error:', error)
             throw error
@@ -369,6 +379,11 @@ export default class extends Controller {
     }
 
     #handleCodeChanged() {
+        // Mark example as modified when code changes
+        if (this.isExampleValue) {
+            this.#exampleCodeModified = true
+        }
+
         if (this.#snippetLoaded) {
             this.#log('Code changed, clearing snippet URL from browser')
             const cleanUrl = `${window.location.origin}${window.location.pathname}`
@@ -400,6 +415,19 @@ export default class extends Controller {
         }
 
         return files
+    }
+
+    async #copyToClipboard(url) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(url)
+            } catch (clipboardError) {
+                this.#log('Clipboard write failed:', clipboardError)
+                prompt('Copy this link:', url)
+            }
+        } else {
+            prompt('Copy this link:', url)
+        }
     }
 
     #showNotification(message, type = 'info', link = null) {

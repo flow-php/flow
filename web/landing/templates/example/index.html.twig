@@ -63,53 +63,21 @@
                     </article>
                 {% endif %}
 
-                <div class="mb-5">
-                    {% if currentOption %}
-                        <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/{{ currentOption }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
-                            Download
-                        </a>
-                    {% else %}
-                        <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
-                            Download
-                        </a>
-                    {% endif %}
-                </div>
-
-                <hr class="hidden lg:block"/>
-                {% if composer %}
-                    <style>
-                        details summary .arrow-closed { display: inline-block; }
-                        details summary .arrow-open { display: none; }
-                        details[open] summary .arrow-closed { display: none; }
-                        details[open] summary .arrow-open { display: inline-block; }
-                    </style>
-                    <details class="mb-5">
-                        <summary class="text-sm font-medium py-2 hover:text-orange-600 transition-colors" style="list-style: none; display: flex; align-items: center; cursor: pointer;">
-                            <span class="arrow-closed mr-2">▶</span>
-                            <span class="arrow-open mr-2">▼</span>
-                            <code>composer.json</code>
-                        </summary>
-                        {% apply spaceless %}
-                            <div id="composer" class="relative mt-2">
-                                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
-                                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
-                                </button>
-                                <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-json" data-controller="syntax-highlight" >
-                                    <code id="composer-json">
-                                        {{- composer -}}
-                                    </code>
-                                </pre>
-                            </div>
-                        {% endapply %}
-                    </details>
-                {% endif %}
-
                 {% apply spaceless %}
                 <code>code.php</code>
                 <div id="code" class="relative">
-                    <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code-php" {{ stimulus_controller('clipboard') }}>
-                        <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
-                    </button>
+                    <div class="absolute top-[12px] right-[12px] flex gap-2">
+                        <a href="{{ path(playgroundUrl.name, playgroundUrl.arguments) }}"
+                           class="bg-orange-100 rounded px-4 leading-9 hover:bg-orange-200"
+                           title="Try in Playground">
+                            <img src="{{ asset('images/icons/play.svg') }}" alt="play" width="20" height="20" class="inline">
+                        </a>
+                        <button class="bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
+                                data-clipboard-target="#code-php"
+                                {{ stimulus_controller('clipboard') }}>
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
+                        </button>
+                    </div>
                     <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-php" data-controller="syntax-highlight" >
                         <code id="code-php">
                             {{- code | escape('html') -}}
@@ -118,22 +86,6 @@
                 </div>
                 {% endapply %}
             </div>
-
-            {% if output %}
-            <h2 class="text-xl mt-5 mb-5">Output</h2>
-            <div id="output" class="relative">
-                {% apply spaceless %}
-                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
-                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
-                </button>
-                <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2 language-{{ output.type }}" {{ stimulus_controller('syntax_highlight') }}>
-                    <code id="output" class="overflow-auto">
-                        {{- output.content -}}
-                    </code>
-                </pre>
-                {% endapply %}
-            </div>
-            {% endif %}
 
             <div class="mt-5">
                 <script src="https://giscus.app/client.js"
