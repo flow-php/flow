@@ -3,7 +3,7 @@
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
     "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-    "phpstan/phpstan": "2.1.33",
+    "phpstan/phpstan": "2.1.40",
     "spaze/phpstan-disallowed-calls": "^4.4"
   },
   "config": {
