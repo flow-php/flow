@@ -1,1 +1,1 @@
-Write data to XML file. 
+Write data to XML files.

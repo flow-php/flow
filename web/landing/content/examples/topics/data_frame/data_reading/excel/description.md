@@ -1,7 +1,1 @@
-Read data from an Excel file (XLSX or ODS).
-
-```php
-function from_excel(
-    string|Path $path
-):
-```
+Extract data from Excel spreadsheets. Supports both XLSX and ODS file formats.

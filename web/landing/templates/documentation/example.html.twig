@@ -52,7 +52,7 @@
 
                 <hr class="hidden lg:block"/>
                 {% apply spaceless %}
-                    <code>code.php</code>
+                    <h2 class="text-xl mt-5 mb-5" id="documentation">Code</h2>
                     <div id="code" class="relative">
                         <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code-php" {{ stimulus_controller('clipboard') }}>
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">

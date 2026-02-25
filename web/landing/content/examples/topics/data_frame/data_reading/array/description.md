@@ -1,9 +1,1 @@
-Read data directly from a php associative array.  Relays on `array_to_rows` DSL function.
-
-```php
-function from_array(array $data);
-```
-
-Additional options:
-
-* `withSchema(Schema $schema)` - the schema of the dataset, when not set, it will be auto-detected
+Read data directly from a PHP array. This is useful when your data is already in memory, such as API responses or test fixtures.

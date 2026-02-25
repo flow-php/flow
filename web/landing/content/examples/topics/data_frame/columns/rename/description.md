@@ -1,6 +1,1 @@
-There are multiple ways to rename entries in a DataFrame:
-
-- `rename(string $from, string $to)` - renames a single entry
-- `renameAll(string $search, string $replace)` - renames all entries that contain a given substring and replaces it with another substring
-- `renameAllToLowercase()` - renames all entries to lowercase
-- `renameAllStyle(StringStyles|string $style)` - renames all entries to a given style (e.g. camel, snakem, kebab, etc.)
+Rename columns in your data. You can rename individual columns, perform bulk renames using search and replace, or transform all column names to a specific style (lowercase, camelCase, snake_case, etc.).

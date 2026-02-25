@@ -1,5 +1,1 @@
-# Delete rows from the database that are matching rows in the DataFrame.
-
-- `to_dbal_table_delete(...)`
-
-
+Delete rows from a database table that match records in your DataFrame. This is useful for synchronizing data or removing outdated entries.

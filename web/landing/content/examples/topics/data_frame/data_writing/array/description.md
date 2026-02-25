@@ -1,2 +1,3 @@
-Write datasets directly to an associative array. Please pay attention to the memory usage when using array loader.
-Large datasets may cause memory overflow.  
+Write data directly to a PHP array. Useful for testing, debugging, or when you need results in memory for further processing.
+
+**Warning:** Large datasets may cause memory overflow since all data is held in memory.

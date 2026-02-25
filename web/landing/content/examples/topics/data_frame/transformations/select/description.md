@@ -1,3 +1,1 @@
-There are also several predefined transformations, like for example `select`.  
-Select is also available directly through `DataFrame::select()` API.  
-Transformations are also great way for improving data processing pipelines readability.
+Choose specific columns from your data, discarding the rest. Transformations like select help keep pipelines readable and explicit about which data is being processed.

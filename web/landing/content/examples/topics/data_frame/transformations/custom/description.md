@@ -1,11 +1,1 @@
-Transformations are reusable blocks of transformations that can be applied to a data frame.  
-The main goal of `Transformations` is to a gruop together a set of transformations.
-
-Transformation needs to implement the `Transformation` interface.
-
-```php
-interface Transformation
-{
-    public function transform(DataFrame $dataFrame) : DataFrame;
-}
-```
+Create reusable transformation blocks that can be applied across multiple pipelines. Custom transformations help organize complex logic and improve code reuse.

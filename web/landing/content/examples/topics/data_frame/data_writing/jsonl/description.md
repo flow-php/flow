@@ -1,2 +1,1 @@
-Write data to a [json lines](https://jsonlines.org/) formatted file. 
-Each row will become a vald JSON object.
+Write data to [JSON Lines](https://jsonlines.org/) files, where each row becomes a separate JSON object on its own line.

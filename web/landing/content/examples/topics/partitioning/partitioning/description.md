@@ -1,7 +1,4 @@
-Partitioning is a technique to divide a large dataset into smaller, more manageable parts.
-When you partition a dataset and write it to any file-based destination Flow will follow Hive partitioning convention.
-The partitioning is done by creating a directory structure where each directory represents a partition.
-The directory name is in the format of `column=value`.
+Divide large datasets into smaller, organized parts based on column values. Flow uses Hive partitioning convention, creating a directory structure where each folder represents a partition value.
 
 ```bash
 output

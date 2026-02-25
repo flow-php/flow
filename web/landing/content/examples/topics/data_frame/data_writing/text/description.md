@@ -1,2 +1,3 @@
-Write data to text file.  
-**Important** - writing to file is only possible for rows with one column.
+Write data to plain text files.
+
+**Important:** Text writing only works with single-column data.
