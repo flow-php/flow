@@ -41,6 +41,7 @@ final class ExamplesController extends AbstractController
             'currentExample' => $example,
             'currentOption' => null,
             'description' => $this->examples->description($topic, $example, $firstOption),
+            'documentation' => $this->examples->documentation($topic, $example, $firstOption),
             'code' => $this->examples->code($topic, $example, $firstOption),
             'playgroundUrl' => $this->examples->playgroundUrl($topic, $example, $firstOption),
         ]);
@@ -93,6 +94,7 @@ final class ExamplesController extends AbstractController
             'currentExample' => $example,
             'currentOption' => $option,
             'description' => $this->examples->description($topic, $example, $option),
+            'documentation' => $this->examples->documentation($topic, $example, $option),
             'code' => $this->examples->code($topic, $example, $option),
             'playgroundUrl' => $this->examples->playgroundUrl($topic, $example, $option),
         ]);
@@ -124,6 +126,7 @@ final class ExamplesController extends AbstractController
             'currentExample' => $firstExample,
             'currentOption' => $firstOption,
             'description' => $this->examples->description($topic, $firstExample, $firstOption),
+            'documentation' => $this->examples->documentation($topic, $firstExample, $firstOption),
             'code' => $this->examples->code($topic, $firstExample, $firstOption),
             'playgroundUrl' => $this->examples->playgroundUrl($topic, $firstExample, $firstOption),
         ]);

@@ -74,7 +74,6 @@ parameters:
         - src/bridge/symfony/telemetry-bundle/tests
         - src/bridge/telemetry/otlp/tests
         - src/lib/telemetry/tests
-        - web/landing/content/examples
 
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*

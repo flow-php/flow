@@ -104,6 +104,29 @@ final readonly class Examples
         return \file_get_contents($path);
     }
 
+    public function documentation(string $topic, string $example, ?string $option = null) : ?string
+    {
+        if ($option !== null) {
+            $path = \sprintf('%s/topics/%s/%s/%s/documentation.md', \realpath($this->examplesPath), $topic, $example, $option);
+        } elseif ($this->hasOptions($topic, $example)) {
+            $options = $this->options($topic, $example);
+
+            if (0 === \count($options)) {
+                return null;
+            }
+            $firstOption = \current($options);
+            $path = \sprintf('%s/topics/%s/%s/%s/documentation.md', \realpath($this->examplesPath), $topic, $example, $firstOption);
+        } else {
+            $path = \sprintf('%s/topics/%s/%s/documentation.md', \realpath($this->examplesPath), $topic, $example);
+        }
+
+        if (false === \file_exists($path)) {
+            return null;
+        }
+
+        return \file_get_contents($path);
+    }
+
     /**
      * @return array<string>
      */

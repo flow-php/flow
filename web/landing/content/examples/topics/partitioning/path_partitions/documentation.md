@@ -1,0 +1,1 @@
+- [Partitioning](/documentation/components/core/partitioning)

@@ -1,0 +1,1 @@
+- [XML Adapter](/documentation/components/adapters/xml)

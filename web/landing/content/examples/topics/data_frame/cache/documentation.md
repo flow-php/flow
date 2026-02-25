@@ -1,0 +1,1 @@
+- [Caching](/documentation/components/core/caching)

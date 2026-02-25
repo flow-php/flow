@@ -63,6 +63,13 @@
                     </article>
                 {% endif %}
 
+                {% if documentation %}
+                    <h2 class="text-xl mt-5">Documentation</h2>
+                    <article class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-5">
+                        {{ documentation|markdown_to_html }}
+                    </article>
+                {% endif %}
+
                 {% apply spaceless %}
                 <code>code.php</code>
                 <div id="code" class="relative">
