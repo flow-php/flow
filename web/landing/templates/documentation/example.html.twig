@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_wide.html.twig' %}
 
 {%- block title -%}
     Flow PHP - {{ currentTopic|humanize }} - {{ currentExample|humanize }} - Example
@@ -12,12 +12,12 @@
 {% endblock %}
 
 {% block main %}
-<section id="documentation-page" class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-2xl">
-    <div class="grid grid-cols-1 lg:grid-cols-6">
-        <div class="order-1 lg:order-0 lg:col-span-1 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto">
+<section id="documentation-page" class="mt-5 mb-5 px-4 lg:px-8 xl:px-12">
+    <div class="grid grid-cols-1 lg:grid-cols-[16rem_1fr_14rem] xl:grid-cols-[18rem_1fr_16rem] gap-4">
+        <div class="order-1 lg:order-0 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pr-4">
             {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationLeft')) }}
         </div>
-        <div class="order-3 lg:order-1 lg:col-span-4 py-2 px-4">
+        <div class="order-3 lg:order-1 min-w-0 py-2 px-4 lg:px-8">
             <div id="example">
                 <hr class="lg:hidden"/>
                 <h1>Example: {{ currentExample|humanize }}</h1>
@@ -85,7 +85,7 @@
             </div>
 
         </div>
-        <div class="order-2 lg:order-2 lg:col-span-1 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto">
+        <div class="order-2 lg:order-2 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pl-4">
             {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight')) }}
         </div>
     </div>
