@@ -9,6 +9,29 @@ use PHPUnit\Framework\TestCase;
 
 final class ExamplesTest extends TestCase
 {
+    public function test_description_merges_example_and_option_levels() : void
+    {
+        $path = __DIR__ . '/../Fixtures/WithMergedDescriptions';
+        $service = new Examples($path);
+
+        $result = $service->description('merged_topic', 'example_with_both', 'option_a');
+
+        self::assertStringContainsString('Example level intro.', $result);
+        self::assertStringContainsString('---', $result);
+        self::assertStringContainsString('Option specific details.', $result);
+    }
+
+    public function test_description_returns_only_option_when_no_example_level() : void
+    {
+        $path = __DIR__ . '/../Fixtures/Valid';
+        $service = new Examples($path);
+
+        $result = $service->description('topic_3', 'example_1');
+
+        // Valid fixture topic_3/example_1 is a 2-level example (no options), so no merge logic applies
+        self::assertNull($result);
+    }
+
     public function test_playground_url_for_example_with_option() : void
     {
         $path = __DIR__ . '/../Fixtures/Valid';

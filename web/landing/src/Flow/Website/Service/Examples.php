@@ -83,25 +83,31 @@ final readonly class Examples
 
     public function description(string $topic, string $example, ?string $option = null) : ?string
     {
-        if ($option !== null) {
-            $path = \sprintf('%s/topics/%s/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example, $option);
-        } elseif ($this->hasOptions($topic, $example)) {
-            $options = $this->options($topic, $example);
-
-            if (0 === \count($options)) {
-                return null;
-            }
-            $firstOption = \current($options);
-            $path = \sprintf('%s/topics/%s/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example, $firstOption);
-        } else {
+        // For 2-level examples (no options), return directly without merge logic
+        if (!$this->hasOptions($topic, $example)) {
             $path = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);
+
+            return \file_exists($path) ? \file_get_contents($path) : null;
         }
 
-        if (false === \file_exists($path)) {
-            return null;
+        // For 3-level examples, check for example-level description
+        $exampleLevelPath = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);
+        $exampleDescription = \file_exists($exampleLevelPath) ? \file_get_contents($exampleLevelPath) : null;
+
+        // Get option-level description
+        if (null === $option) {
+            $option = $this->firstOption($topic, $example);
         }
 
-        return \file_get_contents($path);
+        $optionPath = \sprintf('%s/topics/%s/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example, $option);
+        $optionDescription = \file_exists($optionPath) ? \file_get_contents($optionPath) : null;
+
+        // Merge descriptions with horizontal rule separator
+        if (null !== $exampleDescription && null !== $optionDescription) {
+            return $exampleDescription . "\n\n---\n\n" . $optionDescription;
+        }
+
+        return $exampleDescription ?? $optionDescription;
     }
 
     public function documentation(string $topic, string $example, ?string $option = null) : ?string
