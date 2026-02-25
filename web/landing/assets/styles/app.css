@@ -315,6 +315,16 @@ code {
     display: none;
 }
 
+/* Hide scrollbar for horizontal scroll navigation while keeping scroll functionality */
+[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"] {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"]::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
 #playground {
     @apply py-10 px-2 sm:px-4 mx-auto max-w-screen-2xl;
 

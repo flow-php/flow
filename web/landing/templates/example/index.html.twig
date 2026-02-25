@@ -38,8 +38,11 @@
             </nav>
 
             {% if optionsNavigation|length > 0 %}
-            <nav class="bg-gray-50 rounded px-3 pb-2 mb-4">
-                <ul class="flex whitespace-nowrap overflow-auto gap-1">
+            <nav class="bg-gray-50 rounded pb-2 mb-4"
+                 data-controller="horizontal-scroll">
+                {# Scrollable Container #}
+                <ul class="flex whitespace-nowrap overflow-auto gap-1 scroll-smooth"
+                    data-horizontal-scroll-target="container">
                     {% for option, route in optionsNavigation %}
                         <li>
                             <a href="{{ path(route.name, route.arguments) }}#example"
@@ -49,6 +52,22 @@
                         </li>
                     {% endfor %}
                 </ul>
+
+                {# Scroll Arrows - below the options, left and right #}
+                <div class="flex justify-between mt-1 px-2">
+                    <button type="button"
+                            class="w-8 h-8 flex items-center justify-center bg-orange-300 hover:bg-orange-200 rounded-full shadow transition-all duration-200 opacity-0 pointer-events-none"
+                            data-horizontal-scroll-target="leftArrow"
+                            data-action="click->horizontal-scroll#scrollLeft">
+                        <img src="{{ asset('images/icons/arrow-left.svg') }}" alt="scroll left" width="16" height="16">
+                    </button>
+                    <button type="button"
+                            class="w-8 h-8 flex items-center justify-center bg-orange-300 hover:bg-orange-200 rounded-full shadow transition-all duration-200 opacity-0 pointer-events-none"
+                            data-horizontal-scroll-target="rightArrow"
+                            data-action="click->horizontal-scroll#scrollRight">
+                        <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="scroll right" width="16" height="16">
+                    </button>
+                </div>
             </nav>
             {% endif %}
 
