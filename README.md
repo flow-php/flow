@@ -19,10 +19,10 @@ Supported PHP
 versions: [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/) [![PHP 8.4](https://img.shields.io/badge/php-~8.4-8892BF.svg)](https://php.net/) [![PHP 8.4](https://img.shields.io/badge/php-~8.5-8892BF.svg)](https://php.net/)
 
 Supported Operating Systems
+
 - Linux
 - macOS
 - Windows (experimental)
-
 
 ---
 
@@ -81,6 +81,7 @@ difference!
 
 Flow PHP is sponsored by:
 
-| [![Blackfire](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_300/blackfire_xiugzv.png)](https://blackfire.io/)           | [![DigitalOcean Referral Badge](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_146,w_450/digital-ocean_slmm2i.svg)](https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge) | [![Sentry](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_200,w_350/sentry_ai9hi6.svg)](https://sentry.io/) |
-|---------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| [![Cloudflare](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_200,w_350/cloudflare_logjlf.png)](https://cloudflare.com/) | ![Tailscale VPN](https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/tailscale_biexgf.png)                                                                                                                                                          | ![1Password](https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/1Password_sjoj4n.png)                        |
+| [![Datadog](https://imgix.datadoghq.com/img/about/presskit/logo-h/dd_horizontal_white.png?auto=format&fit=max&w=847&dpr=2)](https://www.datadoghq.com/) | [![Blackfire](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_300/blackfire_xiugzv.png)](https://blackfire.io/)           | [![DigitalOcean Referral Badge](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_146,w_450/digital-ocean_slmm2i.svg)](https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge) |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [![Sentry](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_200,w_350/sentry_ai9hi6.svg)](https://sentry.io/)                                | [![Cloudflare](https://res.cloudinary.com/df2cy8zhc/image/upload/c_scale,h_200,w_350/cloudflare_logjlf.png)](https://cloudflare.com/) | ![Tailscale VPN](https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/tailscale_biexgf.png)                                                                                                                                                          |
+| ![1Password](https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/1Password_sjoj4n.png)                                                       |                                                                                                                                       |                                                                                                                                                                                                                                                                |
