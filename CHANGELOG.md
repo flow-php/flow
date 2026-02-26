@@ -1,3 +1,14 @@
+## [Unreleased] - 2026-02-26
+
+### Added
+- [#2230](https://github.com/flow-php/flow/pull/2230) - **Telemetry Examples** - [@norberttech](https://github.com/norberttech)
+- [#2230](https://github.com/flow-php/flow/pull/2230) - **Reference to documentation above examples** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2230](https://github.com/flow-php/flow/pull/2230) - **Move all examples to be executable in playground** - [@norberttech](https://github.com/norberttech)
+- [#2230](https://github.com/flow-php/flow/pull/2230) - **Reorganized examples** - [@norberttech](https://github.com/norberttech)
+- [#2230](https://github.com/flow-php/flow/pull/2230) - **refactored layout of docuentation playground - to use whole page width** - [@norberttech](https://github.com/norberttech)
+
 ## [0.32.0] - 2026-02-23
 
 ### Added
