@@ -1,0 +1,1 @@
+Collect numeric measurements with different instrument types. Counters track totals, up-down counters track values that increase and decrease, histograms capture value distributions, and gauges record point-in-time values.

@@ -1,0 +1,1 @@
+Chain multiple conditions for multi-tier logic, similar to if-elseif-else chains. Useful for categorizing data into multiple levels, implementing grading systems, or determining status based on several criteria.

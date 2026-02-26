@@ -64,6 +64,7 @@
     {% endblock %}
 </head>
 <body class="scroll-smooth bg-black text-white" data-environment="{{ app.environment }}">
+    {% block header %}
     <header class="py-2 text-white bg-blue-200">
         <div class="mx-auto max-w-screen-2xl px-4 flex items-center justify-between">
             <a href="{{ path('home') }}">
@@ -133,6 +134,7 @@
             </nav>
         </div>
     </header>
+    {% endblock %}
 
     <main id="main">
         {% block hero %}
@@ -152,10 +154,12 @@
         <img src="{{ asset('images/icons/arrow-up.svg') }}" width="32" height="32" alt="scroll back to top" class="inline">
     </a>
 
+    {% block footer %}
     <footer class="text-center bg-orange-100">
         <div class="py-4 mx-auto max-w-screen-2xl">
             <a href="https://github.com/flow-php">&copy; Copyright {{ 'now' | date('Y') }} Flow PHP</a>
         </div>
     </footer>
+    {% endblock %}
 </body>
 </html>

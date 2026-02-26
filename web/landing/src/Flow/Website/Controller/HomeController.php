@@ -20,7 +20,7 @@ final class HomeController extends AbstractController
     public function home() : Response
     {
         return $this->render('main/index.html.twig', [
-            'navigation' => $this->examples->topicsNavigation(),
+            'topicsNavigation' => $this->examples->topicsNavigation(),
         ]);
     }
 

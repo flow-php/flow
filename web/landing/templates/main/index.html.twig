@@ -11,13 +11,13 @@
 {%- endblock -%}
 
 {% block main %}
-    <div class="pt-10 pb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl" data-hx-boost="true">
+    <div class="pt-10 pb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl">
         <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
-        <nav class="font-medium text-center bg-orange-100 rounded">
+        <nav class="font-medium text-center bg-orange-100 rounded mb-10">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
-                {% for topic, route in navigation %}
+                {% for topic, route in topicsNavigation %}
                     <li class="grow">
-                        <a href="{{ path(route.name, route.arguments) }}#example" class="inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
+                        <a href="{{ path(route.name, route.arguments) }}#example" class="inline-block leading-10 px-4 py-2 w-full hover:bg-orange-300 rounded">
                             {{ topic|humanize }}
                         </a>
                     </li>
@@ -38,7 +38,7 @@
                         Instead of creating custom code for each dataset or integration, Flow PHP offers a uniform API for all data sources.
                     </p>
                     <p class="mb-2">
-                        Whether you’re dealing with a CSV file or consuming data from a REST API, Flow ensures consistency by offering a uniform API for all data sources.
+                        Whether you're dealing with a CSV file or consuming data from a REST API, Flow ensures consistency by offering a uniform API for all data sources.
                     </p>
                     <p class="mb-2">
                         It will not only make your codebase more consistent but also ensure that your system processes data in a memory-efficient way out of the box.

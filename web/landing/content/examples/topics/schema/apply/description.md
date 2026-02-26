@@ -1,0 +1,1 @@
+Define explicit column types for data sources that lack strict schema support (like CSV, XML, or JSON). This ensures consistent type handling and avoids issues when early rows contain null or empty values.

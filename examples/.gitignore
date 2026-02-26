@@ -1,6 +1,0 @@
-vendor
-output/*
-!output/.gitkep
-compose.yml
-var
-.env

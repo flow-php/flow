@@ -278,7 +278,6 @@
         "build": [
             "@test:docs",
             "@test:monorepo",
-            "@test:examples",
             "@static:analyze",
             "@test",
             "@test:mutation"
@@ -467,13 +466,10 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=tool-phpunit-telemetry-unit --log-junit ./var/phpunit/logs/tool-phpunit-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/tool-phpunit-telemetry-unit.coverage.xml"
         ],
         "test:docs": [
-            "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples --exclude=documentation ."
+            "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=documentation ."
         ],
         "test:website": [
             "composer test --working-dir=./web/landing"
-        ],
-        "test:examples": [
-            "./examples/run.php"
         ],
         "test:mutation": [
             "Composer\\Config::disableProcessTimeout",

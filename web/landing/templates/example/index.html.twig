@@ -38,8 +38,11 @@
             </nav>
 
             {% if optionsNavigation|length > 0 %}
-            <nav class="bg-gray-50 rounded px-3 pb-2 mb-4">
-                <ul class="flex whitespace-nowrap overflow-auto gap-1">
+            <nav class="bg-gray-50 rounded pb-2 mb-4"
+                 data-controller="horizontal-scroll">
+                {# Scrollable Container #}
+                <ul class="flex whitespace-nowrap overflow-auto gap-1 scroll-smooth"
+                    data-horizontal-scroll-target="container">
                     {% for option, route in optionsNavigation %}
                         <li>
                             <a href="{{ path(route.name, route.arguments) }}#example"
@@ -49,6 +52,22 @@
                         </li>
                     {% endfor %}
                 </ul>
+
+                {# Scroll Arrows - below the options, left and right #}
+                <div class="flex justify-between mt-1 px-2">
+                    <button type="button"
+                            class="w-8 h-8 flex items-center justify-center bg-orange-300 hover:bg-orange-200 rounded-full shadow transition-all duration-200 opacity-0 pointer-events-none"
+                            data-horizontal-scroll-target="leftArrow"
+                            data-action="click->horizontal-scroll#scrollLeft">
+                        <img src="{{ asset('images/icons/arrow-left.svg') }}" alt="scroll left" width="16" height="16">
+                    </button>
+                    <button type="button"
+                            class="w-8 h-8 flex items-center justify-center bg-orange-300 hover:bg-orange-200 rounded-full shadow transition-all duration-200 opacity-0 pointer-events-none"
+                            data-horizontal-scroll-target="rightArrow"
+                            data-action="click->horizontal-scroll#scrollRight">
+                        <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="scroll right" width="16" height="16">
+                    </button>
+                </div>
             </nav>
             {% endif %}
 
@@ -63,53 +82,28 @@
                     </article>
                 {% endif %}
 
-                <div class="mb-5">
-                    {% if currentOption %}
-                        <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/{{ currentOption }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
-                            Download
-                        </a>
-                    {% else %}
-                        <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
-                            Download
-                        </a>
-                    {% endif %}
-                </div>
-
-                <hr class="hidden lg:block"/>
-                {% if composer %}
-                    <style>
-                        details summary .arrow-closed { display: inline-block; }
-                        details summary .arrow-open { display: none; }
-                        details[open] summary .arrow-closed { display: none; }
-                        details[open] summary .arrow-open { display: inline-block; }
-                    </style>
-                    <details class="mb-5">
-                        <summary class="text-sm font-medium py-2 hover:text-orange-600 transition-colors" style="list-style: none; display: flex; align-items: center; cursor: pointer;">
-                            <span class="arrow-closed mr-2">▶</span>
-                            <span class="arrow-open mr-2">▼</span>
-                            <code>composer.json</code>
-                        </summary>
-                        {% apply spaceless %}
-                            <div id="composer" class="relative mt-2">
-                                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
-                                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
-                                </button>
-                                <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-json" data-controller="syntax-highlight" >
-                                    <code id="composer-json">
-                                        {{- composer -}}
-                                    </code>
-                                </pre>
-                            </div>
-                        {% endapply %}
-                    </details>
+                {% if documentation %}
+                    <h2 class="text-xl mt-5">Documentation</h2>
+                    <article class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-5">
+                        {{ documentation|markdown_to_html }}
+                    </article>
                 {% endif %}
 
                 {% apply spaceless %}
-                <code>code.php</code>
+                <h2 class="text-xl mt-5 mb-5" id="documentation">Code</h2>
                 <div id="code" class="relative">
-                    <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code-php" {{ stimulus_controller('clipboard') }}>
-                        <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
-                    </button>
+                    <div class="absolute top-[12px] right-[12px] flex gap-2">
+                        <a href="{{ path(playgroundUrl.name, playgroundUrl.arguments) }}"
+                           class="bg-orange-100 rounded px-4 leading-9 hover:bg-orange-200"
+                           title="Try in Playground">
+                            <img src="{{ asset('images/icons/play.svg') }}" alt="play" width="20" height="20" class="inline">
+                        </a>
+                        <button class="bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
+                                data-clipboard-target="#code-php"
+                                {{ stimulus_controller('clipboard') }}>
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
+                        </button>
+                    </div>
                     <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-php" data-controller="syntax-highlight" >
                         <code id="code-php">
                             {{- code | escape('html') -}}
@@ -118,22 +112,6 @@
                 </div>
                 {% endapply %}
             </div>
-
-            {% if output %}
-            <h2 class="text-xl mt-5 mb-5">Output</h2>
-            <div id="output" class="relative">
-                {% apply spaceless %}
-                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
-                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
-                </button>
-                <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2 language-{{ output.type }}" {{ stimulus_controller('syntax_highlight') }}>
-                    <code id="output" class="overflow-auto">
-                        {{- output.content -}}
-                    </code>
-                </pre>
-                {% endapply %}
-            </div>
-            {% endif %}
 
             <div class="mt-5">
                 <script src="https://giscus.app/client.js"

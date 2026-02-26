@@ -1,9 +1,0 @@
-+----+------------+-----------+----------------+
-| id | first_name | last_name |           name |
-+----+------------+-----------+----------------+
-|  1 |       John |       Doe |       John Doe |
-|  2 |       Jane |     Smith |     Jane Smith |
-|  3 |        Bob |   Johnson |    Bob Johnson |
-|  4 |      Alice |  Williams | Alice Williams |
-+----+------------+-----------+----------------+
-4 rows

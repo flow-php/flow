@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Flow PHP - {{ topic|humanize }} - {{ example|humanize }}{% if option %} - {{ option|humanize }}{% endif %} - Playground
+{%- endblock -%}
+
+{%- block description -%}
+    Interactive playground for {{ example|humanize }} example.
+{%- endblock -%}
+
+{% block hero %}{% endblock %}
+
+{% block main %}
+    {% include 'playground/_playground.html.twig' with {
+        initial_code: code,
+        back_url: backUrl,
+        back_label: 'Back to Example',
+        data_files: data_files|default({}),
+        topic: topic,
+        example: example,
+        option: option
+    } %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endblock %}

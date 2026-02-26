@@ -5,7 +5,8 @@ export default class extends Controller {
     static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "actionSpinner"]
     static values = {
         packageIcon: String,
-        linkIcon: String
+        linkIcon: String,
+        exampleIcon: String
     }
 
     connect() {
@@ -47,6 +48,11 @@ export default class extends Controller {
     onStorageLoaded(event) {
         this.#log('Code loaded from local storage')
         this.#showIndicator('storage')
+    }
+
+    onExampleLoaded(event) {
+        this.#log('Code loaded from example')
+        this.#showIndicator('example')
     }
 
     onUrlLoaded(event) {
@@ -157,12 +163,14 @@ export default class extends Controller {
 
         const icons = {
             storage: `<img src="${this.packageIconValue}" width="16" height="16" alt="">`,
-            url: `<img src="${this.linkIconValue}" width="16" height="16" alt="">`
+            url: `<img src="${this.linkIconValue}" width="16" height="16" alt="">`,
+            example: `<img src="${this.exampleIconValue}" width="16" height="16" alt="">`
         }
 
         const labels = {
             storage: 'Loaded from local storage',
-            url: 'Loaded from snippet'
+            url: 'Loaded from snippet',
+            example: 'Loaded from example'
         }
 
         this.storageIndicatorTarget.innerHTML = icons[source] + '<span>' + labels[source] + '</span>'

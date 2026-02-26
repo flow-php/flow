@@ -1,0 +1,2 @@
+- [Group By](/documentation/components/core/group-by)
+- [Aggregations](/documentation/components/core/aggregations)

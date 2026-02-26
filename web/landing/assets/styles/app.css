@@ -138,7 +138,7 @@ code {
 
 
 #documentation-page {
-    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl;
+    @apply pb-5;
 }
 
 #documentation-page a {
@@ -315,8 +315,18 @@ code {
     display: none;
 }
 
+/* Hide scrollbar for horizontal scroll navigation while keeping scroll functionality */
+[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"] {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"]::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
 #playground {
-    @apply py-10 px-2 sm:px-4 mx-auto max-w-screen-2xl;
+    @apply py-10 px-4 lg:px-8 xl:px-12;
 
     .playground-header {
         @apply mb-6;
@@ -327,6 +337,14 @@ code {
 
         .help-trigger {
             @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
+        }
+
+        .back-link {
+            @apply inline-flex items-center gap-2 ml-4 text-sm text-stone-400 hover:text-white transition-colors no-underline;
+
+            img {
+                @apply inline-block;
+            }
         }
     }
 
@@ -424,8 +442,17 @@ code {
     }
 
     div.editor {
-        @apply grid gap-6 grid-cols-1 lg:grid-cols-12 mb-6;
+        @apply grid gap-6 grid-cols-1;
         display: none; /* Hidden by default, shown by Stimulus */
+
+        @screen lg {
+            grid-template-columns: 16rem 1fr; /* 256px | fluid */
+            align-items: stretch; /* File browser matches height of editor-main */
+        }
+
+        @screen xl {
+            grid-template-columns: 18rem 1fr; /* 288px | fluid */
+        }
 
         div.file-browser-mobile {
             @apply grid grid-cols-[auto_1fr] items-center gap-4;
@@ -454,7 +481,7 @@ code {
 
         div.file-browser {
             @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
-                lg:col-span-2 bg-transparent;
+                bg-transparent;
             display: none;
 
             @screen lg {
@@ -515,7 +542,7 @@ code {
         div.code-container {
             @apply
                 rounded overflow-hidden shadow-2xl shadow-gray rounded border-gray border-2
-                col-span-10 flex flex-col;
+                min-w-0 flex flex-col;
 
             .tab-bar {
                 @apply flex items-center border-b border-gray bg-stone-900 px-2;
@@ -547,13 +574,21 @@ code {
                 }
             }
         }
+
+        div.editor-main {
+            @apply flex flex-col min-w-0;
+            gap: 2rem; /* More space between editor and output */
+        }
+
+        div.dsl-sidebar {
+            display: none;
+        }
     }
 
     div.output-container {
         @apply rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
             min-h-[100px]
         ;
-        display: none; /* Hidden by default, shown by Stimulus */
 
         pre {
             @apply w-full h-full resize-none outline-none p-4;

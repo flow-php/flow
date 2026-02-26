@@ -1,0 +1,1 @@
+- [Schema](/documentation/components/core/schema)

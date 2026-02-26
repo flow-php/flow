@@ -1,6 +1,0 @@
-schema
-|-- id: integer
-|-- name: string
-|-- active: boolean
-|-- tags: ?list<string>
-|-- address: ?map<string, string>

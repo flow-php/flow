@@ -103,9 +103,8 @@ final class DocumentationController extends AbstractController
             'currentTopic' => $topic,
             'currentExample' => $example,
             'description' => $this->examples->description($currentTopic, $currentExample),
-            'composer' => $this->examples->composer($currentTopic, $currentExample),
+            'documentation' => $this->examples->documentation($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
-            'output' => $this->examples->output($currentTopic, $currentExample),
         ]);
     }
 

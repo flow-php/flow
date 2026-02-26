@@ -1,0 +1,1 @@
+Rename columns in your data. You can rename individual columns, perform bulk renames using search and replace, or transform all column names to a specific style (lowercase, camelCase, snake_case, etc.).

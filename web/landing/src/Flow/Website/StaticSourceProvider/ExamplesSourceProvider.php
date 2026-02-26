@@ -27,9 +27,11 @@ final readonly class ExamplesSourceProvider implements SourceProvider
                 if (\count($options) > 0) {
                     foreach ($options as $option) {
                         $sources[] = new Source('example_option', ['topic' => $topic, 'example' => $example, 'option' => $option]);
+                        $sources[] = new Source('example_option_playground', ['topic' => $topic, 'example' => $example, 'option' => $option]);
                     }
                 } else {
                     $sources[] = new Source('example', ['topic' => $topic, 'example' => $example]);
+                    $sources[] = new Source('example_playground', ['topic' => $topic, 'example' => $example]);
                 }
             }
         }

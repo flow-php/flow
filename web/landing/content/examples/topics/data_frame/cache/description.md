@@ -1,0 +1,1 @@
+Cache extracted data to avoid repeated calls to slow or rate-limited sources like APIs. This example demonstrates caching HTTP responses from the GitHub API, so subsequent runs use cached data instead of making new requests.

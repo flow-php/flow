@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_wide.html.twig' %}
 
 {%- block title -%}
     DSL - Documentation - Flow PHP - Data Processing Framework
@@ -13,9 +13,9 @@
 {% endblock %}
 
 {% block main %}
-<div class="mt-5 mb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl" data-hx-boost="true">
-    <div class="grid grid-cols-1 lg:grid-cols-6">
-        <div class="order-1 lg:order-0 col-span-1 lg:col-span-1 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto">
+<div class="mt-5 mb-5 px-4 lg:px-8 xl:px-12" data-hx-boost="true">
+    <div class="grid grid-cols-1 lg:grid-cols-[16rem_1fr_14rem] xl:grid-cols-[18rem_1fr_16rem] gap-4">
+        <div class="order-1 lg:order-0 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pr-4">
             <h1 class="font-bold text-2xl mb-4 hidden lg:block">
                 DSL References
             </h1>
@@ -54,7 +54,7 @@
                 {% endfor %}
             </ul>
         </div>
-        <div class="order-3 lg:order-1 lg:col-span-4 py-2 px-4">
+        <div class="order-3 lg:order-1 min-w-0 py-2 px-4 lg:px-8">
             <hr class="text-blue-100 my-4 border-t-2 rounded" />
             <p class="mb-2 text-sm italic">
                 DSL stands for Domain Specific Language. In the case of Flow, the DSL is used to define simple functions that can be used to transform data.
@@ -100,7 +100,7 @@
                 {% endif %}
             {% endfor %}
         </div>
-        <div class="order-2 lg:order-2 col-span-1 lg:col-span-1 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto">
+        <div class="order-2 lg:order-2 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pl-4">
             {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight')) }}
         </div>
     </div>

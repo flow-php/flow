@@ -1,0 +1,1 @@
+Flow includes a dedicated filesystem abstraction for working with files. The local filesystem provides operations for listing files (with glob pattern support), reading data (in full or chunks), and writing data.

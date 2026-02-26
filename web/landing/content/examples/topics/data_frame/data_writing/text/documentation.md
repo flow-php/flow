@@ -1,0 +1,1 @@
+- [Text Adapter](/documentation/components/adapters/text)
