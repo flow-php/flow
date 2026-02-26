@@ -8,6 +8,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Reference to documentation above examples** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [be622a](https://github.com/flow-php/flow/commit/be622a89dd6761f790f7383407c1cc9882880f95) - **refactor: add retry pattern to e2e website test, enable posthog integration** - [@norberttech](https://github.com/norberttech)
 - [41b8d4](https://github.com/flow-php/flow/commit/41b8d4f16c9d38547d59a59c247e64f252629f93) - **chore: migrate website analytics from umami to posthog** - [@norberttech](https://github.com/norberttech)
 - [7bd77c](https://github.com/flow-php/flow/commit/7bd77ce35fc52f2e5ff409bee6baeabebd4c05e9) - **chore: add datadog to list of sponsors** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **simplified telemetry examples** - [@norberttech](https://github.com/norberttech)
