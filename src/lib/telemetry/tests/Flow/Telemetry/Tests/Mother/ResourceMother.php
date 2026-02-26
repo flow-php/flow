@@ -16,6 +16,17 @@ final class ResourceMother
         ]);
     }
 
+    public static function full() : Resource
+    {
+        return Resource::create([
+            'service.name' => 'test-service',
+            'service.version' => '1.0.0',
+            'service.namespace' => 'test-namespace',
+            'host.name' => 'test-host',
+            'process.pid' => 12345,
+        ]);
+    }
+
     /**
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
      */

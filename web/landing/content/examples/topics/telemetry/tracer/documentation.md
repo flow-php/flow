@@ -1,4 +1,4 @@
-- [Telemetry Library](/documentation/components/libs/telemetry) - Core telemetry abstraction with Tracer, Logger, and Meter
+- [Telemetry Library](/documentation/components/libs/telemetry) 
 - [OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge) - Export telemetry data to OpenTelemetry Protocol backends
 - [PSR-18 Telemetry Bridge](/documentation/components/bridges/psr18-telemetry-bridge) - HTTP client instrumentation for telemetry
 - [PSR-7 Telemetry Bridge](/documentation/components/bridges/psr7-telemetry-bridge) - HTTP message telemetry formatting

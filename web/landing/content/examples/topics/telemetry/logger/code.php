@@ -11,26 +11,20 @@ use function Flow\Telemetry\DSL\{
     resource_detector,
     telemetry
 };
+use function Flow\ETL\DSL\clock;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$clock = new SystemClock();
-$contextStorage = memory_context_storage();
-
-$resource = resource_detector()->detect();
-
 $telemetry = telemetry(
-    $resource,
+    resource_detector()->detect(),
     null,
     null,
     logger_provider(
         memory_log_processor(console_log_exporter(colors: false, maxBodyLength: 200)),
-        $clock,
-        $contextStorage,
+        clock(),
+        memory_context_storage(),
     ),
-);
-
-$telemetry->registerShutdownFunction();
+)->registerShutdownFunction();
 
 $logger = $telemetry->logger('order-service');
 
