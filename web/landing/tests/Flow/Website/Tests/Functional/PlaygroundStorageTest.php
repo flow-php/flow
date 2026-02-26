@@ -21,8 +21,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
     public function test_clearing_storage_removes_saved_code() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
@@ -44,8 +43,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
     public function test_reset_button_clears_storage() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
@@ -65,8 +63,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
     private function clearStorageBeforeTest() : void
     {
         try {
-            $client = self::createE2EClient();
-            $client->request('GET', '/playground');
+            $client = self::navigateWithRetry('/playground');
             $client->executeScript('localStorage.clear();');
         } catch (\Exception) {
         }

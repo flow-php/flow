@@ -8,8 +8,7 @@ final class PlaygroundRunCodeTest extends EndToEndTestCase
 {
     public function test_run_simple_flow_pipeline() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 

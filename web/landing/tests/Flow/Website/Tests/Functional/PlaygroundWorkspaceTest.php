@@ -8,8 +8,7 @@ final class PlaygroundWorkspaceTest extends EndToEndTestCase
 {
     public function test_clicking_file_in_browser_shows_preview() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
@@ -29,8 +28,7 @@ final class PlaygroundWorkspaceTest extends EndToEndTestCase
 
     public function test_file_browser_updates_after_code_creates_files() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
@@ -55,8 +53,7 @@ PHP
 
     public function test_workspace_displays_default_structure() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 

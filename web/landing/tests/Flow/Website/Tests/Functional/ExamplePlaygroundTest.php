@@ -8,8 +8,7 @@ final class ExamplePlaygroundTest extends EndToEndTestCase
 {
     public function test_back_to_example_link_navigates_correctly() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground/data_frame/cache');
+        $client = self::navigateWithRetry('/playground/data_frame/cache');
 
         $this->waitForWasmReady($client);
 
@@ -21,8 +20,7 @@ final class ExamplePlaygroundTest extends EndToEndTestCase
 
     public function test_example_code_is_preloaded_in_playground() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground/data_frame/cache');
+        $client = self::navigateWithRetry('/playground/data_frame/cache');
 
         $this->waitForWasmReady($client);
 
@@ -34,8 +32,7 @@ final class ExamplePlaygroundTest extends EndToEndTestCase
 
     public function test_example_playground_can_run_code() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground/filesystem/stdout');
+        $client = self::navigateWithRetry('/playground/filesystem/stdout');
 
         $this->waitForWasmReady($client);
 
@@ -55,8 +52,7 @@ final class ExamplePlaygroundTest extends EndToEndTestCase
 
     public function test_loaded_from_example_indicator_is_shown() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground/data_frame/cache');
+        $client = self::navigateWithRetry('/playground/data_frame/cache');
 
         $this->waitForWasmReady($client);
 
@@ -74,8 +70,7 @@ final class ExamplePlaygroundTest extends EndToEndTestCase
 
     public function test_option_example_code_is_preloaded() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground/data_frame/data_reading/csv');
+        $client = self::navigateWithRetry('/playground/data_frame/data_reading/csv');
 
         $this->waitForWasmReady($client);
 

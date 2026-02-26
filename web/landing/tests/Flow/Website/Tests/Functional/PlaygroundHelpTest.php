@@ -8,8 +8,7 @@ final class PlaygroundHelpTest extends EndToEndTestCase
 {
     public function test_help_buttons_show_help_section_with_correct_content() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $client->waitForVisibility('[data-help-topic="help-about"]', 5);
 
@@ -42,8 +41,7 @@ final class PlaygroundHelpTest extends EndToEndTestCase
 
     public function test_help_close_button_hides_help_section() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $client->waitForVisibility('[data-help-topic="help-about"]', 5);
 

@@ -8,8 +8,7 @@ final class PlaygroundResetTest extends EndToEndTestCase
 {
     public function test_reset_clears_custom_code_and_restores_default() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 

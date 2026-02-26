@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
+use Facebook\WebDriver\Exception\WebDriverException;
 use Flow\Website\Kernel;
 use Symfony\Component\Panther\{Client, PantherTestCase};
 
@@ -108,5 +109,31 @@ abstract class EndToEndTestCase extends PantherTestCase
     protected static function getKernelClass() : string
     {
         return Kernel::class;
+    }
+
+    /**
+     * Navigate to URL with retry logic to handle transient WebDriver session issues.
+     * Returns a fresh client that successfully navigated to the URL.
+     */
+    protected static function navigateWithRetry(string $url, int $maxRetries = 3) : Client
+    {
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $client = static::createE2EClient();
+                $client->request('GET', $url);
+
+                return $client;
+            } catch (WebDriverException $e) {
+                $lastException = $e;
+
+                if ($attempt === $maxRetries) {
+                    throw $e;
+                }
+            }
+        }
+
+        throw $lastException;
     }
 }

@@ -8,8 +8,7 @@ final class PlaygroundUploadTest extends EndToEndTestCase
 {
     public function test_upload_multiple_files() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
@@ -25,8 +24,7 @@ final class PlaygroundUploadTest extends EndToEndTestCase
 
     public function test_upload_single_file() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 

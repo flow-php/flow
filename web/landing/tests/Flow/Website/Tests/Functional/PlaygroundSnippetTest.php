@@ -53,8 +53,7 @@ PHP;
 
     public function test_load_nonexistent_snippet_shows_error() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground?snippet=nonexistent123');
+        $client = self::navigateWithRetry('/playground?snippet=nonexistent123');
 
         $this->waitForWasmReady($client);
 
@@ -66,8 +65,7 @@ PHP;
 
     public function test_share_requires_non_empty_code() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 

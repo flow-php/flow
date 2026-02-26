@@ -8,8 +8,7 @@ final class PlaygroundFormatCodeTest extends EndToEndTestCase
 {
     public function test_format_unformatted_code() : void
     {
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
