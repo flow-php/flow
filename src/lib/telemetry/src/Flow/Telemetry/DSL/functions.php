@@ -15,7 +15,7 @@ use Flow\Telemetry\Meter\Exemplar\{AlwaysOffExemplarFilter, AlwaysOnExemplarFilt
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, PassThroughMetricProcessor};
 use Flow\Telemetry\Propagation\{ArrayCarrier, CompositePropagator, PropagationContext, Propagator, SuperglobalCarrier, W3CBaggage, W3CTraceContext};
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
+use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleLogOptions, ConsoleMetricExporter, ConsoleMetricOptions, ConsoleSpanExporter, ConsoleSpanOptions};
 use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
 use Flow\Telemetry\Resource\Detector\{CachingDetector, ChainDetector, ComposerDetector, EnvironmentDetector, HostDetector, ManualDetector, OsDetector, ProcessDetector};
@@ -628,11 +628,12 @@ function severity_filtering_log_processor(
  * Useful for debugging and development.
  *
  * @param bool $colors Whether to use ANSI colors (default: true)
+ * @param ConsoleSpanOptions $options Display options for the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_span_exporter(bool $colors = true) : ConsoleSpanExporter
+function console_span_exporter(bool $colors = true, ConsoleSpanOptions $options = new ConsoleSpanOptions()) : ConsoleSpanExporter
 {
-    return new ConsoleSpanExporter($colors);
+    return new ConsoleSpanExporter($colors, null, $options);
 }
 
 /**
@@ -642,11 +643,12 @@ function console_span_exporter(bool $colors = true) : ConsoleSpanExporter
  * Useful for debugging and development.
  *
  * @param bool $colors Whether to use ANSI colors (default: true)
+ * @param ConsoleMetricOptions $options Display options for the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_metric_exporter(bool $colors = true) : ConsoleMetricExporter
+function console_metric_exporter(bool $colors = true, ConsoleMetricOptions $options = new ConsoleMetricOptions()) : ConsoleMetricExporter
 {
-    return new ConsoleMetricExporter($colors);
+    return new ConsoleMetricExporter($colors, null, $options);
 }
 
 /**
@@ -657,11 +659,66 @@ function console_metric_exporter(bool $colors = true) : ConsoleMetricExporter
  *
  * @param bool $colors Whether to use ANSI colors (default: true)
  * @param null|int $maxBodyLength Maximum length for body+attributes column (null = no limit, default: 100)
+ * @param ConsoleLogOptions $options Display options for the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_log_exporter(bool $colors = true, ?int $maxBodyLength = 100) : ConsoleLogExporter
+function console_log_exporter(bool $colors = true, ?int $maxBodyLength = 100, ConsoleLogOptions $options = new ConsoleLogOptions()) : ConsoleLogExporter
 {
-    return new ConsoleLogExporter($colors, $maxBodyLength);
+    return new ConsoleLogExporter($colors, $maxBodyLength, null, $options);
+}
+
+/**
+ * Create ConsoleSpanOptions with all display options enabled (default behavior).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function console_span_options() : ConsoleSpanOptions
+{
+    return ConsoleSpanOptions::default();
+}
+
+/**
+ * Create ConsoleSpanOptions with minimal display (legacy compact format).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function console_span_options_minimal() : ConsoleSpanOptions
+{
+    return ConsoleSpanOptions::minimal();
+}
+
+/**
+ * Create ConsoleLogOptions with all display options enabled (default behavior).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function console_log_options() : ConsoleLogOptions
+{
+    return ConsoleLogOptions::default();
+}
+
+/**
+ * Create ConsoleLogOptions with minimal display (legacy compact format).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function console_log_options_minimal() : ConsoleLogOptions
+{
+    return ConsoleLogOptions::minimal();
+}
+
+/**
+ * Create ConsoleMetricOptions with all display options enabled (default behavior).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function console_metric_options() : ConsoleMetricOptions
+{
+    return ConsoleMetricOptions::default();
+}
+
+/**
+ * Create ConsoleMetricOptions with minimal display (legacy compact format).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function console_metric_options_minimal() : ConsoleMetricOptions
+{
+    return ConsoleMetricOptions::minimal();
 }
 
 /**

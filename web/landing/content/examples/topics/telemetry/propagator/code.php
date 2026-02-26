@@ -17,22 +17,18 @@ use function Flow\Telemetry\DSL\{
     w3c_baggage,
     w3c_trace_context
 };
+use function Flow\ETL\DSL\clock;
 
 require __DIR__ . '/vendor/autoload.php';
-
-$clock = new SystemClock();
-$contextStorage = memory_context_storage();
 
 $telemetry = telemetry(
     resource_detector()->detect(),
     tracer_provider(
         memory_span_processor(console_span_exporter(colors: false)),
-        $clock,
-        $contextStorage,
+        clock(),
+        memory_context_storage(),
     ),
-);
-
-$telemetry->registerShutdownFunction();
+)->registerShutdownFunction();
 
 // Create composite propagator (W3C Trace Context + Baggage)
 $propagator = composite_propagator(

@@ -19,10 +19,11 @@ use function Flow\Telemetry\DSL\{
     telemetry,
     tracer_provider
 };
+use function Flow\ETL\DSL\clock;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$clock = new SystemClock();
+$clock = clock();
 $contextStorage = memory_context_storage();
 
 $telemetry = telemetry(
@@ -41,9 +42,7 @@ $telemetry = telemetry(
         $clock,
         $contextStorage,
     ),
-);
-
-$telemetry->registerShutdownFunction();
+)->registerShutdownFunction();
 
 $tracer = $telemetry->tracer('order-service');
 $logger = $telemetry->logger('order-service');

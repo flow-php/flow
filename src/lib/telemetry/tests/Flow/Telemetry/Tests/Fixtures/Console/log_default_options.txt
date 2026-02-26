@@ -1,0 +1,14 @@
++-------------------------------------------------------------------+
+| LOGS                                                              |
+| Resource:                                                         |
+|   service.name      = test-service                                |
+|   service.version   = 1.0.0                                       |
+|   service.namespace = test-namespace                              |
+|   host.name         = test-host                                   |
+|   process.pid       = 12345                                       |
+| Scope: test-instrumentation v1.0.0                                |
++-------------------------------------------------------------------+
+| Timestamp                  | Level | Message                      |
++-------------------------------------------------------------------+
+| 2024-01-15 10:30:00.000000 | INFO  | User logged in {user_id: 42} |
++-------------------------------------------------------------------+

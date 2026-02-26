@@ -15,6 +15,7 @@ composer config repositories.local-adapter-chartjs '{"type": "path", "url": "../
 composer config repositories.local-openapi-specification '{"type": "path", "url": "../bridge/openapi/specification", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-parquet-viewer '{"type": "path", "url": "../lib/parquet-viewer", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-postgresql '{"type": "path", "url": "../lib/postgresql", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
+composer config repositories.local-telemetry '{"type": "path", "url": "../lib/telemetry", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-types '{"type": "path", "url": "../lib/types", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-array-dot '{"type": "path", "url": "../lib/array-dot", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-filesystem '{"type": "path", "url": "../lib/filesystem", "options": {"symlink": false}}' --working-dir="$CLI_DIR"

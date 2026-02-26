@@ -39,6 +39,7 @@ use function Flow\Types\DSL\{
 };
 use Dom\{HTMLDocument, HTMLElement};
 use Flow\Calculator\Rounding;
+use Flow\Clock\SystemClock;
 use Flow\ETL\{Analyze,
     Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
@@ -243,6 +244,7 @@ use Flow\Types\Type\Native\{
 };
 use Flow\Types\Type\{TypeFactory, Types};
 use Flow\Types\Value\Json;
+use Psr\Clock\ClockInterface;
 use UnitEnum;
 
 /**
@@ -2606,4 +2608,10 @@ function write_with_retries(
     Sleep $sleep = new SystemSleep(),
 ) : RetryLoader {
     return new RetryLoader($loader, $retry_strategy, $delay_factory, $sleep);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function clock(string $time_zone = 'UTC') : ClockInterface
+{
+    return new SystemClock(new \DateTimeZone($time_zone));
 }

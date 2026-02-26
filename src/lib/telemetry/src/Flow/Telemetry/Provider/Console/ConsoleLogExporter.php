@@ -36,6 +36,7 @@ final readonly class ConsoleLogExporter implements LogExporter
         bool $colors = true,
         private ?int $maxBodyLength = null,
         mixed $outputStream = null,
+        private ConsoleLogOptions $options = new ConsoleLogOptions(),
     ) {
         /** @var null|resource $outputStream */
         $this->output = new ConsoleOutput($colors, $outputStream);
@@ -53,10 +54,11 @@ final readonly class ConsoleLogExporter implements LogExporter
         $formattedRecords = $this->formatEntries($entries);
         $bodyWidth = $this->calculateBodyWidth($formattedRecords);
         $hasTrace = $this->hasAnySpanContext($entries);
-        $resourceLine = $this->buildResourceLine($entries[0]->resource);
+        $resourceLines = $this->buildResourceLines($entries[0]->resource);
+        $scopeLine = $this->buildScopeLine($entries[0]);
         $width = $this->calculateTotalWidth($bodyWidth, $hasTrace);
 
-        if ($resourceLine !== null) {
+        foreach ($resourceLines as $resourceLine) {
             $resourceWidth = \mb_strlen($this->output->stripColors($resourceLine)) + 4;
             $width = \max($width, $resourceWidth);
         }
@@ -64,8 +66,14 @@ final readonly class ConsoleLogExporter implements LogExporter
         $buffer = $this->output->border($width) . PHP_EOL;
         $buffer .= $this->output->row($this->output->bold('LOGS'), $width) . PHP_EOL;
 
-        if ($resourceLine !== null) {
-            $buffer .= $this->output->row($resourceLine, $width) . PHP_EOL;
+        if (\count($resourceLines) > 0) {
+            foreach ($resourceLines as $resourceLine) {
+                $buffer .= $this->output->row($resourceLine, $width) . PHP_EOL;
+            }
+        }
+
+        if ($scopeLine !== null) {
+            $buffer .= $this->output->row($scopeLine, $width) . PHP_EOL;
         }
 
         $buffer .= $this->output->border($width) . PHP_EOL;
@@ -110,7 +118,7 @@ final readonly class ConsoleLogExporter implements LogExporter
     }
 
     /**
-     * @param array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string} $record
+     * @param array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string, droppedAttributeCount: int} $record
      */
     private function buildLine(array $record, int $bodyWidth, bool $hasTrace) : string
     {
@@ -123,6 +131,10 @@ final readonly class ConsoleLogExporter implements LogExporter
         $line .= $this->colorBySeverity($severity, $record['severityRaw']) . ' | ';
         $line .= $body;
 
+        if ($this->options->showDroppedAttributeCount && $record['droppedAttributeCount'] > 0) {
+            $line .= ' ' . $this->output->yellow('[dropped:' . $record['droppedAttributeCount'] . ']');
+        }
+
         if ($hasTrace) {
             $trace = $this->output->pad($record['trace'], self::TRACE_WIDTH);
             $line .= ' | ' . ($record['trace'] !== '' ? $this->output->dim($trace) : $trace);
@@ -131,34 +143,68 @@ final readonly class ConsoleLogExporter implements LogExporter
         return $line;
     }
 
-    private function buildResourceLine(TelemetryResource $resource) : ?string
+    /**
+     * @return array<string>
+     */
+    private function buildResourceLines(TelemetryResource $resource) : array
     {
         if ($resource->isEmpty()) {
+            return [];
+        }
+
+        if (!$this->options->showResourceAttributes) {
+            $parts = [];
+            $serviceName = $resource->get('service.name');
+
+            if (\is_string($serviceName)) {
+                $parts[] = $serviceName;
+            }
+
+            $serviceVersion = $resource->get('service.version');
+
+            if (\is_string($serviceVersion)) {
+                $parts[] = 'v' . $serviceVersion;
+            }
+
+            if (\count($parts) === 0) {
+                return [];
+            }
+
+            return ['Resource: ' . $this->output->dim(\implode(' ', $parts))];
+        }
+
+        $lines = [];
+        $lines[] = $this->output->bold('Resource:');
+
+        $attributes = $resource->all();
+        $maxKeyLength = 0;
+
+        foreach (\array_keys($attributes) as $key) {
+            $maxKeyLength = \max($maxKeyLength, \mb_strlen($key));
+        }
+
+        foreach ($attributes as $key => $value) {
+            $keyStr = $this->output->pad($key, $maxKeyLength);
+            $valueStr = $this->output->formatValue($value);
+            $lines[] = '  ' . $this->output->cyan($keyStr) . ' = ' . $valueStr;
+        }
+
+        return $lines;
+    }
+
+    private function buildScopeLine(LogEntry $entry) : ?string
+    {
+        if (!$this->options->showInstrumentationScope) {
             return null;
         }
 
-        $parts = [];
-        $serviceName = $resource->get('service.name');
+        $scope = $entry->scope;
 
-        if (\is_string($serviceName)) {
-            $parts[] = $serviceName;
-        }
-
-        $serviceVersion = $resource->get('service.version');
-
-        if (\is_string($serviceVersion)) {
-            $parts[] = 'v' . $serviceVersion;
-        }
-
-        if (\count($parts) === 0) {
-            return null;
-        }
-
-        return 'Resource: ' . $this->output->dim(\implode(' ', $parts));
+        return 'Scope: ' . $this->output->dim($scope->name . ' v' . $scope->version);
     }
 
     /**
-     * @param array<array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string}> $records
+     * @param array<array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string, droppedAttributeCount: int}> $records
      */
     private function calculateBodyWidth(array $records) : int
     {
@@ -225,7 +271,7 @@ final readonly class ConsoleLogExporter implements LogExporter
     /**
      * @param array<LogEntry> $entries
      *
-     * @return array<array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string}>
+     * @return array<array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string, droppedAttributeCount: int}>
      */
     private function formatEntries(array $entries) : array
     {
@@ -245,12 +291,19 @@ final readonly class ConsoleLogExporter implements LogExporter
                 $trace = \mb_substr($entry->spanContext->traceId->toHex(), 0, 8) . '/' . \mb_substr($entry->spanContext->spanId->toHex(), 0, 8);
             }
 
+            $timestamp = $entry->timestamp->format('Y-m-d H:i:s.u');
+
+            if ($this->options->showObservedTimestamp && $entry->record->observedTimestamp !== null) {
+                $timestamp .= ' (obs: ' . $entry->record->observedTimestamp->format('H:i:s.u') . ')';
+            }
+
             $formatted[] = [
-                'timestamp' => $entry->timestamp->format('Y-m-d H:i:s.u'),
+                'timestamp' => $timestamp,
                 'severity' => $entry->record->severity->name,
                 'severityRaw' => $entry->record->severity,
                 'body' => $body,
                 'trace' => $trace,
+                'droppedAttributeCount' => $entry->droppedAttributeCount,
             ];
         }
 

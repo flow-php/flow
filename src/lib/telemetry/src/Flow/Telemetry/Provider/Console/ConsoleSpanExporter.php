@@ -27,6 +27,7 @@ final readonly class ConsoleSpanExporter implements SpanExporter
     public function __construct(
         bool $colors = true,
         mixed $outputStream = null,
+        private ConsoleSpanOptions $options = new ConsoleSpanOptions(),
     ) {
         /** @var null|resource $outputStream */
         $this->output = new ConsoleOutput($colors, $outputStream);
@@ -84,6 +85,41 @@ final readonly class ConsoleSpanExporter implements SpanExporter
     /**
      * @return array<string>
      */
+    private function buildDroppedCountsLines(Span $span) : array
+    {
+        if (!$this->options->showDroppedCounts) {
+            return [];
+        }
+
+        $droppedAttrs = $span->droppedAttributeCount();
+        $droppedEvents = $span->droppedEventsCount();
+        $droppedLinks = $span->droppedLinksCount();
+
+        if ($droppedAttrs === 0 && $droppedEvents === 0 && $droppedLinks === 0) {
+            return [];
+        }
+
+        $lines = [];
+        $lines[] = $this->output->bold('Dropped:');
+
+        if ($droppedAttrs > 0) {
+            $lines[] = '  ' . $this->output->yellow('Attributes: ' . $droppedAttrs);
+        }
+
+        if ($droppedEvents > 0) {
+            $lines[] = '  ' . $this->output->yellow('Events: ' . $droppedEvents);
+        }
+
+        if ($droppedLinks > 0) {
+            $lines[] = '  ' . $this->output->yellow('Links: ' . $droppedLinks);
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @return array<string>
+     */
     private function buildEventLines(Span $span) : array
     {
         $events = $span->events();
@@ -108,21 +144,102 @@ final readonly class ConsoleSpanExporter implements SpanExporter
     /**
      * @return array<string>
      */
+    private function buildLinkLines(Span $span) : array
+    {
+        if (!$this->options->showLinks) {
+            return [];
+        }
+
+        $links = $span->links();
+
+        if (\count($links) === 0) {
+            return [];
+        }
+
+        $lines = [];
+        $lines[] = $this->output->bold('Links (' . \count($links) . '):');
+
+        foreach ($links as $link) {
+            $traceId = $link->context->traceId->toHex();
+            $spanId = $link->context->spanId->toHex();
+            $lines[] = '  -> ' . $this->output->dim('trace:' . \mb_substr($traceId, 0, 12) . '... span:' . \mb_substr($spanId, 0, 12) . '...');
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function buildResourceLines(TelemetryResource $resource) : array
+    {
+        if ($resource->isEmpty()) {
+            return [];
+        }
+
+        if (!$this->options->showResourceAttributes) {
+            $parts = [];
+            $serviceName = $resource->get('service.name');
+
+            if (\is_string($serviceName)) {
+                $parts[] = $serviceName;
+            }
+
+            $serviceVersion = $resource->get('service.version');
+
+            if (\is_string($serviceVersion)) {
+                $parts[] = 'v' . $serviceVersion;
+            }
+
+            if (\count($parts) === 0) {
+                return [];
+            }
+
+            return ['Resource: ' . $this->output->dim(\implode(' ', $parts))];
+        }
+
+        $lines = [];
+        $lines[] = $this->output->bold('Resource:');
+
+        $attributes = $resource->all();
+        $maxKeyLength = 0;
+
+        foreach (\array_keys($attributes) as $key) {
+            $maxKeyLength = \max($maxKeyLength, \mb_strlen($key));
+        }
+
+        foreach ($attributes as $key => $value) {
+            $keyStr = $this->output->pad($key, $maxKeyLength);
+            $valueStr = $this->output->formatValue($value);
+            $lines[] = '  ' . $this->output->cyan($keyStr) . ' = ' . $valueStr;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function buildScopeLines(Span $span) : array
+    {
+        if (!$this->options->showInstrumentationScope) {
+            return [];
+        }
+
+        $scope = $span->scope();
+
+        return ['Scope: ' . $this->output->dim($scope->name . ' v' . $scope->version)];
+    }
+
+    /**
+     * @return array<string>
+     */
     private function buildSpanLines(Span $span) : array
     {
         $context = $span->context();
-        $resource = $span->resource();
         $lines = [];
 
         $lines[] = 'SPAN: ' . $span->name();
-
-        if (!$resource->isEmpty()) {
-            $resourceStr = $this->formatResource($resource);
-
-            if ($resourceStr !== '') {
-                $lines[] = 'Resource: ' . $this->output->dim($resourceStr);
-            }
-        }
 
         $traceInfo = 'Trace: ' . $this->output->dim($context->traceId->toHex());
         $traceInfo .= '  Span: ' . $this->output->dim($context->spanId->toHex());
@@ -138,7 +255,7 @@ final readonly class ConsoleSpanExporter implements SpanExporter
         $durationStr = $this->output->formatDuration($span->duration());
 
         $details = $this->output->pad('Kind: ' . $kindStr, 22);
-        $details .= $this->output->pad('Status: ' . $statusStr, 18);
+        $details .= 'Status: ' . $statusStr . '  ';
         $details .= 'Duration: ' . $durationStr;
         $lines[] = $details;
 
@@ -162,24 +279,6 @@ final readonly class ConsoleSpanExporter implements SpanExporter
         return \max(self::MIN_WIDTH, $maxLength + 4);
     }
 
-    private function formatResource(TelemetryResource $resource) : string
-    {
-        $parts = [];
-        $serviceName = $resource->get('service.name');
-
-        if (\is_string($serviceName)) {
-            $parts[] = $serviceName;
-        }
-
-        $serviceVersion = $resource->get('service.version');
-
-        if (\is_string($serviceVersion)) {
-            $parts[] = 'v' . $serviceVersion;
-        }
-
-        return \implode(' ', $parts);
-    }
-
     private function formatStatusIcon(Span $span) : string
     {
         $status = $span->status();
@@ -188,11 +287,17 @@ final readonly class ConsoleSpanExporter implements SpanExporter
             return $this->output->yellow('UNSET');
         }
 
-        return match ($status->code) {
+        $statusText = match ($status->code) {
             SpanStatusCode::OK => $this->output->green('OK'),
             SpanStatusCode::ERROR => $this->output->red('ERROR'),
             SpanStatusCode::UNSET => $this->output->yellow('UNSET'),
         };
+
+        if ($this->options->showStatusDescription && $status->code === SpanStatusCode::ERROR && $status->description !== null) {
+            $statusText .= ' ' . $this->output->dim('(' . $status->description . ')');
+        }
+
+        return $statusText;
     }
 
     private function formatTimestamp(\DateTimeImmutable $timestamp) : string
@@ -203,10 +308,14 @@ final readonly class ConsoleSpanExporter implements SpanExporter
     private function printSpan(Span $span) : void
     {
         $headerLines = $this->buildSpanLines($span);
+        $resourceLines = $this->buildResourceLines($span->resource());
+        $scopeLines = $this->buildScopeLines($span);
         $attributeLines = $this->buildAttributeLines($span);
         $eventLines = $this->buildEventLines($span);
+        $linkLines = $this->buildLinkLines($span);
+        $droppedLines = $this->buildDroppedCountsLines($span);
 
-        $allLines = \array_merge($headerLines, $attributeLines, $eventLines);
+        $allLines = \array_merge($headerLines, $resourceLines, $scopeLines, $attributeLines, $eventLines, $linkLines, $droppedLines);
         $width = $this->calculateWidth($allLines);
 
         $buffer = $this->output->border($width) . PHP_EOL;
@@ -215,6 +324,20 @@ final readonly class ConsoleSpanExporter implements SpanExporter
 
         for ($i = 1; $i < \count($headerLines); $i++) {
             $buffer .= $this->output->row($headerLines[$i], $width) . PHP_EOL;
+        }
+
+        if (\count($resourceLines) > 0) {
+            $buffer .= $this->output->border($width) . PHP_EOL;
+
+            foreach ($resourceLines as $line) {
+                $buffer .= $this->output->row($line, $width) . PHP_EOL;
+            }
+        }
+
+        if (\count($scopeLines) > 0) {
+            foreach ($scopeLines as $line) {
+                $buffer .= $this->output->row($line, $width) . PHP_EOL;
+            }
         }
 
         if (\count($attributeLines) > 0) {
@@ -229,6 +352,22 @@ final readonly class ConsoleSpanExporter implements SpanExporter
             $buffer .= $this->output->border($width) . PHP_EOL;
 
             foreach ($eventLines as $line) {
+                $buffer .= $this->output->row($line, $width) . PHP_EOL;
+            }
+        }
+
+        if (\count($linkLines) > 0) {
+            $buffer .= $this->output->border($width) . PHP_EOL;
+
+            foreach ($linkLines as $line) {
+                $buffer .= $this->output->row($line, $width) . PHP_EOL;
+            }
+        }
+
+        if (\count($droppedLines) > 0) {
+            $buffer .= $this->output->border($width) . PHP_EOL;
+
+            foreach ($droppedLines as $line) {
                 $buffer .= $this->output->row($line, $width) . PHP_EOL;
             }
         }

@@ -32,6 +32,24 @@ final class SpanMother
         );
     }
 
+    public static function deterministic(
+        string $name = 'test-operation',
+        SpanKind $kind = SpanKind::SERVER,
+    ) : Span {
+        return new Span(
+            $name,
+            SpanContext::create(
+                TraceId::fromHex('0123456789abcdef0123456789abcdef'),
+                SpanId::fromHex('0123456789abcdef'),
+                SpanId::fromHex('fedcba9876543210'),
+            ),
+            $kind,
+            new \DateTimeImmutable('2024-01-15T10:30:00.000000+00:00'),
+            ResourceMother::full(),
+            InstrumentationScopeMother::default(),
+        );
+    }
+
     public static function withName(string $name) : Span
     {
         return self::create($name);
