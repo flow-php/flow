@@ -8,6 +8,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Reference to documentation above examples** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [7bd77c](https://github.com/flow-php/flow/commit/7bd77ce35fc52f2e5ff409bee6baeabebd4c05e9) - **chore: add datadog to list of sponsors** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **simplified telemetry examples** - [@norberttech](https://github.com/norberttech)
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Move all examples to be executable in playground** - [@norberttech](https://github.com/norberttech)
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Reorganized examples** - [@norberttech](https://github.com/norberttech)
