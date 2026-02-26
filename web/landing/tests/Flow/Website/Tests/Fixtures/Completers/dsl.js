@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 699
+ * Total functions: 706
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -1299,6 +1299,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\chunks_from(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:chunk_size" + "}" + ")"),
         boost: 10
     },                {
+        label: "clock",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">clock</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$time_zone</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;UTC&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ClockInterface</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\clock(" + "$" + "{" + "1:time_zone" + "}" + ")"),
+        boost: 10
+    },                {
         label: "close_cursor",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -1891,15 +1906,51 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">console_log_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxBodyLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleLogExporter</span>
+                    <span class=\"fn-name\">console_log_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxBodyLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleLogOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleLogOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleLogExporter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ConsoleLogExporter.<br>Outputs log records to the console with severity-based coloring.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param null|int $maxBodyLength Maximum length for body+attributes column (null = no limit, default: 100)
+                    Create a ConsoleLogExporter.<br>Outputs log records to the console with severity-based coloring.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param null|int $maxBodyLength Maximum length for body+attributes column (null = no limit, default: 100)<br>@param ConsoleLogOptions $options Display options for the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\console_log_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:maxBodyLength" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_log_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:maxBodyLength" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "console_log_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">console_log_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleLogOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create ConsoleLogOptions with all display options enabled (default behavior).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_log_options()"),
+        boost: 10
+    },                {
+        label: "console_log_options_minimal",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">console_log_options_minimal</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleLogOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create ConsoleLogOptions with minimal display (legacy compact format).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_log_options_minimal()"),
         boost: 10
     },                {
         label: "console_metric_exporter",
@@ -1909,15 +1960,51 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">console_metric_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleMetricExporter</span>
+                    <span class=\"fn-name\">console_metric_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleMetricOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleMetricOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleMetricExporter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ConsoleMetricExporter.<br>Outputs metrics to the console with ASCII table formatting.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)
+                    Create a ConsoleMetricExporter.<br>Outputs metrics to the console with ASCII table formatting.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param ConsoleMetricOptions $options Display options for the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\console_metric_exporter(" + "$" + "{" + "1:colors" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_metric_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "console_metric_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">console_metric_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleMetricOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create ConsoleMetricOptions with all display options enabled (default behavior).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_metric_options()"),
+        boost: 10
+    },                {
+        label: "console_metric_options_minimal",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">console_metric_options_minimal</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleMetricOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create ConsoleMetricOptions with minimal display (legacy compact format).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_metric_options_minimal()"),
         boost: 10
     },                {
         label: "console_span_exporter",
@@ -1927,15 +2014,51 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">console_span_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleSpanExporter</span>
+                    <span class=\"fn-name\">console_span_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleSpanOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleSpanOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleSpanExporter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ConsoleSpanExporter.<br>Outputs spans to the console with ASCII table formatting.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)
+                    Create a ConsoleSpanExporter.<br>Outputs spans to the console with ASCII table formatting.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param ConsoleSpanOptions $options Display options for the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\console_span_exporter(" + "$" + "{" + "1:colors" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_span_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "console_span_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">console_span_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleSpanOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create ConsoleSpanOptions with all display options enabled (default behavior).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_span_options()"),
+        boost: 10
+    },                {
+        label: "console_span_options_minimal",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">console_span_options_minimal</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleSpanOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create ConsoleSpanOptions with minimal display (legacy compact format).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_span_options_minimal()"),
         boost: 10
     },                {
         label: "constraint_sorted_by",
