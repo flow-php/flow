@@ -1,7 +1,9 @@
 twig:
     default_path: '%kernel.project_dir%/templates'
     globals:
-        umami_id: '%env(UMAMI_ID)%'
+        posthog_key: '%env(POSTHOG_KEY)%'
+        posthog_api_host: '%env(POSTHOG_API_HOST)%'
+        posthog_ui_host: '%env(POSTHOG_UI_HOST)%'
         flow_version: '%flow_version%'
         turnstile_site_key: '%env(TURNSTILE_SITE_KEY)%'
         turnstile_appearance: '%env(default:turnstile_appearance_default:TURNSTILE_APPEARANCE)%'
