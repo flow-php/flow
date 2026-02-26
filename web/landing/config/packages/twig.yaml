@@ -9,6 +9,9 @@ twig:
         turnstile_appearance: '%env(default:turnstile_appearance_default:TURNSTILE_APPEARANCE)%'
         playground_api_url: '%env(PLAYGROUND_API_URL)%'
         playground_snippets_url: '%env(PLAYGROUND_SNIPPETS_URL)%'
+        datadog_application_id: '%env(DATADOG_APPLICATION_ID)%'
+        datadog_client_token: '%env(DATADOG_CLIENT_TOKEN)%'
+        datadog_site: '%env(DATADOG_SITE)%'
 when@test:
     twig:
         strict_variables: true
