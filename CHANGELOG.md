@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-02-26
+## [Unreleased] - 2026-02-27
 
 ### Added
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing attributes to telemetry console exporters** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +18,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **refactored layout of docuentation playground - to use whole page width** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [b46086](https://github.com/flow-php/flow/commit/b460864af2cca1b83ef141ec0fc45f656ff2f6f6) - **failing symfony bundle tests** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing entry in bin/build-phar.sh script** - [@norberttech](https://github.com/norberttech)
 
 ## [0.32.0] - 2026-02-23
