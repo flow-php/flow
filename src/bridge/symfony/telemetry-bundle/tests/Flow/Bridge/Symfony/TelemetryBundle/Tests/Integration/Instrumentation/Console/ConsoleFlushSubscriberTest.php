@@ -57,7 +57,7 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new TestCommand());
+        $this->addCommand($application, new TestCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
@@ -108,7 +108,7 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
         ]);
 
         $application = new Application($kernel);
-        $application->add(new TestCommand());
+        $this->addCommand($application, new TestCommand());
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
