@@ -150,6 +150,11 @@
       "name" : "flow-php/postgresql",
       "path": "src/lib/postgresql",
       "type": "lib"
+    },
+    {
+      "name": "flow-php/phpunit-telemetry-bridge",
+      "path": "src/bridge/phpunit/telemetry",
+      "type": "bridge"
     }
   ]
 }

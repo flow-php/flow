@@ -45,8 +45,8 @@ parameters:
         - src/lib/types/src
         - src/lib/postgresql/src
         - src/tools/documentation/src
-        - tools/phpunit/extension/telemetry/src
-        - tools/phpunit/extension/telemetry/tests
+        - src/bridge/phpunit/telemetry/src
+        - src/bridge/phpunit/telemetry/tests
         - src/core/etl/tests
         - src/cli/tests
         - src/adapter/etl-adapter-avro/tests
