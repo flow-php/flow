@@ -1,0 +1,40 @@
+{
+    "name": "flow-php/phpunit-telemetry-bridge",
+    "type": "library",
+    "description": "Flow PHP - PHPUnit Telemetry Bridge",
+    "keywords": [
+        "flow-php",
+        "phpunit",
+        "telemetry",
+        "opentelemetry",
+        "otel",
+        "testing",
+        "bridge"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/telemetry": "self.version",
+        "flow-php/telemetry-otlp-bridge": "self.version",
+        "phpunit/phpunit": "^11"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

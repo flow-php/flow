@@ -30,8 +30,6 @@ $finder = Finder::create()
         __DIR__ . '/web/landing/tests',
         __DIR__ . '/web/landing/bin',
         __DIR__ . '/tools/rector/src',
-        __DIR__ . '/tools/phpunit/extension/telemetry/src',
-        __DIR__ . '/tools/phpunit/extension/telemetry/tests',
     ])
     ->exclude([
         'Flow/Parquet/ThriftModel',
