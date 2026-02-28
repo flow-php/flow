@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-02-27
+## [Unreleased] - 2026-02-28
 
 ### Added
+- [#2234](https://github.com/flow-php/flow/pull/2234) - **phpunit telemetry bridge package** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing attributes to telemetry console exporters** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **options to configure telemetry console exporters verbosity** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **added clock dsl function** - [@norberttech](https://github.com/norberttech)
