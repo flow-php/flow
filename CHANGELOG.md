@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-02-28
+## [Unreleased] - 2026-03-01
 
 ### Added
 - [#2234](https://github.com/flow-php/flow/pull/2234) - **phpunit telemetry bridge package** - [@norberttech](https://github.com/norberttech)
