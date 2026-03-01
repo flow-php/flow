@@ -11,10 +11,7 @@
 
 let
     nixpkgs = fetchTarball {
-        url = if php-version == 8.5 then
-            "https://github.com/NixOS/nixpkgs/archive/refs/pull/422308/head.tar.gz"
-        else
-            "https://github.com/NixOS/nixpkgs/archive/66a437ebcf6160152336e801a7ec289ba2aba3c5.tar.gz";
+        url = "https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-25.11.tar.gz";
     };
 
     pkgs = import nixpkgs {
