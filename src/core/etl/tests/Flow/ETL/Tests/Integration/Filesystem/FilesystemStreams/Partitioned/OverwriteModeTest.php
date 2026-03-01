@@ -27,6 +27,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $this->setupFiles([
             __FUNCTION__ => [
                 'partition=value' => [
+                    'existing.txt' => 'file content',
                     'file.txt' => 'file content',
                 ],
             ],
@@ -39,10 +40,10 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
-        self::assertCount(1, $files);
+        self::assertCount(2, $files);
 
-        self::assertStringStartsWith('file.txt', $files[0]->path->basename());
-        self::assertSame('new content', \file_get_contents($files[0]->path->path()));
+        self::assertStringStartsWith('file.txt', $files[1]->path->basename());
+        self::assertSame('new content', \file_get_contents($files[1]->path->path()));
     }
 
     public function test_open_stream_for_existing_partition_without_existing_file() : void
