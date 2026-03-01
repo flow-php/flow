@@ -95,7 +95,7 @@ final readonly class UnixPath
         return new self('/' . \implode('/', $absoluteParts), $options);
     }
 
-    public function addPartitions(Partition $partition, Partition ...$partitions) : self
+    public function addPartitions(Partition ...$partitions) : self
     {
         if ($this->isPattern()) {
             throw new InvalidArgumentException("Can't add partitions to path pattern.");
@@ -104,11 +104,10 @@ final readonly class UnixPath
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
         $basename = $pathInfo['basename'] ?? '';
-        $partitionsString = \implode('/', \array_map(static fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
+        $partitionsString = \implode('/', \array_map(static fn (Partition $p) => $p->name . '=' . $p->value, $partitions));
 
         return match ($dirname) {
-            '', '.' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
-            '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
+            '', '.', '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
             default => new self($this->protocol->scheme() . $dirname . '/' . $partitionsString . '/' . $basename, $this->options),
         };
     }

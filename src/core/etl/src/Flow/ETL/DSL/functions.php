@@ -2399,15 +2399,14 @@ function type_is(Type $type, string $typeClass) : bool
  * @template T
  *
  * @param Type<T> $type
- * @param class-string<Type<T>> $typeClass
  * @param class-string<Type<T>> ...$typeClasses
  *
- * @deprecated please use \Flow\Types\DSL\type_is_any($type, $typeClass, ...$typeClasses): bool instead
+ * @deprecated please use \Flow\Types\DSL\type_is_any($type, ...$typeClasses): bool instead
  */
 #[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
+function type_is_any(Type $type, string ...$typeClasses) : bool
 {
-    return type_is_any_new($type, $typeClass, ...$typeClasses);
+    return type_is_any_new($type, ...$typeClasses);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -2497,17 +2496,17 @@ function with_entry(string $name, ScalarFunction $function) : WithEntry
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function constraint_unique(string $reference, string ...$references) : UniqueConstraint
+function constraint_unique(string ...$references) : UniqueConstraint
 {
-    return new UniqueConstraint($reference, ...$references);
+    return new UniqueConstraint(...$references);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function constraint_sorted_by(string|Reference $column, string|Reference ...$columns) : SortedByConstraint
+function constraint_sorted_by(string|Reference ...$columns) : SortedByConstraint
 {
     $references = \array_map(
         static fn (string|Reference $ref) => EntryReference::init($ref),
-        [$column, ...$columns]
+        $columns,
     );
 
     return new SortedByConstraint(...$references);

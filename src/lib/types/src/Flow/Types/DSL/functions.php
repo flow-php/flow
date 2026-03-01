@@ -471,13 +471,12 @@ function type_is(Type $type, string $typeClass) : bool
  * @template T
  *
  * @param Type<T> $type
- * @param class-string<Type<mixed>> $typeClass
  * @param class-string<Type<mixed>> ...$typeClasses
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
-function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
+function type_is_any(Type $type, string ...$typeClasses) : bool
 {
-    return (new Comparator())->isAny($type, $typeClass, ...$typeClasses);
+    return (new Comparator())->isAny($type, ...$typeClasses);
 }
 
 /**

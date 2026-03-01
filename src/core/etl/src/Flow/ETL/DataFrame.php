@@ -205,10 +205,8 @@ final class DataFrame
         return $this;
     }
 
-    public function constrain(Constraint $constraint, Constraint ...$constraints) : self
+    public function constrain(Constraint ...$constraints) : self
     {
-        $constraints = \array_merge([$constraint], $constraints);
-
         $this->pipeline->add(new ConstrainedProcessor($constraints));
 
         return $this;
@@ -665,10 +663,8 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
+    public function partitionBy(string|Reference ...$entries) : self
     {
-        \array_unshift($entries, $entry);
-
         $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
 
         return $this;

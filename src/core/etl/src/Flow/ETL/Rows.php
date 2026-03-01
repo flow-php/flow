@@ -583,16 +583,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @param Reference|string $reference
      * @param Reference|string ...$references
      *
      * @throws InvalidArgumentException
      *
      * @return array<Rows>
      */
-    public function partitionBy(string|Reference $reference, string|Reference ...$references) : array
+    public function partitionBy(string|Reference ...$references) : array
     {
-        $refs = References::init($reference, ...$references);
+        $refs = References::init(...$references);
 
         /** @var array<string, array<mixed>> $partitions */
         $partitions = [];

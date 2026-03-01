@@ -15,9 +15,9 @@ final class UniqueConstraint implements Constraint
 
     private Storage $storage;
 
-    public function __construct(string|Reference $column, string|Reference ...$columns)
+    public function __construct(string|Reference ...$columns)
     {
-        $this->reference = refs($column, ...$columns);
+        $this->reference = refs(...$columns);
         $this->storage = new InMemoryStorage();
     }
 

@@ -19,9 +19,9 @@ final class SortedByConstraint implements Constraint
 
     private readonly References $references;
 
-    public function __construct(Reference $column, Reference ...$columns)
+    public function __construct(Reference ...$columns)
     {
-        $this->references = new References($column, ...$columns);
+        $this->references = new References(...$columns);
     }
 
     public function isSatisfiedBy(Row $row) : bool

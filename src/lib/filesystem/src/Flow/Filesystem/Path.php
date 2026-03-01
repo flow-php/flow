@@ -42,9 +42,9 @@ final readonly class Path
         );
     }
 
-    public function addPartitions(Partition $partition, Partition ...$partitions) : self
+    public function addPartitions(Partition ...$partitions) : self
     {
-        return new self($this->implementation->addPartitions($partition, ...$partitions));
+        return new self($this->implementation->addPartitions(...$partitions));
     }
 
     public function basename() : string

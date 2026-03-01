@@ -145,14 +145,11 @@ final class Comparator
      * @template T
      *
      * @param Type<T> $type
-     * @param class-string<Type<mixed>> $typeClass
      * @param class-string<Type<mixed>> ...$typeClasses
      */
-    public function isAny(Type $type, string $typeClass, string ...$typeClasses) : bool
+    public function isAny(Type $type, string ...$typeClasses) : bool
     {
-        $classes = [$typeClass, ...$typeClasses];
-
-        foreach ($classes as $class) {
+        foreach ($typeClasses as $class) {
             if ($this->is($type, $class)) {
                 return true;
             }
