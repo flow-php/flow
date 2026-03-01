@@ -2068,12 +2068,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">constraint_sorted_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortedByConstraint</span>
+                    <span class=\"fn-name\">constraint_sorted_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortedByConstraint</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\constraint_sorted_by(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\constraint_sorted_by(" + "$" + "{" + "1:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "constraint_unique",
@@ -2083,12 +2083,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">constraint_unique</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$reference</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$references</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UniqueConstraint</span>
+                    <span class=\"fn-name\">constraint_unique</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$references</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UniqueConstraint</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\constraint_unique(" + "$" + "{" + "1:reference" + "}" + ", " + "$" + "{" + "2:references" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\constraint_unique(" + "$" + "{" + "1:references" + "}" + ")"),
         boost: 10
     },                {
         label: "context",
@@ -11092,15 +11092,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_is_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$typeClass</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$typeClasses</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
+                    <span class=\"fn-name\">type_is_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$typeClasses</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param Type<T> $type<br>@param class-string<Type<mixed>> $typeClass<br>@param class-string<Type<mixed>> ...$typeClasses
+                    @template T<br>@param Type<T> $type<br>@param class-string<Type<mixed>> ...$typeClasses
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Types\\DSL\\type_is_any(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:typeClass" + "}" + ", " + "$" + "{" + "3:typeClasses" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_is_any(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:typeClasses" + "}" + ")"),
         boost: 10
     },                {
         label: "type_is_nullable",

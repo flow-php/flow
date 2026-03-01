@@ -145,12 +145,12 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">constrain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Constraint</span> <span class=\"fn-param\">$constraint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Constraint</span> <span class=\"fn-param\">$constraints</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">constrain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Constraint</span> <span class=\"fn-param\">$constraints</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("constrain(" + "$" + "{" + "1:constraint" + "}" + ", " + "$" + "{" + "2:constraints" + "}" + ")"),
+        apply: snippet("constrain(" + "$" + "{" + "1:constraints" + "}" + ")"),
         boost: 10
     },        {
         label: "count",
@@ -625,7 +625,7 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">partitionBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">partitionBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy
@@ -633,7 +633,7 @@ const dataframeMethods = [
                             `
             return div
         },
-        apply: snippet("partitionBy(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
+        apply: snippet("partitionBy(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "pivot",
