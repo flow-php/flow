@@ -5,14 +5,23 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row;
 
 use function Flow\ETL\DSL\{ref, refs};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ReferencesTest extends FlowTestCase
 {
+    public function test_empty() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('References cannot be empty.');
+
+        refs();
+    }
+
     public function test_lazy_without() : void
     {
-        $refs = refs()->without('id')->add('id')->add('name');
+        $refs = refs('id')->without('id')->add('id')->add('name');
 
         self::assertEquals(
             refs('name')->all(),

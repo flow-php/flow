@@ -24,6 +24,10 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function __construct(string|Reference ...$references)
     {
+        if ([] === $references) {
+            throw new InvalidArgumentException('References cannot be empty.');
+        }
+
         foreach ($references as $ref) {
             $ref = EntryReference::init($ref);
 
