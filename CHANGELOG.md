@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-03-01
+## [Unreleased] - 2026-03-02
 
 ### Added
+- [#2241](https://github.com/flow-php/flow/pull/2241) - **variadic arguments ADR** - [@norberttech](https://github.com/norberttech)
 - [#2234](https://github.com/flow-php/flow/pull/2234) - **phpunit telemetry bridge package** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing attributes to telemetry console exporters** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **options to configure telemetry console exporters verbosity** - [@norberttech](https://github.com/norberttech)
