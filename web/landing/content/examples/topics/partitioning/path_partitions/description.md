@@ -1,0 +1,1 @@
+Extract partition metadata from file paths without reading file contents using from_path_partitions(). Returns the file path and a map of partition key-value pairs. Useful for discovering available partitions or building file manifests.

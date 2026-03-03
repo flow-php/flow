@@ -108,3 +108,159 @@ $dataFrame->partitionBy('id'); // If IDs are unique, creates many tiny partition
 // Good partitioning - moderate cardinality
 $dataFrame->partitionBy('department'); // Assuming reasonable number of departments
 ```
+
+## Save Modes with Partitioning
+
+When writing partitioned data, the save mode determines how existing partition directories are handled.
+
+### Overwrite Mode
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
+use function Flow\ETL\Adapter\CSV\to_csv;
+
+data_frame()
+    ->read(from_array([
+        ['date' => '2024-01-01', 'amount' => 100],
+        ['date' => '2024-01-02', 'amount' => 200],
+    ]))
+    ->partitionBy(ref('date'))
+    ->mode(overwrite())
+    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->run();
+```
+
+**Behavior:**
+- Removes ALL files within partition directories being written to
+- Partitions NOT in the current dataset are preserved
+- Running twice with the same partition values replaces the first write completely
+
+**Common pitfall:** If you write two separate DataFrames to the same partitions using `overwrite()`, the second write deletes data from the first:
+
+```php
+<?php
+
+// First write - creates date=2024-01-01/sales.csv with amount=100
+data_frame()
+    ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
+    ->partitionBy(ref('date'))
+    ->mode(overwrite())
+    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->run();
+
+// Second write - DELETES the 100 and writes 200
+data_frame()
+    ->read(from_array([['date' => '2024-01-01', 'amount' => 200]]))
+    ->partitionBy(ref('date'))
+    ->mode(overwrite())
+    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->run();
+
+// Result: date=2024-01-01/sales.csv contains ONLY amount=200
+```
+
+To combine data from multiple sources into the same partition, use `append()` mode or merge data before writing.
+
+### Append Mode
+
+```php
+<?php
+
+data_frame()
+    ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
+    ->partitionBy(ref('date'))
+    ->mode(append())
+    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->run();
+```
+
+**Behavior:**
+- Creates new files with randomized suffixes in existing partition directories
+- Does not remove existing files
+- Multiple runs accumulate files (may cause duplicates)
+
+### Ignore Mode
+
+```php
+<?php
+
+data_frame()
+    ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
+    ->partitionBy(ref('date'))
+    ->mode(ignore())
+    ->write(to_csv(__DIR__ . '/output/sales.csv'))
+    ->run();
+```
+
+**Behavior:**
+- Skips writing if partition directory already exists
+- No error thrown, silently continues
+
+### Exception If Exists Mode (Default)
+
+```php
+<?php
+
+data_frame()
+    ->read(from_array([['date' => '2024-01-01', 'amount' => 100]]))
+    ->partitionBy(ref('date'))
+    ->write(to_csv(__DIR__ . '/output/sales.csv')) // Default mode
+    ->run();
+```
+
+**Behavior:**
+- Throws `RuntimeException` if any partition path already exists
+- Safest option to prevent accidental overwrites
+
+## Reading Partitioned Data
+
+Read partitioned data using glob patterns to match partition directories:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\{data_frame, to_output};
+
+data_frame()
+    ->read(from_csv(__DIR__ . '/output/date=*/*.csv'))
+    ->write(to_output())
+    ->run();
+```
+
+### Partition Pruning
+
+Skip entire partitions without reading their contents using `filterPartitions()`:
+
+```php
+<?php
+
+data_frame()
+    ->read(from_csv(__DIR__ . '/output/date=*/department=*/*.csv'))
+    ->filterPartitions(ref('date')->greaterThanEqual(lit('2024-01-01')))
+    ->write(to_output())
+    ->run();
+```
+
+Unlike `filter()` which reads all data then discards non-matching rows, `filterPartitions()` evaluates partition metadata first and only reads matching partitions - significantly improving performance for large datasets.
+
+### Path Partitions
+
+Extract partition metadata without reading file contents using `from_path_partitions()`:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_path_partitions, to_output};
+
+data_frame()
+    ->read(from_path_partitions(__DIR__ . '/output/date=*/department=*/*.csv'))
+    ->write(to_output())
+    ->run();
+
+// Output includes 'path' and 'partitions' columns
+```
+
+Useful for discovering available partitions or building file manifests before processing data.
