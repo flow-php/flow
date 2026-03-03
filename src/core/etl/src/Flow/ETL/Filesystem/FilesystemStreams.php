@@ -41,9 +41,14 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
                     if ($this->saveMode === SaveMode::Overwrite) {
                         if ($fileStream->path()->partitions()->count()) {
-                            $partitionFilesPatter = \Flow\Filesystem\DSL\path($fileStream->path()->parentDirectory()->uri() . '/*', $fileStream->path()->options());
+                            $filename = \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->filename());
 
-                            foreach ($fs->list($partitionFilesPatter) as $partitionFile) {
+                            $partitionFilesPattern = \Flow\Filesystem\DSL\path(
+                                $fileStream->path()->parentDirectory()->uri() . '/' . $filename . '*.' . $fileStream->path()->extension(),
+                                $fileStream->path()->options()
+                            );
+
+                            foreach ($fs->list($partitionFilesPattern) as $partitionFile) {
                                 if (\str_contains($partitionFile->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
                                     continue;
                                 }

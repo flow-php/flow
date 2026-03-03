@@ -1,0 +1,1 @@
+Skip entire partitions without reading their data using filterPartitions(). Unlike filter() which reads all data then filters, partition pruning evaluates metadata first and only reads matching partitions - dramatically improving performance for large datasets.
