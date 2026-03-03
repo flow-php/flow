@@ -70,7 +70,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $response = $this->service->spreadsheets_values->batchGet($this->spreadsheetId, array_merge($this->options, ['ranges' => $ranges]));
 
         foreach ($response->getValueRanges() as $valueRange) {
-            foreach ($valueRange->getValues() as $rowData) {
+            foreach ($valueRange->getValues() ?: [] as $rowData) {
                 $rowDataCount = \count($rowData);
 
                 if ($this->withHeader) {
