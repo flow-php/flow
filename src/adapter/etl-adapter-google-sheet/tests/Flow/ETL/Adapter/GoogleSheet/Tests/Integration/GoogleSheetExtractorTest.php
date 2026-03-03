@@ -100,6 +100,23 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         self::assertCount(19, $rows);
     }
 
+    public function test_extract_with_batches_containing_empty_rows() : void
+    {
+        $extractor = from_google_sheet(
+            $this->context->sheets(__DIR__ . '/../Fixtures/batch-empty-rows.json'),
+            '1234567890',
+            'Sheet',
+        );
+        $extractor->withRowsPerPage(10);
+
+        $rows = df()
+            ->extract($extractor)
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(9, $rows);
+    }
+
     public function test_extract_with_batches_without_header() : void
     {
         $extractor = from_google_sheet(
