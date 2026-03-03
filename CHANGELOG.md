@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-03-03
 
 ### Added
+- [#2244](https://github.com/flow-php/flow/pull/2244) - **more partitioning examples** - [@norberttech](https://github.com/norberttech)
+- [#2244](https://github.com/flow-php/flow/pull/2244) - **more partitioning documentation** - [@norberttech](https://github.com/norberttech)
 - [#2241](https://github.com/flow-php/flow/pull/2241) - **variadic arguments ADR** - [@norberttech](https://github.com/norberttech)
 - [#2234](https://github.com/flow-php/flow/pull/2234) - **phpunit telemetry bridge package** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing attributes to telemetry console exporters** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +12,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Reference to documentation above examples** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2244](https://github.com/flow-php/flow/pull/2244) - **avoid removing files from other datasets using the same partitiong keys and the same output folder** - [@norberttech](https://github.com/norberttech)
 - [e4cc9e](https://github.com/flow-php/flow/commit/e4cc9e8f410d06e277064efebe04bd9d710ab261) - **chore: lock nix shell to nix 25.11** - [@norberttech](https://github.com/norberttech)
 - [1729a8](https://github.com/flow-php/flow/commit/1729a80b7614afe47b054c877afb9096ac8d26a1) - **feature: integrate datadog RUM** - [@norberttech](https://github.com/norberttech)
 - [be622a](https://github.com/flow-php/flow/commit/be622a89dd6761f790f7383407c1cc9882880f95) - **refactor: add retry pattern to e2e website test, enable posthog integration** - [@norberttech](https://github.com/norberttech)
