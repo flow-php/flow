@@ -284,6 +284,51 @@ final class DeleteBuilderTest extends TestCase
         self::assertSame('DELETE FROM sessions WHERE expired = true RETURNING id', $deparsed);
     }
 
+    public function test_delete_with_schema() : void
+    {
+        $query = DeleteBuilder::create()
+            ->from('myschema.users');
+
+        $ast = $query->toAst();
+
+        $relation = $ast->getRelation();
+        self::assertNotNull($relation);
+        self::assertSame('users', $relation->getRelname());
+        self::assertSame('myschema', $relation->getSchemaname());
+    }
+
+    public function test_delete_with_schema_deparsed_output() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available.');
+        }
+
+        $query = DeleteBuilder::create()
+            ->from('public.users');
+
+        $deparsed = $this->deparse($query->toAst());
+        self::assertSame('DELETE FROM public.users', $deparsed);
+    }
+
+    public function test_delete_with_schema_round_trip() : void
+    {
+        $original = DeleteBuilder::create()
+            ->from('myschema.users');
+
+        $ast = $original->toAst();
+        $restored = DeleteBuilder::fromAst($ast);
+        $restoredAst = $restored->toAst();
+
+        $originalRelation = $ast->getRelation();
+        self::assertNotNull($originalRelation);
+
+        $restoredRelation = $restoredAst->getRelation();
+        self::assertNotNull($restoredRelation);
+
+        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        self::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
+    }
+
     public function test_delete_with_using() : void
     {
         $query = DeleteBuilder::create()

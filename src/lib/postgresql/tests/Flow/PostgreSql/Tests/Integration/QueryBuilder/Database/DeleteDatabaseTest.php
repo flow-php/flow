@@ -27,6 +27,10 @@ use function Flow\PostgreSql\DSL\{
 
 final class DeleteDatabaseTest extends DatabaseTestCase
 {
+    private const SCHEMA_NAME = 'flow_postgres_test_delete_schema';
+
+    private const SCHEMA_TABLE = 'flow_postgres_schema_logs';
+
     private const TABLE_ARCHIVE = 'flow_postgres_log_archive';
 
     private const TABLE_LOGS = 'flow_postgres_logs';
@@ -79,6 +83,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
     {
         $this->dropTableIfExists(self::TABLE_ARCHIVE);
         $this->dropTableIfExists(self::TABLE_LOGS);
+        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
 
         parent::tearDown();
     }
@@ -157,6 +162,46 @@ final class DeleteDatabaseTest extends DatabaseTestCase
         self::assertArrayHasKey('level', $row);
         self::assertArrayHasKey('message', $row);
         self::assertArrayHasKey('created_at', $row);
+    }
+
+    public function test_delete_with_schema_qualified_table() : void
+    {
+        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+
+        $this->execute(
+            create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
+                ->column(column('id', data_type_serial()))
+                ->column(column('level', data_type_varchar(20))->notNull())
+                ->column(column('message', data_type_text()))
+                ->constraint(primary_key('id'))
+                ->toSql()
+        );
+
+        $this->execute(
+            insert()
+                ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+                ->columns('level', 'message')
+                ->values(literal('DEBUG'), literal('Test message'))
+                ->values(literal('INFO'), literal('Info message'))
+                ->toSql()
+        );
+
+        $query = delete()
+            ->from(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+            ->where(eq(col('level'), literal('DEBUG')));
+
+        $result = $this->execute($query->toSql());
+
+        self::assertNotFalse($result);
+        self::assertSame(1, $this->affectedRows($result));
+
+        $check = $this->execute(
+            select(agg_count(star())->as('cnt'))
+                ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
+                ->toSql()
+        );
+        $row = $this->fetchOne($check);
+        self::assertSame('1', $row['cnt']);
     }
 
     public function test_delete_with_using() : void

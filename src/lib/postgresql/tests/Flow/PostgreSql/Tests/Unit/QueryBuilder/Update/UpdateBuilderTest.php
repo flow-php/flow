@@ -588,6 +588,57 @@ final class UpdateBuilderTest extends TestCase
         self::assertSame('UPDATE users SET last_login = now() WHERE id = 1 RETURNING id, last_login', $deparsed);
     }
 
+    public function test_update_with_schema() : void
+    {
+        $query = UpdateBuilder::create()
+            ->update('myschema.users')
+            ->set('name', Literal::string('John'))
+            ->setAll([]);
+
+        $ast = $query->toAst();
+
+        $relation = $ast->getRelation();
+        self::assertNotNull($relation);
+        self::assertSame('users', $relation->getRelname());
+        self::assertSame('myschema', $relation->getSchemaname());
+    }
+
+    public function test_update_with_schema_deparsed_output() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available.');
+        }
+
+        $query = UpdateBuilder::create()
+            ->update('public.users')
+            ->set('name', Literal::string('John'))
+            ->setAll([]);
+
+        $deparsed = $this->deparse($query->toAst());
+        self::assertSame("UPDATE public.users SET name = 'John'", $deparsed);
+    }
+
+    public function test_update_with_schema_round_trip() : void
+    {
+        $original = UpdateBuilder::create()
+            ->update('myschema.users')
+            ->set('name', Literal::string('John'))
+            ->setAll([]);
+
+        $ast = $original->toAst();
+        $restored = UpdateBuilder::fromAst($ast);
+        $restoredAst = $restored->toAst();
+
+        $originalRelation = $ast->getRelation();
+        self::assertNotNull($originalRelation);
+
+        $restoredRelation = $restoredAst->getRelation();
+        self::assertNotNull($restoredRelation);
+
+        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        self::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
+    }
+
     public function test_update_with_where() : void
     {
         $query = UpdateBuilder::create()

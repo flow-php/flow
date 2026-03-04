@@ -29,6 +29,10 @@ use function Flow\PostgreSql\DSL\{
 
 final class SelectDatabaseTest extends DatabaseTestCase
 {
+    private const SCHEMA_NAME = 'flow_postgres_test_select_schema';
+
+    private const SCHEMA_TABLE = 'flow_postgres_schema_users';
+
     private const TABLE_ORDERS = 'flow_postgres_orders';
 
     private const TABLE_USERS = 'flow_postgres_users';
@@ -83,6 +87,7 @@ final class SelectDatabaseTest extends DatabaseTestCase
     {
         $this->dropTableIfExists(self::TABLE_ORDERS);
         $this->dropTableIfExists(self::TABLE_USERS);
+        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
 
         parent::tearDown();
     }
@@ -206,6 +211,39 @@ final class SelectDatabaseTest extends DatabaseTestCase
         self::assertCount(2, $rows);
         self::assertSame('Bob Wilson', $rows[0]['name']);
         self::assertSame('John Doe', $rows[1]['name']);
+    }
+
+    public function test_select_with_schema_qualified_table() : void
+    {
+        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+
+        $this->execute(
+            create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('email', data_type_varchar(255)))
+                ->constraint(primary_key('id'))
+                ->toSql()
+        );
+
+        $this->execute(
+            insert()
+                ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+                ->columns('name', 'email')
+                ->values(literal('Schema User'), literal('schema@example.com'))
+                ->toSql()
+        );
+
+        $query = select(star())
+            ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME));
+
+        $result = $this->execute($query->toSql());
+
+        self::assertNotFalse($result);
+        $rows = $this->fetchAll($result);
+        self::assertCount(1, $rows);
+        self::assertSame('Schema User', $rows[0]['name']);
+        self::assertSame('schema@example.com', $rows[0]['email']);
     }
 
     public function test_select_with_where() : void

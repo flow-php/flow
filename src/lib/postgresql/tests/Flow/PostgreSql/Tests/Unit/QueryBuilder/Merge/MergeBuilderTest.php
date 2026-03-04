@@ -144,6 +144,30 @@ final class MergeBuilderTest extends TestCase
         self::assertSame(3, MergeMatchKind::NOT_MATCHED_BY_TARGET->value);
     }
 
+    public function test_merge_using_parses_schema_and_table() : void
+    {
+        $query = MergeBuilder::create()
+            ->into('target', 't')
+            ->using('myschema.source', 's')
+            ->on(new Comparison(Column::tableColumn('t', 'id'), ComparisonOperator::EQ, Column::tableColumn('s', 'id')))
+            ->whenMatched()
+            ->thenDoNothing();
+
+        $ast = $query->toAst();
+
+        $sourceRelation = $ast->getSourceRelation();
+        self::assertNotNull($sourceRelation);
+
+        $rangeVar = $sourceRelation->getRangeVar();
+        self::assertNotNull($rangeVar);
+        self::assertSame('source', $rangeVar->getRelname());
+        self::assertSame('myschema', $rangeVar->getSchemaname());
+
+        $alias = $rangeVar->getAlias();
+        self::assertNotNull($alias);
+        self::assertSame('s', $alias->getAliasname());
+    }
+
     public function test_merge_when_clause_data_structure() : void
     {
         $condition = new Comparison(Column::name('id'), ComparisonOperator::EQ, Literal::int(1));

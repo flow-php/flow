@@ -27,6 +27,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         private ?string $schema = null,
         private ?string $tableAlias = null,
         private ?string $sourceTable = null,
+        private ?string $sourceSchema = null,
         private ?SelectFinalStep $sourceSelect = null,
         private ?string $sourceAlias = null,
         private ?Condition $joinCondition = null,
@@ -52,6 +53,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $this->schema,
             $this->tableAlias,
             $this->sourceTable,
+            $this->sourceSchema,
             $this->sourceSelect,
             $this->sourceAlias,
             $this->joinCondition,
@@ -69,6 +71,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $identifier->schema(),
             $alias,
             $this->sourceTable,
+            $this->sourceSchema,
             $this->sourceSelect,
             $this->sourceAlias,
             $this->joinCondition,
@@ -84,6 +87,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $this->schema,
             $this->tableAlias,
             $this->sourceTable,
+            $this->sourceSchema,
             $this->sourceSelect,
             $this->sourceAlias,
             $condition,
@@ -148,6 +152,11 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
                 'relname' => $this->sourceTable ?? '',
                 'inh' => true,
             ]);
+
+            if ($this->sourceSchema !== null) {
+                $sourceRangeVar->setSchemaname($this->sourceSchema);
+            }
+
             $alias = new Alias();
             $alias->setAliasname($this->sourceAlias);
             $sourceRangeVar->setAlias($alias);
@@ -187,6 +196,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
                 $this->schema,
                 $this->tableAlias,
                 null,
+                null,
                 $source,
                 $alias,
                 $this->joinCondition,
@@ -194,12 +204,15 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             );
         }
 
+        $identifier = QualifiedIdentifier::parse($source);
+
         return new self(
             $this->with,
             $this->table,
             $this->schema,
             $this->tableAlias,
-            $source,
+            $identifier->name(),
+            $identifier->schema(),
             null,
             $alias,
             $this->joinCondition,
