@@ -39,24 +39,26 @@ final class Calculator
     {
         try {
             if ($scale === null && $rounding === null) {
-                $result = BigDecimal::of($a)->dividedByExact(BigDecimal::of($b));
+                $result = BigDecimal::of($a)->dividedBy(BigDecimal::of($b));
 
                 if (!$result->hasNonZeroFractionalPart()) {
                     return $result->toInt();
                 }
             }
 
+            $useNewNaming = \defined('Brick\Math\RoundingMode::Up');
+
             $brickMode = match ($rounding) {
-                Rounding::UP => RoundingMode::Up,
-                Rounding::DOWN => RoundingMode::Down,
-                Rounding::CEILING => RoundingMode::Ceiling,
-                Rounding::FLOOR => RoundingMode::Floor,
-                Rounding::HALF_UP => RoundingMode::HalfUp,
-                Rounding::HALF_DOWN => RoundingMode::HalfDown,
-                Rounding::HALF_CEILING => RoundingMode::HalfCeiling,
-                Rounding::HALF_FLOOR => RoundingMode::HalfFloor,
-                Rounding::HALF_EVEN => RoundingMode::HalfEven,
-                default => RoundingMode::Unnecessary,
+                Rounding::UP => $useNewNaming ? RoundingMode::Up : RoundingMode::UP,
+                Rounding::DOWN => $useNewNaming ? RoundingMode::Down : RoundingMode::DOWN,
+                Rounding::CEILING => $useNewNaming ? RoundingMode::Ceiling : RoundingMode::CEILING,
+                Rounding::FLOOR => $useNewNaming ? RoundingMode::Floor : RoundingMode::FLOOR,
+                Rounding::HALF_UP => $useNewNaming ? RoundingMode::HalfUp : RoundingMode::HALF_UP,
+                Rounding::HALF_DOWN => $useNewNaming ? RoundingMode::HalfDown : RoundingMode::HALF_DOWN,
+                Rounding::HALF_CEILING => $useNewNaming ? RoundingMode::HalfCeiling : RoundingMode::HALF_CEILING,
+                Rounding::HALF_FLOOR => $useNewNaming ? RoundingMode::HalfFloor : RoundingMode::HALF_FLOOR,
+                Rounding::HALF_EVEN => $useNewNaming ? RoundingMode::HalfEven : RoundingMode::HALF_EVEN,
+                default => $useNewNaming ? RoundingMode::Unnecessary : RoundingMode::UNNECESSARY,
             };
 
             $result = BigDecimal::of((string) $a)->dividedBy(BigDecimal::of((string) $b), $scale, $brickMode);
