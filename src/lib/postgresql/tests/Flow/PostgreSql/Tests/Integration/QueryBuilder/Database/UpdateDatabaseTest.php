@@ -27,6 +27,10 @@ use function Flow\PostgreSql\DSL\{
 
 final class UpdateDatabaseTest extends DatabaseTestCase
 {
+    private const SCHEMA_NAME = 'flow_postgres_test_update_schema';
+
+    private const SCHEMA_TABLE = 'flow_postgres_schema_employees';
+
     private const TABLE_DEPARTMENTS = 'flow_postgres_departments';
 
     private const TABLE_EMPLOYEES = 'flow_postgres_employees';
@@ -81,6 +85,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $this->dropTableIfExists(self::TABLE_EMPLOYEES);
         $this->dropTableIfExists(self::TABLE_DEPARTMENTS);
+        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
 
         parent::tearDown();
     }
@@ -185,6 +190,47 @@ final class UpdateDatabaseTest extends DatabaseTestCase
         self::assertArrayHasKey('department_id', $row);
         self::assertArrayHasKey('status', $row);
         self::assertSame('reviewed', $row['status']);
+    }
+
+    public function test_update_with_schema_qualified_table() : void
+    {
+        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+
+        $this->execute(
+            create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('status', data_type_varchar(50))->default('active'))
+                ->constraint(primary_key('id'))
+                ->toSql()
+        );
+
+        $this->execute(
+            insert()
+                ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+                ->columns('name', 'status')
+                ->values(literal('Alice'), literal('active'))
+                ->toSql()
+        );
+
+        $query = update()
+            ->update(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+            ->set('status', literal('updated'))
+            ->where(eq(col('name'), literal('Alice')));
+
+        $result = $this->execute($query->toSql());
+
+        self::assertNotFalse($result);
+        self::assertSame(1, $this->affectedRows($result));
+
+        $check = $this->execute(
+            select(col('status'))
+                ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
+                ->where(eq(col('name'), literal('Alice')))
+                ->toSql()
+        );
+        $row = $this->fetchOne($check);
+        self::assertSame('updated', $row['status']);
     }
 
     public function test_update_with_where() : void

@@ -22,6 +22,10 @@ use function Flow\PostgreSql\DSL\{
 
 final class TruncateDatabaseTest extends DatabaseTestCase
 {
+    private const SCHEMA_NAME = 'flow_postgres_test_truncate_schema';
+
+    private const SCHEMA_TABLE = 'flow_postgres_schema_truncate';
+
     private const TABLE_ONE = 'flow_postgres_truncate_one';
 
     private const TABLE_TWO = 'flow_postgres_truncate_two';
@@ -70,6 +74,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
     {
         $this->dropTableIfExists(self::TABLE_TWO);
         $this->dropTableIfExists(self::TABLE_ONE);
+        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
 
         parent::tearDown();
     }
@@ -239,5 +244,47 @@ final class TruncateDatabaseTest extends DatabaseTestCase
         );
 
         self::assertSame('1', $row['id']);
+    }
+
+    public function test_truncate_with_schema_qualified_table() : void
+    {
+        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+
+        $this->execute(
+            create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
+                ->column(column('id', data_type_serial()))
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->constraint(primary_key('id'))
+                ->toSql()
+        );
+
+        $this->execute(
+            insert()
+                ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+                ->columns('name')
+                ->values(literal('Row 1'))
+                ->values(literal('Row 2'))
+                ->toSql()
+        );
+
+        $rows = $this->fetchAll(
+            $this->execute(
+                select(star())->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))->toSql()
+            )
+        );
+        self::assertCount(2, $rows);
+
+        $result = $this->execute(
+            truncate_table(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)->toSql()
+        );
+
+        self::assertNotFalse($result);
+
+        $rows = $this->fetchAll(
+            $this->execute(
+                select(star())->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))->toSql()
+            )
+        );
+        self::assertCount(0, $rows);
     }
 }

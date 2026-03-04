@@ -26,6 +26,10 @@ use function Flow\PostgreSql\DSL\{
 
 final class InsertDatabaseTest extends DatabaseTestCase
 {
+    private const SCHEMA_NAME = 'flow_postgres_test_insert_schema';
+
+    private const SCHEMA_TABLE = 'flow_postgres_schema_products';
+
     private const TABLE_PRODUCTS = 'flow_postgres_products';
 
     protected function setUp() : void
@@ -48,6 +52,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
     protected function tearDown() : void
     {
         $this->dropTableIfExists(self::TABLE_PRODUCTS);
+        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
 
         parent::tearDown();
     }
@@ -188,5 +193,38 @@ final class InsertDatabaseTest extends DatabaseTestCase
         self::assertArrayHasKey('name', $row);
         self::assertArrayHasKey('price', $row);
         self::assertArrayHasKey('stock', $row);
+    }
+
+    public function test_insert_with_schema_qualified_table() : void
+    {
+        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+
+        $this->execute(
+            create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
+                ->column(column('id', data_type_serial()))
+                ->column(column('sku', data_type_varchar(50))->notNull())
+                ->column(column('name', data_type_varchar(100))->notNull())
+                ->constraint(primary_key('id'))
+                ->toSql()
+        );
+
+        $query = insert()
+            ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
+            ->columns('sku', 'name')
+            ->values(literal('SCHEMA-SKU'), literal('Schema Product'));
+
+        $result = $this->execute($query->toSql());
+
+        self::assertNotFalse($result);
+        self::assertSame(1, $this->affectedRows($result));
+
+        $check = $this->execute(
+            select(col('name'))
+                ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
+                ->where(eq(col('sku'), literal('SCHEMA-SKU')))
+                ->toSql()
+        );
+        $row = $this->fetchOne($check);
+        self::assertSame('Schema Product', $row['name']);
     }
 }

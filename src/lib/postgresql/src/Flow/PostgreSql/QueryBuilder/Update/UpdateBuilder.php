@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Update;
 
 use Flow\PostgreSql\Protobuf\AST\{Alias, Node, RangeVar, ResTarget, UpdateStmt};
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
@@ -27,6 +27,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
     private function __construct(
         private ?WithClause $with = null,
         private ?string $table = null,
+        private ?string $schema = null,
         private ?string $alias = null,
         private array $assignments = [],
         private array $from = [],
@@ -60,6 +61,12 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
         if ($table === '') {
             throw InvalidAstException::missingRequiredField('relname', 'RangeVar');
+        }
+
+        $schema = $relation->getSchemaname();
+
+        if ($schema === '') {
+            $schema = null;
         }
 
         $alias = null;
@@ -127,7 +134,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
             }
         }
 
-        return new self($with, $table, $alias, $assignments, $from, $where, $returning);
+        return new self($with, $table, $schema, $alias, $assignments, $from, $where, $returning);
     }
 
     public static function with(WithClause $with) : UpdateTableStep
@@ -140,6 +147,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             assignments: $this->assignments,
             from: $tables,
@@ -153,6 +161,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             assignments: $this->assignments,
             from: $this->from,
@@ -171,6 +180,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             assignments: [...$this->assignments, $column => $value],
             from: $this->from,
@@ -184,6 +194,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             assignments: [...$this->assignments, ...$assignments],
             from: $this->from,
@@ -205,6 +216,10 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         $updateStmt = new UpdateStmt();
 
         $rangeVar = new RangeVar(['relname' => $this->table, 'inh' => true]);
+
+        if ($this->schema !== null) {
+            $rangeVar->setSchemaname($this->schema);
+        }
 
         if ($this->alias !== null) {
             $aliasProto = new Alias(['aliasname' => $this->alias]);
@@ -271,9 +286,12 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
     public function update(string $table, ?string $alias = null) : UpdateSetStep
     {
+        $identifier = QualifiedIdentifier::parse($table);
+
         return new self(
             with: $this->with,
-            table: $table,
+            table: $identifier->name(),
+            schema: $identifier->schema(),
             alias: $alias,
             assignments: $this->assignments,
             from: $this->from,
@@ -287,6 +305,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             assignments: $this->assignments,
             from: $this->from,

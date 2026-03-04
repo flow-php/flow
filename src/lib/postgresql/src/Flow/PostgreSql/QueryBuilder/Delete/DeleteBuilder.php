@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Delete;
 
 use Flow\PostgreSql\Protobuf\AST\{Alias, DeleteStmt, Node, RangeVar, ResTarget};
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
@@ -33,6 +33,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
     private function __construct(
         private ?WithClause $with = null,
         private ?string $table = null,
+        private ?string $schema = null,
         private ?string $alias = null,
         private array $using = [],
         private ?Condition $where = null,
@@ -57,6 +58,12 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 
         if ($tableName === '') {
             throw InvalidAstException::missingRequiredField('relname', 'RangeVar');
+        }
+
+        $schema = $relation->getSchemaname();
+
+        if ($schema === '') {
+            $schema = null;
         }
 
         $alias = $relation->getAlias();
@@ -125,6 +132,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self(
             with: $withClause,
             table: $tableName,
+            schema: $schema,
             alias: $aliasName,
             using: $using,
             where: $whereCondition,
@@ -139,9 +147,12 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 
     public function from(string $table, ?string $alias = null) : DeleteUsingStep
     {
+        $identifier = QualifiedIdentifier::parse($table);
+
         return new self(
             with: $this->with,
-            table: $table,
+            table: $identifier->name(),
+            schema: $identifier->schema(),
             alias: $alias,
             using: $this->using,
             where: $this->where,
@@ -154,6 +165,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             using: $this->using,
             where: $this->where,
@@ -166,6 +178,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             using: $this->using,
             where: $this->where,
@@ -185,6 +198,10 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
             'relname' => $this->table,
             'inh' => true,
         ]);
+
+        if ($this->schema !== null) {
+            $rangeVar->setSchemaname($this->schema);
+        }
 
         if ($this->alias !== null) {
             $alias = new Alias([
@@ -242,6 +259,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             using: $tables,
             where: $this->where,
@@ -254,6 +272,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self(
             with: $this->with,
             table: $this->table,
+            schema: $this->schema,
             alias: $this->alias,
             using: $this->using,
             where: $condition,
