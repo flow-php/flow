@@ -9,7 +9,7 @@ use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\Dremel\Statistics\Comparator;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 use Flow\Parquet\ParquetFile\Statistics;
 
 final class StatisticsCounter
@@ -126,8 +126,24 @@ final class StatisticsCounter
         $minBuffer = '';
         $maxBuffer = '';
 
-        (new PlainValuesPacker(new BinaryBufferWriter($minBuffer)))->packValues($this->column, [$this->min()]);
-        (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer)))->packValues($this->column, [$this->max()]);
+        $min = $this->min();
+        $max = $this->max();
+
+        if ($min !== null) {
+            if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($min)) {
+                (new BinaryBufferWriter($minBuffer))->append($min);
+            } else {
+                (new PlainValuesPacker(new BinaryBufferWriter($minBuffer)))->packValues($this->column, [$min]);
+            }
+        }
+
+        if ($max !== null) {
+            if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($max)) {
+                (new BinaryBufferWriter($maxBuffer))->append($max);
+            } else {
+                (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer)))->packValues($this->column, [$max]);
+            }
+        }
 
         return new Statistics(
             max: $maxBuffer !== '' ? $maxBuffer : null,
