@@ -27,7 +27,7 @@ final readonly class StatisticsReader
             return null;
         }
 
-        if (ColumnPrimitiveType::isString($column) && \mb_check_encoding($this->statistics->max, 'UTF-8')) {
+        if (ColumnPrimitiveType::isString($column)) {
             return $this->statistics->max;
         }
 
@@ -40,7 +40,7 @@ final readonly class StatisticsReader
             return null;
         }
 
-        if (ColumnPrimitiveType::isString($column) && \mb_check_encoding($this->statistics->maxValue, 'UTF-8')) {
+        if (ColumnPrimitiveType::isString($column)) {
             return $this->statistics->maxValue;
         }
 
@@ -53,7 +53,7 @@ final readonly class StatisticsReader
             return null;
         }
 
-        if (ColumnPrimitiveType::isString($column) && \mb_check_encoding($this->statistics->min, 'UTF-8')) {
+        if (ColumnPrimitiveType::isString($column)) {
             return $this->statistics->min;
         }
 
@@ -66,7 +66,7 @@ final readonly class StatisticsReader
             return null;
         }
 
-        if (ColumnPrimitiveType::isString($column) && \mb_check_encoding($this->statistics->minValue, 'UTF-8')) {
+        if (ColumnPrimitiveType::isString($column)) {
             return $this->statistics->minValue;
         }
 

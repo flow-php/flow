@@ -463,6 +463,53 @@ final class StatisticsCounterTest extends TestCase
         self::assertNull($statistics->max());
     }
 
+    public function test_to_statistics_encodes_byte_array_without_length_prefix() : void
+    {
+        $column = FlatColumn::string('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $statistics->add('hello');
+        $statistics->add('world');
+
+        $result = $statistics->toStatistics();
+
+        self::assertSame('hello', $result->min);
+        self::assertSame('world', $result->max);
+        self::assertSame('hello', $result->minValue);
+        self::assertSame('world', $result->maxValue);
+    }
+
+    public function test_to_statistics_with_int32_encodes_with_packer() : void
+    {
+        $column = FlatColumn::int32('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $statistics->add(5);
+        $statistics->add(10);
+
+        $result = $statistics->toStatistics();
+
+        self::assertSame(\pack('l', 5), $result->min);
+        self::assertSame(\pack('l', 10), $result->max);
+    }
+
+    public function test_to_statistics_with_null_values_does_not_encode() : void
+    {
+        $column = FlatColumn::string('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $statistics->add(null);
+        $statistics->add(null);
+
+        $result = $statistics->toStatistics();
+
+        self::assertNull($result->min);
+        self::assertNull($result->max);
+        self::assertNull($result->minValue);
+        self::assertNull($result->maxValue);
+        self::assertSame(2, $result->nullCount);
+    }
+
     public function test_values_count_calculation_with_arrays() : void
     {
         $column = FlatColumn::string('test_column');
