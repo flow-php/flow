@@ -15,6 +15,10 @@ final readonly class RenameEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
+        if ($this->from === $this->to) {
+            return $rows;
+        }
+
         $context->telemetry()->transformationStarted($this);
 
         try {

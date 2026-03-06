@@ -85,7 +85,7 @@ final class HTMLEntry implements Entry
 
     public function rename(string $name) : static
     {
-        return new self($name, $this->value);
+        return new self($name, $this->value, $this->definition->metadata());
     }
 
     public function toString() : string

@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{html_entry, html_schema, str_entry};
 use Dom\HTMLDocument;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\HTMLEntry;
+use Flow\ETL\Schema\Metadata;
 use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
@@ -154,6 +155,18 @@ HTML);
             $entry,
             $entry->map(static fn ($value) => $value)
         );
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = new HTMLEntry('old_name', '<!DOCTYPE html><html lang="en"><head></head><body><div>test</div></body></html>', $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals($entry->value()?->saveHtml(), $renamedEntry->value()?->saveHtml());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry() : void

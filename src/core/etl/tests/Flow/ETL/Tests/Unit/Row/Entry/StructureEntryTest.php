@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\{structure_entry, structure_schema};
 use function Flow\Types\DSL\{type_array, type_integer, type_map, type_string, type_structure};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -143,6 +144,18 @@ final class StructureEntryTest extends FlowTestCase
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         structure_entry('', ['id' => 1, 'name' => 'one'], type_structure(['id' => type_integer(), 'name' => type_string()]));
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = structure_entry('old_name', ['id' => 1234], type_structure(['id' => type_integer()]), $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals(['id' => 1234], $renamedEntry->value());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry() : void

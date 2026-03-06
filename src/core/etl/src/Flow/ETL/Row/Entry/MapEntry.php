@@ -115,7 +115,7 @@ final class MapEntry implements Entry
 
     public function rename(string $name) : static
     {
-        return new self($name, $this->value, $this->type());
+        return new self($name, $this->value, $this->type(), $this->definition->metadata());
     }
 
     public function toString() : string

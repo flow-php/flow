@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class XMLElementEntryTest extends FlowTestCase
@@ -48,6 +49,18 @@ final class XMLElementEntryTest extends FlowTestCase
 
         self::assertNotSame($entry, $duplicated);
         self::assertSame($entry->toString(), $duplicated->toString());
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = xml_element_entry('old_name', '<node attr="test">value</node>', $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals($entry->toString(), $renamedEntry->toString());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_serialization() : void

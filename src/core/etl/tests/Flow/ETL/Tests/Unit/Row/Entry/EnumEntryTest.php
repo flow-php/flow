@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\{enum_entry, enum_schema};
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\{BackedIntEnum, BackedStringEnum, BasicEnum};
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -74,6 +75,18 @@ final class EnumEntryTest extends FlowTestCase
         self::assertFalse(
             (enum_entry('enum', BasicEnum::one))->isEqual(enum_entry('enum', BackedStringEnum::one)),
         );
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = enum_entry('old_name', BasicEnum::one, $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertSame(BasicEnum::one, $renamedEntry->value());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_to_string() : void

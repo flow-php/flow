@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use function Flow\ETL\DSL\{map_entry, map_schema};
 use function Flow\Types\DSL\{type_boolean, type_datetime, type_float, type_integer, type_map, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MapEntryTest extends FlowTestCase
@@ -114,6 +115,18 @@ final class MapEntryTest extends FlowTestCase
             (map_entry('new_name', ['one', 'two', 'three'], type_map(type_integer(), type_string()))),
             (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->rename('new_name')
         );
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = map_entry('old_name', ['one', 'two', 'three'], type_map(type_integer(), type_string()), $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals(['one', 'two', 'three'], $renamedEntry->value());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_to_string() : void

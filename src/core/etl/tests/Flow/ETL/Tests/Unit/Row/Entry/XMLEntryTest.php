@@ -9,6 +9,7 @@ use function Flow\Types\DSL\type_instance_of;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -155,6 +156,18 @@ XML);
     public function test_is_equal(bool $equals, XMLEntry $entry, XMLEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = xml_entry('old_name', '<root><item>test</item></root>', $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals($entry->toString(), $renamedEntry->toString());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_serialization() : void
