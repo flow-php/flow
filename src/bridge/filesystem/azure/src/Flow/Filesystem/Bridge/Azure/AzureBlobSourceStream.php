@@ -74,18 +74,16 @@ final class AzureBlobSourceStream implements SourceStream
             }
 
             if (\substr_count($content, $separator) > 1) {
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                $lines = \array_filter(\explode($separator, $content));
+                /** @phpstan-ignore argument.type */
+                $lines = \explode($separator, $content);
 
-                // Yield all lines except the last one
-                foreach (\array_slice($lines, 0, -1) as $line) {
-                    yield $line;
+                $lastIndex = \count($lines) - 1;
+
+                for ($i = 0; $i < $lastIndex; $i++) {
+                    yield $lines[$i];
                 }
 
-                // The last line is incomplete, so we need to keep it for the next iteration
-                $content = \end($lines);
+                $content = $lines[$lastIndex];
             } elseif (\substr_count($content, $separator) === 1) {
                 // Split the content by the separator
                 /**

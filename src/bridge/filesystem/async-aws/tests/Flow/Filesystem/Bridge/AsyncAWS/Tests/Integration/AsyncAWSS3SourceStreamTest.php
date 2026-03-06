@@ -85,4 +85,18 @@ TEXT;
 
         $stream->close();
     }
+
+    public function test_reading_lines_with_falsy_values_preserves_all_lines() : void
+    {
+        $content = "header\n0\n\nvalue\n0\nlast";
+        $this->givenFileExists(path('aws-s3://falsy.csv'), $content);
+
+        $stream = aws_s3_filesystem($this->bucket(), $this->s3Client())->readFrom(path('aws-s3://falsy.csv'));
+
+        $lines = \iterator_to_array($stream->readLines());
+
+        self::assertSame(['header', '0', '', 'value', '0', 'last'], $lines);
+
+        $stream->close();
+    }
 }
