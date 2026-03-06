@@ -85,4 +85,18 @@ TEXT;
 
         $stream->close();
     }
+
+    public function test_reading_lines_with_falsy_values_preserves_all_lines() : void
+    {
+        $content = "header\n0\n\nvalue\n0\nlast";
+        $this->givenFileExists('flow-php', 'falsy.csv', $content);
+
+        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(path('azure-blob://falsy.csv'));
+
+        $lines = \iterator_to_array($stream->readLines());
+
+        self::assertSame(['header', '0', '', 'value', '0', 'last'], $lines);
+
+        $stream->close();
+    }
 }
