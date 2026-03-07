@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, rename_replace, rename_style, row, rows, str_entry};
+use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, lit, ref, rename_map, rename_replace, rename_style, row, rows, str_entry};
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -163,7 +164,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameAllStyle(StringStyles::SNAKE)
+            ->renameEach(rename_style(StringStyles::SNAKE))
             ->renameEach(rename_style(StringStyles::LOWER))
             ->getEachAsArray();
 
@@ -265,6 +266,83 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_rename_each_with_empty_map() : void
+    {
+        $rows = df()
+            ->read(from_rows(
+                rows(row(int_entry('id', 1), str_entry('name', 'foo')))
+            ))
+            ->renameEach(rename_map([]))
+            ->fetch();
+
+        self::assertEquals(
+            rows(row(int_entry('id', 1), str_entry('name', 'foo'))),
+            $rows
+        );
+    }
+
+    public function test_rename_each_with_map_chained_with_other_operations() : void
+    {
+        $ds = df()
+            ->read(from_rows(
+                rows(
+                    row(int_entry('user_id', 1), str_entry('user_name', 'John'), bool_entry('is_active', true)),
+                    row(int_entry('user_id', 2), str_entry('user_name', 'Jane'), bool_entry('is_active', false))
+                )
+            ))
+            ->renameEach(rename_map(['user_id' => 'id', 'user_name' => 'name']))
+            ->filter(ref('is_active')->equals(lit(true)))
+            ->drop('is_active')
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'John'],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_each_with_map_multiple_entries() : void
+    {
+        $rows = df()
+            ->read(from_rows(
+                rows(
+                    row(int_entry('id', 1), str_entry('first_name', 'John'), str_entry('last_name', 'Doe')),
+                    row(int_entry('id', 2), str_entry('first_name', 'Jane'), str_entry('last_name', 'Smith'))
+                )
+            ))
+            ->renameEach(rename_map([
+                'first_name' => 'name',
+                'last_name' => 'surname',
+            ]))
+            ->fetch();
+
+        self::assertEquals(
+            rows(
+                row(int_entry('id', 1), str_entry('name', 'John'), str_entry('surname', 'Doe')),
+                row(int_entry('id', 2), str_entry('name', 'Jane'), str_entry('surname', 'Smith'))
+            ),
+            $rows
+        );
+    }
+
+    public function test_rename_each_with_map_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata']);
+
+        $rows = df()
+            ->read(from_rows(
+                rows(row(str_entry('old_name', 'value', $metadata)))
+            ))
+            ->renameEach(rename_map(['old_name' => 'new_name']))
+            ->fetch();
+
+        self::assertTrue(
+            $rows->first()->get('new_name')->definition()->metadata()->isEqual($metadata)
+        );
+    }
+
     public function test_rename_each_with_multiple_strategies() : void
     {
         $rows = rows(
@@ -289,6 +367,22 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['osmy-i-dziewiaty' => 89],
             ],
             \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata']);
+
+        $rows = df()
+            ->read(from_rows(
+                rows(row(str_entry('old_name', 'value', $metadata)))
+            ))
+            ->rename('old_name', 'new_name')
+            ->fetch();
+
+        self::assertTrue(
+            $rows->first()->get('new_name')->definition()->metadata()->isEqual($metadata)
         );
     }
 }

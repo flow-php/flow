@@ -15,7 +15,6 @@ use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction,
     ExecutionMode,
     ScalarFunction,
-    StyleConverter\StringStyles as OldStringStyles,
     WindowFunction};
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
@@ -35,7 +34,6 @@ use Flow\ETL\Processor\{BatchingByProcessor,
 use Flow\ETL\Row\{EntryReference, Formatter\ASCIISchemaFormatter, Reference, References};
 use Flow\ETL\Schema\{Definition, SchemaFormatter};
 use Flow\ETL\Schema\Validator\StrictValidator;
-use Flow\ETL\String\StringStyles;
 use Flow\ETL\Transformer\{AutoCastTransformer,
     CallbackRowTransformer,
     CrossJoinRowsTransformer,
@@ -50,9 +48,7 @@ use Flow\ETL\Transformer\{AutoCastTransformer,
     OrderEntries\TypeComparator,
     RenameEachEntryTransformer,
     RenameEntryTransformer,
-    Rename\RenameCaseEntryStrategy,
     Rename\RenameEntryStrategy,
-    Rename\RenameReplaceEntryStrategy,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
@@ -720,85 +716,6 @@ final class DataFrame
     public function rename(string $from, string $to) : self
     {
         $this->pipeline->add(new RenameEntryTransformer($from, $to));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     * Iterate over all entry names and replace the given search string with replace string.
-     *
-     * @deprecated use DataFrame::renameEach() with a RenameReplaceStrategy
-     */
-    public function renameAll(string $search, string $replace) : self
-    {
-        $this->renameEach(new RenameReplaceEntryStrategy($search, $replace));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
-     * @deprecated use DataFrame::renameEach() with a selected StringStyles
-     */
-    public function renameAllLowerCase() : self
-    {
-        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::LOWER));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     * Rename all entries to a given style.
-     * Please look into \Flow\ETL\Function\StyleConverter\StringStyles class for all available styles.
-     *
-     * @deprecated use DataFrame::renameEach() with a selected Style
-     */
-    public function renameAllStyle(OldStringStyles|StringStyles|string $style) : self
-    {
-        if ($style instanceof OldStringStyles) {
-            $style = StringStyles::fromString($style->value);
-        }
-
-        $this->renameEach(new RenameCaseEntryStrategy(\is_string($style) ? StringStyles::fromString($style) : $style));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
-     * @deprecated use DataFrame::renameEach() with a selected Style
-     */
-    public function renameAllUpperCase() : self
-    {
-        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::UPPER));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
-     * @deprecated use DataFrame::renameEach() with a selected Style
-     */
-    public function renameAllUpperCaseFirst() : self
-    {
-        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::UCFIRST));
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     *
-     * @deprecated use DataFrame::renameEach() with a selected Style
-     */
-    public function renameAllUpperCaseWord() : self
-    {
-        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::UCWORDS));
 
         return $this;
     }

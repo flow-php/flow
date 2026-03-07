@@ -135,6 +135,20 @@ final class Row
     }
 
     /**
+     * Rename multiple entries in a single pass.
+     *
+     * @param array<string, string> $renames Map of old_name => new_name
+     */
+    public function renameMany(array $renames) : self
+    {
+        if ($renames === []) {
+            return $this;
+        }
+
+        return new self($this->entries->renameMany($renames));
+    }
+
+    /**
      * @return Schema
      */
     public function schema() : Schema

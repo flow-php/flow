@@ -9,6 +9,7 @@ use function Flow\Types\DSL\{type_integer, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entries, Entry};
 use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -335,6 +336,75 @@ final class EntriesTest extends FlowTestCase
         self::assertEquals(
             new Entries(string_entry('new-string-name', 'new string entry')),
             $entries
+        );
+    }
+
+    public function test_rename_many_entries() : void
+    {
+        $entries = new Entries(
+            string_entry('a', 'value_a'),
+            string_entry('b', 'value_b'),
+            string_entry('c', 'value_c')
+        );
+
+        $renamed = $entries->renameMany(['a' => 'x', 'b' => 'y']);
+
+        self::assertEquals(
+            new Entries(
+                string_entry('x', 'value_a'),
+                string_entry('y', 'value_b'),
+                string_entry('c', 'value_c')
+            ),
+            $renamed
+        );
+    }
+
+    public function test_rename_many_entries_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test', 'priority' => 1]);
+        $entries = new Entries(
+            string_entry('a', 'value_a', $metadata),
+            string_entry('b', 'value_b')
+        );
+
+        $renamed = $entries->renameMany(['a' => 'x']);
+
+        self::assertTrue($renamed->get('x')->definition()->metadata()->isEqual($metadata));
+    }
+
+    public function test_rename_many_entries_throws_for_non_existing_entry() : void
+    {
+        $this->expectExceptionMessage('Entry "non_existing" does not exist');
+
+        $entries = new Entries(string_entry('a', 'value_a'));
+
+        $entries->renameMany(['non_existing' => 'new_name']);
+    }
+
+    public function test_rename_many_entries_with_empty_array_returns_same_instance() : void
+    {
+        $entries = new Entries(string_entry('name', 'value'));
+
+        $renamed = $entries->renameMany([]);
+
+        self::assertSame($entries, $renamed);
+    }
+
+    public function test_rename_many_entries_with_same_name_skips_noop() : void
+    {
+        $entries = new Entries(
+            string_entry('a', 'value_a'),
+            string_entry('b', 'value_b')
+        );
+
+        $renamed = $entries->renameMany(['a' => 'a', 'b' => 'y']);
+
+        self::assertEquals(
+            new Entries(
+                string_entry('a', 'value_a'),
+                string_entry('y', 'value_b')
+            ),
+            $renamed
         );
     }
 

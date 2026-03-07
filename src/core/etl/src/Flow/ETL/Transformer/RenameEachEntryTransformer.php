@@ -33,11 +33,9 @@ final readonly class RenameEachEntryTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(function (Row $row) use ($context) : Row {
+            $result = $rows->map(function (Row $row) : Row {
                 foreach ($this->strategies as $strategy) {
-                    foreach ($row->entries()->all() as $entry) {
-                        $row = $strategy->rename($row, $entry, $context);
-                    }
+                    $row = $strategy->rename($row);
                 }
 
                 return $row;

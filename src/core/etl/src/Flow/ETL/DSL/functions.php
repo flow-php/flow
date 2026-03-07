@@ -144,7 +144,6 @@ use Flow\ETL\Function\{All,
     Sprintf,
     StringAggregate,
     StructureFunctions,
-    StyleConverter\StringStyles as OldStringStyles,
     Sum,
     ToDate,
     ToDateTime,
@@ -210,7 +209,7 @@ use Flow\ETL\Time\{Duration, Sleep, SystemSleep};
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformation\{AddRowIndex, BatchSize, Drop, Limit, MaskColumns, Select};
 use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameComparator, Order, TypeComparator, TypePriorities};
-use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStrategy};
+use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameMapEntryStrategy, RenameReplaceEntryStrategy};
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
 use Flow\Filesystem\Stream\Mode;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
@@ -497,7 +496,7 @@ function to_branch(ScalarFunction $condition, Loader $loader) : BranchingLoader
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_style(OldStringStyles|StringStyles $style) : RenameCaseEntryStrategy
+function rename_style(StringStyles $style) : RenameCaseEntryStrategy
 {
     return new RenameCaseEntryStrategy($style);
 }
@@ -510,6 +509,15 @@ function rename_style(OldStringStyles|StringStyles $style) : RenameCaseEntryStra
 function rename_replace(string|array $search, string|array $replace) : RenameReplaceEntryStrategy
 {
     return new RenameReplaceEntryStrategy($search, $replace);
+}
+
+/**
+ * @param array<string, string> $renames Map of old_name => new_name
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function rename_map(array $renames) : RenameMapEntryStrategy
+{
+    return new RenameMapEntryStrategy($renames);
 }
 
 /**
@@ -1297,12 +1305,8 @@ function array_key_rename(ScalarFunction $ref, ScalarFunction|string $path, Scal
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_keys_style_convert(ScalarFunction $ref, OldStringStyles|StringStyles|string $style = StringStyles::SNAKE) : ArrayKeysStyleConvert
+function array_keys_style_convert(ScalarFunction $ref, StringStyles|string $style = StringStyles::SNAKE) : ArrayKeysStyleConvert
 {
-    if ($style instanceof OldStringStyles) {
-        $style = StringStyles::fromString($style->value);
-    }
-
     return new ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
 }
 

@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{bool_entry, bool_schema, boolean_entry, datetime_entr
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -216,6 +217,48 @@ final class RowTest extends FlowTestCase
             ),
             $row->remove('something')
         );
+    }
+
+    public function test_rename_many_entries() : void
+    {
+        $row = row(
+            string_entry('a', 'value_a'),
+            string_entry('b', 'value_b'),
+            string_entry('c', 'value_c')
+        );
+
+        $renamed = $row->renameMany(['a' => 'x', 'b' => 'y']);
+
+        self::assertEquals(
+            row(
+                string_entry('x', 'value_a'),
+                string_entry('y', 'value_b'),
+                string_entry('c', 'value_c')
+            ),
+            $renamed
+        );
+    }
+
+    public function test_rename_many_entries_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test']);
+        $row = row(
+            string_entry('a', 'value_a', $metadata),
+            string_entry('b', 'value_b')
+        );
+
+        $renamed = $row->renameMany(['a' => 'x']);
+
+        self::assertTrue($renamed->get('x')->definition()->metadata()->isEqual($metadata));
+    }
+
+    public function test_rename_many_entries_with_empty_array_returns_same_instance() : void
+    {
+        $row = row(string_entry('name', 'value'));
+
+        $renamed = $row->renameMany([]);
+
+        self::assertSame($row, $renamed);
     }
 
     public function test_renames_entry() : void
