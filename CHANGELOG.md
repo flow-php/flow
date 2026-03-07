@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-06
+## [Unreleased] - 2026-03-07
 
 ### Added
 - [#2244](https://github.com/flow-php/flow/pull/2244) - **more partitioning examples** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +12,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Reference to documentation above examples** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2250](https://github.com/flow-php/flow/pull/2250) - **Optimzed rename operation performance** - [@norberttech](https://github.com/norberttech)
 - [#2244](https://github.com/flow-php/flow/pull/2244) - **avoid removing files from other datasets using the same partitiong keys and the same output folder** - [@norberttech](https://github.com/norberttech)
 - [e4cc9e](https://github.com/flow-php/flow/commit/e4cc9e8f410d06e277064efebe04bd9d710ab261) - **chore: lock nix shell to nix 25.11** - [@norberttech](https://github.com/norberttech)
 - [1729a8](https://github.com/flow-php/flow/commit/1729a80b7614afe47b054c877afb9096ac8d26a1) - **feature: integrate datadog RUM** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +25,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **refactored layout of docuentation playground - to use whole page width** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2250](https://github.com/flow-php/flow/pull/2250) - **entries dropping metadata during rename** - [@norberttech](https://github.com/norberttech)
 - [#2249](https://github.com/flow-php/flow/pull/2249) - **readLines() dropping falsy values in S3 and Azure source streams** - [@norberttech](https://github.com/norberttech)
 - [#2248](https://github.com/flow-php/flow/pull/2248) - **dont save string length into min/max statistics** - [@norberttech](https://github.com/norberttech)
 - [#2246](https://github.com/flow-php/flow/pull/2246) - **restore wider support for bricks/math dependency** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +33,9 @@
 - [#2242](https://github.com/flow-php/flow/pull/2242) - **Prevent fatal error when fetching Google sheet rows without values** - [@stloyd](https://github.com/stloyd)
 - [b46086](https://github.com/flow-php/flow/commit/b460864af2cca1b83ef141ec0fc45f656ff2f6f6) - **failing symfony bundle tests** - [@norberttech](https://github.com/norberttech)
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing entry in bin/build-phar.sh script** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2250](https://github.com/flow-php/flow/pull/2250) - **rename related reprecated code** - [@norberttech](https://github.com/norberttech)
 
 ## [0.32.0] - 2026-02-23
 
