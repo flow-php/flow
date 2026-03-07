@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 61
+ * DataFrame methods: 55
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,7 +10,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","mode","offset","onError","partitionBy","pivot","rename","renameAll","renameAllLowerCase","renameAllStyle","renameAllUpperCase","renameAllUpperCaseFirst","renameAllUpperCaseWord","renameEach","reorderEntries","rows","saveMode","select","sortBy","transform","until","validate","void","with","withEntries","withEntry","write"],"groupeddataframe":["aggregate"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","mode","offset","onError","partitionBy","pivot","rename","renameEach","reorderEntries","rows","saveMode","select","sortBy","transform","until","validate","void","with","withEntries","withEntry","write"],"groupeddataframe":["aggregate"]};
 
 // DataFrame methods
 const dataframeMethods = [
@@ -703,114 +703,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("rename(" + "$" + "{" + "1:from" + "}" + ", " + "$" + "{" + "2:to" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "renameAll",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">renameAll</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$search</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$replace</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>Iterate over all entry names and replace the given search string with replace string.<br>@deprecated use DataFrame::renameEach() with a RenameReplaceStrategy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("renameAll(" + "$" + "{" + "1:search" + "}" + ", " + "$" + "{" + "2:replace" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "renameAllLowerCase",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">renameAllLowerCase</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@deprecated use DataFrame::renameEach() with a selected StringStyles
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("renameAllLowerCase()"),
-        boost: 10
-    },        {
-        label: "renameAllStyle",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">renameAllStyle</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StringStyles|StringStyles|string</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>Rename all entries to a given style.<br>Please look into \\Flow\\ETL\\Function\\StyleConverter\\StringStyles class for all available styles.<br>@deprecated use DataFrame::renameEach() with a selected Style
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("renameAllStyle(" + "$" + "{" + "1:style" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "renameAllUpperCase",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">renameAllUpperCase</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@deprecated use DataFrame::renameEach() with a selected Style
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("renameAllUpperCase()"),
-        boost: 10
-    },        {
-        label: "renameAllUpperCaseFirst",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">renameAllUpperCaseFirst</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@deprecated use DataFrame::renameEach() with a selected Style
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("renameAllUpperCaseFirst()"),
-        boost: 10
-    },        {
-        label: "renameAllUpperCaseWord",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">renameAllUpperCaseWord</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@deprecated use DataFrame::renameEach() with a selected Style
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("renameAllUpperCaseWord()"),
         boost: 10
     },        {
         label: "renameEach",

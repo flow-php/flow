@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 706
+ * Total functions: 707
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -475,7 +475,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_keys_style_convert</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StringStyles|StringStyles|string</span> <span class=\"fn-param\">$style</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\String\\StringStyles::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayKeysStyleConvert</span>
+                    <span class=\"fn-name\">array_keys_style_convert</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StringStyles|string</span> <span class=\"fn-param\">$style</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\String\\StringStyles::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayKeysStyleConvert</span>
                 </div>
                             `
             return div
@@ -8232,6 +8232,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\release_savepoint(" + "$" + "{" + "1:name" + "}" + ")"),
         boost: 10
     },                {
+        label: "rename_map",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">rename_map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$renames</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameMapEntryStrategy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<string, string> $renames Map of old_name => new_name
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\rename_map(" + "$" + "{" + "1:renames" + "}" + ")"),
+        boost: 10
+    },                {
         label: "rename_replace",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtransformers",
@@ -8257,7 +8275,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rename_style</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StringStyles|StringStyles</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameCaseEntryStrategy</span>
+                    <span class=\"fn-name\">rename_style</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StringStyles</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameCaseEntryStrategy</span>
                 </div>
                             `
             return div

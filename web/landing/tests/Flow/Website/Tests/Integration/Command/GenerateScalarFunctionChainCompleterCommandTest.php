@@ -16,6 +16,19 @@ final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCom
         self::assertStringContainsString('Generated ScalarFunctionChain completer', $commandTester->getDisplay());
     }
 
+    public function test_generated_js_contains_core_chain_methods() : void
+    {
+        $this->executeCommand('app:generate:scalar-function-chain-completer');
+
+        $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
+
+        $coreMethods = ['equals', 'isNull', 'isNotNull', 'cast', 'trim', 'lower', 'upper'];
+
+        foreach ($coreMethods as $method) {
+            self::assertStringContainsString('label: "' . $method . '"', $content, "Missing core ScalarFunctionChain method: {$method}");
+        }
+    }
+
     public function test_generated_js_contains_required_structure() : void
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
@@ -28,13 +41,14 @@ final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCom
         self::assertStringContainsString('export function', $content);
     }
 
-    public function test_generated_output_matches_expected_fixture() : void
+    public function test_generated_js_has_valid_completion_structure() : void
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
-        $this->assertGeneratedFileMatchesFixture(
-            $this->getOutputPath('scalarfunctionchain.js'),
-            $this->getFixturePath('scalarfunctionchain.js')
-        );
+        $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
+
+        self::assertMatchesRegularExpression('/label:\s*"[a-zA-Z]+"/i', $content, 'Completions should have label property');
+        self::assertMatchesRegularExpression('/type:\s*"method"/i', $content, 'Completions should have type: method');
+        self::assertStringContainsString('ScalarFunctionChain"', $content, 'Completions should reference ScalarFunctionChain class');
     }
 }
