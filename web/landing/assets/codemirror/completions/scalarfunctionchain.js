@@ -1700,7 +1700,7 @@ const scalarFunctionChainMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">stringStyle</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|StringStyles|StringStyles|string</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StringStyle</span>
+                    <span class=\"fn-name\">stringStyle</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|StringStyles|string</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StringStyle</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Covert string to a style from enum list, passed in parameter.<br>Can be string \"upper\" or StringStyles::UPPER for Upper (example).

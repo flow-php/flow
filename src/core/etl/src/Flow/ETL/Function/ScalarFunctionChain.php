@@ -11,7 +11,6 @@ use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\String\StringStyles;
 use Flow\Types\Type;
@@ -676,7 +675,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * Covert string to a style from enum list, passed in parameter.
      * Can be string "upper" or StringStyles::UPPER for Upper (example).
      */
-    public function stringStyle(ScalarFunction|string|OldStringStyles|StringStyles $style) : StringStyle
+    public function stringStyle(ScalarFunction|string|StringStyles $style) : StringStyle
     {
         return new StringStyle($this, $style);
     }

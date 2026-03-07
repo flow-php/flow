@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Rename;
 
-use Flow\ETL\{FlowContext, Row};
-use Flow\ETL\Row\Entry;
+use Flow\ETL\Row;
 
 interface RenameEntryStrategy
 {
-    /**
-     * @param Entry<mixed> $entry
-     */
-    public function rename(Row $row, Entry $entry, FlowContext $context) : Row;
+    public function rename(Row $row) : Row;
 }

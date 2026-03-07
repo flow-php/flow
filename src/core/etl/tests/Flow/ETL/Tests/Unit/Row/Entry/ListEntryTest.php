@@ -15,6 +15,7 @@ use function Flow\Types\DSL\{
     type_string
 };
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ListEntryTest extends FlowTestCase
@@ -123,6 +124,18 @@ final class ListEntryTest extends FlowTestCase
             list_entry('new_name', ['one', 'two', 'three'], type_list(type_string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->rename('new_name')
         );
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = list_entry('old_name', ['one', 'two', 'three'], type_list(type_string()), $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals(['one', 'two', 'three'], $renamedEntry->value());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_to_string() : void

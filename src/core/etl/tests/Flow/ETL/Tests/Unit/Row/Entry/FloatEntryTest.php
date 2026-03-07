@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -58,6 +59,18 @@ final class FloatEntryTest extends FlowTestCase
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         float_entry('', 10.01);
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = float_entry('old_name', 100.5, $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertSame(100.5, $renamedEntry->value());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry() : void

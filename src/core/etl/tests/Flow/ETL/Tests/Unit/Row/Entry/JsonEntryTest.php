@@ -9,6 +9,7 @@ use function Flow\Types\DSL\type_array;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -182,6 +183,18 @@ final class JsonEntryTest extends FlowTestCase
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         json_entry('', [1, 2, 3]);
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = json_entry('old_name', ['id' => 1, 'name' => 'one'], $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals($entry->value()?->toArray(), $renamedEntry->value()?->toArray());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry() : void

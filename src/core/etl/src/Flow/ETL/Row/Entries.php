@@ -331,6 +331,36 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
+     * Rename multiple entries in a single pass.
+     *
+     * @param array<string, string> $renames Map of old_name => new_name
+     */
+    public function renameMany(array $renames) : self
+    {
+        if ($renames === []) {
+            return $this;
+        }
+
+        $entries = $this->entries;
+
+        foreach ($renames as $from => $to) {
+            if ($from === $to) {
+                continue;
+            }
+
+            if (!\array_key_exists($from, $entries)) {
+                throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $from));
+            }
+
+            $entry = $entries[$from];
+            unset($entries[$from]);
+            $entries[$to] = $entry->rename($to);
+        }
+
+        return self::recreate($entries);
+    }
+
+    /**
      * @param Entry<mixed> ...$entries
      */
     public function set(Entry ...$entries) : self

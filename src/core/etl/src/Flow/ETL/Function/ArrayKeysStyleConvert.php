@@ -6,22 +6,15 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
-use Flow\ETL\Function\StyleConverter\{ArrayKeyConverter, StringStyles as OldStringStyles};
+use Flow\ETL\Function\StyleConverter\ArrayKeyConverter;
 use Flow\ETL\String\StringStyles;
 
 final class ArrayKeysStyleConvert extends ScalarFunctionChain
 {
-    private StringStyles $style;
-
     public function __construct(
         private readonly ScalarFunction $ref,
-        OldStringStyles|StringStyles $style,
+        private readonly StringStyles $style,
     ) {
-        if ($style instanceof OldStringStyles) {
-            $this->style = StringStyles::fromString($style->value);
-        } else {
-            $this->style = $style;
-        }
     }
 
     public function eval(Row $row, FlowContext $context) : mixed

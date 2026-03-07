@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -65,6 +66,18 @@ final class StringEntryTest extends FlowTestCase
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         string_entry('', 'any string value');
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = string_entry('old_name', 'test value', $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertSame('test value', $renamedEntry->value());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry() : void

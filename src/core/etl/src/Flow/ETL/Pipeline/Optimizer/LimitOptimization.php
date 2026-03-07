@@ -10,12 +10,9 @@ use Flow\ETL\{Loader, Pipeline, Processor, Transformer};
 use Flow\ETL\Processor\{BatchingProcessor, CollectingProcessor, VoidProcessor};
 use Flow\ETL\Transformer\{CallbackRowTransformer,
     DropEntriesTransformer,
-    EntryNameStyleConverterTransformer,
     LimitTransformer,
-    RenameAllCaseTransformer,
     RenameEachEntryTransformer,
     RenameEntryTransformer,
-    RenameStrReplaceAllEntriesTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer};
 
@@ -38,13 +35,10 @@ final class LimitOptimization implements Optimization
     private array $nonExpandingTransformers = [
         CallbackRowTransformer::class,
         ScalarFunctionTransformer::class,
-        EntryNameStyleConverterTransformer::class,
         SelectEntriesTransformer::class,
         DropEntriesTransformer::class,
-        RenameAllCaseTransformer::class,
         RenameEachEntryTransformer::class,
         RenameEntryTransformer::class,
-        RenameStrReplaceAllEntriesTransformer::class,
         LimitTransformer::class,
     ];
 

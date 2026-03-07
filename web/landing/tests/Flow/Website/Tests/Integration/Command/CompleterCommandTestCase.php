@@ -21,17 +21,6 @@ abstract class CompleterCommandTestCase extends KernelTestCase
         $this->application = new Application(self::$kernel);
     }
 
-    protected function assertGeneratedFileMatchesFixture(string $generatedPath, string $fixturePath) : void
-    {
-        static::assertFileExists($generatedPath, 'Generated file does not exist');
-        static::assertFileExists($fixturePath, 'Fixture file does not exist');
-
-        $generatedContent = \file_get_contents($generatedPath);
-        $fixtureContent = \file_get_contents($fixturePath);
-
-        static::assertSame($fixtureContent, $generatedContent, 'Generated file content does not match fixture');
-    }
-
     protected function executeCommand(string $commandName) : CommandTester
     {
         $command = $this->application->find($commandName);
@@ -39,11 +28,6 @@ abstract class CompleterCommandTestCase extends KernelTestCase
         $commandTester->execute([]);
 
         return $commandTester;
-    }
-
-    protected function getFixturePath(string $filename) : string
-    {
-        return __DIR__ . '/../../Fixtures/Completers/' . $filename;
     }
 
     protected function getOutputPath(string $filename) : string

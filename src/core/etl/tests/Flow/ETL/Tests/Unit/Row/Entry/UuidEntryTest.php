@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\uuid_entry;
 use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -96,6 +97,18 @@ final class UuidEntryTest extends FlowTestCase
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         uuid_entry('', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
+    }
+
+    public function test_rename_preserves_metadata() : void
+    {
+        $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
+        $entry = uuid_entry('old_name', Uuid::fromString('00000000-0000-0000-0000-000000000000'), $metadata);
+
+        $renamedEntry = $entry->rename('new_name');
+
+        self::assertSame('new_name', $renamedEntry->name());
+        self::assertEquals($entry->value()?->toString(), $renamedEntry->value()?->toString());
+        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry() : void
