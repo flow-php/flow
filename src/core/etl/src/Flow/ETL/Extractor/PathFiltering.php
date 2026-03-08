@@ -11,14 +11,6 @@ trait PathFiltering
 {
     private ?Filter $filter = null;
 
-    /**
-     * @deprecated Use withPathFilter instead
-     */
-    public function addFilter(Filter $filter) : self
-    {
-        return $this->withPathFilter($filter);
-    }
-
     public function filter() : Filter
     {
         return $this->filter ?? new OnlyFiles();

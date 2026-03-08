@@ -155,11 +155,6 @@ final class StringDefinition implements Definition
         ];
     }
 
-    public function nullable() : static
-    {
-        return $this->makeNullable();
-    }
-
     public function rename(string $newName) : static
     {
         return new self($newName, $this->nullable, $this->metadata);

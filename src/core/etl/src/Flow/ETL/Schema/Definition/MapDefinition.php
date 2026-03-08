@@ -209,11 +209,6 @@ final class MapDefinition implements Definition
         ];
     }
 
-    public function nullable() : static
-    {
-        return $this->makeNullable();
-    }
-
     public function rename(string $newName) : static
     {
         return new self($newName, $this->type, $this->nullable, $this->metadata);

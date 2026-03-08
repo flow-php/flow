@@ -13,6 +13,114 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 The Meilisearch adapter has been removed from Flow PHP. If you were using it, please migrate to Elasticsearch adapter.
 
+### 2) Removed deprecated DSL functions
+
+All type-related DSL functions have been moved from `Flow\ETL\DSL` to `Flow\Types\DSL`. Update your imports accordingly.
+
+| Removed Function          | Replacement                               |
+|---------------------------|-------------------------------------------|
+| `chunks_from()`           | `batches()`                               |
+| `type_structure()`        | `\Flow\Types\DSL\type_structure()`        |
+| `type_union()`            | `\Flow\Types\DSL\type_union()`            |
+| `type_optional()`         | `\Flow\Types\DSL\type_optional()`         |
+| `type_from_array()`       | `\Flow\Types\DSL\type_from_array()`       |
+| `is_nullable()`           | `\Flow\Types\DSL\type_is_nullable()`      |
+| `type_equals()`           | `\Flow\Types\DSL\type_equals()`           |
+| `types()`                 | `\Flow\Types\DSL\types()`                 |
+| `type_list()`             | `\Flow\Types\DSL\type_list()`             |
+| `type_map()`              | `\Flow\Types\DSL\type_map()`              |
+| `type_json()`             | `\Flow\Types\DSL\type_json()`             |
+| `type_datetime()`         | `\Flow\Types\DSL\type_datetime()`         |
+| `type_date()`             | `\Flow\Types\DSL\type_date()`             |
+| `type_time()`             | `\Flow\Types\DSL\type_time()`             |
+| `type_xml()`              | `\Flow\Types\DSL\type_xml()`              |
+| `type_xml_element()`      | `\Flow\Types\DSL\type_xml_element()`      |
+| `type_uuid()`             | `\Flow\Types\DSL\type_uuid()`             |
+| `type_int()`              | `\Flow\Types\DSL\type_integer()`          |
+| `type_integer()`          | `\Flow\Types\DSL\type_integer()`          |
+| `type_string()`           | `\Flow\Types\DSL\type_string()`           |
+| `type_float()`            | `\Flow\Types\DSL\type_float()`            |
+| `type_boolean()`          | `\Flow\Types\DSL\type_boolean()`          |
+| `type_instance_of()`      | `\Flow\Types\DSL\type_instance_of()`      |
+| `type_resource()`         | `\Flow\Types\DSL\type_resource()`         |
+| `type_array()`            | `\Flow\Types\DSL\type_array()`            |
+| `type_callable()`         | `\Flow\Types\DSL\type_callable()`         |
+| `type_null()`             | `\Flow\Types\DSL\type_null()`             |
+| `type_enum()`             | `\Flow\Types\DSL\type_enum()`             |
+| `struct_schema()`         | `structure_schema()`                      |
+| `get_type()`              | `\Flow\Types\DSL\get_type()`              |
+| `print_schema()`          | `schema_to_ascii()`                       |
+| `type_is()`               | `\Flow\Types\DSL\type_is()`               |
+| `type_is_any()`           | `\Flow\Types\DSL\type_is_any()`           |
+| `dom_element_to_string()` | `\Flow\Types\DSL\dom_element_to_string()` |
+
+### 3) Removed deprecated DataFrame methods
+
+| Removed Method                         | Replacement                                                  |
+|----------------------------------------|--------------------------------------------------------------|
+| `DataFrame::validate()`                | `DataFrame::match()`                                         |
+| `DataFrame::renameAll()`               | `DataFrame::renameEach(rename_replace(...))`                 |
+| `DataFrame::renameAllLowerCase()`      | `DataFrame::renameEach(rename_style(StringStyles::LOWER))`   |
+| `DataFrame::renameAllUpperCase()`      | `DataFrame::renameEach(rename_style(StringStyles::UPPER))`   |
+| `DataFrame::renameAllUpperCaseFirst()` | `DataFrame::renameEach(rename_style(StringStyles::UCFIRST))` |
+| `DataFrame::renameAllUpperCaseWord()`  | `DataFrame::renameEach(rename_style(StringStyles::UCWORDS))` |
+| `DataFrame::renameAllStyle()`          | `DataFrame::renameEach(rename_style(...))`                   |
+
+### 4) Removed deprecated Schema methods
+
+| Removed Method            | Replacement                   |
+|---------------------------|-------------------------------|
+| `Schema::entries()`       | `Schema::references()->all()` |
+| `Schema::getDefinition()` | `Schema::get()`               |
+| `Schema::nullable()`      | `Schema::makeNullable()`      |
+
+### 5) Removed deprecated Definition methods
+
+| Removed Method           | Replacement                  |
+|--------------------------|------------------------------|
+| `Definition::nullable()` | `Definition::makeNullable()` |
+
+This applies to all Definition implementations: `BooleanDefinition`, `DateDefinition`, `DateTimeDefinition`,
+`EnumDefinition`, `FloatDefinition`, `HTMLDefinition`, `HTMLElementDefinition`, `IntegerDefinition`, `JsonDefinition`,
+`ListDefinition`, `MapDefinition`, `StringDefinition`, `StructureDefinition`, `TimeDefinition`, `UuidDefinition`,
+`XMLDefinition`, `XMLElementDefinition`.
+
+### 6) Removed deprecated FileExtractor and PathFiltering methods
+
+| Removed Method               | Replacement                       |
+|------------------------------|-----------------------------------|
+| `FileExtractor::addFilter()` | `FileExtractor::withPathFilter()` |
+| `PathFiltering::addFilter()` | `PathFiltering::withPathFilter()` |
+
+### 7) Removed deprecated ScalarFunctionChain methods
+
+| Removed Method                               | Replacement                                       |
+|----------------------------------------------|---------------------------------------------------|
+| `ScalarFunctionChain::domElementAttribute()` | `ScalarFunctionChain::domElementAttributeValue()` |
+
+### 8) Removed deprecated Config constants
+
+| Removed Constant              | Replacement                       |
+|-------------------------------|-----------------------------------|
+| `Config::CACHE_DIR_ENV`       | `CacheConfig::CACHE_DIR_ENV`      |
+| `Config::SORT_MAX_MEMORY_ENV` | `SortConfig::SORT_MAX_MEMORY_ENV` |
+
+### 9) Removed deprecated Transformers
+
+| Removed Transformer                     | Replacement                                      |
+|-----------------------------------------|--------------------------------------------------|
+| `EntryNameStyleConverterTransformer`    | Use `DataFrame::renameEach(rename_style(...))`   |
+| `RenameAllCaseTransformer`              | Use `DataFrame::renameEach(rename_style(...))`   |
+| `RenameStrReplaceAllEntriesTransformer` | Use `DataFrame::renameEach(rename_replace(...))` |
+
+### 10) Removed deprecated classes
+
+| Removed Class                                   | Replacement                    |
+|-------------------------------------------------|--------------------------------|
+| `Flow\ETL\Function\StyleConverter\StringStyles` | `Flow\ETL\String\StringStyles` |
+
+---
+
 ## Upgrading from 0.28.x to 0.29.x
 
 ### 1) JsonType now uses Json value object instead of string
@@ -48,7 +156,7 @@ $jsonString = $json->toString(); // get the string
 $jsonArray = $json->toArray(); // get as array
 ```
 
-If you were using `JsonEntry::value()` and edxpected an array:
+If you were using `JsonEntry::value()` and expected an array:
 
 Before:
 
@@ -224,6 +332,7 @@ This means all classes related to Schema now live under `Flow\ETL\Schema` namesp
 The old method is now deprecated and will be removed in the next release.
 
 ### 2) Replaced `Flow\ETL\Function\ScalarFunction\TypedScalarFunction` with
+
 `Flow\ETL\Function\ScalarFunction\ScalarResult`.
 
 The old interface was used to allow defining the return type of the ScalarFunctions.

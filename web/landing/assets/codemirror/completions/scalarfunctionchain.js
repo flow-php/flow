@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
- * ScalarFunctionChain methods: 124
+ * ScalarFunctionChain methods: 123
  * ScalarFunctionChain-returning functions: 53
  *
  * This completer triggers after ScalarFunctionChain-returning DSL functions
@@ -506,24 +506,6 @@ const scalarFunctionChainMethods = [
             return div
         },
         apply: snippet("divide(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:scale" + "}" + ", " + "$" + "{" + "3:rounding" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "domElementAttribute",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">domElementAttribute</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|string</span> <span class=\"fn-param\">$attribute</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DOMElementAttributeValue</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated Use domElementAttributeValue instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("domElementAttribute(" + "$" + "{" + "1:attribute" + "}" + ")"),
         boost: 10
     },                {
         label: "domElementAttributesCount",
