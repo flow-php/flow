@@ -20,7 +20,7 @@ data_frame()
         ['id' => 2, 'name' => 'Product 2', 'active' => false],
         ['id' => 3, 'name' => 'Product 3', 'active' => true],
     ]))
-    ->validate($schema)
+    ->match($schema)
     ->collect()
     ->write(to_output(truncate: false, output: Output::rows_and_schema))
     ->run();

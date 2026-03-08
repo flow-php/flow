@@ -20,4 +20,4 @@ data_frame()
     ->write(to_array($array))
     ->run();
 
-\file_put_contents(__DIR__ . '/output.txt', \var_export($array, true));
+\var_dump($array, true);

@@ -5,10 +5,15 @@ declare(strict_types=1);
 use function Flow\ETL\Adapter\Elasticsearch\{entry_id_factory, es_hits_to_rows, from_es, to_es_bulk_index};
 use function Flow\ETL\DSL\{data_frame, from_array, to_output};
 use Symfony\Component\Dotenv\Dotenv;
+use function Flow\Filesystem\DSL\fstab;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\protocol;
 
 require __DIR__ . '/vendor/autoload.php';
 
-if (!\file_exists(__DIR__ . '/.env')) {
+$fs = fstab()->for(protocol('file'));
+
+if ($fs->status(path(__DIR__ . '/.env')) === null) {
     print 'Example skipped. Please create .env file with Azure Storage Account credentials.' . PHP_EOL;
 
     return;

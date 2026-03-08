@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\DSL\{df, print_schema, ref};
+use function Flow\ETL\DSL\{df, ref, schema_to_ascii};
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
@@ -309,7 +309,7 @@ schema
 |-- Industry_code_ANZSIC06: string
 
 SCHEMA,
-            print_schema($rows->schema())
+            schema_to_ascii($rows->schema())
         );
 
     }

@@ -221,16 +221,6 @@ final class XMLDefinitionTest extends FlowTestCase
         self::assertArrayHasKey('metadata', $normalized);
     }
 
-    public function test_nullable_alias_for_make_nullable() : void
-    {
-        $def = xml_schema('document', false);
-
-        $nullable = $def->nullable();
-
-        self::assertTrue($nullable->isNullable());
-        self::assertFalse($def->isNullable());
-    }
-
     public function test_nullable_matches_any_entry_with_same_name() : void
     {
         $def = xml_schema('col', true);

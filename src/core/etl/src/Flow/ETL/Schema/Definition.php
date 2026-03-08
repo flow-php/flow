@@ -62,13 +62,6 @@ interface Definition
     public function normalize() : array;
 
     /**
-     * @deprecated Use makeNullable() instead
-     *
-     * @return static
-     */
-    public function nullable() : static;
-
-    /**
      * @return static
      */
     public function rename(string $newName) : static;

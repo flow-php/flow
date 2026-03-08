@@ -136,16 +136,6 @@ final class Schema implements \Countable
     }
 
     /**
-     * @deprecated use references() : References instead
-     *
-     * @return array<Reference>
-     */
-    public function entries() : array
-    {
-        return $this->references()->all();
-    }
-
-    /**
      * @return null|Definition<mixed>
      */
     public function findDefinition(string|Reference $ref) : ?Definition
@@ -173,18 +163,6 @@ final class Schema implements \Countable
     public function get(string|Reference $ref) : Definition
     {
         return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
-    }
-
-    /**
-     * @deprecated please use Schema::get() instead
-     *
-     * @throw SchemaDefinitionNotFoundException
-     *
-     * @return Definition<mixed>
-     */
-    public function getDefinition(string|Reference $ref) : Definition
-    {
-        return $this->get($ref);
     }
 
     /**
@@ -319,16 +297,6 @@ final class Schema implements \Countable
         }
 
         return $definitions;
-    }
-
-    /**
-     * @deprecated use makeNullable instead
-     *
-     * @return Schema
-     */
-    public function nullable() : self
-    {
-        return $this->makeNullable();
     }
 
     public function references() : References

@@ -7,12 +7,17 @@ use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Symfony\Component\HttpClient\{MockHttpClient, Psr18Client};
 use Symfony\Component\HttpClient\Response\MockResponse;
+use function Flow\Filesystem\DSL\fstab;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\protocol;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$htmlContent = \file_get_contents(__DIR__ . '/input/example.com.html');
+$fs = fstab()->for(protocol('file'));
 
-if ($htmlContent === false) {
+$htmlContent = $fs->readFrom(path(__DIR__ . '/input/example.com.html'))?->content();
+
+if ($htmlContent === null) {
     print 'Example skipped. Could not read input file.' . PHP_EOL;
 
     return;

@@ -13,7 +13,7 @@ use function Flow\ETL\DSL\{bool_schema,
     list_schema,
     map_schema,
     str_schema,
-    struct_schema,
+    structure_schema,
     time_schema,
     uuid_schema};
 use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_list, type_map, type_optional, type_string, type_structure, type_time, type_uuid};
@@ -206,7 +206,7 @@ final class SchemaConverter
             $elements[$structColumn->name()] = $this->parquetToFlowType($structColumn);
         }
 
-        return struct_schema($column->name(), type_structure($elements), $nullable);
+        return structure_schema($column->name(), type_structure($elements), $nullable);
     }
 
     /**

@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\DSL\{data_frame, flow_context};
-use function Flow\ETL\DSL\{df, print_schema};
+use function Flow\ETL\DSL\{df, schema_to_ascii};
 use function Flow\Filesystem\DSL\{path, path_real};
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\ETL\Extractor\Signal;
@@ -98,7 +98,7 @@ schema
 
 SCHEMA
             ,
-            print_schema($schema)
+            schema_to_ascii($schema)
         );
     }
 

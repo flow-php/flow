@@ -5,7 +5,7 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Transformation;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\type_string;
+use function Flow\Types\DSL\type_string;
 use function Flow\ETL\DSL\when;
 
 final readonly class StringLengthValidation implements Transformation

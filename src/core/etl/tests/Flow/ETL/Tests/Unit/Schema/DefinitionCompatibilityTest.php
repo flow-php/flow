@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, string_schema, struct_schema, structure_schema};
+use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, string_schema, structure_schema};
 use function Flow\Types\DSL\{type_boolean,
     type_integer,
     type_list,
@@ -85,51 +85,51 @@ final class DefinitionCompatibilityTest extends FlowTestCase
     public static function structure_types_compatibility_provider() : \Generator
     {
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             true,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_integer()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer()])),
             false,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_boolean()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_boolean()])),
             false,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('different_structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('different_structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             false,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()]), true),
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()]), true),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             true,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()]), true),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()]), true),
             false,
         ];
 
         yield [
             structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['different_id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['different_id' => type_integer(), 'name' => type_string()])),
             false,
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_optional(type_integer()), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_optional(type_integer()), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             true,
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_optional(type_integer()), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_optional(type_integer()), 'name' => type_string()])),
             false,
         ];
     }

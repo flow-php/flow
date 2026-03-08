@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 707
+ * Total functions: 700
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -1279,24 +1279,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\check_constraint(" + "$" + "{" + "1:expression" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "chunks_from",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">chunks_from</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchExtractor</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param int<1, max> $chunk_size<br>@deprecated use batches() instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\chunks_from(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:chunk_size" + "}" + ")"),
         boost: 10
     },                {
         label: "clock",
@@ -3188,24 +3170,6 @@ const dslFunctions = [
     },                {
         label: "dom_element_to_string",
         type: "function",
-        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">dom_element_to_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DOMElement</span> <span class=\"fn-param\">$element</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$format_output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$preserver_white_space</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string|false</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated Please use \\Flow\\Types\\DSL\\dom_element_to_string() instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\dom_element_to_string(" + "$" + "{" + "1:element" + "}" + ", " + "$" + "{" + "2:format_output" + "}" + ", " + "$" + "{" + "3:preserver_white_space" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "dom_element_to_string",
-        type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
@@ -4495,24 +4459,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\generate_random_string(" + "$" + "{" + "1:length" + "}" + ", " + "$" + "{" + "2:generator" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "get_type",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">get_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @return Type<mixed><br>@deprecated Please use \\Flow\\Types\\DSL\\get_type($value) instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\get_type(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },                {
         label: "get_type",
@@ -7695,24 +7641,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\print_rows(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
         boost: 10
     },                {
-        label: "print_schema",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dschema",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">print_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param Schema $schema<br>@deprecated Please use schema_to_ascii($schema) instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\print_schema(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
-        boost: 10
-    },                {
         label: "process_detector",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -9777,24 +9705,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\struct_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },                {
-        label: "struct_schema",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dschema",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">struct_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StructureType|Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$nullable</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureDefinition</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param StructureType<T>|Type<array<string, T>> $type<br>@return StructureDefinition<T><br>@deprecated Use \`structure_schema()\` instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\struct_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
-        boost: 10
-    },                {
         label: "str_entry",
         type: "function",
         detail: "flow\u002Ddsl\u002Dentries",
@@ -10861,24 +10771,6 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_date</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated please use \\Flow\\Types\\DSL\\type_date() : DateType<br>@return Type<\\DateTimeInterface>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\type_date()"),
-        boost: 10
-    },                {
-        label: "type_date",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dtype",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_date</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
                     @return Type<\\DateTimeInterface>
                 </div>
                             `
@@ -11029,24 +10921,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\type_instance_of(" + "$" + "{" + "1:class" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "type_int",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dtype",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">type_int</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated please use \\Flow\\Types\\DSL\\type_integer() : IntegerType<br>@return Type<int>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\type_int()"),
         boost: 10
     },                {
         label: "type_integer",

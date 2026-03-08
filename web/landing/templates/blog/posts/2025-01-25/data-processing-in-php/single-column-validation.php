@@ -3,7 +3,7 @@
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\type_string;
+use function Flow\Types\DSL\type_string;
 use function Flow\ETL\DSL\when;
 
 df()

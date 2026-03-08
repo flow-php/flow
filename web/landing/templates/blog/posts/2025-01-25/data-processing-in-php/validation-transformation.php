@@ -6,9 +6,9 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_uuid;
 use function Flow\ETL\DSL\when;
 
 class Validation implements Transformation

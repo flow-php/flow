@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 55
+ * DataFrame methods: 54
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,7 +10,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","mode","offset","onError","partitionBy","pivot","rename","renameEach","reorderEntries","rows","saveMode","select","sortBy","transform","until","validate","void","with","withEntries","withEntry","write"],"groupeddataframe":["aggregate"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","mode","offset","onError","partitionBy","pivot","rename","renameEach","reorderEntries","rows","saveMode","select","sortBy","transform","until","void","with","withEntries","withEntry","write"],"groupeddataframe":["aggregate"]};
 
 // DataFrame methods
 const dataframeMethods = [
@@ -877,24 +877,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("until(" + "$" + "{" + "1:function" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "validate",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">validate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaValidator</span> <span class=\"fn-param\">$validator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated Please use DataFrame::match instead<br>@lazy<br>@param null|SchemaValidator $validator - when null, StrictValidator gets initialized
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("validate(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:validator" + "}" + ")"),
         boost: 10
     },        {
         label: "void",

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
-use function Flow\ETL\DSL\{definition_from_type, is_nullable};
-use function Flow\Types\DSL\{type_equals, type_float, type_is_any, type_list, type_optional};
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\{type_equals, type_float, type_is_any, type_is_nullable, type_list, type_optional};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
@@ -170,7 +170,7 @@ final class ListDefinition implements Definition
                 return new self(
                     $this->ref,
                     type_list(
-                        is_nullable($thisElementType) || is_nullable($definitionElementType)
+                        type_is_nullable($thisElementType) || type_is_nullable($definitionElementType)
                             ? type_optional(type_float())
                             : type_float()
                     ),
@@ -217,11 +217,6 @@ final class ListDefinition implements Definition
             'nullable' => $this->nullable,
             'metadata' => $this->metadata->normalize(),
         ];
-    }
-
-    public function nullable() : static
-    {
-        return $this->makeNullable();
     }
 
     public function rename(string $newName) : static

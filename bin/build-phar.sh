@@ -10,6 +10,7 @@ composer config repositories.local-adapter-doctrine '{"type": "path", "url": "..
 composer config repositories.local-adapter-json '{"type": "path", "url": "../adapter/etl-adapter-json", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-adapter-text '{"type": "path", "url": "../adapter/etl-adapter-text", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-adapter-xml '{"type": "path", "url": "../adapter/etl-adapter-xml", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
+composer config repositories.local-adapter-http '{"type": "path", "url": "../adapter/etl-adapter-http", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-adapter-excel '{"type": "path", "url": "../adapter/etl-adapter-excel", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-adapter-chartjs '{"type": "path", "url": "../adapter/etl-adapter-chartjs", "options": {"symlink": false}}' --working-dir="$CLI_DIR"
 composer config repositories.local-openapi-specification '{"type": "path", "url": "../bridge/openapi/specification", "options": {"symlink": false}}' --working-dir="$CLI_DIR"

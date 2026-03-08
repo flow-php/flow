@@ -861,20 +861,6 @@ final class DataFrame
     }
 
     /**
-     * @deprecated Please use DataFrame::match instead
-     *
-     * @lazy
-     *
-     * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
-     */
-    public function validate(Schema $schema, ?SchemaValidator $validator = null) : self
-    {
-        $this->match($schema, $validator);
-
-        return $this;
-    }
-
-    /**
      * @lazy
      * This method is useful mostly in development when
      * you want to pause processing at certain moment without

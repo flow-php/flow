@@ -17,13 +17,8 @@ use function Flow\ETL\DSL\{bool_entry,
     str_entry,
     struct_entry,
     to_output,
-    type_float,
-    type_int,
-    type_list,
-    type_string,
-    type_structure,
     uuid_entry};
-use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string, type_structure};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -43,8 +38,8 @@ data_frame()
             str_entry('string_b', 'string'),
             uuid_entry('uuid', '06143adb-3009-45c8-a4f0-c7016f97cab7'),
             json_entry('json', ['id' => 1, 'status' => 'NEW']),
-            list_entry('list', [1, 2, 3], type_list(type_int())),
-            map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_int(), type_string())),
+            list_entry('list', [1, 2, 3], type_list(type_integer())),
+            map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_integer(), type_string())),
             struct_entry(
                 'struct',
                 [
