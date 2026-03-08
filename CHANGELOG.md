@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-03-08
 
 ### Added
+- [#2256](https://github.com/flow-php/flow/pull/2256) - **http adapter/client to CLI application** - [@norberttech](https://github.com/norberttech)
 - [#2244](https://github.com/flow-php/flow/pull/2244) - **more partitioning examples** - [@norberttech](https://github.com/norberttech)
 - [#2244](https://github.com/flow-php/flow/pull/2244) - **more partitioning documentation** - [@norberttech](https://github.com/norberttech)
 - [#2241](https://github.com/flow-php/flow/pull/2241) - **variadic arguments ADR** - [@norberttech](https://github.com/norberttech)
@@ -35,6 +36,7 @@
 - [#2231](https://github.com/flow-php/flow/pull/2231) - **missing entry in bin/build-phar.sh script** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2256](https://github.com/flow-php/flow/pull/2256) - **deprecated code from Data Frame** - [@norberttech](https://github.com/norberttech)
 - [#2250](https://github.com/flow-php/flow/pull/2250) - **rename related reprecated code** - [@norberttech](https://github.com/norberttech)
 
 ## [0.32.0] - 2026-02-23
