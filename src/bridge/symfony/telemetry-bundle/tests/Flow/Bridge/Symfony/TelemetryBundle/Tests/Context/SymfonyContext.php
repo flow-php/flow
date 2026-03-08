@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Context;
 
-use function Flow\ETL\DSL\type_instance_of;
+use function Flow\Types\DSL\type_instance_of;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, ContainerInterface};

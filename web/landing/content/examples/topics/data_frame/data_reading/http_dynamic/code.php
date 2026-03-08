@@ -5,14 +5,14 @@ declare(strict_types=1);
 use function Flow\ETL\DSL\{data_frame, ref, rename_replace, to_output};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Http\Client\Curl\Client;
+use Symfony\Component\HttpClient\Psr18Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
 require __DIR__ . '/vendor/autoload.php';
 
 $factory = new Psr17Factory();
-$client = new Client($factory, $factory);
+$client = new Psr18Client();
 
 $from_github_api = new PsrHttpClientDynamicExtractor($client, new class implements NextRequestFactory {
     public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface

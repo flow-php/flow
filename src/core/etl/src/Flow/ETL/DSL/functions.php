@@ -5,38 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use function Flow\Filesystem\DSL\path_real;
-use function Flow\Types\DSL\{
-    dom_element_to_string as dom_element_to_string_new,
-    get_type as get_type_new,
-    type_array as type_array_new,
-    type_boolean as type_boolean_new,
-    type_callable as type_callable_new,
-    type_date as type_date_new,
-    type_datetime as type_datetime_new,
-    type_enum as type_enum_new,
-    type_equals as type_equals_new,
-    type_float as type_float_new,
-    type_from_array as type_from_array_new,
-    type_instance_of as type_instance_of_new,
-    type_integer as type_integer_new,
-    type_is as type_is_new,
-    type_is_any as type_is_any_new,
-    type_is_nullable as is_nullable_new,
-    type_json as type_json_new,
-    type_list as type_list_new,
-    type_map as type_map_new,
-    type_null as type_null_new,
-    type_optional as type_optional_new,
-    type_resource as type_resource_new,
-    type_string as type_string_new,
-    type_structure as type_structure_new,
-    type_time as type_time_new,
-    type_union as type_union_new,
-    type_uuid as type_uuid_new,
-    type_xml as type_xml_new,
-    type_xml_element as type_xml_element_new,
-    types as types_new
-};
+use function Flow\Types\DSL\type_array;
+
 use Dom\{HTMLDocument, HTMLElement};
 use Flow\Calculator\Rounding;
 use Flow\Clock\SystemClock;
@@ -219,11 +189,9 @@ use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     HTMLElementType,
     HTMLType,
-    InstanceOfType,
     JsonType,
     ListType,
     MapType,
-    OptionalType,
     StructureType,
     TimeType,
     UuidType,
@@ -232,19 +200,14 @@ use Flow\Types\Type\Logical\{DateTimeType,
 use Flow\Types\Type\Native\{
     ArrayType,
     BooleanType,
-    CallableType,
     EnumType,
     FloatType,
     IntegerType,
-    NullType,
-    ResourceType,
-    StringType,
-    UnionType
+    StringType
 };
-use Flow\Types\Type\{TypeFactory, Types};
+use Flow\Types\Type\TypeFactory;
 use Flow\Types\Value\Json;
 use Psr\Clock\ClockInterface;
-use UnitEnum;
 
 /**
  * Alias for data_frame() : Flow.
@@ -380,17 +343,6 @@ function batched_by(Extractor $extractor, string|Reference $column, ?int $min_si
 function batches(Extractor $extractor, int $size) : BatchExtractor
 {
     return new BatchExtractor($extractor, $size);
-}
-
-/**
- * @param int<1, max> $chunk_size
- *
- * @deprecated use batches() instead
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function chunks_from(Extractor $extractor, int $chunk_size) : BatchExtractor
-{
-    return new BatchExtractor($extractor, $chunk_size);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -754,102 +706,6 @@ function structure_entry(string $name, ?array $value, StructureType $type, ?Meta
 /**
  * @template T
  *
- * @param array<string, Type<T>> $elements
- *
- * @return StructureType<T>
- *
- * @deprecated please use \Flow\Types\DSL\type_structure(array $elements) instead
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_structure(array $elements) : StructureType
-{
-    return type_structure_new($elements);
-}
-
-/**
- * @template T
- *
- * @param Type<T> $first
- * @param Type<T> $second
- * @param Type<T> ...$types
- *
- * @return Type<T>
- *
- * @deprecated please use \Flow\Types\DSL\type_union(Type $first, Type $second, Type ...$types) : UnionType
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_union(Type $first, Type $second, Type ...$types) : Type
-{
-    return type_union_new($first, $second, ...$types);
-}
-
-/**
- * @template T
- *
- * @param Type<T> $type
- *
- * @return Type<?T>
- *
- * @deprecated please use \Flow\Types\DSL\type_optional(Type $type) : OptionalType
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_optional(Type $type) : Type
-{
-    return type_optional_new($type);
-}
-
-/**
- * @param array<mixed> $data
- *
- * @return Type<mixed>
- *
- * @deprecated please use \Flow\Types\DSL\type_from_array(array $data) : Type
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_from_array(array $data) : Type
-{
-    return type_from_array_new($data);
-}
-
-/**
- * @param \Flow\Types\Type<mixed> $type
- *
- * @deprecated please use \Flow\Types\DSL\is_nullable(Type $type) : bool
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function is_nullable(Type $type) : bool
-{
-    return is_nullable_new($type);
-}
-
-/**
- * @param Type<mixed> $left
- * @param Type<mixed> $right
- *
- * @deprecated please use \Flow\Types\DSL\type_equals(Type $left, Type $right) : bool
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_equals(Type $left, Type $right) : bool
-{
-    return type_equals_new($left, $right);
-}
-
-/**
- * @param Type<mixed> ...$types
- *
- * @deprecated please use \Flow\Types\DSL\types(Type ...$types) : Types
- *
- * @return Types<mixed>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function types(Type ...$types) : Types
-{
-    return types_new(...$types);
-}
-
-/**
- * @template T
- *
  * @param null|list<mixed> $value
  * @param ListType<T> $type
  *
@@ -859,37 +715,6 @@ function types(Type ...$types) : Types
 function list_entry(string $name, ?array $value, ListType $type, ?Metadata $metadata = null) : Entry
 {
     return new ListEntry($name, $value, $type, $metadata);
-}
-
-/**
- * @template T
- *
- * @param Type<T> $element
- *
- * @return ListType<T>
- *
- * @deprecated please use \Flow\Types\DSL\type_list(Type $element) : ListType
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_list(Type $element) : Type
-{
-    return type_list_new($element);
-}
-
-/**
- * @template TValue
- *
- * @param IntegerType|StringType $key_type
- * @param Type<TValue> $value_type
- *
- * @return MapType<int|string, TValue>
- *
- * @deprecated please use \Flow\Types\DSL\type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
-{
-    return type_map_new($key_type, $value_type);
 }
 
 /**
@@ -905,212 +730,6 @@ function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
 function map_entry(string $name, ?array $value, MapType $mapType, ?Metadata $metadata = null) : Entry
 {
     return new MapEntry($name, $value, $mapType, $metadata);
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_json() : JsonType
- *
- * @return Type<Json>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_json() : Type
-{
-    return type_json_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_datetime() : DateTimeType
- *
- * @return Type<\DateTimeInterface>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_datetime() : Type
-{
-    return type_datetime_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_date() : DateType
- *
- * @return Type<\DateTimeInterface>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_date() : Type
-{
-    return type_date_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_time() : TimeType
- *
- * @return Type<\DateInterval>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_time() : Type
-{
-    return type_time_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_xml() : XMLType
- *
- * @return Type<\DOMDocument>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_xml() : Type
-{
-    return type_xml_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_xml_element() : XMLElementType
- *
- * @return Type<\DOMElement>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_xml_element() : Type
-{
-    return type_xml_element_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_uuid() : UuidType
- *
- * @return Type<\Flow\Types\Value\Uuid>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_uuid() : Type
-{
-    return type_uuid_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_integer() : IntegerType
- *
- * @return Type<int>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_int() : Type
-{
-    return type_integer_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_integer() : IntegerType
- *
- * @return Type<int>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_integer() : Type
-{
-    return type_integer_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_string() : StringType
- *
- * @return Type<string>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_string() : Type
-{
-    return type_string_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_float() : FloatType
- *
- * @return Type<float>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_float() : Type
-{
-    return type_float_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_boolean() : BooleanType
- *
- * @return Type<bool>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_boolean() : Type
-{
-    return type_boolean_new();
-}
-
-/**
- * @template T of object
- *
- * @param class-string<T> $class
- *
- * @return Type<T>
- *
- * @deprecated please use \Flow\Types\DSL\type_instance_of(string $class) : InstanceOfType
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_instance_of(string $class) : Type
-{
-    return type_instance_of_new($class);
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_resource() : ResourceType
- *
- * @return Type<resource>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_resource() : Type
-{
-    return type_resource_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_array() : ArrayType
- *
- * @return Type<array<mixed>>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_array() : Type
-{
-    return type_array_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_callable() : CallableType
- *
- * @return Type<callable>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_callable() : Type
-{
-    return type_callable_new();
-}
-
-/**
- * @deprecated please use \Flow\Types\DSL\type_null() : NullType
- *
- * @return Type<null>
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_null() : Type
-{
-    return type_null_new();
-}
-
-/**
- * @template T of UnitEnum
- *
- * @param class-string<T> $class
- *
- * @return Type<T>
- *
- * @deprecated please use \Flow\Types\DSL\type_enum(string $class) : EnumType
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_enum(string $class) : Type
-{
-    return type_enum_new($class);
 }
 
 /**
@@ -1709,7 +1328,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory, array|Partitions
     $rows = [];
 
     foreach ($data as $row) {
-        $row = type_array_new()->assert($row);
+        $row = type_array()->assert($row);
         $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
     }
 
@@ -1885,7 +1504,7 @@ function schema_selective_validator() : SelectiveValidator
 function schema_from_json(string $schema) : Schema
 {
     $decodedSchema = \json_decode($schema, true, 512, JSON_THROW_ON_ERROR);
-    $decodedSchema = type_array_new()->assert($decodedSchema);
+    $decodedSchema = type_array()->assert($decodedSchema);
 
     return Schema::fromArray($decodedSchema);
 }
@@ -2035,22 +1654,6 @@ function xml_schema(string $name, bool $nullable = false, ?Metadata $metadata = 
 function xml_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : XMLElementDefinition
 {
     return new XMLElementDefinition($name, $nullable, $metadata);
-}
-
-/**
- * @template T
- *
- * @param StructureType<T>|Type<array<string, T>> $type
- *
- * @return StructureDefinition<T>
- *
- * @deprecated Use `structure_schema()` instead
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function struct_schema(string $name, StructureType|Type $type, bool $nullable = false, ?Metadata $metadata = null) : StructureDefinition
-{
-    /** @var StructureType<T> $type */
-    return new StructureDefinition($name, $type, $nullable, $metadata);
 }
 
 /**
@@ -2242,28 +1845,6 @@ function execution_lenient() : ExecutionMode
     return ExecutionMode::LENIENT;
 }
 
-/**
- * @return Type<mixed>
- *
- * @deprecated Please use \Flow\Types\DSL\get_type($value) instead
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function get_type(mixed $value) : Type
-{
-    return get_type_new($value);
-}
-
-/**
- * @param Schema $schema
- *
- * @deprecated Please use schema_to_ascii($schema) instead
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function print_schema(Schema $schema, ?SchemaFormatter $formatter = null) : string
-{
-    return ($formatter ?? new ASCIISchemaFormatter())->format($schema);
-}
-
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null) : string
 {
@@ -2385,35 +1966,6 @@ function is_type(Type|array $type, mixed $value) : bool
     return false;
 }
 
-/**
- * @template T
- *
- * @param \Flow\Types\Type<T> $type
- * @param class-string<Type<mixed>> $typeClass
- *
- * @deprecated please use \Flow\Types\DSL\type_is($type, $typeClass): bool instead
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_is(Type $type, string $typeClass) : bool
-{
-    return type_is_new($type, $typeClass);
-}
-
-/**
- * @template T
- *
- * @param Type<T> $type
- * @param class-string<Type<T>> $typeClass
- * @param class-string<Type<T>> ...$typeClasses
- *
- * @deprecated please use \Flow\Types\DSL\type_is_any($type, $typeClass, ...$typeClasses): bool instead
- */
-#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
-function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
-{
-    return type_is_any_new($type, $typeClass, ...$typeClasses);
-}
-
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function generate_random_string(int $length = 32, NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator()) : string
 {
@@ -2432,15 +1984,6 @@ function random_string(
     RandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
 ) : RandomString {
     return new RandomString($length, $generator);
-}
-
-/**
- * @deprecated Please use \Flow\Types\DSL\dom_element_to_string() instead
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function dom_element_to_string(\DOMElement $element, bool $format_output = false, bool $preserver_white_space = false) : string|false
-{
-    return dom_element_to_string_new($element, $format_output, $preserver_white_space);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

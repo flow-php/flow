@@ -13,7 +13,7 @@ use function Flow\ETL\DSL\{bool_schema,
     list_schema,
     map_schema,
     str_schema,
-    struct_schema,
+    structure_schema,
     time_schema,
     uuid_schema};
 use function Flow\Types\DSL\{type_boolean,
@@ -119,7 +119,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
 
         self::assertEquals(
             \Flow\ETL\DSL\schema(
-                struct_schema(
+                structure_schema(
                     'struct',
                     type_structure(
                         [

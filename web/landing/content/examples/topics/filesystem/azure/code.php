@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use function Flow\Azure\SDK\DSL\{azure_blob_service, azure_blob_service_config, azure_shared_key_authorization_factory};
+use function Flow\Filesystem\DSL\fstab;
+use function Flow\Filesystem\DSL\protocol;
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
 use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite, to_output};
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
@@ -11,7 +13,9 @@ use Symfony\Component\Dotenv\Dotenv;
 
 require __DIR__ . '/vendor/autoload.php';
 
-if (!\file_exists(__DIR__ . '/.env')) {
+$fs = fstab()->for(protocol('file'));
+
+if ($fs->status(path(__DIR__ . '/.env')) === null) {
     print 'Example skipped. Please create .env file with Azure Storage Account credentials.' . PHP_EOL;
 
     return;
