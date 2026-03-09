@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-09
+## [0.33.0] - 2026-03-09
 
 ### Added
 - [#2256](https://github.com/flow-php/flow/pull/2256) - **http adapter/client to CLI application** - [@norberttech](https://github.com/norberttech)
