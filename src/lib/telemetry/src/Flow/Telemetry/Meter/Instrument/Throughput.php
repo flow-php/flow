@@ -31,7 +31,7 @@ final class Throughput implements Instrument
     /**
      * Aggregations by attribute key.
      *
-     * @var array<string, array{count: int, startTimeNs: int, startedAt: \DateTimeImmutable, attributes: array<string, bool|float|int|string>, reservoir: ExemplarReservoir}>
+     * @var array<string, array{count: int, startTimeNs: float|int, startedAt: \DateTimeImmutable, attributes: array<string, bool|float|int|string>, reservoir: ExemplarReservoir}>
      */
     private array $aggregations = [];
 

@@ -446,13 +446,13 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         self::assertSame($parentSpanId, $backInParentSpanId, 'After child completes, should be back to parent span_id');
 
         self::assertSame(
-            $entries[0]->spanContext?->traceId->toHex(),
-            $entries[1]->spanContext?->traceId->toHex(),
+            $entries[0]->spanContext->traceId->toHex(),
+            $entries[1]->spanContext->traceId->toHex(),
             'All logs should share the same trace_id'
         );
         self::assertSame(
-            $entries[1]->spanContext?->traceId->toHex(),
-            $entries[2]->spanContext?->traceId->toHex(),
+            $entries[1]->spanContext->traceId->toHex(),
+            $entries[2]->spanContext->traceId->toHex(),
             'All logs should share the same trace_id'
         );
     }

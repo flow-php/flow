@@ -12,7 +12,7 @@ enum TimeUnit : string
     case NANOSECONDS = 'ns';
     case SECONDS = 'sec';
 
-    public function fromNanoseconds(int $nanoseconds) : float
+    public function fromNanoseconds(int|float $nanoseconds) : float
     {
         return match ($this) {
             self::NANOSECONDS => (float) $nanoseconds,

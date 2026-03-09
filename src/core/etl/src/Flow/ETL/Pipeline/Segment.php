@@ -69,7 +69,7 @@ final readonly class Segment
                             $rows = new Rows();
                             $input->send(Signal::STOP);
                         }
-                    } elseif ($step instanceof Loader && $rows->count()) {
+                    } elseif ($rows->count()) {
                         $step->load($rows, $context);
                     }
                 } catch (\Throwable $exception) {
