@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-08
+## [Unreleased] - 2026-03-09
 
 ### Added
 - [#2256](https://github.com/flow-php/flow/pull/2256) - **http adapter/client to CLI application** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +13,7 @@
 - [#2230](https://github.com/flow-php/flow/pull/2230) - **Reference to documentation above examples** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [9db3c7](https://github.com/flow-php/flow/commit/9db3c747740ace0cbb48ef3282b45f12a2e25a79) - **chore: updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2250](https://github.com/flow-php/flow/pull/2250) - **Optimzed rename operation performance** - [@norberttech](https://github.com/norberttech)
 - [#2244](https://github.com/flow-php/flow/pull/2244) - **avoid removing files from other datasets using the same partitiong keys and the same output folder** - [@norberttech](https://github.com/norberttech)
 - [e4cc9e](https://github.com/flow-php/flow/commit/e4cc9e8f410d06e277064efebe04bd9d710ab261) - **chore: lock nix shell to nix 25.11** - [@norberttech](https://github.com/norberttech)
