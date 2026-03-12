@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace Flow\Parquet\Reader;
 
 use function Flow\ETL\Adapter\Parquet\empty_generator;
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\{ByteOrder,
-    Data\BitWidth,
-    Data\DeltaBinaryPackedDecoder,
-    Data\PlainValueUnpacker,
-    Dremel\ColumnData\ReadFlatColumnValues,
-    Options,
-    ParquetFile\Encodings};
-use Flow\Parquet\Data\RLEBitPackedHybrid;
+use Flow\Parquet\Data\{BitWidth, DeltaBinaryPackedDecoder, PlainValueUnpacker, RLEBitPackedHybrid};
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
@@ -34,7 +31,7 @@ final readonly class ColumnDataDecoder
         ?Dictionary $dictionary = null,
     ) : ReadFlatColumnValues {
 
-        $reader = new BinaryBufferReader($buffer, $this->byteOrder);
+        $reader = new BinaryBufferReader($buffer);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
 
@@ -67,7 +64,7 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ReadFlatColumnValues(
                 $column,
-                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount),
+                (new PlainValueUnpacker($reader, $this->options, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
                 $definitionLevels
             );
@@ -99,8 +96,6 @@ final readonly class ColumnDataDecoder
 
         if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if ($nonEmptyValuesCount) {
-                // while reading indices, there is no length at the beginning since length is simply a remaining length of the buffer
-                // however we need to know bitWidth which is the first value in the buffer after definitions
                 $bitWidth = $reader->readBytes(1)->toInt();
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
@@ -132,7 +127,7 @@ final readonly class ColumnDataDecoder
         DataPageHeaderV2 $pageHeader,
         ?Dictionary $dictionary = null,
     ) : ReadFlatColumnValues {
-        $reader = new BinaryBufferReader($buffer, $this->byteOrder);
+        $reader = new BinaryBufferReader($buffer);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
 
@@ -163,7 +158,7 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ReadFlatColumnValues(
                 $column,
-                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount),
+                (new PlainValueUnpacker($reader, $this->options, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
                 $definitionLevels
             );
@@ -195,8 +190,6 @@ final readonly class ColumnDataDecoder
 
         if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if (\count($definitionLevels)) {
-                // while reading indices, there is no length at the beginning since length is simply a remaining length of the buffer
-                // however we need to know bitWidth which is the first value in the buffer after definitions
                 $bitWidth = $reader->readBytes(1)->toInt();
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
@@ -227,10 +220,10 @@ final readonly class ColumnDataDecoder
         FlatColumn $column,
         DictionaryPageHeader $pageHeader,
     ) : Dictionary {
-        $reader = new BinaryBufferReader($buffer, $this->byteOrder);
+        $reader = new BinaryBufferReader($buffer);
 
         return new Dictionary(
-            \iterator_to_array((new PlainValueUnpacker($reader, $this->options))->unpack($column, $pageHeader->valuesCount()))
+            \iterator_to_array((new PlainValueUnpacker($reader, $this->options, $this->byteOrder))->unpack($column, $pageHeader->valuesCount()))
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
+use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final readonly class FlatValue
@@ -12,7 +13,7 @@ final readonly class FlatValue
         public FlatColumn $column,
         public int $repetitionLevel,
         public int $definitionLevel,
-        public int|float|string|bool|null $value = null,
+        public int|float|string|bool|Bytes|null $value = null,
     ) {
     }
 

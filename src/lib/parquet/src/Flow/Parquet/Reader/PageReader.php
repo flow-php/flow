@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\Parquet\Reader;
 
 use Flow\Parquet\{
-    ByteOrder,
     Dremel\ColumnData\ReadFlatColumnValues,
     Options,
     ParquetFile\Compressions,
     ParquetFile\Data\Codec
 };
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Page\{Dictionary, PageHeader};
 use Flow\Parquet\ParquetFile\Page\Header\Type;

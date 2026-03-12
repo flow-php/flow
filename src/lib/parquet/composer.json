@@ -33,6 +33,7 @@
         },
         "files": [
             "src/Flow/Parquet/functions.php",
+            "src/Flow/Parquet/Binary/functions.php",
             "src/stubs.php"
         ]
     },

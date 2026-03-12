@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
     Dremel\DremelAssembler,
     Dremel\ReadColumnData,

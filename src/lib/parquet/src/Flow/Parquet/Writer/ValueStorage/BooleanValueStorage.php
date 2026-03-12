@@ -34,7 +34,12 @@ final class BooleanValueStorage implements ValueStorage
 
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
-        $writer->writeBooleans($this->values);
+        $bits = [];
+
+        foreach ($this->values as $value) {
+            $bits[] = $value ? 1 : 0;
+        }
+        $writer->writeBits($bits);
 
         return $buffer;
     }

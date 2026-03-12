@@ -12,7 +12,8 @@ use Flow\ETL\{Attribute\DocumentationDSL,
 };
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
-use Flow\Parquet\{ByteOrder, Options};
+use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 
 /**

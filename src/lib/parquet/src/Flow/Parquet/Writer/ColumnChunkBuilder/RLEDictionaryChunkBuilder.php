@@ -4,35 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\{
-    Data\BitWidth,
-    Data\PlainValuesPacker,
-    Dremel\WriteColumnData,
-    Exception\RuntimeException,
-    Option,
-    Options,
-    ParquetFile\Data\Codec,
-    Writer\ColumnChunkBuilder,
-    Writer\ColumnChunkContainer,
-    Writer\PageContainer,
-    Writer\PageContainers,
-    Writer\StatisticsCounter
-};
+use Flow\Parquet\Binary\{ByteOrder, Bytes};
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\RLEBitPackedHybrid;
+use Flow\Parquet\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\ParquetFile\{Compressions,
-    Encodings
-};
+use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\{Option, Options};
+use Flow\Parquet\ParquetFile\{Compressions, Encodings};
+use Flow\Parquet\ParquetFile\Data\Codec;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
-use Flow\Parquet\Writer\PageBuilder\{Dictionary, DictionaryBuilder};
-use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
+use Flow\Parquet\Writer\{ColumnChunkBuilder, ColumnChunkContainer, PageContainer, PageContainers, StatisticsCounter};
+use Flow\Parquet\Writer\PageBuilder\{Dictionary, DictionaryBuilder, RLEBitPackedPacker};
 
 final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 {
+    private readonly ByteOrder $byteOrder;
+
     private StatisticsCounter $chunkStatistics;
 
     /**
@@ -49,7 +40,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private StatisticsCounter $pageStatistics;
 
     /**
-     * @var array<null|bool|float|int|string>
+     * @var array<null|bool|Bytes|float|int|string>
      */
     private array $pageValues = [];
 
@@ -68,6 +59,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->pages = new PageContainers();
         $this->chunkStatistics = new StatisticsCounter($this->column);
         $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
     }
 
     public function addRow(WriteColumnData $columnData) : void
@@ -162,7 +154,6 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             )
         )];
 
-        // Reset all state after flush
         $this->pages = new PageContainers();
         $this->chunkStatistics = new StatisticsCounter($this->column);
         $this->pageStatistics = new StatisticsCounter($this->column);
@@ -176,10 +167,6 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         return $containers;
     }
 
-    /**
-     * Checks if the builder has any data that needs to be written.
-     * Used to prevent writing empty pages.
-     */
     public function isEmpty() : bool
     {
         return count($this->pageValues) === 0
@@ -200,21 +187,22 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private function buildDataPage(Codec $codec, Compressions $compression) : PageContainer
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
+        $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $this->byteOrder);
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
 
         if ($this->column->maxRepetitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels));
+            $pageWriter->append($packer->packWithLength(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels));
         }
 
         if ($this->column->maxDefinitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
+            $pageWriter->append($packer->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
         }
 
         if ($this->dictionary && \count($this->dictionary->indices) > 0) {
             $bitWidth = BitWidth::fromArray($this->dictionary->indices);
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($bitWidth, $this->dictionary->indices));
+            $pageWriter->append($packer->packWithBitWidth($bitWidth, $this->dictionary->indices));
         }
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
@@ -244,9 +232,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $statistics = $this->pageStatistics->toStatistics();
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
+        $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $this->byteOrder);
 
         if ($this->column->maxRepetitionsLevel() > 0) {
-            $repetitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels);
+            $repetitionsBuffer = $packer->pack(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels);
             $repetitionsLength = \strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
@@ -254,7 +243,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         }
 
         if ($this->column->maxDefinitionsLevel() > 0) {
-            $definitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels);
+            $definitionsBuffer = $packer->pack(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels);
             $definitionsLength = \strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';
@@ -265,7 +254,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         if ($this->dictionary && \count($this->dictionary->indices) > 0) {
             $bitWidth = BitWidth::fromArray($this->dictionary->indices);
-            $indicesBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($bitWidth, $this->dictionary->indices);
+            $indicesBuffer = $packer->packWithBitWidth($bitWidth, $this->dictionary->indices);
         }
 
         $compressedBuffer = $codec->compress($indicesBuffer, $compression);
@@ -302,7 +291,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
-        (new PlainValuesPacker($pageWriter))->packValues($this->column, $this->dictionary->dictionary);
+        (new PlainValuesPacker($pageWriter, $this->byteOrder))->packValues($this->column, $this->dictionary->dictionary);
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
 

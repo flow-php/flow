@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer\PageBuilder;
 
+use function Flow\Parquet\Binary\decode_i32;
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
@@ -62,7 +64,7 @@ final class RLEBitPackedPackerTest extends TestCase
     protected function setUp() : void
     {
         $this->hybrid = new RLEBitPackedHybrid();
-        $this->packer = new RLEBitPackedPacker($this->hybrid);
+        $this->packer = new RLEBitPackedPacker($this->hybrid, ByteOrder::LITTLE_ENDIAN);
     }
 
     #[DataProvider('pack_basic_values_provider')]
@@ -107,7 +109,7 @@ final class RLEBitPackedPackerTest extends TestCase
     public function test_pack_maximum_values_for_bit_width() : void
     {
         $bitWidth = 4;
-        $maxValue = (1 << $bitWidth) - 1; // 15 for 4-bit
+        $maxValue = (1 << $bitWidth) - 1;
         $values = [$maxValue, $maxValue, $maxValue];
         $result = $this->packer->pack($bitWidth, $values);
 
@@ -153,13 +155,11 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertIsString($result);
         self::assertGreaterThan(0, strlen($result));
 
-        // Verify the bit width is prepended
         $reader = new BinaryBufferReader($result);
         $decodedBitWidth = $reader->readVarInt();
         $expectedBitWidth = BitWidth::fromArray($values);
         self::assertEquals($expectedBitWidth, $decodedBitWidth, 'Bit width should be prepended');
 
-        // Verify we can decode the remaining data
         $decoded = $this->hybrid->decodeHybrid($reader, $bitWidth, count($values));
         self::assertEquals($values, $decoded, $description);
     }
@@ -198,7 +198,7 @@ final class RLEBitPackedPackerTest extends TestCase
     public function test_pack_with_bit_width_maximum_values_for_bit_width() : void
     {
         $bitWidth = 4;
-        $maxValue = (1 << $bitWidth) - 1; // 15 for 4-bit
+        $maxValue = (1 << $bitWidth) - 1;
         $values = [$maxValue, $maxValue, $maxValue];
         $result = $this->packer->packWithBitWidth($bitWidth, $values);
 
@@ -270,7 +270,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThan(0, $decodedLength, 'Length should be prepended and positive');
 
         $dataBuffer = '';
@@ -289,7 +289,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThanOrEqual(0, $decodedLength);
 
         $decoded = $this->hybrid->decodeHybrid($reader, 1, 0);
@@ -305,7 +305,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThan(0, $decodedLength);
 
         $decoded = $this->hybrid->decodeHybrid($reader, 8, count($values));
@@ -315,7 +315,7 @@ final class RLEBitPackedPackerTest extends TestCase
     public function test_pack_with_length_maximum_values_for_bit_width() : void
     {
         $bitWidth = 4;
-        $maxValue = (1 << $bitWidth) - 1; // 15 for 4-bit
+        $maxValue = (1 << $bitWidth) - 1;
         $values = [$maxValue, $maxValue, $maxValue];
         $result = $this->packer->packWithLength($bitWidth, $values);
 
@@ -323,7 +323,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThan(0, $decodedLength);
 
         $decoded = $this->hybrid->decodeHybrid($reader, $bitWidth, count($values));
@@ -339,7 +339,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThan(0, $decodedLength);
 
         $decoded = $this->hybrid->decodeHybrid($reader, 4, count($values));
@@ -355,7 +355,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThan(0, $decodedLength);
 
         $decoded = $this->hybrid->decodeHybrid($reader, 8, count($values));
@@ -371,7 +371,7 @@ final class RLEBitPackedPackerTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
 
         $reader = new BinaryBufferReader($result);
-        $decodedLength = iterator_to_array($reader->readInts32(1))[0];
+        $decodedLength = decode_i32(ByteOrder::LITTLE_ENDIAN, $reader->readBytes(4)->toString());
         self::assertGreaterThanOrEqual(0, $decodedLength);
 
         $decoded = $this->hybrid->decodeHybrid($reader, 0, count($values));

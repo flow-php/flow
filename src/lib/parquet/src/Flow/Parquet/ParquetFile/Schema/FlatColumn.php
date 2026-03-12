@@ -82,6 +82,15 @@ final class FlatColumn implements Column
         return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::string(), $repetition);
     }
 
+    public static function fixedSizeByteArray(string $name, int $length, Repetition $repetition = Repetition::OPTIONAL) : self
+    {
+        if ($length < 1) {
+            throw new InvalidArgumentException('Length must be at least 1, ' . $length . ' given.');
+        }
+
+        return new self($name, PhysicalType::FIXED_LEN_BYTE_ARRAY, null, null, $repetition, typeLength: $length);
+    }
+
     public static function float(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         return new self($name, PhysicalType::FLOAT, null, null, $repetition);

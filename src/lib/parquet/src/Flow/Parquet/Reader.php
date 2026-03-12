@@ -6,6 +6,7 @@ namespace Flow\Parquet;
 
 use function Flow\Filesystem\DSL\path_real;
 use Flow\Filesystem\{SourceStream, Stream\NativeLocalSourceStream};
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 
 final readonly class Reader

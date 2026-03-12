@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\PageBuilder;
 
+use function Flow\Parquet\Binary\encode_i32;
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
 
@@ -11,6 +13,7 @@ final readonly class RLEBitPackedPacker
 {
     public function __construct(
         private RLEBitPackedHybrid $bitPackedHybrid,
+        private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
     ) {
     }
 
@@ -49,7 +52,7 @@ final readonly class RLEBitPackedPacker
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
         $outputBuffer = '';
         $outputWriter = new BinaryBufferWriter($outputBuffer);
-        $outputWriter->writeInts32([$length = \strlen($dataBuffer)]);
+        $outputWriter->append(encode_i32($this->byteOrder, \strlen($dataBuffer)));
         $outputWriter->append($dataBuffer);
 
         return $outputBuffer;

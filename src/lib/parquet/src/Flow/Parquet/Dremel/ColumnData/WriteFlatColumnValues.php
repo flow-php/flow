@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
+use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
@@ -13,7 +14,7 @@ final class WriteFlatColumnValues
      * @param FlatColumn $column
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
-     * @param array<null|scalar> $values
+     * @param array<null|Bytes|scalar> $values
      */
     public function __construct(
         public readonly FlatColumn $column,
@@ -242,7 +243,7 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @return array<null|scalar>
+     * @return array<null|Bytes|scalar>
      */
     public function values() : array
     {
