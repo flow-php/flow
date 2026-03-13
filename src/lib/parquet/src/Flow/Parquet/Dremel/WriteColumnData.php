@@ -38,13 +38,13 @@ final readonly class WriteColumnData
     public function addValue(FlatValue ...$values) : void
     {
         foreach ($values as $cell) {
-            $this->flatValues[$cell->column->flatPath()]->add($cell);
+            $this->flatValues[$cell->flatPath]->add($cell);
         }
     }
 
     public function addValues(WriteFlatColumnValues $values) : void
     {
-        $this->flatValues[$values->column->flatPath()]->merge($values);
+        $this->flatValues[$values->flatPath()]->merge($values);
     }
 
     /**
@@ -57,13 +57,13 @@ final readonly class WriteColumnData
 
     public function isEmpty(FlatColumn $column) : bool
     {
-        foreach ($this->flatValues as $child) {
-            if ($child->column->flatPath() === $column->flatPath()) {
-                return $child->isEmpty();
-            }
+        $flatPath = $column->flatPath();
+
+        if (!isset($this->flatValues[$flatPath])) {
+            throw new RuntimeException('Column ' . $flatPath . ' not found in FlatData');
         }
 
-        throw new RuntimeException('Column ' . $column->flatPath() . ' not found in FlatData');
+        return $this->flatValues[$flatPath]->isEmpty();
     }
 
     /**
@@ -77,7 +77,7 @@ final readonly class WriteColumnData
     public function merge(self $columnData) : self
     {
         foreach ($columnData->flatValues as $data) {
-            $this->flatValues[$data->column->flatPath()]->merge($data);
+            $this->flatValues[$data->flatPath()]->merge($data);
         }
 
         return $this;
@@ -91,7 +91,7 @@ final readonly class WriteColumnData
         $normalized = [];
 
         foreach ($this->flatValues as $child) {
-            $normalized[$child->column->flatPath()] = [
+            $normalized[$child->flatPath()] = [
                 'repetition_levels' => $child->repetitionLevels(),
                 'definition_levels' => $child->definitionLevels(),
                 'values' => $child->values(),
@@ -120,7 +120,7 @@ final readonly class WriteColumnData
                 }
             };
 
-            $readFlatValues[$flatValue->column->flatPath()] = new ReadFlatColumnValues(
+            $readFlatValues[$flatValue->flatPath()] = new ReadFlatColumnValues(
                 $flatValue->column,
                 $valuesGenerator(),
                 $flatValue->repetitionLevels(),

@@ -8,27 +8,31 @@ use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\ParquetFile\Schema\{Column, NestedColumn};
 use Flow\Parquet\Writer\ColumnChunkBuilder;
 
-final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
+final class NestedColumnChunkBuilder implements ColumnChunkBuilder
 {
+    /** @var array<string, ColumnChunkBuilder> */
+    private array $buildersByPath;
+
     /**
      * @param NestedColumn $column
      * @param array<ColumnChunkBuilder> $childrenColumnChunkBuilders
      */
-    public function __construct(private NestedColumn $column, private array $childrenColumnChunkBuilders)
+    public function __construct(private readonly NestedColumn $column, private readonly array $childrenColumnChunkBuilders)
     {
+        $this->buildersByPath = [];
+
+        foreach ($childrenColumnChunkBuilders as $builder) {
+            $this->buildersByPath[$builder->column()->flatPath()] = $builder;
+        }
     }
 
     public function addRow(WriteColumnData $columnData) : void
     {
         foreach ($columnData->flatValues() as $flatValues) {
-            // We need to find the correct child column chunk builder for the flat values.
-            // This is done by matching the flat path of the flat values with the child column's flat path.
-            foreach ($this->childrenColumnChunkBuilders as $index => $childBuilder) {
-                if ($childBuilder->column()->flatPath() === $flatValues->flatPath()) {
-                    $childBuilder->addRow($columnData->toFlatColumnData($flatValues->flatPath()));
+            $path = $flatValues->flatPath();
 
-                    break;
-                }
+            if (isset($this->buildersByPath[$path])) {
+                $this->buildersByPath[$path]->addRow($columnData->toFlatColumnData($path));
             }
         }
     }
