@@ -14,13 +14,13 @@ final class ColumnDataValidator implements Validator
     {
         $repetition = $column->repetition();
 
-        if ($repetition?->isRequired()) {
+        if ($repetition === Repetition::REQUIRED) {
             if ($data === null) {
                 throw new ValidationException(\sprintf('Column "%s" is required', $column->flatPath()));
             }
         }
 
-        if ($repetition?->isRepeated() && !\is_array($data)) {
+        if ($repetition === Repetition::REPEATED && !\is_array($data)) {
             throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
         }
 
@@ -31,7 +31,7 @@ final class ColumnDataValidator implements Validator
         }
 
         if ($column instanceof FlatColumn) {
-            $this->validateData($column, $data);
+            $this->validateData($column, $data, $repetition);
 
             return;
         }
@@ -73,23 +73,26 @@ final class ColumnDataValidator implements Validator
         }
     }
 
-    private function validateData(FlatColumn $column, mixed $data) : void
+    private function validateData(FlatColumn $column, mixed $data, ?Repetition $repetition) : void
     {
         if (\is_array($data)) {
             foreach ($data as $value) {
-                $this->validateData($column, $value);
+                $this->validateData($column, $value, $repetition);
             }
 
             return;
         }
 
-        if ($column->repetition()?->isOptional()) {
+        if ($repetition !== Repetition::REQUIRED) {
             if ($data === null) {
                 return;
             }
         }
 
-        switch ($column->type()) {
+        $type = $column->type();
+        $logicalTypeName = $column->logicalType()?->name();
+
+        switch ($type) {
             case PhysicalType::BOOLEAN:
                 if (!\is_bool($data)) {
                     throw new ValidationException(\sprintf('Column "%s" is not boolean', $column->flatPath()));
@@ -98,7 +101,7 @@ final class ColumnDataValidator implements Validator
                 break;
             case PhysicalType::INT64:
             case PhysicalType::INT32:
-                switch ($column->logicalType()?->name()) {
+                switch ($logicalTypeName) {
                     case LogicalType::DATE:
                     case LogicalType::TIMESTAMP:
                         if (!$data instanceof \DateTimeInterface) {
@@ -129,7 +132,7 @@ final class ColumnDataValidator implements Validator
 
                 break;
             case PhysicalType::BYTE_ARRAY:
-                switch ($column->logicalType()?->name()) {
+                switch ($logicalTypeName) {
                     case LogicalType::STRING:
                     case LogicalType::JSON:
                     case LogicalType::UUID:
@@ -145,7 +148,7 @@ final class ColumnDataValidator implements Validator
                 break;
 
             default:
-                throw new ValidationException(\sprintf('Unknown column type "%s"', $column->type()->name));
+                throw new ValidationException(\sprintf('Unknown column type "%s"', $type->name));
         }
     }
 }
