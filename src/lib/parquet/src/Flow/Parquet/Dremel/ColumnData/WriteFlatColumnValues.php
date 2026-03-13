@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
-use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class WriteFlatColumnValues
 {
+    private readonly string $flatPath;
+
     /**
      * @param FlatColumn $column
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
-     * @param array<null|scalar> $values
+     * @param array<null|Bytes|scalar> $values
      */
     public function __construct(
         public readonly FlatColumn $column,
@@ -21,13 +23,15 @@ final class WriteFlatColumnValues
         private array $definitionLevels = [],
         private array $values = [],
     ) {
+        $this->flatPath = $column->flatPath();
     }
 
     public function add(FlatValue $cell) : void
     {
-        if ($cell->column->flatPath() !== $this->column->flatPath()) {
-            throw new RuntimeException('Cannot add data from different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $cell->column->flatPath());
-        }
+        \assert(
+            $cell->column->flatPath() === $this->flatPath,
+            'Cannot add data from different column, attempt to merge: ' . $this->flatPath . ' with ' . $cell->column->flatPath()
+        );
 
         $this->repetitionLevels[] = $cell->repetitionLevel;
         $this->definitionLevels[] = $cell->definitionLevel;
@@ -52,7 +56,7 @@ final class WriteFlatColumnValues
 
     public function flatPath() : string
     {
-        return $this->column->flatPath();
+        return $this->flatPath;
     }
 
     public function isEmpty() : bool
@@ -85,9 +89,10 @@ final class WriteFlatColumnValues
 
     public function merge(self $flatData) : self
     {
-        if ($flatData->column->flatPath() !== $this->column->flatPath()) {
-            throw new RuntimeException('Cannot merge different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $flatData->column->flatPath());
-        }
+        \assert(
+            $flatData->flatPath === $this->flatPath,
+            'Cannot merge different column, attempt to merge: ' . $this->flatPath . ' with ' . $flatData->flatPath
+        );
 
         array_push($this->repetitionLevels, ...$flatData->repetitionLevels);
         array_push($this->definitionLevels, ...$flatData->definitionLevels);
@@ -242,7 +247,7 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @return array<null|scalar>
+     * @return array<null|Bytes|scalar>
      */
     public function values() : array
     {

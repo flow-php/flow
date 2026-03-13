@@ -12,6 +12,8 @@ final class FlatColumn implements Column
 {
     private ?string $flatPath = null;
 
+    private ?self $optionalVariant = null;
+
     private ?NestedColumn $parent = null;
 
     private ?Repetitions $repetitions = null;
@@ -80,6 +82,15 @@ final class FlatColumn implements Column
     public static function enum(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::string(), $repetition);
+    }
+
+    public static function fixedSizeByteArray(string $name, int $length, Repetition $repetition = Repetition::OPTIONAL) : self
+    {
+        if ($length < 1) {
+            throw new InvalidArgumentException('Length must be at least 1, ' . $length . ' given.');
+        }
+
+        return new self($name, PhysicalType::FIXED_LEN_BYTE_ARRAY, null, null, $repetition, typeLength: $length);
     }
 
     public static function float(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
@@ -231,9 +242,18 @@ final class FlatColumn implements Column
 
     public function makeOptional() : self
     {
+        if ($this->repetition === Repetition::OPTIONAL) {
+            return $this;
+        }
+
+        if ($this->optionalVariant !== null) {
+            return $this->optionalVariant;
+        }
+
         $column = new self($this->name, $this->type, $this->convertedType, $this->logicalType, Repetition::OPTIONAL, $this->precision, $this->scale, $this->typeLength);
         $column->parent = $this->parent;
         $column->flatPath = $this->flatPath;
+        $this->optionalVariant = $column;
 
         return $column;
     }

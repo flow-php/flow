@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer;
 
 use function Flow\Parquet\array_flatten;
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\Dremel\Statistics\Comparator;
@@ -14,6 +15,8 @@ use Flow\Parquet\ParquetFile\Statistics;
 
 final class StatisticsCounter
 {
+    private readonly ByteOrder $byteOrder;
+
     private readonly Comparator $comparator;
 
     private mixed $max;
@@ -31,6 +34,7 @@ final class StatisticsCounter
         $this->min = null;
         $this->max = null;
         $this->comparator = new Comparator();
+        $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
     }
 
     /**
@@ -133,7 +137,7 @@ final class StatisticsCounter
             if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($min)) {
                 (new BinaryBufferWriter($minBuffer))->append($min);
             } else {
-                (new PlainValuesPacker(new BinaryBufferWriter($minBuffer)))->packValues($this->column, [$min]);
+                (new PlainValuesPacker(new BinaryBufferWriter($minBuffer), $this->byteOrder))->packValues($this->column, [$min]);
             }
         }
 
@@ -141,7 +145,7 @@ final class StatisticsCounter
             if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($max)) {
                 (new BinaryBufferWriter($maxBuffer))->append($max);
             } else {
-                (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer)))->packValues($this->column, [$max]);
+                (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->byteOrder))->packValues($this->column, [$max]);
             }
         }
 

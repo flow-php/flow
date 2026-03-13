@@ -9,10 +9,26 @@ use Faker\Factory;
 use Flow\Parquet\{Consts, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class SimpleTypesWritingTest extends TestCase
 {
+    public static function decimalPrecisionProvider() : array
+    {
+        return [
+            'precision 4, scale 2' => [4, 2, 99.99],
+            'precision 6, scale 2' => [6, 2, 9999.99],
+            'precision 8, scale 2' => [8, 2, 999999.99],
+            'precision 10, scale 2' => [10, 2, 99999999.99],
+            'precision 10, scale 4' => [10, 4, 999999.9999],
+            'precision 15, scale 2' => [15, 2, 9999999999999.99],
+            'precision 18, scale 6' => [18, 6, 999999999999.999999],
+            'precision 5, scale 0' => [5, 0, 99999.0],
+            'precision 8, scale 8' => [8, 8, 0.99999999],
+        ];
+    }
+
     protected function setUp() : void
     {
         if (!\file_exists(__DIR__ . '/var')) {
@@ -157,9 +173,36 @@ final class SimpleTypesWritingTest extends TestCase
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
             [
-                'decimal' => \round($faker->randomFloat(5), 2),
+                'decimal' => \round($faker->randomFloat(2, 0, 99999999.99), 2),
             ],
         ], \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertEquals(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+
+        self::assertTrue(\file_exists($path));
+        \unlink($path);
+    }
+
+    #[DataProvider('decimalPrecisionProvider')]
+    public function test_writing_decimal_column_with_different_precisions(int $precision, int $scale, float $maxValue) : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-decimal-precision-' . generate_random_string() . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(FlatColumn::decimal('decimal', $precision, $scale));
+
+        $inputData = [];
+
+        for ($i = 0; $i < 50; $i++) {
+            $inputData[] = [
+                'decimal' => \round(\mt_rand(0, (int) ($maxValue * 100)) / 100, $scale),
+            ];
+        }
 
         $writer->write($path, $schema, $inputData);
 
@@ -183,7 +226,7 @@ final class SimpleTypesWritingTest extends TestCase
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
             [
-                'decimal' => $i % 2 === 0 ? \round($faker->randomFloat(5), 2) : null,
+                'decimal' => $i % 2 === 0 ? \round($faker->randomFloat(2, 0, 99999999.99), 2) : null,
             ],
         ], \range(1, 100)));
 

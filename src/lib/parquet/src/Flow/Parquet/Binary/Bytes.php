@@ -2,16 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\BinaryReader;
+namespace Flow\Parquet\Binary;
 
-use Flow\Parquet\{ByteOrder, DataSize};
+use Flow\Parquet\DataSize;
 
+/**
+ * @implements \ArrayAccess<int, int>
+ * @implements \IteratorAggregate<int, int>
+ */
 final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 {
+    /** @var ?\ArrayIterator<int, int> */
     private ?\ArrayIterator $iterator = null;
 
     private readonly DataSize $size;
 
+    /**
+     * @param array<int, int> $bytes
+     */
     public function __construct(
         private array $bytes,
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
@@ -31,7 +39,9 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
         return \count($this->bytes);
     }
 
-    // IteratorAggregate methods
+    /**
+     * @return \ArrayIterator<int, int>
+     */
     public function getIterator() : \ArrayIterator
     {
         if ($this->iterator === null) {
@@ -41,18 +51,17 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
         return $this->iterator;
     }
 
-    // ArrayAccess methods
-    public function offsetExists($offset) : bool
+    public function offsetExists(mixed $offset) : bool
     {
         return isset($this->bytes[$offset]);
     }
 
-    public function offsetGet($offset) : mixed
+    public function offsetGet(mixed $offset) : int
     {
         return $this->bytes[$offset];
     }
 
-    public function offsetSet($offset, $value) : void
+    public function offsetSet(mixed $offset, mixed $value) : void
     {
         if ($offset === null) {
             $this->bytes[] = $value;
@@ -61,7 +70,7 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
         }
     }
 
-    public function offsetUnset($offset) : void
+    public function offsetUnset(mixed $offset) : void
     {
         unset($this->bytes[$offset]);
     }

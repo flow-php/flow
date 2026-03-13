@@ -4,34 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\{
-    Data\BitWidth,
-    Dremel\WriteColumnData,
-    Exception\InvalidArgumentException,
-    Exception\RuntimeException,
-    Option,
-    Options,
-    ParquetFile\Data\Codec,
-    Writer\ColumnChunkBuilder,
-    Writer\ColumnChunkContainer,
-    Writer\PageContainer,
-    Writer\PageContainers,
-    Writer\StatisticsCounter
-};
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\RLEBitPackedHybrid;
-use Flow\Parquet\ParquetFile\{Compressions,
-    Encodings
-};
+use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
+use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Parquet\{Option, Options};
+use Flow\Parquet\ParquetFile\{Compressions, Encodings};
+use Flow\Parquet\ParquetFile\Data\Codec;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
+use Flow\Parquet\Writer\{ColumnChunkBuilder, ColumnChunkContainer, PageContainer, PageContainers, StatisticsCounter};
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
 use Flow\Parquet\Writer\ValueStorage\{DeltaBinaryPackedValueStorage, ValueStorage};
 
 final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 {
+    private readonly ByteOrder $byteOrder;
+
     private StatisticsCounter $chunkStatistics;
 
     /**
@@ -65,6 +57,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         $this->chunkStatistics = new StatisticsCounter($this->column);
         $this->pageStatistics = new StatisticsCounter($this->column);
         $this->valueStorage = new DeltaBinaryPackedValueStorage();
+        $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
 
         if (!in_array($this->column->type(), [PhysicalType::INT32, PhysicalType::INT64], true)) {
             throw new InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
@@ -163,10 +156,6 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         return $containers;
     }
 
-    /**
-     * Checks if the builder has any data that needs to be written.
-     * Used to prevent writing empty pages.
-     */
     public function isEmpty() : bool
     {
         return $this->valueStorage->size() === 0
@@ -176,7 +165,6 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     public function isFull() : bool
     {
-        // Use the original estimation logic for compatibility with existing tests
         return $this->valueStorage->size() * ($this->column->type() === PhysicalType::INT32 ? 4 : 8) >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
@@ -188,16 +176,17 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
     private function buildDataPage(Codec $codec, Compressions $compression) : PageContainer
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
+        $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $this->byteOrder);
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
 
         if ($this->column->maxRepetitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels));
+            $pageWriter->append($packer->packWithLength(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels));
         }
 
         if ($this->column->maxDefinitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
+            $pageWriter->append($packer->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
         }
 
         $pageWriter->append($this->valueStorage->getBuffer());
@@ -229,9 +218,10 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         $statistics = $this->pageStatistics->toStatistics();
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
+        $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $this->byteOrder);
 
         if ($this->column->maxRepetitionsLevel() > 0) {
-            $repetitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels);
+            $repetitionsBuffer = $packer->pack(BitWidth::calculate($this->column->maxRepetitionsLevel()), $this->repetitionLevels);
             $repetitionsLength = \strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
@@ -239,7 +229,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         }
 
         if ($this->column->maxDefinitionsLevel() > 0) {
-            $definitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels);
+            $definitionsBuffer = $packer->pack(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels);
             $definitionsLength = \strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';

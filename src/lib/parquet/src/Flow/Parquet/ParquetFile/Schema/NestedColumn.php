@@ -9,6 +9,16 @@ use Flow\Parquet\ThriftModel\SchemaElement;
 
 final class NestedColumn implements Column
 {
+    private ?bool $cachedIsList = null;
+
+    private ?bool $cachedIsMap = null;
+
+    private ?Column $cachedListElement = null;
+
+    private ?FlatColumn $cachedMapKeyColumn = null;
+
+    private ?Column $cachedMapValueColumn = null;
+
     private ?string $flatPath = null;
 
     private ?self $parent = null;
@@ -215,7 +225,7 @@ final class NestedColumn implements Column
     {
         if ($this->isList()) {
             /** @phpstan-ignore-next-line */
-            return $this->children()[0]->children()[0];
+            return $this->cachedListElement ??= $this->children()[0]->children()[0];
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a list');
@@ -225,7 +235,7 @@ final class NestedColumn implements Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
-            return $this->children()[0]->children()[0];
+            return $this->cachedMapKeyColumn ??= $this->children()[0]->children()[0];
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
@@ -235,7 +245,7 @@ final class NestedColumn implements Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
-            return $this->children()[0]->children()[1];
+            return $this->cachedMapValueColumn ??= $this->children()[0]->children()[1];
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
@@ -243,12 +253,12 @@ final class NestedColumn implements Column
 
     public function isList() : bool
     {
-        return $this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST;
+        return $this->cachedIsList ??= ($this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST);
     }
 
     public function isMap() : bool
     {
-        return $this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP;
+        return $this->cachedIsMap ??= ($this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP);
     }
 
     public function isMapElement() : bool

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
-use Flow\Parquet\BinaryReader\Bytes;
-use Flow\Parquet\{BinaryReader, Option, Options};
+use function Flow\Parquet\Binary\{encode_decimal, encode_f32, encode_f64, encode_i32, encode_i64, encode_u32};
+use Flow\Parquet\Binary\{ByteOrder, Bytes};
+use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Data\PlainValueUnpacker;
-use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 use PHPUnit\Framework\TestCase;
 
@@ -15,255 +16,209 @@ final class PlainValueUnpackerTest extends TestCase
 {
     public function test_unpack_boolean() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $buffer = \chr(0b00000010);
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::boolean('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readBooleans')
-            ->with(2)
-            ->willReturn((static function () {
-                yield true;
-                yield false;
-            })());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
-
-        self::assertEquals([true, false], iterator_to_array($unpacker->unpack($column, 2)));
+        self::assertEquals([false, true], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_byte_array_default_with_byte_array_to_string_option_false() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $string1 = 'abc';
+        $string2 = 'def';
+        $buffer = encode_u32($byteOrder, \strlen($string1)) . $string1 . encode_u32($byteOrder, \strlen($string2)) . $string2;
+        $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY);
 
-        $bytes1 = new Bytes([1, 2, 3]);
-        $bytes2 = new Bytes([4, 5, 6]);
+        $unpacker = new PlainValueUnpacker($reader, (new Options())->set(Option::BYTE_ARRAY_TO_STRING, false));
 
-        $binaryReader->expects(self::once())
-            ->method('readByteArrays')
-            ->with(2)
-            ->willReturn((static function () use ($bytes1, $bytes2) {
-                yield $bytes1;
-                yield $bytes2;
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, (new Options())->set(Option::BYTE_ARRAY_TO_STRING, false));
-
-        self::assertEquals([$bytes1, $bytes2], iterator_to_array($unpacker->unpack($column, 2)));
+        $result = iterator_to_array($unpacker->unpack($column, 2));
+        self::assertCount(2, $result);
+        self::assertInstanceOf(Bytes::class, $result[0]);
+        self::assertInstanceOf(Bytes::class, $result[1]);
+        self::assertEquals('abc', $result[0]->toString());
+        self::assertEquals('def', $result[1]->toString());
     }
 
     public function test_unpack_byte_array_default_with_byte_array_to_string_option_true() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $string1 = 'string1';
+        $string2 = 'string2';
+        $buffer = encode_u32($byteOrder, \strlen($string1)) . $string1 . encode_u32($byteOrder, \strlen($string2)) . $string2;
+        $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY);
 
-        $binaryReader->expects(self::once())
-            ->method('readStrings')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 'string1';
-                yield 'string2';
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, (new Options())->set(Option::BYTE_ARRAY_TO_STRING, true));
+        $unpacker = new PlainValueUnpacker($reader, (new Options())->set(Option::BYTE_ARRAY_TO_STRING, true));
 
         self::assertEquals(['string1', 'string2'], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_byte_array_with_json_logical_type() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $json1 = '{"key": "value"}';
+        $json2 = '{"foo": "bar"}';
+        $buffer = encode_u32($byteOrder, \strlen($json1)) . $json1 . encode_u32($byteOrder, \strlen($json2)) . $json2;
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::json('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readStrings')
-            ->with(2)
-            ->willReturn((static function () {
-                yield '{"key": "value"}';
-                yield '{"foo": "bar"}';
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals(['{"key": "value"}', '{"foo": "bar"}'], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_byte_array_with_string_logical_type() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $string1 = 'hello';
+        $string2 = 'world';
+        $buffer = encode_u32($byteOrder, \strlen($string1)) . $string1 . encode_u32($byteOrder, \strlen($string2)) . $string2;
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::string('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readStrings')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 'hello';
-                yield 'world';
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals(['hello', 'world'], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_byte_array_with_uuid_logical_type() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $uuid1 = 'uuid1';
+        $uuid2 = 'uuid2';
+        $buffer = encode_u32($byteOrder, \strlen($uuid1)) . $uuid1 . encode_u32($byteOrder, \strlen($uuid2)) . $uuid2;
+        $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, null, LogicalType::uuid());
 
-        $binaryReader->expects(self::once())
-            ->method('readStrings')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 'uuid1';
-                yield 'uuid2';
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals(['uuid1', 'uuid2'], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_double() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $buffer = encode_f64($byteOrder, 1.123456789) . encode_f64($byteOrder, 2.987654321);
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::double('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readDoubles')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 1.123456789;
-                yield 2.987654321;
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals([1.123456789, 2.987654321], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_fixed_len_byte_array_with_decimal_logical_type() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $column = FlatColumn::decimal('test_column', 10, 2);
+        $buffer = encode_decimal($byteOrder, 123.45, $column->typeLength(), 10, 2);
+        $buffer .= encode_decimal($byteOrder, 678.90, $column->typeLength(), 10, 2);
+        $reader = new BinaryBufferReader($buffer);
 
-        $binaryReader->expects(self::once())
-            ->method('readDecimals')
-            ->with(2, $column->typeLength(), 10, 2)
-            ->willReturn((static function () {
-                yield 123.45;
-                yield 678.90;
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals([123.45, 678.90], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
-    public function test_unpack_fixed_len_byte_array_with_null_logical_type() : void
+    public function test_unpack_fixed_len_byte_array_with_null_logical_type_returns_bytes() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $data1 = \str_repeat('A', 16);
+        $data2 = \str_repeat('B', 16);
+        $buffer = $data1 . $data2;
+        $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::FIXED_LEN_BYTE_ARRAY, null, null, null, null, null, 16);
 
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported logical type null for FIXED_LEN_BYTE_ARRAY');
-
-        iterator_to_array($unpacker->unpack($column, 2));
+        $result = iterator_to_array($unpacker->unpack($column, 2));
+        self::assertCount(2, $result);
+        self::assertInstanceOf(Bytes::class, $result[0]);
+        self::assertInstanceOf(Bytes::class, $result[1]);
+        self::assertEquals($data1, $result[0]->toString());
+        self::assertEquals($data2, $result[1]->toString());
     }
 
-    public function test_unpack_fixed_len_byte_array_with_unsupported_logical_type() : void
+    public function test_unpack_fixed_len_byte_array_with_unsupported_logical_type_returns_bytes() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $data1 = \str_repeat('X', 16);
+        $data2 = \str_repeat('Y', 16);
+        $buffer = $data1 . $data2;
+        $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::FIXED_LEN_BYTE_ARRAY, null, LogicalType::string(), null, null, null, 16);
 
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported logical type STRING for FIXED_LEN_BYTE_ARRAY');
-
-        iterator_to_array($unpacker->unpack($column, 2));
+        $result = iterator_to_array($unpacker->unpack($column, 2));
+        self::assertCount(2, $result);
+        self::assertInstanceOf(Bytes::class, $result[0]);
+        self::assertInstanceOf(Bytes::class, $result[1]);
+        self::assertEquals($data1, $result[0]->toString());
+        self::assertEquals($data2, $result[1]->toString());
     }
 
     public function test_unpack_fixed_len_byte_array_with_uuid_logical_type() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $uuid1 = \hex2bin('550e8400e29b41d4a716446655440000');
+        $uuid2 = \hex2bin('6ba7b8109dad11d180b400c04fd430c8');
+        $buffer = $uuid1 . $uuid2;
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::uuid('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readStrings')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 'fixed-uuid1';
-                yield 'fixed-uuid2';
-            })());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
-
-        self::assertEquals(['fixed-uuid1', 'fixed-uuid2'], iterator_to_array($unpacker->unpack($column, 2)));
+        $result = iterator_to_array($unpacker->unpack($column, 2));
+        self::assertCount(2, $result);
+        self::assertEquals('550e8400-e29b-41d4-a716-446655440000', $result[0]);
+        self::assertEquals('6ba7b810-9dad-11d1-80b4-00c04fd430c8', $result[1]);
     }
 
     public function test_unpack_float() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $buffer = encode_f32($byteOrder, 1.5) . encode_f32($byteOrder, 2.5);
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::float('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readFloats')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 1.5;
-                yield 2.5;
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals([1.5, 2.5], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_int32_default() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $buffer = encode_i32($byteOrder, 100) . encode_i32($byteOrder, 200);
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::int32('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readInts32')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 100;
-                yield 200;
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals([100, 200], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_int64() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $buffer = encode_i64($byteOrder, 1000) . encode_i64($byteOrder, 2000);
+        $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::int64('test_column');
 
-        $binaryReader->expects(self::once())
-            ->method('readInts64')
-            ->with(2)
-            ->willReturn((static function () {
-                yield 1000;
-                yield 2000;
-            })());
-
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEquals([1000, 2000], iterator_to_array($unpacker->unpack($column, 2)));
     }
 
     public function test_unpack_with_zero_total_returns_empty_generator() : void
     {
-        $binaryReader = $this->createMock(BinaryReader::class);
+        $reader = new BinaryBufferReader('');
         $column = FlatColumn::int32('test_column');
 
-        $unpacker = new PlainValueUnpacker($binaryReader, new Options());
+        $unpacker = new PlainValueUnpacker($reader, new Options());
 
         self::assertEmpty(iterator_to_array($unpacker->unpack($column, 0)));
     }

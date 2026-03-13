@@ -21,13 +21,16 @@ final readonly class DremelShredder
      */
     public function shred(Column $column, array $row) : WriteColumnData
     {
+        $value = $row[$column->name()] ?? null;
+        $this->validator->validate($column, $value);
+
         $flatData = WriteColumnData::initialize($column);
         $definitionLevel = 0;
         $repetitionLevel = 0;
         $depth = 0;
 
         if ($column instanceof FlatColumn) {
-            $this->shredFlat($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData);
+            $this->shredFlat($column, $value, $definitionLevel, $repetitionLevel, $flatData);
 
             return $flatData;
         }
@@ -35,29 +38,25 @@ final readonly class DremelShredder
         /** @var NestedColumn $column */
         if ($column->isList()) {
             /** @phpstan-ignore-next-line */
-            $this->shredList($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData, $depth);
+            $this->shredList($column, $value, $definitionLevel, $repetitionLevel, $flatData, $depth);
 
             return $flatData;
         }
 
         if ($column->isMap()) {
             /** @phpstan-ignore-next-line */
-            $this->shredMap($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData, $depth);
+            $this->shredMap($column, $value, $definitionLevel, $repetitionLevel, $flatData, $depth);
 
             return $flatData;
         }
 
-        $this->shredStructure($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData, $depth);
+        $this->shredStructure($column, $value, $definitionLevel, $repetitionLevel, $flatData, $depth);
 
         return $flatData;
     }
 
-    private function shredFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, bool $validate = true) : void
+    private function shredFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, WriteColumnData $data) : void
     {
-        if ($validate) {
-            $this->validator->validate($column, $value);
-        }
-
         if (!$column->repetition()?->isRequired() && $value !== null) {
             $definitionLevel++;
         }
@@ -87,12 +86,11 @@ final readonly class DremelShredder
     {
         $repetitionLevel++;
         $depth++;
-        $this->validator->validate($column, $listValue);
         $listElementColumn = $column->getListElement();
 
         if ($listElementColumn instanceof FlatColumn) {
             if ($listValue === null) {
-                $this->shredFlat($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, false);
+                $this->shredFlat($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
 
                 return;
             }
@@ -102,7 +100,7 @@ final readonly class DremelShredder
             }
 
             if (!\count($listValue)) {
-                $this->shredFlat($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, false);
+                $this->shredFlat($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
 
                 return;
             }
@@ -129,6 +127,7 @@ final readonly class DremelShredder
             }
 
             if (!\count($listValue)) {
+                $this->validator->validate($listElementColumn, null);
                 $this->shredList($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
 
                 return;
@@ -156,6 +155,7 @@ final readonly class DremelShredder
             }
 
             if (!\count($listValue)) {
+                $this->validator->validate($listElementColumn, null);
                 $this->shredMap($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
 
                 return;
@@ -183,6 +183,7 @@ final readonly class DremelShredder
         }
 
         if (!\count($listValue)) {
+            $this->validator->validate($listElementColumn, null);
             $this->shredStructure($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
 
             return;
@@ -202,8 +203,6 @@ final readonly class DremelShredder
     {
         $repetitionLevel++;
         $depth++;
-        $this->validator->validate($column, $mapValue);
-
         $keyColumn = $column->getMapKeyColumn();
         $valueColumn = $column->getMapValueColumn();
 
@@ -221,7 +220,7 @@ final readonly class DremelShredder
 
             if (!\count($mapValue)) {
                 $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredFlat($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, false);
+                $this->shredFlat($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
 
                 return;
             }
@@ -253,6 +252,7 @@ final readonly class DremelShredder
             }
 
             if (!\count($mapValue)) {
+                $this->validator->validate($valueColumn, null);
                 $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
                 $this->shredList($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
 
@@ -286,6 +286,7 @@ final readonly class DremelShredder
             }
 
             if (!\count($mapValue)) {
+                $this->validator->validate($valueColumn, null);
                 $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
                 $this->shredMap($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
 
@@ -320,6 +321,7 @@ final readonly class DremelShredder
         }
 
         if (!\count($mapValue)) {
+            $this->validator->validate($valueColumn, null);
             $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
             $this->shredStructure($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
 
@@ -339,8 +341,6 @@ final readonly class DremelShredder
 
     private function shredStructure(NestedColumn $column, mixed $structureData, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
     {
-        $this->validator->validate($column, $structureData);
-
         if ($structureData === null) {
             foreach ($column->children() as $child) {
                 if ($child instanceof FlatColumn) {

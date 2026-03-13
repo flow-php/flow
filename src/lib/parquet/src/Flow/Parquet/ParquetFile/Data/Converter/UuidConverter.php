@@ -31,10 +31,18 @@ final class UuidConverter implements Converter
 
     public function toParquetType(mixed $data) : string
     {
-        if (!\is_string($data)) {
-            throw new RuntimeException('UUID must be written as a string from Parquet file');
+        if (\is_string($data)) {
+            return $data;
         }
 
-        return $data;
+        if (\is_object($data) && \method_exists($data, 'toString')) {
+            return $data->toString();
+        }
+
+        if ($data instanceof \Stringable) {
+            return (string) $data;
+        }
+
+        throw new RuntimeException('UUID must be written as a string or Stringable object');
     }
 }

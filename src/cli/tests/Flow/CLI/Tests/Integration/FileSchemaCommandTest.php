@@ -388,7 +388,7 @@ OUTPUT,
 +------------+----------+----------+----------+
 |   order_id |     uuid |    false |       [] |
 | created_at | datetime |    false |       [] |
-| updated_at | datetime |    false |       [] |
+| updated_at | datetime |     true |       [] |
 |   discount |    float |     true |       [] |
 |      email |   string |    false |       [] |
 |   customer |   string |    false |       [] |

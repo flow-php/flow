@@ -8,7 +8,8 @@ use function Flow\ETL\DSL\{array_to_row, rows};
 use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\Filesystem\{Path, SourceStream};
-use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader};
+use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\{Options, ParquetFile, Reader};
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
 {

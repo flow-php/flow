@@ -56,10 +56,8 @@ final class RLEBitPackedHybrid
             if ($bitsReadFromByte >= 8) {
                 $bitsReadFromByte -= 8;
                 $bitsLeftInByte -= 8;
-                /** @phpstan-ignore-next-line */
                 $currentByte >>= 8;
             } elseif ($bitsLeftInByte - $bitsReadFromByte >= $bitWidth) {
-                /** @phpstan-ignore-next-line */
                 $decodedValue = (($currentByte >> $bitsReadFromByte) & $bitMask);
                 $totalBits -= $bitWidth;
                 $bitsReadFromByte += $bitWidth;
@@ -67,7 +65,6 @@ final class RLEBitPackedHybrid
                 $output[] = $decodedValue;
             } elseif ($byteIndex + 1 < $actualByteCount) {
                 $byteIndex++;
-                /** @phpstan-ignore-next-line */
                 $currentByte |= ($readBytes[$byteIndex] << $bitsLeftInByte);
                 $bitsLeftInByte += 8;
             }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet;
+namespace Flow\Parquet\Binary;
 
 enum ByteOrder : string
 {

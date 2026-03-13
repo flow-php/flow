@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
 use function Flow\Types\DSL\type_instance_of;
-use Flow\Parquet\BinaryReader\Bytes;
+use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\Data\Converter;
