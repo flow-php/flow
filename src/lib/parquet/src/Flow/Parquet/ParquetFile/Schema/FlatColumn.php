@@ -12,6 +12,8 @@ final class FlatColumn implements Column
 {
     private ?string $flatPath = null;
 
+    private ?self $optionalVariant = null;
+
     private ?NestedColumn $parent = null;
 
     private ?Repetitions $repetitions = null;
@@ -240,9 +242,18 @@ final class FlatColumn implements Column
 
     public function makeOptional() : self
     {
+        if ($this->repetition === Repetition::OPTIONAL) {
+            return $this;
+        }
+
+        if ($this->optionalVariant !== null) {
+            return $this->optionalVariant;
+        }
+
         $column = new self($this->name, $this->type, $this->convertedType, $this->logicalType, Repetition::OPTIONAL, $this->precision, $this->scale, $this->typeLength);
         $column->parent = $this->parent;
         $column->flatPath = $this->flatPath;
+        $this->optionalVariant = $column;
 
         return $column;
     }

@@ -12,17 +12,19 @@ final class ColumnDataValidator implements Validator
 {
     public function validate(Column $column, mixed $data) : void
     {
-        if ($column->repetition()?->isRequired()) {
+        $repetition = $column->repetition();
+
+        if ($repetition?->isRequired()) {
             if ($data === null) {
                 throw new ValidationException(\sprintf('Column "%s" is required', $column->flatPath()));
             }
         }
 
-        if ($column->repetition()?->isRepeated() && !\is_array($data)) {
+        if ($repetition?->isRepeated() && !\is_array($data)) {
             throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
         }
 
-        if ($column->repetition() === Repetition::OPTIONAL) {
+        if ($repetition === Repetition::OPTIONAL) {
             if ($data === null) {
                 return;
             }
