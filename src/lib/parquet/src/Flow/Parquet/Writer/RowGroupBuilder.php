@@ -11,6 +11,11 @@ final class RowGroupBuilder
 {
     private readonly ColumnChunkBuilders $columnChunkBuilders;
 
+    /**
+     * @var array<array<string, mixed>>
+     */
+    private array $rowBuffer = [];
+
     private int $rowsCount = 0;
 
     public function __construct(
@@ -27,20 +32,43 @@ final class RowGroupBuilder
      */
     public function addRow(array $row) : void
     {
-        foreach ($this->schema->columns() as $column) {
-            $this->columnChunkBuilders->add($this->shredder->shred($column, $row));
-        }
-
+        $this->rowBuffer[] = $row;
         $this->rowsCount++;
+
         $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
 
-        if (($this->rowsCount % $interval === 0) && $this->columnChunkBuilders->isAnyPageFull()) {
-            $this->columnChunkBuilders->closePages();
+        if ($this->rowsCount % $interval === 0) {
+            $this->flushBuffer();
+        }
+    }
+
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
+    public function addRows(array $rows) : void
+    {
+        /** @var int<1, max> $interval */
+        $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
+
+        foreach (\array_chunk($rows, $interval) as $chunk) {
+            $flatColumnsData = $this->shredder->shred($this->schema, $chunk);
+
+            foreach ($flatColumnsData as $flatPath => $columnValues) {
+                $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
+            }
+
+            $this->rowsCount += \count($chunk);
+
+            if ($this->columnChunkBuilders->isAnyPageFull()) {
+                $this->columnChunkBuilders->closePages();
+            }
         }
     }
 
     public function flush(int $fileOffset) : RowGroupContainer
     {
+        $this->flushBuffer();
+
         $rowsCount = $this->rowsCount();
         $offset = $fileOffset;
         $buffer = '';
@@ -68,5 +96,24 @@ final class RowGroupBuilder
     public function rowsCount() : int
     {
         return $this->rowsCount;
+    }
+
+    private function flushBuffer() : void
+    {
+        if (\count($this->rowBuffer) === 0) {
+            return;
+        }
+
+        $flatColumnsData = $this->shredder->shred($this->schema, $this->rowBuffer);
+
+        foreach ($flatColumnsData as $flatPath => $columnValues) {
+            $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
+        }
+
+        if ($this->columnChunkBuilders->isAnyPageFull()) {
+            $this->columnChunkBuilders->closePages();
+        }
+
+        $this->rowBuffer = [];
     }
 }

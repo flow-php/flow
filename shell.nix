@@ -48,6 +48,7 @@ pkgs.mkShell {
         pkgs.figlet
         pkgs.symfony-cli
         pkgs.act
+        pkgs.hyperfine
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
         ++ pkgs.lib.optionals with-wasm [

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
-use Flow\Parquet\Dremel\{DremelAssembler, DremelShredder};
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
+use Flow\Parquet\Dremel\{DremelAssembler, DremelShredder, ReadColumnData};
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
@@ -18,14 +19,34 @@ final class SchemaTest extends TestCase
     {
         $schema = $this->dremelPaperDataSchema();
 
-        $data = $this->dremelPaperDataStructure();
+        $rows = $this->dremelPaperDataStructure();
         $shredder = new DremelShredder(new ColumnDataValidator(), $converter = DataConverter::initialize(Options::default()));
         $assembler = new DremelAssembler($converter);
 
-        foreach ($data as $row) {
+        foreach ($rows as $row) {
+            $shredResult = $shredder->shred($schema, [$row]);
+
             foreach ($schema->columns() as $column) {
-                $data = $shredder->shred($column, $row)->toReadColumnData();
-                self::assertEquals($row[$column->name()], \iterator_to_array($assembler->assemble($column, $data))[0][$column->name()]);
+                $readFlatValues = [];
+
+                $flatChildren = $column instanceof FlatColumn
+                    ? [$column]
+                    : $column->childrenFlat();
+
+                foreach ($flatChildren as $flatChild) {
+                    $fp = $flatChild->flatPath();
+                    $wfcv = $shredResult[$fp];
+                    $values = $wfcv->values();
+                    $readFlatValues[] = new ReadFlatColumnValues(
+                        $wfcv->column,
+                        (static function () use ($values) { yield from $values; })(),
+                        $wfcv->repetitionLevels(),
+                        $wfcv->definitionLevels(),
+                    );
+                }
+
+                $readData = new ReadColumnData($column, $readFlatValues);
+                self::assertEquals($row[$column->name()], \iterator_to_array($assembler->assemble($column, $readData))[0][$column->name()]);
             }
         }
     }

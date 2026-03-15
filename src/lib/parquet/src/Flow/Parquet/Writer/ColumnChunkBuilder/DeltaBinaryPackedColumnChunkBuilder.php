@@ -7,7 +7,7 @@ namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Encodings};
@@ -64,15 +64,16 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         }
     }
 
-    public function addRow(WriteColumnData $columnData) : void
+    public function addColumn(WriteFlatColumnValues $columnValues) : void
     {
-        $flatValues = $columnData->values($this->column->flatPath());
-        $this->repetitionLevels = array_merge($this->repetitionLevels, $flatValues->repetitionLevels());
-        $this->definitionLevels = array_merge($this->definitionLevels, $flatValues->definitionLevels());
+        array_push($this->repetitionLevels, ...$columnValues->repetitionLevels());
+
+        $defLevels = $columnValues->definitionLevels();
+        array_push($this->definitionLevels, ...$defLevels);
 
         $maxDefinitionLevel = $this->column->maxDefinitionsLevel();
 
-        foreach ($flatValues->definitionLevels() as $definitionLevel) {
+        foreach ($defLevels as $definitionLevel) {
             if ($definitionLevel < $maxDefinitionLevel) {
                 $this->nullCount++;
             } else {
@@ -80,13 +81,9 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
             }
         }
 
-        $this->valueStorage->addValues($this->column, $flatValues->values());
-
-        foreach ($flatValues->values() as $value) {
-            $this->pageStatistics->add($value);
-        }
-
-        $this->rowsCount++;
+        $this->valueStorage->addValues($this->column, $columnValues->values());
+        $this->pageStatistics->addBatch($columnValues->values());
+        $this->rowsCount += $columnValues->rowsCount();
     }
 
     public function closePage() : void
@@ -138,8 +135,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
                 dictionaryPageOffset: null,
                 dataPageOffset: $fileOffset,
                 indexPageOffset: null,
-                statistics: $this->chunkStatistics->toStatistics(),
-                options: $this->options
+                statistics: $this->chunkStatistics->toStatistics()
             )
         )];
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\Data;
 
 use function Flow\Parquet\Binary\{decode_decimal, decode_f32, decode_f64, decode_i16, decode_i32, decode_i64, decode_u32};
-use Flow\Parquet\Binary\{ByteOrder, Bytes};
-use Flow\Parquet\{BinaryReader, Option, Options};
+use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\BinaryReader;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, LogicalType, PhysicalType};
 
@@ -14,7 +14,6 @@ final readonly class PlainValueUnpacker
 {
     public function __construct(
         private BinaryReader $reader,
-        private Options $options,
         private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
     ) {
     }
@@ -40,9 +39,9 @@ final readonly class PlainValueUnpacker
         };
     }
 
-    private function bytesToUuidString(Bytes $bytes) : string
+    private function rawBytesToUuidString(string $raw) : string
     {
-        $hex = \bin2hex($bytes->toString());
+        $hex = \bin2hex($raw);
 
         return \sprintf(
             '%s-%s-%s-%s-%s',
@@ -65,19 +64,16 @@ final readonly class PlainValueUnpacker
     }
 
     /**
-     * @return \Generator<Bytes|string>
+     * @return \Generator<string>
      */
     private function unpackByteArray(FlatColumn $column, int $total) : \Generator
     {
         for ($i = 0; $i < $total; $i++) {
-            $length = decode_u32($this->byteOrder, $this->reader->readBytes(4)->toString());
-            $data = $this->reader->readBytes($length);
+            $length = decode_u32($this->byteOrder, $this->reader->readBytes(4))[0];
 
             yield match ($column->logicalType()?->name()) {
-                LogicalType::STRING, LogicalType::JSON, LogicalType::UUID => $data->toString(),
-                default => $this->options->get(Option::BYTE_ARRAY_TO_STRING)
-                    ? $data->toString()
-                    : $data,
+                LogicalType::STRING, LogicalType::JSON, LogicalType::UUID => $this->reader->readBytes($length),
+                default => $this->reader->readBytes($length),
             };
         }
     }
@@ -87,13 +83,11 @@ final readonly class PlainValueUnpacker
      */
     private function unpackDoubles(int $total) : \Generator
     {
-        for ($i = 0; $i < $total; $i++) {
-            yield decode_f64($this->byteOrder, $this->reader->readBytes(8)->toString());
-        }
+        yield from decode_f64($this->byteOrder, $this->reader->readBytes($total * 8));
     }
 
     /**
-     * @return \Generator<Bytes|float|string>
+     * @return \Generator<float|string>
      */
     private function unpackFixedLenByteArray(FlatColumn $column, int $total) : \Generator
     {
@@ -107,17 +101,17 @@ final readonly class PlainValueUnpacker
         $decimalData = $logicalType?->decimalData();
 
         for ($i = 0; $i < $total; $i++) {
-            $bytes = $this->reader->readBytes($typeLength);
+            $raw = $this->reader->readBytes($typeLength);
 
             yield match ($logicalType?->name()) {
                 LogicalType::DECIMAL => decode_decimal(
                     $this->byteOrder,
-                    $bytes->toString(),
+                    $raw,
                     $decimalData?->precision() ?? 10,
                     $decimalData?->scale() ?? 0
                 ),
-                LogicalType::UUID => $this->bytesToUuidString($bytes),
-                default => $bytes,
+                LogicalType::UUID => $this->rawBytesToUuidString($raw),
+                default => $raw,
             };
         }
     }
@@ -127,9 +121,7 @@ final readonly class PlainValueUnpacker
      */
     private function unpackFloats(int $total) : \Generator
     {
-        for ($i = 0; $i < $total; $i++) {
-            yield decode_f32($this->byteOrder, $this->reader->readBytes(4)->toString());
-        }
+        yield from decode_f32($this->byteOrder, $this->reader->readBytes($total * 4));
     }
 
     /**
@@ -137,14 +129,13 @@ final readonly class PlainValueUnpacker
      */
     private function unpackInt32(FlatColumn $column, int $total) : \Generator
     {
-        $byteSize = $column->convertedType() === ConvertedType::INT_16 ? 2 : 4;
+        if ($column->convertedType() === ConvertedType::INT_16) {
+            yield from decode_i16($this->byteOrder, $this->reader->readBytes($total * 2));
 
-        for ($i = 0; $i < $total; $i++) {
-            $bytes = $this->reader->readBytes($byteSize)->toString();
-            yield $byteSize === 2
-                ? decode_i16($this->byteOrder, $bytes)
-                : decode_i32($this->byteOrder, $bytes);
+            return;
         }
+
+        yield from decode_i32($this->byteOrder, $this->reader->readBytes($total * 4));
     }
 
     /**
@@ -152,13 +143,11 @@ final readonly class PlainValueUnpacker
      */
     private function unpackInt64(int $total) : \Generator
     {
-        for ($i = 0; $i < $total; $i++) {
-            yield decode_i64($this->byteOrder, $this->reader->readBytes(8)->toString());
-        }
+        yield from decode_i64($this->byteOrder, $this->reader->readBytes($total * 8));
     }
 
     /**
-     * @return \Generator<Bytes>
+     * @return \Generator<string>
      */
     private function unpackInt96(int $total) : \Generator
     {

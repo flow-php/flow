@@ -4,39 +4,41 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\BinaryReader;
 
-use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\{BinaryReader, DataSize};
 
-final readonly class BinaryBufferReader implements BinaryReader
+final class BinaryBufferReader implements BinaryReader
 {
-    private DataSize $length;
+    private int $lengthBits;
 
-    private DataSize $position;
+    private int $positionBits;
 
-    private DataSize $remainingLength;
+    private int $positionBytes;
 
-    public function __construct(private string $buffer)
+    private int $remainingBytes;
+
+    public function __construct(private readonly string $buffer)
     {
-        $this->position = new DataSize(0);
-        $bits = \strlen($buffer) * 8;
-        $this->remainingLength = new DataSize($bits);
-        $this->length = new DataSize($bits);
+        $this->positionBits = 0;
+        $this->positionBytes = 0;
+        $bufferLen = \strlen($buffer);
+        $this->remainingBytes = $bufferLen;
+        $this->lengthBits = $bufferLen * 8;
     }
 
     public function length() : DataSize
     {
-        return $this->length;
+        return new DataSize($this->lengthBits);
     }
 
     public function position() : DataSize
     {
-        return $this->position;
+        return new DataSize($this->positionBits);
     }
 
     public function readBits(int $total) : \Generator
     {
-        $bytePosition = $this->position()->bytes();
-        $bitOffset = $this->position->bits() % 8;
+        $bytePosition = $this->positionBytes;
+        $bitOffset = $this->positionBits % 8;
         $bytesNeeded = \intdiv($bitOffset + $total - 1, 8) + 1;
         $currentBytes = \substr($this->buffer, $bytePosition, $bytesNeeded);
         $bitsRead = 0;
@@ -49,8 +51,10 @@ final readonly class BinaryBufferReader implements BinaryReader
                 $bitsRead++;
 
                 if ($bitsRead === $total) {
-                    $this->position->add($i * 8 + $j + 1 - $bitOffset);
-                    $this->remainingLength->sub($i * 8 + $j + 1 - $bitOffset);
+                    $bitsAdvanced = $i * 8 + $j + 1 - $bitOffset;
+                    $this->positionBits += $bitsAdvanced;
+                    $this->positionBytes = \intdiv($this->positionBits, 8);
+                    $this->remainingBytes = \intdiv($this->lengthBits - $this->positionBits, 8);
 
                     return;
                 }
@@ -59,14 +63,15 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
-    public function readBytes(int $total) : Bytes
+    public function readBytes(int $total) : string
     {
-        $bytes = \array_values(\unpack('C*', \substr($this->buffer, $this->position()->bytes(), $total)));
+        $raw = \substr($this->buffer, $this->positionBytes, $total);
 
-        $this->position->add(8 * $total);
-        $this->remainingLength->sub(8 * $total);
+        $this->positionBits += 8 * $total;
+        $this->positionBytes += $total;
+        $this->remainingBytes -= $total;
 
-        return new Bytes($bytes);
+        return $raw;
     }
 
     public function readVarInt() : int
@@ -75,13 +80,11 @@ final readonly class BinaryBufferReader implements BinaryReader
         $shift = 0;
 
         do {
-            $bytes = $this->readBytes(1);
+            $byte = \ord($this->buffer[$this->positionBytes]);
+            $this->positionBits += 8;
+            $this->positionBytes++;
+            $this->remainingBytes--;
 
-            if ($bytes->count() === 0) {
-                break;
-            }
-
-            $byte = $bytes->toArray()[0];
             $result |= ($byte & 0x7F) << $shift;
             $shift += 7;
         } while ($byte >= 0x80);
@@ -91,18 +94,20 @@ final readonly class BinaryBufferReader implements BinaryReader
 
     public function remainingLength() : DataSize
     {
-        return $this->remainingLength;
+        return DataSize::fromBytes($this->remainingBytes);
     }
 
     public function seekBits(int $bits) : void
     {
-        $this->position->add($bits);
-        $this->length->sub($bits);
+        $this->positionBits += $bits;
+        $this->positionBytes = \intdiv($this->positionBits, 8);
+        $this->lengthBits -= $bits;
     }
 
     public function seekBytes(int $bytes) : void
     {
-        $this->position->add($bytes * 8);
-        $this->remainingLength->sub($bytes * 8);
+        $this->positionBits += $bytes * 8;
+        $this->positionBytes += $bytes;
+        $this->remainingBytes -= $bytes;
     }
 }

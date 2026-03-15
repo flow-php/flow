@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel;
 
-use Flow\Parquet\Dremel\ColumnData\FlatValue;
-use Flow\Parquet\ParquetFile\Data\DataConverter;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
+use Flow\Parquet\Dremel\Validator\DisabledValidator;
+use Flow\Parquet\ParquetFile\Data\{Converter, DataConverter};
+use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final readonly class DremelShredder
@@ -17,90 +19,207 @@ final readonly class DremelShredder
     }
 
     /**
-     * @param array<string,mixed> $row
+     * @param array<array<string, mixed>> $rows
+     *
+     * @return array<string, WriteFlatColumnValues> keyed by flatPath
      */
-    public function shred(Column $column, array $row) : WriteColumnData
+    public function shred(Schema $schema, array $rows) : array
     {
-        $value = $row[$column->name()] ?? null;
-        $this->validator->validate($column, $value);
+        /** @var array<string, WriteFlatColumnValues> $targets */
+        $targets = [];
 
-        $flatData = WriteColumnData::initialize($column);
-        $definitionLevel = 0;
-        $repetitionLevel = 0;
-        $depth = 0;
+        /** @var array<string, bool> $columnRequired */
+        $columnRequired = [];
 
+        /** @var array<string, ?Converter> $columnConverters */
+        $columnConverters = [];
+
+        foreach ($schema->columnsFlat() as $flatColumn) {
+            $fp = $flatColumn->flatPath();
+            $targets[$fp] = new WriteFlatColumnValues($flatColumn);
+            $columnRequired[$fp] = $flatColumn->repetition()?->isRequired() ?? false;
+            $columnConverters[$fp] = $this->dataConverter->resolveConverter($flatColumn);
+        }
+
+        $shouldValidate = !$this->validator instanceof DisabledValidator;
+
+        /** @var array<FlatPlan|ListPlan|MapPlan|StructPlan> $plans */
+        $plans = [];
+
+        foreach ($schema->columns() as $column) {
+            $plans[] = $this->buildPlan($column, $targets, $columnRequired, $columnConverters);
+        }
+
+        foreach ($plans as $plan) {
+            foreach ($rows as $row) {
+                $value = $row[$plan->childName] ?? null;
+
+                if ($shouldValidate) {
+                    $this->validator->validate($schema->get($plan->childName), $value);
+                }
+
+                /** @var array<string, bool> $rowFirstWrite */
+                $rowFirstWrite = [];
+
+                if ($plan instanceof FlatPlan) {
+                    $target = $plan->target;
+                    $converter = $plan->converter;
+
+                    $defLvl = 0;
+
+                    if (!$plan->isRequired && $value !== null) {
+                        $defLvl = 1;
+                    }
+
+                    $target->repetitionLevels[] = 0;
+                    $target->definitionLevels[] = $defLvl;
+
+                    if ($value !== null) {
+                        /** @phpstan-ignore assign.propertyType */
+                        $target->values[] = $converter !== null ? $converter->toParquetType($value) : $value;
+                    }
+                } elseif ($plan instanceof ListPlan) {
+                    /** @phpstan-ignore-next-line */
+                    $this->execList($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                } elseif ($plan instanceof MapPlan) {
+                    /** @phpstan-ignore-next-line */
+                    $this->execMap($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                } elseif ($plan instanceof StructPlan) {
+                    $this->execStruct($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                }
+            }
+        }
+
+        return $targets;
+    }
+
+    /**
+     * @param array<string, WriteFlatColumnValues> $targets
+     * @param array<string, bool> $columnRequired
+     * @param array<string, ?Converter> $columnConverters
+     */
+    private function buildPlan(Column $column, array $targets, array $columnRequired, array $columnConverters) : FlatPlan|StructPlan|ListPlan|MapPlan
+    {
         if ($column instanceof FlatColumn) {
-            $this->shredFlat($column, $value, $definitionLevel, $repetitionLevel, $flatData);
+            $fp = $column->flatPath();
 
-            return $flatData;
+            return new FlatPlan(
+                $fp,
+                $column->name(),
+                $columnRequired[$fp],
+                $columnConverters[$fp],
+                $targets[$fp],
+            );
         }
 
         /** @var NestedColumn $column */
-        if ($column->isList()) {
-            /** @phpstan-ignore-next-line */
-            $this->shredList($column, $value, $definitionLevel, $repetitionLevel, $flatData, $depth);
+        $isRequired = $column->repetition()?->isRequired() ?? false;
 
-            return $flatData;
+        if ($column->isList()) {
+            $listElement = $column->getListElement();
+
+            return new ListPlan(
+                $column->name(),
+                $isRequired,
+                $this->buildPlan($listElement, $targets, $columnRequired, $columnConverters),
+                $listElement instanceof NestedColumn ? $listElement : null,
+            );
         }
 
         if ($column->isMap()) {
-            /** @phpstan-ignore-next-line */
-            $this->shredMap($column, $value, $definitionLevel, $repetitionLevel, $flatData, $depth);
+            $keyColumn = $column->getMapKeyColumn();
+            $valueColumn = $column->getMapValueColumn();
+            $keyFp = $keyColumn->flatPath();
 
-            return $flatData;
+            return new MapPlan(
+                $column->name(),
+                $isRequired,
+                new FlatPlan(
+                    $keyFp,
+                    $keyColumn->name(),
+                    $columnRequired[$keyFp],
+                    $columnConverters[$keyFp],
+                    $targets[$keyFp],
+                ),
+                $this->buildPlan($valueColumn, $targets, $columnRequired, $columnConverters),
+                [
+                    'flatPath' => $keyFp,
+                    'isRequired' => $columnRequired[$keyFp],
+                    'converter' => $columnConverters[$keyFp],
+                    'target' => $targets[$keyFp],
+                ],
+                $valueColumn instanceof NestedColumn ? $valueColumn : null,
+            );
         }
 
-        $this->shredStructure($column, $value, $definitionLevel, $repetitionLevel, $flatData, $depth);
+        $children = [];
+        /** @var array<array{flatPath: string, target: WriteFlatColumnValues}> $nullFlatChildren */
+        $nullFlatChildren = [];
 
-        return $flatData;
-    }
+        foreach ($column->children() as $child) {
+            $childPlan = $this->buildPlan($child, $targets, $columnRequired, $columnConverters);
+            $children[] = $childPlan;
 
-    private function shredFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, WriteColumnData $data) : void
-    {
-        if (!$column->repetition()?->isRequired() && $value !== null) {
-            $definitionLevel++;
+            if ($childPlan instanceof FlatPlan) {
+                $nullFlatChildren[] = [
+                    'flatPath' => $childPlan->flatPath,
+                    'target' => $childPlan->target,
+                ];
+            }
         }
 
-        /**
-         * We can do that since DremelShredder is meant to shred only one row at Time, so there is no risk that Data
-         * will carry previous rows.
-         * In other words, whenever $data for a given column is empty we can safely assume that it's the first
-         * value in the Row and set repetitionLevel to 0.
-         */
-        $repetitionLevel = $data->isEmpty($column) ? 0 : $repetitionLevel;
-        $data->addValue(
-            new FlatValue(
-                $column,
-                $repetitionLevel,
-                $definitionLevel,
-                /** @phpstan-ignore-next-line */
-                $this->dataConverter->toParquetType($column, $value)
-            )
+        return new StructPlan(
+            $column->name(),
+            $isRequired,
+            $children,
+            $nullFlatChildren,
         );
     }
 
     /**
      * @param null|array<mixed> $listValue
+     * @param array<string, bool> $rowFirstWrite
      */
-    private function shredList(NestedColumn $column, ?array $listValue, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
+    private function execList(ListPlan $plan, ?array $listValue, int $definitionLevel, int $repetitionLevel, int $depth, bool $shouldValidate, array &$rowFirstWrite) : void
     {
         $repetitionLevel++;
         $depth++;
-        $listElementColumn = $column->getListElement();
+        $element = $plan->element;
 
-        if ($listElementColumn instanceof FlatColumn) {
+        if ($element instanceof FlatPlan) {
+            $fp = $element->flatPath;
+            $target = $element->target;
+            $isRequired = $element->isRequired;
+            $converter = $element->converter;
+
             if ($listValue === null) {
-                $this->shredFlat($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$fp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$fp] = true;
+                }
+
+                $target->repetitionLevels[] = $repLvl;
+                $target->definitionLevels[] = $definitionLevel;
 
                 return;
             }
 
-            if (!$column->repetition()?->isRequired()) {
+            if (!$plan->isRequired) {
                 $definitionLevel++;
             }
 
             if (!\count($listValue)) {
-                $this->shredFlat($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$fp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$fp] = true;
+                }
+
+                $target->repetitionLevels[] = $repLvl;
+                $target->definitionLevels[] = $definitionLevel;
 
                 return;
             }
@@ -108,27 +227,46 @@ final readonly class DremelShredder
             $definitionLevel++;
 
             foreach ($listValue as $i => $value) {
-                $this->shredFlat($listElementColumn, $value, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $data);
+                $defLvl = $definitionLevel;
+                $repLvl = $i === 0 ? $repetitionLevel - 1 : $depth;
+
+                if (!$isRequired && $value !== null) {
+                    $defLvl++;
+                }
+
+                if (!isset($rowFirstWrite[$fp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$fp] = true;
+                }
+
+                $target->repetitionLevels[] = $repLvl;
+                $target->definitionLevels[] = $defLvl;
+
+                if ($value !== null) {
+                    /** @phpstan-ignore assign.propertyType */
+                    $target->values[] = $converter !== null ? $converter->toParquetType($value) : $value;
+                }
             }
 
             return;
         }
 
-        /** @var NestedColumn $listElementColumn */
-        if ($listElementColumn->isList()) {
+        if ($element instanceof ListPlan) {
             if ($listValue === null) {
-                $this->shredList($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                $this->execList($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
 
-            if (!$column->repetition()?->isRequired()) {
+            if (!$plan->isRequired) {
                 $definitionLevel++;
             }
 
             if (!\count($listValue)) {
-                $this->validator->validate($listElementColumn, null);
-                $this->shredList($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                if ($shouldValidate && $plan->elementColumn !== null) {
+                    $this->validator->validate($plan->elementColumn, null);
+                }
+                $this->execList($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
@@ -137,26 +275,28 @@ final readonly class DremelShredder
 
             foreach ($listValue as $i => $value) {
                 /** @phpstan-ignore-next-line */
-                $this->shredList($listElementColumn, $value, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
+                $this->execList($element, $value, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $depth, $shouldValidate, $rowFirstWrite);
             }
 
             return;
         }
 
-        if ($listElementColumn->isMap()) {
+        if ($element instanceof MapPlan) {
             if ($listValue === null) {
-                $this->shredMap($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                $this->execMap($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
 
-            if (!$column->repetition()?->isRequired()) {
+            if (!$plan->isRequired) {
                 $definitionLevel++;
             }
 
             if (!\count($listValue)) {
-                $this->validator->validate($listElementColumn, null);
-                $this->shredMap($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                if ($shouldValidate && $plan->elementColumn !== null) {
+                    $this->validator->validate($plan->elementColumn, null);
+                }
+                $this->execMap($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
@@ -165,26 +305,28 @@ final readonly class DremelShredder
 
             foreach ($listValue as $i => $mapValue) {
                 /** @phpstan-ignore-next-line */
-                $this->shredMap($listElementColumn, $mapValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
+                $this->execMap($element, $mapValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $depth, $shouldValidate, $rowFirstWrite);
             }
 
             return;
         }
 
-        // List Element is a Structure
+        /** @var StructPlan $element */
         if ($listValue === null) {
-            $this->shredStructure($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+            $this->execStruct($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
             return;
         }
 
-        if (!$column->repetition()?->isRequired()) {
+        if (!$plan->isRequired) {
             $definitionLevel++;
         }
 
         if (!\count($listValue)) {
-            $this->validator->validate($listElementColumn, null);
-            $this->shredStructure($listElementColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+            if ($shouldValidate && $plan->elementColumn !== null) {
+                $this->validator->validate($plan->elementColumn, null);
+            }
+            $this->execStruct($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
             return;
         }
@@ -192,35 +334,85 @@ final readonly class DremelShredder
         $definitionLevel++;
 
         foreach ($listValue as $i => $listElementValue) {
-            $this->shredStructure($listElementColumn, $listElementValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
+            $this->execStruct($element, $listElementValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $depth, $shouldValidate, $rowFirstWrite);
         }
     }
 
     /**
      * @param null|array<mixed> $mapValue
+     * @param array<string, bool> $rowFirstWrite
      */
-    private function shredMap(NestedColumn $column, ?array $mapValue, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
+    private function execMap(MapPlan $plan, ?array $mapValue, int $definitionLevel, int $repetitionLevel, int $depth, bool $shouldValidate, array &$rowFirstWrite) : void
     {
         $repetitionLevel++;
         $depth++;
-        $keyColumn = $column->getMapKeyColumn();
-        $valueColumn = $column->getMapValueColumn();
+        $keyPlan = $plan->keyPlan;
+        $valuePlan = $plan->valuePlan;
 
-        if ($valueColumn instanceof FlatColumn) {
+        if ($valuePlan instanceof FlatPlan) {
+            $keyFp = $keyPlan->flatPath;
+            $valFp = $valuePlan->flatPath;
+            $keyTarget = $keyPlan->target;
+            $valTarget = $valuePlan->target;
+            $keyRequired = $keyPlan->isRequired;
+            $valRequired = $valuePlan->isRequired;
+            $keyConverter = $keyPlan->converter;
+            $valConverter = $valuePlan->converter;
+
             if ($mapValue === null) {
-                $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredFlat($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
+                $optKeyFp = $plan->optionalKey['flatPath'];
+                $optKeyTarget = $plan->optionalKey['target'];
+
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$optKeyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$optKeyFp] = true;
+                }
+
+                $optKeyTarget->repetitionLevels[] = $repLvl;
+                $optKeyTarget->definitionLevels[] = $definitionLevel;
+
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$valFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$valFp] = true;
+                }
+
+                $valTarget->repetitionLevels[] = $repLvl;
+                $valTarget->definitionLevels[] = $definitionLevel;
 
                 return;
             }
 
-            if (!$column->repetition()?->isRequired()) {
+            if (!$plan->isRequired) {
                 $definitionLevel++;
             }
 
             if (!\count($mapValue)) {
-                $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredFlat($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data);
+                $optKeyFp = $plan->optionalKey['flatPath'];
+                $optKeyTarget = $plan->optionalKey['target'];
+
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$optKeyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$optKeyFp] = true;
+                }
+
+                $optKeyTarget->repetitionLevels[] = $repLvl;
+                $optKeyTarget->definitionLevels[] = $definitionLevel;
+
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$valFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$valFp] = true;
+                }
+
+                $valTarget->repetitionLevels[] = $repLvl;
+                $valTarget->definitionLevels[] = $definitionLevel;
 
                 return;
             }
@@ -230,202 +422,401 @@ final readonly class DremelShredder
             $index = 0;
 
             foreach ($mapValue as $key => $value) {
-                $this->shredFlat($keyColumn, $key, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
-                $this->shredFlat($valueColumn, $value, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
+                $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
+
+                $defLvl = $definitionLevel;
+                $repLvl = $repLevel;
+
+                if (!$keyRequired) {
+                    $defLvl++;
+                }
+
+                if (!isset($rowFirstWrite[$keyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$keyFp] = true;
+                }
+
+                $keyTarget->repetitionLevels[] = $repLvl;
+                $keyTarget->definitionLevels[] = $defLvl;
+                /** @phpstan-ignore assign.propertyType */
+                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+
+                $defLvl = $definitionLevel;
+                $repLvl = $repLevel;
+
+                if (!$valRequired && $value !== null) {
+                    $defLvl++;
+                }
+
+                if (!isset($rowFirstWrite[$valFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$valFp] = true;
+                }
+
+                $valTarget->repetitionLevels[] = $repLvl;
+                $valTarget->definitionLevels[] = $defLvl;
+
+                if ($value !== null) {
+                    /** @phpstan-ignore assign.propertyType */
+                    $valTarget->values[] = $valConverter !== null ? $valConverter->toParquetType($value) : $value;
+                }
+
                 $index++;
             }
 
             return;
         }
 
-        /** @var NestedColumn $valueColumn */
-        if ($valueColumn->isList()) {
+        $optKeyFp = $plan->optionalKey['flatPath'];
+        $optKeyTarget = $plan->optionalKey['target'];
+
+        if ($valuePlan instanceof ListPlan) {
             if ($mapValue === null) {
-                $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredList($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$optKeyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$optKeyFp] = true;
+                }
+
+                $optKeyTarget->repetitionLevels[] = $repLvl;
+                $optKeyTarget->definitionLevels[] = $definitionLevel;
+                $this->execList($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
 
-            if (!$column->repetition()?->isRequired()) {
+            if (!$plan->isRequired) {
                 $definitionLevel++;
             }
 
             if (!\count($mapValue)) {
-                $this->validator->validate($valueColumn, null);
-                $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredList($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                if ($shouldValidate && $plan->valueColumn !== null) {
+                    $this->validator->validate($plan->valueColumn, null);
+                }
+
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$optKeyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$optKeyFp] = true;
+                }
+
+                $optKeyTarget->repetitionLevels[] = $repLvl;
+                $optKeyTarget->definitionLevels[] = $definitionLevel;
+                $this->execList($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
 
             $definitionLevel++;
 
+            $keyFp = $keyPlan->flatPath;
+            $keyTarget = $keyPlan->target;
+            $keyRequired = $keyPlan->isRequired;
+            $keyConverter = $keyPlan->converter;
             $index = 0;
 
             foreach ($mapValue as $key => $value) {
-                $this->shredFlat($keyColumn, $key, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
+                $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
+
+                $defLvl = $definitionLevel;
+                $repLvl = $repLevel;
+
+                if (!$keyRequired) {
+                    $defLvl++;
+                }
+
+                if (!isset($rowFirstWrite[$keyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$keyFp] = true;
+                }
+
+                $keyTarget->repetitionLevels[] = $repLvl;
+                $keyTarget->definitionLevels[] = $defLvl;
+                /** @phpstan-ignore assign.propertyType */
+                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
                 /** @phpstan-ignore-next-line */
-                $this->shredList($valueColumn, $value, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
+                $this->execList($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
                 $index++;
             }
 
             return;
         }
 
-        if ($valueColumn->isMap()) {
+        if ($valuePlan instanceof MapPlan) {
             if ($mapValue === null) {
-                $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredMap($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$optKeyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$optKeyFp] = true;
+                }
+
+                $optKeyTarget->repetitionLevels[] = $repLvl;
+                $optKeyTarget->definitionLevels[] = $definitionLevel;
+                $this->execMap($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
 
-            if (!$column->repetition()?->isRequired()) {
+            if (!$plan->isRequired) {
                 $definitionLevel++;
             }
 
             if (!\count($mapValue)) {
-                $this->validator->validate($valueColumn, null);
-                $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-                $this->shredMap($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+                if ($shouldValidate && $plan->valueColumn !== null) {
+                    $this->validator->validate($plan->valueColumn, null);
+                }
+
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$optKeyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$optKeyFp] = true;
+                }
+
+                $optKeyTarget->repetitionLevels[] = $repLvl;
+                $optKeyTarget->definitionLevels[] = $definitionLevel;
+                $this->execMap($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
                 return;
             }
 
             $definitionLevel++;
 
+            $keyFp = $keyPlan->flatPath;
+            $keyTarget = $keyPlan->target;
+            $keyRequired = $keyPlan->isRequired;
+            $keyConverter = $keyPlan->converter;
             $index = 0;
 
             foreach ($mapValue as $key => $value) {
-                $this->shredFlat($keyColumn, $key, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
+                $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
+
+                $defLvl = $definitionLevel;
+                $repLvl = $repLevel;
+
+                if (!$keyRequired) {
+                    $defLvl++;
+                }
+
+                if (!isset($rowFirstWrite[$keyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$keyFp] = true;
+                }
+
+                $keyTarget->repetitionLevels[] = $repLvl;
+                $keyTarget->definitionLevels[] = $defLvl;
+                /** @phpstan-ignore assign.propertyType */
+                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
                 /** @phpstan-ignore-next-line */
-                $this->shredMap($valueColumn, $value, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
+                $this->execMap($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
                 $index++;
             }
 
             return;
         }
 
-        // Map Value is a Structure
-
+        /** @var StructPlan $valuePlan */
         if ($mapValue === null) {
-            $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-            $this->shredStructure($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+            $repLvl = $repetitionLevel - 1;
+
+            if (!isset($rowFirstWrite[$optKeyFp])) {
+                $repLvl = 0;
+                $rowFirstWrite[$optKeyFp] = true;
+            }
+
+            $optKeyTarget->repetitionLevels[] = $repLvl;
+            $optKeyTarget->definitionLevels[] = $definitionLevel;
+            $this->execStruct($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
             return;
         }
 
-        if (!$column->repetition()?->isRequired()) {
+        if (!$plan->isRequired) {
             $definitionLevel++;
         }
 
         if (!\count($mapValue)) {
-            $this->validator->validate($valueColumn, null);
-            $this->shredFlat($keyColumn->makeOptional(), null, $definitionLevel, $repetitionLevel - 1, $data);
-            $this->shredStructure($valueColumn, null, $definitionLevel, $repetitionLevel - 1, $data, $depth);
+            if ($shouldValidate && $plan->valueColumn !== null) {
+                $this->validator->validate($plan->valueColumn, null);
+            }
+
+            $repLvl = $repetitionLevel - 1;
+
+            if (!isset($rowFirstWrite[$optKeyFp])) {
+                $repLvl = 0;
+                $rowFirstWrite[$optKeyFp] = true;
+            }
+
+            $optKeyTarget->repetitionLevels[] = $repLvl;
+            $optKeyTarget->definitionLevels[] = $definitionLevel;
+            $this->execStruct($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
 
             return;
         }
 
         $definitionLevel++;
 
+        $keyFp = $keyPlan->flatPath;
+        $keyTarget = $keyPlan->target;
+        $keyRequired = $keyPlan->isRequired;
+        $keyConverter = $keyPlan->converter;
         $index = 0;
 
         foreach ($mapValue as $key => $value) {
-            $this->shredFlat($keyColumn, $key, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
-            $this->shredStructure($valueColumn, $value, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
+            $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
+
+            $defLvl = $definitionLevel;
+            $repLvl = $repLevel;
+
+            if (!$keyRequired) {
+                $defLvl++;
+            }
+
+            if (!isset($rowFirstWrite[$keyFp])) {
+                $repLvl = 0;
+                $rowFirstWrite[$keyFp] = true;
+            }
+
+            $keyTarget->repetitionLevels[] = $repLvl;
+            $keyTarget->definitionLevels[] = $defLvl;
+            /** @phpstan-ignore assign.propertyType */
+            $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+            $this->execStruct($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
             $index++;
         }
     }
 
-    private function shredStructure(NestedColumn $column, mixed $structureData, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
+    /**
+     * @param array<string, bool> $rowFirstWrite
+     */
+    private function execStruct(StructPlan $plan, mixed $structureData, int $definitionLevel, int $repetitionLevel, int $depth, bool $shouldValidate, array &$rowFirstWrite) : void
     {
         if ($structureData === null) {
-            foreach ($column->children() as $child) {
-                if ($child instanceof FlatColumn) {
-                    $this->shredFlat($child->makeOptional(), null, $definitionLevel, $repetitionLevel, $data);
+            foreach ($plan->children as $child) {
+                if ($child instanceof FlatPlan) {
+                    $fp = $child->flatPath;
+                    $target = $child->target;
+
+                    $repLvl = $repetitionLevel;
+
+                    if (!isset($rowFirstWrite[$fp])) {
+                        $repLvl = 0;
+                        $rowFirstWrite[$fp] = true;
+                    }
+
+                    $target->repetitionLevels[] = $repLvl;
+                    $target->definitionLevels[] = $definitionLevel;
 
                     continue;
                 }
 
-                /**
-                 * @var NestedColumn $child
-                 */
-                if ($child->isList()) {
-                    $this->shredList($child, null, $definitionLevel, $repetitionLevel, $data, $depth);
+                if ($child instanceof ListPlan) {
+                    $this->execList($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
 
                     continue;
                 }
 
-                if ($child->isMap()) {
-                    $this->shredMap($child, null, $definitionLevel, $repetitionLevel, $data, $depth);
+                if ($child instanceof MapPlan) {
+                    $this->execMap($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
 
                     continue;
                 }
 
-                $this->shredStructure($child, null, $definitionLevel, $repetitionLevel, $data, $depth);
+                /** @var StructPlan $child */
+                $this->execStruct($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
             }
 
             return;
         }
 
-        if (!$column->repetition()?->isRequired()) {
+        if (!$plan->isRequired) {
             $definitionLevel++;
         }
 
         if (!\is_array($structureData) || !\count($structureData)) {
-            foreach ($column->children() as $child) {
-                if ($child instanceof FlatColumn) {
-                    $this->shredFlat($child, null, $definitionLevel, $repetitionLevel, $data);
+            foreach ($plan->children as $child) {
+                if ($child instanceof FlatPlan) {
+                    $fp = $child->flatPath;
+                    $target = $child->target;
+
+                    $repLvl = $repetitionLevel;
+
+                    if (!isset($rowFirstWrite[$fp])) {
+                        $repLvl = 0;
+                        $rowFirstWrite[$fp] = true;
+                    }
+
+                    $target->repetitionLevels[] = $repLvl;
+                    $target->definitionLevels[] = $definitionLevel;
 
                     continue;
                 }
 
-                /**
-                 * @var NestedColumn $child
-                 */
-                if ($child->isList()) {
-                    $this->shredList($child, null, $definitionLevel, $repetitionLevel, $data, $depth);
+                if ($child instanceof ListPlan) {
+                    $this->execList($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
 
                     continue;
                 }
 
-                if ($child->isMap()) {
-                    $this->shredMap($child, null, $definitionLevel, $repetitionLevel, $data, $depth);
+                if ($child instanceof MapPlan) {
+                    $this->execMap($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
 
                     continue;
                 }
 
-                $this->shredStructure($child, null, $definitionLevel, $repetitionLevel, $data, $depth);
+                /** @var StructPlan $child */
+                $this->execStruct($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
             }
 
             return;
         }
 
-        foreach ($column->children() as $child) {
-            if ($child instanceof FlatColumn) {
-                $this->shredFlat($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data);
+        foreach ($plan->children as $child) {
+            if ($child instanceof FlatPlan) {
+                $fp = $child->flatPath;
+                $target = $child->target;
+                $value = $structureData[$child->childName] ?? null;
+
+                $defLvl = $definitionLevel;
+                $repLvl = $repetitionLevel;
+
+                if (!$child->isRequired && $value !== null) {
+                    $defLvl++;
+                }
+
+                if (!isset($rowFirstWrite[$fp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$fp] = true;
+                }
+
+                $target->repetitionLevels[] = $repLvl;
+                $target->definitionLevels[] = $defLvl;
+
+                if ($value !== null) {
+                    $converter = $child->converter;
+                    $target->values[] = $converter !== null ? $converter->toParquetType($value) : $value;
+                }
 
                 continue;
             }
 
-            /**
-             * @var NestedColumn $child
-             */
-            if ($child->isList()) {
-                $this->shredList($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
+            if ($child instanceof ListPlan) {
+                $this->execList($child, $structureData[$child->childName] ?? null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
 
                 continue;
             }
 
-            if ($child->isMap()) {
-                $this->shredMap($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
+            if ($child instanceof MapPlan) {
+                $this->execMap($child, $structureData[$child->childName] ?? null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
 
                 continue;
             }
 
-            $this->shredStructure($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
+            /** @var StructPlan $child */
+            $this->execStruct($child, $structureData[$child->childName] ?? null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
         }
     }
 }

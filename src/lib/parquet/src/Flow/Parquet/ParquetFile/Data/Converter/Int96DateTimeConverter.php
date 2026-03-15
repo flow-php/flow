@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
-use function Flow\Types\DSL\type_instance_of;
-use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\Data\Converter;
@@ -15,7 +13,8 @@ final class Int96DateTimeConverter implements Converter
 {
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
-        return $this->convertArrayOfBytesToDateTime(type_instance_of(Bytes::class)->assert($data));
+        /** @var string $data */
+        return $this->convertRawBytesToDateTime($data);
     }
 
     public function isFor(FlatColumn $column, Options $options) : bool
@@ -35,9 +34,16 @@ final class Int96DateTimeConverter implements Converter
         throw new RuntimeException("Converting DateTime to INT96 is deprecated and should not be used, please use INT64 to store \DateTime objects as number of microseconds since Jan 1 1970.");
     }
 
-    private function convertArrayOfBytesToDateTime(Bytes $bytes) : \DateTimeImmutable
+    private function convertRawBytesToDateTime(string $bytes) : \DateTimeImmutable
     {
-        $bytesArray = $bytes->toArray();
+        $unpacked = \unpack('C*', $bytes);
+
+        if ($unpacked === false) {
+            throw new RuntimeException('Failed to unpack INT96 bytes: ' . \bin2hex($bytes));
+        }
+
+        /** @var array<int, int> $bytesArray */
+        $bytesArray = \array_values($unpacked);
         $daysInEpoch = $bytesArray[8] | ($bytesArray[9] << 8) | ($bytesArray[10] << 16) | ($bytesArray[11] << 24);
 
         // Convert the first 8 bytes to the number of nanoseconds within the day
@@ -62,7 +68,7 @@ final class Int96DateTimeConverter implements Converter
         $dateTime = \DateTimeImmutable::createFromFormat('U.u', \sprintf('%d.%06d', $seconds, $microseconds));
 
         if ($dateTime === false) {
-            throw new RuntimeException('Failed to convert INT96 to DateTime, given bytes: ' . \json_encode($bytesArray, JSON_THROW_ON_ERROR));
+            throw new RuntimeException('Failed to convert INT96 to DateTime, given bytes: ' . \bin2hex($bytes));
         }
 
         return $dateTime;

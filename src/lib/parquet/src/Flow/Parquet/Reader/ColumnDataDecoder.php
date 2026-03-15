@@ -10,7 +10,6 @@ use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Data\{BitWidth, DeltaBinaryPackedDecoder, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
@@ -19,7 +18,6 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 final readonly class ColumnDataDecoder
 {
     public function __construct(
-        private Options $options,
         private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
     ) {
     }
@@ -64,7 +62,7 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ReadFlatColumnValues(
                 $column,
-                (new PlainValueUnpacker($reader, $this->options, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
+                (new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
                 $definitionLevels
             );
@@ -79,8 +77,7 @@ final readonly class ColumnDataDecoder
                 return new ReadFlatColumnValues($column, empty_generator(), $repetitionLevels, $definitionLevels);
             }
 
-            $remainingBuffer = $reader->readBytes($reader->remainingLength()->bytes())->toArray();
-            $remainingData = implode('', array_map('chr', $remainingBuffer));
+            $remainingData = $reader->readBytes($reader->remainingLength()->bytes());
 
             $decoder = new DeltaBinaryPackedDecoder();
             $values = $decoder->decode($remainingData, $nonEmptyValuesCount);
@@ -96,7 +93,7 @@ final readonly class ColumnDataDecoder
 
         if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if ($nonEmptyValuesCount) {
-                $bitWidth = $reader->readBytes(1)->toInt();
+                $bitWidth = \ord($reader->readBytes(1));
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
                     $reader,
@@ -158,7 +155,7 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ReadFlatColumnValues(
                 $column,
-                (new PlainValueUnpacker($reader, $this->options, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
+                (new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
                 $definitionLevels
             );
@@ -173,8 +170,7 @@ final readonly class ColumnDataDecoder
                 return new ReadFlatColumnValues($column, empty_generator(), $repetitionLevels, $definitionLevels);
             }
 
-            $remainingBuffer = $reader->readBytes($reader->remainingLength()->bytes())->toArray();
-            $remainingData = implode('', array_map('chr', $remainingBuffer));
+            $remainingData = $reader->readBytes($reader->remainingLength()->bytes());
 
             $decoder = new DeltaBinaryPackedDecoder();
             $values = $decoder->decode($remainingData, $nonEmptyValuesCount);
@@ -190,7 +186,7 @@ final readonly class ColumnDataDecoder
 
         if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if (\count($definitionLevels)) {
-                $bitWidth = $reader->readBytes(1)->toInt();
+                $bitWidth = \ord($reader->readBytes(1));
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
                     $reader,
@@ -223,7 +219,7 @@ final readonly class ColumnDataDecoder
         $reader = new BinaryBufferReader($buffer);
 
         return new Dictionary(
-            \iterator_to_array((new PlainValueUnpacker($reader, $this->options, $this->byteOrder))->unpack($column, $pageHeader->valuesCount()))
+            \iterator_to_array((new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $pageHeader->valuesCount()))
         );
     }
 

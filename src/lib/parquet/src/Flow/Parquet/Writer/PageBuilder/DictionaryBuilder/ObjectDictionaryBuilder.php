@@ -21,19 +21,19 @@ final class ObjectDictionaryBuilder
                 continue;
             }
 
-            $hash = \serialize($value);
+            if ($value instanceof \DateTimeInterface) {
+                $hash = $value->format('U u');
+            } else {
+                $hash = \serialize($value);
+            }
 
             if (!isset($valueToIndex[$hash])) {
-                $dictionary[] = $hash;
+                $dictionary[] = $value;
                 $valueToIndex[$hash] = $dictionarySize;
                 $dictionarySize++;
             }
 
             $indices[] = $valueToIndex[$hash];
-        }
-
-        foreach ($dictionary as $index => $value) {
-            $dictionary[$index] = @\unserialize($value, ['allowed_classes' => [\DateTimeImmutable::class, \DateInterval::class]]);
         }
 
         return new Dictionary($dictionary, $indices);

@@ -81,6 +81,30 @@ final class StatisticsCounter
         }
     }
 
+    /**
+     * @param array<null|bool|float|int|object|string> $values
+     */
+    public function addBatch(array $values) : void
+    {
+        $this->valuesCount += \count($values);
+
+        foreach ($values as $value) {
+            if ($value === null) {
+                $this->nullCount++;
+
+                continue;
+            }
+
+            if ($this->min === null || $value < $this->min) {
+                $this->min = $value;
+            }
+
+            if ($this->max === null || $value > $this->max) {
+                $this->max = $value;
+            }
+        }
+    }
+
     public function max() : mixed
     {
         return $this->max;

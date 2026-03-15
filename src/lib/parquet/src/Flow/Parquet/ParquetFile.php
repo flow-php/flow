@@ -70,7 +70,7 @@ final class ParquetFile
             )
         );
 
-        $this->metadata = Metadata::fromThrift($thriftMetadata, $this->options);
+        $this->metadata = Metadata::fromThrift($thriftMetadata);
 
         return $this->metadata;
     }

@@ -21,6 +21,10 @@ final class NestedColumn implements Column
 
     private ?string $flatPath = null;
 
+    private ?int $maxDefinitionsLevel = null;
+
+    private ?int $maxRepetitionsLevel = null;
+
     private ?self $parent = null;
 
     private ?Repetitions $repetitions = null;
@@ -305,24 +309,32 @@ final class NestedColumn implements Column
 
     public function maxDefinitionsLevel() : int
     {
+        if ($this->maxDefinitionsLevel !== null) {
+            return $this->maxDefinitionsLevel;
+        }
+
         if ($this->repetition === null) {
             $level = 0;
         } else {
             $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
         }
 
-        return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
+        return $this->maxDefinitionsLevel = $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
     public function maxRepetitionsLevel() : int
     {
+        if ($this->maxRepetitionsLevel !== null) {
+            return $this->maxRepetitionsLevel;
+        }
+
         if ($this->repetition === null) {
             $level = 0;
         } else {
             $level = $this->repetition() === Repetition::REPEATED ? 1 : 0;
         }
 
-        return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
+        return $this->maxRepetitionsLevel = $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
     public function name() : string
@@ -373,6 +385,8 @@ final class NestedColumn implements Column
     public function setParent(self $parent) : void
     {
         $this->flatPath = null;
+        $this->maxDefinitionsLevel = null;
+        $this->maxRepetitionsLevel = null;
         $this->parent = $parent;
 
         foreach ($this->children as $child) {

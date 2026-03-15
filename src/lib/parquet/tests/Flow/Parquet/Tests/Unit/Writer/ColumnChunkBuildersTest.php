@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer;
 
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Encodings, Schema};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, LogicalType, MapKey, MapValue, NestedColumn, PhysicalType};
@@ -24,11 +24,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData1 = WriteColumnData::initialize($flatColumn);
-        $columnData2 = WriteColumnData::initialize($flatColumn);
+        $columnValues1 = new WriteFlatColumnValues($flatColumn);
+        $columnValues2 = new WriteFlatColumnValues($flatColumn);
 
-        $builders->add($columnData1);
-        $builders->add($columnData2);
+        $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues1);
+        $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues2);
 
         self::assertTrue(true);
     }
@@ -43,9 +43,9 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData = WriteColumnData::initialize($flatColumn);
+        $columnValues = new WriteFlatColumnValues($flatColumn);
 
-        $builders->add($columnData);
+        $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues);
 
         self::assertTrue(true);
     }
@@ -60,8 +60,8 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData = WriteColumnData::initialize($flatColumn);
-        $builders->add($columnData);
+        $columnValues = new WriteFlatColumnValues($flatColumn);
+        $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues);
 
         self::assertTrue(true);
     }
@@ -77,8 +77,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $builders->add($columnData);
+        foreach ($nestedColumn->childrenFlat() as $flatChild) {
+            $columnValues = new WriteFlatColumnValues($flatChild);
+            $builders->addColumnByFlatPath($flatChild->flatPath(), $columnValues);
+        }
 
         self::assertTrue(true);
     }
@@ -843,8 +845,8 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData = WriteColumnData::initialize($flatColumn);
-        $builders->add($columnData);
+        $columnValues = new WriteFlatColumnValues($flatColumn);
+        $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues);
 
         $builders->closePages();
 
@@ -866,11 +868,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData1 = WriteColumnData::initialize($flatColumn1);
-        $columnData2 = WriteColumnData::initialize($flatColumn2);
+        $columnValues1 = new WriteFlatColumnValues($flatColumn1);
+        $columnValues2 = new WriteFlatColumnValues($flatColumn2);
 
-        $builders->add($columnData1);
-        $builders->add($columnData2);
+        $builders->addColumnByFlatPath($flatColumn1->flatPath(), $columnValues1);
+        $builders->addColumnByFlatPath($flatColumn2->flatPath(), $columnValues2);
 
         self::assertFalse($builders->isAnyPageFull());
 
@@ -896,8 +898,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $builders->add($columnData);
+        foreach ($nestedColumn->childrenFlat() as $flatChild) {
+            $columnValues = new WriteFlatColumnValues($flatChild);
+            $builders->addColumnByFlatPath($flatChild->flatPath(), $columnValues);
+        }
 
         self::assertFalse($builders->isAnyPageFull());
 

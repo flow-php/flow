@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
@@ -21,10 +20,10 @@ final class RowGroup
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\RowGroup $thrift, Options $options) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\RowGroup $thrift) : self
     {
         return new self(
-            \array_map(static fn (\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk, $options), $thrift->columns),
+            \array_map(static fn (\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk), $thrift->columns),
             (int) $thrift->num_rows
         );
     }

@@ -143,8 +143,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_f32_big_endian() : void
     {
         $value = 3.14;
-        $encoded = encode_f32(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_f32(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_f32(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_f32(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertEqualsWithDelta($value, $decoded, 0.0001);
     }
@@ -152,8 +152,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_f32_little_endian() : void
     {
         $value = 3.14;
-        $encoded = encode_f32(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_f32(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_f32(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_f32(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertEqualsWithDelta($value, $decoded, 0.0001);
     }
@@ -161,8 +161,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_f64_big_endian() : void
     {
         $value = 3.141592653589793;
-        $encoded = encode_f64(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_f64(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_f64(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_f64(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -170,8 +170,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_f64_little_endian() : void
     {
         $value = 3.141592653589793;
-        $encoded = encode_f64(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_f64(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_f64(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_f64(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -179,8 +179,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int16Provider')]
     public function test_encode_decode_i16_big_endian(int $value) : void
     {
-        $encoded = encode_i16(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_i16(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_i16(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_i16(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -188,8 +188,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int16Provider')]
     public function test_encode_decode_i16_little_endian(int $value) : void
     {
-        $encoded = encode_i16(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_i16(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_i16(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_i16(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -197,8 +197,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int32Provider')]
     public function test_encode_decode_i32_big_endian(int $value) : void
     {
-        $encoded = encode_i32(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_i32(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_i32(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_i32(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -206,8 +206,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int32Provider')]
     public function test_encode_decode_i32_little_endian(int $value) : void
     {
-        $encoded = encode_i32(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_i32(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_i32(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_i32(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -215,8 +215,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int64Provider')]
     public function test_encode_decode_i64_big_endian(int $value) : void
     {
-        $encoded = encode_i64(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_i64(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_i64(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_i64(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -224,8 +224,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int64Provider')]
     public function test_encode_decode_i64_little_endian(int $value) : void
     {
-        $encoded = encode_i64(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_i64(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_i64(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_i64(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -233,8 +233,8 @@ final class ByteConverterTest extends TestCase
     #[DataProvider('int8Provider')]
     public function test_encode_decode_i8(int $value) : void
     {
-        $encoded = encode_i8($value);
-        $decoded = decode_i8($encoded);
+        $encoded = encode_i8([$value]);
+        $decoded = decode_i8($encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -242,8 +242,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u16_big_endian() : void
     {
         $value = 65000;
-        $encoded = encode_u16(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_u16(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_u16(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_u16(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -251,8 +251,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u16_little_endian() : void
     {
         $value = 65000;
-        $encoded = encode_u16(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_u16(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_u16(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_u16(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -260,8 +260,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u32_big_endian() : void
     {
         $value = 4000000000;
-        $encoded = encode_u32(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_u32(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_u32(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_u32(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -269,8 +269,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u32_little_endian() : void
     {
         $value = 4000000000;
-        $encoded = encode_u32(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_u32(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_u32(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_u32(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -278,8 +278,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u64_big_endian() : void
     {
         $value = 9223372036854775807;
-        $encoded = encode_u64(ByteOrder::BIG_ENDIAN, $value);
-        $decoded = decode_u64(ByteOrder::BIG_ENDIAN, $encoded);
+        $encoded = encode_u64(ByteOrder::BIG_ENDIAN, [$value]);
+        $decoded = decode_u64(ByteOrder::BIG_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -287,8 +287,8 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u64_little_endian() : void
     {
         $value = 9223372036854775807;
-        $encoded = encode_u64(ByteOrder::LITTLE_ENDIAN, $value);
-        $decoded = decode_u64(ByteOrder::LITTLE_ENDIAN, $encoded);
+        $encoded = encode_u64(ByteOrder::LITTLE_ENDIAN, [$value]);
+        $decoded = decode_u64(ByteOrder::LITTLE_ENDIAN, $encoded)[0];
 
         self::assertSame($value, $decoded);
     }
@@ -296,59 +296,59 @@ final class ByteConverterTest extends TestCase
     public function test_encode_decode_u8() : void
     {
         $value = 255;
-        $encoded = encode_u8($value);
-        $decoded = decode_u8($encoded);
+        $encoded = encode_u8([$value]);
+        $decoded = decode_u8($encoded)[0];
 
         self::assertSame($value, $decoded);
     }
 
     public function test_encode_returns_correct_byte_length_for_f32() : void
     {
-        self::assertSame(4, \strlen(encode_f32(ByteOrder::LITTLE_ENDIAN, 1.0)));
+        self::assertSame(4, \strlen(encode_f32(ByteOrder::LITTLE_ENDIAN, [1.0])));
     }
 
     public function test_encode_returns_correct_byte_length_for_f64() : void
     {
-        self::assertSame(8, \strlen(encode_f64(ByteOrder::LITTLE_ENDIAN, 1.0)));
+        self::assertSame(8, \strlen(encode_f64(ByteOrder::LITTLE_ENDIAN, [1.0])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i16() : void
     {
-        self::assertSame(2, \strlen(encode_i16(ByteOrder::LITTLE_ENDIAN, 1)));
+        self::assertSame(2, \strlen(encode_i16(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i32() : void
     {
-        self::assertSame(4, \strlen(encode_i32(ByteOrder::LITTLE_ENDIAN, 1)));
+        self::assertSame(4, \strlen(encode_i32(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i64() : void
     {
-        self::assertSame(8, \strlen(encode_i64(ByteOrder::LITTLE_ENDIAN, 1)));
+        self::assertSame(8, \strlen(encode_i64(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i8() : void
     {
-        self::assertSame(1, \strlen(encode_i8(1)));
+        self::assertSame(1, \strlen(encode_i8([1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u16() : void
     {
-        self::assertSame(2, \strlen(encode_u16(ByteOrder::LITTLE_ENDIAN, 1)));
+        self::assertSame(2, \strlen(encode_u16(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u32() : void
     {
-        self::assertSame(4, \strlen(encode_u32(ByteOrder::LITTLE_ENDIAN, 1)));
+        self::assertSame(4, \strlen(encode_u32(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u64() : void
     {
-        self::assertSame(8, \strlen(encode_u64(ByteOrder::LITTLE_ENDIAN, 1)));
+        self::assertSame(8, \strlen(encode_u64(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u8() : void
     {
-        self::assertSame(1, \strlen(encode_u8(1)));
+        self::assertSame(1, \strlen(encode_u8([1])));
     }
 }

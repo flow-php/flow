@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Binary\{ByteOrder, Bytes};
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Encodings};
@@ -40,7 +39,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private StatisticsCounter $pageStatistics;
 
     /**
-     * @var array<null|bool|Bytes|float|int|string>
+     * @var array<null|bool|float|int|string>
      */
     private array $pageValues = [];
 
@@ -62,27 +61,24 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
     }
 
-    public function addRow(WriteColumnData $columnData) : void
+    public function addColumn(WriteFlatColumnValues $columnValues) : void
     {
-        $flatValues = $columnData->values($this->column->flatPath());
-        $this->repetitionLevels = array_merge($this->repetitionLevels, $flatValues->repetitionLevels());
-        $this->definitionLevels = array_merge($this->definitionLevels, $flatValues->definitionLevels());
+        array_push($this->repetitionLevels, ...$columnValues->repetitionLevels());
+
+        $defLevels = $columnValues->definitionLevels();
+        array_push($this->definitionLevels, ...$defLevels);
 
         $maxDefinitionLevel = $this->column->maxDefinitionsLevel();
 
-        foreach ($flatValues->definitionLevels() as $definitionLevel) {
+        foreach ($defLevels as $definitionLevel) {
             if ($definitionLevel < $maxDefinitionLevel) {
                 $this->nullCount++;
             }
         }
 
-        array_push($this->pageValues, ...$flatValues->values());
-
-        foreach ($flatValues->values() as $value) {
-            $this->pageStatistics->add($value);
-        }
-
-        $this->rowsCount++;
+        array_push($this->pageValues, ...$columnValues->values());
+        $this->pageStatistics->addBatch($columnValues->values());
+        $this->rowsCount += $columnValues->rowsCount();
     }
 
     public function closePage() : void
@@ -149,8 +145,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 dictionaryPageOffset: ($this->pages->dictionaryPageContainer()) ? $fileOffset : null,
                 dataPageOffset: ($this->pages->dictionaryPageContainer()) ? $fileOffset + $this->pages->dictionaryPageContainer()->totalCompressedSize() : $fileOffset,
                 indexPageOffset: null,
-                statistics: $this->chunkStatistics->toStatistics(),
-                options: $this->options
+                statistics: $this->chunkStatistics->toStatistics()
             )
         )];
 

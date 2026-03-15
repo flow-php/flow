@@ -63,13 +63,7 @@ final readonly class DremelAssembler
     private function assemblyFlat(FlatColumn $column, ReadColumnData $flatData) : \Generator
     {
         if ($column->repetitions()->maxRepetitionLevel() === 0) {
-            foreach ($flatData->iterator($column) as $value) {
-                yield $this->definitionConverter->toValue(
-                    $column->repetitions(),
-                    $value->definitionLevel,
-                    $this->dataConverter->fromParquetType($column, $value->value)
-                );
-            }
+            yield from $flatData->flatValues[$column->flatPath()]->assembleFlat($this->dataConverter);
 
             return;
         }

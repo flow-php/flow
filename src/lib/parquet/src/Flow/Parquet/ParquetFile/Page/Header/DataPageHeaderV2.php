@@ -58,7 +58,7 @@ final readonly class DataPageHeaderV2
             return null;
         }
 
-        return new StatisticsReader($this->statistics, $options);
+        return new StatisticsReader($this->statistics);
     }
 
     public function toThrift() : \Flow\Parquet\ThriftModel\DataPageHeaderV2

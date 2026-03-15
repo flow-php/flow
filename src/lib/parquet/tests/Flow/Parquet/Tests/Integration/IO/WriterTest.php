@@ -12,6 +12,7 @@ use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\{MapKey, MapValue};
 use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
@@ -62,6 +63,38 @@ final class WriterTest extends TestCase
         $this->expectExceptionMessage('Writer is already open');
 
         $writer->open($path, $schema);
+    }
+
+    public function test_writing_all_column_types() : void
+    {
+        $schema = Schema::with(
+            FlatColumn::int32('int32_col'),
+            FlatColumn::int64('int64_col'),
+            FlatColumn::string('string_col'),
+            FlatColumn::boolean('bool_col'),
+            FlatColumn::double('double_col'),
+            FlatColumn::float('float_col'),
+            NestedColumn::structure('struct_col', [
+                FlatColumn::int32('a'),
+                FlatColumn::string('b'),
+            ]),
+            NestedColumn::list('list_col', ListElement::int32()),
+            NestedColumn::map('map_col', MapKey::string(), MapValue::int32()),
+        );
+
+        $rows = [
+            ['int32_col' => 1, 'int64_col' => 100, 'string_col' => 'hello', 'bool_col' => true, 'double_col' => 1.5, 'float_col' => 2.5, 'struct_col' => ['a' => 10, 'b' => 'x'], 'list_col' => [1, 2], 'map_col' => ['k' => 1]],
+            ['int32_col' => null, 'int64_col' => null, 'string_col' => null, 'bool_col' => null, 'double_col' => null, 'float_col' => null, 'struct_col' => null, 'list_col' => null, 'map_col' => null],
+            ['int32_col' => 3, 'int64_col' => 300, 'string_col' => 'world', 'bool_col' => false, 'double_col' => 3.5, 'float_col' => 4.5, 'struct_col' => ['a' => 30, 'b' => 'z'], 'list_col' => [3], 'map_col' => ['a' => 1, 'b' => 2]],
+        ];
+
+        $path = __DIR__ . '/var/all-types-' . generate_random_string() . '.parquet';
+
+        (new Writer())->write($path, $schema, $rows);
+
+        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+
+        \unlink($path);
     }
 
     public function test_writing_batch_to_not_open_stream() : void
@@ -318,6 +351,76 @@ final class WriterTest extends TestCase
             \iterator_to_array((new Reader())->read($path)->values())
         );
         self::assertFileExists($path);
+        \unlink($path);
+    }
+
+    public function test_writing_with_all_nullable_columns() : void
+    {
+        $schema = Schema::with(
+            FlatColumn::int32('a'),
+            FlatColumn::string('b'),
+            FlatColumn::boolean('c'),
+        );
+
+        $rows = [
+            ['a' => null, 'b' => null, 'c' => null],
+            ['a' => null, 'b' => null, 'c' => null],
+            ['a' => 1, 'b' => 'x', 'c' => true],
+            ['a' => null, 'b' => null, 'c' => null],
+        ];
+
+        $path = __DIR__ . '/var/nullable-' . generate_random_string() . '.parquet';
+
+        (new Writer())->write($path, $schema, $rows);
+
+        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+
+        \unlink($path);
+    }
+
+    public function test_writing_with_dictionary_encoding() : void
+    {
+        $schema = Schema::with(
+            FlatColumn::int32('id')->makeRequired(),
+            FlatColumn::string('category'),
+        );
+
+        $rows = [];
+
+        for ($i = 0; $i < 100; $i++) {
+            $rows[] = ['id' => $i, 'category' => 'cat_' . ($i % 5)];
+        }
+
+        $path = __DIR__ . '/var/dict-' . generate_random_string() . '.parquet';
+
+        (new Writer())->write($path, $schema, $rows);
+
+        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+
+        \unlink($path);
+    }
+
+    public function test_writing_with_empty_lists_and_maps() : void
+    {
+        $schema = Schema::with(
+            FlatColumn::int32('id')->makeRequired(),
+            NestedColumn::list('items', ListElement::string()),
+            NestedColumn::map('props', MapKey::string(), MapValue::int32()),
+        );
+
+        $rows = [
+            ['id' => 1, 'items' => [], 'props' => []],
+            ['id' => 2, 'items' => ['a'], 'props' => ['x' => 1]],
+            ['id' => 3, 'items' => [], 'props' => []],
+            ['id' => 4, 'items' => null, 'props' => null],
+        ];
+
+        $path = __DIR__ . '/var/empty-' . generate_random_string() . '.parquet';
+
+        (new Writer())->write($path, $schema, $rows);
+
+        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+
         \unlink($path);
     }
 

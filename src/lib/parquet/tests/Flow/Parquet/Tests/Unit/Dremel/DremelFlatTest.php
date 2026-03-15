@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Dremel;
 
-use Flow\Parquet\Dremel\{DremelAssembler, DremelShredder};
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
+use Flow\Parquet\Dremel\{DremelAssembler, DremelShredder, ReadColumnData};
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
@@ -43,12 +44,36 @@ final class DremelFlatTest extends TestCase
         self::assertEquals(1, $schema->get('int32')->repetitions()->maxDefinitionLevel());
         self::assertEquals(0, $schema->get('int32')->repetitions()->maxRepetitionLevel());
 
-        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+        $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+        $shredResult = $shredder->shred($schema, [$row]);
 
-        self::assertEquals(
-            $flatData,
-            $dremel->shred($schema->get('int32'), $row)->normalize()
-        );
+        $normalized = [];
+
+        foreach ($shredResult as $flatPath => $columnValues) {
+            $normalized[$flatPath] = [
+                'repetition_levels' => $columnValues->repetitionLevels(),
+                'definition_levels' => $columnValues->definitionLevels(),
+                'values' => $columnValues->values(),
+            ];
+        }
+
+        self::assertEquals($flatData, $normalized);
+
+        $readFlatValues = [];
+
+        foreach ($shredResult as $flatValue) {
+            $valuesGenerator = (static function () use ($flatValue) {
+                foreach ($flatValue->values() as $value) {
+                    yield $value;
+                }
+            })();
+            $readFlatValues[] = new ReadFlatColumnValues(
+                $flatValue->column,
+                $valuesGenerator,
+                $flatValue->repetitionLevels(),
+                $flatValue->definitionLevels()
+            );
+        }
 
         self::assertEquals(
             [
@@ -58,7 +83,7 @@ final class DremelFlatTest extends TestCase
                 (new DremelAssembler(DataConverter::initialize(Options::default())))
                     ->assemble(
                         $schema->get('int32'),
-                        $dremel->shred($schema->get('int32'), $row)->toReadColumnData()
+                        new ReadColumnData($schema->get('int32'), $readFlatValues)
                     )
             )
         );
@@ -78,7 +103,7 @@ final class DremelFlatTest extends TestCase
     public function test_required_int32(array $row, array $flatData, ?string $exceptionMessage = null) : void
     {
         $schema = Schema::with(FlatColumn::int32('int32')->makeRequired());
-        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+        $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED', $schema->get('int32')->repetitions());
         self::assertEquals(0, $schema->get('int32')->repetitions()->maxDefinitionLevel());
@@ -86,12 +111,37 @@ final class DremelFlatTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shred($schema->get('int32'), $row);
+            $shredder->shred($schema, [$row]);
         } else {
-            self::assertEquals(
-                $flatData,
-                $dremel->shred($schema->get('int32'), $row)->normalize()
-            );
+            $shredResult = $shredder->shred($schema, [$row]);
+
+            $normalized = [];
+
+            foreach ($shredResult as $flatPath => $columnValues) {
+                $normalized[$flatPath] = [
+                    'repetition_levels' => $columnValues->repetitionLevels(),
+                    'definition_levels' => $columnValues->definitionLevels(),
+                    'values' => $columnValues->values(),
+                ];
+            }
+
+            self::assertEquals($flatData, $normalized);
+
+            $readFlatValues = [];
+
+            foreach ($shredResult as $flatValue) {
+                $valuesGenerator = (static function () use ($flatValue) {
+                    foreach ($flatValue->values() as $value) {
+                        yield $value;
+                    }
+                })();
+                $readFlatValues[] = new ReadFlatColumnValues(
+                    $flatValue->column,
+                    $valuesGenerator,
+                    $flatValue->repetitionLevels(),
+                    $flatValue->definitionLevels()
+                );
+            }
 
             self::assertEquals(
                 [
@@ -101,7 +151,7 @@ final class DremelFlatTest extends TestCase
                     (new DremelAssembler(DataConverter::initialize(Options::default())))
                         ->assemble(
                             $schema->get('int32'),
-                            $dremel->shred($schema->get('int32'), $row)->toReadColumnData()
+                            new ReadColumnData($schema->get('int32'), $readFlatValues)
                         )
                 )
             );
