@@ -1,10 +1,11 @@
-## [Unreleased] - 2026-03-13
+## [Unreleased] - 2026-03-16
 
 ### Added
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **parquet fixed array length support** - [@norberttech](https://github.com/norberttech)
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **byte encoding functions** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2258](https://github.com/flow-php/flow/pull/2258) - **optimize parquet library read/write performance** - [@norberttech](https://github.com/norberttech)
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **Refactored binnary writter/reader** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
