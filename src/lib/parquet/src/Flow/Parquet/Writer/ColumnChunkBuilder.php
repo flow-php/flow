@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer;
 
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\Column;
 
 interface ColumnChunkBuilder
 {
-    public function addRow(WriteColumnData $columnData) : void;
+    public function addColumn(WriteFlatColumnValues $columnValues) : void;
 
     public function closePage() : void;
 

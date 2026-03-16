@@ -21,19 +21,15 @@ final class FloatDictionaryBuilder
                 continue;
             }
 
-            $hash = \serialize($value);
+            $hash = \pack('E', $value);
 
             if (!isset($valueToIndex[$hash])) {
-                $dictionary[] = $hash;
+                $dictionary[] = $value;
                 $valueToIndex[$hash] = $dictionarySize;
                 $dictionarySize++;
             }
 
             $indices[] = $valueToIndex[$hash];
-        }
-
-        foreach ($dictionary as $index => $value) {
-            $dictionary[$index] = @\unserialize($value, ['allowed_classes' => []]);
         }
 
         return new Dictionary($dictionary, $indices);

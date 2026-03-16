@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\PageBuilder\DictionaryBuilder;
 
-use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 
@@ -22,10 +21,8 @@ final class ScalarDictionaryBuilder
                 continue;
             }
 
-            if ($value instanceof Bytes) {
-                $key = $value->toString();
-            } elseif (\is_float($value)) {
-                $key = \serialize($value);
+            if (\is_float($value)) {
+                $key = \pack('E', $value);
             } else {
                 $key = $value;
             }
@@ -37,10 +34,6 @@ final class ScalarDictionaryBuilder
             }
 
             $indices[] = $valueToIndex[$key];
-        }
-
-        foreach ($dictionary as $index => $value) {
-            $dictionary[$index] = $value;
         }
 
         return new Dictionary($dictionary, $indices);

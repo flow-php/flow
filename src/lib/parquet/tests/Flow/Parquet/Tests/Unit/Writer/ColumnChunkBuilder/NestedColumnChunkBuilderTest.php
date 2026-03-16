@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Dremel\ColumnData\FlatValue;
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, NestedColumn, PhysicalType};
@@ -60,10 +59,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         for ($i = 0; $i < 5; $i++) {
-            $columnData = WriteColumnData::initialize($nestedColumn);
-            $flatValue = new FlatValue($childColumn, 0, 1, $i * 10);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [$i * 10]));
         }
 
         self::assertFalse($builder->isFull());
@@ -84,11 +80,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder3 = new PlainFlatColumnChunkBuilder($childColumn3, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2, $childBuilder3]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue2 = new FlatValue($childColumn2, 0, 1, 'middle_child');
-        $columnData->addValue($flatValue2);
-
-        $builder->addRow($columnData);
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['middle_child']));
 
         self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
@@ -103,9 +95,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [], [], []));
 
         self::assertFalse($builder->isFull());
         self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
@@ -123,12 +113,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn2, 0, 1, 'hello');
-        $columnData->addValue($flatValue1, $flatValue2);
-
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['hello']));
 
         self::assertFalse($builder->isFull());
         self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
@@ -144,11 +130,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 0, null);
-        $columnData->addValue($flatValue);
-
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [0], []));
 
         self::assertFalse($builder->isFull());
         self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
@@ -166,11 +148,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $columnData->addValue($flatValue1);
-
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
 
         self::assertFalse($builder->isFull());
         self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
@@ -186,11 +164,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 1, 42);
-        $columnData->addValue($flatValue);
-
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
         self::assertFalse($builder->isFull());
         self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
@@ -219,11 +193,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn2, 0, 1, 'hello');
-        $columnData->addValue($flatValue1, $flatValue2);
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['hello']));
 
         $builder->closePage();
 
@@ -241,10 +212,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 1, 42);
-        $columnData->addValue($flatValue);
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
         $builder->closePage();
 
@@ -334,11 +302,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn2, 0, 0, null);
-        $columnData->addValue($flatValue1, $flatValue2);
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [0], []));
 
         $containers = $builder->flush(0);
 
@@ -352,7 +317,6 @@ final class NestedColumnChunkBuilderTest extends TestCase
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $unmatchedColumn = new FlatColumn('unmatched', PhysicalType::BOOLEAN);
         $nestedColumn = NestedColumn::create('nested', [$childColumn1, $childColumn2]);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
@@ -361,12 +325,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $unmatchedFlatValue = new FlatValue($unmatchedColumn, 0, 1, true);
-        $columnData->addValue($flatValue1);
-
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
 
         $containers = $builder->flush(0);
 
@@ -386,10 +345,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 1, 42);
-        $columnData->addValue($flatValue);
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
         $containers = $builder->flush(0);
 
@@ -413,12 +369,9 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder3 = new PlainFlatColumnChunkBuilder($childColumn3, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2, $childBuilder3]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn2, 0, 1, 'hello');
-        $flatValue3 = new FlatValue($childColumn3, 0, 1, true);
-        $columnData->addValue($flatValue1, $flatValue2, $flatValue3);
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['hello']));
+        $childBuilder3->addColumn(new WriteFlatColumnValues($childColumn3, [0], [1], [true]));
 
         $containers = $builder->flush(1000);
 
@@ -450,11 +403,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn, 0, 1, 84);
-        $columnData->addValue($flatValue1, $flatValue2);
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0, 0], [1, 1], [42, 84]));
 
         self::assertFalse($childBuilder->isEmpty());
         self::assertGreaterThan(0, $childBuilder->uncompressedSize());
@@ -465,10 +414,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         self::assertTrue($childBuilder->isEmpty());
         self::assertEquals(0, $childBuilder->uncompressedSize());
 
-        $columnData2 = WriteColumnData::initialize($nestedColumn);
-        $flatValue3 = new FlatValue($childColumn, 0, 1, 126);
-        $columnData2->addValue($flatValue3);
-        $builder->addRow($columnData2);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [126]));
 
         self::assertFalse($childBuilder->isEmpty());
         self::assertGreaterThan(0, $childBuilder->uncompressedSize());
@@ -518,11 +464,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn2, 0, 1, 'hello');
-        $columnData->addValue($flatValue1, $flatValue2);
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['hello']));
 
         $containers = $builder->flush(100);
 
@@ -544,10 +487,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 1, 42);
-        $columnData->addValue($flatValue);
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
         $containers = $builder->flush(100);
 
@@ -593,7 +533,6 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
 
         $mockFullChildBuilder = $this->createMock(ColumnChunkBuilder::class);
@@ -623,10 +562,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 1, 42);
-        $columnData->addValue($flatValue);
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
         $builder->closePage();
         $builder->closePage();
@@ -660,11 +596,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue1 = new FlatValue($childColumn1, 0, 1, 42);
-        $flatValue2 = new FlatValue($childColumn2, 0, 1, 'hello');
-        $columnData->addValue($flatValue1, $flatValue2);
-        $builder->addRow($columnData);
+        $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
+        $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['hello']));
         $builder->closePage();
 
         $totalSize = $builder->uncompressedSize();
@@ -715,11 +648,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         for ($i = 0; $i < 3; $i++) {
-            $columnData = WriteColumnData::initialize($nestedColumn);
-            $flatValue1 = new FlatValue($childColumn1, 0, 1, $i * 10);
-            $flatValue2 = new FlatValue($childColumn2, 0, 1, "value_{$i}");
-            $columnData->addValue($flatValue1, $flatValue2);
-            $builder->addRow($columnData);
+            $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [$i * 10]));
+            $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ["value_{$i}"]));
         }
 
         $builder->closePage();
@@ -744,10 +674,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         for ($cycle = 0; $cycle < 3; $cycle++) {
-            $columnData = WriteColumnData::initialize($nestedColumn);
-            $flatValue = new FlatValue($childColumn, 0, 1, $cycle * 100);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [$cycle * 100]));
             $builder->closePage();
         }
 
@@ -769,10 +696,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        $columnData = WriteColumnData::initialize($nestedColumn);
-        $flatValue = new FlatValue($childColumn, 0, 1, 42);
-        $columnData->addValue($flatValue);
-        $builder->addRow($columnData);
+        $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
         $builder->closePage();
         $containers = $builder->flush(0);

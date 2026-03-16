@@ -6,7 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Dremel\ColumnData;
 
 use Faker\Factory;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\Dremel\{DremelShredder, WriteColumnData};
+use Flow\Parquet\Dremel\DremelShredder;
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
@@ -79,17 +79,9 @@ final class WriteFlatColumnValuesTest extends TestCase
             ],
         ], \range(1, 10)));
 
-        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options = Options::default()));
-
-        $flatColumnData = WriteColumnData::initialize($schema->get('struct'));
-
-        foreach ($rows as $row) {
-            foreach ($dremel->shred($schema->get('struct'), $row)->flatValues() as $nextFlatValues) {
-                $flatColumnData->addValues($nextFlatValues);
-            }
-        }
-
-        $flatColumnValues = $flatColumnData->values('struct.list_of_string.list.element');
+        $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+        $result = $shredder->shred($schema, $rows);
+        $flatColumnValues = $result['struct.list_of_string.list.element'];
 
         self::assertSame(10, $flatColumnValues->rowsCount());
 
@@ -204,17 +196,9 @@ final class WriteFlatColumnValuesTest extends TestCase
             ],
         ], \range(1, 100)));
 
-        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options = Options::default()));
-
-        $flatColumnData = WriteColumnData::initialize($schema->get('struct'));
-
-        foreach ($rows as $row) {
-            foreach ($dremel->shred($schema->get('struct'), $row)->flatValues() as $nextFlatValues) {
-                $flatColumnData->addValues($nextFlatValues);
-            }
-        }
-
-        $flatColumnValues = $flatColumnData->values('struct.list_of_string.list.element');
+        $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+        $result = $shredder->shred($schema, $rows);
+        $flatColumnValues = $result['struct.list_of_string.list.element'];
 
         $splitResult = $flatColumnValues->splitByRows(20);
 

@@ -7,7 +7,6 @@ namespace Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Data\PlainValueUnpacker;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn};
 use Flow\Parquet\ParquetFile\Statistics;
 
@@ -15,7 +14,7 @@ final readonly class StatisticsReader
 {
     private ByteOrder $byteOrder;
 
-    public function __construct(private Statistics $statistics, private Options $options)
+    public function __construct(private Statistics $statistics)
     {
         $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
     }
@@ -35,7 +34,7 @@ final readonly class StatisticsReader
             return $this->statistics->max;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->max), $this->options, $this->byteOrder))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->max), $this->byteOrder))->unpack($column, 1))[0];
     }
 
     public function maxValue(FlatColumn $column) : mixed
@@ -48,7 +47,7 @@ final readonly class StatisticsReader
             return $this->statistics->maxValue;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->maxValue), $this->options, $this->byteOrder))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->maxValue), $this->byteOrder))->unpack($column, 1))[0];
     }
 
     public function min(FlatColumn $column) : mixed
@@ -61,7 +60,7 @@ final readonly class StatisticsReader
             return $this->statistics->min;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->min), $this->options, $this->byteOrder))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->min), $this->byteOrder))->unpack($column, 1))[0];
     }
 
     public function minValue(FlatColumn $column) : mixed
@@ -74,7 +73,7 @@ final readonly class StatisticsReader
             return $this->statistics->minValue;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->minValue), $this->options, $this->byteOrder))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($this->statistics->minValue), $this->byteOrder))->unpack($column, 1))[0];
     }
 
     public function nullCount() : ?int

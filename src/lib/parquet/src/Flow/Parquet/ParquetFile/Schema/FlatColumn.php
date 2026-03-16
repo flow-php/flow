@@ -12,6 +12,10 @@ final class FlatColumn implements Column
 {
     private ?string $flatPath = null;
 
+    private ?int $maxDefinitionsLevel = null;
+
+    private ?int $maxRepetitionsLevel = null;
+
     private ?self $optionalVariant = null;
 
     private ?NestedColumn $parent = null;
@@ -265,17 +269,25 @@ final class FlatColumn implements Column
 
     public function maxDefinitionsLevel() : int
     {
+        if ($this->maxDefinitionsLevel !== null) {
+            return $this->maxDefinitionsLevel;
+        }
+
         $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
         $level += $this->repetition === Repetition::REPEATED ? 1 : 0;
 
-        return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
+        return $this->maxDefinitionsLevel = $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
     public function maxRepetitionsLevel() : int
     {
+        if ($this->maxRepetitionsLevel !== null) {
+            return $this->maxRepetitionsLevel;
+        }
+
         $level = $this->repetition === Repetition::REPEATED ? 1 : 0;
 
-        return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
+        return $this->maxRepetitionsLevel = $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
     public function name() : string
@@ -335,6 +347,8 @@ final class FlatColumn implements Column
     public function setParent(NestedColumn $parent) : void
     {
         $this->flatPath = null;
+        $this->maxDefinitionsLevel = null;
+        $this->maxRepetitionsLevel = null;
         $this->parent = $parent;
     }
 

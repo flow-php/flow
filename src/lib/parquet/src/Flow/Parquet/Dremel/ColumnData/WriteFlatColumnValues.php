@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
-use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class WriteFlatColumnValues
@@ -15,13 +14,13 @@ final class WriteFlatColumnValues
      * @param FlatColumn $column
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
-     * @param array<null|Bytes|scalar> $values
+     * @param array<null|scalar> $values
      */
     public function __construct(
         public readonly FlatColumn $column,
-        private array $repetitionLevels = [],
-        private array $definitionLevels = [],
-        private array $values = [],
+        public array $repetitionLevels = [],
+        public array $definitionLevels = [],
+        public array $values = [],
     ) {
         $this->flatPath = $column->flatPath();
     }
@@ -38,6 +37,19 @@ final class WriteFlatColumnValues
 
         if ($cell->value !== null) {
             $this->values[] = $cell->value;
+        }
+    }
+
+    /**
+     * @param null|scalar $value
+     */
+    public function addRaw(int $repetitionLevel, int $definitionLevel, bool|float|int|string|null $value) : void
+    {
+        $this->repetitionLevels[] = $repetitionLevel;
+        $this->definitionLevels[] = $definitionLevel;
+
+        if ($value !== null) {
+            $this->values[] = $value;
         }
     }
 
@@ -247,7 +259,7 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @return array<null|Bytes|scalar>
+     * @return array<null|scalar>
      */
     public function values() : array
     {

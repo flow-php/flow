@@ -163,6 +163,12 @@ final class Writer
      */
     public function writeBatch(iterable $rows) : void
     {
+        if (\is_array($rows)) {
+            $this->rowGroupBuilder()->addRows($rows);
+
+            return;
+        }
+
         foreach ($rows as $row) {
             $this->writeRow($row);
         }
@@ -206,18 +212,15 @@ final class Writer
     {
         if ($this->rowGroupBuilder === null) {
             $dataConverter = DataConverter::initialize($this->options);
-            $shredder = new DremelShredder(
-                $this->options->getBool(Option::VALIDATE_DATA)
-                    ? new ColumnDataValidator()
-                    : new DisabledValidator(),
-                $dataConverter
-            );
+            $validator = $this->options->getBool(Option::VALIDATE_DATA)
+                ? new ColumnDataValidator()
+                : new DisabledValidator();
 
             $this->rowGroupBuilder = new RowGroupBuilder(
                 $schema,
                 $this->compression,
                 $this->options,
-                $shredder
+                new DremelShredder($validator, $dataConverter),
             );
         } else {
             throw new RuntimeException('RowGroupBuilder is already initialized, please close the writer first before initializing a new RowGroupBuilder');

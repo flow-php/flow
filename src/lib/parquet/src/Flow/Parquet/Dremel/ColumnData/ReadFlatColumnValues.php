@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final readonly class ReadFlatColumnValues
@@ -20,6 +21,25 @@ final readonly class ReadFlatColumnValues
         private array $repetitionLevels,
         private array $definitionLevels,
     ) {
+    }
+
+    /**
+     * @return \Generator<array-key, mixed>
+     */
+    public function assembleFlat(DataConverter $dataConverter) : \Generator
+    {
+        $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
+
+        foreach ($this->definitionLevels as $definitionLevel) {
+            if ($definitionLevel === $maxDefinitionLevel) {
+                $value = $this->values->valid() ? $this->values->current() : null;
+                $this->values->next();
+
+                yield $dataConverter->fromParquetType($this->column, $value);
+            } else {
+                yield new NullLevel($definitionLevel);
+            }
+        }
     }
 
     /**

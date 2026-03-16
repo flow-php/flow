@@ -36,8 +36,8 @@ final class RLEBitPackedHybrid
         $totalByteCount = (int) (($bitWidth * $count) / 8);
 
         $remainingByteCount = $reader->remainingLength()->bytes();
-        $readBytes = $reader->readBytes(\min($remainingByteCount, $totalByteCount));
-        $actualByteCount = $readBytes->count();
+        $readRaw = $reader->readBytes(\min($remainingByteCount, $totalByteCount));
+        $actualByteCount = \strlen($readRaw);
 
         if ($actualByteCount === 0) {
             return;
@@ -45,7 +45,7 @@ final class RLEBitPackedHybrid
 
         $bitMask = (1 << $bitWidth) - 1;
         $byteIndex = 0;
-        $currentByte = $readBytes[$byteIndex];
+        $currentByte = \ord($readRaw[0]);
         $totalBits = $actualByteCount * 8;
         $bitsLeftInByte = 8;
         $bitsReadFromByte = 0;
@@ -65,7 +65,7 @@ final class RLEBitPackedHybrid
                 $output[] = $decodedValue;
             } elseif ($byteIndex + 1 < $actualByteCount) {
                 $byteIndex++;
-                $currentByte |= ($readBytes[$byteIndex] << $bitsLeftInByte);
+                $currentByte |= (\ord($readRaw[$byteIndex]) << $bitsLeftInByte);
                 $bitsLeftInByte += 8;
             }
         }
@@ -109,7 +109,17 @@ final class RLEBitPackedHybrid
 
         $count = \min($runLength, $maxItems);
         $width = (int) (($bitWidth + 7) / 8);
-        $value = $width > 0 ? $reader->readBytes($width)->toInt() : 0;
+
+        if ($width > 0) {
+            $raw = $reader->readBytes($width);
+            $value = 0;
+
+            for ($i = 0; $i < $width; $i++) {
+                $value |= (\ord($raw[$i]) << ($i * 8));
+            }
+        } else {
+            $value = 0;
+        }
 
         if ($isLiteralRun) {
             for ($i = 0; $i < $count; $i++) {
@@ -128,13 +138,21 @@ final class RLEBitPackedHybrid
      */
     public function encodeBitPacked(BinaryWriter $writer, int $bitWidth, array $values) : void
     {
-        $numGroups = (int) \ceil(\count($values) / 8.0);
+        $count = \count($values);
+        $numGroups = ($count + 7) >> 3;
         $varInt = ($numGroups << 1) | 1;
 
-        $writer->writeVarInts([$varInt]);
+        $packed = '';
+
+        while ($varInt >= 0x80) {
+            $packed .= \chr(($varInt & 0x7F) | 0x80);
+            $varInt >>= 7;
+        }
+        $packed .= \chr($varInt & 0x7F);
 
         $buffer = 0;
         $bitsInBuffer = 0;
+        /** @var array<int> $bytes */
         $bytes = [];
 
         foreach ($values as $value) {
@@ -148,18 +166,18 @@ final class RLEBitPackedHybrid
             }
         }
 
-        // Write any remaining bits in the buffer
         if ($bitsInBuffer > 0) {
             $bytes[] = $buffer & 0xFF;
         }
 
-        $writer->writeBytes($bytes);
         $expectedBytesCount = (int) ((($numGroups * 8) * $bitWidth) / 8);
+        $byteCount = \count($bytes);
 
-        while (\count($bytes) < $expectedBytesCount) {
-            $writer->writeBytes([0]);
-            $bytes[] = 0;
+        if ($byteCount < $expectedBytesCount) {
+            \array_push($bytes, ...\array_fill(0, $expectedBytesCount - $byteCount, 0));
         }
+
+        $writer->append($packed . \pack('C*', ...$bytes));
     }
 
     /**
@@ -205,7 +223,7 @@ final class RLEBitPackedHybrid
                     $rleBuffer = [];
                 }
 
-                $bitPackedBuffer = \array_merge($bitPackedBuffer, $rleBuffer);
+                \array_push($bitPackedBuffer, ...$rleBuffer);
                 $bitPackedBuffer[] = $value;
                 $rleBuffer = [];
             }
@@ -220,7 +238,7 @@ final class RLEBitPackedHybrid
 
         if (\count($bitPackedBuffer)) {
             if (\count($rleBuffer)) {
-                $bitPackedBuffer = \array_merge($bitPackedBuffer, $rleBuffer);
+                \array_push($bitPackedBuffer, ...$rleBuffer);
             }
 
             $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
@@ -242,7 +260,20 @@ final class RLEBitPackedHybrid
 
         $value = $values[0];
 
-        $writer->writeVarInts([$intVar]);
-        $writer->writeBytes(BitWidth::toBytes($value, $bitWidth));
+        $packed = '';
+
+        while ($intVar >= 0x80) {
+            $packed .= \chr(($intVar & 0x7F) | 0x80);
+            $intVar >>= 7;
+        }
+        $packed .= \chr($intVar & 0x7F);
+
+        $width = (int) (($bitWidth + 7) / 8);
+
+        for ($i = 0; $i < $width; $i++) {
+            $packed .= \chr(($value >> ($i * 8)) & 0xFF);
+        }
+
+        $writer->append($packed);
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Dremel\ColumnData\FlatValue;
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Encodings};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
@@ -23,10 +22,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $negativeValues = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8];
 
         foreach ($negativeValues as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);
@@ -48,10 +44,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $sequentialValues = range(1, 100);
 
         foreach ($sequentialValues as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);
@@ -74,10 +67,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
         for ($i = 0; $i < 100; $i++) {
             $timestamp = $baseTimestamp + ($i * 60);
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $timestamp);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$timestamp]));
         }
 
         $containers = $builder->flush(0);
@@ -99,10 +89,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $values = range(1, 50);
 
         foreach ($values as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         self::assertFalse($builder->isFull());
@@ -128,10 +115,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
         foreach ($values as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);
@@ -159,17 +143,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         }
 
         foreach ($values as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);
         $container = $containers[0];
 
-        // For now, just verify the container was created successfully
-        // Full round-trip testing would require more complex page parsing
         self::assertNotNull($container);
         self::assertGreaterThan(0, strlen($container->binaryBuffer));
         self::assertSame($column->type(), $container->columnChunk->type());
@@ -184,10 +163,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $values = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8];
 
         foreach ($values as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);
@@ -207,10 +183,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $values = range(100, 200);
 
         foreach ($values as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);

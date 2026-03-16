@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Data;
 
 use function Flow\Parquet\Binary\{encode_decimal, encode_f32, encode_f64, encode_i32, encode_i64, encode_u32};
-use Flow\Parquet\Binary\{ByteOrder, Bytes};
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
@@ -99,19 +99,13 @@ final readonly class PlainValuesPacker
     }
 
     /**
-     * @param array<Bytes|string> $values
+     * @param array<string> $values
      */
     private function packByteArrays(array $values) : void
     {
         foreach ($values as $value) {
-            if ($value instanceof Bytes) {
-                $data = $value->toString();
-            } else {
-                $data = (string) $value;
-            }
-
-            $this->writer->append(encode_u32($this->byteOrder, \strlen($data)));
-            $this->writer->append($data);
+            $this->writer->append(encode_u32($this->byteOrder, [\strlen($value)]));
+            $this->writer->append($value);
         }
     }
 
@@ -130,22 +124,16 @@ final readonly class PlainValuesPacker
      */
     private function packDoubles(array $doubles) : void
     {
-        foreach ($doubles as $double) {
-            $this->writer->append(encode_f64($this->byteOrder, $double));
-        }
+        $this->writer->append(encode_f64($this->byteOrder, $doubles));
     }
 
     /**
-     * @param array<Bytes|string> $values
+     * @param array<string> $values
      */
     private function packFixedLenByteArrays(array $values) : void
     {
         foreach ($values as $value) {
-            if ($value instanceof Bytes) {
-                $this->writer->append($value->toString());
-            } else {
-                $this->writer->append((string) $value);
-            }
+            $this->writer->append($value);
         }
     }
 
@@ -154,9 +142,7 @@ final readonly class PlainValuesPacker
      */
     private function packFloats(array $floats) : void
     {
-        foreach ($floats as $float) {
-            $this->writer->append(encode_f32($this->byteOrder, $float));
-        }
+        $this->writer->append(encode_f32($this->byteOrder, $floats));
     }
 
     /**
@@ -164,9 +150,7 @@ final readonly class PlainValuesPacker
      */
     private function packInt32s(array $ints) : void
     {
-        foreach ($ints as $int) {
-            $this->writer->append(encode_i32($this->byteOrder, $int));
-        }
+        $this->writer->append(encode_i32($this->byteOrder, $ints));
     }
 
     /**
@@ -174,9 +158,7 @@ final readonly class PlainValuesPacker
      */
     private function packInt64s(array $ints) : void
     {
-        foreach ($ints as $int) {
-            $this->writer->append(encode_i64($this->byteOrder, $int));
-        }
+        $this->writer->append(encode_i64($this->byteOrder, $ints));
     }
 
     /**
@@ -185,7 +167,7 @@ final readonly class PlainValuesPacker
     private function packStrings(array $strings) : void
     {
         foreach ($strings as $string) {
-            $this->writer->append(encode_u32($this->byteOrder, \strlen($string)));
+            $this->writer->append(encode_u32($this->byteOrder, [\strlen($string)]));
             $this->writer->append($string);
         }
     }

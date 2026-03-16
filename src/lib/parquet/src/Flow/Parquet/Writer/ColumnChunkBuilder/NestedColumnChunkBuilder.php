@@ -4,37 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema\{Column, NestedColumn};
 use Flow\Parquet\Writer\ColumnChunkBuilder;
 
-final class NestedColumnChunkBuilder implements ColumnChunkBuilder
+final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
 {
-    /** @var array<string, ColumnChunkBuilder> */
-    private array $buildersByPath;
-
     /**
      * @param NestedColumn $column
      * @param array<ColumnChunkBuilder> $childrenColumnChunkBuilders
      */
-    public function __construct(private readonly NestedColumn $column, private readonly array $childrenColumnChunkBuilders)
+    public function __construct(private NestedColumn $column, private array $childrenColumnChunkBuilders)
     {
-        $this->buildersByPath = [];
-
-        foreach ($childrenColumnChunkBuilders as $builder) {
-            $this->buildersByPath[$builder->column()->flatPath()] = $builder;
-        }
     }
 
-    public function addRow(WriteColumnData $columnData) : void
+    public function addColumn(WriteFlatColumnValues $columnValues) : void
     {
-        foreach ($columnData->flatValues() as $flatValues) {
-            $path = $flatValues->flatPath();
-
-            if (isset($this->buildersByPath[$path])) {
-                $this->buildersByPath[$path]->addRow($columnData->toFlatColumnData($path));
-            }
-        }
+        throw new RuntimeException('NestedColumnChunkBuilder does not support addColumn(). Use flat builders directly via addColumnByFlatPath().');
     }
 
     public function closePage() : void

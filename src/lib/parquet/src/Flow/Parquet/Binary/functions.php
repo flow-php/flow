@@ -4,196 +4,274 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Binary;
 
-function encode_i8(int $value) : string
+/**
+ * @param array<int> $values
+ */
+function encode_i8(array $values) : string
 {
-    return \pack('c', $value);
-}
-
-function decode_i8(string $bytes) : int
-{
-    $value = \ord($bytes[0]);
-
-    if ($value & 0x80) {
-        $value = -((~$value & 0xFF) + 1);
+    if (\count($values) === 0) {
+        return '';
     }
 
-    return $value;
+    return \pack(\str_repeat('c', \count($values)), ...$values);
 }
 
-function encode_i16(ByteOrder $order, int $value) : string
+/**
+ * @return array<int>
+ */
+function decode_i8(string $bytes) : array
 {
+    /** @var array<int, int> $values */
+    $values = \unpack('c*', $bytes);
+
+    return \array_values($values);
+}
+
+/**
+ * @param array<int> $values
+ */
+function encode_i16(ByteOrder $order, array $values) : string
+{
+    if (\count($values) === 0) {
+        return '';
+    }
+
     $format = $order === ByteOrder::BIG_ENDIAN ? 'n' : 'v';
 
-    return \pack($format, $value);
+    return \pack(\str_repeat($format, \count($values)), ...$values);
 }
 
-function decode_i16(ByteOrder $order, string $bytes) : int
-{
-    /** @var array<int, int> $byteArray */
-    $byteArray = \unpack('C*', $bytes);
-
-    if ($order === ByteOrder::LITTLE_ENDIAN) {
-        $integer = $byteArray[1] | ($byteArray[2] << 8);
-    } else {
-        $integer = ($byteArray[1] << 8) | $byteArray[2];
-    }
-
-    if ($integer & 0x8000) {
-        $integer = -((~$integer & 0xFFFF) + 1);
-    }
-
-    return $integer;
-}
-
-function encode_i32(ByteOrder $order, int $value) : string
-{
-    $format = $order === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
-
-    return \pack($format, $value);
-}
-
-function decode_i32(ByteOrder $order, string $bytes) : int
-{
-    /** @var array<int, int> $byteArray */
-    $byteArray = \unpack('C*', $bytes);
-
-    if ($order === ByteOrder::LITTLE_ENDIAN) {
-        $int = $byteArray[1] | ($byteArray[2] << 8) | ($byteArray[3] << 16) | ($byteArray[4] << 24);
-    } else {
-        $int = ($byteArray[1] << 24) | ($byteArray[2] << 16) | ($byteArray[3] << 8) | $byteArray[4];
-    }
-
-    if ($int & 0x80000000) {
-        $int = -((~$int & 0xFFFFFFFF) + 1);
-    }
-
-    return $int;
-}
-
-function encode_i64(ByteOrder $order, int $value) : string
-{
-    $format = $order === ByteOrder::BIG_ENDIAN ? 'J' : 'P';
-
-    return \pack($format, $value);
-}
-
-function decode_i64(ByteOrder $order, string $bytes) : int
-{
-    /** @var array<int, int> $byteArray */
-    $byteArray = \unpack('C*', $bytes);
-
-    if ($order === ByteOrder::LITTLE_ENDIAN) {
-        $int = $byteArray[1] | ($byteArray[2] << 8) | ($byteArray[3] << 16) | ($byteArray[4] << 24) |
-            ($byteArray[5] << 32) | ($byteArray[6] << 40) | ($byteArray[7] << 48) | ($byteArray[8] << 56);
-        $sign = $byteArray[8];
-    } else {
-        $int = ($byteArray[1] << 56) | ($byteArray[2] << 48) | ($byteArray[3] << 40) | ($byteArray[4] << 32) |
-            ($byteArray[5] << 24) | ($byteArray[6] << 16) | ($byteArray[7] << 8) | $byteArray[8];
-        $sign = $byteArray[1];
-    }
-
-    if ($sign & 0x80) {
-        $int |= (-1 ^ 0xFFFFFFFFFFFFFFFF) << 56;
-    } else {
-        $int |= $sign << 56;
-    }
-
-    return $int;
-}
-
-function encode_u8(int $value) : string
-{
-    return \pack('C', $value);
-}
-
-function decode_u8(string $bytes) : int
-{
-    return \ord($bytes[0]);
-}
-
-function encode_u16(ByteOrder $order, int $value) : string
-{
-    $format = $order === ByteOrder::BIG_ENDIAN ? 'n' : 'v';
-
-    return \pack($format, $value);
-}
-
-function decode_u16(ByteOrder $order, string $bytes) : int
+/**
+ * @return array<int>
+ */
+function decode_i16(ByteOrder $order, string $bytes) : array
 {
     $format = $order === ByteOrder::LITTLE_ENDIAN ? 'v' : 'n';
+    /** @var array<int, int> $values */
+    $values = \unpack($format . '*', $bytes);
 
-    /** @var array<int, int> $result */
-    $result = \unpack($format, $bytes);
+    foreach ($values as $k => $v) {
+        if ($v & 0x8000) {
+            $values[$k] = -((~$v & 0xFFFF) + 1);
+        }
+    }
 
-    return $result[1];
+    return \array_values($values);
 }
 
-function encode_u32(ByteOrder $order, int $value) : string
+/**
+ * @param array<int> $values
+ */
+function encode_i32(ByteOrder $order, array $values) : string
 {
+    if (\count($values) === 0) {
+        return '';
+    }
+
     $format = $order === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
 
-    return \pack($format, $value);
+    return \pack(\str_repeat($format, \count($values)), ...$values);
 }
 
-function decode_u32(ByteOrder $order, string $bytes) : int
+/**
+ * @return array<int>
+ */
+function decode_i32(ByteOrder $order, string $bytes) : array
 {
     $format = $order === ByteOrder::LITTLE_ENDIAN ? 'V' : 'N';
+    /** @var array<int, int> $values */
+    $values = \unpack($format . '*', $bytes);
 
-    /** @var array<int, int> $result */
-    $result = \unpack($format, $bytes);
+    foreach ($values as $k => $v) {
+        if ($v >= 0x80000000) {
+            $values[$k] = $v - 0x100000000;
+        }
+    }
 
-    return $result[1];
+    return \array_values($values);
 }
 
-function encode_u64(ByteOrder $order, int $value) : string
+/**
+ * @param array<int> $values
+ */
+function encode_i64(ByteOrder $order, array $values) : string
 {
+    if (\count($values) === 0) {
+        return '';
+    }
+
     $format = $order === ByteOrder::BIG_ENDIAN ? 'J' : 'P';
 
-    return \pack($format, $value);
+    return \pack(\str_repeat($format, \count($values)), ...$values);
 }
 
-function decode_u64(ByteOrder $order, string $bytes) : int
+/**
+ * @return array<int>
+ */
+function decode_i64(ByteOrder $order, string $bytes) : array
 {
     $format = $order === ByteOrder::LITTLE_ENDIAN ? 'P' : 'J';
+    /** @var array<int, int> $values */
+    $values = \unpack($format . '*', $bytes);
 
-    /** @var array<int, int> $result */
-    $result = \unpack($format, $bytes);
-
-    return $result[1];
+    return \array_values($values);
 }
 
-function encode_f32(ByteOrder $order, float $value) : string
+/**
+ * @param array<int> $values
+ */
+function encode_u8(array $values) : string
 {
+    if (\count($values) === 0) {
+        return '';
+    }
+
+    return \pack(\str_repeat('C', \count($values)), ...$values);
+}
+
+/**
+ * @return array<int>
+ */
+function decode_u8(string $bytes) : array
+{
+    /** @var array<int, int> $values */
+    $values = \unpack('C*', $bytes);
+
+    return \array_values($values);
+}
+
+/**
+ * @param array<int> $values
+ */
+function encode_u16(ByteOrder $order, array $values) : string
+{
+    if (\count($values) === 0) {
+        return '';
+    }
+
+    $format = $order === ByteOrder::BIG_ENDIAN ? 'n' : 'v';
+
+    return \pack(\str_repeat($format, \count($values)), ...$values);
+}
+
+/**
+ * @return array<int>
+ */
+function decode_u16(ByteOrder $order, string $bytes) : array
+{
+    $format = $order === ByteOrder::LITTLE_ENDIAN ? 'v' : 'n';
+    /** @var array<int, int> $values */
+    $values = \unpack($format . '*', $bytes);
+
+    return \array_values($values);
+}
+
+/**
+ * @param array<int> $values
+ */
+function encode_u32(ByteOrder $order, array $values) : string
+{
+    if (\count($values) === 0) {
+        return '';
+    }
+
+    $format = $order === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
+
+    return \pack(\str_repeat($format, \count($values)), ...$values);
+}
+
+/**
+ * @return array<int>
+ */
+function decode_u32(ByteOrder $order, string $bytes) : array
+{
+    $format = $order === ByteOrder::LITTLE_ENDIAN ? 'V' : 'N';
+    /** @var array<int, int> $values */
+    $values = \unpack($format . '*', $bytes);
+
+    return \array_values($values);
+}
+
+/**
+ * @param array<int> $values
+ */
+function encode_u64(ByteOrder $order, array $values) : string
+{
+    if (\count($values) === 0) {
+        return '';
+    }
+
+    $format = $order === ByteOrder::BIG_ENDIAN ? 'J' : 'P';
+
+    return \pack(\str_repeat($format, \count($values)), ...$values);
+}
+
+/**
+ * @return array<int>
+ */
+function decode_u64(ByteOrder $order, string $bytes) : array
+{
+    $format = $order === ByteOrder::LITTLE_ENDIAN ? 'P' : 'J';
+    /** @var array<int, int> $values */
+    $values = \unpack($format . '*', $bytes);
+
+    return \array_values($values);
+}
+
+/**
+ * @param array<float> $values
+ */
+function encode_f32(ByteOrder $order, array $values) : string
+{
+    if (\count($values) === 0) {
+        return '';
+    }
+
     $format = $order === ByteOrder::BIG_ENDIAN ? 'G' : 'g';
 
-    return \pack($format, $value);
+    return \pack(\str_repeat($format, \count($values)), ...$values);
 }
 
-function decode_f32(ByteOrder $order, string $bytes) : float
+/**
+ * @return array<float>
+ */
+function decode_f32(ByteOrder $order, string $bytes) : array
 {
     $format = $order === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G';
+    /** @var array<int, float> $values */
+    $values = \unpack($format . '*', $bytes);
 
-    /** @var array<int, float> $result */
-    $result = \unpack($format, $bytes);
+    foreach ($values as $k => $v) {
+        $values[$k] = \round($v, 7);
+    }
 
-    return \round($result[1], 7);
+    return \array_values($values);
 }
 
-function encode_f64(ByteOrder $order, float $value) : string
+/**
+ * @param array<float> $values
+ */
+function encode_f64(ByteOrder $order, array $values) : string
 {
+    if (\count($values) === 0) {
+        return '';
+    }
+
     $format = $order === ByteOrder::BIG_ENDIAN ? 'E' : 'e';
 
-    return \pack($format, $value);
+    return \pack(\str_repeat($format, \count($values)), ...$values);
 }
 
-function decode_f64(ByteOrder $order, string $bytes) : float
+/**
+ * @return array<float>
+ */
+function decode_f64(ByteOrder $order, string $bytes) : array
 {
     $format = $order === ByteOrder::LITTLE_ENDIAN ? 'e' : 'E';
+    /** @var array<int, float> $values */
+    $values = \unpack($format . '*', $bytes);
 
-    /** @var array<int, float> $result */
-    $result = \unpack($format, $bytes);
-
-    return $result[1];
+    return \array_values($values);
 }
 
 function encode_decimal(ByteOrder $order, float $value, int $byteLength, int $precision, int $scale) : string

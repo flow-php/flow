@@ -73,7 +73,7 @@ final readonly class DeltaBinaryPackedDecoder
         $bitWidths = [];
 
         for ($i = 0; $i < $miniblockCount; $i++) {
-            $bitWidths[] = $reader->readBytes(1)->toArray()[0];
+            $bitWidths[] = \ord($reader->readBytes(1));
         }
 
         $deltas = [];
@@ -90,8 +90,8 @@ final readonly class DeltaBinaryPackedDecoder
                 $miniblockDeltas = array_fill(0, $valuesToRead, 0);
             } else {
                 $packedSize = (int) ceil(($miniblockSize * $bitWidth) / 8);
-                $packedData = $reader->readBytes($packedSize);
-                $miniblockDeltas = $this->unpackMiniblock($packedData->toArray(), $bitWidth, $valuesToRead);
+                $packedRaw = $reader->readBytes($packedSize);
+                $miniblockDeltas = $this->unpackMiniblockFromString($packedRaw, $bitWidth, $valuesToRead);
             }
 
             $actualDeltas = array_map(static function ($delta) use ($minDelta) {
@@ -180,21 +180,17 @@ final readonly class DeltaBinaryPackedDecoder
     }
 
     /**
-     * @param array<int> $packedBytes
-     *
      * @return array<int>
      */
-    private function unpackMiniblock(array $packedBytes, int $bitWidth, int $valuesToRead) : array
+    private function unpackMiniblockFromString(string $packedData, int $bitWidth, int $valuesToRead) : array
     {
-        // For large bit widths (>= 62), use safe unpacking to avoid overflow
         if ($bitWidth >= 62) {
-            return $this->unpackMiniblockSafe($packedBytes, $bitWidth, $valuesToRead);
+            return $this->unpackMiniblockFromStringSafe($packedData, $bitWidth, $valuesToRead);
         }
 
-        // Use the original fast method for smaller bit widths
         $values = [];
         $bitOffset = 0;
-        $packedData = \pack('C*', ...$packedBytes);
+        $dataLen = \strlen($packedData);
 
         for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
             $value = 0;
@@ -203,11 +199,11 @@ final readonly class DeltaBinaryPackedDecoder
                 $byteIndex = intdiv($bitOffset, 8);
                 $bitIndex = $bitOffset % 8;
 
-                if ($byteIndex >= strlen($packedData)) {
+                if ($byteIndex >= $dataLen) {
                     break;
                 }
 
-                $byte = ord($packedData[$byteIndex]);
+                $byte = \ord($packedData[$byteIndex]);
                 $bitValue = ($byte >> $bitIndex) & 1;
                 $value |= ($bitValue << $bit);
                 $bitOffset++;
@@ -220,30 +216,23 @@ final readonly class DeltaBinaryPackedDecoder
     }
 
     /**
-     * Safe bit unpacking for large bit widths to avoid integer overflow.
-     * Uses the exact inverse of the safe packing algorithm.
-     *
-     * @param array<int> $packedBytes
-     *
      * @return array<int>
      */
-    private function unpackMiniblockSafe(array $packedBytes, int $bitWidth, int $valuesToRead) : array
+    private function unpackMiniblockFromStringSafe(string $packedData, int $bitWidth, int $valuesToRead) : array
     {
         $values = [];
-        $packedData = \pack('C*', ...$packedBytes);
-
+        $dataLen = \strlen($packedData);
         $globalBitOffset = 0;
 
         for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
             $value = 0;
 
-            // Unpack this value bit by bit
             for ($bit = 0; $bit < $bitWidth; $bit++) {
                 $byteIndex = intdiv($globalBitOffset, 8);
                 $bitIndex = $globalBitOffset % 8;
 
-                if ($byteIndex < strlen($packedData)) {
-                    $byte = ord($packedData[$byteIndex]);
+                if ($byteIndex < $dataLen) {
+                    $byte = \ord($packedData[$byteIndex]);
                     $bitValue = ($byte >> $bitIndex) & 1;
 
                     if ($bitValue) {

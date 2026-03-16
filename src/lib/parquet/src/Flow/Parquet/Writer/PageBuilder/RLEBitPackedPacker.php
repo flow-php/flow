@@ -52,7 +52,7 @@ final readonly class RLEBitPackedPacker
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
         $outputBuffer = '';
         $outputWriter = new BinaryBufferWriter($outputBuffer);
-        $outputWriter->append(encode_i32($this->byteOrder, \strlen($dataBuffer)));
+        $outputWriter->append(encode_i32($this->byteOrder, [\strlen($dataBuffer)]));
         $outputWriter->append($dataBuffer);
 
         return $outputBuffer;

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
-use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\{BinaryReader, DataSize};
 use Flow\Parquet\Data\RLEBitPackedHybrid;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +27,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::once())
             ->method('readBytes')
-            ->willReturn(new Bytes([8]));
+            ->willReturn(\chr(8));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
@@ -53,7 +52,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::once())
             ->method('readBytes')
-            ->willReturn(new Bytes([8, 4]));
+            ->willReturn(\chr(8) . \chr(4));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
@@ -78,7 +77,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::once())
             ->method('readBytes')
-            ->willReturn(new Bytes([8]));
+            ->willReturn(\chr(8));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
@@ -116,7 +115,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::once())
             ->method('readBytes')
-            ->willReturn(new Bytes([2]));
+            ->willReturn(\chr(2));
 
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);
@@ -137,7 +136,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::exactly(1))
             ->method('readBytes')
-            ->willReturn(new Bytes([]));
+            ->willReturn(\chr(0));
 
         $binaryReader->expects(self::exactly(1))
             ->method('readBits')

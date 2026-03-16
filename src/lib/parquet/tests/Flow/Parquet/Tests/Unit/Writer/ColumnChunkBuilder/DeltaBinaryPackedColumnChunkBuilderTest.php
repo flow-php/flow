@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Dremel\ColumnData\FlatValue;
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
@@ -72,11 +71,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $compression = Compressions::UNCOMPRESSED;
         $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, $compression);
 
-        $columnData = WriteColumnData::initialize($column);
-        $flatValue1 = new FlatValue($column, 0, 1, 42);
-        $flatValue2 = new FlatValue($column, 0, 1, 84);
-        $columnData->addValue($flatValue1, $flatValue2);
-        $builder->addRow($columnData);
+        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [42, 84]));
 
         self::assertFalse($builder->isEmpty());
         self::assertGreaterThan(0, $builder->uncompressedSize());
@@ -87,10 +82,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         self::assertTrue($builder->isEmpty());
         self::assertEquals(0, $builder->uncompressedSize());
 
-        $columnData2 = WriteColumnData::initialize($column);
-        $flatValue3 = new FlatValue($column, 0, 1, 126);
-        $columnData2->addValue($flatValue3);
-        $builder->addRow($columnData2);
+        $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [126]));
 
         self::assertFalse($builder->isEmpty());
         self::assertGreaterThan(0, $builder->uncompressedSize());
@@ -118,10 +110,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $values = [1, 2, 3, 4, 5];
 
         foreach ($values as $value) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $value);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
         $containers = $builder->flush(0);
@@ -129,7 +118,6 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         self::assertIsArray($containers);
         self::assertCount(1, $containers);
         self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        // After flush, builder should be clean (no leftovers)
         self::assertEquals(0, $builder->uncompressedSize());
     }
 
@@ -142,12 +130,8 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
 
-        // Add enough INT32 values to exceed page size (100 bytes / 4 bytes per int = 25 values)
         for ($i = 0; $i < 30; $i++) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $i);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$i]));
         }
 
         self::assertTrue($builder->isFull());
@@ -162,12 +146,8 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT64);
         $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
 
-        // Add enough INT64 values to exceed page size (100 bytes / 8 bytes per int = 12.5, so 13 values)
         for ($i = 0; $i < 15; $i++) {
-            $columnData = WriteColumnData::initialize($column);
-            $flatValue = new FlatValue($column, 0, 1, $i);
-            $columnData->addValue($flatValue);
-            $builder->addRow($columnData);
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$i]));
         }
 
         self::assertTrue($builder->isFull());

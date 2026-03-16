@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\Binary\Bytes;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, Repetition};
 use Flow\Parquet\{Reader, Writer};
@@ -47,17 +46,17 @@ final class FixedLenByteArrayReadingTest extends TestCase
         $rows = \iterator_to_array($parquetFile->values());
 
         self::assertCount(3, $rows);
-        self::assertInstanceOf(Bytes::class, $rows[0]['raw_bytes']);
-        self::assertInstanceOf(Bytes::class, $rows[1]['raw_bytes']);
-        self::assertInstanceOf(Bytes::class, $rows[2]['raw_bytes']);
-        self::assertSame($bytes1, $rows[0]['raw_bytes']->toString());
-        self::assertSame($bytes2, $rows[1]['raw_bytes']->toString());
-        self::assertSame($bytes3, $rows[2]['raw_bytes']->toString());
+        self::assertIsString($rows[0]['raw_bytes']);
+        self::assertIsString($rows[1]['raw_bytes']);
+        self::assertIsString($rows[2]['raw_bytes']);
+        self::assertSame($bytes1, $rows[0]['raw_bytes']);
+        self::assertSame($bytes2, $rows[1]['raw_bytes']);
+        self::assertSame($bytes3, $rows[2]['raw_bytes']);
 
         \unlink($path);
     }
 
-    public function test_reading_fixed_len_byte_array_returns_bytes_object() : void
+    public function test_reading_fixed_len_byte_array_returns_raw_string() : void
     {
         $path = __DIR__ . '/var/parquet_fixed_len_byte_array_bytes_' . \uniqid() . '.parquet';
 
@@ -78,8 +77,8 @@ final class FixedLenByteArrayReadingTest extends TestCase
         $rows = \iterator_to_array($parquetFile->values());
 
         self::assertCount(1, $rows);
-        self::assertInstanceOf(Bytes::class, $rows[0]['data']);
-        self::assertSame($data, $rows[0]['data']->toString());
+        self::assertIsString($rows[0]['data']);
+        self::assertSame($data, $rows[0]['data']);
 
         \unlink($path);
     }

@@ -53,23 +53,25 @@ final class DataConverter
             return null;
         }
 
-        if (\array_key_exists($column->flatPath(), $this->cache)) {
-            if ($this->cache[$column->flatPath()] === null) {
+        $flatPath = $column->flatPath();
+
+        if (\array_key_exists($flatPath, $this->cache)) {
+            if ($this->cache[$flatPath] === null) {
                 return $data;
             }
 
-            return $this->cache[$column->flatPath()]->fromParquetType($data);
+            return $this->cache[$flatPath]->fromParquetType($data);
         }
 
         foreach ($this->converters as $converter) {
             if ($converter->isFor($column, $this->options)) {
-                $this->cache[$column->flatPath()] = $converter;
+                $this->cache[$flatPath] = $converter;
 
                 try {
                     return $converter->fromParquetType($data);
                 } catch (\Throwable $e) {
                     throw new DataConversionException(
-                        "Failed to convert data from parquet type for column '{$column->flatPath()}'. {$e->getMessage()}",
+                        "Failed to convert data from parquet type for column '{$flatPath}'. {$e->getMessage()}",
                         0,
                         $e
                     );
@@ -77,9 +79,30 @@ final class DataConverter
             }
         }
 
-        $this->cache[$column->flatPath()] = null;
+        $this->cache[$flatPath] = null;
 
         return $data;
+    }
+
+    public function resolveConverter(FlatColumn $column) : ?Converter
+    {
+        $flatPath = $column->flatPath();
+
+        if (\array_key_exists($flatPath, $this->cache)) {
+            return $this->cache[$flatPath];
+        }
+
+        foreach ($this->converters as $converter) {
+            if ($converter->isFor($column, $this->options)) {
+                $this->cache[$flatPath] = $converter;
+
+                return $converter;
+            }
+        }
+
+        $this->cache[$flatPath] = null;
+
+        return null;
     }
 
     public function toParquetType(FlatColumn $column, mixed $data) : mixed
@@ -88,23 +111,25 @@ final class DataConverter
             return null;
         }
 
-        if (\array_key_exists($column->flatPath(), $this->cache)) {
-            if ($this->cache[$column->flatPath()] === null) {
+        $flatPath = $column->flatPath();
+
+        if (\array_key_exists($flatPath, $this->cache)) {
+            if ($this->cache[$flatPath] === null) {
                 return $data;
             }
 
-            return $this->cache[$column->flatPath()]->toParquetType($data);
+            return $this->cache[$flatPath]->toParquetType($data);
         }
 
         foreach ($this->converters as $converter) {
             if ($converter->isFor($column, $this->options)) {
-                $this->cache[$column->flatPath()] = $converter;
+                $this->cache[$flatPath] = $converter;
 
                 return $converter->toParquetType($data);
             }
         }
 
-        $this->cache[$column->flatPath()] = null;
+        $this->cache[$flatPath] = null;
 
         return $data;
     }
