@@ -7,15 +7,15 @@ seo_description: >
 
 # Installation
 
-- [⬅️️ Back](introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 
 [TOC]
 
 ## Installation Methods
 
-- [Docker](installation/docker.md)
-- [PHAR with PHIVE](installation/phive.md)
-- [Quick Start](quick-start.md)
+- [Docker](/documentation/installation/docker.md)
+- [PHAR with PHIVE](/documentation/installation/phive.md)
+- [Quick Start](/documentation/quick-start.md)
 
 ## Composer
 
