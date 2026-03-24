@@ -5,35 +5,20 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use function Flow\Filesystem\DSL\path;
-use function Flow\Types\DSL\type_integer;
-use Composer\InstalledVersions;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
-use Flow\Parquet\Dremel\DremelShredder;
-use Flow\Parquet\Dremel\Validator\{ColumnDataValidator, DisabledValidator};
+use Flow\Parquet\Engine\{AdaptiveParquetEngine, ArrowParquetEngine, PhpParquetEngine};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\{Compressions,
-    Metadata,
-    RowGroups,
-    Schema
-};
-use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\Thrift\{CompactProtocol, PhpFileStream};
-use Flow\Parquet\Writer\RowGroupBuilder;
+use Flow\Parquet\ParquetFile\{Compressions, Schema};
 
 final class Writer
 {
-    private int $fileOffset = 0;
-
-    private ?Metadata $metadata = null;
-
-    private ?RowGroupBuilder $rowGroupBuilder = null;
-
-    private ?DestinationStream $stream = null;
+    private bool $isOpen = false;
 
     public function __construct(
         private readonly Compressions $compression = Compressions::SNAPPY,
         private readonly Options $options = new Options(),
+        private readonly ParquetEngine $engine = new AdaptiveParquetEngine(),
     ) {
         switch ($this->compression) {
             case Compressions::UNCOMPRESSED:
@@ -50,6 +35,16 @@ final class Writer
         }
     }
 
+    public static function arrow(Compressions $compression = Compressions::SNAPPY, Options $options = new Options()) : self
+    {
+        return new self($compression, $options, new ArrowParquetEngine());
+    }
+
+    public static function php(Compressions $compression = Compressions::SNAPPY, Options $options = new Options()) : self
+    {
+        return new self($compression, $options, new PhpParquetEngine());
+    }
+
     public function __destruct()
     {
         if ($this->isOpen()) {
@@ -63,45 +58,13 @@ final class Writer
             throw new RuntimeException('Writer is not open');
         }
 
-        if (!$this->rowGroupBuilder()->isEmpty()) {
-            $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);
-            $this->stream()->append($rowGroupContainer->binaryBuffer);
-            $this->metadata()->rowGroups()->add($rowGroupContainer->rowGroup);
-            $this->fileOffset += \strlen($rowGroupContainer->binaryBuffer);
-        }
-
-        $this->rowGroupBuilder = null;
-
-        $metadataHandle = \fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
-
-        if ($metadataHandle === false) {
-            throw new RuntimeException('Cannot open temporary stream');
-        }
-
-        $this->metadata()->toThrift()->write(new CompactProtocol(new PhpFileStream($metadataHandle)));
-        $metadata = \stream_get_contents($metadataHandle, offset: 0);
-
-        if ($metadata === false) {
-            throw new RuntimeException('Cannot read metadata from temporary stream');
-        }
-
-        $this->stream()->append($metadata);
-        \fclose($metadataHandle);
-
-        $size = \strlen($metadata);
-
-        $this->stream()->append(\pack('l', $size));
-        $this->stream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);
-
-        $this->stream()->close();
-
-        $this->stream = null;
-        $this->fileOffset = 0;
+        $this->engine->closeWrite();
+        $this->isOpen = false;
     }
 
     public function isOpen() : bool
     {
-        return $this->stream !== null;
+        return $this->isOpen;
     }
 
     public function open(string $path, Schema $schema) : void
@@ -110,152 +73,64 @@ final class Writer
             throw new RuntimeException('Writer is already open');
         }
 
-        // This will be later replaced with append
         if (\file_exists($path)) {
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $stream = NativeLocalDestinationStream::openBlank(path($path));
-
-        $this->stream = $stream;
-        $this->stream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);
-        $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
-
-        $this->initMetadata($schema);
-        $this->initGroupBuilder($schema);
+        $this->engine->openForWrite(
+            NativeLocalDestinationStream::openBlank(path($path)),
+            $schema,
+            $this->compression,
+            $this->options,
+        );
+        $this->isOpen = true;
     }
 
-    /**
-     * Opens a writer for an existing stream.
-     */
     public function openForStream(DestinationStream $stream, Schema $schema) : void
     {
-        $this->stream = $stream;
-
-        $this->stream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);
-        $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
-
-        $this->initMetadata($schema);
-
-        $this->initGroupBuilder($schema);
+        $this->engine->openForWrite($stream, $schema, $this->compression, $this->options);
+        $this->isOpen = true;
     }
 
     /**
-     * Create new parquet file, write rows, write metadata and close the file.
-     *
      * @param iterable<array<string, mixed>> $rows
      */
     public function write(string $path, Schema $schema, iterable $rows) : void
     {
-        $this->open($path, $schema);
+        if (\file_exists($path)) {
+            throw new InvalidArgumentException("File {$path} already exists");
+        }
 
-        $this->writeBatch($rows);
-
-        $this->close();
+        $this->engine->writeRows(
+            NativeLocalDestinationStream::openBlank(path($path)),
+            $schema,
+            $this->compression,
+            $this->options,
+            $rows,
+        );
     }
 
     /**
-     * Write a batch of rows into a parquet file.
-     * Before using this method, you should call open() or openForStream() method to open the writer.
-     * Once all rows are written, you should call close() method to close the writer.
-     *
      * @param iterable<array<string, mixed>> $rows
      */
     public function writeBatch(iterable $rows) : void
     {
-        if (\is_array($rows)) {
-            $this->rowGroupBuilder()->addRows($rows);
-
-            return;
-        }
-
-        foreach ($rows as $row) {
-            $this->writeRow($row);
-        }
+        $this->engine->writeBatch($rows);
     }
 
     /**
-     * Write a single row into a parquet file.
-     * Before using this method, you should call open() or openForStream() method to open the writer.
-     * Once all rows are written, you should call close() method to close the writer.
-     *
      * @param array<string, mixed> $row
      */
     public function writeRow(array $row) : void
     {
-        $this->rowGroupBuilder()->addRow($row);
-        $interval = type_integer()->assert($this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL));
-
-        if (($this->rowGroupBuilder()->rowsCount() % $interval === 0) && $this->rowGroupBuilder()->isFull()) {
-            $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);
-            $this->stream()->append($rowGroupContainer->binaryBuffer);
-            $this->metadata()->rowGroups()->add($rowGroupContainer->rowGroup);
-            $this->fileOffset += \strlen($rowGroupContainer->binaryBuffer);
-        }
+        $this->engine->writeRow($row);
     }
 
     /**
-     * Create new parquet file directly in stream, write rows, write metadata and close the file.
-     *
      * @param iterable<array<string, mixed>> $rows
      */
-    public function writeStream(DestinationStream $resource, Schema $schema, iterable $rows) : void
+    public function writeStream(DestinationStream $stream, Schema $schema, iterable $rows) : void
     {
-        $this->openForStream($resource, $schema);
-
-        $this->writeBatch($rows);
-
-        $this->close();
-    }
-
-    private function initGroupBuilder(Schema $schema) : void
-    {
-        if ($this->rowGroupBuilder === null) {
-            $dataConverter = DataConverter::initialize($this->options);
-            $validator = $this->options->getBool(Option::VALIDATE_DATA)
-                ? new ColumnDataValidator()
-                : new DisabledValidator();
-
-            $this->rowGroupBuilder = new RowGroupBuilder(
-                $schema,
-                $this->compression,
-                $this->options,
-                new DremelShredder($validator, $dataConverter),
-            );
-        } else {
-            throw new RuntimeException('RowGroupBuilder is already initialized, please close the writer first before initializing a new RowGroupBuilder');
-        }
-    }
-
-    private function initMetadata(Schema $schema) : void
-    {
-        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, $this->options->getInt(Option::WRITER_VERSION), 'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version']));
-    }
-
-    private function metadata() : Metadata
-    {
-        if ($this->metadata === null) {
-            throw new RuntimeException('Writer is not open');
-        }
-
-        return $this->metadata;
-    }
-
-    private function rowGroupBuilder() : RowGroupBuilder
-    {
-        if ($this->rowGroupBuilder === null) {
-            throw new RuntimeException('Writer is not open');
-        }
-
-        return $this->rowGroupBuilder;
-    }
-
-    private function stream() : DestinationStream
-    {
-        if ($this->stream === null) {
-            throw new RuntimeException('Writer is not open');
-        }
-
-        return $this->stream;
+        $this->engine->writeRows($stream, $schema, $this->compression, $this->options, $rows);
     }
 }

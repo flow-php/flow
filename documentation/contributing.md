@@ -109,4 +109,7 @@ It's mandatory to follow all of them without any exceptions unless explicitly ov
 - [Setup development environment](/documentation/contributing/environment.md)
   - [Nix Shell](/documentation/contributing/nix.md)
 - [Development Guidelines](/documentation/contributing/guidelines.md)
-- [WASM Build](/documentation/contributing/wasm.md)
+- Extension Development
+  - [Rust - Arrow Extension](/documentation/contributing/rust.md)
+  - [C - pg-query Extension](/documentation/contributing/c.md)
+  - [WASM - Interactive Playground](/documentation/contributing/wasm.md)

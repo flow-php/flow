@@ -1,0 +1,84 @@
+name: Arrow Extension
+
+on:
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+jobs:
+  build:
+    name: Build and Test Extension
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest']
+        php: ['8.3', '8.4', '8.5']
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Setup PHP Environment
+        uses: ./.github/actions/setup-php-env
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: locked
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
+          tools: 'composer:v2, php-config'
+          install-dependencies: 'false'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src/extension/arrow-ext/target
+          key: ${{ runner.os }}-php${{ matrix.php }}-cargo-${{ hashFiles('src/extension/arrow-ext/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php${{ matrix.php }}-cargo-
+
+      - name: Install build dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang libclang-dev
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install llvm
+          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> $GITHUB_ENV
+
+      - name: Set LIBCLANG_PATH (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          echo "LIBCLANG_PATH=$(llvm-config --libdir)" >> $GITHUB_ENV
+
+      - name: Build extension
+        working-directory: src/extension/arrow-ext
+        run: make build
+
+      - name: Run PHPT tests
+        working-directory: src/extension/arrow-ext
+        run: make test
+
+      - name: Install extension and verify
+        working-directory: src/extension/arrow-ext
+        run: |
+          EXT_DIR=$(php -r 'echo ini_get("extension_dir");')
+          sudo cp ext/modules/arrow.so "$EXT_DIR/"
+          echo "extension=arrow.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
+          php -m | grep arrow
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Run Parquet Integration Tests with Arrow
+        run: tools/phpunit/vendor/bin/phpunit --testsuite lib-parquet-integration --group apache-parquet-testing

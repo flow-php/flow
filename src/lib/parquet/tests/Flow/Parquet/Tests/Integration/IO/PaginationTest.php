@@ -6,82 +6,98 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use function Flow\ETL\DSL\generate_random_int;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\{Option, Options, Reader, Writer};
+use Flow\Parquet\{Option, Options, ParquetEngine, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 use Flow\Parquet\ParquetFile\Schema\{ListElement, MapKey, MapValue};
-use PHPUnit\Framework\Attributes\TestWith;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-final class PaginationTest extends TestCase
+class PaginationTest extends ParquetIntegrationTestCase
 {
-    public function test_reading_last_100_rows() : void
+    public static function engine_with_offset_provider() : \Generator
+    {
+        $cases = [
+            [6000, 10, 0],
+            [4900, 100, 100],
+            [0, null, 5000],
+            [4999, 2, 1],
+            [0, 2, 2],
+        ];
+
+        foreach (self::engine_provider() as $engineName => $engineArgs) {
+            foreach ($cases as $case) {
+                yield $engineName . ' offset ' . $case[0] . ' limit ' . ($case[1] ?? 'null') => [$engineArgs[0], $case[0], $case[1], $case[2]];
+            }
+        }
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_reading_last_100_rows(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
-        $totalRows = (new Reader())->read($path)->metadata()->rowsNumber();
+        $totalRows = (new Reader(engine: $engine))->read($path)->metadata()->rowsNumber();
 
-        self::assertEquals(
+        static::assertEquals(
             \array_merge(
                 ...\array_map(
                     static fn (int $i) : array => [['id' => $i]],
                     \range($totalRows - 100, $totalRows - 1)
                 )
             ),
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: $totalRows - 100))
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values(['id'], offset: $totalRows - 100))
         );
     }
 
-    #[TestWith([6000, 10, 0])]
-    #[TestWith([4900, 100, 100])]
-    #[TestWith([0, null, 5000])]
-    #[TestWith([4999, 2, 1])]
-    #[TestWith([0, 2, 2])]
-    public function test_setting_offset_larger_than_file(int $offset, ?int $limit, int $results) : void
+    #[DataProvider('engine_with_offset_provider')]
+    public function test_setting_offset_larger_than_file(ParquetEngine $engine, int $offset, ?int $limit, int $results) : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
-        self::assertCount(
+        static::assertCount(
             $results,
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: $offset, limit: $limit))
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values(['id'], offset: $offset, limit: $limit))
         );
     }
 
-    public function test_setting_setting_limit_to_negative() : void
+    #[DataProvider('engine_provider')]
+    public function test_setting_setting_limit_to_negative(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Limit must be greater than 0');
 
-        \iterator_to_array((new Reader())->read($path)->values(['id'], limit: -2));
+        \iterator_to_array((new Reader(engine: $engine))->read($path)->values(['id'], limit: -2));
     }
 
-    public function test_setting_setting_offset_to_negative() : void
+    #[DataProvider('engine_provider')]
+    public function test_setting_setting_offset_to_negative(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');
 
-        \iterator_to_array((new Reader())->read($path)->values(['id'], offset: -2, limit: 2));
+        \iterator_to_array((new Reader(engine: $engine))->read($path)->values(['id'], offset: -2, limit: 2));
     }
 
-    public function test_simple_pagination_on_small_row_group_size() : void
+    #[DataProvider('engine_provider')]
+    public function test_simple_pagination_on_small_row_group_size(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         // Uncomment only to apply changes to the dataset
         // $this->generateDataset($path);
 
-        self::assertEquals(
+        static::assertEquals(
             \array_merge(
                 ...\array_map(
                     static fn (int $i) : array => [['id' => $i]],
                     \range(1020, 1029)
                 )
             ),
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 1020, limit: 10))
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values(['id'], offset: 1020, limit: 10))
         );
     }
 

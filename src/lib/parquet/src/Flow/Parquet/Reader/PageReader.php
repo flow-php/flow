@@ -40,7 +40,8 @@ final readonly class PageReader
                     ->decompress(
                         /** @phpstan-ignore-next-line */
                         \fread($stream, $pageHeader->compressedPageSize()),
-                        $codec
+                        $codec,
+                        $pageHeader->uncompressedPageSize()
                     );
 
                 /** @phpstan-ignore-next-line  */
@@ -61,7 +62,8 @@ final readonly class PageReader
                     ->decompress(
                         /** @phpstan-ignore-next-line */
                         \fread($stream, $pageHeader->compressedPageSize() - $levelsLength),
-                        $codec
+                        $codec,
+                        $pageHeader->uncompressedPageSize() - $levelsLength
                     );
 
                 return (new ColumnDataDecoder($this->byteOrder))
@@ -88,7 +90,8 @@ final readonly class PageReader
                     ->decompress(
                         /** @phpstan-ignore-next-line */
                         $pageHeader->compressedPageSize() === 0 ? '' : \fread($stream, $pageHeader->compressedPageSize()),
-                        $codec
+                        $codec,
+                        $pageHeader->uncompressedPageSize()
                     ),
                 $column,
                 $pageHeader->dictionaryPageHeader()

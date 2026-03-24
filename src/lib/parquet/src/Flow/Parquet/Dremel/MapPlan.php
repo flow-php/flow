@@ -20,7 +20,7 @@ final readonly class MapPlan
         public string $childName,
         public bool $isRequired,
         public FlatPlan $keyPlan,
-        public FlatPlan|StructPlan|ListPlan|self $valuePlan,
+        public FlatPlan|StructPlan|ListPlan|self|null $valuePlan,
         public array $optionalKey,
         public ?Column $valueColumn = null,
     ) {

@@ -25,7 +25,7 @@ final readonly class Codec
             Compressions::BROTLI => \brotli_compress($data, $this->options->getInt(Option::BROTLI_COMPRESSION_LEVEL)),
             Compressions::GZIP => \gzencode($data, $this->options->getInt(Option::GZIP_COMPRESSION_LEVEL)),
             Compressions::LZ4 => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
-            Compressions::LZ4_RAW => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
+            Compressions::LZ4_RAW => \substr((string) \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)), 4),
             Compressions::ZSTD => \zstd_compress($data, $this->options->getInt(Option::ZSTD_COMPRESSION_LEVEL)),
             default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet'),
         };
@@ -37,7 +37,7 @@ final readonly class Codec
         return $result;
     }
 
-    public function decompress(string $data, Compressions $compression) : string
+    public function decompress(string $data, Compressions $compression, ?int $uncompressedSize = null) : string
     {
         /** @var false|string $result */
         $result = match ($compression) {
@@ -45,8 +45,8 @@ final readonly class Codec
             Compressions::SNAPPY => \snappy_uncompress($data),
             Compressions::BROTLI => \brotli_uncompress($data),
             Compressions::GZIP => \gzdecode($data),
-            Compressions::LZ4 => \lz4_uncompress($data),
-            Compressions::LZ4_RAW => \lz4_uncompress($data),
+            Compressions::LZ4 => @\lz4_uncompress($data),
+            Compressions::LZ4_RAW => @\lz4_uncompress(\pack('V', $uncompressedSize ?? \strlen($data)) . $data),
             Compressions::ZSTD => \zstd_uncompress($data),
             default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet'),
         };

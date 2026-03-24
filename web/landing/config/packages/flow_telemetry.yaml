@@ -37,7 +37,7 @@ flow_telemetry:
         otlp:
           transport:
             type: curl
-            endpoint: "http://localhost:4318"
+            endpoint: "http://127.0.0.1:4318"
             timeout: 30
             serializer:
               type: json

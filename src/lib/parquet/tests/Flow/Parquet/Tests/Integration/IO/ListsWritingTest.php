@@ -6,12 +6,12 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use function Flow\ETL\DSL\{generate_random_int, generate_random_string};
 use Faker\Factory;
-use Flow\Parquet\{Consts, Reader, Writer};
+use Flow\Parquet\{Consts, ParquetEngine, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-final class ListsWritingTest extends TestCase
+class ListsWritingTest extends ParquetIntegrationTestCase
 {
     protected function setUp() : void
     {
@@ -20,11 +20,12 @@ final class ListsWritingTest extends TestCase
         }
     }
 
-    public function test_writing_empty_lists_of_ints() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_empty_lists_of_ints(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -35,17 +36,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_list_of_ints() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_list_of_ints(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
@@ -57,17 +59,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_list_of_strings() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_list_of_strings(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_strings', ListElement::string()));
 
         $faker = Factory::create();
@@ -79,17 +82,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_list_of_structures() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_list_of_structures(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(
             NestedColumn::list('list_of_structs', ListElement::structure(
                 [
@@ -111,17 +115,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_list_with_nullable_elements() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_list_with_nullable_elements(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
@@ -135,17 +140,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_list_with_nullable_list_values() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_list_with_nullable_list_values(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
@@ -159,17 +165,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_nullable_list_of_ints() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_nullable_list_of_ints(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
@@ -183,17 +190,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_nullable_list_of_structures() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_nullable_list_of_structures(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(
             NestedColumn::list(
                 'list_of_structs',
@@ -220,17 +228,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_nullable_list_of_structures_with_required_fields() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_nullable_list_of_structures_with_required_fields(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(
             NestedColumn::list(
                 'list_of_structs',
@@ -254,17 +263,18 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_nullable_lists_of_ints() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_nullable_lists_of_ints(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -275,9 +285,9 @@ final class ListsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 }

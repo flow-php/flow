@@ -190,11 +190,14 @@ final class SchemaConverter
                 throw new RuntimeException('Flow expects map key type to be string or integer type.');
             }
 
+            $mapValueColumn = $column->getMapValueColumn();
+            $valueType = $mapValueColumn !== null ? $this->parquetToFlowType($mapValueColumn) : type_optional(type_string());
+
             return map_schema(
                 $column->name(),
                 type_map(
                     $keyType,
-                    $this->parquetToFlowType($column->getMapValueColumn()),
+                    $valueType,
                 ),
                 $nullable
             );
@@ -268,9 +271,12 @@ final class SchemaConverter
                 throw new RuntimeException('Flow expects map key type to be string or integer type.');
             }
 
+            $mapValueColumn = $column->getMapValueColumn();
+            $valueType = $mapValueColumn !== null ? $this->parquetToFlowType($mapValueColumn) : type_optional(type_string());
+
             return $nullable
-                ? type_optional(type_map($keyType, $this->parquetToFlowType($column->getMapValueColumn())))
-                : type_map($keyType, $this->parquetToFlowType($column->getMapValueColumn()));
+                ? type_optional(type_map($keyType, $valueType))
+                : type_map($keyType, $valueType);
         }
 
         $elements = [];

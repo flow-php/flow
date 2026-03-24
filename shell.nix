@@ -4,10 +4,16 @@
     with-xdebug ? false,
     with-pcov ? !with-blackfire,
     with-pg-query-ext ? true,
+    with-arrow-ext ? true,
+    with-c ? false,
+    with-rust ? false,
     with-terraform ? false,
     with-wasm ? false,
-    with-grpc ? true,
+    with-grpc ? false
 }:
+
+assert (!(with-rust && with-arrow-ext)) || builtins.throw "Cannot use --arg with-rust true and --arg with-arrow-ext true together. Use: --arg with-arrow-ext false --arg with-rust true";
+assert (!(with-c && with-pg-query-ext)) || builtins.throw "Cannot use --arg with-c true and --arg with-pg-query-ext true together. Use: --arg with-pg-query-ext false --arg with-c true";
 
 let
     nixpkgs = fetchTarball {
@@ -34,10 +40,12 @@ let
     php-lz4 = pkgs.callPackage ./.nix/pkgs/php-lz4/package.nix { php = base-php; };
     php-zstd = pkgs.callPackage ./.nix/pkgs/php-zstd/package.nix { php = base-php; };
     php-pg-query-ext = pkgs.callPackage ./.nix/pkgs/php-pg-query-ext/package.nix { php = base-php; };
+    php-arrow-ext = pkgs.callPackage ./.nix/pkgs/php-arrow-ext/package.nix { php = base-php; };
 
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;
-        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext with-pcov with-xdebug with-blackfire with-pg-query-ext with-grpc;
+        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext php-arrow-ext
+                with-pcov with-xdebug with-blackfire with-pg-query-ext with-arrow-ext with-grpc;
     };
 in
 pkgs.mkShell {
@@ -67,7 +75,7 @@ pkgs.mkShell {
             pkgs.terraform
             pkgs.nodejs_24
         ]
-        ++ pkgs.lib.optionals with-pg-query-ext [
+        ++ pkgs.lib.optionals with-c [
             # C development tools for pg-query-ext extension development
             pkgs.gcc
             pkgs.gnumake
@@ -79,6 +87,17 @@ pkgs.mkShell {
             pkgs.git
             php.unwrapped.dev
         ]
+        ++ pkgs.lib.optionals with-rust [
+            # Rust development tools for arrow-ext extension development
+            pkgs.rustc
+            pkgs.cargo
+            pkgs.rustfmt
+            pkgs.clippy
+            pkgs.clang
+            pkgs.llvmPackages.libclang
+            pkgs.pkg-config
+            php.unwrapped.dev
+        ]
     ;
 
     shellHook = ''
@@ -88,9 +107,16 @@ pkgs.mkShell {
         export STARSHIP_CONFIG="$PWD/.nix/shell/starship.toml.dist"
     fi
 
-    ${pkgs.lib.optionalString with-pg-query-ext ''
-    # Setup for pg-query-ext extension development
-    export PHP_CONFIG="${php}/bin/php-config"
+    ${pkgs.lib.optionalString with-c ''
+    # Setup for pg-query-ext C extension development
+    export PHP_CONFIG="${php.unwrapped.dev}/bin/php-config"
+    export PHPIZE="${php.unwrapped.dev}/bin/phpize"
+    ''}
+
+    ${pkgs.lib.optionalString with-rust ''
+    # Setup for arrow-ext Rust extension development
+    export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib"
+    export PHP_CONFIG="${php.unwrapped.dev}/bin/php-config"
     export PHPIZE="${php.unwrapped.dev}/bin/phpize"
     ''}
 

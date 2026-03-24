@@ -24,7 +24,7 @@ final readonly class Github
 
     public function contributors() : array
     {
-        if ($this->parameters->get('kernel.environment') === 'test') {
+        if (in_array($this->parameters->get('kernel.environment'), ['test', 'dev'], true)) {
             return [
                 [
                     'login' => 'norberttech',
@@ -63,7 +63,7 @@ final readonly class Github
                 ->run();
 
             return $memory->dump();
-        } catch (\Exception) {
+        } catch (\Throwable) {
             return [];
         }
     }

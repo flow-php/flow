@@ -1,0 +1,20 @@
+[package]
+name = "arrow"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+ext-php-rs = "0.14"
+parquet = { version = "58", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli"] }
+arrow-array = "58"
+arrow-buffer = "58"
+arrow-schema = { version = "58", features = ["canonical_extension_types"] }
+bytes = "1"
+
+[[example]]
+name = "generate_fixtures"
+path = "examples/generate_fixtures.rs"

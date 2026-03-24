@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\Reader;
-use PHPUnit\Framework\TestCase;
+use Flow\Parquet\{ParquetEngine, Reader};
+use PHPUnit\Framework\Attributes\DataProvider;
 
-final class EdgeCasesReadingTest extends TestCase
+class EdgeCasesReadingTest extends ParquetIntegrationTestCase
 {
-    public function test_nonullable_impala() : void
+    #[DataProvider('engine_provider')]
+    public function test_nonullable_impala(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/Fixtures/EdgeCases/nonnullable.impala.parquet';
 
-        $reader = (new Reader())->read($path);
+        $reader = (new Reader(engine: $engine))->read($path);
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     'ID' => 8,
@@ -62,7 +63,7 @@ final class EdgeCasesReadingTest extends TestCase
 
         $path = __DIR__ . '/Fixtures/EdgeCases/datapage_v2.snappy.parquet';
 
-        $reader = (new Reader())->read($path);
+        $reader = Reader::php()->read($path);
 
         $rows = [];
 
@@ -70,7 +71,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['emptylist' => null],
             ],
@@ -78,11 +79,12 @@ final class EdgeCasesReadingTest extends TestCase
         );
     }
 
-    public function test_read_null_list() : void
+    #[DataProvider('engine_provider')]
+    public function test_read_null_list(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/Fixtures/EdgeCases/null_list.parquet';
 
-        $reader = (new Reader())->read($path);
+        $reader = (new Reader(engine: $engine))->read($path);
 
         $rows = [];
 
@@ -90,7 +92,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['emptylist' => []],
             ],

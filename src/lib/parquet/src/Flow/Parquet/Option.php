@@ -7,12 +7,34 @@ namespace Flow\Parquet;
 enum Option
 {
     /**
+     * When using the Arrow engine, controls how many rows are returned per internal read call.
+     * Reduces peak memory usage for large row groups by streaming batches of this size.
+     *
+     * Only affects the Arrow engine. Ignored by the PHP engine.
+     * Set to null to read entire row groups at once (maximum throughput).
+     *
+     * Default: 1024
+     */
+    case ARROW_BATCH_SIZE;
+
+    /**
+     * When using the Arrow engine, controls how many rows are buffered in PHP
+     * before sending them to the extension's writeBatch() in a single call.
+     * Larger values reduce call overhead but increase PHP memory usage.
+     *
+     * Only affects the Arrow engine. Ignored by the PHP engine.
+     *
+     * Default: 1000
+     */
+    case ARROW_WRITE_BATCH_SIZE;
+    /**
      * Compression level for Brotli codec. This option is going to be passed to gzcompress function when Compression is set to Brotli.
      * The higher the quality, the slower the compression.
      *
      * Default value is 11 (BROTLI_COMPRESS_LEVEL_DEFAULT)
      */
     case BROTLI_COMPRESSION_LEVEL;
+
     /**
      * Some parquet writers might not properly use LogicalTyp for storing Strings or JSON's.
      * This option would tell the reader to treat all BYTE_ARRAY's as UTF-8 strings.

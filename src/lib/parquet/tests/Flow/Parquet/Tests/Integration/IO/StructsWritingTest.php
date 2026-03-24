@@ -6,12 +6,12 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use function Flow\ETL\DSL\{generate_random_int, generate_random_string};
 use Faker\Factory;
-use Flow\Parquet\{Consts, Reader, Writer};
+use Flow\Parquet\{Consts, ParquetEngine, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-final class StructsWritingTest extends TestCase
+class StructsWritingTest extends ParquetIntegrationTestCase
 {
     protected function setUp() : void
     {
@@ -20,11 +20,12 @@ final class StructsWritingTest extends TestCase
         }
     }
 
-    public function test_writing_flat_nullable_structure() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_flat_nullable_structure(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::struct('struct', [
             FlatColumn::int64('int64'),
             FlatColumn::boolean('boolean'),
@@ -58,17 +59,18 @@ final class StructsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_flat_structure() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_flat_structure(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::struct('struct', [
             FlatColumn::int64('int64'),
             FlatColumn::boolean('boolean'),
@@ -100,17 +102,18 @@ final class StructsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 
-    public function test_writing_flat_structure_with_nullable_elements() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_flat_structure_with_nullable_elements(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::struct('struct', [
             FlatColumn::int64('int64'),
             FlatColumn::boolean('boolean'),
@@ -146,9 +149,9 @@ final class StructsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
     }
 }

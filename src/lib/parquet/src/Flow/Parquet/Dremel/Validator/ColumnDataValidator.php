@@ -56,9 +56,14 @@ final class ColumnDataValidator implements Validator
                 throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
             }
 
+            $valueColumn = $column->getMapValueColumn();
+
             foreach ($data as $key => $value) {
                 $this->validate($column->getMapKeyColumn(), $key);
-                $this->validate($column->getMapValueColumn(), $value);
+
+                if ($valueColumn !== null) {
+                    $this->validate($valueColumn, $value);
+                }
             }
 
             return;

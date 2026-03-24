@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Flow\Parquet\{ParquetEngine, Reader};
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
-use Flow\Parquet\Reader;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-final class SchemaReadingTest extends TestCase
+class SchemaReadingTest extends ParquetIntegrationTestCase
 {
-    public function test_reading_lists_schema_ddl() : void
+    #[DataProvider('engine_provider')]
+    public function test_reading_lists_schema_ddl(ParquetEngine $engine) : void
     {
-        $reader = new Reader();
+        $reader = new Reader(engine: $engine);
 
         $schema = new Schema(
             NestedColumn::create('schema', [
@@ -37,15 +38,16 @@ final class SchemaReadingTest extends TestCase
             ])
         );
 
-        self::assertSame(
+        static::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/lists.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL(),
         );
     }
 
-    public function test_reading_maps_schema_ddl() : void
+    #[DataProvider('engine_provider')]
+    public function test_reading_maps_schema_ddl(ParquetEngine $engine) : void
     {
-        $reader = new Reader();
+        $reader = new Reader(engine: $engine);
 
         $schema = Schema::with(
             NestedColumn::map('map', MapKey::string(), MapValue::int32()),
@@ -72,15 +74,16 @@ final class SchemaReadingTest extends TestCase
             ])),
         );
 
-        self::assertSame(
+        static::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/maps.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL(),
         );
     }
 
-    public function test_reading_primitives_schema_ddl() : void
+    #[DataProvider('engine_provider')]
+    public function test_reading_primitives_schema_ddl(ParquetEngine $engine) : void
     {
-        $reader = new Reader();
+        $reader = new Reader(engine: $engine);
 
         $schema = Schema::with(
             FlatColumn::int32('int32'),
@@ -111,24 +114,26 @@ final class SchemaReadingTest extends TestCase
             FlatColumn::decimal('decimal_nullable'),
         );
 
-        self::assertSame(
+        static::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/primitives.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );
     }
 
-    public function test_reading_statistics() : void
+    #[DataProvider('engine_provider')]
+    public function test_reading_statistics(ParquetEngine $engine) : void
     {
-        $metadata = (new Reader())->read(__DIR__ . '/Fixtures/primitives.parquet')->metadata();
+        $metadata = (new Reader(engine: $engine))->read(__DIR__ . '/Fixtures/primitives.parquet')->metadata();
 
         foreach ($metadata->columnChunks() as $chunk) {
-            self::assertInstanceOf(StatisticsReader::class, $chunk->statistics());
+            static::assertInstanceOf(StatisticsReader::class, $chunk->statistics());
         }
     }
 
-    public function test_reading_structs_schema_ddl() : void
+    #[DataProvider('engine_provider')]
+    public function test_reading_structs_schema_ddl(ParquetEngine $engine) : void
     {
-        $reader = new Reader();
+        $reader = new Reader(engine: $engine);
 
         $schema = Schema::with(
             NestedColumn::struct('struct_flat', [
@@ -225,7 +230,7 @@ final class SchemaReadingTest extends TestCase
             ])
         );
 
-        self::assertSame(
+        static::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/structs.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );

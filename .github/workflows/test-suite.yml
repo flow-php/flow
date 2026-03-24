@@ -45,6 +45,10 @@ jobs:
     uses: ./.github/workflows/job-pg-query-extension.yml
     secrets: inherit
 
+  arrow-extension:
+    uses: ./.github/workflows/job-arrow-extension.yml
+    secrets: inherit
+
   windows-tests:
     uses: ./.github/workflows/job-windows-tests.yml
 

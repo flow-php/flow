@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\{Decimal, Time, Timestamp};
-use Flow\Parquet\ThriftModel\{BsonType, DateType, DecimalType, EnumType, IntType, JsonType, ListType, MapType, MicroSeconds, MilliSeconds, NanoSeconds, NullType, StringType, TimeType, TimeUnit, TimestampType, UUIDType};
+use Flow\Parquet\ThriftModel\{BsonType, DateType, DecimalType, EnumType, Float16Type, IntType, JsonType, ListType, MapType, MicroSeconds, MilliSeconds, NanoSeconds, NullType, StringType, TimeType, TimeUnit, TimestampType, UUIDType};
 
 final readonly class LogicalType
 {
@@ -17,6 +16,8 @@ final readonly class LogicalType
     public const string DECIMAL = 'DECIMAL';
 
     public const string ENUM = 'ENUM';
+
+    public const string FLOAT16 = 'FLOAT16';
 
     public const string INTEGER = 'INTEGER';
 
@@ -64,7 +65,7 @@ final readonly class LogicalType
         return new self(self::ENUM);
     }
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType) : ?self
     {
         $name = null;
 
@@ -120,8 +121,12 @@ final readonly class LogicalType
             $name = self::UUID;
         }
 
+        if ($logicalType->FLOAT16 !== null) {
+            $name = self::FLOAT16;
+        }
+
         if (null === $name) {
-            throw new InvalidArgumentException('Unknown logical type');
+            return null;
         }
 
         return new self(
@@ -235,6 +240,7 @@ final readonly class LogicalType
             ]) : null,
             self::UNKNOWN => $this->is(self::UNKNOWN) ? new NullType() : null,
             self::UUID => $this->is(self::UUID) ? new UUIDType() : null,
+            self::FLOAT16 => $this->is(self::FLOAT16) ? new Float16Type() : null,
         ]);
     }
 }

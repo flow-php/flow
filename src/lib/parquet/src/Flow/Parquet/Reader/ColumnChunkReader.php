@@ -43,6 +43,17 @@ final readonly class ColumnChunkReader
         }
 
         if ($header->type()->isDictionaryPage()) {
+            // PARQUET-816: old parquet-mr writers set data_page_offset to the dictionary page
+            // and left dictionary_page_offset null, excluding the dictionary page header size
+            // from total_compressed_size. Extend the buffer with the missing bytes.
+            if ($columnChunk->dictionaryPageOffset() === null) {
+                /** @var int<1, max> $dictHeaderSize */
+                $dictHeaderSize = (int) \ftell($pageStream);
+                \fseek($pageStream, 0, \SEEK_END);
+                \fwrite($pageStream, $stream->read($dictHeaderSize, $columnChunk->pageOffset() + $columnChunk->totalCompressedSize()));
+                \fseek($pageStream, $dictHeaderSize);
+            }
+
             $dictionary = $this->pageReader->readDictionary(
                 $column,
                 $header,

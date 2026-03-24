@@ -103,6 +103,8 @@ jobs:
 
           - local_path: 'src/extension/pg-query-ext'
             split_repository: 'pg-query-ext'
+          - local_path: 'src/extension/arrow-ext'
+            split_repository: 'arrow-ext'
 
     steps:
       - uses: actions/checkout@v5
