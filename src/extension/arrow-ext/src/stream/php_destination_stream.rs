@@ -8,8 +8,9 @@ pub struct PhpDestinationStream {
     obj: ZBox<ZendObject>,
 }
 
-// SAFETY: PHP runs single-threaded (NTS). PhpDestinationStream is only used
-// on the PHP request thread. The parquet crate requires Send for
+// SAFETY: PhpDestinationStream wraps a PHP ZendObject that belongs to the
+// current request thread. In NTS mode PHP is single-threaded; in ZTS mode each
+// thread owns its own request context. The parquet crate requires Send+Sync for
 // ArrowWriter<W: Write> but never sends across threads in synchronous usage.
 unsafe impl Send for PhpDestinationStream {}
 unsafe impl Sync for PhpDestinationStream {}
@@ -37,6 +38,8 @@ impl Write for PhpDestinationStream {
             .try_call_method("append", vec![&data as &dyn IntoZvalDyn])
             .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to call append(): {:?}", e)))?;
 
+        // OutputStream::append() is all-or-nothing: it returns self on success
+        // or throws on failure (caught above). No partial write path exists.
         Ok(buf.len())
     }
 

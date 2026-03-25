@@ -13,8 +13,9 @@ struct PhpSourceStreamInner {
     len: u64,
 }
 
-// SAFETY: PHP runs single-threaded (NTS). PhpSourceStream is only used
-// on the PHP request thread. The parquet crate requires Send+Sync for
+// SAFETY: PhpSourceStream wraps a PHP ZendObject that belongs to the current
+// request thread. In NTS mode PHP is single-threaded; in ZTS mode each thread
+// owns its own request context. The parquet crate requires Send+Sync for
 // ChunkReader but never sends across threads in synchronous usage.
 unsafe impl Send for PhpSourceStreamInner {}
 unsafe impl Sync for PhpSourceStreamInner {}
@@ -67,7 +68,7 @@ impl ChunkReader for PhpSourceStream {
     fn get_read(&self, start: u64) -> parquet::errors::Result<Self::T> {
         let length = self.inner.len.saturating_sub(start) as usize;
         let bytes = self.get_bytes(start, length)?;
-        Ok(Cursor::new(bytes.to_vec()))
+        Ok(Cursor::new(bytes.into()))
     }
 
     fn get_bytes(&self, start: u64, length: usize) -> parquet::errors::Result<Bytes> {

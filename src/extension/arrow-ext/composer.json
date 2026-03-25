@@ -28,7 +28,7 @@
         "extension-name": "arrow",
         "build-path": "ext",
         "configure-options": [],
-        "support-zts": false,
+        "support-zts": true,
         "support-nts": true
     }
 }

@@ -55,8 +55,17 @@ class Block
             throw new RuntimeException('Block is full, space left: ' . $this->spaceLeft() . ' bytes, trying to append: ' . strlen($data) . ' bytes.');
         }
 
-        \fwrite($this->handle, $data);
-        $this->size += strlen($data);
+        try {
+            $written = \fwrite($this->handle, $data);
+        } catch (\TypeError) {
+            throw new RuntimeException('Failed to write to block, stream resource is invalid');
+        }
+
+        if ($written === false || $written !== \strlen($data)) {
+            throw new RuntimeException('Failed to write all bytes to block, expected ' . \strlen($data) . ' bytes, written: ' . ($written === false ? '0' : $written));
+        }
+
+        $this->size += $written;
     }
 
     /**

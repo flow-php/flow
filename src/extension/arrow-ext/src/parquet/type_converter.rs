@@ -751,7 +751,17 @@ macro_rules! build_int_array {
             if zv.is_null() {
                 builder.append_null();
             } else if let Some(v) = zv.long() {
-                builder.append_value(v as $cast_type);
+                let converted = <$cast_type>::try_from(v).map_err(|_| {
+                    format!(
+                        "Column '{}': value {} out of range for {} (valid range: {} to {})",
+                        $column_name,
+                        v,
+                        stringify!($cast_type),
+                        <$cast_type>::MIN,
+                        <$cast_type>::MAX
+                    )
+                })?;
+                builder.append_value(converted);
             } else {
                 return Err(format!(
                     "Column '{}': expected int, got {}",
@@ -771,7 +781,14 @@ macro_rules! build_float_array {
             if zv.is_null() {
                 builder.append_null();
             } else if let Some(v) = zv.double() {
-                builder.append_value(v as $cast_type);
+                let converted = v as $cast_type;
+                if converted.is_infinite() && !v.is_infinite() {
+                    return Err(format!(
+                        "Column '{}': value {} overflows {}",
+                        $column_name, v, stringify!($cast_type)
+                    ));
+                }
+                builder.append_value(converted);
             } else if let Some(v) = zv.long() {
                 builder.append_value(v as $cast_type);
             } else {
@@ -1003,7 +1020,13 @@ pub fn php_array_to_arrow(
                 if zv.is_null() {
                     builder.append_null();
                 } else if let Some(v) = zv.long() {
-                    builder.append_value(v as u64);
+                    let converted = u64::try_from(v).map_err(|_| {
+                        format!(
+                            "Column '{}': value {} out of range for u64 (valid range: {} to {})",
+                            column_name, v, u64::MIN, u64::MAX
+                        )
+                    })?;
+                    builder.append_value(converted);
                 } else if let Some(s) = zv.str() {
                     let parsed: u64 = s.parse().map_err(|e| {
                         format!("Column '{}': failed to parse '{}' as u64: {}", column_name, s, e)
