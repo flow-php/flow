@@ -34,11 +34,14 @@ composer require flow-php/etl-adapter-json:~--FLOW_PHP_VERSION--
 ```php
 <?php
 
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\{data_frame, to_output};
 
-$rows = (new Flow())
-    ->read(from_json(__DIR__ . '/../Fixtures/timezones.json', 5))
-    ->fetch()
+data_frame()
+    ->read(from_json(__DIR__ . '/data.json'))
+    ->collect()
+    ->write(to_output())
+    ->run();
 ```
 
 ## Loader - JsonLoader
@@ -46,23 +49,17 @@ $rows = (new Flow())
 ```php
 <?php
 
-use function Flow\ETL\Adapter\JSON\{to_json};
-use Flow\ETL\Flow;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\Adapter\JSON\to_json;
+use function Flow\ETL\DSL\{data_frame, from_array};
 
-(new Flow())
-    ->process(
-        new Rows(
-            ...\array_map(
-                fn (int $i) : Row => Row::create(
-                    new Row\Entry\IntegerEntry('id', $i),
-                    new Row\Entry\StringEntry('name', 'name_' . $i)
-                ),
-                \range(0, 10)
-            )
+data_frame()
+    ->read(from_array(
+        \array_map(
+            fn (int $i) : array => ['id' => $i, 'name' => 'name_' . $i],
+            \range(0, 10)
         )
-    )
+    ))
+    ->collect()
     ->write(to_json(\sys_get_temp_dir() . '/file.json'))
     ->run();
 ```
@@ -75,23 +72,17 @@ It is also possible to export the rows using the [json lines](https://jsonlines.
 ```php
 <?php
 
-use function Flow\ETL\Adapter\JSON\{to_json};
-use Flow\ETL\Flow;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\Adapter\JSON\to_json_lines;
+use function Flow\ETL\DSL\{data_frame, from_array};
 
-(new Flow())
-    ->process(
-        new Rows(
-            ...\array_map(
-                fn (int $i) : Row => Row::create(
-                    new Row\Entry\IntegerEntry('id', $i),
-                    new Row\Entry\StringEntry('name', 'name_' . $i)
-                ),
-                \range(0, 10)
-            )
+data_frame()
+    ->read(from_array(
+        \array_map(
+            fn (int $i) : array => ['id' => $i, 'name' => 'name_' . $i],
+            \range(0, 10)
         )
-    )
-    ->write(to_json(\sys_get_temp_dir() . '/file.jsonl')->asJsonl())
+    ))
+    ->collect()
+    ->write(to_json_lines(\sys_get_temp_dir() . '/file.jsonl'))
     ->run();
 ```
