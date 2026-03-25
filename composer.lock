@@ -267,16 +267,16 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "4.4.2",
+            "version": "4.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "476f7f0fa6ea4aa5364926db7fabdf6049075722"
+                "reference": "61e730f1658814821a85f2402c945f3883407dec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/476f7f0fa6ea4aa5364926db7fabdf6049075722",
-                "reference": "476f7f0fa6ea4aa5364926db7fabdf6049075722",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/61e730f1658814821a85f2402c945f3883407dec",
+                "reference": "61e730f1658814821a85f2402c945f3883407dec",
                 "shasum": ""
             },
             "require": {
@@ -353,7 +353,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.4.2"
+                "source": "https://github.com/doctrine/dbal/tree/4.4.3"
             },
             "funding": [
                 {
@@ -369,7 +369,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-26T12:12:19+00:00"
+            "time": "2026-03-20T08:52:12+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -712,16 +712,16 @@
         },
         {
             "name": "google/auth",
-            "version": "v1.50.0",
+            "version": "v1.50.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "e1c26a718198e16d8a3c69b1cae136b73f959b0f"
+                "reference": "870c17ee3a1d73338d39a9ffa77a700ba77f5a83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/e1c26a718198e16d8a3c69b1cae136b73f959b0f",
-                "reference": "e1c26a718198e16d8a3c69b1cae136b73f959b0f",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/870c17ee3a1d73338d39a9ffa77a700ba77f5a83",
+                "reference": "870c17ee3a1d73338d39a9ffa77a700ba77f5a83",
                 "shasum": ""
             },
             "require": {
@@ -731,7 +731,7 @@
                 "php": "^8.1",
                 "psr/cache": "^2.0||^3.0",
                 "psr/http-message": "^1.1||^2.0",
-                "psr/log": "^3.0"
+                "psr/log": "^2.0||^3.0"
             },
             "require-dev": {
                 "guzzlehttp/promises": "^2.0",
@@ -768,29 +768,29 @@
             "support": {
                 "docs": "https://cloud.google.com/php/docs/reference/auth/latest",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.50.0"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.50.1"
             },
-            "time": "2026-01-08T21:33:57+00:00"
+            "time": "2026-03-18T20:03:29+00:00"
         },
         {
             "name": "google/protobuf",
-            "version": "v4.33.5",
+            "version": "v4.33.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d"
+                "reference": "84b008c23915ed94536737eae46f41ba3bccfe67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
-                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/84b008c23915ed94536737eae46f41ba3bccfe67",
+                "reference": "84b008c23915ed94536737eae46f41ba3bccfe67",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1.0"
             },
             "require-dev": {
-                "phpunit/phpunit": ">=5.0.0 <8.5.27"
+                "phpunit/phpunit": ">=10.5.62 <11.0.0"
             },
             "suggest": {
                 "ext-bcmath": "Need to support JSON deserialization"
@@ -812,9 +812,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.5"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.6"
             },
-            "time": "2026-01-29T20:49:00+00:00"
+            "time": "2026-03-18T17:32:05+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -1027,16 +1027,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.8.0",
+            "version": "2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "21dc724a0583619cd1652f673303492272778051"
+                "reference": "7d0ed42f28e42d61352a7a79de682e5e67fec884"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/21dc724a0583619cd1652f673303492272778051",
-                "reference": "21dc724a0583619cd1652f673303492272778051",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/7d0ed42f28e42d61352a7a79de682e5e67fec884",
+                "reference": "7d0ed42f28e42d61352a7a79de682e5e67fec884",
                 "shasum": ""
             },
             "require": {
@@ -1052,6 +1052,7 @@
             "require-dev": {
                 "bamarni/composer-bin-plugin": "^1.8.2",
                 "http-interop/http-factory-tests": "0.9.0",
+                "jshttp/mime-db": "1.54.0.1",
                 "phpunit/phpunit": "^8.5.44 || ^9.6.25"
             },
             "suggest": {
@@ -1123,7 +1124,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.8.0"
+                "source": "https://github.com/guzzle/psr7/tree/2.9.0"
             },
             "funding": [
                 {
@@ -1139,7 +1140,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-08-23T21:21:41+00:00"
+            "time": "2026-03-10T16:41:02+00:00"
         },
         {
             "name": "halaxa/json-machine",
@@ -1308,16 +1309,16 @@
         },
         {
             "name": "open-telemetry/api",
-            "version": "1.8.0",
+            "version": "1.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/api.git",
-                "reference": "df5197c6fd0ddd8e9883b87de042d9341300e2ad"
+                "reference": "6f8d237ce2c304ca85f31970f788e7f074d147be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/df5197c6fd0ddd8e9883b87de042d9341300e2ad",
-                "reference": "df5197c6fd0ddd8e9883b87de042d9341300e2ad",
+                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/6f8d237ce2c304ca85f31970f788e7f074d147be",
+                "reference": "6f8d237ce2c304ca85f31970f788e7f074d147be",
                 "shasum": ""
             },
             "require": {
@@ -1374,20 +1375,20 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-21T04:14:03+00:00"
+            "time": "2026-02-25T13:24:05+00:00"
         },
         {
             "name": "open-telemetry/context",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/context.git",
-                "reference": "d4c4470b541ce72000d18c339cfee633e4c8e0cf"
+                "reference": "3c414b246e0dabb7d6145404e6a5e4536ca18d07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/d4c4470b541ce72000d18c339cfee633e4c8e0cf",
-                "reference": "d4c4470b541ce72000d18c339cfee633e4c8e0cf",
+                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/3c414b246e0dabb7d6145404e6a5e4536ca18d07",
+                "reference": "3c414b246e0dabb7d6145404e6a5e4536ca18d07",
                 "shasum": ""
             },
             "require": {
@@ -1429,11 +1430,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-19T00:05:49+00:00"
+            "time": "2025-10-19T06:44:33+00:00"
         },
         {
             "name": "openspout/openspout",
@@ -1875,16 +1876,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.49",
+            "version": "3.0.50",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "6233a1e12584754e6b5daa69fe1289b47775c1b9"
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/6233a1e12584754e6b5daa69fe1289b47775c1b9",
-                "reference": "6233a1e12584754e6b5daa69fe1289b47775c1b9",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
                 "shasum": ""
             },
             "require": {
@@ -1965,7 +1966,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.49"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.50"
             },
             "funding": [
                 {
@@ -1981,7 +1982,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-27T09:17:28+00:00"
+            "time": "2026-03-19T02:57:58+00:00"
         },
         {
             "name": "psr/cache",
@@ -5261,16 +5262,16 @@
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
-            "version": "1.8.0",
+            "version": "1.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/gen-otlp-protobuf.git",
-                "reference": "673af5b06545b513466081884b47ef15a536edde"
+                "reference": "a229cf161d42001d64c8f21e8f678581fe1c66b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/gen-otlp-protobuf/zipball/673af5b06545b513466081884b47ef15a536edde",
-                "reference": "673af5b06545b513466081884b47ef15a536edde",
+                "url": "https://api.github.com/repos/opentelemetry-php/gen-otlp-protobuf/zipball/a229cf161d42001d64c8f21e8f678581fe1c66b9",
+                "reference": "a229cf161d42001d64c8f21e8f678581fe1c66b9",
                 "shasum": ""
             },
             "require": {
@@ -5316,11 +5317,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-17T23:10:12+00:00"
+            "time": "2025-10-19T06:44:33+00:00"
         },
         {
             "name": "php-http/client-common",
@@ -6702,16 +6703,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.23.0",
+            "version": "v3.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "a64dc5d2cc7d6cafb9347f6cd802d0d06d0351c9"
+                "reference": "a6769aefb305efef849dc25c9fd1653358c148f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/a64dc5d2cc7d6cafb9347f6cd802d0d06d0351c9",
-                "reference": "a64dc5d2cc7d6cafb9347f6cd802d0d06d0351c9",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/a6769aefb305efef849dc25c9fd1653358c148f0",
+                "reference": "a6769aefb305efef849dc25c9fd1653358c148f0",
                 "shasum": ""
             },
             "require": {
@@ -6721,7 +6722,8 @@
                 "symfony/polyfill-mbstring": "^1.3"
             },
             "require-dev": {
-                "phpstan/phpstan": "^2.0",
+                "php-cs-fixer/shim": "^3.0@stable",
+                "phpstan/phpstan": "^2.0@stable",
                 "psr/container": "^1.0|^2.0",
                 "symfony/phpunit-bridge": "^5.4.9|^6.4|^7.0"
             },
@@ -6765,7 +6767,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.23.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.24.0"
             },
             "funding": [
                 {
@@ -6777,7 +6779,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-23T21:00:41+00:00"
+            "time": "2026-03-17T21:31:11+00:00"
         }
     ],
     "aliases": [],
