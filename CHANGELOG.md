@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-23
+## [Unreleased] - 2026-03-25
 
 ### Added
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **parquet fixed array length support** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +9,8 @@
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **Refactored binnary writter/reader** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2271](https://github.com/flow-php/flow/pull/2271) - **Documentation jsonl examples** - [@norberttech](https://github.com/norberttech)
+- [#2271](https://github.com/flow-php/flow/pull/2271) - **Playground json/json/doctrine examples** - [@norberttech](https://github.com/norberttech)
 - [#2267](https://github.com/flow-php/flow/pull/2267) - **Broken links on the installation docs.** - [@jaapio](https://github.com/jaapio)
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **improve parquet writer performance by 18%** - [@norberttech](https://github.com/norberttech)
 
