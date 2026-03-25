@@ -218,11 +218,18 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(FlatColumn::decimal('decimal', $precision, $scale));
 
         $inputData = [];
+        $intDigits = \max(0, \min($precision - $scale, 9));
+        $fracDigits = \min($scale, 6);
+        $intMax = $intDigits > 0 ? (int) (10 ** $intDigits) - 1 : 0;
+        $fracMax = $fracDigits > 0 ? (int) (10 ** $fracDigits) - 1 : 0;
 
         for ($i = 0; $i < 50; $i++) {
-            $inputData[] = [
-                'decimal' => \round(\mt_rand(0, (int) ($maxValue * 100)) / 100, $scale),
-            ];
+            $intPart = $intMax > 0 ? \mt_rand(0, $intMax) : 0;
+            $fracPart = $fracMax > 0 ? \mt_rand(0, $fracMax) : 0;
+            $value = $scale > 0
+                ? (float) \sprintf('%d.%0' . $fracDigits . 'd', $intPart, $fracPart)
+                : (float) $intPart;
+            $inputData[] = ['decimal' => $value];
         }
 
         $writer->write($path, $schema, $inputData);

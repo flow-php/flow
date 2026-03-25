@@ -41,7 +41,7 @@ jobs:
         ports:
           - 9200:9200
       localstack:
-        image: localstack/localstack:latest
+        image: localstack/localstack:4.4
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           SERVICES: s3
@@ -64,8 +64,6 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v5"
-        with:
-          submodules: true
 
       - name: "Start OpenTelemetry Collector"
         run: |

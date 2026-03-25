@@ -1,3 +1,0 @@
-[submodule "src/lib/parquet/tests/Flow/Parquet/Tests/Integration/IO/Fixtures/parquet-testing"]
-	path = src/lib/parquet/tests/Flow/Parquet/Tests/Integration/IO/Fixtures/parquet-testing
-	url = https://github.com/apache/parquet-testing.git

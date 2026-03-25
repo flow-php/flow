@@ -18,16 +18,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Setup PHP Environment
         uses: ./.github/actions/setup-php-env
         with:
           php-version: ${{ matrix.php }}
           dependencies: locked
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, zstd'
           tools: 'composer:v2, php-config'
+          coverage: 'pcov'
           install-dependencies: 'false'
 
       - name: Install Rust toolchain
@@ -59,7 +58,8 @@ jobs:
       - name: Set LIBCLANG_PATH (Ubuntu)
         if: runner.os == 'Linux'
         run: |
-          echo "LIBCLANG_PATH=$(llvm-config --libdir)" >> $GITHUB_ENV
+          LIBCLANG_SO=$(find /usr/lib -name 'libclang*.so' -o -name 'libclang*.so.*' 2>/dev/null | head -1)
+          echo "LIBCLANG_PATH=$(dirname "$LIBCLANG_SO")" >> $GITHUB_ENV
 
       - name: Build extension
         working-directory: src/extension/arrow-ext
@@ -81,4 +81,4 @@ jobs:
         run: composer install --no-interaction --no-progress
 
       - name: Run Parquet Integration Tests with Arrow
-        run: tools/phpunit/vendor/bin/phpunit --testsuite lib-parquet-integration --group apache-parquet-testing
+        run: composer test:lib:parquet

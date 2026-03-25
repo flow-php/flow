@@ -560,14 +560,11 @@
             "Google\\Task\\Composer::cleanup"
         ],
         "post-install-cmd": [
-            "@submodules:init",
             "@tools:install"
         ],
         "post-update-cmd": [
-            "@submodules:init",
             "@tools:update"
         ],
-        "submodules:init": "git submodule update --init",
         "tools:install": [
             "composer install --working-dir=./tools/blackfire",
             "composer install --working-dir=./tools/box",
