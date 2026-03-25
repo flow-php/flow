@@ -79,18 +79,21 @@ abstract class EndToEndTestCase extends PantherTestCase
         $startTime = \time();
 
         while (\time() - $startTime < $timeout) {
-            $isReady = $client->executeScript(
-                'const playground = document.getElementById("playground");
-                if (!playground) return false;
-                const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
-                return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();'
-            );
+            try {
+                $isReady = $client->executeScript(
+                    'const playground = document.getElementById("playground");
+                    if (!playground) return false;
+                    const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
+                    return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();'
+                );
 
-            if ($isReady === true) {
-                // Give a small delay to ensure all event handlers have completed
-                $client->wait(0.5);
+                if ($isReady === true) {
+                    $client->wait(0.5);
 
-                return;
+                    return;
+                }
+            } catch (WebDriverException) {
+                // Page may not be fully attached yet, retry
             }
 
             $client->wait(0.5);
