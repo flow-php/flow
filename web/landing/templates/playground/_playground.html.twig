@@ -20,6 +20,7 @@ Parameters:
     'data/orders.xml': asset('wasm/data/orders.xml'),
     'data/orders.json': asset('wasm/data/orders.json'),
     'data/orders.csv': asset('wasm/data/orders.csv'),
+    'data/orders.jsonl': asset('wasm/data/orders.jsonl'),
     'data/orders.parquet': asset('wasm/data/orders.parquet')
 } %}
 {% for virtualPath, relativePath in data_files|default({}) %}
