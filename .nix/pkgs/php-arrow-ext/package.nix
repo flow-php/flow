@@ -5,6 +5,7 @@
   rustPlatform,
   clang,
   llvmPackages,
+  arrow-ext-version ? "dev",
 }:
 
 let
@@ -25,7 +26,7 @@ let
   };
   pkg = rustPlatform.buildRustPackage {
     pname = "php-arrow-ext";
-    version = "0.1.0";
+    version = arrow-ext-version;
 
     src = extSrc;
 
@@ -42,6 +43,7 @@ let
       LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
       PHP_CONFIG = "${php.unwrapped.dev}/bin/php-config";
       PHP = "${php.unwrapped}/bin/php";
+      ARROW_VERSION = arrow-ext-version;
     };
 
     installPhase = let

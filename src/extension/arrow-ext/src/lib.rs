@@ -14,8 +14,10 @@ static GLOBAL: System = System;
 
 pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_start!();
-    info_table_row!("arrow", "enabled");
-    info_table_row!("version", env!("CARGO_PKG_VERSION"));
+    info_table_row!("arrow.enabled", "true");
+    info_table_row!("arrow.extension_version", env!("ARROW_VERSION"));
+    info_table_row!("arrow.library_version", env!("ARROW_LIB_VERSION"));
+    info_table_row!("arrow.parquet_library_version", env!("PARQUET_LIB_VERSION"));
     info_table_end!();
 }
 

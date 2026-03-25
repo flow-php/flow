@@ -82,11 +82,3 @@ jobs:
 
       - name: Run Parquet Integration Tests with Arrow
         run: composer test:lib:parquet
-
-      - name: Upload to Codecov
-        if: ${{ !cancelled() && matrix.php == '8.3' }}
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./var/phpunit/coverage/clover
-          flags: arrow-extension
