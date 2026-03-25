@@ -1,5 +1,8 @@
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 jobs:
   extension-tests:
@@ -45,3 +48,11 @@ jobs:
 
       - name: "Test Snappy"
         run: "composer test:lib:parquet -- --group snappy-extension"
+
+      - name: Upload to Codecov
+        if: ${{ !cancelled() && matrix.php-version == '8.3' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+          flags: extension-tests

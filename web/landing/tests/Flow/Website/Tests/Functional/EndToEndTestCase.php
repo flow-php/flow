@@ -124,19 +124,19 @@ abstract class EndToEndTestCase extends PantherTestCase
      */
     protected static function navigateWithRetry(string $url, int $maxRetries = 3) : Client
     {
+        $client = static::createE2EClient();
         $lastException = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
-                $client = static::createE2EClient();
                 $client->request('GET', $url);
 
                 return $client;
             } catch (WebDriverException $e) {
                 $lastException = $e;
 
-                if ($attempt === $maxRetries) {
-                    throw $e;
+                if ($attempt < $maxRetries) {
+                    $client->restart();
                 }
             }
         }
