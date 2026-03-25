@@ -5,6 +5,7 @@
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **byte encoding functions** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [5b4d92](https://github.com/flow-php/flow/commit/5b4d9281abff433f4dc5ad263e194b26e14528b4) - **chore: update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2258](https://github.com/flow-php/flow/pull/2258) - **optimize parquet library read/write performance** - [@norberttech](https://github.com/norberttech)
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **Refactored binnary writter/reader** - [@norberttech](https://github.com/norberttech)
 
