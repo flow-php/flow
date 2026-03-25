@@ -106,7 +106,11 @@ abstract class EndToEndTestCase extends PantherTestCase
     {
         return static::createPantherClient(\array_merge([
             'env' => ['APP_ENV' => 'test'],
-        ], $options));
+        ], $options), [], [
+            'capabilities' => [
+                'pageLoadStrategy' => 'eager',
+            ],
+        ]);
     }
 
     protected static function getKernelClass() : string
