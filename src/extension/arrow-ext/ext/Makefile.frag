@@ -7,7 +7,7 @@ all: cargo_build_arrow
 
 .PHONY: cargo_build_arrow
 cargo_build_arrow: $(phplibdir)/arrow.so
-	cd "$(ARROW_CARGO_DIR)" && cargo build --release
+	cd "$(ARROW_CARGO_DIR)" && PHP_CONFIG="$$(which php-config)" PHP="$$(which php)" cargo build --release
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		cp "$(ARROW_CARGO_DIR)/target/release/libarrow.dylib" "$(phplibdir)/arrow.so"; \
 	else \
