@@ -41,7 +41,7 @@ jobs:
         ports:
           - 9200:9200
       localstack:
-        image: localstack/localstack:4.4
+        image: localstack/localstack:latest
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           SERVICES: s3
