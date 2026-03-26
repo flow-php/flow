@@ -36,6 +36,7 @@ $finder = Finder::create()
         'Flow/CLI/Tests/Integration',
         'Flow/ETL/Tests/Unit/Loader',
         'Flow/ETL/Tests/Unit/Exception',
+        'extension/arrow-ext/ext',
         'extension/pg-query-ext/ext',
     ]);
 

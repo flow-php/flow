@@ -1,20 +1,11 @@
-# Flow PHP - PHPUnit Telemetry Bridge
+# PHPUnit Telemetry Bridge
 
 PHPUnit extension allowing to collect test suite telemetry and export to OTEL collector.
 
-> [!IMPORTANT]
-> This repository is a subtree split from our monorepo. If you'd like to contribute,
-> please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
+> [!IMPORTANT]  
+> This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
 
-## Installation
-
-```bash
-composer require flow-php/phpunit-telemetry-bridge
-```
-
-## Resources
-
-- [Documentation](https://flow-php.com/documentation/components/bridges/phpunit-telemetry-bridge/)
-- [Installation](https://flow-php.com/documentation/installation/)
-- [Contributing](https://flow-php.com/documentation/contributing/)
-- [Upgrading](https://flow-php.com/documentation/upgrading/)
+- 📜 [Documentation](https://flow-php.com/documentation/components/bridges/phpunit-telemetry-bridge/)
+- ➡️ [Installation](https://flow-php.com/documentation/installation/)
+- 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
+- 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)
