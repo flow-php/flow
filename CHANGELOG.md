@@ -1,3 +1,12 @@
+## [Unreleased] - 2026-03-26
+
+### Added
+- [#2268](https://github.com/flow-php/flow/pull/2268) - **arrow-ext and expose parquet reader/writer** - [@norberttech](https://github.com/norberttech)
+- [#2268](https://github.com/flow-php/flow/pull/2268) - **ParquetEngine abstraction into flow-php/parquet** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2268](https://github.com/flow-php/flow/pull/2268) - **Let flow-php/parquet use engines based on arrow extension availability** - [@norberttech](https://github.com/norberttech)
+
 ## [0.34.0] - 2026-03-26
 
 ### Added
