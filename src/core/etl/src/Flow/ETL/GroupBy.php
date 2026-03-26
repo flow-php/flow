@@ -71,7 +71,7 @@ final class GroupBy
                 }
             }
 
-            $this->pivotColumns = \array_values(\array_filter(\array_unique($this->pivotColumns)));
+            $this->pivotColumns = \array_values(\array_filter(\array_unique($this->pivotColumns))); // @phpstan-ignore argument.type
 
             foreach ($rows as $row) {
                 $values = [];

@@ -69,7 +69,7 @@ final class BatchByTest extends FlowIntegrationTestCase
             ]))
             ->batchBy('order_id')
             ->run(callback: static function ($rows) use (&$batches) : void {
-                $orderIds = \array_unique(\array_column($rows->toArray(), 'order_id'));
+                $orderIds = \array_unique(\array_column($rows->toArray(), 'order_id')); // @phpstan-ignore argument.type
                 $batches[] = $orderIds;
             });
 

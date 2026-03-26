@@ -43,6 +43,7 @@ jobs:
       localstack:
         image: localstack/localstack:latest
         env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           SERVICES: s3
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test

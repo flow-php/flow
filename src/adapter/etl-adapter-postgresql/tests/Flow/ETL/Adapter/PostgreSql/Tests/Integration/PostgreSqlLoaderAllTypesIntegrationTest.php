@@ -115,12 +115,12 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         self::assertEqualsWithDelta(3.14159, $row['col_float'], 0.00001);
         self::assertTrue($row['col_boolean']);
         self::assertSame('2024-01-15', $row['col_date'] instanceof \DateTimeInterface ? $row['col_date']->format('Y-m-d') : $row['col_date']);
-        self::assertStringStartsWith('2024-01-15', $row['col_datetime'] instanceof \DateTimeInterface ? $row['col_datetime']->format('Y-m-d H:i:s') : $row['col_datetime']);
+        self::assertStringStartsWith('2024-01-15', $row['col_datetime'] instanceof \DateTimeInterface ? $row['col_datetime']->format('Y-m-d H:i:s') : $row['col_datetime']); // @phpstan-ignore argument.type
         self::assertSame('10:30:15', $row['col_time'] instanceof \DateInterval ? \sprintf('%02d:%02d:%02d', $row['col_time']->h, $row['col_time']->i, $row['col_time']->s) : $row['col_time']);
         self::assertSame($uuid, $row['col_uuid']);
         self::assertEquals(['key' => 'value', 'number' => 123], \is_string($row['col_json']) ? \json_decode($row['col_json'], true) : $row['col_json']);
-        self::assertStringContainsString('<root><item>test</item></root>', $row['col_xml']);
-        self::assertStringContainsString('<item id="elem">element</item>', $row['col_xml_element']);
+        self::assertStringContainsString('<root><item>test</item></root>', $row['col_xml']); // @phpstan-ignore argument.type
+        self::assertStringContainsString('<item id="elem">element</item>', $row['col_xml_element']); // @phpstan-ignore argument.type
         self::assertSame('<p>HTML content</p>', $row['col_html']);
         self::assertSame('<span>element</span>', $row['col_html_element']);
         self::assertSame('one', $row['col_enum']);

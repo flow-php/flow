@@ -445,7 +445,7 @@ final readonly class BlobService implements BlobServiceInterface
             }
         }
 
-        if ($normalized['NextMarker'] !== null) {
+        if (\is_string($normalized['NextMarker'])) {
             yield from $this->listBlobs($options->withMarker($normalized['NextMarker']));
         }
     }

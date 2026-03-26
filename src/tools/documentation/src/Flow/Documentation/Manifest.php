@@ -31,6 +31,8 @@ final readonly class Manifest
                 $package['name'] = type_string()->assert($package['name']);
                 $package['path'] = type_string()->assert($package['path']);
 
+                $package['type'] = type_string()->assert($package['type']);
+
                 return new Package($package['name'], $package['path'], Type::from($package['type']));
             },
             $data['packages']

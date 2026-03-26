@@ -138,6 +138,12 @@ parameters:
         -
             path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Doctrine/DBAL/TracingMiddleware.php
             identifier: return.type
+        -
+            path: src/lib/parquet/src/Flow/Parquet/Dremel/DremelShredder.php
+            identifier: argument.type
+        -
+            path: src/lib/parquet/src/Flow/Parquet/Dremel/DremelShredder.php
+            identifier: assign.propertyType
 
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon

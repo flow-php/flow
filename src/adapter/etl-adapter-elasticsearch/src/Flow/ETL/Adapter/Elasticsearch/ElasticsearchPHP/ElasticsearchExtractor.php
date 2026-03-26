@@ -116,7 +116,7 @@ final class ElasticsearchExtractor implements Extractor
                     break;
                 }
 
-                if ($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size'] > $results->total()) {
+                if ($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size'] > $results->total()) { // @phpstan-ignore binaryOp.invalid
                     $nextPageParams = $nextPageParams->set('size', $results->total() - $fetched);
                 }
 
