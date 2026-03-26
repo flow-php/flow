@@ -1,4 +1,4 @@
-# Filesystem Azure Bridge
+# Filesystem Async AWS Bridge
 
 This package provides a bridge between the [Filesystem](https://github.com/flow-php/filesystem) and the [Async AWS SDK](https://github.com/async-aws/s3). 
 

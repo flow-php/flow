@@ -1,14 +1,11 @@
-# Flow PHP - Telemetry
+# Telemetry
 
 Flow Telemetry is a library for metrics and tracing in PHP, designed to work seamlessly with Flow PHP ETL pipelines.
 
-## Installation
+> [!IMPORTANT]  
+> This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
 
-```bash
-composer require flow-php/telemetry
-```
-
-## Documentation
-
-- [Documentation](https://github.com/flow-php/flow/blob/1.x/documentation/components/libs/telemetry.md)
-- [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)
+- 📜 [Documentation](https://flow-php.com/documentation/components/libs/telemetry/)
+- ➡️ [Installation](https://flow-php.com/documentation/installation/)
+- 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
+- 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)
