@@ -5,10 +5,12 @@
     php-brotli,
     php-zstd,
     php-pg-query-ext,
+    php-arrow-ext,
     with-pcov ? true,
     with-xdebug ? false,
     with-blackfire ? false,
     with-pg-query-ext ? false,
+    with-arrow-ext ? false,
     with-grpc ? false
 }:
 
@@ -34,6 +36,7 @@ let
         ++ (if with-pcov then [pcov] else [])
         ++ (if with-blackfire then [blackfire] else [])
         ++ (if with-pg-query-ext then [(php-pg-query-ext.override { inherit php; })] else [])
+        ++ (if with-arrow-ext then [(php-arrow-ext.override { inherit php; })] else [])
         ++ (if with-grpc then [grpc] else [])
     );
 in

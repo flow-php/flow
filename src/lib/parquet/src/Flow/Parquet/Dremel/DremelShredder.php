@@ -141,7 +141,7 @@ final readonly class DremelShredder
                     $columnConverters[$keyFp],
                     $targets[$keyFp],
                 ),
-                $this->buildPlan($valueColumn, $targets, $columnRequired, $columnConverters),
+                $valueColumn !== null ? $this->buildPlan($valueColumn, $targets, $columnRequired, $columnConverters) : null,
                 [
                     'flatPath' => $keyFp,
                     'isRequired' => $columnRequired[$keyFp],
@@ -348,6 +348,52 @@ final readonly class DremelShredder
         $depth++;
         $keyPlan = $plan->keyPlan;
         $valuePlan = $plan->valuePlan;
+
+        if ($valuePlan === null) {
+            $keyFp = $keyPlan->flatPath;
+            $keyTarget = $keyPlan->target;
+            $keyConverter = $keyPlan->converter;
+
+            if ($mapValue === null) {
+                $repLvl = $repetitionLevel - 1;
+
+                if (!isset($rowFirstWrite[$keyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$keyFp] = true;
+                }
+
+                $keyTarget->repetitionLevels[] = $repLvl;
+                $keyTarget->definitionLevels[] = $definitionLevel;
+
+                return;
+            }
+
+            if (!$plan->isRequired) {
+                $definitionLevel++;
+            }
+
+            $definitionLevel++;
+            $index = 0;
+
+            foreach ($mapValue as $key => $value) {
+                $repLvl = $index === 0 ? ($repetitionLevel - 1) : $repetitionLevel;
+
+                if (!isset($rowFirstWrite[$keyFp])) {
+                    $repLvl = 0;
+                    $rowFirstWrite[$keyFp] = true;
+                }
+
+                $defLvl = $definitionLevel + ($keyPlan->isRequired ? 0 : 1);
+
+                $keyTarget->repetitionLevels[] = $repLvl;
+                $keyTarget->definitionLevels[] = $defLvl;
+                /** @phpstan-ignore assign.propertyType */
+                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+                $index++;
+            }
+
+            return;
+        }
 
         if ($valuePlan instanceof FlatPlan) {
             $keyFp = $keyPlan->flatPath;

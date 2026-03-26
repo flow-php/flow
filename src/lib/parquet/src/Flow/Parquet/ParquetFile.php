@@ -6,37 +6,25 @@ namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
-    Dremel\DremelAssembler,
-    Dremel\ReadColumnData,
-    ParquetFile\Metadata,
-    ParquetFile\Page\ColumnPageHeader,
-    ParquetFile\Schema,
-    Reader\PageReader,
-    Thrift\CompactProtocol,
-    Thrift\MemoryBuffer};
-use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\Data\DataConverter;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\ParquetFile\{Metadata, Page\ColumnPageHeader, Schema};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader\{ColumnChunkReader, ColumnChunkViewer};
+use Flow\Parquet\Reader\ColumnChunkViewer;
+use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\ThriftModel\FileMetaData;
 
 final class ParquetFile
 {
     public const string PARQUET_MAGIC_NUMBER = 'PAR1';
 
-    private readonly DremelAssembler $dremelAssembler;
-
     private ?Metadata $metadata = null;
 
     public function __construct(
         private readonly SourceStream $stream,
         private readonly ByteOrder $byteOrder,
-        private readonly DataConverter $dataConverter,
         private readonly Options $options,
+        private readonly ParquetEngine $engine,
     ) {
-        $this->dremelAssembler = new DremelAssembler($this->dataConverter);
     }
 
     public function __destruct()
@@ -117,141 +105,7 @@ final class ParquetFile
             }
         }
 
-        $totalRows = $this->metadata()->rowsNumber();
-
-        if ($offset > $totalRows) {
-            return;
-        }
-
-        if ($offset !== null) {
-            if ($totalRows > $offset) {
-                $totalRows -= $offset;
-            } else {
-                $totalRows = 0;
-            }
-        }
-
-        $totalRows = min($totalRows, $limit ?? $totalRows);
-
-        if ($totalRows === 0) {
-            return;
-        }
-
-        $multipleIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
-
-        foreach ($columns as $columnName) {
-            $multipleIterator->attachIterator($this->read($this->schema()->get($columnName), $limit, $offset), $columnName);
-        }
-
-        $rowCount = 0;
-
-        foreach ($multipleIterator as $rowData) {
-            if ($limit !== null && $rowCount >= $limit) {
-                break;
-            }
-
-            $row = [];
-
-            foreach ($rowData as $columnData) {
-                if ($columnData !== null) {
-                    foreach ($columnData as $key => $value) {
-                        $row[$key] = $value;
-                    }
-                }
-            }
-
-            yield $row;
-            $rowCount++;
-        }
-    }
-
-    private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
-    {
-        $yieldedRows = 0;
-        $rowGroupOffset = 0;
-        $chunkReader = new ColumnChunkReader(
-            new PageReader($this->byteOrder, $this->options),
-            $this->options
-        );
-
-        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
-            if ($offset !== null) {
-
-                if ($rowGroupOffset + $rowGroup->rowsCount() <= $offset) {
-                    $rowGroupOffset += $rowGroup->rowsCount();
-
-                    continue;
-                }
-            }
-            $skipRows = $offset - $rowGroupOffset;
-
-            if ($column instanceof FlatColumn) {
-                foreach ($chunkReader->read($rowGroup->getColumnChunk($column), $column, $this->stream) as $flatColumnValues) {
-                    $columnData = new ReadColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
-
-                    $rowsSkipped = 0;
-
-                    foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-                        if ($skipRows > 0 && $rowsSkipped < $skipRows) {
-                            $rowsSkipped++;
-
-                            continue;
-                        }
-
-                        if ($limit !== null && $yieldedRows >= $limit) {
-                            return;
-                        }
-                        yield $row;
-                        $yieldedRows++;
-                    }
-                }
-            } elseif ($column instanceof NestedColumn) {
-
-                $childrenFlatValuesIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
-
-                foreach ($column->childrenFlat() as $child) {
-                    $childrenFlatValuesIterator->attachIterator($chunkReader->read($rowGroup->getColumnChunk($child), $child, $this->stream), $child->flatPath());
-                }
-
-                foreach ($childrenFlatValuesIterator as $childrenFlatValues) {
-                    $columnFlatData = [];
-
-                    foreach ($childrenFlatValues as $flatPath => $childFlatValues) {
-                        if (!$childFlatValues instanceof ReadFlatColumnValues) {
-                            // The reason why this might happen is because when we are writing to parquet file
-                            // we write each nested column child as a separate flat column.
-                            // Now when the mechanism that calculates how many rows will fit in the page
-                            // it's unaware of the fact that some of the columns should share the rows count with their siblings.
-                            throw new RuntimeException('Unexpected child flat values');
-                        }
-
-                        $columnFlatData[$flatPath] = $childFlatValues;
-                    }
-
-                    $columnData = new ReadColumnData($column, \array_values($columnFlatData));
-
-                    $rowsSkipped = 0;
-
-                    foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-                        if ($skipRows > 0 && $rowsSkipped < $skipRows) {
-                            $rowsSkipped++;
-
-                            continue;
-                        }
-
-                        if ($limit !== null && $yieldedRows >= $limit) {
-                            return;
-                        }
-                        yield $row;
-                        $yieldedRows++;
-                    }
-                }
-            } else {
-                throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
-            }
-
-            $rowGroupOffset += $rowGroup->rowsCount();
-        }
+        yield from $this->engine->readValues($this->stream, $this->schema(), $columns, $limit, $offset);
     }
 
     /**

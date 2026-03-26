@@ -10,13 +10,15 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 final class Options
 {
     /**
-     * @var array<string, null|array<mixed>|bool|float|int>
+     * @var array<string, null|array<mixed>|bool|float|int|string>
      */
     private array $options;
 
     public function __construct()
     {
         $this->options = [
+            Option::ARROW_BATCH_SIZE->name => 1024,
+            Option::ARROW_WRITE_BATCH_SIZE->name => 1000,
             Option::BYTE_ARRAY_TO_STRING->name => true,
             Option::ROUND_NANOSECONDS->name => false,
             Option::INT_96_AS_DATETIME->name => true,
@@ -44,9 +46,9 @@ final class Options
     }
 
     /**
-     * @return null|array<mixed>|bool|float|int
+     * @return null|array<mixed>|bool|float|int|string
      */
-    public function get(Option $option) : bool|int|float|array|null
+    public function get(Option $option) : bool|int|float|string|array|null
     {
         return $this->options[$option->name];
     }
@@ -91,6 +93,17 @@ final class Options
         return $value;
     }
 
+    public function getString(Option $option) : string
+    {
+        $value = $this->options[$option->name];
+
+        if (!\is_string($value)) {
+            throw new InvalidArgumentException("Option {$option->name} is not a string, but: " . \gettype($value));
+        }
+
+        return $value;
+    }
+
     public function has(Option $option) : bool
     {
         $value = $this->options[$option->name] ?? null;
@@ -99,9 +112,9 @@ final class Options
     }
 
     /**
-     * @param null|array<mixed>|bool|float|int $value
+     * @param null|array<mixed>|bool|float|int|string $value
      */
-    public function set(Option $option, bool|int|float|array|null $value) : self
+    public function set(Option $option, bool|int|float|string|array|null $value) : self
     {
         $this->options[$option->name] = $value;
 

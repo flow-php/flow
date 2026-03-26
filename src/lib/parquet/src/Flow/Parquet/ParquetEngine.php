@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Parquet;
+
+use Flow\Filesystem\{DestinationStream, SourceStream};
+use Flow\Parquet\ParquetFile\{Compressions, Schema};
+
+interface ParquetEngine
+{
+    public function closeWrite() : void;
+
+    public function openForWrite(
+        DestinationStream $stream,
+        Schema $schema,
+        Compressions $compression,
+        Options $options,
+    ) : void;
+
+    /**
+     * @param array<string> $columns
+     *
+     * @return \Generator<int, array<string, mixed>>
+     */
+    public function readValues(
+        SourceStream $stream,
+        Schema $schema,
+        array $columns = [],
+        ?int $limit = null,
+        ?int $offset = null,
+    ) : \Generator;
+
+    /**
+     * @param iterable<array<string, mixed>> $rows
+     */
+    public function writeBatch(iterable $rows) : void;
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    public function writeRow(array $row) : void;
+
+    /**
+     * @param iterable<array<string, mixed>> $rows
+     */
+    public function writeRows(
+        DestinationStream $stream,
+        Schema $schema,
+        Compressions $compression,
+        Options $options,
+        iterable $rows,
+    ) : void;
+}

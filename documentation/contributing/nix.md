@@ -56,7 +56,7 @@ If that file is not present, the default php.ini.dist from the same location wil
 
 - `pcov` - required for code coverage
 
-To skip installing pcov extension, you can run nix shell with `--arg with-pco false` flag:
+To skip installing pcov extension, you can run nix shell with `--arg with-pcov false` flag:
 
 ```shell
 
@@ -110,11 +110,11 @@ This keeps the default shell lightweight while allowing access to specialized to
 
 ### WASM Build Tools
 
-To include tools for building WebAssembly (emscripten, autoconf, wget, etc.):
-
 ```shell
 nix-shell --arg with-wasm true
 ```
+
+See [WASM - Interactive Playground Build](/documentation/contributing/wasm.md) for details.
 
 ### Terraform
 
@@ -124,28 +124,21 @@ To include Terraform and Node.js for infrastructure development:
 nix-shell --arg with-terraform true
 ```
 
-### pg-query-ext Extension
-
-To include the `pg-query-ext` PHP extension (PostgreSQL SQL parser):
+### pg-query-ext Extension (C)
 
 ```shell
-nix-shell --arg with-pg-query-ext true
+nix-shell --arg with-pg-query-ext false --arg with-c true
 ```
 
-The extension is built from local source (`src/extension/pg-query-ext/ext`) and automatically loaded by PHP:
+See [C - pg-query Extension Development](/documentation/contributing/c.md) for details.
+
+### arrow-ext Extension (Rust)
 
 ```shell
-php -m | grep pg_query
-./tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-unit
+nix-shell --arg with-arrow-ext false --arg with-rust true
 ```
 
-This also includes C development tools for extension development. To rebuild after modifying C source code:
-
-```shell
-cd src/extension/pg-query-ext && make rebuild
-```
-
-Note: Re-entering nix-shell will also rebuild the extension if sources changed.
+See [Rust - Arrow Extension Development](/documentation/contributing/rust.md) for details.
 
 ### Combining Multiple Options
 

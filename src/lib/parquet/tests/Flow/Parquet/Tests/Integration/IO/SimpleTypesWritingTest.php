@@ -6,17 +6,16 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use function Flow\ETL\DSL\{generate_random_int, generate_random_string};
 use Faker\Factory;
-use Flow\Parquet\{Consts, Reader, Writer};
+use Flow\Parquet\{Consts, ParquetEngine, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 
-final class SimpleTypesWritingTest extends TestCase
+class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 {
     public static function decimalPrecisionProvider() : array
     {
-        return [
+        $precisions = [
             'precision 4, scale 2' => [4, 2, 99.99],
             'precision 6, scale 2' => [6, 2, 9999.99],
             'precision 8, scale 2' => [8, 2, 999999.99],
@@ -27,6 +26,22 @@ final class SimpleTypesWritingTest extends TestCase
             'precision 5, scale 0' => [5, 0, 99999.0],
             'precision 8, scale 8' => [8, 8, 0.99999999],
         ];
+
+        $engines = ['php' => new \Flow\Parquet\Engine\PhpParquetEngine()];
+
+        if (\extension_loaded('arrow')) {
+            $engines['arrow'] = new \Flow\Parquet\Engine\ArrowParquetEngine();
+        }
+
+        $result = [];
+
+        foreach ($engines as $engineName => $engine) {
+            foreach ($precisions as $label => $params) {
+                $result["{$engineName} {$label}"] = [$engine, ...$params];
+            }
+        }
+
+        return $result;
     }
 
     protected function setUp() : void
@@ -36,11 +51,12 @@ final class SimpleTypesWritingTest extends TestCase
         }
     }
 
-    public function test_writing_bool_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_bool_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::boolean('boolean'));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -51,20 +67,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_bool_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_bool_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::boolean('boolean'));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -75,20 +92,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertSame(
+        static::assertSame(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_date_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_date_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::date('date'));
 
         $faker = Factory::create();
@@ -101,20 +119,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_date_column_before_1970() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_date_column_before_1970(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::date('date'));
 
         $faker = Factory::create();
@@ -127,20 +146,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_date_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_date_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::date('date'));
 
         $faker = Factory::create();
@@ -153,20 +173,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_decimal_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_decimal_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::decimal('decimal'));
 
         $faker = Factory::create();
@@ -179,47 +200,55 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
     #[DataProvider('decimalPrecisionProvider')]
-    public function test_writing_decimal_column_with_different_precisions(int $precision, int $scale, float $maxValue) : void
+    public function test_writing_decimal_column_with_different_precisions(ParquetEngine $engine, int $precision, int $scale, float $maxValue) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-decimal-precision-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::decimal('decimal', $precision, $scale));
 
         $inputData = [];
+        $intDigits = \max(0, \min($precision - $scale, 9));
+        $fracDigits = \min($scale, 6);
+        $intMax = $intDigits > 0 ? (int) (10 ** $intDigits) - 1 : 0;
+        $fracMax = $fracDigits > 0 ? (int) (10 ** $fracDigits) - 1 : 0;
 
         for ($i = 0; $i < 50; $i++) {
-            $inputData[] = [
-                'decimal' => \round(\mt_rand(0, (int) ($maxValue * 100)) / 100, $scale),
-            ];
+            $intPart = $intMax > 0 ? \mt_rand(0, $intMax) : 0;
+            $fracPart = $fracMax > 0 ? \mt_rand(0, $fracMax) : 0;
+            $value = $scale > 0
+                ? (float) \sprintf('%d.%0' . $fracDigits . 'd', $intPart, $fracPart)
+                : (float) $intPart;
+            $inputData[] = ['decimal' => $value];
         }
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_decimal_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_decimal_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::decimal('decimal'));
 
         $faker = Factory::create();
@@ -232,20 +261,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_double_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_double_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::double('double'));
 
         $faker = Factory::create();
@@ -258,20 +288,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_double_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_double_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::double('double'));
 
         $faker = Factory::create();
@@ -284,20 +315,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_enum_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_enum_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::enum('enum'));
 
         $enum = ['A', 'B', 'C', 'D'];
@@ -310,20 +342,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_float_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_float_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -334,20 +367,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_float_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_float_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -358,20 +392,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_int32_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_int32_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int32('int32'));
 
         $faker = Factory::create();
@@ -384,20 +419,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_int32_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_int32_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int32('int32'));
 
         $faker = Factory::create();
@@ -410,20 +446,21 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
 
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_int64() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_int64(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int64('int64'));
 
         $faker = Factory::create();
@@ -436,19 +473,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_int64_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_int64_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::int64('int64'));
 
         $faker = Factory::create();
@@ -461,19 +499,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_json_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_json_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::json('json'));
 
         $faker = Factory::create();
@@ -486,19 +525,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_json_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_json_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::json('json'));
 
         $faker = Factory::create();
@@ -513,19 +553,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_string_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_string_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::string('string'));
 
         $faker = Factory::create();
@@ -538,19 +579,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_string_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_string_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::string('string'));
 
         $faker = Factory::create();
@@ -563,19 +605,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_time_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_time_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::time('time'));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -586,19 +629,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_time_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_time_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::time('time'));
 
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
@@ -609,19 +653,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_timestamp_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_timestamp_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
 
         $faker = Factory::create();
@@ -634,19 +679,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_timestamp_column_for_years_before_1970() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_timestamp_column_for_years_before_1970(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
 
         $faker = Factory::create();
@@ -659,19 +705,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_timestamp_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_timestamp_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
 
         $faker = Factory::create();
@@ -684,19 +731,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_uuid_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_uuid_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::uuid('uuid'));
 
         $faker = Factory::create();
@@ -709,19 +757,20 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
-    public function test_writing_uuid_nullable_column() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_uuid_nullable_column(ParquetEngine $engine) : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::uuid('uuid'));
 
         $faker = Factory::create();
@@ -734,11 +783,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        self::assertEquals(
+        static::assertEquals(
             $inputData,
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertTrue(\file_exists($path));
+        static::assertTrue(\file_exists($path));
         \unlink($path);
     }
 }

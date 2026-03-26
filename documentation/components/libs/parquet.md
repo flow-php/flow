@@ -14,6 +14,64 @@
 composer require flow-php/parquet:~--FLOW_PHP_VERSION--
 ```
 
+## Engine System
+
+The parquet library supports a pluggable engine system with two implementations:
+
+- **PHP Engine** (`PhpParquetEngine`) — Pure PHP implementation. Works everywhere with no extra dependencies beyond
+  optional compression extensions.
+- **Arrow Engine** (`ArrowParquetEngine`) — Uses
+  the [arrow PHP extension](/documentation/components/extensions/arrow-ext.md) for native Rust-powered performance. All
+  compression codecs are built into the extension.
+- **Adaptive Engine** (`AdaptiveParquetEngine`) — Default. Automatically selects Arrow if the `arrow` extension is
+  loaded, otherwise falls back to PHP.
+
+### Engine Selection
+
+By default, `new Reader()` and `new Writer()` use the adaptive engine:
+
+```php
+<?php
+
+use Flow\Parquet\Reader;
+use Flow\Parquet\Writer;
+
+// Adaptive engine: uses Arrow if ext-arrow is loaded, otherwise PHP
+$reader = new Reader();
+$writer = new Writer();
+```
+
+To explicitly choose an engine:
+
+```php
+<?php
+
+use Flow\Parquet\Reader;
+use Flow\Parquet\Writer;
+
+// Force Arrow engine (throws if ext-arrow is not loaded)
+$reader = Reader::arrow();
+$writer = Writer::arrow();
+
+// Force PHP engine
+$reader = Reader::php();
+$writer = Writer::php();
+```
+
+### Cross-Engine Compatibility
+
+Files written by one engine can be read by the other. Both produce standard Apache Parquet files.
+
+### When to Use Each Engine
+
+| Consideration       | PHP Engine                        | Arrow Engine                                                            |
+|---------------------|-----------------------------------|-------------------------------------------------------------------------|
+| **Setup**           | No extra requirements             | Requires [ext-arrow](/documentation/components/extensions/arrow-ext.md) |
+| **Performance**     | Good for small/medium datasets    | Significantly faster for large datasets                                 |
+| **Compression**     | Requires PHP extensions per codec | All codecs built-in                                                     |
+| **Nested types**    | Full Dremel support               | Full support via Arrow                                                  |
+| **Recommended for** | Environments without Rust         | Production workloads                                                    |
+
 ## What is Parquet
 
 Apache Parquet is an open source, column-oriented data file format designed for efficient data storage and retrieval.
@@ -27,6 +85,7 @@ Parquet stores data in a columnar format, but what does it means?
 Row-based format:
 
 -----------------
+
 | ID | Name  | Age |
 |----|-------|-----|
 | 1  | Alice | 20  |
@@ -35,19 +94,23 @@ Row-based format:
 
 Column-based format:
 --------------------
-| ID | 1 | 2 | 3 |
-|----|---|---|---|
+
+| ID   | 1     | 2   | 3     |
+|------|-------|-----|-------|
 | Name | Alice | Bob | Carol |
 | Age  | 20    | 25  | 30    |
-
 
 This approach has several advantages:
 
 - **Compression**: Since data is stored in columns, it is naturally compressed better.
-- **I/O**: When querying a subset of columns, we can skip reading the other columns. This is especially useful when the columns are large.
-- **Encoding**: Different encoding schemes can be used for different columns, depending on the data type and the distribution of values.
-- **Data skipping**: When querying a subset of rows, we can skip reading the other rows. This is especially useful when the rows are large.
-- **Reading selective columns**: When querying a subset of columns, we can skip reading the other columns. This is especially useful when the columns are large.
+- **I/O**: When querying a subset of columns, we can skip reading the other columns. This is especially useful when the
+  columns are large.
+- **Encoding**: Different encoding schemes can be used for different columns, depending on the data type and the
+  distribution of values.
+- **Data skipping**: When querying a subset of rows, we can skip reading the other rows. This is especially useful when
+  the rows are large.
+- **Reading selective columns**: When querying a subset of columns, we can skip reading the other columns. This is
+  especially useful when the columns are large.
 
 ### Parquet File Structure
 
@@ -82,6 +145,10 @@ use Flow\Parquet\Reader;
 
 $reader = new Reader();
 ```
+
+> [!TIP]
+> `new Reader()` uses the adaptive engine. See [Engine System](#engine-system) for how to explicitly choose the Arrow or
+> PHP engine.
 
 The Reader accepts two arguments:
 
@@ -199,6 +266,10 @@ use Flow\Parquet\Writer;
 $writer = new Writer();
 ```
 
+> [!TIP]
+> `new Writer()` uses the adaptive engine. Use `Writer::arrow()` or `Writer::php()` to explicitly select an engine.
+> See [Engine System](#engine-system).
+
 and write our data:
 
 ```
@@ -256,14 +327,19 @@ $writer->close();
 
 ### Writer Options
 
-- `BYTE_ARRAY_TO_STRING` - default: `true` - if set to `true` then `BYTE_ARRAY` values will be converted to `string` objects.
-- `DICTIONARY_PAGE_MIN_CARDINALITY_RATION` - default '0.4' - minimum ratio of unique values to total values for a column to have dictionary encoding.
+- `BYTE_ARRAY_TO_STRING` - default: `true` - if set to `true` then `BYTE_ARRAY` values will be converted to `string`
+  objects.
+- `DICTIONARY_PAGE_MIN_CARDINALITY_RATION` - default '0.4' - minimum ratio of unique values to total values for a column
+  to have dictionary encoding.
 - `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page.
-- `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression is enabled).
+- `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
+  is enabled).
 - `PAGE_SIZE_BYTES` - default: `8Kb` - maximum size of data page.
-- `ROUND_NANOSECONDS` - default: `false` - Since PHP does not support nanoseconds precision for DateTime objects, when this options is set to true, reader will round nanoseconds to microseconds.
+- `ROUND_NANOSECONDS` - default: `false` - Since PHP does not support nanoseconds precision for DateTime objects, when
+  this options is set to true, reader will round nanoseconds to microseconds.
 - `ROW_GROUP_SIZE_BYTES` - default: `8Mb` - maximum size of row group.
-- `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is reached.
+- `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
+  reached.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
 - `WRITER_VERSION` - default `1` - tells writer which version of parquet format should be used.
 
@@ -295,25 +371,32 @@ You will need to play a bit with those values to find the best one for your use 
 
 ## Compressions
 
+> [!NOTE]
+> When using the Arrow engine, all compression codecs are built into the native extension. The PHP compression
+> extensions listed below are only required when using the PHP engine.
+
 Parquet supports several compression algorithms.
 
- - `BROTLI` - supported if [Brotli Extension](https://github.com/kjdev/php-ext-brotli) is installed
- - `GZIP` - supported out of the box
- - `LZ4` - supported if [LZ4 Extension](https://github.com/kjdev/php-ext-lz4) is installed
- - `LZ4_RAW` - supported if [LZ4 Extension](https://github.com/kjdev/php-ext-lz4) is installed
- - `LZO`  - not yet supported
- - `SNAPPY` - supported - it's recommended to install [Snappy Extension](https://github.com/kjdev/php-ext-snappy) - otherwise php implementation is used that is much slower than extension
- - `UNCOMPRESSED` - supported out of the box
- - `ZSTD` - supported if [ZSTD Extension](https://github.com/kjdev/php-ext-zstd) is installed
+- `BROTLI` - supported if [Brotli Extension](https://github.com/kjdev/php-ext-brotli) is installed
+- `GZIP` - supported out of the box
+- `LZ4` - supported if [LZ4 Extension](https://github.com/kjdev/php-ext-lz4) is installed
+- `LZ4_RAW` - supported if [LZ4 Extension](https://github.com/kjdev/php-ext-lz4) is installed
+- `LZO`  - not yet supported
+- `SNAPPY` - supported - it's recommended to install [Snappy Extension](https://github.com/kjdev/php-ext-snappy) -
+  otherwise php implementation is used that is much slower than extension
+- `UNCOMPRESSED` - supported out of the box
+- `ZSTD` - supported if [ZSTD Extension](https://github.com/kjdev/php-ext-zstd) is installed
 
 Obviously, compression is a trade-off between speed and size.
 If you want to achieve the best compression, you should use `GZIP` or `SNAPPY` which is a default compression algorithm.
 
-For not yet supported algorithms, please check our [Roadmap](https://github.com/orgs/flow-php/projects/1) to understand when they will be supported.
+For not yet supported algorithms, please check our [Roadmap](https://github.com/orgs/flow-php/projects/1) to understand
+when they will be supported.
 
 ### Per-Column Compression
 
-You can specify different compression algorithms for individual columns using flat path notation. This allows fine-grained control over the compression strategy for optimal storage and performance.
+You can specify different compression algorithms for individual columns using flat path notation. This allows
+fine-grained control over the compression strategy for optimal storage and performance.
 
 #### When to Use Per-Column Compression
 
@@ -391,6 +474,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 #### Performance-Optimized Strategies
 
 **Query-Optimized Strategy:**
+
 ```php
 $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
     // Frequently queried columns - prioritize speed
@@ -409,6 +493,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 ```
 
 **Storage-Optimized Strategy:**
+
 ```php
 $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
     // Only critical columns use fast compression
@@ -442,27 +527,29 @@ $options = Options::default()
 
 #### Compression Selection Guidelines
 
-| Data Type | Characteristics | Recommended Compression | Use Case |
-|-----------|----------------|------------------------|-----------|
-| **Primary Keys** | Sequential integers, frequent queries | `UNCOMPRESSED` or `LZ4` | Fast joins and lookups |
-| **Status/Categories** | Low cardinality, repeated values | `SNAPPY` | Balanced performance |
-| **Timestamps** | Sequential, frequently filtered | `LZ4` | Fast time-based queries |
-| **Text Content** | High variance, large size | `ZSTD` or `BROTLI` | Storage optimization |
-| **JSON/Metadata** | Complex nested data | `ZSTD` | Maximum compression |
-| **Numerical Data** | Calculations, aggregations | `SNAPPY` or `LZ4` | Fast mathematical operations |
-| **Archive Data** | Rarely accessed | `ZSTD` or `BROTLI` | Long-term storage |
+| Data Type             | Characteristics                       | Recommended Compression | Use Case                     |
+|-----------------------|---------------------------------------|-------------------------|------------------------------|
+| **Primary Keys**      | Sequential integers, frequent queries | `UNCOMPRESSED` or `LZ4` | Fast joins and lookups       |
+| **Status/Categories** | Low cardinality, repeated values      | `SNAPPY`                | Balanced performance         |
+| **Timestamps**        | Sequential, frequently filtered       | `LZ4`                   | Fast time-based queries      |
+| **Text Content**      | High variance, large size             | `ZSTD` or `BROTLI`      | Storage optimization         |
+| **JSON/Metadata**     | Complex nested data                   | `ZSTD`                  | Maximum compression          |
+| **Numerical Data**    | Calculations, aggregations            | `SNAPPY` or `LZ4`       | Fast mathematical operations |
+| **Archive Data**      | Rarely accessed                       | `ZSTD` or `BROTLI`      | Long-term storage            |
 
 #### Performance vs. Compression Trade-offs
 
 **Compression Ratio (Best to Worst):**
+
 1. `ZSTD` - Best compression, slower decompression
-2. `BROTLI` - Excellent compression, moderate speed  
+2. `BROTLI` - Excellent compression, moderate speed
 3. `GZIP` - Good compression, widely supported
 4. `SNAPPY` - Balanced compression and speed (default)
 5. `LZ4` - Fast compression/decompression, moderate ratio
 6. `UNCOMPRESSED` - No compression overhead, largest size
 
 **Decompression Speed (Fastest to Slowest):**
+
 1. `UNCOMPRESSED` - No decompression needed
 2. `LZ4` - Very fast decompression
 3. `SNAPPY` - Fast decompression (good balance)
@@ -472,15 +559,17 @@ $options = Options::default()
 
 ## Column Encodings
 
-Parquet supports various column encoding algorithms that can significantly impact file size and query performance. 
+Parquet supports various column encoding algorithms that can significantly impact file size and query performance.
 You can specify custom encodings for individual columns using flat path notation.
 
 ### Available Encodings
 
 #### PLAIN
+
 The default encoding that stores values as-is without any compression scheme.
 
 **When to use:**
+
 - Small datasets where compression overhead isn't justified
 - Columns with high cardinality and random distribution
 - When you need maximum compatibility with other Parquet readers
@@ -498,9 +587,11 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ```
 
 #### RLE_DICTIONARY
+
 Run Length Encoding with Dictionary compression. Values are stored in a dictionary and replaced with indices.
 
 **When to use:**
+
 - Columns with low cardinality (many repeated values)
 - String columns with repeated categories (status, country, department)
 - Enumeration-like data
@@ -517,9 +608,11 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ```
 
 #### DELTA_BINARY_PACKED
+
 Delta encoding with binary packing for integer columns. Stores differences between consecutive values.
 
 **When to use:**
+
 - Sequential or monotonic integer data (IDs, timestamps, counters)
 - Time series data with incremental values
 - Can achieve 70-95% compression for sequential data
@@ -560,11 +653,12 @@ $writer = new Writer(compressions: Compressions::SNAPPY, options: $options);
 
 #### Nested Column Encoding (Flat Path Notation)
 
-For nested structures, use dot notation to specify the exact column path. 
+For nested structures, use dot notation to specify the exact column path.
 The flat path follows Parquet's internal structure conventions:
 
 **Flat Path Patterns:**
-- **Struct fields**: `parent.field_name` 
+
+- **Struct fields**: `parent.field_name`
 - **List elements**: `list_name.list.element`
 - **Map keys**: `map_name.key_value.key`
 - **Map values**: `map_name.key_value.value`
@@ -669,17 +763,17 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 ### Encoding Compatibility
 
-| Encoding | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
-|----------|-------------|------------|---------|--------------|----------------------|
-| PLAIN | ✅ | ✅ | ✅ | ✅ | ✅ |
-| RLE_DICTIONARY | ✅ | ✅ | ✅ | ✅ | ❌ |
-| DELTA_BINARY_PACKED | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Encoding            | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
+|---------------------|-------------|------------|---------|--------------|----------------------|
+| PLAIN               | ✅           | ✅          | ✅       | ✅            | ✅                    |
+| RLE_DICTIONARY      | ✅           | ✅          | ✅       | ✅            | ❌                    |
+| DELTA_BINARY_PACKED | ✅           | ❌          | ❌       | ❌            | ❌                    |
 
 ### Performance Guidelines
 
 1. **Analyze your data first** - Check cardinality and distribution patterns
 2. **Use RLE_DICTIONARY for categorical data** - Countries, statuses, departments
-3. **Use DELTA_BINARY_PACKED for sequential integers** - IDs, timestamps, counters  
+3. **Use DELTA_BINARY_PACKED for sequential integers** - IDs, timestamps, counters
 4. **Use PLAIN for high-variance data** - Descriptions, UUIDs, random data
 5. **Test different combinations** - Measure file size and query performance
 6. **Consider query patterns** - Frequently filtered columns benefit from dictionary encoding

@@ -86,6 +86,14 @@ final readonly class ReadFlatColumnValues
     }
 
     /**
+     * @return \Generator<mixed>
+     */
+    public function rawValues() : \Generator
+    {
+        yield from $this->values;
+    }
+
+    /**
      * @return array<int>
      */
     public function repetitionLevels() : array

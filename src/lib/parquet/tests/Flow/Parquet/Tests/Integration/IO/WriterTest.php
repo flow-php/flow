@@ -9,13 +9,12 @@ use function Flow\Filesystem\DSL\path;
 use Composer\InstalledVersions;
 use Faker\Factory;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
-use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
+use Flow\Parquet\{Consts, Option, Options, ParquetEngine, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
-use Flow\Parquet\ParquetFile\Schema\{MapKey, MapValue};
-use PHPUnit\Framework\TestCase;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
+use PHPUnit\Framework\Attributes\DataProvider;
 
-final class WriterTest extends TestCase
+class WriterTest extends ParquetIntegrationTestCase
 {
     protected function setUp() : void
     {
@@ -24,9 +23,10 @@ final class WriterTest extends TestCase
         }
     }
 
-    public function test_closing_not_open_writer() : void
+    #[DataProvider('engine_provider')]
+    public function test_closing_not_open_writer(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
@@ -36,7 +36,7 @@ final class WriterTest extends TestCase
 
     public function test_created_by_metadata() : void
     {
-        $writer = new Writer();
+        $writer = Writer::php();
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -44,14 +44,15 @@ final class WriterTest extends TestCase
         $writer->open($path, $schema);
         $writer->close();
 
-        $metadata = (new Reader())->read($path)->metadata();
+        $metadata = Reader::php()->read($path)->metadata();
 
-        self::assertSame('flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'], $metadata->createdBy());
+        static::assertSame('flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'], $metadata->createdBy());
     }
 
-    public function test_opening_already_open_writer() : void
+    #[DataProvider('engine_provider')]
+    public function test_opening_already_open_writer(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -65,7 +66,8 @@ final class WriterTest extends TestCase
         $writer->open($path, $schema);
     }
 
-    public function test_writing_all_column_types() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_all_column_types(ParquetEngine $engine) : void
     {
         $schema = Schema::with(
             FlatColumn::int32('int32_col'),
@@ -90,16 +92,17 @@ final class WriterTest extends TestCase
 
         $path = __DIR__ . '/var/all-types-' . generate_random_string() . '.parquet';
 
-        (new Writer())->write($path, $schema, $rows);
+        (new Writer(engine: $engine))->write($path, $schema, $rows);
 
-        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+        static::assertSame($rows, \iterator_to_array((new Reader(engine: $engine))->read($path)->values()));
 
         \unlink($path);
     }
 
-    public function test_writing_batch_to_not_open_stream() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_batch_to_not_open_stream(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
@@ -107,11 +110,13 @@ final class WriterTest extends TestCase
         $writer->writeBatch([$this->createRow()]);
     }
 
-    public function test_writing_column_statistics() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_column_statistics(ParquetEngine $engine) : void
     {
         $writer = new Writer(
             options: Options::default()
-                ->set(Option::WRITER_VERSION, 1)
+                ->set(Option::WRITER_VERSION, 1),
+            engine: $engine,
         );
 
         $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
@@ -123,25 +128,23 @@ final class WriterTest extends TestCase
             \range(1, 100)
         ));
 
-        $statistics = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics();
+        $statistics = (new Reader(engine: $engine))->read($path)->metadata()->columnChunks()[0]->statistics();
 
-        self::assertSame(1, $statistics->min($column));
-        self::assertSame(100, $statistics->max($column));
-        self::assertSame(1, $statistics->minValue($column));
-        self::assertSame(100, $statistics->maxValue($column));
-        self::assertNull($statistics->distinctCount());
-        self::assertSame(0, $statistics->nullCount());
+        static::assertSame(1, $statistics->min($column));
+        static::assertSame(100, $statistics->max($column));
+        static::assertSame(1, $statistics->minValue($column));
+        static::assertSame(100, $statistics->maxValue($column));
+        static::assertNull($statistics->distinctCount());
+        static::assertSame(0, $statistics->nullCount());
 
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
     public function test_writing_data_page_v2_statistics() : void
     {
-        $writer = new Writer(
-            options: $options = Options::default()
-                ->set(Option::WRITER_VERSION, 2)
-        );
+        $options = Options::default()->set(Option::WRITER_VERSION, 2);
+        $writer = Writer::php(options: $options);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
 
@@ -152,23 +155,24 @@ final class WriterTest extends TestCase
             \range(1, 100)
         ));
 
-        foreach ((new Reader())->read($path)->pageHeaders() as $pageHeader) {
+        foreach ((new Reader(options: $options, engine: new \Flow\Parquet\Engine\PhpParquetEngine()))->read($path)->pageHeaders() as $pageHeader) {
             $statistics = $pageHeader->pageHeader->dataPageHeaderV2()->statistics($options);
 
-            self::assertSame(1, $statistics->min($column));
-            self::assertSame(100, $statistics->max($column));
-            self::assertSame(1, $statistics->minValue($column));
-            self::assertSame(100, $statistics->maxValue($column));
-            self::assertNull($statistics->distinctCount());
-            self::assertSame(0, $statistics->nullCount());
+            static::assertSame(1, $statistics->min($column));
+            static::assertSame(100, $statistics->max($column));
+            static::assertSame(1, $statistics->minValue($column));
+            static::assertSame(100, $statistics->maxValue($column));
+            static::assertNull($statistics->distinctCount());
+            static::assertSame(0, $statistics->nullCount());
         }
 
         \unlink($path);
     }
 
-    public function test_writing_in_batches_to_file() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_in_batches_to_file(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -185,17 +189,18 @@ final class WriterTest extends TestCase
 
         $writer->close();
 
-        self::assertSame(
+        static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_in_batches_to_file_without_explicit_close() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_in_batches_to_file_without_explicit_close(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -211,17 +216,18 @@ final class WriterTest extends TestCase
 
         unset($writer);
 
-        self::assertSame(
+        static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_in_batches_to_stream() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_in_batches_to_stream(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -239,17 +245,18 @@ final class WriterTest extends TestCase
 
         $writer->close();
 
-        self::assertSame(
+        static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_one_row_that_is_nullable() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_one_row_that_is_nullable(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $schema = Schema::with(
             $column = FlatColumn::int32('id'),
@@ -267,23 +274,24 @@ final class WriterTest extends TestCase
             ]
         );
 
-        $max = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->max($column);
-        $min = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->min($column);
-        $maxValue = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->max($column);
-        $minValue = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->min($column);
+        $max = (new Reader(engine: $engine))->read($path)->metadata()->columnChunks()[0]->statistics()->max($column);
+        $min = (new Reader(engine: $engine))->read($path)->metadata()->columnChunks()[0]->statistics()->min($column);
+        $maxValue = (new Reader(engine: $engine))->read($path)->metadata()->columnChunks()[0]->statistics()->max($column);
+        $minValue = (new Reader(engine: $engine))->read($path)->metadata()->columnChunks()[0]->statistics()->min($column);
 
-        self::assertNull($max);
-        self::assertNull($min);
-        self::assertNull($maxValue);
-        self::assertNull($minValue);
+        static::assertNull($max);
+        static::assertNull($min);
+        static::assertNull($maxValue);
+        static::assertNull($minValue);
 
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_row_to_not_open_stream() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_row_to_not_open_stream(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
@@ -291,9 +299,10 @@ final class WriterTest extends TestCase
         $writer->writeRow($this->createRow());
     }
 
-    public function test_writing_to_file() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_to_file(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -302,19 +311,21 @@ final class WriterTest extends TestCase
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        self::assertSame(
+        static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_to_file_v2() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_to_file_v2(ParquetEngine $engine) : void
     {
         $writer = new Writer(
             options: Options::default()
-                ->set(Option::WRITER_VERSION, 2)
+                ->set(Option::WRITER_VERSION, 2),
+            engine: $engine,
         );
 
         $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
@@ -324,18 +335,19 @@ final class WriterTest extends TestCase
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        self::assertSame(2, (new Reader())->read($path)->metadata()->version());
-        self::assertSame(
+        static::assertSame(2, (new Reader(engine: $engine))->read($path)->metadata()->version());
+        static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_to_stream() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_to_stream(ParquetEngine $engine) : void
     {
-        $writer = new Writer();
+        $writer = new Writer(engine: $engine);
 
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
@@ -346,15 +358,16 @@ final class WriterTest extends TestCase
 
         $writer->writeStream(new NativeLocalDestinationStream(path($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        self::assertSame(
+        static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
+            \iterator_to_array((new Reader(engine: $engine))->read($path)->values())
         );
-        self::assertFileExists($path);
+        static::assertFileExists($path);
         \unlink($path);
     }
 
-    public function test_writing_with_all_nullable_columns() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_with_all_nullable_columns(ParquetEngine $engine) : void
     {
         $schema = Schema::with(
             FlatColumn::int32('a'),
@@ -371,14 +384,15 @@ final class WriterTest extends TestCase
 
         $path = __DIR__ . '/var/nullable-' . generate_random_string() . '.parquet';
 
-        (new Writer())->write($path, $schema, $rows);
+        (new Writer(engine: $engine))->write($path, $schema, $rows);
 
-        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+        static::assertSame($rows, \iterator_to_array((new Reader(engine: $engine))->read($path)->values()));
 
         \unlink($path);
     }
 
-    public function test_writing_with_dictionary_encoding() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_with_dictionary_encoding(ParquetEngine $engine) : void
     {
         $schema = Schema::with(
             FlatColumn::int32('id')->makeRequired(),
@@ -393,14 +407,15 @@ final class WriterTest extends TestCase
 
         $path = __DIR__ . '/var/dict-' . generate_random_string() . '.parquet';
 
-        (new Writer())->write($path, $schema, $rows);
+        (new Writer(engine: $engine))->write($path, $schema, $rows);
 
-        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+        static::assertSame($rows, \iterator_to_array((new Reader(engine: $engine))->read($path)->values()));
 
         \unlink($path);
     }
 
-    public function test_writing_with_empty_lists_and_maps() : void
+    #[DataProvider('engine_provider')]
+    public function test_writing_with_empty_lists_and_maps(ParquetEngine $engine) : void
     {
         $schema = Schema::with(
             FlatColumn::int32('id')->makeRequired(),
@@ -417,9 +432,9 @@ final class WriterTest extends TestCase
 
         $path = __DIR__ . '/var/empty-' . generate_random_string() . '.parquet';
 
-        (new Writer())->write($path, $schema, $rows);
+        (new Writer(engine: $engine))->write($path, $schema, $rows);
 
-        self::assertSame($rows, \iterator_to_array((new Reader())->read($path)->values()));
+        static::assertSame($rows, \iterator_to_array((new Reader(engine: $engine))->read($path)->values()));
 
         \unlink($path);
     }

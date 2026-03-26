@@ -68,12 +68,6 @@ jobs:
       - name: "Test - Lib - Types"
         run: "composer test:lib:types"
 
-      - name: "Test - Lib - Parquet"
-        run: "composer test:lib:parquet"
-
-      - name: "Test - Lib - Parquet Viewer"
-        run: "composer test:lib:parquet-viewer"
-
       - name: "Test - Lib - Snappy"
         run: "composer test:lib:snappy"
 
@@ -97,9 +91,6 @@ jobs:
 
       - name: "Test - Adapter - Logger"
         run: "composer test:adapter:logger"
-
-      - name: "Test - Adapter - Parquet"
-        run: "composer test:adapter:parquet"
 
       - name: "Test - Adapter - Text"
         run: "composer test:adapter:text"

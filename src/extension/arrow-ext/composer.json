@@ -1,0 +1,34 @@
+{
+    "name": "flow-php/arrow-ext",
+    "type": "php-ext",
+    "description": "Apache Arrow PHP extension powered by Rust",
+    "keywords": ["arrow", "parquet", "extension", "rust", "native"],
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\Arrow\\": "php/Flow/Arrow/"
+        }
+    },
+    "scripts": {
+        "build": "make build",
+        "test:ext": "make test"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-1.x": "1.x-dev"
+        }
+    },
+    "php-ext": {
+        "extension-name": "arrow",
+        "build-path": "ext",
+        "configure-options": [],
+        "support-zts": true,
+        "support-nts": true
+    }
+}

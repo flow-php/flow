@@ -245,11 +245,11 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
     }
 
-    public function getMapValueColumn() : Column
+    public function getMapValueColumn() : ?Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
-            return $this->cachedMapValueColumn ??= $this->children()[0]->children()[1];
+            return $this->cachedMapValueColumn ??= $this->children()[0]->children()[1] ?? null;
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');

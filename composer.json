@@ -160,7 +160,8 @@
                 "src/lib/snappy/src/Flow",
                 "src/lib/telemetry/src/Flow",
                 "src/lib/types/src/Flow",
-                "src/tools/documentation/src/Flow"
+                "src/tools/documentation/src/Flow",
+                "src/extension/arrow-ext/php/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
                 "src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk"

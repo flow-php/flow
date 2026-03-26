@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\BinaryReader;
 
 use Flow\Parquet\{BinaryReader, DataSize};
+use Flow\Parquet\Exception\OutOfBoundsException;
 
 final class BinaryBufferReader implements BinaryReader
 {
@@ -80,6 +81,10 @@ final class BinaryBufferReader implements BinaryReader
         $shift = 0;
 
         do {
+            if ($this->positionBytes >= \strlen($this->buffer)) {
+                throw new OutOfBoundsException('Buffer overflow: attempted to read beyond buffer length in readVarInt');
+            }
+
             $byte = \ord($this->buffer[$this->positionBytes]);
             $this->positionBits += 8;
             $this->positionBytes++;

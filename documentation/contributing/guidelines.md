@@ -24,7 +24,7 @@ The project is structured as follows:
 │   ├── bridge
 │   ├── cli
 │   ├── core
-│   ├── functions.php
+│   ├── extension
 │   ├── lib
 │   └── tools
 ├── tools
@@ -48,6 +48,8 @@ The project is structured as follows:
     - `bridge` contains bridges to connect flow libs with other libraries and frameworks.
     - `cli` contains the command line interface application.
     - `core` contains the core functionality of the project, it holds the entire DataFrame.
+    - `extension` contains PHP extensions written in other languages (Rust, C) that provide performance-critical
+      functionality.
     - `lib` contains standalone libraries that can be used independently of the project, like `doctrine-dbal-bulk` and
       `parquet`.
     - `tools` contains tools used during development.

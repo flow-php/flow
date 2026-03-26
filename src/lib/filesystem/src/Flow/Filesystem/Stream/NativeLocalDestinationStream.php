@@ -59,7 +59,12 @@ final class NativeLocalDestinationStream implements DestinationStream
         }
 
         \fseek($this->handle(), 0, \SEEK_END);
-        \fwrite($this->handle(), $data);
+
+        $written = \fwrite($this->handle(), $data);
+
+        if ($written === false || $written !== \strlen($data)) {
+            throw new RuntimeException('Failed to write all bytes to stream, expected ' . \strlen($data) . ' bytes, written: ' . ($written === false ? '0' : $written));
+        }
 
         return $this;
     }

@@ -143,6 +143,32 @@ final readonly class DremelAssembler
         $mapKeyColumn = $column->getMapKeyColumn();
         $mapValueColumn = $column->getMapValueColumn();
 
+        if ($mapValueColumn === null) {
+            foreach ($this->assemblyFlat($mapKeyColumn, $flatData) as $key) {
+                if ($key instanceof NullLevel) {
+                    yield $key;
+
+                    continue;
+                }
+
+                if (\is_array($key)) {
+                    $result = [];
+
+                    foreach ($key as $k) {
+                        /** @var int|string $k */
+                        $result[$k] = null;
+                    }
+
+                    yield $result;
+                } else {
+                    /** @var int|string $key */
+                    yield [$key => null];
+                }
+            }
+
+            return;
+        }
+
         if ($mapValueColumn instanceof FlatColumn) {
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');

@@ -79,18 +79,21 @@ abstract class EndToEndTestCase extends PantherTestCase
         $startTime = \time();
 
         while (\time() - $startTime < $timeout) {
-            $isReady = $client->executeScript(
-                'const playground = document.getElementById("playground");
-                if (!playground) return false;
-                const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
-                return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();'
-            );
+            try {
+                $isReady = $client->executeScript(
+                    'const playground = document.getElementById("playground");
+                    if (!playground) return false;
+                    const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
+                    return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();'
+                );
 
-            if ($isReady === true) {
-                // Give a small delay to ensure all event handlers have completed
-                $client->wait(0.5);
+                if ($isReady === true) {
+                    $client->wait(0.5);
 
-                return;
+                    return;
+                }
+            } catch (WebDriverException) {
+                // Page may not be fully attached yet, retry
             }
 
             $client->wait(0.5);
@@ -103,7 +106,11 @@ abstract class EndToEndTestCase extends PantherTestCase
     {
         return static::createPantherClient(\array_merge([
             'env' => ['APP_ENV' => 'test'],
-        ], $options));
+        ], $options), [], [
+            'capabilities' => [
+                'pageLoadStrategy' => 'eager',
+            ],
+        ]);
     }
 
     protected static function getKernelClass() : string
@@ -117,19 +124,19 @@ abstract class EndToEndTestCase extends PantherTestCase
      */
     protected static function navigateWithRetry(string $url, int $maxRetries = 3) : Client
     {
+        $client = static::createE2EClient();
         $lastException = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
-                $client = static::createE2EClient();
                 $client->request('GET', $url);
 
                 return $client;
             } catch (WebDriverException $e) {
                 $lastException = $e;
 
-                if ($attempt === $maxRetries) {
-                    throw $e;
+                if ($attempt < $maxRetries) {
+                    $client->restart();
                 }
             }
         }

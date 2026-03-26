@@ -21,6 +21,9 @@
         "optimize-autoloader": true,
         "sort-packages": true
     },
+    "suggest": {
+        "ext-arrow": "For high-performance Parquet reading/writing via Apache Arrow"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {

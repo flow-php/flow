@@ -69,7 +69,7 @@ final class CodecTest extends TestCase
 
         self::assertSame(
             $data,
-            $codec->decompress($codec->compress($data, Compressions::LZ4_RAW), Compressions::LZ4_RAW)
+            $codec->decompress($codec->compress($data, Compressions::LZ4_RAW), Compressions::LZ4_RAW, \strlen($data))
         );
     }
 

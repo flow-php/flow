@@ -94,6 +94,7 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if ($nonEmptyValuesCount) {
                 $bitWidth = \ord($reader->readBytes(1));
+
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
                     $reader,
@@ -187,6 +188,7 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if (\count($definitionLevels)) {
                 $bitWidth = \ord($reader->readBytes(1));
+
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
                     $reader,

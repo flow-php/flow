@@ -1,5 +1,14 @@
+codecov:
+  notify:
+    after_n_builds: 5
+
 comment:
   layout: "condensed_header, diff, components"
+  after_n_builds: 5
+
+flag_management:
+  default_rules:
+    carryforward: true
 
 component_management:
   individual_components:
