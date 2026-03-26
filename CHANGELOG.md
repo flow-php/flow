@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-26
+## [0.34.0] - 2026-03-26
 
 ### Added
 - [#2257](https://github.com/flow-php/flow/pull/2257) - **parquet fixed array length support** - [@norberttech](https://github.com/norberttech)
