@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-03-26
 
 ### Added
+- [#2274](https://github.com/flow-php/flow/pull/2274) - **flow-php/arrow-ext to Dockerfile** - [@norberttech](https://github.com/norberttech)
+- [#2274](https://github.com/flow-php/flow/pull/2274) - **flow-php/arrow-ext pie installation tests** - [@norberttech](https://github.com/norberttech)
 - [#2268](https://github.com/flow-php/flow/pull/2268) - **arrow-ext and expose parquet reader/writer** - [@norberttech](https://github.com/norberttech)
 - [#2268](https://github.com/flow-php/flow/pull/2268) - **ParquetEngine abstraction into flow-php/parquet** - [@norberttech](https://github.com/norberttech)
 
@@ -8,6 +10,7 @@
 - [#2268](https://github.com/flow-php/flow/pull/2268) - **Let flow-php/parquet use engines based on arrow extension availability** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2274](https://github.com/flow-php/flow/pull/2274) - **packages README files** - [@norberttech](https://github.com/norberttech)
 - [32a488](https://github.com/flow-php/flow/commit/32a488a456d8ea5f347a09cfb1fb488fb486430a) - **makefile.frag** - [@norberttech](https://github.com/norberttech)
 - [#2273](https://github.com/flow-php/flow/pull/2273) - **arrow-ext installation through pie** - [@norberttech](https://github.com/norberttech)
 
