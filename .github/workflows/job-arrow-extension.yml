@@ -94,6 +94,8 @@ jobs:
   pie-install-test:
     name: Test PIE Installation
     runs-on: ${{ matrix.os }}
+    env:
+      RUSTUP_TOOLCHAIN: stable
     strategy:
       fail-fast: false
       matrix:
@@ -147,7 +149,7 @@ jobs:
         run: |
           sudo pie repository:remove packagist.org
           sudo pie repository:add path ${{ github.workspace }}/src/extension/arrow-ext
-          sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" pie install flow-php/arrow-ext:0.0.9999@dev
+          sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN" "CARGO_HOME=$CARGO_HOME" "RUSTUP_HOME=$RUSTUP_HOME" pie install flow-php/arrow-ext:0.0.9999@dev
 
       - name: Verify extension is loaded
         run: |
