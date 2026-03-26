@@ -7,6 +7,9 @@
 ### Changed
 - [#2268](https://github.com/flow-php/flow/pull/2268) - **Let flow-php/parquet use engines based on arrow extension availability** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [#2273](https://github.com/flow-php/flow/pull/2273) - **arrow-ext installation through pie** - [@norberttech](https://github.com/norberttech)
+
 ## [0.34.0] - 2026-03-26
 
 ### Added
