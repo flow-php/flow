@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-27
+## [0.34.3] - 2026-03-27
 
 ### Fixed
 - [b2b99c](https://github.com/flow-php/flow/commit/b2b99cd2658be3ad7c3d433d1671aff09f4fee72) - **docker permissions while building arrow-ext binaries in workflow** - [@norberttech](https://github.com/norberttech)
