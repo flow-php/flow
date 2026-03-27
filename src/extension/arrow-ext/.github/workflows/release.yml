@@ -58,6 +58,9 @@ jobs:
             echo "ts-suffix=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Create output directory
+        run: mkdir -p dist
+
       - name: Build in Docker container
         run: |
           docker run --rm \
@@ -88,7 +91,6 @@ jobs:
               echo "::endgroup::"
 
               echo "::group::Package artifact"
-              mkdir -p /workspace/dist
               cp /workspace/target/release/libarrow.so /workspace/dist/arrow.so
               echo "::endgroup::"
             '
