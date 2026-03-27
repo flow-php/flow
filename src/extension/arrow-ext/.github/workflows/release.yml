@@ -1,0 +1,185 @@
+name: Release Precompiled Binaries
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+env:
+  EXTENSION_NAME: arrow
+  RUST_BACKTRACE: 1
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Get tag
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --draft \
+            --title "${{ steps.tag.outputs.tag }}" \
+            --generate-notes
+
+  build-linux:
+    name: "Linux ${{ matrix.arch }} - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
+    needs: create-release
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+        arch: ['x86_64', 'arm64']
+        ts: ['nts', 'zts']
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set build variables
+        id: build-vars
+        run: |
+          if [ "${{ matrix.ts }}" = "zts" ]; then
+            echo "php-image=${{ matrix.php }}-zts" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
+          else
+            echo "php-image=${{ matrix.php }}-cli" >> "$GITHUB_OUTPUT"
+            echo "ts-suffix=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build in Docker container
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e ARROW_VERSION="${{ needs.create-release.outputs.tag }}" \
+            php:${{ steps.build-vars.outputs.php-image }} \
+            bash -c '
+              set -euo pipefail
+
+              echo "::group::Install system dependencies"
+              apt-get update
+              apt-get install -y build-essential clang libclang-dev curl pkg-config
+              echo "::endgroup::"
+
+              echo "::group::Install Rust"
+              curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              source "$HOME/.cargo/env"
+              echo "::endgroup::"
+
+              echo "::group::Build extension"
+              cargo build --release
+              echo "::endgroup::"
+
+              echo "::group::Verify extension loads"
+              php -n -d extension=/workspace/target/release/libarrow.so -r "if (!extension_loaded(\"arrow\")) { echo \"ERROR: arrow extension failed to load\n\"; exit(1); } echo \"arrow extension loaded successfully\n\";"
+              echo "::endgroup::"
+
+              echo "::group::Package artifact"
+              mkdir -p /workspace/dist
+              cp /workspace/target/release/libarrow.so /workspace/dist/arrow.so
+              echo "::endgroup::"
+            '
+
+      - name: Create ZIP archive
+        run: |
+          cd dist
+          ARTIFACT_NAME="php_${{ env.EXTENSION_NAME }}-${{ needs.create-release.outputs.tag }}_php${{ matrix.php }}-${{ matrix.arch }}-linux-glibc${{ steps.build-vars.outputs.ts-suffix }}.zip"
+          zip "$ARTIFACT_NAME" arrow.so
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.create-release.outputs.tag }}" \
+            "${{ env.ARTIFACT_PATH }}" \
+            --repo "${{ github.repository }}"
+
+  build-macos:
+    name: "macOS arm64 - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
+    needs: create-release
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+        ts: ['nts', 'zts']
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+        env:
+          phpts: ${{ matrix.ts }}
+
+      - name: Set build variables
+        id: build-vars
+        run: |
+          if [ "${{ matrix.ts }}" = "zts" ]; then
+            echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
+          else
+            echo "ts-suffix=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install build dependencies
+        run: |
+          brew install llvm
+          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> "$GITHUB_ENV"
+
+      - name: Build extension
+        env:
+          ARROW_VERSION: ${{ needs.create-release.outputs.tag }}
+        run: cargo build --release
+
+      - name: Verify extension loads
+        run: php -n -d extension=./target/release/libarrow.dylib -r 'if (!extension_loaded("arrow")) { echo "ERROR: arrow extension failed to load\n"; exit(1); } echo "arrow extension loaded successfully\n";'
+
+      - name: Create ZIP archive
+        run: |
+          mkdir -p dist
+          cp target/release/libarrow.dylib dist/arrow.so
+          cd dist
+          ARTIFACT_NAME="php_${{ env.EXTENSION_NAME }}-${{ needs.create-release.outputs.tag }}_php${{ matrix.php }}-arm64-darwin-bsdlibc${{ steps.build-vars.outputs.ts-suffix }}.zip"
+          zip "$ARTIFACT_NAME" arrow.so
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.create-release.outputs.tag }}" \
+            "${{ env.ARTIFACT_PATH }}" \
+            --repo "${{ github.repository }}"
+
+  publish-release:
+    name: Publish Release
+    needs: [create-release, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark release as published
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "${{ needs.create-release.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --draft=false
