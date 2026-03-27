@@ -5,15 +5,14 @@ and baggage via PSR-7 request and response objects.
 
 - [Back](/documentation/introduction.md)
 - [Packagist](https://packagist.org/packages/flow-php/psr7-telemetry-bridge)
+- [➡️ Installation](/documentation/installation/packages/psr7-telemetry-bridge.md)
 - [GitHub](https://github.com/flow-php/psr7-telemetry-bridge)
 
 [TOC]
 
 ## Installation
 
-```
-composer require flow-php/psr7-telemetry-bridge:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/psr7-telemetry-bridge.md).
 
 ## Overview
 

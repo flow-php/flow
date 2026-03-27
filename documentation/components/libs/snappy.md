@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/snappy)
+- [➡️ Installation](/documentation/installation/packages/snappy.md)
 - [🐙GitHub](https://github.com/flow-php/snappy)
 - [📚API Reference](/documentation/api/lib/snappy)
 - [📁Files](/documentation/api/lib/snappy/indices/files.html)
@@ -16,9 +17,7 @@ otherwise this lib will register polyfill functions.
 
 ## Installation
 
-```
-composer require flow-php/snappy:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/snappy.md).
 
 ## Usage
 

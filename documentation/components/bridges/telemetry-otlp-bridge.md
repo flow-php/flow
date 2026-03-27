@@ -7,6 +7,7 @@ capabilities.
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/telemetry-otlp-bridge)
+- [➡️ Installation](/documentation/installation/packages/telemetry-otlp-bridge.md)
 - [🐙GitHub](https://github.com/flow-php/telemetry-otlp-bridge)
 - [📚API Reference](/documentation/api/bridge/telemetry/otlp)
 - [🗺DSL](/documentation/api/bridge/telemetry/otlp/namespaces/flow-bridge-telemetry-otlp-dsl.html)
@@ -15,9 +16,7 @@ capabilities.
 
 ## Installation
 
-```
-composer require flow-php/telemetry-otlp-bridge:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/telemetry-otlp-bridge.md).
 
 ### Transports
 

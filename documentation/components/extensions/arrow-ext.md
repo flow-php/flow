@@ -1,6 +1,7 @@
 # Arrow Extension
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [➡️ Installation](/documentation/installation/packages/arrow-ext.md)
 
 [TOC]
 
@@ -47,65 +48,7 @@ The Arrow Rust crates offer additional I/O capabilities that are candidates for 
 
 ## Installation
 
-### Using PIE (Recommended)
-
-[PIE](https://github.com/php/pie) is the modern PHP extension installer.
-
-**Prerequisites:** Install Rust toolchain and clang on your system:
-
-```bash
-# Install Rust (if not already installed)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Ubuntu/Debian
-sudo apt-get install build-essential clang libclang-dev
-
-# macOS with Homebrew
-brew install llvm
-export LIBCLANG_PATH=$(brew --prefix llvm)/lib
-```
-
-**Install the extension:**
-
-```bash
-pie install flow-php/arrow-ext
-```
-
-### Build from Source
-
-```bash
-# Install build dependencies (Ubuntu/Debian)
-sudo apt-get install build-essential clang libclang-dev
-
-# Install build dependencies (macOS)
-brew install llvm
-export LIBCLANG_PATH=$(brew --prefix llvm)/lib
-
-# Build
-cd src/extension/arrow-ext
-make build
-
-# Run tests
-make test
-
-# Install to system PHP
-make install
-```
-
-### Using Nix (Monorepo Development)
-
-From the Flow PHP monorepo root:
-
-```bash
-# Default shell includes the pre-built arrow extension
-nix-shell
-php -m | grep arrow
-
-# For extension development (Rust toolchain + PHP dev headers, no pre-built extension)
-nix-shell --arg with-arrow-ext false --arg with-rust true
-cd src/extension/arrow-ext
-make build && make test
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/arrow-ext.md).
 
 ## Loading the Extension
 

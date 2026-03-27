@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-google-sheet)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-google-sheet.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-google-sheet)
 - [📚API Reference](/documentation/api/adapter/google-sheet)
 - [📁Files](/documentation/api/adapter/google-sheet/indices/files.html)
@@ -22,9 +23,7 @@ with the robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-google-sheet:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-google-sheet.md).
 
 ## Extractor
 

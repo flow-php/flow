@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-csv)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-csv.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-csv)
 - [📚API Reference](/documentation/api/adapter/csv)
 - [📁Files](/documentation/api/adapter/csv/indices/files.html)
@@ -21,9 +22,7 @@ aligning with the robust and adaptable framework of the Flow PHP ecosystem.
 
 ## Installation
 
-``` 
-composer require flow-php/etl-adapter-csv:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-csv.md).
 
 ## Extractor
 

@@ -2,16 +2,17 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/filesystem-async-aws-bridge)
+- [➡️ Installation](/documentation/installation/packages/filesystem-async-aws-bridge.md)
 - [🐙GitHub](https://github.com/flow-php/filesystem-async-aws-bridge)
 - [📚API Reference](/documentation/api/bridge/filesystem/async-aws)
 - [📁Files](/documentation/api/bridge/filesystem/async-aws/indices/files.html)
 
-The Filesystem Async AWS Bridge is a bridge that allows you to use the S3 as a filesystem in your application 
+The Filesystem Async AWS Bridge is a bridge that allows you to use the S3 as a filesystem in your application
 through [Async AWS SDK](https://github.com/async-aws/s3).
 
-```bash
-composer require flow-php/filesystem-async-aws-bridge:~--FLOW_PHP_VERSION--
-```
+## Installation
+
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem-async-aws-bridge.md).
 
 ```php
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};

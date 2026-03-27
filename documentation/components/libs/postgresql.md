@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/postgresql)
+- [➡️ Installation](/documentation/installation/packages/postgresql.md)
 - [🐙GitHub](https://github.com/flow-php/postgresql)
 - [📚API Reference](/documentation/api/lib/postgresql)
 - [📁Files](/documentation/api/lib/postgresql/indices/files.html)
@@ -48,9 +49,7 @@ Both extensions are optional - you can use the Client without installing `ext-pg
 
 ## Installation
 
-```
-composer require flow-php/postgresql:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/postgresql.md).
 
 ---
 

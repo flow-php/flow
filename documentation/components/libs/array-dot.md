@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/array-dot)
+- [➡️ Installation](/documentation/installation/packages/array-dot.md)
 - [🐙GitHub](https://github.com/flow-php/array-dot)
 - [📚API Reference](/documentation/api/lib/array-dot)
 - [📁Files](/documentation/api/lib/array-dot/indices/files.html)
@@ -20,9 +21,7 @@ companion for achieving cleaner and more efficient array operations.
 
 ## Installation
 
-```
-composer require flow-php/array-dot:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/array-dot.md).
 
 ## Available Functions
 

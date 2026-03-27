@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-doctrine)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-doctrine.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-doctrine)
 - [📚API Reference](/documentation/api/adapter/doctrine)
 - [📁Files](/documentation/api/adapter/doctrin/indices/files.html)
@@ -22,9 +23,7 @@ robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-doctrine:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-doctrine.md).
 
 ## Description
 

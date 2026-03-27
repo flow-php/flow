@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/doctrine-dbal-bulk)
+- [➡️ Installation](/documentation/installation/packages/doctrine-dbal-bulk.md)
 - [🐙GitHub](https://github.com/flow-php/doctrine-dbal-bulk)
 - [📚API Reference](/documentation/api/lib/doctrine-dbal-bulk)
 - [📁Files](/documentation/api/lib/doctrine-dbal-bulk/indices/files.html)
@@ -19,9 +20,7 @@ toolkit.
 
 ## Installation
 
-```
-composer require flow-php/doctrine-dbal-bulk:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/doctrine-dbal-bulk.md).
 
 ## Usage Examples
 

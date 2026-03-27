@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/azure-sdk)
+- [➡️ Installation](/documentation/installation/packages/azure-sdk.md)
 - [🐙GitHub](https://github.com/flow-php/azure-sdk)
 - [📚API Reference](/documentation/api/lib/azure-sdk)
 - [📁Files](/documentation/api/lib/azure-sdk/indices/files.html)
@@ -12,9 +13,7 @@ Simple, lightweight, dependency-free and efficient Azure SDK for PHP.
 
 ## Installation
 
-```bash
-composer require flow-php/azure-sdk:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/azure-sdk.md).
 
 > [!NOTE]  
 > Since the Azure SDK is not providing any http client or factories, you need to install them manually.

@@ -6,6 +6,6 @@ A PHP client for PostgreSQL featuring a powerful SQL parser and query builder fo
 > This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
 
 - 📜 [Documentation](https://flow-php.com/documentation/components/libs/postgresql/)
-- ➡️ [Installation](https://flow-php.com/documentation/installation/)
+- ➡️ [Installation](https://flow-php.com/documentation/installation/packages/postgresql/)
 - 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
 - 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)

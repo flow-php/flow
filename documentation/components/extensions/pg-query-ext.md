@@ -1,6 +1,7 @@
 # PG Query Extension
 
 - [⬅️️ Back](/documentation/introduction.md)
+- [➡️ Installation](/documentation/installation/packages/pg-query-ext.md)
 
 [TOC]
 
@@ -31,25 +32,7 @@ interface with strongly-typed AST nodes, see the [pg-query library](/documentati
 
 ## Installation
 
-### Using PIE (Recommended)
-
-[PIE](https://github.com/php/pie) is the modern PHP extension installer.
-
-```bash
-# Simple installation
-pie install flow-php/pg-query-ext
-```
-
-The extension will automatically download and build the appropriate libpg_query version. Build dependencies (
-`protobuf-c`, `git`, `make`, `gcc`) must be available on your system.
-
-### Supported PostgreSQL Versions
-
-| PostgreSQL | libpg_query version |
-|------------|---------------------|
-| 17         | 17-6.2.1 (default)  |
-| 16         | 16-5.2.0            |
-| 15         | 15-4.2.4            |
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/pg-query-ext.md).
 
 ## Loading the Extension
 

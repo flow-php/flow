@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-xml)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-xml.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-xml)
 - [📚API Reference](/documentation/api/adapter/xml)
 - [📁Files](/documentation/api/adapter/xml/indices/files.html)
@@ -21,9 +22,7 @@ aligning perfectly with the robust and adaptable nature of the Flow PHP ecosyste
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-xml:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-xml.md).
 
 ## Extractor - XMLExtractor
 

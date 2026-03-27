@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/quick-start.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/cli)
+- [➡️ Installation](/documentation/installation/packages/cli.md)
 - [🐙GitHub](https://github.com/flow-php/cli)
 - [📚API Reference](/documentation/api/cli)
 - [📁Files](/documentation/api/cli/indices/files.html)
@@ -10,25 +11,7 @@
 
 ## Installation
 
-```shell
-composer require flow-php/cli:~--FLOW_PHP_VERSION--
-```
-
-In some cases, it might make sense to install the CLI globally:
-
-```shell
-composer global require flow-php/cli:~--FLOW_PHP_VERSION--
-```
-
-Now you can run the CLI using the `flow` command.
-
-### Docker
-
-Flow CLI application is also available as a docker image: 
-
-```shell
-docker run -v $(pwd):/flow-workspace -it ghcr.io/flow-php/flow:latest --version
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/cli.md).
 
 ## Commands
 

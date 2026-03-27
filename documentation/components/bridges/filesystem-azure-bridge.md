@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/filesystem-azure-bridge)
+- [➡️ Installation](/documentation/installation/packages/filesystem-azure-bridge.md)
 - [🐙GitHub](https://github.com/flow-php/filesystem-azure-bridge)
 - [📚API Reference](/documentation/api/bridge/filesystem/azure)
 - [📁Files](/documentation/api/bridge/filesystem/azure/indices/files.html)
@@ -12,9 +13,7 @@ The Filesystem Azure Bridge is a bridge that allows you to use the Azure Blob St
 
 ## Installation
 
-```bash
-composer require flow-php/filesystem-azure-bridge:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem-azure-bridge.md).
 
 ## Usage
 

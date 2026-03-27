@@ -4,6 +4,7 @@ PHPUnit extension allowing to collect test suite telemetry and export to OTEL co
 
 - [Back](/documentation/introduction.md)
 - [Packagist](https://packagist.org/packages/flow-php/phpunit-telemetry-bridge)
+- [➡️ Installation](/documentation/installation/packages/phpunit-telemetry-bridge.md)
 - [GitHub](https://github.com/flow-php/phpunit-telemetry-bridge)
 - [API Reference](/documentation/api/bridge/phpunit/telemetry)
 
@@ -11,9 +12,7 @@ PHPUnit extension allowing to collect test suite telemetry and export to OTEL co
 
 ## Installation
 
-```bash
-composer require flow-php/phpunit-telemetry-bridge:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/phpunit-telemetry-bridge.md).
 
 ## Configuration
 

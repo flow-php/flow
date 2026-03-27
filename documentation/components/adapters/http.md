@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-http)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-http.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-http)
 - [📚API Reference](/documentation/api/adapter/http)
 - [📁Files](/documentation/api/adapter/http/indices/files.html)
@@ -22,9 +23,7 @@ of the Flow PHP ecosystem.
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-http:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-http.md).
 
 ## Extractor - PsrHttpClientDynamicExtractor
 

@@ -155,6 +155,56 @@
       "name": "flow-php/phpunit-telemetry-bridge",
       "path": "src/bridge/phpunit/telemetry",
       "type": "bridge"
+    },
+    {
+      "name": "flow-php/etl-adapter-postgresql",
+      "path": "src/adapter/etl-adapter-postgresql",
+      "type": "adapter"
+    },
+    {
+      "name": "flow-php/monolog-telemetry-bridge",
+      "path": "src/bridge/monolog/telemetry",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/psr18-telemetry-bridge",
+      "path": "src/bridge/psr18/telemetry",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/psr7-telemetry-bridge",
+      "path": "src/bridge/psr7/telemetry",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/symfony-http-foundation-telemetry-bridge",
+      "path": "src/bridge/symfony/http-foundation-telemetry",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/symfony-telemetry-bundle",
+      "path": "src/bridge/symfony/telemetry-bundle",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/telemetry-otlp-bridge",
+      "path": "src/bridge/telemetry/otlp",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/telemetry",
+      "path": "src/lib/telemetry",
+      "type": "lib"
+    },
+    {
+      "name": "flow-php/arrow-ext",
+      "path": "src/extension/arrow-ext",
+      "type": "extension"
+    },
+    {
+      "name": "flow-php/pg-query-ext",
+      "path": "src/extension/pg-query-ext",
+      "type": "extension"
     }
   ]
 }
