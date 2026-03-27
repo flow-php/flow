@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-03-27
+## [0.34.1] - 2026-03-27
 
 ### Added
 - [#2278](https://github.com/flow-php/flow/pull/2278) - **workflow to precompile arrow extension binaries during release** - [@norberttech](https://github.com/norberttech)
