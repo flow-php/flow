@@ -83,7 +83,8 @@ jobs:
               echo "::endgroup::"
 
               echo "::group::Verify extension loads"
-              php -n -d extension=/workspace/target/release/libarrow.so -r "if (!extension_loaded(\"arrow\")) { echo \"ERROR: arrow extension failed to load\n\"; exit(1); } echo \"arrow extension loaded successfully\n\";"
+              php -n -d extension=/workspace/target/release/libarrow.so -m | grep -q arrow || { echo "ERROR: arrow extension failed to load"; exit 1; }
+              echo "arrow extension loaded successfully"
               echo "::endgroup::"
 
               echo "::group::Package artifact"
@@ -151,7 +152,9 @@ jobs:
         run: cargo build --release
 
       - name: Verify extension loads
-        run: php -n -d extension=./target/release/libarrow.dylib -r 'if (!extension_loaded("arrow")) { echo "ERROR: arrow extension failed to load\n"; exit(1); } echo "arrow extension loaded successfully\n";'
+        run: |
+          php -n -d extension=./target/release/libarrow.dylib -m | grep -q arrow || { echo "ERROR: arrow extension failed to load"; exit 1; }
+          echo "arrow extension loaded successfully"
 
       - name: Create ZIP archive
         run: |

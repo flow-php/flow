@@ -57,6 +57,7 @@ pkgs.mkShell {
         pkgs.symfony-cli
         pkgs.act
         pkgs.hyperfine
+        pkgs.actionlint
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
         ++ pkgs.lib.optionals with-wasm [
