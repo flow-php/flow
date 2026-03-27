@@ -7,6 +7,7 @@ The main goal of this library is to simplify common type-related tasks, such as 
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/types)
+- [➡️ Installation](/documentation/installation/packages/types.md)
 - [🐙GitHub](https://github.com/flow-php/types)
 - [📖Architecture](/documentation/components/libs/types/architecture.md)
 - [📚API Reference](/documentation/api/lib/types)
@@ -16,9 +17,7 @@ The main goal of this library is to simplify common type-related tasks, such as 
 
 ## Installation
 
-```
-composer require flow-php/types:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/types.md).
 
 ### Usage
 

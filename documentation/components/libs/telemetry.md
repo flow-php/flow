@@ -5,6 +5,7 @@ It provides a unified API for distributed tracing, metrics collection, and struc
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/telemetry)
+- [➡️ Installation](/documentation/installation/packages/telemetry.md)
 - [🐙GitHub](https://github.com/flow-php/telemetry)
 - [📚API Reference](/documentation/api/lib/telemetry)
 - [🗺DSL](/documentation/api/lib/telemetry/namespaces/flow-telemetry-dsl.html)
@@ -13,9 +14,7 @@ It provides a unified API for distributed tracing, metrics collection, and struc
 
 ## Installation
 
-```
-composer require flow-php/telemetry:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/telemetry.md).
 
 ## Telemetry
 

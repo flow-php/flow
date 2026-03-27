@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-postgresql)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-postgresql.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-postgresql)
 - [📚API Reference](/documentation/api/adapter/postgresql)
 - [📁Files](/documentation/api/adapter/postgresql/indices/files.html)
@@ -17,9 +18,7 @@ efficiency.
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-postgresql:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-postgresql.md).
 
 ## Requirements
 

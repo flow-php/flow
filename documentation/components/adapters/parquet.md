@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-parquet)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-parquet.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-parquet)
 - [📚API Reference](/documentation/api/adapter/parquet)
 - [📁Files](/documentation/api/adapter/parquet/indices/files.html)
@@ -20,6 +21,4 @@ the robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-parquet:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-parquet.md).

@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/parquet)
+- [➡️ Installation](/documentation/installation/packages/parquet.md)
 - [🐙GitHub](https://github.com/flow-php/parquet)
 - [📚API Reference](/documentation/api/lib/parquet)
 - [📁Files](/documentation/api/lib/parquet/indices/files.html)
@@ -10,9 +11,7 @@
 
 ## Installation
 
-```
-composer require flow-php/parquet:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/parquet.md).
 
 ## Engine System
 

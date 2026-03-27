@@ -2,12 +2,17 @@
 
 - [⬅️️ Back](/documentation/quick-start.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl)
+- [➡️ Installation](/documentation/installation/packages/etl.md)
 - [🐙GitHub](https://github.com/flow-php/etl)
 - [📚API Reference](/documentation/api/core)
 - [📁Files](/documentation/api/core/indices/files.html)
 - [🗺DSL](/documentation/api/core/namespaces/flow-etl-dsl.html)
 
 [TOC]
+
+## Installation
+
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl.md).
 
 A Data Frame is the core component of Flow PHP's ETL framework. It represents a structured collection of tabular data that can be processed, transformed, and loaded efficiently. Think of it as a programmable spreadsheet that can handle large datasets with minimal memory footprint.
 

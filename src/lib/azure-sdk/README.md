@@ -8,6 +8,6 @@ The main goal is to provide a integration between Flow Filesystem and Azure Blob
 > This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
 
 - 📜 [Documentation](https://flow-php.com/documentation/components/libs/azure-sdk/)
-- ➡️ [Installation](https://flow-php.com/documentation/installation/)
+- ➡️ [Installation](https://flow-php.com/documentation/installation/packages/azure-sdk/)
 - 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
 - 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)

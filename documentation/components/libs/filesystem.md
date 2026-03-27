@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/filesystem)
+- [➡️ Installation](/documentation/installation/packages/filesystem.md)
 - [🐙GitHub](https://github.com/flow-php/filesystem)
 - [📚API Reference](/documentation/api/lib/filesystem)
 - [📁Files](/documentation/api/lib/filesystem/indices/files.html)
@@ -11,9 +12,7 @@
 
 ## Installation
 
-```
-composer require flow-php/filesystem:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/filesystem.md).
 
 Flow Filesystem is a unified solution to store and retrieve data at remote and local filesystems.
 What differentiates Flow Filesystem from other libraries is the ability to store data in Blocks and read

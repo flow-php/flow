@@ -13,6 +13,6 @@ choice for developers dealing with PostgreSQL database operations in large-scale
 > This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
 
 - 📜 [Documentation](https://flow-php.com/documentation/components/adapters/postgresql/)
-- ➡️ [Installation](https://flow-php.com/documentation/installation/)
+- ➡️ [Installation](https://flow-php.com/documentation/installation/packages/etl-adapter-postgresql/)
 - 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
 - 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)

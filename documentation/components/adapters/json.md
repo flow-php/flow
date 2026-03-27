@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-json)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-json.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-json)
 - [📚API Reference](/documentation/api/adapter/json)
 - [📁Files](/documentation/api/adapter/json/indices/files.html)
@@ -21,9 +22,7 @@ simplified and efficient task, perfectly aligning with the robust and adaptable 
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-json:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-json.md).
 
 
 > Json library is not explicitly required, you need to make sure it is available in your composer.json file.

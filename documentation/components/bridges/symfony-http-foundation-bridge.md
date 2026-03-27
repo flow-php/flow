@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/symfony-http-foundation-bridge)
+- [➡️ Installation](/documentation/installation/packages/symfony-http-foundation-bridge.md)
 - [🐙GitHub](https://github.com/flow-php/symfony-http-foundation-bridge)
 - [📚API Reference](/documentation/api/bridge/symfony/http-foundation)
 - [📁Files](/documentation/api/bridge/symfony/http-foundation/indices/files.html)
@@ -19,9 +20,7 @@ Http Foundation Bridge provides seamless integration between Symfony Http Founda
 
 ## Installation
 
-```
-composer require flow-php/symfony-http-foundation-bridge:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/symfony-http-foundation-bridge.md).
 
 ## Usage
 

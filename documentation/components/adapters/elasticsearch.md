@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-elasticsearch)
+- [➡️ Installation](/documentation/installation/packages/etl-adapter-elasticsearch.md)
 - [🐙GitHub](https://github.com/flow-php/etl-adapter-elasticsearch)
 - [📚API Reference](/documentation/api/adapter/elasticsearch)
 - [📁Files](/documentation/api/adapter/elasticsearch/indices/files.html)
@@ -22,9 +23,7 @@ efficient endeavor, harmoniously aligning with the robust and adaptable framewor
 
 ## Installation
 
-```
-composer require flow-php/etl-adapter-elasticsearch:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-elasticsearch.md).
 
 ## Description
 

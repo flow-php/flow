@@ -2,6 +2,7 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📦Packagist](https://packagist.org/packages/flow-php/openapi-specification-bridge)
+- [➡️ Installation](/documentation/installation/packages/openapi-specification-bridge.md)
 - [🐙GitHub](https://github.com/flow-php/openapi-specification-bridge)
 - [📚API Reference](/documentation/api/bridge/openapi/specification)
 - [📁Files](/documentation/api/bridge/openapi/specification/indices/files.html)
@@ -13,9 +14,7 @@ It enables you to generate OpenAPI documentation from Flow schemas and vice vers
 
 ## Installation
 
-```
-composer require flow-php/openapi-specification-bridge:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/openapi-specification-bridge.md).
 
 ## Usage
 

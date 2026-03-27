@@ -6,15 +6,14 @@ backends.
 
 - [Back](/documentation/introduction.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-telemetry-bundle)
+- [➡️ Installation](/documentation/installation/packages/symfony-telemetry-bundle.md)
 - [GitHub](https://github.com/flow-php/symfony-telemetry-bundle)
 
 [TOC]
 
 ## Installation
 
-```
-composer require flow-php/symfony-telemetry-bundle:~--FLOW_PHP_VERSION--
-```
+For detailed installation instructions, see the [installation page](/documentation/installation/packages/symfony-telemetry-bundle.md).
 
 ## Overview
 
