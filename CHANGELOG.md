@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-03-27
 
 ### Added
+- [#2278](https://github.com/flow-php/flow/pull/2278) - **workflow to precompile arrow extension binaries during release** - [@norberttech](https://github.com/norberttech)
 - [#2277](https://github.com/flow-php/flow/pull/2277) - **Dedicated installation instructions for each package of monorepo** - [@norberttech](https://github.com/norberttech)
 - [#2274](https://github.com/flow-php/flow/pull/2274) - **flow-php/arrow-ext to Dockerfile** - [@norberttech](https://github.com/norberttech)
 - [#2274](https://github.com/flow-php/flow/pull/2274) - **flow-php/arrow-ext pie installation tests** - [@norberttech](https://github.com/norberttech)
