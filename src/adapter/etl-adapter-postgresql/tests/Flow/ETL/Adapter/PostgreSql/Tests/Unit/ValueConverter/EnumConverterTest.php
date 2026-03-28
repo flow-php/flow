@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\ValueConverter;
 
 use Flow\ETL\Adapter\PostgreSql\Tests\Fixtures\Enum\{BackedIntEnum, BackedStringEnum, UnitEnum};
 use Flow\ETL\Adapter\PostgreSql\ValueConverter\EnumConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
 final class EnumConverterTest extends TestCase
@@ -45,7 +45,7 @@ final class EnumConverterTest extends TestCase
     {
         $converter = new EnumConverter();
 
-        self::assertSame([PostgreSqlType::TEXT], $converter->supportedTypes());
+        self::assertSame([ValueType::TEXT], $converter->supportedTypes());
     }
 
     public function test_unit_enum_returns_name() : void

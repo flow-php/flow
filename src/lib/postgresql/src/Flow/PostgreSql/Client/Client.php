@@ -99,47 +99,43 @@ interface Client
     public function fetchAll(SqlQuery|string $sql, array $parameters = []) : array;
 
     /**
-     * Fetch all rows and map to objects.
+     * Fetch all rows and map using the provided mapper.
      *
-     * @template T of object
+     * @template T
      *
-     * @param class-string<T> $class Target class for mapping
+     * @param RowMapper<T> $mapper Mapper to apply to each row
      * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
-     * @param null|RowMapper $mapper Override default mapper for this call
      *
      * @throws QueryException
      *
-     * @return array<int, T>
+     * @return list<T>
      */
     public function fetchAllInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
     ) : array;
 
     /**
-     * Fetch the first row and map to object.
+     * Fetch the first row and map using the provided mapper.
      * Returns null if no rows found.
      *
-     * @template T of object
+     * @template T
      *
-     * @param class-string<T> $class Target class for mapping
+     * @param RowMapper<T> $mapper Mapper to apply to the row
      * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
-     * @param null|RowMapper $mapper Override default mapper for this call
      *
      * @throws QueryException
      *
      * @return null|T
      */
     public function fetchInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
-    ) : ?object;
+    ) : mixed;
 
     /**
      * Fetch exactly one row. Throws if result has 0 or more than 1 row.
@@ -155,26 +151,24 @@ interface Client
     public function fetchOne(SqlQuery|string $sql, array $parameters = []) : array;
 
     /**
-     * Fetch exactly one row and map to object.
+     * Fetch exactly one row and map using the provided mapper.
      * Throws if result has 0 or more than 1 row.
      *
-     * @template T of object
+     * @template T
      *
-     * @param class-string<T> $class Target class for mapping
+     * @param RowMapper<T> $mapper Mapper to apply to the row
      * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
-     * @param null|RowMapper $mapper Override default mapper for this call
      *
      * @throws QueryException When row count is not exactly 1
      *
      * @return T
      */
     public function fetchOneInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
-    ) : object;
+    ) : mixed;
 
     /**
      * Fetch a single scalar value from the first column of first row.

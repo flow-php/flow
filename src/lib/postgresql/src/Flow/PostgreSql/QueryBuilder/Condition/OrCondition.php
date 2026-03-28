@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Condition;
 use Flow\PostgreSql\Protobuf\AST\{A_Expr_Kind, SubLinkType};
 use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
 use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 
 final readonly class OrCondition implements Condition
 {
@@ -52,6 +53,11 @@ final readonly class OrCondition implements Condition
     public function and(Condition $other) : AndCondition
     {
         return new AndCondition($this, $other);
+    }
+
+    public function as(string $alias) : AliasedExpression
+    {
+        return new AliasedExpression($this, $alias);
     }
 
     public function not() : NotCondition

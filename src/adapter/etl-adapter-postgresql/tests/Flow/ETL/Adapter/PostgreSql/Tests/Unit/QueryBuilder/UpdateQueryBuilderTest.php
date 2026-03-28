@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{int_entry, row, str_entry};
 use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\UpdateOptions, QueryBuilder\UpdateQueryBuilder};
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
 final class UpdateQueryBuilderTest extends TestCase
@@ -38,10 +38,10 @@ final class UpdateQueryBuilderTest extends TestCase
         self::assertCount(2, $params);
         self::assertInstanceOf(TypedValue::class, $params[0]);
         self::assertSame('Alice', $params[0]->value);
-        self::assertSame(PostgreSqlType::TEXT, $params[0]->targetType);
+        self::assertSame(ValueType::TEXT, $params[0]->targetType);
         self::assertInstanceOf(TypedValue::class, $params[1]);
         self::assertSame(1, $params[1]->value);
-        self::assertSame(PostgreSqlType::INT8, $params[1]->targetType);
+        self::assertSame(ValueType::INT8, $params[1]->targetType);
     }
 
     public function test_build_simple_update() : void

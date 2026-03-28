@@ -9,13 +9,13 @@ use Flow\PostgreSql\QueryBuilder\Table\TableReference;
 
 interface SelectJoinStep extends SelectWhereStep
 {
-    public function crossJoin(TableReference $table) : self;
+    public function crossJoin(string|TableReference $table) : self;
 
-    public function fullJoin(TableReference $table, Condition $on) : self;
+    public function fullJoin(string|TableReference $table, Condition $on) : self;
 
-    public function join(TableReference $table, Condition $on) : self;
+    public function join(string|TableReference $table, Condition $on) : self;
 
-    public function leftJoin(TableReference $table, Condition $on) : self;
+    public function leftJoin(string|TableReference $table, Condition $on) : self;
 
-    public function rightJoin(TableReference $table, Condition $on) : self;
+    public function rightJoin(string|TableReference $table, Condition $on) : self;
 }

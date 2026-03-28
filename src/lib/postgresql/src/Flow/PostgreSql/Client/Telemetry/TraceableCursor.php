@@ -113,10 +113,10 @@ final class TraceableCursor implements Cursor
         }
     }
 
-    public function map(string $class, ?RowMapper $mapper = null) : \Generator
+    public function map(RowMapper $mapper) : \Generator
     {
         try {
-            foreach ($this->cursor->map($class, $mapper) as $object) {
+            foreach ($this->cursor->map($mapper) as $object) {
                 $this->rowsIterated++;
 
                 yield $object;

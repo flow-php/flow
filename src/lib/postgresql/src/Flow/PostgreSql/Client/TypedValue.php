@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 
 /**
  * Wrapper for values that need explicit type specification.
@@ -16,7 +16,7 @@ final readonly class TypedValue
 {
     public function __construct(
         public mixed $value,
-        public PostgreSqlType $targetType,
+        public ValueType $targetType,
     ) {
     }
 }

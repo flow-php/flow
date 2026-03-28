@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_numeric, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class NumericConverterTest extends ConverterTestCase
+final class NumericConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
@@ -25,7 +26,7 @@ final class NumericConverterTest extends ConverterTestCase
 
     public function test_null_numeric() : void
     {
-        $result = $this->fetchValue('SELECT NULL::numeric AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_numeric())->as('val'))->toSql());
 
         self::assertNull($result);
     }
@@ -33,14 +34,14 @@ final class NumericConverterTest extends ConverterTestCase
     #[DataProvider('provide_numeric_values')]
     public function test_numeric_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::numeric AS val', [typed($input, PostgreSqlType::NUMERIC)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_numeric())->as('val'))->toSql(), [typed($input, ValueType::NUMERIC)]);
 
         self::assertSame($expected, $result);
     }
 
     public function test_numeric_with_precision_and_scale() : void
     {
-        $result = $this->fetchValue('SELECT $1::numeric(10,2) AS val', [typed('1234.5678', PostgreSqlType::NUMERIC)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_numeric(10, 2))->as('val'))->toSql(), [typed('1234.5678', ValueType::NUMERIC)]);
 
         self::assertSame('1234.57', $result);
     }

@@ -23,7 +23,7 @@ $conditions = conditions()
 // Use in a query
 $query = select()->from(table('users'))->where($conditions);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE status = 'active' AND age > 18
 ```
 
@@ -35,7 +35,7 @@ The real power of `ConditionBuilder` is building conditions based on runtime log
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    conditions, select, table, col, eq, gte, like, param
+    conditions, select, table, col, eq, ge, like, param
 };
 
 function buildUserQuery(array $filters): SelectFinalStep
@@ -47,7 +47,7 @@ function buildUserQuery(array $filters): SelectFinalStep
     }
 
     if (array_key_exists('min_age', $filters)) {
-        $conditions = $conditions->and(gte(col('age'), param($filters['min_age'])));
+        $conditions = $conditions->and(ge(col('age'), param($filters['min_age'])));
     }
 
     if (array_key_exists('email_domain', $filters)) {
@@ -66,7 +66,7 @@ function buildUserQuery(array $filters): SelectFinalStep
 
 // Usage
 $query = buildUserQuery(['status' => 'active', 'min_age' => 21]);
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE status = $1 AND age >= $2
 ```
 
@@ -93,7 +93,7 @@ $conditions = conditions()
 
 $query = select()->from(table('users'))->where($conditions);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE status = 'active' AND (role = 'admin' OR role = 'moderator') AND age > 18
 ```
 
@@ -152,15 +152,15 @@ $conditions = conditions()
 | `getCondition()` | Returns the built `Condition` or `null` if empty |
 | `isEmpty()` | Returns `true` if no conditions have been added |
 
-## Comparison with cond_and/cond_or
+## Comparison with and_/or_
 
-For static conditions known at build time, `cond_and()` and `cond_or()` are simpler:
+For static conditions known at build time, `and_()` and `or_()` are simpler:
 
 ```php
-// Static conditions - use cond_and/cond_or
+// Static conditions - use and_/or_
 $query = select()
     ->from(table('users'))
-    ->where(cond_and(
+    ->where(and_(
         eq(col('active'), literal(true)),
         gt(col('age'), literal(18))
     ));

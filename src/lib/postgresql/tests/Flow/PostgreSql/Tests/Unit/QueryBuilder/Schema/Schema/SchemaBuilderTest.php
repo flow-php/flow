@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Schema;
 
+use function Flow\PostgreSql\DSL\{alter, create, drop};
 use Flow\PostgreSql\Protobuf\AST\{AlterOwnerStmt, CreateSchemaStmt, DropBehavior, DropStmt, ObjectType, RenameStmt, RoleSpecType};
 use Flow\PostgreSql\QueryBuilder\Schema\Schema\{AlterSchemaBuilder, CreateSchemaBuilder, DropSchemaBuilder};
 use PHPUnit\Framework\TestCase;
@@ -41,6 +42,11 @@ final class SchemaBuilderTest extends TestCase
         self::assertSame('admin_user', $newOwner->getRolename());
     }
 
+    public function test_alter_schema_owner_to_sql() : void
+    {
+        self::assertSame('ALTER SCHEMA my_schema OWNER TO new_owner', alter()->schema('my_schema')->ownerTo('new_owner')->toSql());
+    }
+
     public function test_alter_schema_rename_ast_type() : void
     {
         $builder = AlterSchemaBuilder::create('old_schema')
@@ -61,6 +67,11 @@ final class SchemaBuilderTest extends TestCase
 
         self::assertSame('old_schema', $ast->getSubname());
         self::assertSame('new_schema', $ast->getNewname());
+    }
+
+    public function test_alter_schema_rename_to_sql() : void
+    {
+        self::assertSame('ALTER SCHEMA old_schema RENAME TO new_schema', alter()->schema('old_schema')->renameTo('new_schema')->toSql());
     }
 
     public function test_create_schema_ast_type() : void
@@ -95,6 +106,16 @@ final class SchemaBuilderTest extends TestCase
         self::assertTrue($ast->getIfNotExists());
     }
 
+    public function test_create_schema_if_not_exists_to_sql() : void
+    {
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS my_schema', create()->schema('my_schema')->ifNotExists()->toSql());
+    }
+
+    public function test_create_schema_if_not_exists_with_authorization_to_sql() : void
+    {
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS my_schema AUTHORIZATION admin_user', create()->schema('my_schema')->ifNotExists()->authorization('admin_user')->toSql());
+    }
+
     public function test_create_schema_immutability() : void
     {
         $original = CreateSchemaBuilder::create('my_schema');
@@ -111,6 +132,16 @@ final class SchemaBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertSame('my_schema', $ast->getSchemaname());
+    }
+
+    public function test_create_schema_simple_to_sql() : void
+    {
+        self::assertSame('CREATE SCHEMA my_schema', create()->schema('my_schema')->toSql());
+    }
+
+    public function test_create_schema_with_authorization_to_sql() : void
+    {
+        self::assertSame('CREATE SCHEMA my_schema AUTHORIZATION admin_user', create()->schema('my_schema')->authorization('admin_user')->toSql());
     }
 
     public function test_drop_schema_ast_type() : void
@@ -133,6 +164,16 @@ final class SchemaBuilderTest extends TestCase
         self::assertSame(DropBehavior::DROP_CASCADE, $ast->getBehavior());
     }
 
+    public function test_drop_schema_cascade_to_sql() : void
+    {
+        self::assertSame('DROP SCHEMA my_schema CASCADE', drop()->schema('my_schema')->cascade()->toSql());
+    }
+
+    public function test_drop_schema_if_exists_cascade_to_sql() : void
+    {
+        self::assertSame('DROP SCHEMA IF EXISTS my_schema CASCADE', drop()->schema('my_schema')->ifExists()->cascade()->toSql());
+    }
+
     public function test_drop_schema_if_exists_sets_flag() : void
     {
         $builder = DropSchemaBuilder::create('my_schema')
@@ -141,6 +182,11 @@ final class SchemaBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertTrue($ast->getMissingOk());
+    }
+
+    public function test_drop_schema_if_exists_to_sql() : void
+    {
+        self::assertSame('DROP SCHEMA IF EXISTS my_schema', drop()->schema('my_schema')->ifExists()->toSql());
     }
 
     public function test_drop_schema_immutability() : void
@@ -161,6 +207,11 @@ final class SchemaBuilderTest extends TestCase
         self::assertCount(3, $ast->getObjects());
     }
 
+    public function test_drop_schema_multiple_to_sql() : void
+    {
+        self::assertSame('DROP SCHEMA schema1, schema2', drop()->schema('schema1', 'schema2')->toSql());
+    }
+
     public function test_drop_schema_restrict_sets_behavior() : void
     {
         $builder = DropSchemaBuilder::create('my_schema')
@@ -169,5 +220,15 @@ final class SchemaBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertSame(DropBehavior::DROP_RESTRICT, $ast->getBehavior());
+    }
+
+    public function test_drop_schema_restrict_to_sql() : void
+    {
+        self::assertSame('DROP SCHEMA my_schema', drop()->schema('my_schema')->restrict()->toSql());
+    }
+
+    public function test_drop_schema_simple_to_sql() : void
+    {
+        self::assertSame('DROP SCHEMA my_schema', drop()->schema('my_schema')->toSql());
     }
 }

@@ -62,12 +62,8 @@ final class ConditionFactory
             };
         }
 
-        if ($node->getTypeCast() !== null) {
-            return RawCondition::fromTypeCast($node);
-        }
-
-        if ($node->getAConst() !== null) {
-            return RawCondition::fromAConst($node);
+        if ($node->getAConst() !== null || $node->getColumnRef() !== null) {
+            return BooleanCondition::fromAst($node);
         }
 
         throw UnsupportedNodeException::forNodeType('Unknown condition node type');

@@ -26,7 +26,7 @@ final class BinaryComparisonsTest extends FlowTestCase
                 when(ref('a')->equals(ref('b')), lit(true), lit(false))
             )
             ->withEntry(
-                'neq',
+                'ne',
                 when(ref('a')->notEquals(ref('c')), lit(true), lit(false))
             )
             ->withEntry(
@@ -34,7 +34,7 @@ final class BinaryComparisonsTest extends FlowTestCase
                 when(ref('a')->greaterThan(ref('b')), lit(true), lit(false))
             )
             ->withEntry(
-                'gte',
+                'ge',
                 when(ref('a')->greaterThanEqual(ref('b')), lit(true), lit(false))
             )
             ->withEntry(
@@ -42,7 +42,7 @@ final class BinaryComparisonsTest extends FlowTestCase
                 when(ref('a')->lessThan(ref('b')), lit(true), lit(false))
             )
             ->withEntry(
-                'lte',
+                'le',
                 when(ref('a')->lessThanEqual(ref('b')), lit(true), lit(false))
             )
             ->withEntry(
@@ -89,11 +89,11 @@ final class BinaryComparisonsTest extends FlowTestCase
                     'c' => 10,
                     'd' => 'value',
                     'eq' => true,
-                    'neq' => true,
+                    'ne' => true,
                     'gt' => false,
-                    'gte' => true,
+                    'ge' => true,
                     'lt' => false,
-                    'lte' => true,
+                    'le' => true,
                     'in' => true,
                     'same' => true,
                     'not_same' => false,

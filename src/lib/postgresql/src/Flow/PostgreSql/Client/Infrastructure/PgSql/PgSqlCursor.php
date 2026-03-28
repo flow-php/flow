@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
 use Flow\PostgreSql\Client\{Cursor, RowMapper};
-use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\Types\ResultCaster;
 use PgSql\Result;
 
@@ -20,7 +19,7 @@ final class PgSqlCursor implements Cursor
 
     private readonly ResultCaster $resultCaster;
 
-    public function __construct(private ?Result $result, private readonly ?RowMapper $defaultMapper = null)
+    public function __construct(private ?Result $result)
     {
         $this->resultCaster = new ResultCaster();
     }
@@ -59,16 +58,10 @@ final class PgSqlCursor implements Cursor
         $this->free();
     }
 
-    public function map(string $class, ?RowMapper $mapper = null) : \Generator
+    public function map(RowMapper $mapper) : \Generator
     {
-        $resolved = $mapper ?? $this->defaultMapper;
-
-        if ($resolved === null) {
-            throw MappingException::noMapperConfigured();
-        }
-
         foreach ($this->iterate() as $row) {
-            yield $resolved->map($class, $row);
+            yield $mapper->map($row);
         }
     }
 

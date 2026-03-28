@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Type;
 
-use function Flow\PostgreSql\DSL\{data_type_text, data_type_varchar};
+use function Flow\PostgreSql\DSL\{alter, column_type_text, column_type_varchar, create, drop, type_attr};
 use Flow\PostgreSql\Protobuf\AST\{AlterEnumStmt, CompositeTypeStmt, CreateEnumStmt, CreateRangeStmt, DropBehavior, DropStmt, ObjectType};
 use Flow\PostgreSql\QueryBuilder\Schema\Type\{AlterEnumTypeBuilder, CreateCompositeTypeBuilder, CreateEnumTypeBuilder, CreateRangeTypeBuilder, DropTypeBuilder, TypeAttribute};
 
@@ -54,6 +54,17 @@ final class TypeBuilderTest extends TestCase
         self::assertFalse($ast->getNewValIsAfter());
     }
 
+    public function test_alter_enum_type_add_value_if_not_exists_to_sql() : void
+    {
+        self::assertSame(
+            "ALTER TYPE status ADD VALUE IF NOT EXISTS 'archived'",
+            alter()->enumType('status')
+                ->addValue('archived')
+                ->ifNotExists()
+                ->toSql()
+        );
+    }
+
     public function test_alter_enum_type_ast_type() : void
     {
         $builder = AlterEnumTypeBuilder::create('status')
@@ -89,7 +100,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_ast_type() : void
     {
         $builder = CreateCompositeTypeBuilder::create('address')
-            ->attributes(TypeAttribute::of('street', data_type_text()));
+            ->attributes(TypeAttribute::of('street', column_type_text()));
 
         $ast = $builder->toAst();
 
@@ -100,9 +111,9 @@ final class TypeBuilderTest extends TestCase
     {
         $builder = CreateCompositeTypeBuilder::create('address')
             ->attributes(
-                TypeAttribute::of('street', data_type_text()),
-                TypeAttribute::of('city', data_type_text()),
-                TypeAttribute::of('zip', data_type_varchar(50))
+                TypeAttribute::of('street', column_type_text()),
+                TypeAttribute::of('city', column_type_text()),
+                TypeAttribute::of('zip', column_type_varchar(50))
             );
 
         $ast = $builder->toAst();
@@ -114,7 +125,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_sets_name() : void
     {
         $builder = CreateCompositeTypeBuilder::create('address')
-            ->attributes(TypeAttribute::of('street', data_type_text()));
+            ->attributes(TypeAttribute::of('street', column_type_text()));
 
         $ast = $builder->toAst();
         $typevar = $ast->getTypevar();
@@ -123,10 +134,24 @@ final class TypeBuilderTest extends TestCase
         self::assertSame('address', $typevar->getRelname());
     }
 
+    public function test_create_composite_type_simple_to_sql() : void
+    {
+        self::assertSame(
+            'CREATE TYPE address AS (street pg_catalog.text, city pg_catalog.text, zip pg_catalog.text)',
+            create()->compositeType('address')
+                ->attributes(
+                    type_attr('street', column_type_text()),
+                    type_attr('city', column_type_text()),
+                    type_attr('zip', column_type_text())
+                )
+                ->toSql()
+        );
+    }
+
     public function test_create_composite_type_with_collation() : void
     {
         $builder = CreateCompositeTypeBuilder::create('address')
-            ->attributes(TypeAttribute::of('name', data_type_text())->collate('en_US'));
+            ->attributes(TypeAttribute::of('name', column_type_text())->collate('en_US'));
 
         $ast = $builder->toAst();
         $coldeflist = $ast->getColdeflist();
@@ -141,7 +166,7 @@ final class TypeBuilderTest extends TestCase
     public function test_create_composite_type_with_schema() : void
     {
         $builder = CreateCompositeTypeBuilder::create('public.address')
-            ->attributes(TypeAttribute::of('street', data_type_text()));
+            ->attributes(TypeAttribute::of('street', column_type_text()));
 
         $ast = $builder->toAst();
         $typevar = $ast->getTypevar();
@@ -181,6 +206,16 @@ final class TypeBuilderTest extends TestCase
         $typeName = $ast->getTypeName();
 
         self::assertCount(1, $typeName);
+    }
+
+    public function test_create_enum_type_simple_to_sql() : void
+    {
+        self::assertSame(
+            "CREATE TYPE status AS ENUM ('pending', 'active', 'closed')",
+            create()->enumType('status')
+                ->labels('pending', 'active', 'closed')
+                ->toSql()
+        );
     }
 
     public function test_create_enum_type_with_schema() : void
@@ -228,6 +263,27 @@ final class TypeBuilderTest extends TestCase
         $defElem = $params[0]->getDefElem();
         self::assertNotNull($defElem);
         self::assertSame('subtype', $defElem->getDefname());
+    }
+
+    public function test_create_range_type_simple_to_sql() : void
+    {
+        self::assertSame(
+            'CREATE TYPE floatrange AS RANGE (subtype = float8)',
+            create()->rangeType('floatrange')
+                ->subtype('float8')
+                ->toSql()
+        );
+    }
+
+    public function test_create_range_type_with_collation_to_sql() : void
+    {
+        self::assertSame(
+            "CREATE TYPE textrange AS RANGE (subtype = text, \"collation\" = 'en_US')",
+            create()->rangeType('textrange')
+                ->subtype('text')
+                ->collation('en_US')
+                ->toSql()
+        );
     }
 
     public function test_create_range_type_with_options() : void
@@ -284,6 +340,17 @@ final class TypeBuilderTest extends TestCase
         self::assertTrue($ast->getMissingOk());
     }
 
+    public function test_drop_type_if_exists_cascade_to_sql() : void
+    {
+        self::assertSame(
+            'DROP TYPE IF EXISTS address CASCADE',
+            drop()->type('address')
+                ->ifExists()
+                ->cascade()
+                ->toSql()
+        );
+    }
+
     public function test_drop_type_immutability() : void
     {
         $original = DropTypeBuilder::create('address');
@@ -291,6 +358,15 @@ final class TypeBuilderTest extends TestCase
 
         self::assertFalse($original->toAst()->getMissingOk());
         self::assertTrue($modified->toAst()->getMissingOk());
+    }
+
+    public function test_drop_type_multiple_to_sql() : void
+    {
+        self::assertSame(
+            'DROP TYPE address, status, floatrange',
+            drop()->type('address', 'status', 'floatrange')
+                ->toSql()
+        );
     }
 
     public function test_drop_type_multiple_types() : void
@@ -310,5 +386,14 @@ final class TypeBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertSame(DropBehavior::DROP_RESTRICT, $ast->getBehavior());
+    }
+
+    public function test_drop_type_simple_to_sql() : void
+    {
+        self::assertSame(
+            'DROP TYPE address',
+            drop()->type('address')
+                ->toSql()
+        );
     }
 }

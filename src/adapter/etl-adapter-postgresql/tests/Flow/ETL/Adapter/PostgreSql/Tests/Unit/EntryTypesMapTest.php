@@ -9,7 +9,7 @@ use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, typ
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
 final class EntryTypesMapTest extends TestCase
@@ -17,13 +17,13 @@ final class EntryTypesMapTest extends TestCase
     public function test_allows_override_for_integer_entry_to_int2() : void
     {
         $map = new EntryTypesMap([
-            IntegerEntry::class => PostgreSqlType::INT2,
+            IntegerEntry::class => ValueType::INT2,
         ]);
 
         $result = $map->mapEntry(int_entry('small_count', 42));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::INT2, $result->targetType);
+        self::assertSame(ValueType::INT2, $result->targetType);
         self::assertSame(42, $result->value);
     }
 
@@ -33,7 +33,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(bool_entry('active', true));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::BOOL, $result->targetType);
+        self::assertSame(ValueType::BOOL, $result->targetType);
         self::assertTrue($result->value);
     }
 
@@ -44,7 +44,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(datetime_entry('created_at', $date));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::TIMESTAMPTZ, $result->targetType);
+        self::assertSame(ValueType::TIMESTAMPTZ, $result->targetType);
         self::assertEquals($date, $result->value);
     }
 
@@ -54,7 +54,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(float_entry('price', 99.99));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::FLOAT8, $result->targetType);
+        self::assertSame(ValueType::FLOAT8, $result->targetType);
         self::assertSame(99.99, $result->value);
     }
 
@@ -64,7 +64,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(int_entry('count', 42));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::INT8, $result->targetType);
+        self::assertSame(ValueType::INT8, $result->targetType);
         self::assertSame(42, $result->value);
     }
 
@@ -74,7 +74,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(json_entry('data', ['key' => 'value']));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::JSONB, $result->targetType);
+        self::assertSame(ValueType::JSONB, $result->targetType);
     }
 
     public function test_maps_list_entry_to_jsonb_type() : void
@@ -83,7 +83,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(list_entry('tags', [1, 2, 3], type_list(type_integer())));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::JSONB, $result->targetType);
+        self::assertSame(ValueType::JSONB, $result->targetType);
         self::assertSame([1, 2, 3], $result->value);
     }
 
@@ -93,7 +93,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(map_entry('metadata', ['key' => 'value'], type_map(type_string(), type_string())));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::JSONB, $result->targetType);
+        self::assertSame(ValueType::JSONB, $result->targetType);
         self::assertSame(['key' => 'value'], $result->value);
     }
 
@@ -111,7 +111,7 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(str_entry('name', 'Alice'));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::TEXT, $result->targetType);
+        self::assertSame(ValueType::TEXT, $result->targetType);
         self::assertSame('Alice', $result->value);
     }
 
@@ -124,7 +124,7 @@ final class EntryTypesMapTest extends TestCase
         ])));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::JSONB, $result->targetType);
+        self::assertSame(ValueType::JSONB, $result->targetType);
     }
 
     public function test_maps_uuid_entry_to_uuid_type() : void
@@ -133,6 +133,6 @@ final class EntryTypesMapTest extends TestCase
         $result = $map->mapEntry(uuid_entry('id', '550e8400-e29b-41d4-a716-446655440000'));
 
         self::assertInstanceOf(TypedValue::class, $result);
-        self::assertSame(PostgreSqlType::UUID, $result->targetType);
+        self::assertSame(ValueType::UUID, $result->targetType);
     }
 }

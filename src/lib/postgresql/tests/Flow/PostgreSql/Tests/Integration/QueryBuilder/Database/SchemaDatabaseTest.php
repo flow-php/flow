@@ -7,9 +7,9 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use function Flow\PostgreSql\DSL\{
     alter,
     column,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_serial,
-    data_type_varchar,
     drop,
     insert,
     literal,
@@ -18,8 +18,9 @@ use function Flow\PostgreSql\DSL\{
     star,
     table
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class SchemaDatabaseTest extends DatabaseTestCase
+final class SchemaDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_schema';
 
@@ -31,109 +32,101 @@ final class SchemaDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->dropSchemaIfExists(self::SCHEMA_NAME);
-        $this->dropSchemaIfExists(self::SCHEMA_NAME_RENAMED);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME_RENAMED);
     }
 
     protected function tearDown() : void
     {
-        $this->dropSchemaIfExists(self::SCHEMA_NAME);
-        $this->dropSchemaIfExists(self::SCHEMA_NAME_RENAMED);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME_RENAMED);
 
         parent::tearDown();
     }
 
     public function test_alter_schema_owner() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        $currentUser = $this->fetchOne($this->execute('SELECT current_user AS username'));
+        $currentUser = $this->pgsqlContext()->client()->fetchOne('SELECT current_user AS username');
         self::assertIsString($currentUser['username']);
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->schema(self::SCHEMA_NAME)
                 ->ownerTo($currentUser['username'])
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_schema_rename() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->schema(self::SCHEMA_NAME)
                 ->renameTo(self::SCHEMA_NAME_RENAMED)
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->schemaExists(self::SCHEMA_NAME));
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME_RENAMED));
     }
 
     public function test_create_schema() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME));
     }
 
     public function test_create_schema_if_not_exists() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->ifNotExists()->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME));
     }
 
     public function test_create_schema_with_authorization() : void
     {
-        $currentUser = $this->fetchOne($this->execute('SELECT current_user AS username'));
+        $currentUser = $this->pgsqlContext()->client()->fetchOne('SELECT current_user AS username');
         self::assertIsString($currentUser['username']);
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)
                 ->authorization($currentUser['username'])
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME));
     }
 
     public function test_create_table_in_schema() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::TABLE_NAME)
                 ->columns('name')
@@ -141,10 +134,8 @@ final class SchemaDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                select(star())->from(table(self::TABLE_NAME, self::SCHEMA_NAME))->toSql()
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(star())->from(table(self::TABLE_NAME, self::SCHEMA_NAME))->toSql()
         );
 
         self::assertSame('Test', $row['name']);
@@ -152,78 +143,70 @@ final class SchemaDatabaseTest extends DatabaseTestCase
 
     public function test_drop_multiple_schemas() : void
     {
-        $this->execute(create()->schema(self::SCHEMA_NAME)->toSql());
-        $this->execute(create()->schema(self::SCHEMA_NAME_RENAMED)->toSql());
+        $this->pgsqlContext()->client()->execute(create()->schema(self::SCHEMA_NAME)->toSql());
+        $this->pgsqlContext()->client()->execute(create()->schema(self::SCHEMA_NAME_RENAMED)->toSql());
 
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME));
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME_RENAMED));
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->schema(self::SCHEMA_NAME, self::SCHEMA_NAME_RENAMED)->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->schemaExists(self::SCHEMA_NAME));
         self::assertFalse($this->schemaExists(self::SCHEMA_NAME_RENAMED));
     }
 
     public function test_drop_schema() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
         self::assertTrue($this->schemaExists(self::SCHEMA_NAME));
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->schemaExists(self::SCHEMA_NAME));
     }
 
     public function test_drop_schema_cascade() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
+                ->column(column('id', column_type_serial()))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->schema(self::SCHEMA_NAME)->cascade()->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->schemaExists(self::SCHEMA_NAME));
     }
 
     public function test_drop_schema_if_exists() : void
     {
-        $result = $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             drop()->schema(self::SCHEMA_NAME)->ifExists()->toSql()
         );
-
-        self::assertNotFalse($result);
-    }
-
-    protected function dropSchemaIfExists(string $name) : void
-    {
-        $this->execute("DROP SCHEMA IF EXISTS {$name} CASCADE");
     }
 
     protected function schemaExists(string $name) : bool
     {
-        $row = $this->fetchOne(
-            $this->execute("SELECT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname = '{$name}') AS schema_exists")
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            "SELECT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname = '{$name}') AS schema_exists"
         );
 
-        return $row['schema_exists'] === 't';
+        return $row['schema_exists'] === true;
     }
 }

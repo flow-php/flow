@@ -8,10 +8,10 @@ use function Flow\PostgreSql\DSL\{
     agg_count,
     col,
     column,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     drop,
     eq,
     index_col,
@@ -23,8 +23,10 @@ use function Flow\PostgreSql\DSL\{
     star,
     table
 };
+use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class IndexDatabaseTest extends DatabaseTestCase
+final class IndexDatabaseTest extends PostgreSqlTestCase
 {
     private const INDEX_COMPOSITE = 'flow_postgres_idx_composite';
 
@@ -39,14 +41,14 @@ final class IndexDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $query = create()->table(self::TABLE_INDEXED)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100)))
-            ->column(column('email', data_type_varchar(255)))
-            ->column(column('age', data_type_integer()));
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100)))
+            ->column(column('email', column_type_varchar(255)))
+            ->column(column('age', column_type_integer()));
 
-        $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_INDEXED)
                 ->columns('name', 'email', 'age')
@@ -57,10 +59,10 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropIndexIfExists(self::INDEX_NAME);
-        $this->dropIndexIfExists(self::INDEX_EMAIL);
-        $this->dropIndexIfExists(self::INDEX_COMPOSITE);
-        $this->dropTableIfExists(self::TABLE_INDEXED);
+        $this->pgsqlContext()->dropIndexIfExists(self::INDEX_NAME);
+        $this->pgsqlContext()->dropIndexIfExists(self::INDEX_EMAIL);
+        $this->pgsqlContext()->dropIndexIfExists(self::INDEX_COMPOSITE);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_INDEXED);
 
         parent::tearDown();
     }
@@ -71,9 +73,15 @@ final class IndexDatabaseTest extends DatabaseTestCase
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'), index_col('email'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count(star())->as('cnt'))
+                ->from(table('pg_indexes'))
+                ->where(eq(col('indexname'), literal(self::INDEX_COMPOSITE)))
+                ->toSql()
+        );
+        self::assertSame(1, (int) $row['cnt']);
     }
 
     public function test_create_index() : void
@@ -82,11 +90,9 @@ final class IndexDatabaseTest extends DatabaseTestCase
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(
@@ -94,7 +100,6 @@ final class IndexDatabaseTest extends DatabaseTestCase
                 )
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertGreaterThanOrEqual(1, (int) $row['cnt']);
     }
 
@@ -105,10 +110,16 @@ final class IndexDatabaseTest extends DatabaseTestCase
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'));
 
-        $this->execute($query->toSql());
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count(star())->as('cnt'))
+                ->from(table('pg_indexes'))
+                ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
+                ->toSql()
+        );
+        self::assertSame(1, (int) $row['cnt']);
     }
 
     public function test_create_index_with_btree_method() : void
@@ -118,9 +129,15 @@ final class IndexDatabaseTest extends DatabaseTestCase
             ->using(index_method_btree())
             ->columns(index_col('name'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count(star())->as('cnt'))
+                ->from(table('pg_indexes'))
+                ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
+                ->toSql()
+        );
+        self::assertSame(1, (int) $row['cnt']);
     }
 
     public function test_create_index_with_hash_method() : void
@@ -130,9 +147,15 @@ final class IndexDatabaseTest extends DatabaseTestCase
             ->using(index_method_hash())
             ->columns(index_col('name'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count(star())->as('cnt'))
+                ->from(table('pg_indexes'))
+                ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
+                ->toSql()
+        );
+        self::assertSame(1, (int) $row['cnt']);
     }
 
     public function test_create_unique_index() : void
@@ -142,18 +165,16 @@ final class IndexDatabaseTest extends DatabaseTestCase
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('email'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $duplicateResult = @$this->execute(
+        $this->expectException(QueryException::class);
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_INDEXED)
                 ->columns('name', 'email', 'age')
                 ->values(literal('Test2'), literal('test@example.com'), literal(25))
                 ->toSql()
         );
-        self::assertFalse($duplicateResult);
     }
 
     public function test_drop_index() : void
@@ -161,21 +182,31 @@ final class IndexDatabaseTest extends DatabaseTestCase
         $createQuery = create()->index(self::INDEX_NAME)
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'));
-        $this->execute($createQuery->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
         $dropQuery = drop()->index(self::INDEX_NAME);
+        $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        $result = $this->execute($dropQuery->toSql());
-
-        self::assertNotFalse($result);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count(star())->as('cnt'))
+                ->from(table('pg_indexes'))
+                ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
+                ->toSql()
+        );
+        self::assertSame(0, (int) $row['cnt']);
     }
 
     public function test_drop_index_if_exists() : void
     {
         $dropQuery = drop()->index(self::INDEX_NAME)->ifExists();
+        $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        $result = $this->execute($dropQuery->toSql());
-
-        self::assertNotFalse($result);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count(star())->as('cnt'))
+                ->from(table('pg_indexes'))
+                ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
+                ->toSql()
+        );
+        self::assertSame(0, (int) $row['cnt']);
     }
 }

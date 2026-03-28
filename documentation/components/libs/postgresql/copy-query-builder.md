@@ -19,7 +19,7 @@ $query = copy()
     ->from('users')
     ->file('/tmp/users.csv');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users FROM '/tmp/users.csv'
 ```
 
@@ -35,7 +35,7 @@ $query = copy()
     ->columns('id', 'name', 'email')
     ->file('/tmp/users.csv');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users(id, name, email) FROM '/tmp/users.csv'
 ```
 
@@ -52,7 +52,7 @@ $query = copy()
     ->stdin()
     ->format(CopyFormat::CSV);
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users FROM STDIN WITH (format csv)
 ```
 
@@ -67,7 +67,7 @@ $query = copy()
     ->from('logs')
     ->program('gunzip -c /var/log/app.log.gz');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY logs FROM PROGRAM 'gunzip -c /var/log/app.log.gz'
 ```
 
@@ -90,7 +90,7 @@ $query = copy()
     ->escape('\\')
     ->encoding('UTF8');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY data FROM '/tmp/data.csv' WITH (format csv, delimiter ';', null 'NULL', header true, quote '''', escape '\\', encoding 'UTF8')
 ```
 
@@ -110,7 +110,7 @@ $query = copy()
     ->format(CopyFormat::CSV)
     ->forceNotNull('name', 'email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users FROM '/tmp/users.csv' WITH (format csv, force_not_null (name, email))
 ```
 
@@ -130,7 +130,7 @@ $query = copy()
     ->format(CopyFormat::CSV)
     ->forceNull('description', 'notes');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users FROM '/tmp/users.csv' WITH (format csv, force_null (description, notes))
 ```
 
@@ -149,7 +149,7 @@ $query = copy()
     ->file('/tmp/events.csv')
     ->onError(CopyOnError::IGNORE);
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY events FROM '/tmp/events.csv' WITH (on_error 'ignore')
 ```
 
@@ -166,7 +166,7 @@ $query = copy()
     ->to('users')
     ->file('/tmp/users.csv');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users TO '/tmp/users.csv'
 ```
 
@@ -182,7 +182,7 @@ $query = copy()
     ->columns('id', 'name', 'email')
     ->file('/tmp/users.csv');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users(id, name, email) TO '/tmp/users.csv'
 ```
 
@@ -199,7 +199,7 @@ $query = copy()
     ->stdout()
     ->format(CopyFormat::CSV);
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY users TO STDOUT WITH (format csv)
 ```
 
@@ -214,7 +214,7 @@ $query = copy()
     ->to('logs')
     ->program('gzip > /tmp/logs.csv.gz');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY logs TO PROGRAM 'gzip > /tmp/logs.csv.gz'
 ```
 
@@ -237,7 +237,7 @@ $query = copy()
     ->file('/tmp/active_users.csv')
     ->format(CopyFormat::CSV);
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY (SELECT id, name FROM users) TO '/tmp/active_users.csv' WITH (format csv)
 ```
 
@@ -254,7 +254,7 @@ $query = copy()
     ->file('/tmp/data.bin')
     ->format(CopyFormat::BINARY);
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY data TO '/tmp/data.bin' WITH (format binary)
 ```
 
@@ -275,7 +275,7 @@ $query = copy()
     ->format(CopyFormat::CSV)
     ->forceQuote('name', 'description');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY products TO '/tmp/products.csv' WITH (format csv, force_quote (name, description))
 
 // Quote all columns
@@ -285,7 +285,7 @@ $query = copy()
     ->format(CopyFormat::CSV)
     ->forceQuoteAll();
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY products TO '/tmp/products.csv' WITH (format csv, force_quote *)
 ```
 
@@ -300,14 +300,14 @@ $query = copy()
     ->from('analytics.events')
     ->file('/tmp/events.csv');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY analytics.events FROM '/tmp/events.csv'
 
 $query = copy()
     ->to('analytics.events')
     ->file('/tmp/events.csv');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COPY analytics.events TO '/tmp/events.csv'
 ```
 

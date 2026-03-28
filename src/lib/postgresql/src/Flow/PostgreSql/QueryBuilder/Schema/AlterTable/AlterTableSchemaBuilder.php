@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
 use Flow\PostgreSql\Protobuf\AST\{AlterObjectSchemaStmt, ObjectType, RangeVar};
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterTableSchemaBuilder
 {
+    use AstToSql;
+
     private function __construct(
         private string $table,
         private ?string $schema,

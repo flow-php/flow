@@ -7,8 +7,8 @@ namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 use function Flow\PostgreSql\DSL\{begin, commit, release_savepoint, rollback, savepoint};
 use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper, TransactionContext, TypedValue};
-use Flow\PostgreSql\Client\Exception\{ConnectionException, MappingException, PostgreSqlError, QueryException, ResultException, TransactionException, ValueConversionException};
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ResultCaster, ValueConverters};
+use Flow\PostgreSql\Client\Exception\{ConnectionException, PostgreSqlError, QueryException, ResultException, TransactionException, ValueConversionException};
+use Flow\PostgreSql\Client\Types\{ResultCaster, ValueConverters, ValueType};
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Parser;
@@ -27,7 +27,6 @@ final class PgSqlClient implements Client
         private ?Connection $connection,
         private readonly ConnectionParameters $connectionParameters,
         private readonly ValueConverters $valueConverters,
-        private readonly ?RowMapper $defaultMapper = null,
     ) {
         $this->resultCaster = new ResultCaster();
         $this->transactionContext = new TransactionContext();
@@ -39,7 +38,6 @@ final class PgSqlClient implements Client
     public static function connect(
         ConnectionParameters $params,
         ?ValueConverters $valueConverters = null,
-        ?RowMapper $mapper = null,
     ) : self {
         if (!\extension_loaded('pgsql')) {
             throw ConnectionException::extensionNotLoaded('pgsql');
@@ -58,7 +56,6 @@ final class PgSqlClient implements Client
             $connection,
             $params,
             $valueConverters ?? ValueConverters::create(),
-            $mapper,
         );
     }
 
@@ -111,7 +108,7 @@ final class PgSqlClient implements Client
     {
         $result = $this->query($sql, $parameters);
 
-        return new PgSqlCursor($result, $this->defaultMapper);
+        return new PgSqlCursor($result);
     }
 
     public function execute(SqlQuery|string $sql, array $parameters = []) : int
@@ -172,38 +169,28 @@ final class PgSqlClient implements Client
     }
 
     public function fetchAllInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
     ) : array {
-        $rows = $this->fetchAll($sql, $parameters);
-
-        if ($rows === []) {
-            return [];
-        }
-
-        $mapper = $this->resolveMapper($mapper);
-
-        return \array_map(
-            static fn (array $row) => $mapper->map($class, $row),
-            $rows,
-        );
+        return \array_values(\array_map(
+            static fn (array $row) => $mapper->map($row),
+            $this->fetchAll($sql, $parameters),
+        ));
     }
 
     public function fetchInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
-    ) : ?object {
+    ) : mixed {
         $row = $this->fetch($sql, $parameters);
 
         if ($row === null) {
             return null;
         }
 
-        return $this->resolveMapper($mapper)->map($class, $row);
+        return $mapper->map($row);
     }
 
     public function fetchOne(SqlQuery|string $sql, array $parameters = []) : array
@@ -238,12 +225,11 @@ final class PgSqlClient implements Client
     }
 
     public function fetchOneInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
-    ) : object {
-        return $this->resolveMapper($mapper)->map($class, $this->fetchOne($sql, $parameters));
+    ) : mixed {
+        return $mapper->map($this->fetchOne($sql, $parameters));
     }
 
     public function fetchScalar(SqlQuery|string $sql, array $parameters = []) : mixed
@@ -427,14 +413,14 @@ final class PgSqlClient implements Client
             if ($value === null) {
                 $converted[] = null;
             } elseif ($value instanceof TypedValue) {
-                $converter = $this->valueConverters->forPostgreSqlType($value->targetType);
+                $converter = $this->valueConverters->forValueType($value->targetType);
                 $converted[] = $converter->toDatabase($value->value);
             } else {
                 if (\is_array($value)) {
                     throw ValueConversionException::ambiguousArrayType();
                 }
 
-                $converted[] = $this->valueConverters->forPostgreSqlType(PostgreSqlType::TEXT)->toDatabase($value);
+                $converted[] = $this->valueConverters->forValueType(ValueType::TEXT)->toDatabase($value);
             }
         }
 
@@ -556,16 +542,5 @@ final class PgSqlClient implements Client
         }
 
         return $result;
-    }
-
-    private function resolveMapper(?RowMapper $mapper) : RowMapper
-    {
-        $resolved = $mapper ?? $this->defaultMapper;
-
-        if ($resolved === null) {
-            throw MappingException::noMapperConfigured();
-        }
-
-        return $resolved;
     }
 }

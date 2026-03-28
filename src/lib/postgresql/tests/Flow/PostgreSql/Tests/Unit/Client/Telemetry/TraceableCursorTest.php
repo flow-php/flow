@@ -147,7 +147,7 @@ final class TraceableCursorTest extends TestCase
 
         $objects = [];
 
-        foreach ($cursor->map(\stdClass::class) as $object) {
+        foreach ($cursor->map(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class)) as $object) {
             $objects[] = $object;
         }
 

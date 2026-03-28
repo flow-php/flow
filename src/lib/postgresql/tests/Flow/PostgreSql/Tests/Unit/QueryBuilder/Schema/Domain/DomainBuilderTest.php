@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Domain;
 
-use function Flow\PostgreSql\DSL\data_type_text;
+use function Flow\PostgreSql\DSL\{alter, col, column_type_text, create, drop, literal};
+
 use Flow\PostgreSql\Protobuf\AST\{AlterDomainStmt, ConstrType, CreateDomainStmt, DropBehavior, DropStmt, ObjectType};
+use Flow\PostgreSql\QueryBuilder\Condition\OperatorCondition;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\Domain\{AlterDomainBuilder, CreateDomainBuilder, DropDomainBuilder};
 
 use PHPUnit\Framework\TestCase;
@@ -22,7 +25,7 @@ final class DomainBuilderTest extends TestCase
     public function test_alter_domain_add_constraint() : void
     {
         $builder = AlterDomainBuilder::create('email')
-            ->addConstraint('valid_email', "VALUE ~ '^.+@.+$'");
+            ->addConstraint('valid_email', new OperatorCondition(col('VALUE'), '~', literal('^.+@.+$')));
 
         $ast = $builder->toAst();
 
@@ -62,6 +65,17 @@ final class DomainBuilderTest extends TestCase
         self::assertSame('valid_email', $ast->getName());
     }
 
+    public function test_alter_domain_drop_constraint_cascade_to_sql() : void
+    {
+        self::assertSame(
+            'ALTER DOMAIN email DROP CONSTRAINT valid_email CASCADE',
+            alter()->domain('email')
+                ->dropConstraint('valid_email')
+                ->cascade()
+                ->toSql()
+        );
+    }
+
     public function test_alter_domain_drop_default() : void
     {
         $builder = AlterDomainBuilder::create('email')
@@ -96,7 +110,7 @@ final class DomainBuilderTest extends TestCase
     public function test_alter_domain_set_default() : void
     {
         $builder = AlterDomainBuilder::create('email')
-            ->setDefault("'default@example.com'");
+            ->setDefault(literal('default@example.com'));
 
         $ast = $builder->toAst();
 
@@ -128,7 +142,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_ast_type() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text());
+            ->as(column_type_text());
 
         $ast = $builder->toAst();
 
@@ -138,7 +152,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_sets_name() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text());
+            ->as(column_type_text());
 
         $ast = $builder->toAst();
         $domainname = $ast->getDomainname();
@@ -149,7 +163,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_sets_type() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text());
+            ->as(column_type_text());
 
         $ast = $builder->toAst();
         $typeName = $ast->getTypeName();
@@ -158,11 +172,21 @@ final class DomainBuilderTest extends TestCase
         self::assertCount(2, $typeName->getNames());
     }
 
+    public function test_create_domain_simple_to_sql() : void
+    {
+        self::assertSame(
+            'CREATE DOMAIN email AS pg_catalog.text',
+            create()->domain('email')
+                ->as(ColumnType::text())
+                ->toSql()
+        );
+    }
+
     public function test_create_domain_with_check() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
-            ->check("VALUE ~ '^.+@.+$'");
+            ->as(column_type_text())
+            ->check(new OperatorCondition(col('VALUE'), '~', literal('^.+@.+$')));
 
         $ast = $builder->toAst();
         $constraints = $ast->getConstraints();
@@ -177,7 +201,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_collation() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
+            ->as(column_type_text())
             ->collate('en_US');
 
         $ast = $builder->toAst();
@@ -188,8 +212,8 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_default() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
-            ->default("'default@example.com'");
+            ->as(column_type_text())
+            ->default(literal('default@example.com'));
 
         $ast = $builder->toAst();
         $constraints = $ast->getConstraints();
@@ -204,9 +228,9 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_multiple_constraints() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
+            ->as(column_type_text())
             ->notNull()
-            ->check("VALUE ~ '^.+@.+$'");
+            ->check(new OperatorCondition(col('VALUE'), '~', literal('^.+@.+$')));
 
         $ast = $builder->toAst();
         $constraints = $ast->getConstraints();
@@ -217,9 +241,9 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_named_constraint() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
+            ->as(column_type_text())
             ->constraint('valid_email')
-            ->check("VALUE ~ '^.+@.+$'");
+            ->check(new OperatorCondition(col('VALUE'), '~', literal('^.+@.+$')));
 
         $ast = $builder->toAst();
         $constraints = $ast->getConstraints();
@@ -234,7 +258,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_not_null() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
+            ->as(column_type_text())
             ->notNull();
 
         $ast = $builder->toAst();
@@ -250,7 +274,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_null() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as(data_type_text())
+            ->as(column_type_text())
             ->null();
 
         $ast = $builder->toAst();
@@ -266,7 +290,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_schema() : void
     {
         $builder = CreateDomainBuilder::create('public.email')
-            ->as(data_type_text());
+            ->as(column_type_text());
 
         $ast = $builder->toAst();
         $domainname = $ast->getDomainname();
@@ -304,6 +328,17 @@ final class DomainBuilderTest extends TestCase
         self::assertTrue($ast->getMissingOk());
     }
 
+    public function test_drop_domain_if_exists_cascade_to_sql() : void
+    {
+        self::assertSame(
+            'DROP DOMAIN IF EXISTS email CASCADE',
+            drop()->domain('email')
+                ->ifExists()
+                ->cascade()
+                ->toSql()
+        );
+    }
+
     public function test_drop_domain_immutability() : void
     {
         $original = DropDomainBuilder::create('email');
@@ -322,6 +357,15 @@ final class DomainBuilderTest extends TestCase
         self::assertCount(3, $ast->getObjects());
     }
 
+    public function test_drop_domain_multiple_to_sql() : void
+    {
+        self::assertSame(
+            'DROP DOMAIN email, phone, url',
+            drop()->domain('email', 'phone', 'url')
+                ->toSql()
+        );
+    }
+
     public function test_drop_domain_restrict() : void
     {
         $builder = DropDomainBuilder::create('email')
@@ -330,5 +374,14 @@ final class DomainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertSame(DropBehavior::DROP_RESTRICT, $ast->getBehavior());
+    }
+
+    public function test_drop_domain_simple_to_sql() : void
+    {
+        self::assertSame(
+            'DROP DOMAIN email',
+            drop()->domain('email')
+                ->toSql()
+        );
     }
 }

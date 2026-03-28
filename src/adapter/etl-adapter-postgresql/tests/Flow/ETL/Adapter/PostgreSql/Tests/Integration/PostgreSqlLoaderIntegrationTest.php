@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_limit_offset, pgsql_delete_options, pgsql_insert_options, pgsql_update_options, to_pgsql_table};
 use function Flow\ETL\DSL\{df, from_array};
-use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_integer, data_type_text, drop, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, column_type_integer, column_type_text, create, drop, select, star, table};
 use Flow\ETL\Adapter\PostgreSql\Operation;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
@@ -24,9 +24,9 @@ final class PostgreSqlLoaderIntegrationTest extends IntegrationTestCase
 
         $this->client->execute(
             create()->table($this->tableName)
-                ->column(column('id', data_type_integer())->primaryKey())
-                ->column(column('name', data_type_text()))
-                ->column(column('email', data_type_text())->unique())
+                ->column(column('id', column_type_integer())->primaryKey())
+                ->column(column('name', column_type_text()))
+                ->column(column('email', column_type_text())->unique())
         );
     }
 

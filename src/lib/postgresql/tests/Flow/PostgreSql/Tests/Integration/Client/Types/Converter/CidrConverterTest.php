@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_cidr, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class CidrConverterTest extends ConverterTestCase
+final class CidrConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
@@ -24,14 +25,14 @@ final class CidrConverterTest extends ConverterTestCase
     #[DataProvider('provide_cidr_values')]
     public function test_cidr_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::cidr AS val', [typed($input, PostgreSqlType::CIDR)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_cidr())->as('val'))->toSql(), [typed($input, ValueType::CIDR)]);
 
         self::assertSame($expected, $result);
     }
 
     public function test_null_cidr() : void
     {
-        $result = $this->fetchValue('SELECT NULL::cidr AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_cidr())->as('val'))->toSql());
 
         self::assertNull($result);
     }

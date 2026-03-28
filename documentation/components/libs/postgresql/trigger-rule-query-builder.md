@@ -6,10 +6,10 @@ This document describes the PostgreSQL Trigger and Rule Query Builder components
 
 ### CREATE TRIGGER
 
-Create triggers using the `create_trigger()` DSL function:
+Create triggers using the `create()->trigger()` builder method:
 
 ```php
-use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\{create, col, eq, literal};
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent;
 
 // Basic AFTER INSERT trigger
@@ -48,7 +48,7 @@ $builder = create()->trigger('protect_admin')
     ->before(TriggerEvent::DELETE)
     ->on('users')
     ->forEachRow()
-    ->when(raw_cond('OLD.role = \'admin\''))
+    ->when(eq(col('role', 'OLD'), literal('admin')))
     ->execute('raise_error');
 // CREATE TRIGGER protect_admin BEFORE DELETE ON users FOR EACH ROW WHEN (old.role = 'admin') EXECUTE FUNCTION raise_error()
 
@@ -183,7 +183,7 @@ $builder = alter()->table('users')->disableTriggerUser();
 
 ### CREATE RULE
 
-Create rules using the `create_rule()` DSL function:
+Create rules using the `create()->rule()` builder method:
 
 ```php
 use function Flow\PostgreSql\DSL\create;

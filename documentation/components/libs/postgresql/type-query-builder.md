@@ -23,7 +23,7 @@ $query = create()->compositeType('address')
         type_attr('zip', 'text')
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE address AS (street text, city text, zip text)
 ```
 
@@ -39,7 +39,7 @@ $query = create()->compositeType('public.address')
         type_attr('street', 'text')
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE public.address AS (street text)
 ```
 
@@ -55,7 +55,7 @@ $query = create()->compositeType('person')
         type_attr('name', 'text')->collate('en_US')
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE person AS (name text COLLATE "en_US")
 ```
 
@@ -71,7 +71,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->enumType('status')
     ->labels('pending', 'active', 'closed');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE status AS ENUM ('pending', 'active', 'closed')
 ```
 
@@ -85,7 +85,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->enumType('public.status')
     ->labels('pending', 'active');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE public.status AS ENUM ('pending', 'active')
 ```
 
@@ -101,7 +101,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->rangeType('floatrange')
     ->subtype('float8');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE floatrange AS RANGE (subtype = float8)
 ```
 
@@ -115,7 +115,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->rangeType('public.floatrange')
     ->subtype('float8');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE public.floatrange AS RANGE (subtype = float8)
 ```
 
@@ -130,7 +130,7 @@ $query = create()->rangeType('floatrange')
     ->subtype('float8')
     ->subtypeOpclass('float8_ops');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE floatrange AS RANGE (subtype = float8, subtype_opclass = 'float8_ops')
 ```
 
@@ -145,7 +145,7 @@ $query = create()->rangeType('textrange')
     ->subtype('text')
     ->collation('en_US');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE textrange AS RANGE (subtype = text, "collation" = 'en_US')
 ```
 
@@ -160,7 +160,7 @@ $query = create()->rangeType('daterange')
     ->subtype('date')
     ->canonical('daterange_canonical');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE daterange AS RANGE (subtype = date, canonical = 'daterange_canonical')
 ```
 
@@ -175,7 +175,7 @@ $query = create()->rangeType('floatrange')
     ->subtype('float8')
     ->subtypeDiff('float8mi');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TYPE floatrange AS RANGE (subtype = float8, subtype_diff = 'float8mi')
 ```
 
@@ -191,7 +191,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->enumType('status')
     ->addValue('archived');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER TYPE status ADD VALUE 'archived'
 ```
 
@@ -206,7 +206,7 @@ $query = alter()->enumType('status')
     ->addValue('archived')
     ->ifNotExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER TYPE status ADD VALUE IF NOT EXISTS 'archived'
 ```
 
@@ -220,7 +220,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->enumType('status')
     ->addValueBefore('pending', 'active');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER TYPE status ADD VALUE 'pending' BEFORE 'active'
 ```
 
@@ -234,7 +234,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->enumType('status')
     ->addValueAfter('archived', 'closed');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER TYPE status ADD VALUE 'archived' AFTER 'closed'
 ```
 
@@ -248,7 +248,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->enumType('status')
     ->renameValue('old_name', 'new_name');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER TYPE status RENAME VALUE 'old_name' TO 'new_name'
 ```
 
@@ -263,7 +263,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP TYPE address
 ```
 
@@ -277,7 +277,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->type('address')
     ->ifExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP TYPE IF EXISTS address
 ```
 
@@ -293,7 +293,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->type('address')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP TYPE address CASCADE
 ```
 
@@ -309,7 +309,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->type('address')
     ->restrict();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP TYPE address
 ```
 
@@ -322,7 +322,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address', 'status', 'floatrange');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP TYPE address, status, floatrange
 ```
 
@@ -337,7 +337,7 @@ $query = drop()->type('address')
     ->ifExists()
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP TYPE IF EXISTS address CASCADE
 ```
 

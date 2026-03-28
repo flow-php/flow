@@ -17,7 +17,7 @@ $query = delete()
     ->from('users')
     ->where(eq(col('id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM users WHERE id = 1
 ```
 
@@ -34,7 +34,7 @@ $query = delete()
     ->from('users')
     ->where(eq(col('id'), param(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM users WHERE id = $1
 ```
 
@@ -49,7 +49,7 @@ $query = delete()
     ->from('users', 'u')
     ->where(eq(col('u.id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM users u WHERE u.id = 1
 ```
 
@@ -67,7 +67,7 @@ $query = delete()
     ->using(table('users'))
     ->where(eq(col('orders.user_id'), col('users.id')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM orders USING users WHERE orders.user_id = users.id
 ```
 
@@ -77,7 +77,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    delete, select, col, table, any_sub_select
+    delete, select, col, table, any_
 };
 
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
@@ -88,9 +88,9 @@ $subquery = select()
 
 $query = delete()
     ->from('users')
-    ->where(any_sub_select(col('id'), ComparisonOperator::EQ, $subquery));
+    ->where(any_(col('id'), ComparisonOperator::EQ, $subquery));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM users WHERE id = ANY (SELECT user_id FROM inactive_users)
 ```
 
@@ -107,7 +107,7 @@ $query = delete()
     ->where(eq(col('id'), literal(1)))
     ->returning(col('id'), col('name'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM users WHERE id = 1 RETURNING id, name
 
 // Return all columns
@@ -116,7 +116,7 @@ $query = delete()
     ->where(eq(col('id'), literal(1)))
     ->returningAll();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM users WHERE id = 1 RETURNING *
 ```
 
@@ -126,19 +126,19 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    delete, col, eq, lt, literal, cond_and
+    delete, col, eq, lt, literal, and_
 };
 
 $query = delete()
     ->from('sessions')
     ->where(
-        cond_and(
+        and_(
             eq(col('active'), literal(false)),
             lt(col('expires_at'), literal('2024-01-01'))
         )
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // DELETE FROM sessions WHERE active = false AND expires_at < '2024-01-01'
 ```
 

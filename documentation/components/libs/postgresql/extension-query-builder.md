@@ -18,7 +18,7 @@ use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('uuid-ossp');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE EXTENSION "uuid-ossp"
 ```
 
@@ -32,7 +32,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->extension('uuid-ossp')
     ->ifNotExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
 ```
 
@@ -48,7 +48,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->extension('uuid-ossp')
     ->schema('public');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE EXTENSION "uuid-ossp" SCHEMA public
 ```
 
@@ -64,7 +64,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->extension('postgis')
     ->version('3.0');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE EXTENSION postgis VERSION "3.0"
 ```
 
@@ -80,7 +80,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->extension('postgis_raster')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE EXTENSION postgis_raster CASCADE
 ```
 
@@ -97,7 +97,7 @@ $query = create()->extension('postgis')
     ->version('3.0')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE EXTENSION IF NOT EXISTS postgis SCHEMA extensions VERSION "3.0" CASCADE
 ```
 
@@ -115,7 +115,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->extension('postgis')
     ->update();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION postgis UPDATE
 ```
 
@@ -129,7 +129,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->extension('postgis')
     ->updateTo('3.0');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION postgis UPDATE TO "3.0"
 ```
 
@@ -145,7 +145,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->extension('uuid-ossp')
     ->setSchema('public');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION "uuid-ossp" SET SCHEMA public
 ```
 
@@ -161,7 +161,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->extension('my_extension')
     ->addFunction('my_func', ['integer', 'text']);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION my_extension ADD FUNCTION my_func("integer", text)
 ```
 
@@ -175,7 +175,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->extension('my_extension')
     ->addTable('my_table');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION my_extension ADD TABLE my_table
 ```
 
@@ -189,13 +189,13 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->extension('my_extension')
     ->dropFunction('my_func', ['integer']);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION my_extension DROP FUNCTION my_func("integer")
 
 $query = alter()->extension('my_extension')
     ->dropTable('my_table');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER EXTENSION my_extension DROP TABLE my_table
 ```
 
@@ -210,7 +210,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('uuid-ossp');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP EXTENSION "uuid-ossp"
 ```
 
@@ -224,7 +224,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->extension('uuid-ossp')
     ->ifExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP EXTENSION IF EXISTS "uuid-ossp"
 ```
 
@@ -240,7 +240,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->extension('postgis')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP EXTENSION postgis CASCADE
 ```
 
@@ -256,7 +256,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->extension('uuid-ossp')
     ->restrict();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP EXTENSION "uuid-ossp"
 ```
 
@@ -269,7 +269,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('postgis', 'postgis_raster', 'postgis_topology');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP EXTENSION postgis, postgis_raster, postgis_topology
 ```
 
@@ -284,7 +284,7 @@ $query = drop()->extension('postgis')
     ->ifExists()
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP EXTENSION IF EXISTS postgis CASCADE
 ```
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Constraint;
 
+use function Flow\PostgreSql\DSL\{col, eq, literal};
 use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +21,7 @@ final class ExcludeConstraintTest extends TestCase
     public function test_exclude_constraint_with_btree() : void
     {
         $constraint = ExcludeConstraint::create('btree')
-            ->element('id', '=');
+            ->element(col('id'), '=');
 
         $ast = $constraint->toAst();
 
@@ -32,8 +33,8 @@ final class ExcludeConstraintTest extends TestCase
     public function test_exclude_constraint_with_multiple_elements() : void
     {
         $constraint = ExcludeConstraint::create('gist')
-            ->element('room_id', '=')
-            ->element('during', '&&');
+            ->element(col('room_id'), '=')
+            ->element(col('during'), '&&');
 
         $ast = $constraint->toAst();
 
@@ -45,7 +46,7 @@ final class ExcludeConstraintTest extends TestCase
     public function test_exclude_constraint_with_name() : void
     {
         $constraint = ExcludeConstraint::create()
-            ->element('room_id', '=')
+            ->element(col('room_id'), '=')
             ->name('exc_room_booking');
 
         $ast = $constraint->toAst();
@@ -57,8 +58,8 @@ final class ExcludeConstraintTest extends TestCase
     public function test_exclude_constraint_with_where_clause() : void
     {
         $constraint = ExcludeConstraint::create()
-            ->element('room_id', '=')
-            ->where('active = true');
+            ->element(col('room_id'), '=')
+            ->where(eq(col('active'), literal(true)));
 
         $ast = $constraint->toAst();
 
@@ -70,9 +71,9 @@ final class ExcludeConstraintTest extends TestCase
     {
         $constraint = ExcludeConstraint::create('gist')
             ->name('exc_booking')
-            ->element('room_id', '=')
-            ->element('period', '&&')
-            ->where('cancelled = false');
+            ->element(col('room_id'), '=')
+            ->element(col('period'), '&&')
+            ->where(eq(col('cancelled'), literal(false)));
 
         $ast = $constraint->toAst();
 
@@ -96,7 +97,7 @@ final class ExcludeConstraintTest extends TestCase
     public function test_simple_exclude_constraint() : void
     {
         $constraint = ExcludeConstraint::create()
-            ->element('room_id', '=');
+            ->element(col('room_id'), '=');
 
         $ast = $constraint->toAst();
 

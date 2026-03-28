@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
-use function Flow\PostgreSql\DSL\{conditions, raw_cond};
+use function Flow\PostgreSql\DSL\{col, conditions, eq, literal};
 use Flow\PostgreSql\Protobuf\AST\BoolExprType;
 use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, ConditionBuilder, OrCondition};
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_and_on_empty_builder_returns_new_builder_with_condition() : void
     {
-        $cond = raw_cond('x = 1');
+        $cond = eq(col('x'), literal(1));
 
         $builder = ConditionBuilder::create();
         $result = $builder->and($cond);
@@ -31,8 +31,8 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_builder_is_immutable() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $original = ConditionBuilder::create();
         $modified = $original->and($cond1);
@@ -53,7 +53,7 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_empty_nested_builder_is_ignored_in_and() : void
     {
-        $cond = raw_cond('x = 1');
+        $cond = eq(col('x'), literal(1));
         $emptyBuilder = conditions();
 
         $builder = conditions()
@@ -66,7 +66,7 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_empty_nested_builder_is_ignored_in_or() : void
     {
-        $cond = raw_cond('x = 1');
+        $cond = eq(col('x'), literal(1));
         $emptyBuilder = conditions();
 
         $builder = conditions()
@@ -79,9 +79,9 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_mixing_and_then_or() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
-        $cond3 = raw_cond('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $builder = conditions()
             ->and($cond1)
@@ -94,9 +94,9 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_mixing_or_then_and() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
-        $cond3 = raw_cond('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $builder = conditions()
             ->or($cond1)
@@ -109,9 +109,9 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_multiple_and_conditions() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
-        $cond3 = raw_cond('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $builder = conditions()
             ->and($cond1)
@@ -134,9 +134,9 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_multiple_or_conditions() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
-        $cond3 = raw_cond('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $builder = conditions()
             ->or($cond1)
@@ -159,9 +159,9 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_nested_builder_via_and() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
-        $cond3 = raw_cond('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $nestedBuilder = conditions()
             ->or($cond2)
@@ -179,9 +179,9 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_nested_builder_via_or() : void
     {
-        $cond1 = raw_cond('x = 1');
-        $cond2 = raw_cond('y = 2');
-        $cond3 = raw_cond('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $nestedBuilder = conditions()
             ->and($cond2)
@@ -199,7 +199,7 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_or_on_empty_builder_returns_new_builder_with_condition() : void
     {
-        $cond = raw_cond('x = 1');
+        $cond = eq(col('x'), literal(1));
 
         $builder = conditions();
         $result = $builder->or($cond);
@@ -210,7 +210,7 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_single_condition_via_and() : void
     {
-        $cond = raw_cond('x = 1');
+        $cond = eq(col('x'), literal(1));
         $builder = conditions()->and($cond);
 
         self::assertFalse($builder->isEmpty());
@@ -219,7 +219,7 @@ final class ConditionBuilderTest extends TestCase
 
     public function test_single_condition_via_or() : void
     {
-        $cond = raw_cond('x = 1');
+        $cond = eq(col('x'), literal(1));
         $builder = conditions()->or($cond);
 
         self::assertFalse($builder->isEmpty());

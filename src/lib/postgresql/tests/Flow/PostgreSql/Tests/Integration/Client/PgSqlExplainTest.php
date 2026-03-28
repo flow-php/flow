@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Integration\Client;
 
 use function Flow\PostgreSql\DSL\{
+    binary_expr,
+    cast,
     col,
     column,
+    column_type_integer,
+    column_type_text,
     create,
-    data_type_integer,
-    data_type_text,
     eq,
     insert,
     literal,
@@ -22,9 +24,10 @@ use function Flow\PostgreSql\DSL\{
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Explain\Analyzer\{PlanAnalyzer, PlanSummary};
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class PgSqlExplainTest extends ClientTestCase
+final class PgSqlExplainTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{ExplainConfig, array{
@@ -117,7 +120,7 @@ final class PgSqlExplainTest extends ClientTestCase
 
     public function test_explain_for_estimate() : void
     {
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(literal(1)),
             config: ExplainConfig::forEstimate()
         );
@@ -129,13 +132,13 @@ final class PgSqlExplainTest extends ClientTestCase
 
     public function test_explain_returns_plan_for_select_query() : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_explain')
-                ->column(column('id', data_type_integer()))
-                ->column(column('name', data_type_text()))
+                ->column(column('id', column_type_integer()))
+                ->column(column('name', column_type_text()))
         );
 
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(star())->from(table('test_explain'))
         );
 
@@ -145,13 +148,13 @@ final class PgSqlExplainTest extends ClientTestCase
 
     public function test_explain_returns_plan_with_parameters() : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_explain_params')
-                ->column(column('id', data_type_integer()))
-                ->column(column('name', data_type_text()))
+                ->column(column('id', column_type_integer()))
+                ->column(column('name', column_type_text()))
         );
 
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(star())->from(table('test_explain_params'))->where(eq(col('id'), param(1))),
             ['42']
         );
@@ -161,8 +164,8 @@ final class PgSqlExplainTest extends ClientTestCase
 
     public function test_explain_returns_plan_with_raw_sql() : void
     {
-        $plan = $this->client->explain(
-            'SELECT $1::int + $2::int',
+        $plan = $this->pgsqlContext()->client()->explain(
+            select(binary_expr(cast(param(1), column_type_integer()), '+', cast(param(2), column_type_integer()))),
             ['10', '32']
         );
 
@@ -181,17 +184,17 @@ final class PgSqlExplainTest extends ClientTestCase
     #[DataProvider('provideExplainConfigCombinations')]
     public function test_explain_with_config_combinations(ExplainConfig $config, array $expected) : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_explain_combinations')
-                ->column(column('id', data_type_integer()))
-                ->column(column('name', data_type_text()))
+                ->column(column('id', column_type_integer()))
+                ->column(column('name', column_type_text()))
         );
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()->into('test_explain_combinations')->columns('id', 'name')
                 ->values(literal(1), literal('test'))
         );
 
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(star())->from(table('test_explain_combinations')),
             config: $config
         );
@@ -231,12 +234,12 @@ final class PgSqlExplainTest extends ClientTestCase
 
     public function test_explain_with_custom_config() : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_explain_config')
-                ->column(column('id', data_type_integer()))
+                ->column(column('id', column_type_integer()))
         );
 
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(star())->from(table('test_explain_config')),
             config: sql_explain_config()
         );
@@ -247,7 +250,7 @@ final class PgSqlExplainTest extends ClientTestCase
 
     public function test_explain_without_analyze() : void
     {
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(literal(1)),
             config: sql_explain_config(
                 analyze: false,
@@ -273,17 +276,17 @@ final class PgSqlExplainTest extends ClientTestCase
     #[DataProvider('provideExplainConfigCombinations')]
     public function test_plan_summary_with_config_combinations(ExplainConfig $config, array $expected) : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_summary_combinations')
-                ->column(column('id', data_type_integer()))
-                ->column(column('name', data_type_text()))
+                ->column(column('id', column_type_integer()))
+                ->column(column('name', column_type_text()))
         );
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()->into('test_summary_combinations')->columns('id', 'name')
                 ->values(literal(1), literal('test'))
         );
 
-        $plan = $this->client->explain(
+        $plan = $this->pgsqlContext()->client()->explain(
             select(star())->from(table('test_summary_combinations')),
             config: $config
         );

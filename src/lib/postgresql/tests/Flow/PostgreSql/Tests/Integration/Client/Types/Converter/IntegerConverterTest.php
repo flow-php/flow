@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_bigint, column_type_integer, column_type_smallint, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class IntegerConverterTest extends ConverterTestCase
+final class IntegerConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{int, int}>
@@ -47,7 +48,7 @@ final class IntegerConverterTest extends ConverterTestCase
     #[DataProvider('provide_int2_values')]
     public function test_int2_round_trip(int $input, int $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::int2 AS val', [typed($input, PostgreSqlType::INT2)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_smallint())->as('val'))->toSql(), [typed($input, ValueType::INT2)]);
 
         self::assertSame($expected, $result);
     }
@@ -55,7 +56,7 @@ final class IntegerConverterTest extends ConverterTestCase
     #[DataProvider('provide_int4_values')]
     public function test_int4_round_trip(int $input, int $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::int4 AS val', [typed($input, PostgreSqlType::INT4)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_integer())->as('val'))->toSql(), [typed($input, ValueType::INT4)]);
 
         self::assertSame($expected, $result);
     }
@@ -63,14 +64,14 @@ final class IntegerConverterTest extends ConverterTestCase
     #[DataProvider('provide_int8_values')]
     public function test_int8_round_trip(int $input, int $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::int8 AS val', [typed($input, PostgreSqlType::INT8)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_bigint())->as('val'))->toSql(), [typed($input, ValueType::INT8)]);
 
         self::assertSame($expected, $result);
     }
 
     public function test_null_integer() : void
     {
-        $result = $this->fetchValue('SELECT NULL::int4 AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_integer())->as('val'))->toSql());
 
         self::assertNull($result);
     }

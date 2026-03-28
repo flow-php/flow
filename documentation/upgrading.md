@@ -7,6 +7,252 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.35.x to 0.36.x
+
+### 1) PostgreSQL Library: `RawCondition` and `RawExpression` removed
+
+The `raw_cond()` and `raw_expr()` escape hatches have been removed. All query builder operations are now covered by
+type-safe DSL functions.
+
+| Removed                               | Replacement                                                               |
+|---------------------------------------|---------------------------------------------------------------------------|
+| `raw_cond('NOT col')`                 | `not_(is_true(col('col')))`                                               |
+| `raw_cond('a = ANY(b)')`              | `any_(col('a'), ComparisonOperator::EQ, col('b'))`                        |
+| `raw_cond("x IN ('a', 'b')")`         | `in_(col('x'), [literal('a'), literal('b')])`                             |
+| `raw_cond("x NOT LIKE 'pg_%'")`       | `not_like(col('x'), literal('pg_%'))`                                     |
+| `raw_expr('NOT col')`                 | `not_(col('col'))`                                                        |
+| `raw_expr('a \|\| b')`                | `concat(col('a'), col('b'))` or `binary_expr(col('a'), '\|\|', col('b'))` |
+| `raw_expr('CASE x WHEN ...')`         | `case_when([when(...)], operand: col('x'))`                               |
+| `raw_expr('array_agg(DISTINCT ...)')` | `agg('array_agg', [...], distinct: true)->withOrderBy(...)`               |
+| `RawCondition` class                  | Use specific condition classes                                            |
+| `RawExpression` class                 | Use specific expression classes                                           |
+
+### 2) PostgreSQL Library: `Condition` now extends `Expression`
+
+Conditions are now expressions — they can be used in SELECT lists, CASE WHEN, ORDER BY, etc.
+
+```php
+// Conditions can now be aliased and used as expressions:
+select(eq(col('a'), col('b'))->as('is_equal'));
+
+// NOT works in both WHERE and SELECT:
+not_(col('is_deleted'))->as('is_active');
+
+// CASE WHEN accepts conditions directly:
+case_when([when(eq(col('x'), literal(0)), literal('zero'))]);
+```
+
+### 3) PostgreSQL Library: DSL condition function renames
+
+Function names have been unified following standard SQL builder conventions (jOOQ, Diesel, SQLAlchemy).
+
+| Removed              | Replacement               | Reason                                                    |
+|----------------------|---------------------------|-----------------------------------------------------------|
+| `neq()`              | `ne()`                    | Standard short form                                       |
+| `lte()`              | `le()`                    | Standard short form                                       |
+| `gte()`              | `ge()`                    | Standard short form                                       |
+| `is_in()`            | `in_()`                   | Drop `is_` prefix, trailing underscore for PHP keyword    |
+| `is_distinct_from()` | `distinct_from()`         | Drop `is_` prefix                                         |
+| `cond_and()`         | `and_()`                  | Drop `cond_` prefix, trailing underscore for PHP keyword  |
+| `cond_or()`          | `or_()`                   | Drop `cond_` prefix, trailing underscore for PHP keyword  |
+| `cond_not()`         | `not_()`                  | Drop `cond_` prefix, trailing underscore for PHP keyword  |
+| `any_sub_select()`   | `any_()`                  | Unified — accepts both `Expression` and `SelectFinalStep` |
+| `all_sub_select()`   | `all_()`                  | Unified — accepts both `Expression` and `SelectFinalStep` |
+| `cond_true()`        | `is_true(literal(true))`  | Use `is_true()` with literal                              |
+| `cond_false()`       | `is_true(literal(false))` | Use `is_true()` with literal                              |
+| `bool_cond()`        | `is_true()`               | Wraps expression as boolean condition                     |
+| `any_array()`        | `any_()`                  | Merged into unified `any_()`                              |
+| `all_array()`        | `all_()`                  | Merged into unified `all_()`                              |
+
+New functions added:
+
+| Function                           | Purpose                                        |
+|------------------------------------|------------------------------------------------|
+| `is_true(Expression)`              | Wrap expression as boolean condition for WHERE |
+| `not_like(Expression, Expression)` | NOT LIKE condition                             |
+| `concat(Expression, ...)`          | String concatenation with `\|\|` operator      |
+
+Before:
+
+```php
+use function Flow\PostgreSql\DSL\{cond_and, cond_not, cond_true, neq, lte, gte, is_in, any_sub_select};
+
+select(col('name'))
+    ->where(cond_and(
+        neq(col('status'), literal('deleted')),
+        lte(col('age'), literal(65)),
+        gte(col('age'), literal(18)),
+        is_in(col('role'), [literal('admin'), literal('user')]),
+    ));
+```
+
+After:
+
+```php
+use function Flow\PostgreSql\DSL\{and_, ne, le, ge, in_};
+
+select(col('name'))
+    ->where(and_(
+        ne(col('status'), literal('deleted')),
+        le(col('age'), literal(65)),
+        ge(col('age'), literal(18)),
+        in_(col('role'), [literal('admin'), literal('user')]),
+    ));
+```
+
+### 4) PostgreSQL Library: Schema builder methods accept `Expression`/`Condition` instead of strings
+
+Methods that previously accepted raw SQL strings now require typed `Expression` or `Condition` objects.
+
+| Method                                       | Before (string)                           | After (typed)                                           |
+|----------------------------------------------|-------------------------------------------|---------------------------------------------------------|
+| `ColumnDefinition::check()`                  | `->check('age > 0')`                      | `->check(gt(col('age'), literal(0)))`                   |
+| `ColumnDefinition::defaultRaw()`             | `->defaultRaw('CURRENT_TIMESTAMP')`       | `->defaultRaw(current_timestamp())`                     |
+| `ColumnDefinition::generatedAs()`            | `->generatedAs("a \|\| b")`               | `->generatedAs(concat(col('a'), col('b')))`             |
+| `CheckConstraint::create()`                  | `::create('age > 0')`                     | `::create(gt(col('age'), literal(0)))`                  |
+| `ExcludeConstraint::element()`               | `->element('col', '=')`                   | `->element(col('col'), '=')`                            |
+| `ExcludeConstraint::where()`                 | `->where('active = true')`                | `->where(eq(col('active'), literal(true)))`             |
+| `CreateDomainBuilder::check()`               | `->check('VALUE > 0')`                    | `->check(gt(col('VALUE'), literal(0)))`                 |
+| `CreateDomainBuilder::default()`             | `->default("'text'")`                     | `->default(literal('text'))`                            |
+| `AlterDomainBuilder::addConstraint()`        | `->addConstraint('name', 'VALUE > 0')`    | `->addConstraint('name', gt(col('VALUE'), literal(0)))` |
+| `AlterDomainBuilder::setDefault()`           | `->setDefault('100')`                     | `->setDefault(literal(100))`                            |
+| `AlterTableBuilder::alterColumnSetDefault()` | `->alterColumnSetDefault('col', "'val'")` | `->alterColumnSetDefault('col', literal('val'))`        |
+| `CreateRuleBuilder::where()`                 | `->where("OLD.role = 'admin'")`           | `->where(eq(col('role', 'OLD'), literal('admin')))`     |
+
+### 5) PostgreSQL Library: DSL functions split into separate files
+
+The monolithic `functions.php` has been split into 5 focused files (same namespace, no import changes needed):
+
+| File            | Purpose                                                                                    |
+|-----------------|--------------------------------------------------------------------------------------------|
+| `query.php`     | Query building, expressions, tables, ordering, CTE, window, locking, transactions, cursors |
+| `condition.php` | Comparisons, predicates, logic, JSON/array/regex operators                                 |
+| `schema.php`    | DDL, constraints, indexes, maintenance, privileges, types, schema definitions              |
+| `client.php`    | Connections, telemetry, mappers                                                            |
+| `parser.php`    | SQL parsing, formatting, analysis                                                          |
+
+---
+
+## Upgrading from 0.34.x to 0.35.x
+
+### 1) PostgreSQL Library: `DataType` renamed to `ColumnType`
+
+The `DataType` class used for schema/DDL definitions has been renamed to `ColumnType` to better communicate its purpose.
+All related DSL functions have been renamed from `data_type_*` to `column_type_*`.
+
+| Removed                                        | Replacement                                      |
+|------------------------------------------------|--------------------------------------------------|
+| `Flow\PostgreSql\QueryBuilder\Schema\DataType` | `Flow\PostgreSql\QueryBuilder\Schema\ColumnType` |
+| `Flow\PostgreSql\Parser\DataTypeParser`        | `Flow\PostgreSql\Parser\ColumnTypeParser`        |
+| `data_type_integer()`                          | `column_type_integer()`                          |
+| `data_type_smallint()`                         | `column_type_smallint()`                         |
+| `data_type_bigint()`                           | `column_type_bigint()`                           |
+| `data_type_boolean()`                          | `column_type_boolean()`                          |
+| `data_type_text()`                             | `column_type_text()`                             |
+| `data_type_varchar()`                          | `column_type_varchar()`                          |
+| `data_type_char()`                             | `column_type_char()`                             |
+| `data_type_numeric()`                          | `column_type_numeric()`                          |
+| `data_type_decimal()`                          | `column_type_decimal()`                          |
+| `data_type_real()`                             | `column_type_real()`                             |
+| `data_type_double_precision()`                 | `column_type_double_precision()`                 |
+| `data_type_date()`                             | `column_type_date()`                             |
+| `data_type_time()`                             | `column_type_time()`                             |
+| `data_type_timestamp()`                        | `column_type_timestamp()`                        |
+| `data_type_timestamptz()`                      | `column_type_timestamptz()`                      |
+| `data_type_interval()`                         | `column_type_interval()`                         |
+| `data_type_uuid()`                             | `column_type_uuid()`                             |
+| `data_type_json()`                             | `column_type_json()`                             |
+| `data_type_jsonb()`                            | `column_type_jsonb()`                            |
+| `data_type_bytea()`                            | `column_type_bytea()`                            |
+| `data_type_inet()`                             | `column_type_inet()`                             |
+| `data_type_cidr()`                             | `column_type_cidr()`                             |
+| `data_type_macaddr()`                          | `column_type_macaddr()`                          |
+| `data_type_serial()`                           | `column_type_serial()`                           |
+| `data_type_smallserial()`                      | `column_type_smallserial()`                      |
+| `data_type_bigserial()`                        | `column_type_bigserial()`                        |
+| `data_type_array()`                            | `column_type_array()`                            |
+| `data_type_custom()`                           | `column_type_custom()`                           |
+| `data_type_from_string()`                      | `column_type_from_string()`                      |
+
+Before:
+
+```php
+use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use function Flow\PostgreSql\DSL\data_type_integer;
+use function Flow\PostgreSql\DSL\data_type_varchar;
+
+column('age', data_type_integer());
+column('name', data_type_varchar(255));
+cast(ref('id'), DataType::bigint());
+```
+
+After:
+
+```php
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use function Flow\PostgreSql\DSL\column_type_integer;
+use function Flow\PostgreSql\DSL\column_type_varchar;
+
+column('age', column_type_integer());
+column('name', column_type_varchar(255));
+cast(ref('id'), ColumnType::bigint());
+```
+
+### 2) PostgreSQL Library: `PostgreSqlType` renamed to `ValueType`
+
+The `PostgreSqlType` enum used for value binding/casting has been renamed to `ValueType` to better communicate its
+purpose.
+All related DSL functions have been renamed from `pgsql_type_*` to `value_type_*`.
+
+| Removed                                       | Replacement                              |
+|-----------------------------------------------|------------------------------------------|
+| `Flow\PostgreSql\Client\Types\PostgreSqlType` | `Flow\PostgreSql\Client\Types\ValueType` |
+| `pgsql_type_text()`                           | `value_type_text()`                      |
+| `pgsql_type_varchar()`                        | `value_type_varchar()`                   |
+| `pgsql_type_integer()`                        | `value_type_integer()`                   |
+| `pgsql_type_bigint()`                         | `value_type_bigint()`                    |
+| `pgsql_type_smallint()`                       | `value_type_smallint()`                  |
+| `pgsql_type_boolean()`                        | `value_type_boolean()`                   |
+| `pgsql_type_float4()`                         | `value_type_float4()`                    |
+| `pgsql_type_float8()`                         | `value_type_float8()`                    |
+| `pgsql_type_numeric()`                        | `value_type_numeric()`                   |
+| `pgsql_type_date()`                           | `value_type_date()`                      |
+| `pgsql_type_timestamp()`                      | `value_type_timestamp()`                 |
+| `pgsql_type_timestamptz()`                    | `value_type_timestamptz()`               |
+| `pgsql_type_json()`                           | `value_type_json()`                      |
+| `pgsql_type_jsonb()`                          | `value_type_jsonb()`                     |
+| `pgsql_type_uuid()`                           | `value_type_uuid()`                      |
+| `pgsql_type_bytea()`                          | `value_type_bytea()`                     |
+| `pgsql_type_inet()`                           | `value_type_inet()`                      |
+| `pgsql_type_cidr()`                           | `value_type_cidr()`                      |
+| All other `pgsql_type_*()` functions          | Corresponding `value_type_*()` functions |
+
+Before:
+
+```php
+use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\pgsql_type_uuid;
+use function Flow\PostgreSql\DSL\pgsql_type_text_array;
+
+typed('550e8400-e29b-41d4-a716-446655440000', pgsql_type_uuid());
+typed(['tag1', 'tag2'], pgsql_type_text_array());
+typed(42, PostgreSqlType::INT4);
+```
+
+After:
+
+```php
+use Flow\PostgreSql\Client\Types\ValueType;
+use function Flow\PostgreSql\DSL\value_type_uuid;
+use function Flow\PostgreSql\DSL\value_type_text_array;
+
+typed('550e8400-e29b-41d4-a716-446655440000', value_type_uuid());
+typed(['tag1', 'tag2'], value_type_text_array());
+typed(42, ValueType::INT4);
+```
+
+---
+
 ## Upgrading from 0.31.x to 0.32.x
 
 ### 1) Removal of Meilisearch Adapter

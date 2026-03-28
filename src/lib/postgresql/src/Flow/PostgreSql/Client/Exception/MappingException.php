@@ -11,13 +11,6 @@ final class MappingException extends ClientException
         return new self(\sprintf('Failed to map row to "%s": %s', $class, $reason));
     }
 
-    public static function noMapperConfigured() : self
-    {
-        return new self(
-            'No RowMapper configured. Pass a mapper to the method or set a default mapper on the client.'
-        );
-    }
-
     public static function propertyNotFound(string $class, string $property) : self
     {
         return new self(\sprintf('Property "%s" not found on class "%s"', $property, $class));

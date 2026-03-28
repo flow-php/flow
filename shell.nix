@@ -17,7 +17,8 @@ assert (!(with-c && with-pg-query-ext)) || builtins.throw "Cannot use --arg with
 
 let
     nixpkgs = fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-25.11.tar.gz";
+        url = "https://github.com/NixOS/nixpkgs/archive/03158cb739fc4a09babe7949900bfc221871d642.tar.gz";
+        sha256 = "0vl4iwqcpbczhzb3xbckjb86brcsxkcz4wcbqzidia2fyhm9llmx";
     };
 
     pkgs = import nixpkgs {

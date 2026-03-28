@@ -36,6 +36,9 @@ final readonly class ConditionBuilder
         return $this->condition;
     }
 
+    /**
+     * @phpstan-assert-if-true Condition $this->condition
+     */
     public function isEmpty() : bool
     {
         return $this->condition === null;

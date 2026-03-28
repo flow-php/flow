@@ -6,10 +6,12 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PostgreSql\DSL\{
     alter,
+    col,
     column,
+    column_type_serial,
     create,
-    data_type_serial,
     drop,
+    gt,
     insert,
     literal,
     primary_key,
@@ -18,9 +20,11 @@ use function Flow\PostgreSql\DSL\{
     table
 };
 
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Condition\OperatorCondition;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class DomainDatabaseTest extends DatabaseTestCase
+final class DomainDatabaseTest extends PostgreSqlTestCase
 {
     private const DOMAIN_NAME = 'flow_postgres_email_domain';
 
@@ -30,150 +34,149 @@ final class DomainDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_NAME);
-        $this->dropDomainIfExists(self::DOMAIN_NAME);
-        $this->dropDomainIfExists(self::DOMAIN_NAME_2);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_NAME);
+        $this->pgsqlContext()->dropDomainIfExists(self::DOMAIN_NAME);
+        $this->pgsqlContext()->dropDomainIfExists(self::DOMAIN_NAME_2);
 
         parent::tearDown();
     }
 
     public function test_alter_domain_add_constraint() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
+                ->as(ColumnType::integer())
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->domain(self::DOMAIN_NAME_2)
-                ->addConstraint('positive_check', 'VALUE > 0')
+                ->addConstraint('positive_check', gt(col('value'), literal(0)))
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_domain_drop_constraint() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
+                ->as(ColumnType::integer())
                 ->constraint('positive_check')
-                ->check('VALUE > 0')
+                ->check(gt(col('value'), literal(0)))
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->domain(self::DOMAIN_NAME_2)
                 ->dropConstraint('positive_check')
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_domain_drop_default() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
-                ->default('0')
+                ->as(ColumnType::integer())
+                ->default(literal(0))
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->domain(self::DOMAIN_NAME_2)
                 ->dropDefault()
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_domain_drop_not_null() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
+                ->as(ColumnType::integer())
                 ->notNull()
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->domain(self::DOMAIN_NAME_2)
                 ->dropNotNull()
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_domain_set_default() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
+                ->as(ColumnType::integer())
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->domain(self::DOMAIN_NAME_2)
-                ->setDefault('100')
+                ->setDefault(literal(100))
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_domain_set_not_null() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
+                ->as(ColumnType::integer())
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->domain(self::DOMAIN_NAME_2)
                 ->setNotNull()
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_create_domain() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME)
-                ->as(DataType::varchar(255))
+                ->as(ColumnType::varchar(255))
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->domainExists(self::DOMAIN_NAME));
     }
 
     public function test_create_domain_and_use_in_table() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME)
-                ->as(DataType::varchar(255))
+                ->as(ColumnType::varchar(255))
                 ->constraint('valid_email')
-                ->check("VALUE ~ '^[^@]+@[^@]+\\.[^@]+$'")
+                ->check(new OperatorCondition(col('value'), '~', literal('^[^@]+@[^@]+\\.[^@]+$')))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('email', DataType::custom(self::DOMAIN_NAME))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('email', ColumnType::custom(self::DOMAIN_NAME))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('email')
@@ -181,10 +184,8 @@ final class DomainDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                select(star())->from(table(self::TABLE_NAME))->toSql()
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(star())->from(table(self::TABLE_NAME))->toSql()
         );
 
         self::assertSame('test@example.com', $row['email']);
@@ -192,113 +193,101 @@ final class DomainDatabaseTest extends DatabaseTestCase
 
     public function test_create_domain_with_check_constraint() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME)
-                ->as(DataType::varchar(255))
+                ->as(ColumnType::varchar(255))
                 ->constraint('valid_email')
-                ->check("VALUE ~ '^[^@]+@[^@]+\\.[^@]+$'")
+                ->check(new OperatorCondition(col('value'), '~', literal('^[^@]+@[^@]+\\.[^@]+$')))
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->domainExists(self::DOMAIN_NAME));
     }
 
     public function test_create_domain_with_default() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME_2)
-                ->as(DataType::integer())
-                ->default('0')
+                ->as(ColumnType::integer())
+                ->default(literal(0))
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->domainExists(self::DOMAIN_NAME_2));
     }
 
     public function test_create_domain_with_not_null() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME)
-                ->as(DataType::varchar(255))
+                ->as(ColumnType::varchar(255))
                 ->notNull()
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->domainExists(self::DOMAIN_NAME));
     }
 
     public function test_drop_domain() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME)
-                ->as(DataType::varchar(255))
+                ->as(ColumnType::varchar(255))
                 ->toSql()
         );
 
         self::assertTrue($this->domainExists(self::DOMAIN_NAME));
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->domain(self::DOMAIN_NAME)->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->domainExists(self::DOMAIN_NAME));
     }
 
     public function test_drop_domain_cascade() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->domain(self::DOMAIN_NAME)
-                ->as(DataType::varchar(255))
+                ->as(ColumnType::varchar(255))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('email', DataType::custom(self::DOMAIN_NAME)))
+                ->column(column('id', column_type_serial()))
+                ->column(column('email', ColumnType::custom(self::DOMAIN_NAME)))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->domain(self::DOMAIN_NAME)->cascade()->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->domainExists(self::DOMAIN_NAME));
     }
 
     public function test_drop_domain_if_exists() : void
     {
-        $result = $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             drop()->domain(self::DOMAIN_NAME)->ifExists()->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
-    protected function domainExists(string $name) : bool
+    private function domainExists(string $name) : bool
     {
-        $row = $this->fetchOne(
-            $this->execute(
-                "SELECT EXISTS(
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            "SELECT EXISTS(
                     SELECT 1 FROM pg_type t
                     JOIN pg_namespace n ON t.typnamespace = n.oid
                     WHERE t.typname = '{$name}'
                     AND t.typtype = 'd'
                 ) AS domain_exists"
-            )
         );
 
-        return $row['domain_exists'] === 't';
-    }
-
-    protected function dropDomainIfExists(string $name) : void
-    {
-        $this->execute("DROP DOMAIN IF EXISTS {$name} CASCADE");
+        return $row['domain_exists'] === true;
     }
 }

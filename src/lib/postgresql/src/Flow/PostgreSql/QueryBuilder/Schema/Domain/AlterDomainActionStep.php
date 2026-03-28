@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Domain;
 
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+
 interface AlterDomainActionStep
 {
-    public function addConstraint(string $name, string $expression) : AlterDomainFinalStep;
+    public function addConstraint(string $name, Condition $condition) : AlterDomainFinalStep;
 
     public function dropConstraint(string $name) : AlterDomainFinalStep;
 
@@ -14,7 +17,7 @@ interface AlterDomainActionStep
 
     public function dropNotNull() : AlterDomainFinalStep;
 
-    public function setDefault(string $expression) : AlterDomainFinalStep;
+    public function setDefault(Expression $expression) : AlterDomainFinalStep;
 
     public function setNotNull() : AlterDomainFinalStep;
 

@@ -206,42 +206,40 @@ final class TraceableClient implements Client
     }
 
     public function fetchAllInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
     ) : array {
         $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($class, $sql, $parameters, $mapper, $query) : array {
+            function () use ($mapper, $sql, $parameters, $query) : array {
                 $this->logQuery($query, $parameters);
 
-                return $this->client->fetchAllInto($class, $sql, $parameters, $mapper);
+                return $this->client->fetchAllInto($mapper, $sql, $parameters);
             },
             static fn (array $rows) => \count($rows),
         );
     }
 
     public function fetchInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
-    ) : ?object {
+    ) : mixed {
         $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($class, $sql, $parameters, $mapper, $query) : ?object {
+            function () use ($mapper, $sql, $parameters, $query) : mixed {
                 $this->logQuery($query, $parameters);
 
-                return $this->client->fetchInto($class, $sql, $parameters, $mapper);
+                return $this->client->fetchInto($mapper, $sql, $parameters);
             },
-            static fn (?object $obj) => $obj !== null ? 1 : 0,
+            static fn (mixed $result) => $result !== null ? 1 : 0,
         );
     }
 
@@ -262,22 +260,21 @@ final class TraceableClient implements Client
     }
 
     public function fetchOneInto(
-        string $class,
+        RowMapper $mapper,
         SqlQuery|string $sql,
         array $parameters = [],
-        ?RowMapper $mapper = null,
-    ) : object {
+    ) : mixed {
         $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($class, $sql, $parameters, $mapper, $query) : object {
+            function () use ($mapper, $sql, $parameters, $query) : mixed {
                 $this->logQuery($query, $parameters);
 
-                return $this->client->fetchOneInto($class, $sql, $parameters, $mapper);
+                return $this->client->fetchOneInto($mapper, $sql, $parameters);
             },
-            static fn (object $obj) => 1,
+            static fn (mixed $result) => 1,
         );
     }
 

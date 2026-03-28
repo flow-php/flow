@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final class IntArrayConverter implements ValueConverter
 {
     public function supportedTypes() : array
     {
         return [
-            PostgreSqlType::INT2_ARRAY,
-            PostgreSqlType::INT4_ARRAY,
-            PostgreSqlType::INT8_ARRAY,
+            ValueType::INT2_ARRAY,
+            ValueType::INT4_ARRAY,
+            ValueType::INT8_ARRAY,
         ];
     }
 

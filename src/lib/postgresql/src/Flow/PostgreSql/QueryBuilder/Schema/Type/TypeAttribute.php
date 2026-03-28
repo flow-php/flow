@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class TypeAttribute
 {
     public function __construct(
         public string $name,
-        public DataType $type,
+        public ColumnType $type,
         public ?string $collation = null,
     ) {
     }
 
-    public static function of(string $name, DataType $type) : self
+    public static function of(string $name, ColumnType $type) : self
     {
         return new self($name, $type);
     }

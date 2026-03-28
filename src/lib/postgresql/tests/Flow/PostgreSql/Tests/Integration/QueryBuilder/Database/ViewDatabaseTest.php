@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PostgreSql\DSL\{
+    agg_count,
     col,
     column,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     drop,
     eq,
     gt,
@@ -21,8 +22,9 @@ use function Flow\PostgreSql\DSL\{
     star,
     table
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class ViewDatabaseTest extends DatabaseTestCase
+final class ViewDatabaseTest extends PostgreSqlTestCase
 {
     private const MATVIEW_SIMPLE = 'flow_postgres_simple_matview';
 
@@ -37,13 +39,13 @@ final class ViewDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $query = create()->table(self::TABLE_SOURCE)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100)))
-            ->column(column('value', data_type_integer()));
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100)))
+            ->column(column('value', column_type_integer()));
 
-        $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_SOURCE)
                 ->columns('name', 'value')
@@ -57,10 +59,10 @@ final class ViewDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropViewIfExists(self::VIEW_SIMPLE);
-        $this->dropViewIfExists(self::VIEW_FILTERED);
-        $this->dropMaterializedViewIfExists(self::MATVIEW_SIMPLE);
-        $this->dropTableIfExists(self::TABLE_SOURCE);
+        $this->pgsqlContext()->dropViewIfExists(self::VIEW_SIMPLE);
+        $this->pgsqlContext()->dropViewIfExists(self::VIEW_FILTERED);
+        $this->pgsqlContext()->dropMaterializedViewIfExists(self::MATVIEW_SIMPLE);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_SOURCE);
 
         parent::tearDown();
     }
@@ -72,12 +74,14 @@ final class ViewDatabaseTest extends DatabaseTestCase
         $query = create()->materializedView(self::MATVIEW_SIMPLE)
             ->as($selectQuery);
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT matviewname FROM pg_matviews WHERE matviewname = '" . self::MATVIEW_SIMPLE . "'");
-        $views = $this->fetchAll($check);
+        $views = $this->pgsqlContext()->client()->fetchAll(
+            select(col('matviewname'))
+                ->from(table('pg_matviews'))
+                ->where(eq(col('matviewname'), literal(self::MATVIEW_SIMPLE)))
+                ->toSql()
+        );
         self::assertCount(1, $views);
     }
 
@@ -85,22 +89,22 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery1 = select(col('id'), col('name'))->from(table(self::TABLE_SOURCE));
         $createQuery1 = create()->view(self::VIEW_SIMPLE)->as($selectQuery1);
-        $this->execute($createQuery1->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery1->toSql());
 
         $selectQuery2 = select(col('id'), col('name'), col('value'))->from(table(self::TABLE_SOURCE));
         $replaceQuery = create()->view(self::VIEW_SIMPLE)
             ->orReplace()
             ->as($selectQuery2);
 
-        $result = $this->execute($replaceQuery->toSql());
+        $this->pgsqlContext()->client()->execute($replaceQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute('SELECT * FROM ' . self::VIEW_SIMPLE);
-        $row = $this->fetchOne($check);
-        self::assertArrayHasKey('id', $row);
-        self::assertArrayHasKey('name', $row);
-        self::assertArrayHasKey('value', $row);
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::VIEW_SIMPLE))->toSql()
+        );
+        self::assertNotEmpty($rows);
+        self::assertArrayHasKey('id', $rows[0]);
+        self::assertArrayHasKey('name', $rows[0]);
+        self::assertArrayHasKey('value', $rows[0]);
     }
 
     public function test_create_view() : void
@@ -110,17 +114,14 @@ final class ViewDatabaseTest extends DatabaseTestCase
         $query = create()->view(self::VIEW_SIMPLE)
             ->as($selectQuery);
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute(
+        $views = $this->pgsqlContext()->client()->fetchAll(
             select(col('table_name'))
                 ->from(table('information_schema.views'))
                 ->where(eq(col('table_name'), literal(self::VIEW_SIMPLE)))
                 ->toSql()
         );
-        $views = $this->fetchAll($check);
         self::assertCount(1, $views);
     }
 
@@ -133,12 +134,11 @@ final class ViewDatabaseTest extends DatabaseTestCase
         $query = create()->view(self::VIEW_FILTERED)
             ->as($selectQuery);
 
-        $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $result = $this->execute('SELECT * FROM ' . self::VIEW_FILTERED);
-
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::VIEW_FILTERED))->toSql()
+        );
         self::assertCount(2, $rows);
     }
 
@@ -146,16 +146,18 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
         $createQuery = create()->materializedView(self::MATVIEW_SIMPLE)->as($selectQuery);
-        $this->execute($createQuery->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
         $dropQuery = drop()->materializedView(self::MATVIEW_SIMPLE);
 
-        $result = $this->execute($dropQuery->toSql());
+        $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT matviewname FROM pg_matviews WHERE matviewname = '" . self::MATVIEW_SIMPLE . "'");
-        $views = $this->fetchAll($check);
+        $views = $this->pgsqlContext()->client()->fetchAll(
+            select(col('matviewname'))
+                ->from(table('pg_matviews'))
+                ->where(eq(col('matviewname'), literal(self::MATVIEW_SIMPLE)))
+                ->toSql()
+        );
         self::assertCount(0, $views);
     }
 
@@ -163,26 +165,28 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
         $createQuery = create()->view(self::VIEW_SIMPLE)->as($selectQuery);
-        $this->execute($createQuery->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
         $dropQuery = drop()->view(self::VIEW_SIMPLE);
 
-        $result = $this->execute($dropQuery->toSql());
+        $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT table_name FROM information_schema.views WHERE table_name = '" . self::VIEW_SIMPLE . "'");
-        $views = $this->fetchAll($check);
+        $views = $this->pgsqlContext()->client()->fetchAll(
+            select(col('table_name'))
+                ->from(table('information_schema.views'))
+                ->where(eq(col('table_name'), literal(self::VIEW_SIMPLE)))
+                ->toSql()
+        );
         self::assertCount(0, $views);
     }
 
     public function test_drop_view_if_exists() : void
     {
+        $this->expectNotToPerformAssertions();
+
         $dropQuery = drop()->view(self::VIEW_SIMPLE)->ifExists();
 
-        $result = $this->execute($dropQuery->toSql());
-
-        self::assertNotFalse($result);
+        $this->pgsqlContext()->client()->execute($dropQuery->toSql());
     }
 
     public function test_materialized_view_returns_data() : void
@@ -191,12 +195,11 @@ final class ViewDatabaseTest extends DatabaseTestCase
 
         $createQuery = create()->materializedView(self::MATVIEW_SIMPLE)
             ->as($selectQuery);
-        $this->execute($createQuery->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
-        $result = $this->execute('SELECT * FROM ' . self::MATVIEW_SIMPLE);
-
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::MATVIEW_SIMPLE))->toSql()
+        );
         self::assertCount(4, $rows);
     }
 
@@ -206,20 +209,28 @@ final class ViewDatabaseTest extends DatabaseTestCase
 
         $createQuery = create()->materializedView(self::MATVIEW_SIMPLE)
             ->as($selectQuery);
-        $this->execute($createQuery->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
-        $this->execute('INSERT INTO ' . self::TABLE_SOURCE . " (name, value) VALUES ('Item E', 500)");
+        $this->pgsqlContext()->client()->execute(
+            insert()
+                ->into(self::TABLE_SOURCE)
+                ->columns('name', 'value')
+                ->values(literal('Item E'), literal(500))
+                ->toSql()
+        );
 
-        $beforeRefresh = $this->execute('SELECT COUNT(*) as cnt FROM ' . self::MATVIEW_SIMPLE);
-        $beforeRow = $this->fetchOne($beforeRefresh);
-        self::assertSame('4', $beforeRow['cnt']);
+        $beforeRow = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count()->as('cnt'))->from(table(self::MATVIEW_SIMPLE))->toSql()
+        );
+        self::assertSame(4, $beforeRow['cnt']);
 
         $refreshQuery = refresh_materialized_view(self::MATVIEW_SIMPLE);
-        $this->execute($refreshQuery->toSql());
+        $this->pgsqlContext()->client()->execute($refreshQuery->toSql());
 
-        $afterRefresh = $this->execute('SELECT COUNT(*) as cnt FROM ' . self::MATVIEW_SIMPLE);
-        $afterRow = $this->fetchOne($afterRefresh);
-        self::assertSame('5', $afterRow['cnt']);
+        $afterRow = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count()->as('cnt'))->from(table(self::MATVIEW_SIMPLE))->toSql()
+        );
+        self::assertSame(5, $afterRow['cnt']);
     }
 
     public function test_view_returns_data() : void
@@ -228,14 +239,11 @@ final class ViewDatabaseTest extends DatabaseTestCase
 
         $createQuery = create()->view(self::VIEW_SIMPLE)
             ->as($selectQuery);
-        $this->execute($createQuery->toSql());
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
-        $result = $this->execute(
+        $rows = $this->pgsqlContext()->client()->fetchAll(
             select(star())->from(table(self::VIEW_SIMPLE))->toSql()
         );
-
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(4, $rows);
     }
 }

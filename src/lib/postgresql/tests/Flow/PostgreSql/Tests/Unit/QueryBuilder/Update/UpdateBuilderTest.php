@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Update;
 
+use function Flow\PostgreSql\DSL\{col, eq, literal, param, select, sub_select, table, update};
 use Flow\PostgreSql\{ParsedQuery, Parser};
 use Flow\PostgreSql\Protobuf\AST\{Node, RawStmt, UpdateStmt};
 use Flow\PostgreSql\QueryBuilder\Clause\{CTE, WithClause};
@@ -428,6 +429,16 @@ final class UpdateBuilderTest extends TestCase
         self::assertSame('UPDATE counters SET count = count + 1', $deparsed);
     }
 
+    public function test_update_with_column_expression() : void
+    {
+        $query = update()
+            ->update('products')
+            ->set('price', col('price'))
+            ->where(eq(col('id'), literal(1)));
+
+        self::assertSame('UPDATE products SET price = price WHERE id = 1', $query->toSql());
+    }
+
     public function test_update_with_column_reference() : void
     {
         $query = UpdateBuilder::create()
@@ -526,6 +537,27 @@ final class UpdateBuilderTest extends TestCase
         $fromClause = $ast->getFromClause();
         self::assertNotNull($fromClause);
         self::assertCount(2, $fromClause);
+    }
+
+    public function test_update_with_multiple_set() : void
+    {
+        $query = update()
+            ->update('users')
+            ->set('name', literal('John'))
+            ->set('email', literal('john@example.com'))
+            ->where(eq(col('id'), literal(1)));
+
+        self::assertSame("UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1", $query->toSql());
+    }
+
+    public function test_update_with_parameters() : void
+    {
+        $query = update()
+            ->update('users')
+            ->set('name', param(1))
+            ->where(eq(col('id'), param(2)));
+
+        self::assertSame('UPDATE users SET name = $1 WHERE id = $2', $query->toSql());
     }
 
     public function test_update_with_returning() : void
@@ -637,6 +669,34 @@ final class UpdateBuilderTest extends TestCase
 
         self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
         self::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
+    }
+
+    public function test_update_with_set_all() : void
+    {
+        $query = update()
+            ->update('users')
+            ->setAll([
+                'name' => literal('John'),
+                'email' => literal('john@example.com'),
+            ])
+            ->where(eq(col('id'), literal(1)));
+
+        self::assertSame("UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1", $query->toSql());
+    }
+
+    public function test_update_with_subquery_in_set() : void
+    {
+        $subquery = select()
+            ->select(col('avg_price'))
+            ->from(table('price_stats'))
+            ->where(eq(col('category'), col('products.category')));
+
+        $query = update()
+            ->update('products')
+            ->set('price', sub_select($subquery))
+            ->where(eq(col('id'), literal(1)));
+
+        self::assertSame('UPDATE products SET price = (SELECT avg_price FROM price_stats WHERE category = products.category) WHERE id = 1', $query->toSql());
     }
 
     public function test_update_with_where() : void

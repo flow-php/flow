@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{col, cond_and, delete, eq, param};
+use function Flow\PostgreSql\DSL\{and_, col, delete, eq, param};
 use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\DeleteOptions};
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\{Row, Row\Entry};
@@ -48,7 +48,7 @@ final readonly class DeleteQueryBuilder
             $params[] = $this->mapEntryToParameter($entry);
         }
 
-        $query = delete()->from($this->table)->where(cond_and(...$conditions));
+        $query = delete()->from($this->table)->where(and_(...$conditions));
 
         return [$query, $params];
     }

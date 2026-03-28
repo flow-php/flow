@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
 use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 use Flow\PostgreSql\QueryBuilder\SqlQuery;
 
@@ -15,15 +16,17 @@ interface AlterTableFinalStep extends SqlQuery
 
     public function addConstraint(TableConstraint $constraint) : self;
 
+    public function addInherit(string $table) : self;
+
     public function alterColumnDropDefault(string $column) : self;
 
     public function alterColumnDropNotNull(string $column) : self;
 
-    public function alterColumnSetDefault(string $column, string $defaultExpression) : self;
+    public function alterColumnSetDefault(string $column, Expression $defaultExpression) : self;
 
     public function alterColumnSetNotNull(string $column) : self;
 
-    public function alterColumnType(string $column, DataType $type) : self;
+    public function alterColumnType(string $column, ColumnType $type) : self;
 
     public function disableTrigger(string $trigger) : self;
 
@@ -38,6 +41,8 @@ interface AlterTableFinalStep extends SqlQuery
     public function dropConstraint(string $constraintName, bool $cascade = false) : self;
 
     public function dropConstraintIfExists(string $constraintName, bool $cascade = false) : self;
+
+    public function dropInherit(string $table) : self;
 
     public function enableTrigger(string $trigger) : self;
 
@@ -57,7 +62,13 @@ interface AlterTableFinalStep extends SqlQuery
 
     public function renameTo(string $newName) : RenameTableBuilder;
 
+    public function setLogged() : AlterTableLoggingFinalStep;
+
     public function setSchema(string $schema) : AlterTableSchemaBuilder;
+
+    public function setTablespace(string $tablespace) : self;
+
+    public function setUnlogged() : AlterTableLoggingFinalStep;
 
     public function toAst() : AlterTableStmt;
 

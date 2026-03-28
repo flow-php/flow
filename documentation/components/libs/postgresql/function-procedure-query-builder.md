@@ -14,15 +14,15 @@ CREATE FUNCTION, CREATE PROCEDURE, ALTER FUNCTION, ALTER PROCEDURE, DROP FUNCTIO
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_integer};
 
 $query = create()->function('add_numbers')
-    ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
+    ->arguments(func_arg(column_type_integer())->named('a'), func_arg(column_type_integer())->named('b'))
     ->returns('integer')
     ->language('sql')
     ->as('SELECT a + b');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE FUNCTION add_numbers(IN a "integer", IN b "integer") RETURNS "integer" LANGUAGE sql AS $$SELECT a + b$$
 ```
 
@@ -31,15 +31,15 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_integer};
 
 $query = create()->function('increment')
-    ->arguments(func_arg('integer')->named('val'))
+    ->arguments(func_arg(column_type_integer())->named('val'))
     ->returns('integer')
     ->language('plpgsql')
     ->as('BEGIN RETURN val + 1; END;');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE FUNCTION increment(IN val "integer") RETURNS "integer" LANGUAGE plpgsql AS $$BEGIN RETURN val + 1; END;$$
 ```
 
@@ -56,7 +56,7 @@ $query = create()->function('my_func')
     ->language('sql')
     ->as('SELECT 1');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE OR REPLACE FUNCTION my_func() RETURNS "integer" LANGUAGE sql AS $$SELECT 1$$
 ```
 
@@ -74,7 +74,7 @@ $query = create()->function('get_users')
     ->language('sql')
     ->as('SELECT id, name FROM users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE FUNCTION get_users() RETURNS TABLE (id "integer", name text) LANGUAGE sql AS $$SELECT id, name FROM users$$
 ```
 
@@ -92,7 +92,7 @@ $query = create()->function('get_user_ids')
     ->language('sql')
     ->as('SELECT id FROM users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE FUNCTION get_user_ids() RETURNS SETOF "integer" LANGUAGE sql AS $$SELECT id FROM users$$
 ```
 
@@ -110,7 +110,7 @@ $query = create()->function('log_event')
     ->language('sql')
     ->as('INSERT INTO logs (msg) VALUES (current_timestamp)');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE FUNCTION log_event() RETURNS void LANGUAGE sql AS $$INSERT INTO logs (msg) VALUES (current_timestamp)$$
 ```
 
@@ -119,11 +119,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_integer};
 
 // IMMUTABLE - same input always produces same output
 $query = create()->function('double')
-    ->arguments(func_arg('integer')->named('x'))
+    ->arguments(func_arg(column_type_integer())->named('x'))
     ->returns('integer')
     ->language('sql')
     ->immutable()
@@ -149,11 +149,11 @@ $query = create()->function('get_time')
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_integer};
 use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
 $query = create()->function('compute')
-    ->arguments(func_arg('integer')->named('x'))
+    ->arguments(func_arg(column_type_integer())->named('x'))
     ->returns('integer')
     ->language('sql')
     ->parallel(ParallelSafety::SAFE)
@@ -170,10 +170,10 @@ $query = create()->function('compute')
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_integer};
 
 $query = create()->function('safe_add')
-    ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
+    ->arguments(func_arg(column_type_integer())->named('a'), func_arg(column_type_integer())->named('b'))
     ->returns('integer')
     ->language('sql')
     ->strict()  // Returns NULL if any input is NULL
@@ -181,7 +181,7 @@ $query = create()->function('safe_add')
 
 // Or explicitly call on NULL input
 $query = create()->function('nullable_add')
-    ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
+    ->arguments(func_arg(column_type_integer())->named('a'), func_arg(column_type_integer())->named('b'))
     ->returns('integer')
     ->language('sql')
     ->calledOnNullInput()  // Function is called even with NULL inputs
@@ -265,22 +265,22 @@ The `func_arg()` DSL function creates function arguments with various options:
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\func_arg;
+use function Flow\PostgreSql\DSL\{func_arg, column_type_integer, column_type_text};
 
 // Basic argument
-$arg = func_arg('integer');
+$arg = func_arg(column_type_integer());
 
 // Named argument
-$arg = func_arg('integer')->named('user_id');
+$arg = func_arg(column_type_integer())->named('user_id');
 
 // With default value
-$arg = func_arg('integer')->named('limit')->default('100');
+$arg = func_arg(column_type_integer())->named('limit')->default('100');
 
 // Argument modes
-$arg = func_arg('integer')->in();       // IN - input only (default)
-$arg = func_arg('integer')->out();      // OUT - output only
-$arg = func_arg('integer')->inout();    // INOUT - both input and output
-$arg = func_arg('text')->variadic();    // VARIADIC - variable number of arguments
+$arg = func_arg(column_type_integer())->in();       // IN - input only (default)
+$arg = func_arg(column_type_integer())->out();      // OUT - output only
+$arg = func_arg(column_type_integer())->inout();    // INOUT - both input and output
+$arg = func_arg(column_type_text())->variadic();    // VARIADIC - variable number of arguments
 ```
 
 ### Complete Example
@@ -288,14 +288,14 @@ $arg = func_arg('text')->variadic();    // VARIADIC - variable number of argumen
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_numeric};
 use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
 $query = create()->function('calculate_discount')
     ->orReplace()
     ->arguments(
-        func_arg('numeric')->named('price'),
-        func_arg('numeric')->named('discount_percent')->default('10')
+        func_arg(column_type_numeric())->named('price'),
+        func_arg(column_type_numeric())->named('discount_percent')->default('10')
     )
     ->returns('numeric')
     ->language('sql')
@@ -312,14 +312,14 @@ $query = create()->function('calculate_discount')
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg, column_type_integer};
 
 $query = create()->procedure('update_stats')
-    ->arguments(func_arg('integer')->named('user_id'))
+    ->arguments(func_arg(column_type_integer())->named('user_id'))
     ->language('plpgsql')
     ->as('BEGIN UPDATE stats SET count = count + 1 WHERE id = user_id; END;');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE PROCEDURE update_stats(IN user_id "integer") LANGUAGE plpgsql AS $$BEGIN UPDATE stats SET count = count + 1 WHERE id = user_id; END;$$
 ```
 
@@ -335,7 +335,7 @@ $query = create()->procedure('my_proc')
     ->language('sql')
     ->as('SELECT 1');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE OR REPLACE PROCEDURE my_proc() LANGUAGE sql AS $$SELECT 1$$
 ```
 
@@ -372,13 +372,13 @@ $query = create()->procedure('my_proc')
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg, column_type_integer};
 
 $query = alter()->function('my_func')
-    ->arguments(func_arg('integer'))
+    ->arguments(func_arg(column_type_integer()))
     ->immutable();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER FUNCTION my_func("integer") IMMUTABLE
 ```
 
@@ -387,14 +387,14 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg, column_type_integer};
 use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
 $query = alter()->function('my_func')
-    ->arguments(func_arg('integer'))
+    ->arguments(func_arg(column_type_integer()))
     ->parallel(ParallelSafety::SAFE);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER FUNCTION my_func("integer") PARALLEL safe
 ```
 
@@ -403,13 +403,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg, column_type_text};
 
 $query = alter()->function('old_name')
-    ->arguments(func_arg('text'))
+    ->arguments(func_arg(column_type_text()))
     ->renameTo('new_name');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER FUNCTION old_name(text) RENAME TO new_name
 ```
 
@@ -418,10 +418,10 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg, column_type_integer};
 
 $query = alter()->function('my_func')
-    ->arguments(func_arg('integer'))
+    ->arguments(func_arg(column_type_integer()))
     ->cost(500);
 
 $query = alter()->function('set_returning_func')
@@ -455,13 +455,13 @@ $query = alter()->function('my_func')
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg, column_type_integer};
 
 $query = alter()->procedure('old_proc')
-    ->arguments(func_arg('integer'))
+    ->arguments(func_arg(column_type_integer()))
     ->renameTo('new_proc');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER PROCEDURE old_proc("integer") RENAME TO new_proc
 ```
 
@@ -475,7 +475,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->procedure('my_proc')
     ->securityDefiner();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER PROCEDURE my_proc SECURITY DEFINER
 ```
 
@@ -507,7 +507,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->function('my_func');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP FUNCTION my_func
 ```
 
@@ -516,12 +516,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg, column_type_integer, column_type_text};
 
 $query = drop()->function('my_func')
-    ->arguments(func_arg('integer'), func_arg('text'));
+    ->arguments(func_arg(column_type_integer()), func_arg(column_type_text()));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP FUNCTION my_func("integer", text)
 ```
 
@@ -530,13 +530,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg, column_type_integer};
 
 $query = drop()->function('my_func')
     ->ifExists()
-    ->arguments(func_arg('integer'));
+    ->arguments(func_arg(column_type_integer()));
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP FUNCTION IF EXISTS my_func("integer")
 ```
 
@@ -545,14 +545,14 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg, column_type_integer, column_type_text};
 
 $query = drop()->function('my_func')
     ->ifExists()
-    ->arguments(func_arg('integer'), func_arg('text'))
+    ->arguments(func_arg(column_type_integer()), func_arg(column_type_text()))
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP FUNCTION IF EXISTS my_func("integer", text) CASCADE
 ```
 
@@ -566,7 +566,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->function('my_func')
     ->restrict();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP FUNCTION my_func RESTRICT
 ```
 
@@ -581,7 +581,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->procedure('my_proc');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP PROCEDURE my_proc
 ```
 
@@ -590,14 +590,14 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg, column_type_integer};
 
 $query = drop()->procedure('my_proc')
     ->ifExists()
-    ->arguments(func_arg('integer'))
+    ->arguments(func_arg(column_type_integer()))
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP PROCEDURE IF EXISTS my_proc("integer") CASCADE
 ```
 
@@ -612,7 +612,7 @@ use function Flow\PostgreSql\DSL\call;
 
 $query = call('update_stats');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CALL update_stats()
 ```
 
@@ -626,7 +626,7 @@ use function Flow\PostgreSql\DSL\call;
 $query = call('update_stats')
     ->with(123, 'test');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CALL update_stats(123, 'test')
 ```
 
@@ -640,7 +640,7 @@ use function Flow\PostgreSql\DSL\call;
 $query = call('process_data')
     ->with(42, 'hello', 3.14, true, null);
 
-echo $query->toSQL();
+echo $query->toSql();
 // CALL process_data(42, 'hello', 3.14, true, NULL)
 ```
 
@@ -655,7 +655,7 @@ use function Flow\PostgreSql\DSL\do_block;
 
 $query = do_block('BEGIN RAISE NOTICE $$Hello$$; END;');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DO $outer$BEGIN RAISE NOTICE $$Hello$$; END;$outer$ LANGUAGE plpgsql
 ```
 
@@ -668,7 +668,7 @@ use function Flow\PostgreSql\DSL\do_block;
 
 $query = do_block('SELECT 1')->language('sql');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DO $$SELECT 1$$ LANGUAGE sql
 ```
 
@@ -676,7 +676,7 @@ echo $query->toSQL();
 
 | Function | Description |
 |----------|-------------|
-| `func_arg(string $type)` | Create a function argument |
+| `func_arg(ColumnType $type)` | Create a function argument |
 | `create()->function(string $name)` | Create a new function |
 | `create()->procedure(string $name)` | Create a new procedure |
 | `alter()->function(string $name)` | Alter an existing function |

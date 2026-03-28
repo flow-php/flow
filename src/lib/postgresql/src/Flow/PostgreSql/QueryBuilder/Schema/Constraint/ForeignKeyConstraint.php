@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
 use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, PBString, RangeVar};
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 
 final readonly class ForeignKeyConstraint implements TableConstraint
@@ -32,7 +33,9 @@ final readonly class ForeignKeyConstraint implements TableConstraint
      */
     public static function create(array $columns, string $referenceTable, array $referenceColumns = []) : self
     {
-        return new self($columns, $referenceTable, $referenceColumns);
+        $identifier = QualifiedIdentifier::parse($referenceTable);
+
+        return new self($columns, $identifier->name(), $referenceColumns, $identifier->schema());
     }
 
     public function deferrable(bool $initiallyDeferred = false) : self

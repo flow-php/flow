@@ -254,8 +254,20 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return $deleteStmt;
     }
 
-    public function using(TableReference ...$tables) : DeleteWhereStep
+    public function using(string|TableReference ...$tables) : DeleteWhereStep
     {
+        $tables = \array_map(
+            static function (string|TableReference $t) : TableReference {
+                if ($t instanceof TableReference) {
+                    return $t;
+                }
+                $id = QualifiedIdentifier::parse($t);
+
+                return new Table($id->name(), $id->schema());
+            },
+            $tables,
+        );
+
         return new self(
             with: $this->with,
             table: $this->table,

@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_limit_offset, to_pgsql_table};
 use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, df, enum_entry, float_entry, from_rows, int_entry, json_entry, list_entry, map_entry, row, rows, str_entry, structure_entry, time_entry, uuid_entry, xml_element_entry, xml_entry};
-use function Flow\PostgreSql\DSL\{asc, col, column, create, data_type_bigint, data_type_boolean, data_type_custom, data_type_date, data_type_double_precision, data_type_jsonb, data_type_serial, data_type_text, data_type_time, data_type_timestamptz, data_type_uuid, drop, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, column_type_bigint, column_type_boolean, column_type_custom, column_type_date, column_type_double_precision, column_type_jsonb, column_type_serial, column_type_text, column_type_time, column_type_timestamptz, column_type_uuid, create, drop, select, star, table};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\PostgreSql\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
@@ -25,24 +25,24 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
 
         $this->client->execute(
             create()->table($this->tableName)
-                ->column(column('id', data_type_serial())->primaryKey())
-                ->column(column('col_string', data_type_text()))
-                ->column(column('col_integer', data_type_bigint()))
-                ->column(column('col_float', data_type_double_precision()))
-                ->column(column('col_boolean', data_type_boolean()))
-                ->column(column('col_date', data_type_date()))
-                ->column(column('col_datetime', data_type_timestamptz()))
-                ->column(column('col_time', data_type_time()))
-                ->column(column('col_uuid', data_type_uuid()))
-                ->column(column('col_json', data_type_jsonb()))
-                ->column(column('col_xml', data_type_custom('xml')))
-                ->column(column('col_xml_element', data_type_custom('xml')))
-                ->column(column('col_html', data_type_text()))
-                ->column(column('col_html_element', data_type_text()))
-                ->column(column('col_enum', data_type_text()))
-                ->column(column('col_list', data_type_jsonb()))
-                ->column(column('col_map', data_type_jsonb()))
-                ->column(column('col_structure', data_type_jsonb()))
+                ->column(column('id', column_type_serial())->primaryKey())
+                ->column(column('col_string', column_type_text()))
+                ->column(column('col_integer', column_type_bigint()))
+                ->column(column('col_float', column_type_double_precision()))
+                ->column(column('col_boolean', column_type_boolean()))
+                ->column(column('col_date', column_type_date()))
+                ->column(column('col_datetime', column_type_timestamptz()))
+                ->column(column('col_time', column_type_time()))
+                ->column(column('col_uuid', column_type_uuid()))
+                ->column(column('col_json', column_type_jsonb()))
+                ->column(column('col_xml', column_type_custom('xml')))
+                ->column(column('col_xml_element', column_type_custom('xml')))
+                ->column(column('col_html', column_type_text()))
+                ->column(column('col_html_element', column_type_text()))
+                ->column(column('col_enum', column_type_text()))
+                ->column(column('col_list', column_type_jsonb()))
+                ->column(column('col_map', column_type_jsonb()))
+                ->column(column('col_structure', column_type_jsonb()))
         );
     }
 

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\CreateTableAs;
 
+use function Flow\PostgreSql\DSL\{col, literal};
 use Flow\PostgreSql\Protobuf\AST\{CreateTableAsStmt, ObjectType};
-use Flow\PostgreSql\QueryBuilder\Expression\RawExpression;
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTableAs\CreateTableAsBuilder;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
+
 use PHPUnit\Framework\TestCase;
 
 final class CreateTableAsBuilderTest extends TestCase
@@ -23,7 +24,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_create_table_as_if_not_exists() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('1'));
+            ->select(literal(1));
 
         $builder = CreateTableAsBuilder::create('new_table', $select)
             ->ifNotExists();
@@ -37,7 +38,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_create_table_as_with_column_names() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('id'), new RawExpression('name'));
+            ->select(col('id'), col('name'));
 
         $builder = CreateTableAsBuilder::create('new_table', $select)
             ->columnNames('user_id', 'user_name');
@@ -53,7 +54,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_create_table_as_with_no_data() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('id'), new RawExpression('name'))
+            ->select(col('id'), col('name'))
             ->from(new Table('users'));
 
         $builder = CreateTableAsBuilder::create('users_copy', $select)
@@ -68,7 +69,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_create_table_as_with_schema() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('id'), new RawExpression('email'))
+            ->select(col('id'), col('email'))
             ->from(new Table('users'));
 
         $builder = CreateTableAsBuilder::create('new_table', $select, 'archive');
@@ -83,7 +84,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_immutability() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('1'));
+            ->select(literal(1));
 
         $original = CreateTableAsBuilder::create('new_table', $select);
         $modified = $original->ifNotExists();
@@ -95,7 +96,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_simple_create_table_as() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('id'), new RawExpression('name'))
+            ->select(col('id'), col('name'))
             ->from(new Table('users'));
 
         $builder = CreateTableAsBuilder::create('users_copy', $select);
@@ -111,7 +112,7 @@ final class CreateTableAsBuilderTest extends TestCase
     public function test_with_all_options() : void
     {
         $select = SelectBuilder::create()
-            ->select(new RawExpression('id'), new RawExpression('name'))
+            ->select(col('id'), col('name'))
             ->from(new Table('users'));
 
         $builder = CreateTableAsBuilder::create('users_backup', $select, 'archive')

@@ -96,7 +96,7 @@ When automatic detection isn't sufficient, use `typed()` to specify the exact Po
 
 use function Flow\PostgreSql\DSL\{
     pgsql_client, pgsql_connection, typed,
-    pgsql_type_uuid, pgsql_type_json, pgsql_type_date, pgsql_type_int4_array
+    value_type_uuid, value_type_json, value_type_date, value_type_int4_array
 };
 
 $client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
@@ -104,25 +104,25 @@ $client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
 // UUID - string that should be treated as UUID
 $client->fetch(
     'SELECT * FROM users WHERE id = $1',
-    [typed('550e8400-e29b-41d4-a716-446655440000', pgsql_type_uuid())]
+    [typed('550e8400-e29b-41d4-a716-446655440000', value_type_uuid())]
 );
 
 // JSON - array to be sent as JSON
 $client->execute(
     'INSERT INTO events (payload) VALUES ($1)',
-    [typed(['event' => 'login', 'user_id' => 42], pgsql_type_json())]
+    [typed(['event' => 'login', 'user_id' => 42], value_type_json())]
 );
 
 // DATE - DateTime that should be DATE, not TIMESTAMP
 $client->fetch(
     'SELECT * FROM events WHERE date = $1',
-    [typed(new \DateTimeImmutable('2024-01-15'), pgsql_type_date())]
+    [typed(new \DateTimeImmutable('2024-01-15'), value_type_date())]
 );
 
 // Integer array
 $client->execute(
     'INSERT INTO scores (values) VALUES ($1)',
-    [typed([100, 200, 300], pgsql_type_int4_array())]
+    [typed([100, 200, 300], value_type_int4_array())]
 );
 ```
 
@@ -145,53 +145,53 @@ $client->execute(
 | DSL Function | PostgreSQL Type | Use Case |
 |--------------|-----------------|----------|
 | **String types** | | |
-| `pgsql_type_text()` | TEXT | Text strings |
-| `pgsql_type_varchar()` | VARCHAR | Variable-length strings |
-| `pgsql_type_char()` | CHAR | Fixed-length strings |
+| `value_type_text()` | TEXT | Text strings |
+| `value_type_varchar()` | VARCHAR | Variable-length strings |
+| `value_type_char()` | CHAR | Fixed-length strings |
 | **Integer types** | | |
-| `pgsql_type_int2()` / `pgsql_type_smallint()` | SMALLINT | Small integers |
-| `pgsql_type_int4()` / `pgsql_type_integer()` | INTEGER | Standard integers |
-| `pgsql_type_int8()` / `pgsql_type_bigint()` | BIGINT | Large integers |
+| `value_type_int2()` / `value_type_smallint()` | SMALLINT | Small integers |
+| `value_type_int4()` / `value_type_integer()` | INTEGER | Standard integers |
+| `value_type_int8()` / `value_type_bigint()` | BIGINT | Large integers |
 | **Floating point types** | | |
-| `pgsql_type_float4()` / `pgsql_type_real()` | REAL | Single precision floats |
-| `pgsql_type_float8()` / `pgsql_type_double()` | DOUBLE PRECISION | Double precision floats |
-| `pgsql_type_numeric()` | NUMERIC | Arbitrary precision numbers |
-| `pgsql_type_money()` | MONEY | Currency amounts |
+| `value_type_float4()` / `value_type_real()` | REAL | Single precision floats |
+| `value_type_float8()` / `value_type_double()` | DOUBLE PRECISION | Double precision floats |
+| `value_type_numeric()` | NUMERIC | Arbitrary precision numbers |
+| `value_type_money()` | MONEY | Currency amounts |
 | **Boolean type** | | |
-| `pgsql_type_bool()` / `pgsql_type_boolean()` | BOOLEAN | True/false values |
+| `value_type_bool()` / `value_type_boolean()` | BOOLEAN | True/false values |
 | **Binary types** | | |
-| `pgsql_type_bytea()` | BYTEA | Binary data |
-| `pgsql_type_bit()` | BIT | Bit strings |
-| `pgsql_type_varbit()` | VARBIT | Variable-length bit strings |
+| `value_type_bytea()` | BYTEA | Binary data |
+| `value_type_bit()` | BIT | Bit strings |
+| `value_type_varbit()` | VARBIT | Variable-length bit strings |
 | **Date/time types** | | |
-| `pgsql_type_date()` | DATE | Dates without time |
-| `pgsql_type_time()` | TIME | Time without timezone |
-| `pgsql_type_timetz()` | TIMETZ | Time with timezone |
-| `pgsql_type_timestamp()` | TIMESTAMP | Timestamp without timezone |
-| `pgsql_type_timestamptz()` | TIMESTAMPTZ | Timestamp with timezone |
-| `pgsql_type_interval()` | INTERVAL | Time intervals |
+| `value_type_date()` | DATE | Dates without time |
+| `value_type_time()` | TIME | Time without timezone |
+| `value_type_timetz()` | TIMETZ | Time with timezone |
+| `value_type_timestamp()` | TIMESTAMP | Timestamp without timezone |
+| `value_type_timestamptz()` | TIMESTAMPTZ | Timestamp with timezone |
+| `value_type_interval()` | INTERVAL | Time intervals |
 | **JSON types** | | |
-| `pgsql_type_json()` | JSON | JSON data |
-| `pgsql_type_jsonb()` | JSONB | Binary JSON data |
+| `value_type_json()` | JSON | JSON data |
+| `value_type_jsonb()` | JSONB | Binary JSON data |
 | **UUID type** | | |
-| `pgsql_type_uuid()` | UUID | Universally unique identifiers |
+| `value_type_uuid()` | UUID | Universally unique identifiers |
 | **Network types** | | |
-| `pgsql_type_inet()` | INET | IPv4/IPv6 addresses |
-| `pgsql_type_cidr()` | CIDR | Network addresses |
-| `pgsql_type_macaddr()` | MACADDR | MAC addresses |
-| `pgsql_type_macaddr8()` | MACADDR8 | MAC addresses (EUI-64) |
+| `value_type_inet()` | INET | IPv4/IPv6 addresses |
+| `value_type_cidr()` | CIDR | Network addresses |
+| `value_type_macaddr()` | MACADDR | MAC addresses |
+| `value_type_macaddr8()` | MACADDR8 | MAC addresses (EUI-64) |
 | **Other types** | | |
-| `pgsql_type_xml()` | XML | XML data |
-| `pgsql_type_oid()` | OID | Object identifiers |
+| `value_type_xml()` | XML | XML data |
+| `value_type_oid()` | OID | Object identifiers |
 | **Array types** | | |
-| `pgsql_type_text_array()` | TEXT[] | Array of strings |
-| `pgsql_type_int4_array()` | INTEGER[] | Array of integers |
-| `pgsql_type_int8_array()` | BIGINT[] | Array of big integers |
-| `pgsql_type_float8_array()` | FLOAT8[] | Array of floats |
-| `pgsql_type_bool_array()` | BOOLEAN[] | Array of booleans |
-| `pgsql_type_uuid_array()` | UUID[] | Array of UUIDs |
-| `pgsql_type_json_array()` | JSON[] | Array of JSON |
-| `pgsql_type_jsonb_array()` | JSONB[] | Array of JSONB |
+| `value_type_text_array()` | TEXT[] | Array of strings |
+| `value_type_int4_array()` | INTEGER[] | Array of integers |
+| `value_type_int8_array()` | BIGINT[] | Array of big integers |
+| `value_type_float8_array()` | FLOAT8[] | Array of floats |
+| `value_type_bool_array()` | BOOLEAN[] | Array of booleans |
+| `value_type_uuid_array()` | UUID[] | Array of UUIDs |
+| `value_type_json_array()` | JSON[] | Array of JSON |
+| `value_type_jsonb_array()` | JSONB[] | Array of JSONB |
 
 ## Built-in Value Converters
 

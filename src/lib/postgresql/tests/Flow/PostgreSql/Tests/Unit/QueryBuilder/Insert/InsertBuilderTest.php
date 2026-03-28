@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Insert;
 
+use function Flow\PostgreSql\DSL\{col, conflict_columns, insert, literal, param, parameters, select, table};
+
 use Flow\PostgreSql\{ParsedQuery, Parser};
 use Flow\PostgreSql\Protobuf\AST\{InsertStmt, Node, RawStmt};
 use Flow\PostgreSql\QueryBuilder\Clause\{ConflictTarget, OnConflictClause};
@@ -259,6 +261,22 @@ final class InsertBuilderTest extends TestCase
         self::assertCount(1, $returning);
     }
 
+    public function test_insert_select_to_sql() : void
+    {
+        self::assertSame(
+            'INSERT INTO users (name, email) SELECT name, email FROM archived_users',
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->select(
+                    select()
+                        ->select(col('name'), col('email'))
+                        ->from(table('archived_users'))
+                )
+                ->toSql()
+        );
+    }
+
     public function test_insert_with_alias() : void
     {
         $query = InsertBuilder::create()
@@ -275,6 +293,17 @@ final class InsertBuilderTest extends TestCase
         $alias = $relation->getAlias();
         self::assertNotNull($alias);
         self::assertSame('u', $alias->getAliasname());
+    }
+
+    public function test_insert_with_default_values_to_sql() : void
+    {
+        self::assertSame(
+            'INSERT INTO users DEFAULT VALUES',
+            insert()
+                ->into('users')
+                ->defaultValues()
+                ->toSql()
+        );
     }
 
     public function test_insert_with_function_values() : void
@@ -308,6 +337,19 @@ final class InsertBuilderTest extends TestCase
         self::assertSame("INSERT INTO logs (message, created_at) VALUES ('test message', now())", $deparsed);
     }
 
+    public function test_insert_with_multiple_rows_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name, email) VALUES ('John', 'john@example.com'), ('Jane', 'jane@example.com')",
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(literal('John'), literal('john@example.com'))
+                ->values(literal('Jane'), literal('jane@example.com'))
+                ->toSql()
+        );
+    }
+
     public function test_insert_with_on_conflict_do_nothing_deparsed_output() : void
     {
         if (!\function_exists('pg_query_deparse')) {
@@ -322,6 +364,19 @@ final class InsertBuilderTest extends TestCase
 
         $deparsed = $this->deparse($insert->toAst());
         self::assertSame("INSERT INTO users (email, name) VALUES ('john@example.com', 'John') ON CONFLICT (email) DO NOTHING", $deparsed);
+    }
+
+    public function test_insert_with_on_conflict_do_nothing_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name, email) VALUES ('John', 'john@example.com') ON CONFLICT DO NOTHING",
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(literal('John'), literal('john@example.com'))
+                ->onConflictDoNothing()
+                ->toSql()
+        );
     }
 
     public function test_insert_with_on_conflict_do_update_deparsed_output() : void
@@ -343,6 +398,85 @@ final class InsertBuilderTest extends TestCase
         self::assertSame("INSERT INTO users (email, name) VALUES ('john@example.com', 'John') ON CONFLICT (email) DO UPDATE SET name = excluded.name", $deparsed);
     }
 
+    public function test_insert_with_on_conflict_do_update_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (email, name) VALUES ('john@example.com', 'John') ON CONFLICT (email) DO UPDATE SET name = 'Updated John'",
+            insert()
+                ->into('users')
+                ->columns('email', 'name')
+                ->values(literal('john@example.com'), literal('John'))
+                ->onConflictDoUpdate(
+                    conflict_columns(['email']),
+                    ['name' => literal('Updated John')]
+                )
+                ->toSql()
+        );
+    }
+
+    public function test_insert_with_on_conflict_on_columns_do_nothing_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name, email) VALUES ('John', 'john@example.com') ON CONFLICT (email) DO NOTHING",
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(literal('John'), literal('john@example.com'))
+                ->onConflictDoNothing(conflict_columns(['email']))
+                ->toSql()
+        );
+    }
+
+    public function test_insert_with_parameters_function_multiple_rows_to_sql() : void
+    {
+        self::assertSame(
+            'INSERT INTO users (name, email) VALUES ($1, $2), ($3, $4)',
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(...parameters(2))
+                ->values(...parameters(2, startAt: 3))
+                ->toSql()
+        );
+    }
+
+    public function test_insert_with_parameters_function_to_sql() : void
+    {
+        self::assertSame(
+            'INSERT INTO users (name, email) VALUES ($1, $2)',
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(...parameters(2))
+                ->toSql()
+        );
+    }
+
+    public function test_insert_with_parameters_to_sql() : void
+    {
+        self::assertSame(
+            'INSERT INTO users (name, email) VALUES ($1, $2)',
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(param(1), param(2))
+                ->toSql()
+        );
+    }
+
+    public function test_insert_with_returning_all_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name) VALUES ('John') RETURNING *",
+            insert()
+                ->into('users')
+                ->columns('name')
+                ->values(literal('John'))
+                ->returningAll()
+                ->toSql()
+        );
+    }
+
     public function test_insert_with_returning_deparsed_output() : void
     {
         if (!\function_exists('pg_query_deparse')) {
@@ -357,6 +491,19 @@ final class InsertBuilderTest extends TestCase
 
         $deparsed = $this->deparse($insert->toAst());
         self::assertSame("INSERT INTO users (name) VALUES ('John') RETURNING id", $deparsed);
+    }
+
+    public function test_insert_with_returning_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name) VALUES ('John') RETURNING id",
+            insert()
+                ->into('users')
+                ->columns('name')
+                ->values(literal('John'))
+                ->returning(col('id'))
+                ->toSql()
+        );
     }
 
     public function test_insert_with_schema() : void
@@ -387,6 +534,18 @@ final class InsertBuilderTest extends TestCase
 
         $deparsed = $this->deparse($insert->toAst());
         self::assertSame("INSERT INTO public.users (name) VALUES ('John')", $deparsed);
+    }
+
+    public function test_insert_with_schema_qualified_table_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO public.users (name) VALUES ('John')",
+            insert()
+                ->into('public.users')
+                ->columns('name')
+                ->values(literal('John'))
+                ->toSql()
+        );
     }
 
     public function test_insert_without_columns() : void
@@ -605,6 +764,18 @@ final class InsertBuilderTest extends TestCase
 
         $deparsed = $this->deparse($insert->toAst());
         self::assertSame("INSERT INTO users (name, email) VALUES ('John', 'john@example.com')", $deparsed);
+    }
+
+    public function test_simple_insert_with_values_to_sql() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name, email) VALUES ('John', 'john@example.com')",
+            insert()
+                ->into('users')
+                ->columns('name', 'email')
+                ->values(literal('John'), literal('john@example.com'))
+                ->toSql()
+        );
     }
 
     private function deparse(InsertStmt $insertStmt) : string

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
+use function Flow\PostgreSql\DSL\{cast, column_type_custom, column_type_time, literal, param, select};
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class TimeConverterTest extends ConverterTestCase
+final class TimeConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
@@ -40,7 +42,7 @@ final class TimeConverterTest extends ConverterTestCase
 
     public function test_null_time() : void
     {
-        $result = $this->fetchValue('SELECT NULL::time AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_time())->as('val'))->toSql());
 
         self::assertNull($result);
     }
@@ -48,7 +50,7 @@ final class TimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_time_values')]
     public function test_time_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::time AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_time())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -57,7 +59,7 @@ final class TimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_time_with_microseconds')]
     public function test_time_with_microseconds(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::time AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_time())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -66,7 +68,7 @@ final class TimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_timetz_values')]
     public function test_timetz_round_trip(string $input, string $expectedTime, string $expectedOffset) : void
     {
-        $result = $this->fetchValue('SELECT $1::timetz AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_custom('timetz'))->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertStringStartsWith($expectedTime, $result);

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_json, column_type_jsonb, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class JsonConverterTest extends ConverterTestCase
+final class JsonConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{array<mixed>, string}>
@@ -77,7 +78,7 @@ final class JsonConverterTest extends ConverterTestCase
     #[DataProvider('provide_json_arrays')]
     public function test_json_array_round_trip(array $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::json AS val', [typed($input, PostgreSqlType::JSON)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_json())->as('val'))->toSql(), [typed($input, ValueType::JSON)]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -86,7 +87,7 @@ final class JsonConverterTest extends ConverterTestCase
     #[DataProvider('provide_json_strings')]
     public function test_json_string_round_trip(string $input) : void
     {
-        $result = $this->fetchValue('SELECT $1::json AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_json())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame($input, $result);
@@ -95,7 +96,7 @@ final class JsonConverterTest extends ConverterTestCase
     #[DataProvider('provide_jsonb_strings')]
     public function test_jsonb_string_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::jsonb AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_jsonb())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -107,7 +108,7 @@ final class JsonConverterTest extends ConverterTestCase
     #[DataProvider('provide_nested_json')]
     public function test_nested_json_round_trip(array $input) : void
     {
-        $result = $this->fetchValue('SELECT $1::json AS val', [typed($input, PostgreSqlType::JSON)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_json())->as('val'))->toSql(), [typed($input, ValueType::JSON)]);
 
         self::assertIsString($result);
         self::assertSame($input, \json_decode($result, true, 512, \JSON_THROW_ON_ERROR));
@@ -115,14 +116,14 @@ final class JsonConverterTest extends ConverterTestCase
 
     public function test_null_json() : void
     {
-        $result = $this->fetchValue('SELECT NULL::json AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_json())->as('val'))->toSql());
 
         self::assertNull($result);
     }
 
     public function test_null_jsonb() : void
     {
-        $result = $this->fetchValue('SELECT NULL::jsonb AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_jsonb())->as('val'))->toSql());
 
         self::assertNull($result);
     }

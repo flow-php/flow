@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\IntegerConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -56,9 +56,9 @@ final class IntegerConverterTest extends TestCase
         $converter = new IntegerConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(PostgreSqlType::INT2, $types);
-        self::assertContains(PostgreSqlType::INT4, $types);
-        self::assertContains(PostgreSqlType::INT8, $types);
+        self::assertContains(ValueType::INT2, $types);
+        self::assertContains(ValueType::INT4, $types);
+        self::assertContains(ValueType::INT8, $types);
     }
 
     #[DataProvider('provide_valid_values')]

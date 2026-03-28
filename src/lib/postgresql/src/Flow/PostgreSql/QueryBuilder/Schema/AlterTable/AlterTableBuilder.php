@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar};
 use Flow\PostgreSql\Protobuf\AST\ColumnDef;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
 final readonly class AlterTableBuilder implements AlterTableFinalStep
@@ -66,6 +65,28 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         );
     }
 
+    public function addInherit(string $table) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_AddInherit);
+
+        $rangeVar = new RangeVar();
+        $rangeVar->setRelname($table);
+        $rangeVar->setInh(true);
+        $rangeVar->setRelpersistence('p');
+
+        $node = new Node();
+        $node->setRangeVar($rangeVar);
+        $cmd->setDef($node);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
     public function alterColumnDropDefault(string $column) : AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
@@ -94,13 +115,13 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         );
     }
 
-    public function alterColumnSetDefault(string $column, string $defaultExpression) : AlterTableFinalStep
+    public function alterColumnSetDefault(string $column, Expression $defaultExpression) : AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_ColumnDefault);
         $cmd->setName($column);
 
-        $cmd->setDef($this->parseExpression($defaultExpression));
+        $cmd->setDef($defaultExpression->toAst());
 
         return new self(
             $this->table,
@@ -124,7 +145,7 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         );
     }
 
-    public function alterColumnType(string $column, DataType $type) : AlterTableFinalStep
+    public function alterColumnType(string $column, ColumnType $type) : AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_AlterColumnType);
@@ -259,6 +280,28 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         );
     }
 
+    public function dropInherit(string $table) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_DropInherit);
+
+        $rangeVar = new RangeVar();
+        $rangeVar->setRelname($table);
+        $rangeVar->setInh(true);
+        $rangeVar->setRelpersistence('p');
+
+        $node = new Node();
+        $node->setRangeVar($rangeVar);
+        $cmd->setDef($node);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
     public function enableTrigger(string $trigger) : AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
@@ -352,9 +395,33 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         return RenameTableBuilder::renameTo($this->table, $this->schema, $newName, $this->ifExists);
     }
 
+    public function setLogged() : AlterTableLoggingFinalStep
+    {
+        return AlterTableLoggingBuilder::createLogged($this->table, $this->schema, $this->ifExists);
+    }
+
     public function setSchema(string $schema) : AlterTableSchemaBuilder
     {
         return AlterTableSchemaBuilder::create($this->table, $this->schema, $schema, $this->ifExists);
+    }
+
+    public function setTablespace(string $tablespace) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_SetTableSpace);
+        $cmd->setName($tablespace);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function setUnlogged() : AlterTableLoggingFinalStep
+    {
+        return AlterTableLoggingBuilder::createUnlogged($this->table, $this->schema, $this->ifExists);
     }
 
     public function toAst() : AlterTableStmt
@@ -390,45 +457,5 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         }
 
         return $stmt;
-    }
-
-    private function parseExpression(string $expression) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT {$expression} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
     }
 }

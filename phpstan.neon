@@ -44,6 +44,7 @@ parameters:
         - src/lib/telemetry/src
         - src/lib/types/src
         - src/lib/postgresql/src
+        - src/lib/postgresql-migrations/src
         - src/tools/documentation/src
         - src/bridge/phpunit/telemetry/src
         - src/bridge/phpunit/telemetry/tests
@@ -74,6 +75,7 @@ parameters:
         - src/bridge/symfony/telemetry-bundle/tests
         - src/bridge/telemetry/otlp/tests
         - src/lib/telemetry/tests
+        - src/lib/postgresql-migrations/tests
 
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*

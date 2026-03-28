@@ -13,6 +13,7 @@
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "flow-php/telemetry": "self.version",
+        "flow-php/types": "self.version",
         "google/protobuf": "^4.0",
         "psr/clock": "^1.0"
     },
@@ -37,7 +38,11 @@
             ]
         },
         "files": [
-            "src/Flow/PostgreSql/DSL/functions.php",
+            "src/Flow/PostgreSql/DSL/client.php",
+            "src/Flow/PostgreSql/DSL/condition.php",
+            "src/Flow/PostgreSql/DSL/parser.php",
+            "src/Flow/PostgreSql/DSL/query.php",
+            "src/Flow/PostgreSql/DSL/schema.php",
             "src/stubs.php"
         ]
     },

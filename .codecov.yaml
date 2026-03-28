@@ -60,6 +60,10 @@ component_management:
       name: lib-postgresql
       paths:
         - src/lib/postgresql/**
+    - component_id: lib-postgresql-migrations
+      name: lib-postgresql-migrations
+      paths:
+        - src/lib/postgresql-migrations/**
     - component_id: lib-telemetry
       name: lib-telemetry
       paths:

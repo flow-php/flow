@@ -20,7 +20,7 @@ $query = create()->index('idx_users_email')
     ->on('users')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_email ON users (email)
 ```
 
@@ -36,7 +36,7 @@ $query = create()->index('idx_users_email')
     ->on('users')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE UNIQUE INDEX idx_users_email ON users (email)
 ```
 
@@ -52,7 +52,7 @@ $query = create()->index('idx_users_email')
     ->on('users')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)
 ```
 
@@ -70,7 +70,7 @@ $query = create()->index('idx_users_email')
     ->on('users')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX CONCURRENTLY idx_users_email ON users (email)
 ```
 
@@ -88,7 +88,7 @@ $query = create()->index('idx_users_email')
     ->on('users')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users (email)
 ```
 
@@ -103,7 +103,7 @@ $query = create()->index('idx_users_email')
     ->on('users', 'public')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_email ON public.users (email)
 ```
 
@@ -164,7 +164,7 @@ $query = create()->index('idx_users_name_email')
     ->on('users')
     ->columns('name', 'email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_name_email ON users (name, email)
 ```
 
@@ -182,7 +182,7 @@ $query = create()->index('idx_users_created_at')
     ->on('users')
     ->columns(index_col('created_at')->desc());
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_created_at ON users (created_at DESC)
 
 // With NULLS ordering
@@ -190,14 +190,14 @@ $query = create()->index('idx_users_created_at')
     ->on('users')
     ->columns(index_col('created_at')->desc()->nullsFirst());
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_created_at ON users (created_at DESC NULLS FIRST)
 
 $query = create()->index('idx_users_created_at')
     ->on('users')
     ->columns(index_col('created_at')->nullsLast());
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_created_at ON users (created_at NULLS LAST)
 ```
 
@@ -214,7 +214,7 @@ $query = create()->index('idx_users_name_pattern')
     ->on('users')
     ->columns(index_col('name')->opclass('text_pattern_ops'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_name_pattern ON users (name text_pattern_ops)
 ```
 
@@ -246,7 +246,7 @@ $query = create()->index('idx_users_lower_email')
     ->on('users')
     ->columns(index_expr(new RawExpression('lower(email)')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_lower_email ON users ((lower(email)))
 ```
 
@@ -264,7 +264,7 @@ $query = create()->index('idx_users_email')
     ->columns('email')
     ->include('name', 'created_at');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_email ON users (email) INCLUDE (name, created_at)
 ```
 
@@ -282,7 +282,7 @@ $query = create()->index('idx_users_active_email')
     ->columns('email')
     ->where(eq(col('active'), literal(true)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_active_email ON users (email) WHERE active = true
 ```
 
@@ -300,7 +300,7 @@ $query = create()->index('idx_users_email')
     ->columns('email')
     ->tablespace('fast_storage');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_email ON users (email) TABLESPACE fast_storage
 ```
 
@@ -319,7 +319,7 @@ $query = create()->index('idx_users_email')
     ->columns('email')
     ->nullsNotDistinct();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE UNIQUE INDEX idx_users_email ON users (email) NULLS NOT DISTINCT
 ```
 
@@ -336,7 +336,7 @@ $query = create()->index('idx_users_email')
     ->onOnly('users')
     ->columns('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE INDEX idx_users_email ON ONLY users (email)
 ```
 
@@ -351,7 +351,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX idx_users_email
 ```
 
@@ -365,7 +365,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->index('idx_users_email')
     ->ifExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX IF EXISTS idx_users_email
 ```
 
@@ -381,7 +381,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->index('idx_users_email')
     ->concurrently();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX CONCURRENTLY idx_users_email
 ```
 
@@ -397,7 +397,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->index('idx_users_email')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX idx_users_email CASCADE
 ```
 
@@ -412,7 +412,7 @@ $query = drop()->index('idx_users_email')
     ->ifExists()
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX IF EXISTS idx_users_email CASCADE
 ```
 
@@ -425,7 +425,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email', 'idx_users_name', 'idx_orders_date');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX idx_users_email, idx_users_name, idx_orders_date
 ```
 
@@ -438,7 +438,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('public.idx_users_email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP INDEX public.idx_users_email
 ```
 
@@ -453,7 +453,7 @@ use function Flow\PostgreSql\DSL\reindex_index;
 
 $query = reindex_index('idx_users_email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX INDEX idx_users_email
 ```
 
@@ -468,7 +468,7 @@ use function Flow\PostgreSql\DSL\reindex_table;
 
 $query = reindex_table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX TABLE users
 ```
 
@@ -483,7 +483,7 @@ use function Flow\PostgreSql\DSL\reindex_schema;
 
 $query = reindex_schema('public');
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX SCHEMA public
 ```
 
@@ -498,7 +498,7 @@ use function Flow\PostgreSql\DSL\reindex_database;
 
 $query = reindex_database('mydb');
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX DATABASE mydb
 ```
 
@@ -514,7 +514,7 @@ use function Flow\PostgreSql\DSL\reindex_index;
 $query = reindex_index('idx_users_email')
     ->concurrently();
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX (CONCURRENTLY) INDEX idx_users_email
 ```
 
@@ -530,7 +530,7 @@ use function Flow\PostgreSql\DSL\reindex_table;
 $query = reindex_table('users')
     ->verbose();
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX (VERBOSE) TABLE users
 ```
 
@@ -546,7 +546,7 @@ use function Flow\PostgreSql\DSL\reindex_index;
 $query = reindex_index('idx_users_email')
     ->tablespace('fast_storage');
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX (TABLESPACE fast_storage) INDEX idx_users_email
 ```
 
@@ -559,7 +559,7 @@ use function Flow\PostgreSql\DSL\reindex_table;
 
 $query = reindex_table('public.users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // REINDEX TABLE public.users
 ```
 
@@ -575,7 +575,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->index('idx_old')
     ->renameTo('idx_new');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER INDEX idx_old RENAME TO idx_new
 ```
 
@@ -590,7 +590,7 @@ $query = alter()->index('idx_old')
     ->ifExists()
     ->renameTo('idx_new');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER INDEX IF EXISTS idx_old RENAME TO idx_new
 ```
 
@@ -604,7 +604,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->index('idx_old', 'public')
     ->renameTo('idx_new');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER INDEX public.idx_old RENAME TO idx_new
 ```
 
@@ -620,7 +620,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->index('idx_users_email')
     ->setTablespace('fast_storage');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER INDEX idx_users_email SET TABLESPACE fast_storage
 ```
 
@@ -635,7 +635,7 @@ $query = alter()->index('idx_users_email')
     ->ifExists()
     ->setTablespace('fast_storage');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER INDEX IF EXISTS idx_users_email SET TABLESPACE fast_storage
 ```
 

@@ -18,7 +18,7 @@ $query = insert()
     ->columns('name', 'email')
     ->values(literal('John'), literal('john@example.com'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com')
 ```
 
@@ -36,8 +36,41 @@ $query = insert()
     ->columns('name', 'email')
     ->values(param(1), param(2));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) VALUES ($1, $2)
+```
+
+For queries with many columns, use `parameters()` to generate all positional parameters at once:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{insert, parameters};
+
+$query = insert()
+    ->into('users')
+    ->columns('id', 'name', 'email', 'created_at', 'updated_at')
+    ->values(...parameters(5));
+
+echo $query->toSql();
+// INSERT INTO users (id, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)
+```
+
+The `parameters()` function accepts an optional `startAt` argument for multi-row inserts:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{insert, parameters};
+
+$query = insert()
+    ->into('users')
+    ->columns('name', 'email')
+    ->values(...parameters(2))
+    ->values(...parameters(2, startAt: 3));
+
+echo $query->toSql();
+// INSERT INTO users (name, email) VALUES ($1, $2), ($3, $4)
 ```
 
 ## Multi-Row Insert
@@ -53,7 +86,7 @@ $query = insert()
     ->values(literal('John'), literal('john@example.com'))
     ->values(literal('Jane'), literal('jane@example.com'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com'), ('Jane', 'jane@example.com')
 ```
 
@@ -68,7 +101,7 @@ $query = insert()
     ->into('users')
     ->defaultValues();
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users DEFAULT VALUES
 ```
 
@@ -88,7 +121,7 @@ $query = insert()
     ->columns('name', 'email')
     ->select($selectQuery);
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) SELECT name, email FROM archived_users
 ```
 
@@ -108,7 +141,7 @@ $query = insert()
     ->values(literal('John'), literal('john@example.com'))
     ->onConflictDoNothing();
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com') ON CONFLICT DO NOTHING
 ```
 
@@ -125,7 +158,7 @@ $query = insert()
     ->values(literal('John'), literal('john@example.com'))
     ->onConflictDoNothing(conflict_columns(['email']));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com') ON CONFLICT (email) DO NOTHING
 ```
 
@@ -142,7 +175,7 @@ $query = insert()
     ->values(literal('John'), literal('john@example.com'))
     ->onConflictDoNothing(conflict_constraint('users_pkey'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com') ON CONFLICT ON CONSTRAINT users_pkey DO NOTHING
 ```
 
@@ -162,7 +195,7 @@ $query = insert()
         ['name' => literal('Updated John')]
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (email, name) VALUES ('john@example.com', 'John') ON CONFLICT (email) DO UPDATE SET name = 'Updated John'
 ```
 
@@ -184,7 +217,7 @@ $query = insert()
         ['name' => col('excluded.name')]
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (email, name) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET name = excluded.name
 ```
 
@@ -207,7 +240,7 @@ $query = insert()
     )
     ->where(eq(col('users.active'), literal(true)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (email, name, active) VALUES ('john@example.com', 'John', true) ON CONFLICT (email) DO UPDATE SET name = 'Updated John' WHERE users.active = true
 ```
 
@@ -225,7 +258,7 @@ $query = insert()
     ->values(literal('John'))
     ->returning(col('id'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name) VALUES ('John') RETURNING id
 
 // Return all columns
@@ -235,7 +268,7 @@ $query = insert()
     ->values(literal('John'))
     ->returningAll();
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO users (name) VALUES ('John') RETURNING *
 ```
 
@@ -251,7 +284,7 @@ $query = insert()
     ->columns('name')
     ->values(literal('John'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // INSERT INTO public.users (name) VALUES ('John')
 ```
 

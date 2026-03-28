@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\ValueConverter;
 
 use Flow\ETL\Adapter\PostgreSql\ValueConverter\XMLConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
 final class XMLConverterTest extends TestCase
@@ -57,6 +57,6 @@ final class XMLConverterTest extends TestCase
     {
         $converter = new XMLConverter();
 
-        self::assertSame([PostgreSqlType::XML], $converter->supportedTypes());
+        self::assertSame([ValueType::XML], $converter->supportedTypes());
     }
 }

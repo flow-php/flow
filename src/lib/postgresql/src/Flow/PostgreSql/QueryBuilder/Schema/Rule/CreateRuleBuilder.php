@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Rule;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{Node, RangeVar, RuleStmt};
 use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEventStep, CreateRuleFinalStep, CreateRuleToStep, CreateRuleWhereStep
@@ -22,7 +23,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         private ?RuleEvent $event = null,
         private ?string $table = null,
         private ?string $schema = null,
-        private ?string $whereCondition = null,
+        private ?Condition $whereCondition = null,
         private bool $instead = false,
         private array $actions = [],
     ) {
@@ -189,7 +190,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         }
 
         if ($this->whereCondition !== null) {
-            $stmt->setWhereClause($this->parseCondition($this->whereCondition));
+            $stmt->setWhereClause($this->whereCondition->toAst());
         }
 
         $stmt->setInstead($this->instead);
@@ -201,7 +202,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         return $stmt;
     }
 
-    public function where(string $condition) : CreateRuleDoStep
+    public function where(Condition $condition) : CreateRuleDoStep
     {
         return new self(
             $this->name,
@@ -233,31 +234,5 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         }
 
         return $stmt;
-    }
-
-    private function parseCondition(string $condition) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT * FROM t WHERE {$condition}");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $selectStmt = $stmts[0]->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $whereClause = $selectStmt->getWhereClause();
-
-        if ($whereClause === null) {
-            throw InvalidAstException::missingRequiredField('whereClause', 'SelectStmt');
-        }
-
-        return $whereClause;
     }
 }

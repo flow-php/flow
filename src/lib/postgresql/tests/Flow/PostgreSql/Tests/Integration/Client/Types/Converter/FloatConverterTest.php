@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_double_precision, column_type_numeric, column_type_real, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class FloatConverterTest extends ConverterTestCase
+final class FloatConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{float, float}>
@@ -48,7 +49,7 @@ final class FloatConverterTest extends ConverterTestCase
     #[DataProvider('provide_float4_values')]
     public function test_float4_round_trip(float $input, float $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::float4 AS val', [typed($input, PostgreSqlType::FLOAT4)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_real())->as('val'))->toSql(), [typed($input, ValueType::FLOAT4)]);
 
         self::assertEqualsWithDelta($expected, $result, 0.0001);
     }
@@ -56,14 +57,14 @@ final class FloatConverterTest extends ConverterTestCase
     #[DataProvider('provide_float8_values')]
     public function test_float8_round_trip(float $input, float $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::float8 AS val', [typed($input, PostgreSqlType::FLOAT8)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_double_precision())->as('val'))->toSql(), [typed($input, ValueType::FLOAT8)]);
 
         self::assertEqualsWithDelta($expected, $result, 0.00000001);
     }
 
     public function test_null_float() : void
     {
-        $result = $this->fetchValue('SELECT NULL::float8 AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_double_precision())->as('val'))->toSql());
 
         self::assertNull($result);
     }
@@ -71,28 +72,28 @@ final class FloatConverterTest extends ConverterTestCase
     #[DataProvider('provide_numeric_values')]
     public function test_numeric_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::numeric AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_numeric())->as('val'))->toSql(), [$input]);
 
         self::assertSame($expected, $result);
     }
 
     public function test_special_float_infinity() : void
     {
-        $result = $this->fetchValue("SELECT 'Infinity'::float8 AS val");
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal('Infinity'), column_type_double_precision())->as('val'))->toSql());
 
         self::assertSame(INF, $result);
     }
 
     public function test_special_float_nan() : void
     {
-        $result = $this->fetchValue("SELECT 'NaN'::float8 AS val");
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal('NaN'), column_type_double_precision())->as('val'))->toSql());
 
         self::assertNan($result);
     }
 
     public function test_special_float_negative_infinity() : void
     {
-        $result = $this->fetchValue("SELECT '-Infinity'::float8 AS val");
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal('-Infinity'), column_type_double_precision())->as('val'))->toSql());
 
         self::assertSame(-INF, $result);
     }

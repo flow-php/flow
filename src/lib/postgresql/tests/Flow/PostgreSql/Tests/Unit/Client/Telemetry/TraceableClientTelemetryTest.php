@@ -178,7 +178,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $mockClient->method('fetchAllInto')->willReturn($users);
 
         $client = traceable_postgresql_client($mockClient, $config);
-        $client->fetchAllInto(\stdClass::class, 'SELECT * FROM users');
+        $client->fetchAllInto(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class), 'SELECT * FROM users');
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
@@ -198,7 +198,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $mockClient->method('fetchInto')->willReturn($user);
 
         $client = traceable_postgresql_client($mockClient, $config);
-        $client->fetchInto(\stdClass::class, 'SELECT * FROM users WHERE id = $1', [1]);
+        $client->fetchInto(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class), 'SELECT * FROM users WHERE id = $1', [1]);
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
@@ -218,7 +218,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $mockClient->method('fetchOneInto')->willReturn($user);
 
         $client = traceable_postgresql_client($mockClient, $config);
-        $client->fetchOneInto(\stdClass::class, 'SELECT * FROM users WHERE id = $1', [1]);
+        $client->fetchOneInto(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class), 'SELECT * FROM users WHERE id = $1', [1]);
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);

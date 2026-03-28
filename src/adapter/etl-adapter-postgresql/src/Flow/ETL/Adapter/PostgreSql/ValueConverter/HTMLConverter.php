@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\ValueConverter;
 
 use Dom\{HTMLDocument, HTMLElement};
 use Flow\PostgreSql\Client\Types\Converter\StringConverter;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final readonly class HTMLConverter implements ValueConverter
 {
@@ -17,7 +17,7 @@ final readonly class HTMLConverter implements ValueConverter
 
     public function supportedTypes() : array
     {
-        return [PostgreSqlType::TEXT];
+        return [ValueType::TEXT];
     }
 
     public function toDatabase(mixed $value) : ?string

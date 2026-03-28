@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
+use function Flow\PostgreSql\DSL\{col, eq, literal};
 use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition, RawCondition};
+use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+
 use PHPUnit\Framework\TestCase;
 
 final class OrConditionTest extends TestCase
@@ -20,9 +22,9 @@ final class OrConditionTest extends TestCase
 
     public function test_and_returns_and_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
-        $cond3 = new RawCondition('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $or = new OrCondition($cond1, $cond2);
         $and = $or->and($cond3);
@@ -45,8 +47,8 @@ final class OrConditionTest extends TestCase
 
     public function test_from_ast_reconstructs_or_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $original = new OrCondition($cond1, $cond2);
         $ast = $original->toAst();
@@ -88,8 +90,8 @@ final class OrConditionTest extends TestCase
 
     public function test_not_returns_not_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $or = new OrCondition($cond1, $cond2);
         $not = $or->not();
@@ -99,9 +101,9 @@ final class OrConditionTest extends TestCase
 
     public function test_or_flattens_multiple_or_conditions() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
-        $cond3 = new RawCondition('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $or1 = new OrCondition($cond1, $cond2);
         $or2 = $or1->or($cond3);
@@ -118,8 +120,8 @@ final class OrConditionTest extends TestCase
 
     public function test_or_method_returns_new_instance() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $original = new OrCondition($cond1);
         $modified = $original->or($cond2);
@@ -129,10 +131,10 @@ final class OrConditionTest extends TestCase
 
     public function test_or_with_another_or_condition_flattens() : void
     {
-        $cond1 = new RawCondition('a = 1');
-        $cond2 = new RawCondition('b = 2');
-        $cond3 = new RawCondition('c = 3');
-        $cond4 = new RawCondition('d = 4');
+        $cond1 = eq(col('a'), literal(1));
+        $cond2 = eq(col('b'), literal(2));
+        $cond3 = eq(col('c'), literal(3));
+        $cond4 = eq(col('d'), literal(4));
 
         $or1 = new OrCondition($cond1, $cond2);
         $or2 = new OrCondition($cond3, $cond4);
@@ -149,8 +151,8 @@ final class OrConditionTest extends TestCase
 
     public function test_or_with_single_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $or = new OrCondition($cond1, $cond2);
         $ast = $or->toAst();
@@ -165,8 +167,8 @@ final class OrConditionTest extends TestCase
 
     public function test_to_ast_creates_bool_expr() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $or = new OrCondition($cond1, $cond2);
         $ast = $or->toAst();

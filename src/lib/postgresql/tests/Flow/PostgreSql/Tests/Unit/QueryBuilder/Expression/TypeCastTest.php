@@ -6,15 +6,15 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
 use Flow\PostgreSql\Protobuf\AST\{Node, PBString, TypeCast as AstTypeCast, TypeName};
 use Flow\PostgreSql\QueryBuilder\Expression\{Column, Literal, TypeCast};
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use PHPUnit\Framework\TestCase;
 
 final class TypeCastTest extends TestCase
 {
     public function test_complex_expression_cast() : void
     {
-        $innerExpr = new TypeCast(Literal::string('42'), DataType::integer());
-        $outerCast = new TypeCast($innerExpr, DataType::varchar(255));
+        $innerExpr = new TypeCast(Literal::string('42'), ColumnType::integer());
+        $outerCast = new TypeCast($innerExpr, ColumnType::varchar(255));
 
         $node = $outerCast->toAst();
         $restored = TypeCast::fromAst($node);
@@ -25,7 +25,7 @@ final class TypeCastTest extends TestCase
     public function test_converts_to_ast() : void
     {
         $expr = Literal::string('123');
-        $cast = new TypeCast($expr, DataType::integer());
+        $cast = new TypeCast($expr, ColumnType::integer());
 
         $node = $cast->toAst();
 
@@ -49,7 +49,7 @@ final class TypeCastTest extends TestCase
     public function test_converts_type_cast_with_schema_to_ast() : void
     {
         $expr = Column::name('id');
-        $cast = new TypeCast($expr, DataType::text());
+        $cast = new TypeCast($expr, ColumnType::text());
 
         $node = $cast->toAst();
         $typeCast = $node->getTypeCast();
@@ -70,7 +70,7 @@ final class TypeCastTest extends TestCase
     public function test_creates_aliased_expression() : void
     {
         $expr = Literal::int(42);
-        $cast = new TypeCast($expr, DataType::varchar(100));
+        $cast = new TypeCast($expr, ColumnType::varchar(100));
         $aliased = $cast->as('casted_value');
 
         self::assertSame('casted_value', $aliased->getAlias());
@@ -80,20 +80,20 @@ final class TypeCastTest extends TestCase
     public function test_creates_simple_type_cast() : void
     {
         $expr = Literal::int(42);
-        $dataType = DataType::varchar(100);
+        $dataType = ColumnType::varchar(100);
         $cast = new TypeCast($expr, $dataType);
 
-        self::assertSame($dataType, $cast->getDataType());
+        self::assertSame($dataType, $cast->getColumnType());
         self::assertSame($expr, $cast->getExpression());
     }
 
     public function test_creates_type_cast_with_schema() : void
     {
         $expr = Column::name('value');
-        $dataType = DataType::integer();
+        $dataType = ColumnType::integer();
         $cast = new TypeCast($expr, $dataType);
 
-        self::assertSame($dataType, $cast->getDataType());
+        self::assertSame($dataType, $cast->getColumnType());
     }
 
     public function test_recreates_from_ast() : void
@@ -118,7 +118,7 @@ final class TypeCastTest extends TestCase
 
         $cast = TypeCast::fromAst($node);
 
-        self::assertInstanceOf(DataType::class, $cast->getDataType());
+        self::assertInstanceOf(ColumnType::class, $cast->getColumnType());
     }
 
     public function test_recreates_type_cast_with_schema_from_ast() : void
@@ -147,39 +147,39 @@ final class TypeCastTest extends TestCase
 
         $cast = TypeCast::fromAst($node);
 
-        self::assertInstanceOf(DataType::class, $cast->getDataType());
+        self::assertInstanceOf(ColumnType::class, $cast->getColumnType());
     }
 
     public function test_round_trip_conversion() : void
     {
         $expr = Column::name('amount');
-        $cast = new TypeCast($expr, DataType::numeric(10, 2));
+        $cast = new TypeCast($expr, ColumnType::numeric(10, 2));
 
         $node = $cast->toAst();
         $restored = TypeCast::fromAst($node);
 
-        self::assertInstanceOf(DataType::class, $restored->getDataType());
+        self::assertInstanceOf(ColumnType::class, $restored->getColumnType());
     }
 
-    public function test_with_data_type_creates_new_instance() : void
+    public function test_with_column_type_creates_new_instance() : void
     {
         $expr = Literal::int(1);
-        $dataType1 = DataType::integer();
-        $dataType2 = DataType::varchar(100);
+        $dataType1 = ColumnType::integer();
+        $dataType2 = ColumnType::varchar(100);
         $cast = new TypeCast($expr, $dataType1);
 
-        $newCast = $cast->withDataType($dataType2);
+        $newCast = $cast->withColumnType($dataType2);
 
         self::assertNotSame($cast, $newCast);
-        self::assertSame($dataType1, $cast->getDataType());
-        self::assertSame($dataType2, $newCast->getDataType());
+        self::assertSame($dataType1, $cast->getColumnType());
+        self::assertSame($dataType2, $newCast->getColumnType());
     }
 
     public function test_with_expression_creates_new_instance() : void
     {
         $expr1 = Literal::int(1);
         $expr2 = Literal::int(2);
-        $cast = new TypeCast($expr1, DataType::integer());
+        $cast = new TypeCast($expr1, ColumnType::integer());
 
         $newCast = $cast->withExpression($expr2);
 

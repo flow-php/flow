@@ -8,7 +8,7 @@ use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, HTMLElementEntry, HTMLEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 
 /**
  * Maps ETL Entry types to PostgreSQL types.
@@ -23,8 +23,8 @@ use Flow\PostgreSql\Client\Types\PostgreSqlType;
  *
  * // Override specific types
  * $map = new EntryTypesMap([
- *     IntegerEntry::class => PostgreSqlType::INT2,
- *     ListEntry::class => PostgreSqlType::TEXT_ARRAY,
+ *     IntegerEntry::class => ValueType::INT2,
+ *     ListEntry::class => ValueType::TEXT_ARRAY,
  * ]);
  * ```
  */
@@ -33,35 +33,35 @@ final readonly class EntryTypesMap
     /**
      * Default mapping of Entry classes to PostgreSQL types.
      *
-     * @var array<class-string<Entry<mixed>>, PostgreSqlType>
+     * @var array<class-string<Entry<mixed>>, ValueType>
      */
     public const array DEFAULT_TYPES = [
-        StringEntry::class => PostgreSqlType::TEXT,
-        IntegerEntry::class => PostgreSqlType::INT8,
-        FloatEntry::class => PostgreSqlType::FLOAT8,
-        BooleanEntry::class => PostgreSqlType::BOOL,
-        DateEntry::class => PostgreSqlType::DATE,
-        DateTimeEntry::class => PostgreSqlType::TIMESTAMPTZ,
-        TimeEntry::class => PostgreSqlType::TIME,
-        UuidEntry::class => PostgreSqlType::UUID,
-        JsonEntry::class => PostgreSqlType::JSONB,
-        XMLEntry::class => PostgreSqlType::XML,
-        XMLElementEntry::class => PostgreSqlType::XML,
-        HTMLEntry::class => PostgreSqlType::TEXT,
-        HTMLElementEntry::class => PostgreSqlType::TEXT,
-        EnumEntry::class => PostgreSqlType::TEXT,
-        ListEntry::class => PostgreSqlType::JSONB,
-        MapEntry::class => PostgreSqlType::JSONB,
-        StructureEntry::class => PostgreSqlType::JSONB,
+        StringEntry::class => ValueType::TEXT,
+        IntegerEntry::class => ValueType::INT8,
+        FloatEntry::class => ValueType::FLOAT8,
+        BooleanEntry::class => ValueType::BOOL,
+        DateEntry::class => ValueType::DATE,
+        DateTimeEntry::class => ValueType::TIMESTAMPTZ,
+        TimeEntry::class => ValueType::TIME,
+        UuidEntry::class => ValueType::UUID,
+        JsonEntry::class => ValueType::JSONB,
+        XMLEntry::class => ValueType::XML,
+        XMLElementEntry::class => ValueType::XML,
+        HTMLEntry::class => ValueType::TEXT,
+        HTMLElementEntry::class => ValueType::TEXT,
+        EnumEntry::class => ValueType::TEXT,
+        ListEntry::class => ValueType::JSONB,
+        MapEntry::class => ValueType::JSONB,
+        StructureEntry::class => ValueType::JSONB,
     ];
 
     /**
-     * @var array<class-string<Entry<mixed>>, PostgreSqlType>
+     * @var array<class-string<Entry<mixed>>, ValueType>
      */
     private array $typeMap;
 
     /**
-     * @param array<class-string<Entry<mixed>>, PostgreSqlType> $overrides Entry class to PostgreSqlType mappings that override defaults
+     * @param array<class-string<Entry<mixed>>, ValueType> $overrides Entry class to ValueType mappings that override defaults
      */
     public function __construct(array $overrides = [])
     {

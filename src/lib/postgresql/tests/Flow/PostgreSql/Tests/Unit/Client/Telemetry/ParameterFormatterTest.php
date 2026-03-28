@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use Flow\PostgreSql\Client\Telemetry\ParameterFormatter;
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
 final class ParameterFormatterTest extends TestCase
@@ -109,7 +109,7 @@ final class ParameterFormatterTest extends TestCase
     public function test_convert_to_string_typed_value() : void
     {
         $formatter = new ParameterFormatter();
-        $typedValue = new TypedValue('some_value', PostgreSqlType::TEXT);
+        $typedValue = new TypedValue('some_value', ValueType::TEXT);
 
         $result = $formatter->convertToString($typedValue);
 
@@ -119,7 +119,7 @@ final class ParameterFormatterTest extends TestCase
     public function test_convert_to_string_typed_value_with_nested_value() : void
     {
         $formatter = new ParameterFormatter();
-        $typedValue = new TypedValue(['a', 'b', 'c'], PostgreSqlType::TEXT_ARRAY);
+        $typedValue = new TypedValue(['a', 'b', 'c'], ValueType::TEXT_ARRAY);
 
         $result = $formatter->convertToString($typedValue);
 
