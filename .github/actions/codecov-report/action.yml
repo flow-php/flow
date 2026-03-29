@@ -43,14 +43,14 @@ runs:
 
     - name: Upload code coverage (baseline)
       if: ${{ github.event_name == 'push' && !cancelled() && inputs.php-version == '8.3' && inputs.dependencies == 'locked' }}
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ inputs.token }}
         directory: ./var/phpunit/coverage/clover
 
     - name: Upload code coverage (pull request)
       if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' }}
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ inputs.token }}
         directory: ./var/phpunit/coverage/clover

@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php-version == '8.3' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
