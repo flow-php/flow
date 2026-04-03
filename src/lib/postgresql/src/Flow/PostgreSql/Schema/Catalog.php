@@ -6,6 +6,11 @@ namespace Flow\PostgreSql\Schema;
 
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 
+/**
+ * @phpstan-import-type SchemaShape from Schema
+ *
+ * @phpstan-type CatalogShape = array{schemas: list<SchemaShape>}
+ */
 final readonly class Catalog
 {
     /**
@@ -14,6 +19,19 @@ final readonly class Catalog
     public function __construct(
         private array $schemas,
     ) {
+    }
+
+    /**
+     * @param CatalogShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            schemas: \array_map(
+                static fn (array $s) : Schema => Schema::fromArray($s),
+                $data['schemas'],
+            ),
+        );
     }
 
     /**
@@ -46,6 +64,23 @@ final readonly class Catalog
         return false;
     }
 
+    public function merge(self $other) : self
+    {
+        $schemas = [];
+
+        foreach ($this->schemas as $schema) {
+            $schemas[$schema->name] = $schema;
+        }
+
+        foreach ($other->schemas as $schema) {
+            $schemas[$schema->name] = \array_key_exists($schema->name, $schemas)
+                ? $schemas[$schema->name]->merge($schema)
+                : $schema;
+        }
+
+        return new self(\array_values($schemas));
+    }
+
     /**
      * @return list<string>
      */
@@ -55,5 +90,18 @@ final readonly class Catalog
             static fn (Schema $s) : string => $s->name,
             $this->schemas,
         );
+    }
+
+    /**
+     * @return CatalogShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'schemas' => \array_map(
+                static fn (Schema $s) : array => $s->normalize(),
+                $this->schemas,
+            ),
+        ];
     }
 }

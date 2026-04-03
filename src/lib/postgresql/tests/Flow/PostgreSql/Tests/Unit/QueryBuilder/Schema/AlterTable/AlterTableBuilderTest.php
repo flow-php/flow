@@ -9,7 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\{AlterTableStmt, AlterTableType, DropBehavior, 
 use Flow\PostgreSql\QueryBuilder\Schema\AlterTable\{AlterTableBuilder, RenameTableBuilder};
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use PHPUnit\Framework\TestCase;
 
 final class AlterTableBuilderTest extends TestCase
@@ -319,7 +319,7 @@ final class AlterTableBuilderTest extends TestCase
     public function test_rename_table_builder_implements_sql_query() : void
     {
         self::assertInstanceOf(
-            SqlQuery::class,
+            Sql::class,
             RenameTableBuilder::renameTo('users', null, 'people', false)
         );
     }

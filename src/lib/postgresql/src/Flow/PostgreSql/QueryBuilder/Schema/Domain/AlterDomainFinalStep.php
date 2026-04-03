@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Domain;
 
 use Flow\PostgreSql\Protobuf\AST\AlterDomainStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface AlterDomainFinalStep extends SqlQuery
+interface AlterDomainFinalStep extends Sql
 {
     public function cascade() : self;
 

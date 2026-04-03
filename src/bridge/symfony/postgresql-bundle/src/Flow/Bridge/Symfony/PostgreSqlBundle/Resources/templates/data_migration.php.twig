@@ -1,0 +1,22 @@
+{% autoescape false %}<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
+
+return new class implements Migration
+{
+    public function migrate(MigrationContext $context) : void
+    {
+        // TODO: implement
+    }
+
+    public function transactional() : bool
+    {
+        return true;
+    }
+};
+{% endautoescape %}

@@ -12,7 +12,7 @@
     <version number="1.x">
         <api format="php">
             <source dsn="./../">
-                <path>src/lib/postgresql-migrations/src</path>
+                <path>src/lib/postgresql/src/Flow/PostgreSql/Migrations</path>
             </source>
             <output>postgresql-migrations</output>
             <default-package-name>PostgreSQL Migrations</default-package-name>

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
 use Flow\PostgreSql\Protobuf\AST\DropStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface DropTypeFinalStep extends SqlQuery
+interface DropTypeFinalStep extends Sql
 {
     public function cascade() : self;
 

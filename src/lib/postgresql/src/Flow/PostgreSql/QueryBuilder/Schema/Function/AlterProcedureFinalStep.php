@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\{AlterFunctionStmt, RenameStmt};
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface AlterProcedureFinalStep extends SqlQuery
+interface AlterProcedureFinalStep extends Sql
 {
     public function renameTo(string $newName) : self;
 

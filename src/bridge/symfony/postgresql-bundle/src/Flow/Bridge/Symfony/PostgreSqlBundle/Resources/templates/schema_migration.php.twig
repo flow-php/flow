@@ -1,0 +1,24 @@
+{% autoescape false %}<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
+
+return new class implements Migration
+{
+    public function migrate(MigrationContext $context) : void
+    {
+{% for query in queries %}
+        $context->client->execute('{{ query|replace({"'": "\\'"}) }}');
+{% endfor %}
+    }
+
+    public function transactional() : bool
+    {
+        return true;
+    }
+};
+{% endautoescape %}

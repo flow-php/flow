@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterMaterializedView;
 
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface RenameMatViewFinalStep extends SqlQuery
+interface RenameMatViewFinalStep extends Sql
 {
     public function toAst() : RenameStmt;
 

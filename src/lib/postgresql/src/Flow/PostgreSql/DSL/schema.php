@@ -91,7 +91,7 @@ use Flow\PostgreSql\Schema\{
     TriggerTiming,
     View as SchemaView
 };
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider, ManualCatalogProvider};
+use Flow\PostgreSql\Schema\{Catalog, CatalogProvider, ChainCatalogProvider, ManualCatalogProvider};
 use Flow\PostgreSql\Schema\Constraint\{
     CheckConstraint as SchemaCheckConstraint,
     ExcludeConstraint as SchemaExcludeConstraint,
@@ -1714,17 +1714,24 @@ function schema_extension(string $name, ?string $version = null) : SchemaExtensi
 
 /**
  * @param ?list<string> $schemaNames
+ * @param list<string> $excludeTables
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function client_catalog_provider(Client\Client $client, ?array $schemaNames = null) : CatalogProvider
+function client_catalog_provider(Client\Client $client, ?array $schemaNames = null, array $excludeTables = []) : CatalogProvider
 {
-    return new PgCatalogProvider($client, $schemaNames);
+    return new PgCatalogProvider($client, $schemaNames, $excludeTables);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function manual_catalog_provider(Catalog $catalog) : CatalogProvider
 {
     return new ManualCatalogProvider($catalog);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function chain_catalog_provider(CatalogProvider ...$providers) : ChainCatalogProvider
+{
+    return new ChainCatalogProvider(...$providers);
 }
 
 /**

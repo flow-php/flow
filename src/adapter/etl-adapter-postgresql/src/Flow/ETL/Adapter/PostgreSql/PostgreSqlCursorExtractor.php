@@ -10,7 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 /**
  * PostgreSQL extractor using server-side cursors for memory-efficient extraction.
@@ -36,7 +36,7 @@ final class PostgreSqlCursorExtractor implements Extractor
      */
     public function __construct(
         private readonly Client $client,
-        private readonly string|SqlQuery $query,
+        private readonly string|Sql $query,
         private readonly array $parameters = [],
     ) {
     }

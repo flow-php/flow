@@ -31,6 +31,7 @@ parameters:
         - src/bridge/psr18/telemetry/src
         - src/bridge/symfony/http-foundation/src
         - src/bridge/symfony/http-foundation-telemetry/src
+        - src/bridge/symfony/postgresql-bundle/src
         - src/bridge/symfony/telemetry-bundle/src
         - src/bridge/telemetry/otlp/src
         - src/lib/array-dot/src
@@ -44,7 +45,6 @@ parameters:
         - src/lib/telemetry/src
         - src/lib/types/src
         - src/lib/postgresql/src
-        - src/lib/postgresql-migrations/src
         - src/tools/documentation/src
         - src/bridge/phpunit/telemetry/src
         - src/bridge/phpunit/telemetry/tests
@@ -72,10 +72,10 @@ parameters:
         - src/bridge/psr18/telemetry/tests
         - src/bridge/symfony/http-foundation/tests
         - src/bridge/symfony/http-foundation-telemetry/tests
+        - src/bridge/symfony/postgresql-bundle/tests
         - src/bridge/symfony/telemetry-bundle/tests
         - src/bridge/telemetry/otlp/tests
         - src/lib/telemetry/tests
-        - src/lib/postgresql-migrations/tests
 
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*
@@ -91,6 +91,8 @@ parameters:
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
         - src/lib/parquet/src/Flow/Parquet/Dremel/ColumnData/DefinitionConverter.php
         - src/lib/postgresql/src/Flow/PostgreSql/Protobuf/*
+        - src/bridge/symfony/postgresql-bundle/src/Flow/Bridge/Symfony/PostgreSqlBundle/Resources/config/*
+        - src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Integration/Command/*
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Resources/config/instrumentation/*
         - src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Unit/DependencyInjection/ConfigurationTest.php
         - src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Messenger/TracingMiddleware.php

@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Cursor;
 
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{DeclareCursorStmt, Node};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, SqlQuery};
+use Flow\PostgreSql\QueryBuilder\{AstToSql, Sql};
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 final class DeclareCursorBuilder implements DeclareCursorOptionsStep
@@ -29,9 +29,9 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return new self($cursorName, $node);
     }
 
-    public static function createFromSql(string $cursorName, string|SqlQuery $query) : DeclareCursorOptionsStep
+    public static function createFromSql(string $cursorName, string|Sql $query) : DeclareCursorOptionsStep
     {
-        $sql = $query instanceof SqlQuery ? $query->toSql() : $query;
+        $sql = $query instanceof Sql ? $query->toSql() : $query;
         $parser = new Parser();
         $parsed = $parser->parse($sql);
         $rawStmts = $parsed->raw()->getStmts();

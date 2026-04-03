@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Insert;
 
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 /**
  * Optimized bulk INSERT query builder for high-performance multi-row inserts.
@@ -15,7 +15,7 @@ use Flow\PostgreSql\QueryBuilder\SqlQuery;
  *
  * Uses PostgreSQL-style numbered placeholders ($1, $2, $3...).
  */
-final readonly class BulkInsert implements SqlQuery
+final readonly class BulkInsert implements Sql
 {
     /**
      * @param list<string> $columns

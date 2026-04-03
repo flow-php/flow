@@ -22,7 +22,7 @@ final class CatalogDiffTest extends TestCase
         $sqls = $diff->generate();
 
         self::assertCount(1, $sqls);
-        self::assertSame('CREATE SCHEMA audit', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS audit', $sqls[0]->toSql());
     }
 
     public function test_creates_added_schema_with_objects() : void
@@ -42,7 +42,7 @@ final class CatalogDiffTest extends TestCase
         $sqls = $diff->generate();
 
         self::assertGreaterThanOrEqual(3, \count($sqls));
-        self::assertSame('CREATE SCHEMA audit', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS audit', $sqls[0]->toSql());
         self::assertStringContainsString('CREATE SEQUENCE', $sqls[1]->toSql());
         self::assertStringContainsString('events_id_seq', $sqls[1]->toSql());
         self::assertStringContainsString('CREATE TABLE', $sqls[2]->toSql());
@@ -108,7 +108,7 @@ final class CatalogDiffTest extends TestCase
         $sqls = $diff->generate();
 
         self::assertCount(2, $sqls);
-        self::assertSame('CREATE SCHEMA new_schema', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS new_schema', $sqls[0]->toSql());
         self::assertSame('DROP SCHEMA old_schema CASCADE', $sqls[1]->toSql());
     }
 
@@ -168,7 +168,7 @@ final class CatalogDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertSame('CREATE SCHEMA new', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS new', $sqls[0]->toSql());
 
         $createTableIdx = null;
         $dropSchemaIdx = null;
@@ -225,7 +225,7 @@ final class CatalogDiffTest extends TestCase
         $sqls = $diff->generate();
 
         self::assertGreaterThanOrEqual(2, \count($sqls));
-        self::assertSame('CREATE SCHEMA audit', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS audit', $sqls[0]->toSql());
         self::assertStringContainsString('CREATE TABLE', $sqls[1]->toSql());
         self::assertStringContainsString('events', $sqls[1]->toSql());
     }
@@ -245,7 +245,7 @@ final class CatalogDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertSame('CREATE SCHEMA audit', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS audit', $sqls[0]->toSql());
         self::assertStringContainsString('CREATE SEQUENCE', $sqls[1]->toSql());
         self::assertStringContainsString('events_id_seq', $sqls[1]->toSql());
         self::assertStringContainsString('CREATE TABLE', $sqls[2]->toSql());
@@ -292,7 +292,7 @@ final class CatalogDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertSame('CREATE SCHEMA old', $sqls[0]->toSql());
+        self::assertSame('CREATE SCHEMA IF NOT EXISTS old', $sqls[0]->toSql());
 
         $dropTableIdx = null;
         $dropSchemaIdx = null;

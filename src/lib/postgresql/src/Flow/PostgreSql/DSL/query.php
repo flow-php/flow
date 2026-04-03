@@ -59,7 +59,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\{
 use Flow\PostgreSql\QueryBuilder\Factory\CopyFactory;
 use Flow\PostgreSql\QueryBuilder\Insert\{BulkInsert, InsertBuilder, InsertIntoStep};
 use Flow\PostgreSql\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
-use Flow\PostgreSql\QueryBuilder\{QualifiedIdentifier, SqlQuery};
+use Flow\PostgreSql\QueryBuilder\{QualifiedIdentifier, Sql};
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Select\{ParsedSelect, SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PostgreSql\QueryBuilder\Table\{
@@ -1105,10 +1105,10 @@ function rollback_prepared(string $transactionId) : PreparedTransactionFinalStep
  *   Produces: DECLARE my_cursor NO SCROLL CURSOR WITH HOLD FOR SELECT * FROM users WHERE active = true
  *
  * @param string $cursorName Unique cursor name
- * @param SelectFinalStep|SqlQuery|string $query Query to iterate over
+ * @param SelectFinalStep|Sql|string $query Query to iterate over
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function declare_cursor(string $cursorName, SelectFinalStep|string|SqlQuery $query) : DeclareCursorOptionsStep
+function declare_cursor(string $cursorName, SelectFinalStep|string|Sql $query) : DeclareCursorOptionsStep
 {
     if ($query instanceof SelectFinalStep) {
         return DeclareCursorBuilder::create($cursorName, $query);

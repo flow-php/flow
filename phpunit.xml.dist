@@ -96,10 +96,10 @@
             <directory>src/lib/postgresql/tests/Flow/PostgreSql/Tests/Integration</directory>
         </testsuite>
         <testsuite name="lib-postgresql-migrations-unit">
-            <directory>src/lib/postgresql-migrations/tests/Flow/PostgreSql/Migrations/Tests/Unit</directory>
+            <directory>src/lib/postgresql/tests/Flow/PostgreSql/Migrations/Tests/Unit</directory>
         </testsuite>
         <testsuite name="lib-postgresql-migrations-integration">
-            <directory>src/lib/postgresql-migrations/tests/Flow/PostgreSql/Migrations/Tests/Integration</directory>
+            <directory>src/lib/postgresql/tests/Flow/PostgreSql/Migrations/Tests/Integration</directory>
         </testsuite>
         <testsuite name="bridge-filesystem-azure-unit">
             <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Unit</directory>
@@ -148,6 +148,12 @@
         </testsuite>
         <testsuite name="bridge-symfony-http-foundation-telemetry-integration">
             <directory>src/bridge/symfony/http-foundation-telemetry/tests/Flow/Bridge/Symfony/HttpFoundationTelemetry/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-postgresql-bundle-unit">
+            <directory>src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-postgresql-bundle-integration">
+            <directory>src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Integration</directory>
         </testsuite>
         <testsuite name="bridge-symfony-telemetry-bundle-unit">
             <directory>src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Unit</directory>

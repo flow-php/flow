@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema;
 use Flow\PostgreSql\Protobuf\AST\{A_Const, Integer, Node, PBString, TypeName};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+/**
+ * @phpstan-type ColumnTypeShape = array{name: string, schema: ?string, precision: ?int, scale: ?int, is_array: bool}
+ */
 final readonly class ColumnType
 {
     private function __construct(
@@ -77,6 +80,20 @@ final readonly class ColumnType
     public static function doublePrecision() : self
     {
         return new self('float8', 'pg_catalog');
+    }
+
+    /**
+     * @param ColumnTypeShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            name: $data['name'],
+            schema: $data['schema'] ?? null,
+            precision: $data['precision'] ?? null,
+            scale: $data['scale'] ?? null,
+            isArray: $data['is_array'] ?? false,
+        );
     }
 
     public static function fromAst(TypeName $typeName) : self
@@ -237,11 +254,25 @@ final readonly class ColumnType
 
     public function isEqual(self $other) : bool
     {
-        return $this->name === $other->name
-            && $this->schema === $other->schema
+        return self::normalizedName($this->name) === self::normalizedName($other->name)
+            && $this->normalizedSchema() === $other->normalizedSchema()
             && $this->precision === $other->precision
             && $this->scale === $other->scale
             && $this->isArray === $other->isArray;
+    }
+
+    /**
+     * @return ColumnTypeShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'name' => $this->name,
+            'schema' => $this->normalizedSchema(),
+            'precision' => $this->precision,
+            'scale' => $this->scale,
+            'is_array' => $this->isArray,
+        ];
     }
 
     public function toAst() : TypeName
@@ -301,5 +332,27 @@ final readonly class ColumnType
         $node->setString($str);
 
         return $node;
+    }
+
+    private function normalizedSchema() : ?string
+    {
+        if ($this->schema === 'pg_catalog') {
+            return null;
+        }
+
+        return $this->schema;
+    }
+
+    /**
+     * Serial types are syntactic sugar — PostgreSQL stores them as their base integer types.
+     */
+    private static function normalizedName(string $name) : string
+    {
+        return match ($name) {
+            'bigserial' => 'int8',
+            'serial' => 'int4',
+            'smallserial' => 'int2',
+            default => $name,
+        };
     }
 }

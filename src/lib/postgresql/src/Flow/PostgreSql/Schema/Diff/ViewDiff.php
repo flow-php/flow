@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 use function Flow\PostgreSql\DSL\{create, parsed_select};
 
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\View;
 
 final readonly class ViewDiff implements Diff
@@ -18,7 +18,7 @@ final readonly class ViewDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {

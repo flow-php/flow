@@ -10,7 +10,7 @@ use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Domain;
 
@@ -29,7 +29,7 @@ final readonly class DomainDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {

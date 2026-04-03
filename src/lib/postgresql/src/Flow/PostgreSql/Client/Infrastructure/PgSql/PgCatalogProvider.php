@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
-use function Flow\PostgreSql\DSL\{agg, and_, any_, asc, case_when, cast, col, concat, eq, func, gt, in_, is_true, literal, ne, not_, not_like, param, select, sub_select, table, type_mapper, when};
+use function Flow\PostgreSql\DSL\{agg, and_, any_, asc, case_when, cast, col, concat, eq, func, gt, in_, is_null, is_true, literal, ne, not_, not_like, param, select, sub_select, table, type_mapper, when};
 
 use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string, type_structure, type_union};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Parser\ColumnTypeParser;
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Parser\{ColumnTypeParser, ExpressionParser};
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
@@ -20,14 +21,19 @@ final readonly class PgCatalogProvider implements CatalogProvider
 {
     private ColumnTypeParser $columnTypeParser;
 
+    private ExpressionParser $expressionParser;
+
     /**
      * @param ?list<string> $schemaNames
+     * @param list<string> $excludeTables
      */
     public function __construct(
         private Client $client,
         private ?array $schemaNames = null,
+        private array $excludeTables = [],
     ) {
         $this->columnTypeParser = new ColumnTypeParser();
+        $this->expressionParser = new ExpressionParser(new Parser());
     }
 
     public function get() : Catalog
@@ -49,6 +55,55 @@ final readonly class PgCatalogProvider implements CatalogProvider
     private function mapReferentialAction(string $code) : ReferentialAction
     {
         return ReferentialAction::tryFrom($code) ?? ReferentialAction::NO_ACTION;
+    }
+
+    /**
+     * Strip implicit type casts from default values that PostgreSQL adds for storage.
+     *
+     * PostgreSQL stores `'pending'` as `'pending'::character varying` — the cast is implicit
+     * and redundant since the column type is already known. This method parses the expression
+     * and removes the outer TypeCast when it wraps a simple constant.
+     */
+    private function normalizeDefault(?string $default) : ?string
+    {
+        if ($default === null) {
+            return null;
+        }
+
+        $node = $this->expressionParser->parse($default);
+        $typeCast = $node->getTypeCast();
+
+        if ($typeCast === null) {
+            return $default;
+        }
+
+        $inner = $typeCast->getArg();
+
+        if ($inner === null || $inner->getAConst() === null) {
+            return $default;
+        }
+
+        $aConst = $inner->getAConst();
+        $sval = $aConst->getSval();
+
+        if ($sval !== null) {
+            return "'" . \str_replace("'", "''", $sval->getSval()) . "'";
+        }
+
+        $ival = $aConst->getIval();
+
+        if ($ival !== null) {
+            /** @phpstan-ignore method.nonObject */
+            return (string) $ival->getIval();
+        }
+
+        $fval = $aConst->getFval();
+
+        if ($fval !== null) {
+            return $fval->getFval();
+        }
+
+        return $default;
     }
 
     /**
@@ -184,15 +239,17 @@ final readonly class PgCatalogProvider implements CatalogProvider
             $isIdentity = $row['identity'] !== '';
             $isGenerated = $row['generated'] !== '';
 
+            $defaultValue = $row['default_value'] ?? null;
+
             $columns[] = new Column(
                 $row['name'],
                 $this->columnTypeParser->parse($row['type_name']),
                 $row['nullable'],
-                $isGenerated ? null : ($row['default_value'] ?? null),
+                $isGenerated ? null : $this->normalizeDefault($defaultValue),
                 $isIdentity,
                 $isIdentity ? IdentityGeneration::from($row['identity']) : null,
                 $isGenerated,
-                $isGenerated ? ($row['default_value'] ?? null) : null,
+                $isGenerated ? $this->normalizeDefault($defaultValue) : null,
                 $row['ordinal_position'],
             );
         }
@@ -517,10 +574,15 @@ final readonly class PgCatalogProvider implements CatalogProvider
                     eq(col('attrelid', 'a'), col('oid', 't')),
                     any_(col('attnum', 'a'), ComparisonOperator::EQ, col('indkey', 'ix')),
                 ))
+                ->leftJoin(
+                    table('pg_constraint', 'pg_catalog')->as('con'),
+                    eq(col('conindid', 'con'), col('indexrelid', 'ix')),
+                )
                 ->where(and_(
                     eq(col('relname', 't'), param(1)),
                     eq(col('nspname', 'n'), param(2)),
                     gt(col('attnum', 'a'), literal(0)),
+                    is_null(col('conindid', 'con')),
                 ))
                 ->groupBy(
                     col('relname', 'i'),
@@ -801,6 +863,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $sequences = [];
 
         foreach ($rows as $row) {
+            if (($row['owned_by_table'] ?? null) !== null) {
+                continue;
+            }
+
             $sequences[] = new Sequence(
                 $row['name'],
                 $row['data_type'],
@@ -810,8 +876,8 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $row['increment_by'],
                 $row['cycle'],
                 $row['cache_value'],
-                $row['owned_by_table'] ?? null,
-                $row['owned_by_column'] ?? null,
+                null,
+                null,
             );
         }
 
@@ -853,6 +919,18 @@ final readonly class PgCatalogProvider implements CatalogProvider
      */
     private function readTableNames(string $schemaName) : array
     {
+        $conditions = and_(
+            eq(col('nspname', 'n'), param(1)),
+            in_(col('relkind', 'c'), [literal('r'), literal('p')]),
+        );
+
+        if ($this->excludeTables !== []) {
+            $conditions = and_(
+                $conditions,
+                not_(in_(col('relname', 'c'), \array_map(static fn (string $t) : Literal => literal($t), $this->excludeTables))),
+            );
+        }
+
         return \array_values($this->client->fetchAllInto(
             type_mapper(type_structure([
                 'relname' => type_string(),
@@ -873,10 +951,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_class', 'pg_catalog')->as('c'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
                 ->leftJoin(table('pg_tablespace', 'pg_catalog')->as('ts'), eq(col('oid', 'ts'), col('reltablespace', 'c')))
-                ->where(and_(
-                    eq(col('nspname', 'n'), param(1)),
-                    in_(col('relkind', 'c'), [literal('r'), literal('p')]),
-                ))
+                ->where($conditions)
                 ->orderBy(asc(col('relname', 'c'))),
             [$schemaName],
         ));

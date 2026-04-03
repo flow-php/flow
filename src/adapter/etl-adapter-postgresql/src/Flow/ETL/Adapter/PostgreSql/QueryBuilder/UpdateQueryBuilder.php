@@ -9,7 +9,7 @@ use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\UpdateOptions};
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\{Row, Row\Entry};
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final readonly class UpdateQueryBuilder
 {
@@ -20,7 +20,7 @@ final readonly class UpdateQueryBuilder
     }
 
     /**
-     * @return array{null|SqlQuery, list<null|TypedValue>}
+     * @return array{null|Sql, list<null|TypedValue>}
      */
     public function build(Row $row, UpdateOptions $options) : array
     {

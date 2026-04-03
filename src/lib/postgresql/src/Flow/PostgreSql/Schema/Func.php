@@ -7,8 +7,11 @@ namespace Flow\PostgreSql\Schema;
 use function Flow\PostgreSql\DSL\{column_type_from_string, create};
 
 use Flow\PostgreSql\QueryBuilder\Schema\Function\FunctionArgument;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
+/**
+ * @phpstan-type FuncShape = array{name: string, return_type: string, argument_types: list<string>, language: string, definition: ?string, is_strict: bool, volatility: ?string}
+ */
 final readonly class Func
 {
     /**
@@ -25,7 +28,39 @@ final readonly class Func
     ) {
     }
 
-    public function toSql() : ?SqlQuery
+    /**
+     * @param FuncShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            name: $data['name'],
+            returnType: $data['return_type'],
+            argumentTypes: $data['argument_types'] ?? [],
+            language: $data['language'] ?? 'sql',
+            definition: $data['definition'] ?? null,
+            isStrict: $data['is_strict'] ?? false,
+            volatility: array_key_exists('volatility', $data) && $data['volatility'] !== null ? FunctionVolatility::from($data['volatility']) : null,
+        );
+    }
+
+    /**
+     * @return FuncShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'name' => $this->name,
+            'return_type' => $this->returnType,
+            'argument_types' => $this->argumentTypes,
+            'language' => $this->language,
+            'definition' => $this->definition,
+            'is_strict' => $this->isStrict,
+            'volatility' => $this->volatility?->value,
+        ];
+    }
+
+    public function toSql() : ?Sql
     {
         if ($this->definition === null) {
             return null;

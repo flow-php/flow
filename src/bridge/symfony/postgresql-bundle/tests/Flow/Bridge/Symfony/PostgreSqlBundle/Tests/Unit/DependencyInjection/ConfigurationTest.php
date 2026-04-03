@@ -1,0 +1,272 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\DependencyInjection;
+
+use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Configuration;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Config\Definition\Processor;
+
+final class ConfigurationTest extends TestCase
+{
+    public function test_catalog_providers_at_top_level_with_inline_catalog() : void
+    {
+        $catalogData = [
+            'schemas' => [
+                [
+                    'name' => 'public',
+                    'tables' => [
+                        [
+                            'name' => 'users',
+                            'columns' => [
+                                ['name' => 'id', 'type' => ['name' => 'int4', 'schema' => 'pg_catalog'], 'nullable' => false],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+            'migrations' => [
+                'enabled' => true,
+            ],
+            'catalog_providers' => [
+                ['catalog' => $catalogData],
+            ],
+        ]]);
+
+        self::assertCount(1, $config['catalog_providers']);
+        self::assertSame($catalogData, $config['catalog_providers'][0]['catalog']);
+    }
+
+    public function test_catalog_providers_at_top_level_with_service_reference() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'directory' => '/custom/migrations',
+                'namespace' => 'Custom\\Migrations',
+                'table_name' => 'custom_migrations',
+                'table_schema' => 'custom',
+            ],
+            'catalog_providers' => [
+                ['catalog_provider_id' => 'app.catalog_provider'],
+            ],
+        ]]);
+
+        self::assertSame('app.catalog_provider', $config['catalog_providers'][0]['catalog_provider_id']);
+        self::assertSame('/custom/migrations', $config['migrations']['directory']);
+        self::assertSame('Custom\\Migrations', $config['migrations']['namespace']);
+        self::assertSame('custom_migrations', $config['migrations']['table_name']);
+        self::assertSame('custom', $config['migrations']['table_schema']);
+    }
+
+    public function test_catalog_providers_multiple_entries() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+            'catalog_providers' => [
+                ['catalog' => ['schemas' => []]],
+                ['catalog_provider_id' => 'app.second_provider'],
+            ],
+        ]]);
+
+        self::assertCount(2, $config['catalog_providers']);
+        self::assertSame('app.second_provider', $config['catalog_providers'][1]['catalog_provider_id']);
+    }
+
+    public function test_connections_requires_at_least_one_element() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [],
+        ]]);
+    }
+
+    public function test_dsn_is_required() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [],
+            ],
+        ]]);
+    }
+
+    public function test_migrations_default_values() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+            'migrations' => [
+                'enabled' => true,
+            ],
+        ]]);
+
+        self::assertSame('%kernel.project_dir%/migrations', $config['migrations']['directory']);
+        self::assertSame('App\\Migrations', $config['migrations']['namespace']);
+        self::assertSame('flow_migrations', $config['migrations']['table_name']);
+        self::assertSame('public', $config['migrations']['table_schema']);
+        self::assertFalse($config['migrations']['all_or_nothing']);
+        self::assertTrue($config['migrations']['generate_rollback']);
+    }
+
+    public function test_migrations_enabled_without_catalog_providers_is_valid_at_config_level() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+            'migrations' => [
+                'enabled' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['migrations']['enabled']);
+    }
+
+    public function test_multiple_connections() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db1',
+                ],
+                'analytics' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db2',
+                ],
+            ],
+        ]]);
+
+        self::assertArrayHasKey('default', $config['connections']);
+        self::assertArrayHasKey('analytics', $config['connections']);
+        self::assertSame('postgresql://user:pass@localhost:5432/db1', $config['connections']['default']['dsn']);
+        self::assertSame('postgresql://user:pass@localhost:5432/db2', $config['connections']['analytics']['dsn']);
+    }
+
+    public function test_single_connection_with_defaults() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('postgresql://user:pass@localhost:5432/db', $config['connections']['default']['dsn']);
+        self::assertFalse($config['migrations']['enabled']);
+    }
+
+    public function test_telemetry_not_present_by_default() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+        ]]);
+
+        self::assertArrayNotHasKey('telemetry', $config['connections']['default']);
+    }
+
+    public function test_telemetry_requires_service_id() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'telemetry' => [],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_telemetry_with_custom_options() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'telemetry' => [
+                        'service_id' => 'my.telemetry',
+                        'clock_service_id' => 'my.clock',
+                        'trace_queries' => false,
+                        'trace_transactions' => false,
+                        'collect_metrics' => false,
+                        'log_queries' => true,
+                        'max_query_length' => 500,
+                        'include_parameters' => true,
+                        'max_parameters' => 5,
+                        'max_parameter_length' => 50,
+                    ],
+                ],
+            ],
+        ]]);
+
+        $telemetry = $config['connections']['default']['telemetry'];
+        self::assertSame('my.telemetry', $telemetry['service_id']);
+        self::assertSame('my.clock', $telemetry['clock_service_id']);
+        self::assertFalse($telemetry['trace_queries']);
+        self::assertFalse($telemetry['trace_transactions']);
+        self::assertFalse($telemetry['collect_metrics']);
+        self::assertTrue($telemetry['log_queries']);
+        self::assertSame(500, $telemetry['max_query_length']);
+        self::assertTrue($telemetry['include_parameters']);
+        self::assertSame(5, $telemetry['max_parameters']);
+        self::assertSame(50, $telemetry['max_parameter_length']);
+    }
+
+    public function test_telemetry_with_defaults() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'telemetry' => [
+                        'service_id' => 'flow.telemetry',
+                    ],
+                ],
+            ],
+        ]]);
+
+        $telemetry = $config['connections']['default']['telemetry'];
+        self::assertSame('flow.telemetry', $telemetry['service_id']);
+        self::assertNull($telemetry['clock_service_id']);
+        self::assertTrue($telemetry['trace_queries']);
+        self::assertTrue($telemetry['trace_transactions']);
+        self::assertTrue($telemetry['collect_metrics']);
+        self::assertFalse($telemetry['log_queries']);
+        self::assertSame(1000, $telemetry['max_query_length']);
+        self::assertFalse($telemetry['include_parameters']);
+        self::assertSame(10, $telemetry['max_parameters']);
+        self::assertSame(100, $telemetry['max_parameter_length']);
+    }
+}

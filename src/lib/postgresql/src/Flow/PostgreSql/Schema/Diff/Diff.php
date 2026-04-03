@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface Diff
 {
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array;
 }

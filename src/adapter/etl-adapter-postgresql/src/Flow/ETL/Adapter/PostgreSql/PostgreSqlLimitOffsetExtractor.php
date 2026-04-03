@@ -10,7 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final class PostgreSqlLimitOffsetExtractor implements Extractor
 {
@@ -25,7 +25,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
      */
     public function __construct(
         private readonly Client $client,
-        private readonly string|SqlQuery $query,
+        private readonly string|Sql $query,
         private readonly array $parameters = [],
     ) {
     }
@@ -33,7 +33,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         $uri = 'postgresql://limit-offset';
-        $sql = $this->query instanceof SqlQuery ? $this->query->toSql() : $this->query;
+        $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
         if (!sql_query_order_by(sql_parse($sql))->hasOrderBy()) {
             throw new InvalidArgumentException(

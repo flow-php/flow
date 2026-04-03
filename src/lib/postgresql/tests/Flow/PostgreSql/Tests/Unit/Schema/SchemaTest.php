@@ -219,6 +219,93 @@ final class SchemaTest extends TestCase
         self::assertFalse($schema->hasTable('missing'));
     }
 
+    public function test_merge_empty_schemas() : void
+    {
+        $result = schema('public')->merge(schema('public'));
+
+        self::assertSame('public', $result->name);
+        self::assertSame([], $result->tables);
+        self::assertSame([], $result->sequences);
+        self::assertSame([], $result->views);
+        self::assertSame([], $result->materializedViews);
+        self::assertSame([], $result->functions);
+        self::assertSame([], $result->procedures);
+        self::assertSame([], $result->domains);
+        self::assertSame([], $result->extensions);
+    }
+
+    public function test_merge_schemas_preserves_all_entity_types() : void
+    {
+        $first = schema(
+            'public',
+            tables: [schema_table('users', [schema_column_integer('id', nullable: false)])],
+            sequences: [schema_sequence('seq_a')],
+            extensions: [schema_extension('pgcrypto')],
+        );
+        $second = schema(
+            'public',
+            views: [schema_view('active_users', select(star())->from(table('users'))->toSql())],
+            sequences: [schema_sequence('seq_b')],
+        );
+
+        $result = $first->merge($second);
+
+        self::assertCount(1, $result->tables);
+        self::assertCount(2, $result->sequences);
+        self::assertCount(1, $result->views);
+        self::assertCount(1, $result->extensions);
+    }
+
+    public function test_merge_schemas_same_sequence_later_overrides() : void
+    {
+        $first = schema('public', sequences: [
+            schema_sequence('my_seq', dataType: 'integer', startValue: 1),
+        ]);
+        $second = schema('public', sequences: [
+            schema_sequence('my_seq', dataType: 'bigint', startValue: 100),
+        ]);
+
+        $result = $first->merge($second);
+
+        self::assertCount(1, $result->sequences);
+        self::assertSame('bigint', $result->sequence('my_seq')->dataType);
+        self::assertSame(100, $result->sequence('my_seq')->startValue);
+    }
+
+    public function test_merge_schemas_same_table_later_overrides() : void
+    {
+        $first = schema('public', tables: [
+            schema_table('users', [schema_column_integer('id', nullable: false)]),
+        ]);
+        $second = schema('public', tables: [
+            schema_table('users', [
+                schema_column_integer('id', nullable: false),
+                schema_column_text('name'),
+            ]),
+        ]);
+
+        $result = $first->merge($second);
+
+        self::assertCount(2, $result->table('users')->columns);
+        self::assertSame('name', $result->table('users')->columns[1]->name);
+    }
+
+    public function test_merge_schemas_with_different_tables() : void
+    {
+        $first = schema('public', tables: [
+            schema_table('users', [schema_column_integer('id', nullable: false)]),
+        ]);
+        $second = schema('public', tables: [
+            schema_table('posts', [schema_column_integer('id', nullable: false)]),
+        ]);
+
+        $result = $first->merge($second);
+
+        self::assertSame('public', $result->name);
+        self::assertTrue($result->hasTable('users'));
+        self::assertTrue($result->hasTable('posts'));
+    }
+
     public function test_schema_column_type_shortcuts_all_types() : void
     {
         $table = schema_table('all_types', [

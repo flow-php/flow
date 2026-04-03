@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
 use Flow\PostgreSql\Protobuf\AST\AlterEnumStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface AlterEnumTypeFinalStep extends SqlQuery
+interface AlterEnumTypeFinalStep extends Sql
 {
     public function ifNotExists() : self;
 

@@ -9,7 +9,7 @@ use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\InsertOptions};
 use Flow\ETL\{Row\Entry, Rows};
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final readonly class InsertQueryBuilder
 {
@@ -20,7 +20,7 @@ final readonly class InsertQueryBuilder
     }
 
     /**
-     * @return array{SqlQuery, list<null|TypedValue>}
+     * @return array{Sql, list<null|TypedValue>}
      */
     public function build(Rows $rows, ?InsertOptions $options = null) : array
     {

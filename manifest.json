@@ -152,11 +152,6 @@
       "type": "lib"
     },
     {
-      "name": "flow-php/postgresql-migrations",
-      "path": "src/lib/postgresql-migrations",
-      "type": "lib"
-    },
-    {
       "name": "flow-php/phpunit-telemetry-bridge",
       "path": "src/bridge/phpunit/telemetry",
       "type": "bridge"
@@ -184,6 +179,11 @@
     {
       "name": "flow-php/symfony-http-foundation-telemetry-bridge",
       "path": "src/bridge/symfony/http-foundation-telemetry",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/symfony-postgresql-bundle",
+      "path": "src/bridge/symfony/postgresql-bundle",
       "type": "bridge"
     },
     {

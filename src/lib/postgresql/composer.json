@@ -43,7 +43,8 @@
             "src/Flow/PostgreSql/DSL/parser.php",
             "src/Flow/PostgreSql/DSL/query.php",
             "src/Flow/PostgreSql/DSL/schema.php",
-            "src/stubs.php"
+            "src/stubs.php",
+            "src/Flow/PostgreSql/Migrations/DSL/functions.php"
         ]
     },
     "autoload-dev": {

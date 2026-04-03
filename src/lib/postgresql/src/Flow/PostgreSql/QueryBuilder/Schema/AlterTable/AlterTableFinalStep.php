@@ -8,9 +8,9 @@ use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface AlterTableFinalStep extends SqlQuery
+interface AlterTableFinalStep extends Sql
 {
     public function addColumn(ColumnDefinition $column) : self;
 

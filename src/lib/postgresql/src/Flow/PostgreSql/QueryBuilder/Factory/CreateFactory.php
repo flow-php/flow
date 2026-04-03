@@ -8,6 +8,7 @@ use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\CreateSequence\{CreateSequenceBuilder, CreateSequenceOptionsStep};
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep, CreateTemporaryTableColumnsStep};
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
+use Flow\PostgreSql\QueryBuilder\Schema\Database\{CreateDatabaseBuilder, CreateDatabaseOptionsStep};
 use Flow\PostgreSql\QueryBuilder\Schema\Domain\{CreateDomainBuilder, CreateDomainTypeStep};
 use Flow\PostgreSql\QueryBuilder\Schema\Extension\{CreateExtensionBuilder, CreateExtensionOptionsStep};
 use Flow\PostgreSql\QueryBuilder\Schema\Function\{CreateFunctionArgsStep, CreateFunctionBuilder, CreateProcedureArgsStep, CreateProcedureBuilder};
@@ -26,6 +27,11 @@ final readonly class CreateFactory
     public function compositeType(string $name) : CreateCompositeTypeAttributesStep
     {
         return CreateCompositeTypeBuilder::create($name);
+    }
+
+    public function database(string $name) : CreateDatabaseOptionsStep
+    {
+        return CreateDatabaseBuilder::create($name);
     }
 
     public function domain(string $name) : CreateDomainTypeStep

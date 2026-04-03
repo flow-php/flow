@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Factory;
 
+use Flow\PostgreSql\QueryBuilder\Schema\Database\{DropDatabaseBuilder, DropDatabaseFinalStep};
 use Flow\PostgreSql\QueryBuilder\Schema\Domain\{DropDomainBuilder, DropDomainFinalStep};
 use Flow\PostgreSql\QueryBuilder\Schema\DropSequence\{DropSequenceBuilder, DropSequenceFinalStep};
 use Flow\PostgreSql\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
@@ -21,6 +22,11 @@ use Flow\PostgreSql\QueryBuilder\Schema\View\DropView\{DropViewBuilder, DropView
 
 final readonly class DropFactory
 {
+    public function database(string $name) : DropDatabaseFinalStep
+    {
+        return DropDatabaseBuilder::create($name);
+    }
+
     public function domain(string ...$domains) : DropDomainFinalStep
     {
         return DropDomainBuilder::create(...$domains);

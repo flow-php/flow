@@ -8,7 +8,7 @@ use Flow\ETL\Adapter\PostgreSql\LoaderOptions\{DeleteOptions, InsertOptions, Upd
 use Flow\ETL\Adapter\PostgreSql\Pagination\{Key, KeySet, Order};
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 /**
  * Create a PostgreSQL cursor extractor using server-side cursors for memory-efficient extraction.
@@ -19,13 +19,13 @@ use Flow\PostgreSql\QueryBuilder\SqlQuery;
  * Note: Requires a transaction context (auto-started if not in one).
  *
  * @param Client $client PostgreSQL client
- * @param SqlQuery|string $query SQL query to execute (wrapped in DECLARE CURSOR)
+ * @param Sql|string $query SQL query to execute (wrapped in DECLARE CURSOR)
  * @param array<int, mixed> $parameters Positional parameters for the query
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_cursor(
     Client $client,
-    string|SqlQuery $query,
+    string|Sql $query,
     array $parameters = [],
 ) : PostgreSqlCursorExtractor {
     return new PostgreSqlCursorExtractor($client, $query, $parameters);
@@ -38,13 +38,13 @@ function from_pgsql_cursor(
  * (from_pgsql_key_set) which is more efficient.
  *
  * @param Client $client PostgreSQL client
- * @param SqlQuery|string $query SQL query to execute (must have ORDER BY clause)
+ * @param Sql|string $query SQL query to execute (must have ORDER BY clause)
  * @param array<int, mixed> $parameters Positional parameters for the query
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_limit_offset(
     Client $client,
-    string|SqlQuery $query,
+    string|Sql $query,
     array $parameters = [],
 ) : PostgreSqlLimitOffsetExtractor {
     return new PostgreSqlLimitOffsetExtractor($client, $query, $parameters);
@@ -57,14 +57,14 @@ function from_pgsql_limit_offset(
  * instead of skipping rows.
  *
  * @param Client $client PostgreSQL client
- * @param SqlQuery|string $query SQL query to execute (must have ORDER BY matching keyset columns)
+ * @param Sql|string $query SQL query to execute (must have ORDER BY matching keyset columns)
  * @param KeySet $keySet Columns to use for keyset pagination
  * @param array<int, mixed> $parameters Positional parameters for the query
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_key_set(
     Client $client,
-    string|SqlQuery $query,
+    string|Sql $query,
     KeySet $keySet,
     array $parameters = [],
 ) : PostgreSqlKeySetExtractor {

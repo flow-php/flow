@@ -8,7 +8,7 @@ use function Flow\PostgreSql\DSL\{create, drop, parsed_select};
 use Flow\PostgreSql\Parser;
 
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\{Catalog, ExecutionOrderStrategy, ForeignKeyDependencyOrder, IndexMethod, MaterializedView, MaterializedViewDependencyOrder, Schema, View, ViewDependencyOrder};
 use Flow\PostgreSql\Schema\Table;
 
@@ -36,14 +36,14 @@ final readonly class CatalogDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {
         $sqls = [];
 
         foreach ($this->addedSchemas as $schema) {
-            $sqls[] = create()->schema($schema->name);
+            $sqls[] = create()->schema($schema->name)->ifNotExists();
             $sqls = [...$sqls, ...$schema->toSql($this->tableOrderStrategy, $this->viewOrderStrategy, $this->materializedViewOrderStrategy)];
         }
 

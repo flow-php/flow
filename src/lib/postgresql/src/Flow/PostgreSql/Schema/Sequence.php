@@ -6,8 +6,11 @@ namespace Flow\PostgreSql\Schema;
 
 use function Flow\PostgreSql\DSL\create;
 
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
+/**
+ * @phpstan-type SequenceShape = array{name: string, data_type: string, start_value: int|string, min_value: int|string, max_value: null|int|string, increment_by: int|string, cycle: bool, cache_value: int|string, owned_by_table: ?string, owned_by_column: ?string}
+ */
 final readonly class Sequence
 {
     public function __construct(
@@ -24,7 +27,45 @@ final readonly class Sequence
     ) {
     }
 
-    public function toSql() : SqlQuery
+    /**
+     * @param SequenceShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            name: $data['name'],
+            dataType: $data['data_type'] ?? 'bigint',
+            startValue: $data['start_value'] ?? 1,
+            minValue: $data['min_value'] ?? 1,
+            maxValue: $data['max_value'] ?? null,
+            incrementBy: $data['increment_by'] ?? 1,
+            cycle: $data['cycle'] ?? false,
+            cacheValue: $data['cache_value'] ?? 1,
+            ownedByTable: $data['owned_by_table'] ?? null,
+            ownedByColumn: $data['owned_by_column'] ?? null,
+        );
+    }
+
+    /**
+     * @return SequenceShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'name' => $this->name,
+            'data_type' => $this->dataType,
+            'start_value' => $this->startValue,
+            'min_value' => $this->minValue,
+            'max_value' => $this->maxValue,
+            'increment_by' => $this->incrementBy,
+            'cycle' => $this->cycle,
+            'cache_value' => $this->cacheValue,
+            'owned_by_table' => $this->ownedByTable,
+            'owned_by_column' => $this->ownedByColumn,
+        ];
+    }
+
+    public function toSql() : Sql
     {
         $builder = create()->sequence($this->name)
             ->asType($this->dataType)

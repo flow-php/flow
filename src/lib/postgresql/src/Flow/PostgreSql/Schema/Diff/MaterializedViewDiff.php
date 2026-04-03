@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 use function Flow\PostgreSql\DSL\{create, drop};
 
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\{Index, IndexMethod, MaterializedView};
 
 final readonly class MaterializedViewDiff implements Diff
@@ -25,7 +25,7 @@ final readonly class MaterializedViewDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {

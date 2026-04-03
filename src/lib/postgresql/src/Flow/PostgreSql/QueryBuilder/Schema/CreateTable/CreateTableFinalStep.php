@@ -6,9 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTable;
 
 use Flow\PostgreSql\Protobuf\AST\CreateStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface CreateTableFinalStep extends SqlQuery
+interface CreateTableFinalStep extends Sql
 {
     public function constraint(TableConstraint $constraint) : self;
 

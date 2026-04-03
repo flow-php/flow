@@ -9,7 +9,7 @@ use function Flow\PostgreSql\DSL\{alter, column};
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\{Column, IdentityGeneration};
 
 final readonly class ColumnDiff implements Diff
@@ -22,7 +22,7 @@ final readonly class ColumnDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {

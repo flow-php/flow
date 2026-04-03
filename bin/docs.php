@@ -65,7 +65,7 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/condition.php',
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/parser.php',
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/client.php',
-            __DIR__ . '/../src/lib/postgresql-migrations/src/Flow/PostgreSql/Migrations/DSL/functions.php',
+            __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/Migrations/DSL/functions.php',
             __DIR__ . '/../src/lib/telemetry/src/Flow/Telemetry/DSL/functions.php',
             __DIR__ . '/../src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php',
             __DIR__ . '/../src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php',

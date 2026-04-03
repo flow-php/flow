@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterView;
 
 use Flow\PostgreSql\Protobuf\AST\AlterObjectSchemaStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface AlterViewSchemaFinalStep extends SqlQuery
+interface AlterViewSchemaFinalStep extends Sql
 {
     public function toAst() : AlterObjectSchemaStmt;
 

@@ -8,7 +8,7 @@ use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\{QueryException, TransactionException};
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface Client
 {
@@ -43,60 +43,60 @@ interface Client
      * Memory efficient - rows are fetched one at a time.
      * Use cursor->map() to map rows to objects.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function cursor(SqlQuery|string $sql, array $parameters = []) : Cursor;
+    public function cursor(Sql|string $sql, array $parameters = []) : Cursor;
 
     /**
      * Execute a statement that modifies data (INSERT, UPDATE, DELETE).
      * Returns the number of affected rows.
      *
-     * @param SqlQuery|string $sql SQL statement or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL statement or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function execute(SqlQuery|string $sql, array $parameters = []) : int;
+    public function execute(Sql|string $sql, array $parameters = []) : int;
 
     /**
      * Execute EXPLAIN ANALYZE on a query and return the execution plan.
      * Useful for analyzing query performance.
      *
-     * @param SqlQuery|string $sql SQL query to explain
+     * @param Sql|string $sql SQL query to explain
      * @param array<int, mixed> $parameters Positional parameters
      * @param null|ExplainConfig $config EXPLAIN configuration (defaults to forAnalysis())
      *
      * @throws QueryException
      */
-    public function explain(SqlQuery|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan;
+    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan;
 
     /**
      * Fetch the first row from query result.
      * Returns null if no rows found.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      *
      * @return null|array<string, mixed>
      */
-    public function fetch(SqlQuery|string $sql, array $parameters = []) : ?array;
+    public function fetch(Sql|string $sql, array $parameters = []) : ?array;
 
     /**
      * Fetch all rows from query result.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      *
      * @return array<int, array<string, mixed>>
      */
-    public function fetchAll(SqlQuery|string $sql, array $parameters = []) : array;
+    public function fetchAll(Sql|string $sql, array $parameters = []) : array;
 
     /**
      * Fetch all rows and map using the provided mapper.
@@ -104,7 +104,7 @@ interface Client
      * @template T
      *
      * @param RowMapper<T> $mapper Mapper to apply to each row
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
@@ -113,7 +113,7 @@ interface Client
      */
     public function fetchAllInto(
         RowMapper $mapper,
-        SqlQuery|string $sql,
+        Sql|string $sql,
         array $parameters = [],
     ) : array;
 
@@ -124,7 +124,7 @@ interface Client
      * @template T
      *
      * @param RowMapper<T> $mapper Mapper to apply to the row
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
@@ -133,7 +133,7 @@ interface Client
      */
     public function fetchInto(
         RowMapper $mapper,
-        SqlQuery|string $sql,
+        Sql|string $sql,
         array $parameters = [],
     ) : mixed;
 
@@ -141,14 +141,14 @@ interface Client
      * Fetch exactly one row. Throws if result has 0 or more than 1 row.
      * Use when you expect precisely one result (e.g., SELECT by primary key).
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException When row count is not exactly 1
      *
      * @return array<string, mixed>
      */
-    public function fetchOne(SqlQuery|string $sql, array $parameters = []) : array;
+    public function fetchOne(Sql|string $sql, array $parameters = []) : array;
 
     /**
      * Fetch exactly one row and map using the provided mapper.
@@ -157,7 +157,7 @@ interface Client
      * @template T
      *
      * @param RowMapper<T> $mapper Mapper to apply to the row
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException When row count is not exactly 1
@@ -166,7 +166,7 @@ interface Client
      */
     public function fetchOneInto(
         RowMapper $mapper,
-        SqlQuery|string $sql,
+        Sql|string $sql,
         array $parameters = [],
     ) : mixed;
 
@@ -174,53 +174,53 @@ interface Client
      * Fetch a single scalar value from the first column of first row.
      * Ideal for COUNT(*), MAX(), MIN(), etc.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function fetchScalar(SqlQuery|string $sql, array $parameters = []) : mixed;
+    public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed;
 
     /**
      * Fetch a single boolean value from the first column of first row.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function fetchScalarBool(SqlQuery|string $sql, array $parameters = []) : bool;
+    public function fetchScalarBool(Sql|string $sql, array $parameters = []) : bool;
 
     /**
      * Fetch a single float value from the first column of first row.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function fetchScalarFloat(SqlQuery|string $sql, array $parameters = []) : float;
+    public function fetchScalarFloat(Sql|string $sql, array $parameters = []) : float;
 
     /**
      * Fetch a single integer value from the first column of first row.
      * Ideal for COUNT(*), MAX(), MIN(), etc.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function fetchScalarInt(SqlQuery|string $sql, array $parameters = []) : int;
+    public function fetchScalarInt(Sql|string $sql, array $parameters = []) : int;
 
     /**
      * Fetch a single string value from the first column of first row.
      *
-     * @param SqlQuery|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
      * @throws QueryException
      */
-    public function fetchScalarString(SqlQuery|string $sql, array $parameters = []) : string;
+    public function fetchScalarString(Sql|string $sql, array $parameters = []) : string;
 
     /**
      * Get the current transaction nesting level.

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Update;
 
 use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 /**
  * Terminal interface for UPDATE query builder.
  */
-interface UpdateFinalStep extends SqlQuery
+interface UpdateFinalStep extends Sql
 {
     /**
      * Convert this UPDATE query to protobuf AST.

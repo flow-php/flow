@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Constraint;
 
+/**
+ * @phpstan-type UniqueConstraintShape = array{columns: non-empty-list<string>, name: ?string, nulls_not_distinct: bool}
+ */
 final readonly class UniqueConstraint
 {
     /**
@@ -14,6 +17,18 @@ final readonly class UniqueConstraint
         public ?string $name = null,
         public bool $nullsNotDistinct = false,
     ) {
+    }
+
+    /**
+     * @param UniqueConstraintShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            columns: $data['columns'],
+            name: $data['name'] ?? null,
+            nullsNotDistinct: $data['nulls_not_distinct'] ?? false,
+        );
     }
 
     public function isEqual(self $other) : bool
@@ -29,5 +44,17 @@ final readonly class UniqueConstraint
         \sort($bCols);
 
         return $aCols === $bCols && $this->nullsNotDistinct === $other->nullsNotDistinct;
+    }
+
+    /**
+     * @return UniqueConstraintShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'columns' => $this->columns,
+            'name' => $this->name,
+            'nulls_not_distinct' => $this->nullsNotDistinct,
+        ];
     }
 }

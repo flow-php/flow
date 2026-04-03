@@ -13,7 +13,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint as CheckConstraintBuilder, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint as UniqueConstraintBuilder};
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as QbTriggerEvent;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\{Column, IdentityGeneration, Index, IndexMethod, Table, Trigger, TriggerEvent, TriggerTiming};
 use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, ForeignKey, PrimaryKey, UniqueConstraint};
 
@@ -69,7 +69,7 @@ final readonly class TableDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {

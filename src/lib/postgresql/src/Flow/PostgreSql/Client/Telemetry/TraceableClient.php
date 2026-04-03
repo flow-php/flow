@@ -9,7 +9,7 @@ use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper};
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\PackageVersion;
@@ -132,9 +132,9 @@ final class TraceableClient implements Client
         return $this->client->converters();
     }
 
-    public function cursor(SqlQuery|string $sql, array $parameters = []) : Cursor
+    public function cursor(Sql|string $sql, array $parameters = []) : Cursor
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
         $cursor = $this->client->cursor($sql, $parameters);
 
         if (!$this->telemetryConfig->options->traceQueries && !$this->telemetryConfig->options->collectMetrics) {
@@ -146,9 +146,9 @@ final class TraceableClient implements Client
         return new TraceableCursor($cursor, $this->telemetryConfig, $this->client->parameters(), $query, $parameters);
     }
 
-    public function execute(SqlQuery|string $sql, array $parameters = []) : int
+    public function execute(Sql|string $sql, array $parameters = []) : int
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -162,9 +162,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function explain(SqlQuery|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan
+    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -173,9 +173,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetch(SqlQuery|string $sql, array $parameters = []) : ?array
+    public function fetch(Sql|string $sql, array $parameters = []) : ?array
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -189,9 +189,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchAll(SqlQuery|string $sql, array $parameters = []) : array
+    public function fetchAll(Sql|string $sql, array $parameters = []) : array
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -207,10 +207,10 @@ final class TraceableClient implements Client
 
     public function fetchAllInto(
         RowMapper $mapper,
-        SqlQuery|string $sql,
+        Sql|string $sql,
         array $parameters = [],
     ) : array {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -226,10 +226,10 @@ final class TraceableClient implements Client
 
     public function fetchInto(
         RowMapper $mapper,
-        SqlQuery|string $sql,
+        Sql|string $sql,
         array $parameters = [],
     ) : mixed {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -243,9 +243,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchOne(SqlQuery|string $sql, array $parameters = []) : array
+    public function fetchOne(Sql|string $sql, array $parameters = []) : array
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -261,10 +261,10 @@ final class TraceableClient implements Client
 
     public function fetchOneInto(
         RowMapper $mapper,
-        SqlQuery|string $sql,
+        Sql|string $sql,
         array $parameters = [],
     ) : mixed {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -278,9 +278,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchScalar(SqlQuery|string $sql, array $parameters = []) : mixed
+    public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -294,9 +294,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchScalarBool(SqlQuery|string $sql, array $parameters = []) : bool
+    public function fetchScalarBool(Sql|string $sql, array $parameters = []) : bool
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -310,9 +310,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchScalarFloat(SqlQuery|string $sql, array $parameters = []) : float
+    public function fetchScalarFloat(Sql|string $sql, array $parameters = []) : float
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -326,9 +326,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchScalarInt(SqlQuery|string $sql, array $parameters = []) : int
+    public function fetchScalarInt(Sql|string $sql, array $parameters = []) : int
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
@@ -342,9 +342,9 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchScalarString(SqlQuery|string $sql, array $parameters = []) : string
+    public function fetchScalarString(Sql|string $sql, array $parameters = []) : string
     {
-        $query = $sql instanceof SqlQuery ? $sql->toSql() : $sql;
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,

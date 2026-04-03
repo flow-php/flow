@@ -60,10 +60,6 @@ component_management:
       name: lib-postgresql
       paths:
         - src/lib/postgresql/**
-    - component_id: lib-postgresql-migrations
-      name: lib-postgresql-migrations
-      paths:
-        - src/lib/postgresql-migrations/**
     - component_id: lib-telemetry
       name: lib-telemetry
       paths:
@@ -104,6 +100,10 @@ component_management:
       name: bridge-symfony-http-foundation-telemetry
       paths:
         - src/bridge/symfony/http-foundation-telemetry/**
+    - component_id: bridge-symfony-postgresql-bundle
+      name: bridge-symfony-postgresql-bundle
+      paths:
+        - src/bridge/symfony/postgresql-bundle/**
     - component_id: bridge-symfony-telemetry-bundle
       name: bridge-symfony-telemetry-bundle
       paths:

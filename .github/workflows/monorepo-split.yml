@@ -44,8 +44,6 @@ jobs:
             split_repository: 'types'
           - local_path: 'src/lib/postgresql'
             split_repository: 'postgresql'
-          - local_path: 'src/lib/postgresql-migrations'
-            split_repository: 'postgresql-migrations'
           - local_path: 'src/lib/telemetry'
             split_repository: 'telemetry'
 
@@ -96,6 +94,8 @@ jobs:
             split_repository: 'symfony-http-foundation-bridge'
           - local_path: 'src/bridge/symfony/http-foundation-telemetry'
             split_repository: 'symfony-http-foundation-telemetry-bridge'
+          - local_path: 'src/bridge/symfony/postgresql-bundle'
+            split_repository: 'symfony-postgresql-bundle'
           - local_path: 'src/bridge/symfony/telemetry-bundle'
             split_repository: 'symfony-telemetry-bundle'
           - local_path: 'src/bridge/telemetry/otlp'

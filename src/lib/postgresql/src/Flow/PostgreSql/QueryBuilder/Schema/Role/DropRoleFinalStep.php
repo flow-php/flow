@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
 use Flow\PostgreSql\Protobuf\AST\DropRoleStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface DropRoleFinalStep extends SqlQuery
+interface DropRoleFinalStep extends Sql
 {
     public function ifExists() : self;
 

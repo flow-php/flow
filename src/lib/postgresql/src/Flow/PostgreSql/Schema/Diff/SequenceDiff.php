@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 use function Flow\PostgreSql\DSL\alter;
 
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Sequence;
 
 final readonly class SequenceDiff implements Diff
@@ -18,7 +18,7 @@ final readonly class SequenceDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {

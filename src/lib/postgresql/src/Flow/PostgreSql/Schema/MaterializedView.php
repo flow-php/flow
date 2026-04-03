@@ -7,8 +7,13 @@ namespace Flow\PostgreSql\Schema;
 use function Flow\PostgreSql\DSL\{create, parsed_select};
 
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
+/**
+ * @phpstan-import-type IndexShape from Index
+ *
+ * @phpstan-type MaterializedViewShape = array{name: string, definition: string, indexes: list<IndexShape>}
+ */
 final readonly class MaterializedView
 {
     /**
@@ -22,7 +27,37 @@ final readonly class MaterializedView
     }
 
     /**
-     * @return list<SqlQuery>
+     * @param MaterializedViewShape $data
+     */
+    public static function fromArray(array $data) : self
+    {
+        return new self(
+            name: $data['name'],
+            definition: $data['definition'],
+            indexes: \array_map(
+                static fn (array $index) : Index => Index::fromArray($index),
+                $data['indexes'] ?? [],
+            ),
+        );
+    }
+
+    /**
+     * @return MaterializedViewShape
+     */
+    public function normalize() : array
+    {
+        return [
+            'name' => $this->name,
+            'definition' => $this->definition,
+            'indexes' => \array_map(
+                static fn (Index $index) : array => $index->normalize(),
+                $this->indexes,
+            ),
+        ];
+    }
+
+    /**
+     * @return list<Sql>
      */
     public function toSql() : array
     {

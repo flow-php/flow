@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 use function Flow\PostgreSql\DSL\{alter, drop};
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\{Domain, ExecutionOrderStrategy, Extension, ForeignKeyDependencyOrder, Func, MaterializedView, MaterializedViewDependencyOrder, Procedure, Schema, Sequence, Table, View, ViewDependencyOrder};
 
 final readonly class SchemaDiff implements Diff
@@ -77,7 +77,7 @@ final readonly class SchemaDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     public function generate() : array
     {
@@ -128,7 +128,7 @@ final readonly class SchemaDiff implements Diff
      * @param list<Domain> $domains
      * @param list<Extension> $extensions
      *
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     private function dropObjectSqls(array $materializedViews, array $views, array $tables, array $procedures, array $functions, array $sequences, array $domains, array $extensions) : array
     {
@@ -170,7 +170,7 @@ final readonly class SchemaDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     private function modifiedSqls() : array
     {
@@ -197,7 +197,7 @@ final readonly class SchemaDiff implements Diff
     }
 
     /**
-     * @return list<SqlQuery>
+     * @return list<Sql>
      */
     private function renamedTableSqls() : array
     {
