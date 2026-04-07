@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
+use function Flow\PostgreSql\DSL\{col, func};
 use Flow\PostgreSql\Protobuf\AST\{IndexElem, SortByDir, SortByNulls};
-use Flow\PostgreSql\QueryBuilder\Expression\RawExpression;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
+
 use PHPUnit\Framework\TestCase;
 
 final class IndexColumnTest extends TestCase
@@ -79,7 +80,7 @@ final class IndexColumnTest extends TestCase
 
     public function test_expression_creates_index_elem() : void
     {
-        $column = IndexColumn::expression(new RawExpression('lower(name)'));
+        $column = IndexColumn::expression(func('lower', [col('name')]));
 
         $ast = $column->toAst();
 

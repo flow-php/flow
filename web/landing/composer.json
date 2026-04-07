@@ -99,7 +99,7 @@
         "league/commonmark": "^2.4",
         "presta/sitemap-bundle": "^4.1",
         "symfony/mime": "^7.2",
-        "symfony/string": "^7.3"
+        "symfony/string": "^7.4"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",

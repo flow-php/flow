@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, Node, PBList, PBString};
 use Flow\PostgreSql\Protobuf\AST\Integer;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, CreateProcedureFinalStep, CreateProcedureOptionsStep
 {
@@ -18,6 +18,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
      */
     private function __construct(
         private string $name,
+        private ?string $schema = null,
         private bool $replace = false,
         private array $arguments = [],
         private array $options = [],
@@ -26,13 +27,16 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
 
     public static function create(string $name) : CreateProcedureArgsStep
     {
-        return new self($name);
+        $identifier = QualifiedIdentifier::parse($name);
+
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function arguments(FunctionArgument ...$args) : CreateProcedureOptionsStep
     {
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             \array_values($args),
             $this->options,
@@ -53,6 +57,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
     {
         return new self(
             $this->name,
+            $this->schema,
             true,
             $this->arguments,
             $this->options,
@@ -107,6 +112,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
 
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             $newOptions,
@@ -120,6 +126,15 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         $stmt->setReplace($this->replace);
 
         $funcnameNodes = [];
+
+        if ($this->schema !== null) {
+            $str = new PBString();
+            $str->setSval($this->schema);
+            $node = new Node();
+            $node->setString($str);
+            $funcnameNodes[] = $node;
+        }
+
         $str = new PBString();
         $str->setSval($this->name);
         $node = new Node();
@@ -216,6 +231,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
 
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             $newOptions,

@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_key_set, pgsql_pagination_key_asc, pgsql_pagination_key_desc, pgsql_pagination_key_set};
 use function Flow\ETL\DSL\df;
-use function Flow\PostgreSql\DSL\{col, column, create, data_type_integer, data_type_text, delete, drop, insert, literal, select, star, table};
+use function Flow\PostgreSql\DSL\{col, column, column_type_integer, column_type_text, create, delete, drop, insert, literal, select, star, table};
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
 final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
@@ -23,8 +23,8 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
 
         $this->client->execute(
             create()->table($this->tableName)
-                ->column(column('id', data_type_integer())->primaryKey())
-                ->column(column('name', data_type_text()))
+                ->column(column('id', column_type_integer())->primaryKey())
+                ->column(column('name', column_type_text()))
         );
 
         $this->insertTestData(25);

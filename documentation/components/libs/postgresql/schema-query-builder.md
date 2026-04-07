@@ -18,21 +18,21 @@ use function Flow\PostgreSql\DSL\create;
 // Simple schema creation
 $query = create()->schema('my_schema');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SCHEMA my_schema
 
 // With IF NOT EXISTS
 $query = create()->schema('my_schema')
     ->ifNotExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SCHEMA IF NOT EXISTS my_schema
 
 // With authorization
 $query = create()->schema('my_schema')
     ->authorization('admin_user');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SCHEMA my_schema AUTHORIZATION admin_user
 
 // Combined options
@@ -40,7 +40,7 @@ $query = create()->schema('my_schema')
     ->ifNotExists()
     ->authorization('admin_user');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SCHEMA IF NOT EXISTS my_schema AUTHORIZATION admin_user
 ```
 
@@ -65,7 +65,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->schema('old_schema')
     ->renameTo('new_schema');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SCHEMA old_schema RENAME TO new_schema
 ```
 
@@ -79,7 +79,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->schema('my_schema')
     ->ownerTo('new_owner');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SCHEMA my_schema OWNER TO new_owner
 ```
 
@@ -95,21 +95,21 @@ use function Flow\PostgreSql\DSL\drop;
 // Simple drop
 $query = drop()->schema('my_schema');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SCHEMA my_schema
 
 // With IF EXISTS
 $query = drop()->schema('my_schema')
     ->ifExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SCHEMA IF EXISTS my_schema
 
 // With CASCADE
 $query = drop()->schema('my_schema')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SCHEMA my_schema CASCADE
 
 // Combined options
@@ -117,14 +117,14 @@ $query = drop()->schema('my_schema')
     ->ifExists()
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SCHEMA IF EXISTS my_schema CASCADE
 
 // Drop multiple schemas
 $query = drop()->schema('schema1', 'schema2', 'schema3')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SCHEMA schema1, schema2, schema3 CASCADE
 ```
 

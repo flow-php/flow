@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Domain;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{CollateClause, ConstrType, Constraint, CreateDomainStmt, Node, PBString};
 use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, CreateDomainTypeStep
 {
@@ -20,7 +20,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
     private function __construct(
         private string $name,
         private ?string $schema = null,
-        private ?DataType $dataType = null,
+        private ?ColumnType $dataType = null,
         private ?string $collation = null,
         private array $constraints = [],
         private ?string $currentConstraintName = null,
@@ -34,7 +34,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function as(DataType $dataType) : CreateDomainOptionsStep
+    public function as(ColumnType $dataType) : CreateDomainOptionsStep
     {
         return new self(
             $this->name,
@@ -46,11 +46,11 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         );
     }
 
-    public function check(string $expression) : CreateDomainOptionsStep
+    public function check(Condition $condition) : CreateDomainOptionsStep
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
-        $constraint->setRawExpr($this->parseExpression($expression));
+        $constraint->setRawExpr($condition->toAst());
 
         if ($this->currentConstraintName !== null) {
             $constraint->setConname($this->currentConstraintName);
@@ -93,11 +93,11 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         );
     }
 
-    public function default(string $expression) : CreateDomainOptionsStep
+    public function default(Expression $expression) : CreateDomainOptionsStep
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_DEFAULT);
-        $constraint->setRawExpr($this->parseExpression($expression));
+        $constraint->setRawExpr($expression->toAst());
 
         $newConstraints = $this->constraints;
         $newConstraints[] = $constraint;
@@ -205,45 +205,5 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         }
 
         return $stmt;
-    }
-
-    private function parseExpression(string $expression) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT {$expression} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
     }
 }

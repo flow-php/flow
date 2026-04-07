@@ -18,5 +18,5 @@ interface DeleteUsingStep extends DeleteWhereStep
      *
      * @param TableReference ...$tables Tables to join for conditional deletion
      */
-    public function using(TableReference ...$tables) : DeleteWhereStep;
+    public function using(string|TableReference ...$tables) : DeleteWhereStep;
 }

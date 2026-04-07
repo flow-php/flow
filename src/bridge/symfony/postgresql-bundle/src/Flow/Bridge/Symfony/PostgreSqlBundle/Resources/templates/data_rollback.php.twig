@@ -1,0 +1,22 @@
+{% autoescape false %}<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Flow\PostgreSql\Migrations\MigrationContext;
+use Flow\PostgreSql\Migrations\Rollback;
+
+return new class implements Rollback
+{
+    public function rollback(MigrationContext $context) : void
+    {
+        // TODO: implement
+    }
+
+    public function transactional() : bool
+    {
+        return true;
+    }
+};
+{% endautoescape %}

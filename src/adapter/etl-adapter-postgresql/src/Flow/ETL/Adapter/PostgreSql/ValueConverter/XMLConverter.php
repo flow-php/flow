@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\ValueConverter;
 
 use Flow\PostgreSql\Client\Types\Converter\StringConverter;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final readonly class XMLConverter implements ValueConverter
 {
@@ -16,7 +16,7 @@ final readonly class XMLConverter implements ValueConverter
 
     public function supportedTypes() : array
     {
-        return [PostgreSqlType::XML];
+        return [ValueType::XML];
     }
 
     public function toDatabase(mixed $value) : ?string

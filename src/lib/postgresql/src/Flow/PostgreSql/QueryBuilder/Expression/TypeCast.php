@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Expression;
 
 use Flow\PostgreSql\Protobuf\AST\{Node, TypeCast as AstTypeCast};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 /**
  * Represents a type cast expression: expr::type or CAST(expr AS type).
@@ -15,11 +15,11 @@ final readonly class TypeCast implements Expression
 {
     /**
      * @param Expression $expression Expression to cast
-     * @param DataType $dataType Target data type
+     * @param ColumnType $dataType Target data type
      */
     public function __construct(
         private Expression $expression,
-        private DataType $dataType,
+        private ColumnType $dataType,
     ) {
     }
 
@@ -45,7 +45,7 @@ final readonly class TypeCast implements Expression
             throw InvalidAstException::missingRequiredField('typeName', 'TypeCast');
         }
 
-        $dataType = DataType::fromAst($typeNameNode);
+        $dataType = ColumnType::fromAst($typeNameNode);
 
         return new self($expression, $dataType);
     }
@@ -55,7 +55,7 @@ final readonly class TypeCast implements Expression
         return new AliasedExpression($this, $alias);
     }
 
-    public function getDataType() : DataType
+    public function getColumnType() : ColumnType
     {
         return $this->dataType;
     }
@@ -77,7 +77,7 @@ final readonly class TypeCast implements Expression
         return $node;
     }
 
-    public function withDataType(DataType $dataType) : self
+    public function withColumnType(ColumnType $dataType) : self
     {
         return new self($this->expression, $dataType);
     }

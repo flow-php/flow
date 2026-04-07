@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\ByteaConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -54,7 +54,7 @@ final class ByteaConverterTest extends TestCase
     public function test_supported_types() : void
     {
         $converter = new ByteaConverter();
-        self::assertContains(PostgreSqlType::BYTEA, $converter->supportedTypes());
+        self::assertContains(ValueType::BYTEA, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]

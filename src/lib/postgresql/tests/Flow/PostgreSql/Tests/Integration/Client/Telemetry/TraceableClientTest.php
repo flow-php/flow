@@ -4,57 +4,40 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Telemetry;
 
-use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection_dsn, pgsql_mapper, postgresql_telemetry_config, postgresql_telemetry_options, traceable_postgresql_client};
+use function Flow\PostgreSql\DSL\{column, column_type_serial, column_type_text, create, insert, literal, param, postgresql_telemetry_config, postgresql_telemetry_options, primary_key, select, star, table, traceable_postgresql_client};
 use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use PHPUnit\Framework\TestCase;
 
-final class TraceableClientTest extends TestCase
+final class TraceableClientTest extends PostgreSqlTestCase
 {
-    private Client $baseClient;
-
-    protected function setUp() : void
-    {
-        if (!\extension_loaded('pgsql')) {
-            self::markTestSkipped('ext-pgsql is not available');
-        }
-
-        $dsn = \getenv('PGSQL_DATABASE_URL');
-
-        if (!$dsn) {
-            self::markTestSkipped('PGSQL_DATABASE_URL environment variable is not set');
-        }
-
-        $this->baseClient = pgsql_client(
-            pgsql_connection_dsn($dsn),
-            mapper: pgsql_mapper(),
-        );
-    }
-
-    protected function tearDown() : void
-    {
-        if (isset($this->baseClient)) {
-            $this->baseClient->close();
-        }
-    }
-
     public function test_cursor_iteration_creates_span() : void
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_cursor (id serial PRIMARY KEY, name text)');
-        $client->execute('INSERT INTO test_cursor (name) VALUES ($1), ($2)', ['John', 'Jane']);
+        $client->execute(
+            create()->temporaryTable('test_cursor')
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_text()))
+                ->constraint(primary_key('id'))
+        );
+        $client->execute(
+            insert()->into('test_cursor')->columns('name')
+                ->values(param(1))
+                ->values(param(2)),
+            ['John', 'Jane']
+        );
 
-        $cursor = $client->cursor('SELECT * FROM test_cursor');
+        $cursor = $client->cursor(select(star())->from(table('test_cursor')));
         $rows = [];
 
         foreach ($cursor->iterate() as $row) {
@@ -75,10 +58,18 @@ final class TraceableClientTest extends TestCase
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = $this->createConfig($spanProcessor);
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_execute_span (id serial PRIMARY KEY, name text)');
-        $client->execute('INSERT INTO test_execute_span (name) VALUES ($1)', ['John']);
+        $client->execute(
+            create()->temporaryTable('test_execute_span')
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_text()))
+                ->constraint(primary_key('id'))
+        );
+        $client->execute(
+            insert()->into('test_execute_span')->columns('name')->values(param(1)),
+            ['John']
+        );
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(2, $spans);
@@ -96,10 +87,10 @@ final class TraceableClientTest extends TestCase
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = $this->createConfig($spanProcessor);
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
         try {
-            $client->execute('SELECT * FROM nonexistent_table_12345');
+            $client->execute(select(star())->from(table('nonexistent_table_12345')));
         } catch (\Throwable) {
         }
 
@@ -114,11 +105,22 @@ final class TraceableClientTest extends TestCase
     {
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = $this->createConfig($spanProcessor);
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_fetch_span (id serial PRIMARY KEY, name text)');
-        $client->execute('INSERT INTO test_fetch_span (name) VALUES ($1), ($2), ($3)', ['John', 'Jane', 'Bob']);
-        $result = $client->fetchAll('SELECT * FROM test_fetch_span');
+        $client->execute(
+            create()->temporaryTable('test_fetch_span')
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_text()))
+                ->constraint(primary_key('id'))
+        );
+        $client->execute(
+            insert()->into('test_fetch_span')->columns('name')
+                ->values(param(1))
+                ->values(param(2))
+                ->values(param(3)),
+            ['John', 'Jane', 'Bob']
+        );
+        $result = $client->fetchAll(select(star())->from(table('test_fetch_span')));
 
         self::assertCount(3, $result);
 
@@ -135,10 +137,14 @@ final class TraceableClientTest extends TestCase
         $config = $this->createConfig(logProcessor: $logProcessor, options: postgresql_telemetry_options(
             logQueries: true,
         ));
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_logging (id serial PRIMARY KEY)');
-        $client->execute('INSERT INTO test_logging DEFAULT VALUES');
+        $client->execute(
+            create()->temporaryTable('test_logging')
+                ->column(column('id', column_type_serial()))
+                ->constraint(primary_key('id'))
+        );
+        $client->execute(insert()->into('test_logging')->defaultValues());
 
         $logs = $logProcessor->entries();
         self::assertCount(2, $logs);
@@ -152,9 +158,9 @@ final class TraceableClientTest extends TestCase
         $config = $this->createConfig(metricProcessor: $metricProcessor, options: postgresql_telemetry_options(
             collectMetrics: true,
         ));
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('SELECT 1');
+        $client->execute(select(literal(1)));
 
         $this->collectMetrics($config);
 
@@ -171,14 +177,18 @@ final class TraceableClientTest extends TestCase
             traceTransactions: true,
             traceQueries: false,
         ));
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_nested_tx (id serial PRIMARY KEY)');
+        $client->execute(
+            create()->temporaryTable('test_nested_tx')
+                ->column(column('id', column_type_serial()))
+                ->constraint(primary_key('id'))
+        );
         $client->transaction(static function (Client $outer) : void {
-            $outer->execute('INSERT INTO test_nested_tx DEFAULT VALUES');
+            $outer->execute(insert()->into('test_nested_tx')->defaultValues());
 
             $outer->transaction(static function (Client $inner) : void {
-                $inner->execute('INSERT INTO test_nested_tx DEFAULT VALUES');
+                $inner->execute(insert()->into('test_nested_tx')->defaultValues());
             });
         });
 
@@ -196,10 +206,18 @@ final class TraceableClientTest extends TestCase
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             includeParameters: true,
         ));
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_params (id serial PRIMARY KEY, name text)');
-        $client->execute('INSERT INTO test_params (name) VALUES ($1)', ['John']);
+        $client->execute(
+            create()->temporaryTable('test_params')
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_text()))
+                ->constraint(primary_key('id'))
+        );
+        $client->execute(
+            insert()->into('test_params')->columns('name')->values(param(1)),
+            ['John']
+        );
 
         $spans = $spanProcessor->endedSpans();
         $insertSpan = \array_filter($spans, static fn ($s) => \str_contains($s->name(), 'INSERT'));
@@ -215,11 +233,15 @@ final class TraceableClientTest extends TestCase
             traceTransactions: true,
             traceQueries: false,
         ));
-        $client = traceable_postgresql_client($this->baseClient, $config);
+        $client = traceable_postgresql_client($this->pgsqlContext()->client(), $config);
 
-        $client->execute('CREATE TEMP TABLE test_tx_span (id serial PRIMARY KEY)');
+        $client->execute(
+            create()->temporaryTable('test_tx_span')
+                ->column(column('id', column_type_serial()))
+                ->constraint(primary_key('id'))
+        );
         $client->transaction(static function (Client $c) : void {
-            $c->execute('INSERT INTO test_tx_span DEFAULT VALUES');
+            $c->execute(insert()->into('test_tx_span')->defaultValues());
         });
 
         $spans = $spanProcessor->endedSpans();

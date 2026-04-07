@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
+use function Flow\PostgreSql\DSL\{cast, column_type_uuid, func, literal, param, select};
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class UuidConverterTest extends ConverterTestCase
+final class UuidConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string}>
@@ -21,7 +23,7 @@ final class UuidConverterTest extends ConverterTestCase
 
     public function test_gen_random_uuid() : void
     {
-        $result = $this->fetchValue('SELECT gen_random_uuid() AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(func('gen_random_uuid')->as('val'))->toSql());
 
         self::assertIsString($result);
         self::assertMatchesRegularExpression(
@@ -32,7 +34,7 @@ final class UuidConverterTest extends ConverterTestCase
 
     public function test_null_uuid() : void
     {
-        $result = $this->fetchValue('SELECT NULL::uuid AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_uuid())->as('val'))->toSql());
 
         self::assertNull($result);
     }
@@ -40,7 +42,7 @@ final class UuidConverterTest extends ConverterTestCase
     #[DataProvider('provide_uuid_strings')]
     public function test_uuid_string_round_trip(string $input) : void
     {
-        $result = $this->fetchValue('SELECT $1::uuid AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_uuid())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame(\strtolower($input), $result);

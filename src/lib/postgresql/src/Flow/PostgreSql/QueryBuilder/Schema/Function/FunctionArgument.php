@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class FunctionArgument
 {
     private function __construct(
-        public DataType $type,
+        public ColumnType $type,
         public ?string $name = null,
         public ArgumentMode $mode = ArgumentMode::IN,
         public ?string $default = null,
     ) {
     }
 
-    public static function of(DataType $type) : self
+    public static function of(ColumnType $type) : self
     {
         return new self($type);
     }

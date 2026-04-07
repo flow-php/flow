@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
 use Flow\PostgreSql\Protobuf\AST\{ObjectType, RangeVar, RenameStmt};
+use Flow\PostgreSql\QueryBuilder\{AstToSql, Sql};
 
-final readonly class RenameTableBuilder
+final readonly class RenameTableBuilder implements Sql
 {
+    use AstToSql;
+
     private function __construct(
         private string $table,
         private ?string $schema,

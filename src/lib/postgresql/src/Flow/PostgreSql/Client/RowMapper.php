@@ -5,30 +5,20 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client;
 
 /**
- * Contract for mapping database rows to objects.
+ * Contract for mapping database rows to typed results.
  *
- * Implementations can provide various hydration strategies:
- * - Reflection-based mapping
- * - Constructor mapping
- * - Named arguments mapping
- * - Custom attribute-based mapping
- *
- * External libraries (like Symfony Serializer, JMS Serializer, etc.)
- * can implement this interface to integrate with the client.
+ * @template T
  */
 interface RowMapper
 {
     /**
-     * Map a database row to an object of the specified class.
+     * Map a database row to a typed result.
      *
-     * @template T of object
-     *
-     * @param class-string<T> $class Target class for mapping
      * @param array<string, mixed> $row Database row as associative array
      *
      * @throws Exception\MappingException When mapping fails
      *
-     * @return T Instance of the target class
+     * @return T
      */
-    public function map(string $class, array $row) : object;
+    public function map(array $row) : mixed;
 }

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_date, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class DateConverterTest extends ConverterTestCase
+final class DateConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
@@ -41,7 +42,7 @@ final class DateConverterTest extends ConverterTestCase
     #[DataProvider('provide_date_values')]
     public function test_date_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::date AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_date())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -50,7 +51,7 @@ final class DateConverterTest extends ConverterTestCase
     #[DataProvider('provide_datetime_to_date')]
     public function test_datetime_object_to_date(\DateTimeImmutable $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::date AS val', [typed($input, PostgreSqlType::DATE)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_date())->as('val'))->toSql(), [typed($input, ValueType::DATE)]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -58,7 +59,7 @@ final class DateConverterTest extends ConverterTestCase
 
     public function test_null_date() : void
     {
-        $result = $this->fetchValue('SELECT NULL::date AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_date())->as('val'))->toSql());
 
         self::assertNull($result);
     }

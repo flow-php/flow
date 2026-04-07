@@ -8,14 +8,15 @@ use function Flow\PostgreSql\DSL\{
     binary_expr,
     cast,
     col,
-    cond_false,
+    column_type_double_precision,
+    column_type_integer,
+    constructor_mapper,
     create,
-    data_type_double_precision,
-    data_type_integer,
     delete,
     func,
     gt,
     insert,
+    is_true,
     literal,
     param,
     row_expr,
@@ -25,32 +26,33 @@ use function Flow\PostgreSql\DSL\{
 };
 use Flow\PostgreSql\Client\Exception\{QueryException, ResultException};
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class PgSqlClientTest extends ClientTestCase
+final class PgSqlClientTest extends PostgreSqlTestCase
 {
     public function test_close_disconnects() : void
     {
-        $this->client->close();
+        $this->pgsqlContext()->client()->close();
 
-        self::assertFalse($this->client->isConnected());
+        self::assertFalse($this->pgsqlContext()->client()->isConnected());
     }
 
     public function test_execute_returns_affected_rows() : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_execute')
-                ->column(ColumnDefinition::create('id', DataType::integer()))
+                ->column(ColumnDefinition::create('id', ColumnType::integer()))
         );
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()->into('test_execute')->columns('id')
                 ->values(literal(1))
                 ->values(literal(2))
                 ->values(literal(3))
         );
 
-        $affected = $this->client->execute(
+        $affected = $this->pgsqlContext()->client()->execute(
             delete()->from('test_execute')->where(gt(col('id'), literal(1)))
         );
 
@@ -59,8 +61,8 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_all_into_maps_to_objects() : void
     {
-        $users = $this->client->fetchAllInto(
-            TestUser::class,
+        $users = $this->pgsqlContext()->client()->fetchAllInto(
+            constructor_mapper(TestUser::class),
             select(star())->from(
                 values_table(
                     row_expr([literal(1), literal('Alice'), literal('alice@example.com')]),
@@ -78,7 +80,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_all_returns_all_rows() : void
     {
-        $rows = $this->client->fetchAll(
+        $rows = $this->pgsqlContext()->client()->fetchAll(
             select(func('generate_series', [literal(1), literal(3)])->as('num'))
         );
 
@@ -90,8 +92,8 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_all_returns_empty_array_when_no_rows() : void
     {
-        $rows = $this->client->fetchAll(
-            select(literal(1))->where(cond_false())
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(literal(1))->where(is_true(literal(false)))
         );
 
         self::assertSame([], $rows);
@@ -99,8 +101,8 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_into_maps_to_object() : void
     {
-        $user = $this->client->fetchInto(
-            TestUser::class,
+        $user = $this->pgsqlContext()->client()->fetchInto(
+            constructor_mapper(TestUser::class),
             select(literal(1)->as('id'), param(1)->as('name'), param(2)->as('email')),
             ['John Doe', 'john@example.com']
         );
@@ -113,10 +115,10 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_into_returns_null_when_no_rows() : void
     {
-        $user = $this->client->fetchInto(
-            TestUser::class,
+        $user = $this->pgsqlContext()->client()->fetchInto(
+            constructor_mapper(TestUser::class),
             select(literal(1)->as('id'), param(1)->as('name'), param(2)->as('email'))
-                ->where(cond_false()),
+                ->where(is_true(literal(false))),
             ['John', 'john@example.com']
         );
 
@@ -125,8 +127,8 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_one_into_maps_to_object() : void
     {
-        $user = $this->client->fetchOneInto(
-            TestUser::class,
+        $user = $this->pgsqlContext()->client()->fetchOneInto(
+            constructor_mapper(TestUser::class),
             select(literal(1)->as('id'), param(1)->as('name'), param(2)->as('email')),
             ['Jane Doe', 'jane@example.com']
         );
@@ -137,7 +139,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_one_returns_exactly_one_row() : void
     {
-        $row = $this->client->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(literal(42)->as('value'))
         );
 
@@ -149,7 +151,7 @@ final class PgSqlClientTest extends ClientTestCase
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Expected exactly one row');
 
-        $this->client->fetchOne(
+        $this->pgsqlContext()->client()->fetchOne(
             select(func('generate_series', [literal(1), literal(3)]))
         );
     }
@@ -159,15 +161,15 @@ final class PgSqlClientTest extends ClientTestCase
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Expected exactly one row');
 
-        $this->client->fetchOne(
-            select(literal(1))->where(cond_false())
+        $this->pgsqlContext()->client()->fetchOne(
+            select(literal(1))->where(is_true(literal(false)))
         );
     }
 
     public function test_fetch_returns_null_when_no_rows() : void
     {
-        $row = $this->client->fetch(
-            select(literal(1))->where(cond_false())
+        $row = $this->pgsqlContext()->client()->fetch(
+            select(literal(1))->where(is_true(literal(false)))
         );
 
         self::assertNull($row);
@@ -175,7 +177,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_returns_single_row() : void
     {
-        $row = $this->client->fetch(
+        $row = $this->pgsqlContext()->client()->fetch(
             select(literal(1)->as('id'), param(1)->as('name')),
             ['Alice']
         );
@@ -187,13 +189,13 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_scalar_bool_returns_boolean() : void
     {
-        $value = $this->client->fetchScalarBool(
+        $value = $this->pgsqlContext()->client()->fetchScalarBool(
             select(literal(true))
         );
 
         self::assertTrue($value);
 
-        $value = $this->client->fetchScalarBool(
+        $value = $this->pgsqlContext()->client()->fetchScalarBool(
             select(literal(false))
         );
 
@@ -202,8 +204,8 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_scalar_float_returns_float() : void
     {
-        $value = $this->client->fetchScalarFloat(
-            select(cast(literal(3.14), data_type_double_precision()))
+        $value = $this->pgsqlContext()->client()->fetchScalarFloat(
+            select(cast(literal(3.14), column_type_double_precision()))
         );
 
         self::assertSame(3.14, $value);
@@ -211,7 +213,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_scalar_int_returns_integer() : void
     {
-        $value = $this->client->fetchScalarInt(
+        $value = $this->pgsqlContext()->client()->fetchScalarInt(
             select(literal(42))
         );
 
@@ -220,8 +222,8 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_scalar_returns_null_when_no_rows() : void
     {
-        $value = $this->client->fetchScalar(
-            select(literal(1))->where(cond_false())
+        $value = $this->pgsqlContext()->client()->fetchScalar(
+            select(literal(1))->where(is_true(literal(false)))
         );
 
         self::assertNull($value);
@@ -229,12 +231,12 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_scalar_returns_single_value() : void
     {
-        $value = $this->client->fetchScalar(
+        $value = $this->pgsqlContext()->client()->fetchScalar(
             select(
                 binary_expr(
-                    cast(param(1), data_type_integer()),
+                    cast(param(1), column_type_integer()),
                     '+',
-                    cast(param(2), data_type_integer())
+                    cast(param(2), column_type_integer())
                 )
             ),
             ['10', '32']
@@ -245,7 +247,7 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_fetch_scalar_string_returns_string() : void
     {
-        $value = $this->client->fetchScalarString(
+        $value = $this->pgsqlContext()->client()->fetchScalarString(
             select(literal('hello world'))
         );
 
@@ -254,49 +256,49 @@ final class PgSqlClientTest extends ClientTestCase
 
     public function test_is_connected() : void
     {
-        self::assertTrue($this->client->isConnected());
+        self::assertTrue($this->pgsqlContext()->client()->isConnected());
     }
 
     public function test_last_insert_id_returns_sequence_value() : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporaryTable('test_last_insert_id')
-                ->column(ColumnDefinition::create('id', DataType::serial())->primaryKey())
-                ->column(ColumnDefinition::create('name', DataType::text()))
+                ->column(ColumnDefinition::create('id', ColumnType::serial())->primaryKey())
+                ->column(ColumnDefinition::create('name', ColumnType::text()))
         );
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()->into('test_last_insert_id')->columns('name')->values(literal('first'))
         );
 
-        $id = $this->client->lastInsertId('test_last_insert_id_id_seq');
+        $id = $this->pgsqlContext()->client()->lastInsertId('test_last_insert_id_id_seq');
 
         self::assertSame(1, $id);
 
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()->into('test_last_insert_id')->columns('name')->values(literal('second'))
         );
-        $id = $this->client->lastInsertId('test_last_insert_id_id_seq');
+        $id = $this->pgsqlContext()->client()->lastInsertId('test_last_insert_id_id_seq');
 
         self::assertSame(2, $id);
     }
 
     public function test_last_insert_id_throws_when_sequence_not_used() : void
     {
-        $this->client->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->temporarySequence('test_unused_seq')
         );
 
         $this->expectException(QueryException::class);
         $this->expectExceptionMessage('Query execution failed [55000]: Object not in prerequisite state. SQL: SELECT currval($1)');
 
-        $this->client->lastInsertId('test_unused_seq');
+        $this->pgsqlContext()->client()->lastInsertId('test_unused_seq');
     }
 
     public function test_typed_value_forces_type() : void
     {
-        $value = new TypedValue(42, PostgreSqlType::INT4);
-        $row = $this->client->fetchOne(
-            select(cast(param(1), data_type_integer())->as('val')),
+        $value = new TypedValue(42, ValueType::INT4);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(cast(param(1), column_type_integer())->as('val')),
             [$value]
         );
 

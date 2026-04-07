@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\BoolArrayConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -61,7 +61,7 @@ final class BoolArrayConverterTest extends TestCase
         $converter = new BoolArrayConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(PostgreSqlType::BOOL_ARRAY, $types);
+        self::assertContains(ValueType::BOOL_ARRAY, $types);
         self::assertCount(1, $types);
     }
 

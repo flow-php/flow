@@ -7,9 +7,9 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use function Flow\PostgreSql\DSL\{
     alter,
     column,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_serial,
-    data_type_varchar,
     drop,
     insert,
     literal,
@@ -18,11 +18,11 @@ use function Flow\PostgreSql\DSL\{
     star,
     table
 };
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
-
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\Type\TypeAttribute;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class TypeDatabaseTest extends DatabaseTestCase
+final class TypeDatabaseTest extends PostgreSqlTestCase
 {
     private const COMPOSITE_TYPE = 'flow_postgres_address_type';
 
@@ -34,32 +34,30 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_NAME);
-        $this->dropTypeIfExists(self::ENUM_TYPE);
-        $this->dropTypeIfExists(self::COMPOSITE_TYPE);
-        $this->dropTypeIfExists(self::RANGE_TYPE);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_NAME);
+        $this->pgsqlContext()->dropTypeIfExists(self::ENUM_TYPE);
+        $this->pgsqlContext()->dropTypeIfExists(self::COMPOSITE_TYPE);
+        $this->pgsqlContext()->dropTypeIfExists(self::RANGE_TYPE);
 
         parent::tearDown();
     }
 
     public function test_alter_enum_add_value() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active')
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->enumType(self::ENUM_TYPE)
                 ->addValue('completed')
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $values = $this->fetchAll(
-            $this->execute('SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val')
+        $values = $this->pgsqlContext()->client()->fetchAll(
+            'SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val'
         );
 
         $enumValues = \array_column($values, 'val');
@@ -68,22 +66,20 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     public function test_alter_enum_add_value_after() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('first', 'last')
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->enumType(self::ENUM_TYPE)
                 ->addValueAfter('middle', 'first')
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $values = $this->fetchAll(
-            $this->execute('SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val')
+        $values = $this->pgsqlContext()->client()->fetchAll(
+            'SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val'
         );
 
         self::assertSame('first', $values[0]['val']);
@@ -93,22 +89,20 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     public function test_alter_enum_add_value_before() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('first', 'last')
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->enumType(self::ENUM_TYPE)
                 ->addValueBefore('middle', 'last')
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $values = $this->fetchAll(
-            $this->execute('SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val')
+        $values = $this->pgsqlContext()->client()->fetchAll(
+            'SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val'
         );
 
         self::assertSame('first', $values[0]['val']);
@@ -118,40 +112,38 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     public function test_alter_enum_add_value_if_not_exists() : void
     {
-        $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active')
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->enumType(self::ENUM_TYPE)
                 ->addValue('active')
                 ->ifNotExists()
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
     }
 
     public function test_alter_enum_rename_value() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('old_name', 'other')
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->enumType(self::ENUM_TYPE)
                 ->renameValue('old_name', 'new_name')
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $values = $this->fetchAll(
-            $this->execute('SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val')
+        $values = $this->pgsqlContext()->client()->fetchAll(
+            'SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val'
         );
 
         $enumValues = \array_column($values, 'val');
@@ -161,48 +153,45 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     public function test_create_composite_type() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->compositeType(self::COMPOSITE_TYPE)
                 ->attributes(
-                    TypeAttribute::of('street', data_type_varchar(100)),
-                    TypeAttribute::of('city', data_type_varchar(50)),
-                    TypeAttribute::of('postal_code', data_type_varchar(20))
+                    TypeAttribute::of('street', column_type_varchar(100)),
+                    TypeAttribute::of('city', column_type_varchar(50)),
+                    TypeAttribute::of('postal_code', column_type_varchar(20))
                 )
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->typeExists(self::COMPOSITE_TYPE));
     }
 
     public function test_create_composite_type_and_use_in_table() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->compositeType(self::COMPOSITE_TYPE)
                 ->attributes(
-                    TypeAttribute::of('street', data_type_varchar(100)),
-                    TypeAttribute::of('city', data_type_varchar(50))
+                    TypeAttribute::of('street', column_type_varchar(100)),
+                    TypeAttribute::of('city', column_type_varchar(50))
                 )
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100)))
-                ->column(column('address', DataType::custom(self::COMPOSITE_TYPE)))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100)))
+                ->column(column('address', ColumnType::custom(self::COMPOSITE_TYPE)))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             'INSERT INTO ' . self::TABLE_NAME . " (name, address) VALUES ('John', ROW('123 Main St', 'NYC'))"
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                'SELECT name, (address).street, (address).city FROM ' . self::TABLE_NAME
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            'SELECT name, (address).street, (address).city FROM ' . self::TABLE_NAME
         );
 
         self::assertSame('John', $row['name']);
@@ -212,33 +201,32 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     public function test_create_enum_type() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active', 'completed', 'cancelled')
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->typeExists(self::ENUM_TYPE));
     }
 
     public function test_create_enum_type_and_use_in_table() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active', 'completed')
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('status', DataType::custom(self::ENUM_TYPE))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('status', ColumnType::custom(self::ENUM_TYPE))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('status')
@@ -246,10 +234,8 @@ final class TypeDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                select(star())->from(table(self::TABLE_NAME))->toSql()
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(star())->from(table(self::TABLE_NAME))->toSql()
         );
 
         self::assertSame('active', $row['status']);
@@ -257,19 +243,18 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
     public function test_create_range_type() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->rangeType(self::RANGE_TYPE)
                 ->subtype('float8')
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->typeExists(self::RANGE_TYPE));
     }
 
     public function test_drop_type() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('a', 'b')
                 ->toSql()
@@ -277,58 +262,51 @@ final class TypeDatabaseTest extends DatabaseTestCase
 
         self::assertTrue($this->typeExists(self::ENUM_TYPE));
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->type(self::ENUM_TYPE)->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->typeExists(self::ENUM_TYPE));
     }
 
     public function test_drop_type_cascade() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->enumType(self::ENUM_TYPE)
                 ->labels('a', 'b')
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('status', DataType::custom(self::ENUM_TYPE)))
+                ->column(column('id', column_type_serial()))
+                ->column(column('status', ColumnType::custom(self::ENUM_TYPE)))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->type(self::ENUM_TYPE)->cascade()->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->typeExists(self::ENUM_TYPE));
     }
 
     public function test_drop_type_if_exists() : void
     {
-        $result = $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             drop()->type(self::ENUM_TYPE)->ifExists()->toSql()
         );
-
-        self::assertNotFalse($result);
-    }
-
-    protected function dropTypeIfExists(string $name) : void
-    {
-        $this->execute("DROP TYPE IF EXISTS {$name} CASCADE");
     }
 
     protected function typeExists(string $name) : bool
     {
-        $row = $this->fetchOne(
-            $this->execute("SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = '{$name}') AS type_exists")
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            "SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = '{$name}') AS type_exists"
         );
 
-        return $row['type_exists'] === 't';
+        return $row['type_exists'] === true;
     }
 }

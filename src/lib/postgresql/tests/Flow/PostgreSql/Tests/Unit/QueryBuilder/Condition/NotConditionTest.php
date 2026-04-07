@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
+use function Flow\PostgreSql\DSL\{col, eq, literal};
 use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition, RawCondition};
+use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+
 use PHPUnit\Framework\TestCase;
 
 final class NotConditionTest extends TestCase
@@ -20,8 +22,8 @@ final class NotConditionTest extends TestCase
 
     public function test_and_returns_and_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $not = new NotCondition($cond1);
         $and = $not->and($cond2);
@@ -31,7 +33,7 @@ final class NotConditionTest extends TestCase
 
     public function test_double_negation() : void
     {
-        $cond = new RawCondition('x = 1');
+        $cond = eq(col('x'), literal(1));
         $not1 = new NotCondition($cond);
         $not2 = $not1->not();
 
@@ -54,7 +56,7 @@ final class NotConditionTest extends TestCase
 
     public function test_from_ast_reconstructs_not_condition() : void
     {
-        $cond = new RawCondition('x = 1');
+        $cond = eq(col('x'), literal(1));
         $original = new NotCondition($cond);
         $ast = $original->toAst();
 
@@ -91,8 +93,8 @@ final class NotConditionTest extends TestCase
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('NOT_EXPR must have exactly one argument, got 2');
 
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $boolExpr = new BoolExpr();
         $boolExpr->setBoolop(BoolExprType::NOT_EXPR);
@@ -129,7 +131,7 @@ final class NotConditionTest extends TestCase
 
     public function test_not_negates_condition() : void
     {
-        $cond = new RawCondition('x = 1');
+        $cond = eq(col('x'), literal(1));
         $not = new NotCondition($cond);
         $ast = $not->toAst();
 
@@ -143,7 +145,7 @@ final class NotConditionTest extends TestCase
 
     public function test_not_returns_not_condition() : void
     {
-        $cond = new RawCondition('x = 1');
+        $cond = eq(col('x'), literal(1));
         $not = new NotCondition($cond);
         $notNot = $not->not();
 
@@ -152,8 +154,8 @@ final class NotConditionTest extends TestCase
 
     public function test_or_returns_or_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $not = new NotCondition($cond1);
         $or = $not->or($cond2);
@@ -163,7 +165,7 @@ final class NotConditionTest extends TestCase
 
     public function test_to_ast_creates_bool_expr() : void
     {
-        $cond = new RawCondition('x = 1');
+        $cond = eq(col('x'), literal(1));
         $not = new NotCondition($cond);
         $ast = $not->toAst();
 

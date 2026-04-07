@@ -6,25 +6,27 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PostgreSql\DSL\{
     alter,
+    col,
     column,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     drop,
     insert,
     literal,
+    ne,
     primary_key,
-    raw_cond,
     select,
     star,
     table
 };
 
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class TriggerDatabaseTest extends DatabaseTestCase
+final class TriggerDatabaseTest extends PostgreSqlTestCase
 {
     private const FUNCTION_NAME = 'flow_postgres_trigger_func';
 
@@ -40,27 +42,27 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('value', data_type_integer())->default(0))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('value', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_LOG)
-                ->column(column('id', data_type_serial()))
-                ->column(column('action', data_type_varchar(50))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('action', column_type_varchar(50))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->function(self::FUNCTION_NAME)
                 ->arguments()
-                ->returns(DataType::custom('trigger'))
+                ->returns(ColumnType::custom('trigger'))
                 ->language('plpgsql')
                 ->as('BEGIN INSERT INTO ' . self::TABLE_LOG . ' (action) VALUES (TG_OP); RETURN NEW; END;')
                 ->toSql()
@@ -69,18 +71,18 @@ final class TriggerDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTriggerIfExists(self::TRIGGER_NAME, self::TABLE_NAME);
-        $this->dropTriggerIfExists(self::TRIGGER_NAME_RENAMED, self::TABLE_NAME);
-        $this->dropFunctionIfExists(self::FUNCTION_NAME);
-        $this->dropTableIfExists(self::TABLE_LOG);
-        $this->dropTableIfExists(self::TABLE_NAME);
+        $this->pgsqlContext()->dropTriggerIfExists(self::TRIGGER_NAME, self::TABLE_NAME);
+        $this->pgsqlContext()->dropTriggerIfExists(self::TRIGGER_NAME_RENAMED, self::TABLE_NAME);
+        $this->pgsqlContext()->dropFunctionIfExists(self::FUNCTION_NAME);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_LOG);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_NAME);
 
         parent::tearDown();
     }
 
     public function test_alter_trigger_rename() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -89,21 +91,20 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             alter()->trigger(self::TRIGGER_NAME)
                 ->on(self::TABLE_NAME)
                 ->renameTo(self::TRIGGER_NAME_RENAMED)
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME_RENAMED, self::TABLE_NAME));
     }
 
     public function test_create_or_replace_trigger() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -112,7 +113,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->orReplace()
                 ->after(TriggerEvent::INSERT)
@@ -122,13 +123,12 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
     }
 
     public function test_create_trigger_after_insert() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->after(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -137,13 +137,12 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
     }
 
     public function test_create_trigger_after_multiple_events() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->after(TriggerEvent::INSERT, TriggerEvent::UPDATE)
                 ->on(self::TABLE_NAME)
@@ -152,13 +151,12 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
     }
 
     public function test_create_trigger_before_insert() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -167,10 +165,9 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name')
@@ -178,11 +175,9 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $logs = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_LOG))
-                    ->toSql()
-            )
+        $logs = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_LOG))
+                ->toSql()
         );
 
         self::assertCount(1, $logs);
@@ -191,20 +186,19 @@ final class TriggerDatabaseTest extends DatabaseTestCase
 
     public function test_create_trigger_with_when_condition() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
-                ->when(raw_cond('NEW.value <> 0'))
+                ->when(ne(col('value', 'new'), literal(0)))
                 ->execute(self::FUNCTION_NAME)
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name', 'value')
@@ -212,15 +206,13 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $logs = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_LOG))
-                    ->toSql()
-            )
+        $logs = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_LOG))
+                ->toSql()
         );
         self::assertCount(0, $logs);
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name', 'value')
@@ -228,18 +220,16 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $logs = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_LOG))
-                    ->toSql()
-            )
+        $logs = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_LOG))
+                ->toSql()
         );
         self::assertCount(1, $logs);
     }
 
     public function test_drop_trigger() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -250,18 +240,17 @@ final class TriggerDatabaseTest extends DatabaseTestCase
 
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->trigger(self::TRIGGER_NAME)->on(self::TABLE_NAME)
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
     }
 
     public function test_drop_trigger_cascade() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -270,49 +259,36 @@ final class TriggerDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             drop()->trigger(self::TRIGGER_NAME)->on(self::TABLE_NAME)->cascade()
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
         self::assertFalse($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
     }
 
     public function test_drop_trigger_if_exists() : void
     {
-        $result = $this->execute(
+        $this->expectNotToPerformAssertions();
+
+        $this->pgsqlContext()->client()->execute(
             drop()->trigger(self::TRIGGER_NAME)->ifExists()->on(self::TABLE_NAME)
                 ->toSql()
         );
-
-        self::assertNotFalse($result);
-    }
-
-    protected function dropFunctionIfExists(string $name) : void
-    {
-        $this->execute("DROP FUNCTION IF EXISTS {$name} CASCADE");
-    }
-
-    protected function dropTriggerIfExists(string $triggerName, string $tableName) : void
-    {
-        $this->execute("DROP TRIGGER IF EXISTS {$triggerName} ON {$tableName} CASCADE");
     }
 
     protected function triggerExists(string $triggerName, string $tableName) : bool
     {
-        $row = $this->fetchOne(
-            $this->execute(
-                "SELECT EXISTS(
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            "SELECT EXISTS(
                     SELECT 1 FROM pg_trigger t
                     JOIN pg_class c ON t.tgrelid = c.oid
                     WHERE t.tgname = '{$triggerName}'
                     AND c.relname = '{$tableName}'
                     AND NOT t.tgisinternal
                 ) AS trigger_exists"
-            )
         );
 
-        return $row['trigger_exists'] === 't';
+        return $row['trigger_exists'] === true;
     }
 }

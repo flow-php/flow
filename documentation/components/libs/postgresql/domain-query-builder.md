@@ -21,7 +21,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->domain('email')
     ->as('text');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN email AS text
 ```
 
@@ -35,7 +35,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->domain('public.email')
     ->as('text');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN public.email AS text
 ```
 
@@ -50,7 +50,7 @@ $query = create()->domain('email')
     ->as('text')
     ->notNull();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN email AS text NOT NULL
 ```
 
@@ -67,7 +67,7 @@ $query = create()->domain('email')
     ->as('text')
     ->null();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN email AS text NULL
 ```
 
@@ -84,7 +84,7 @@ $query = create()->domain('email')
     ->as('text')
     ->default("'default@example.com'");
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN email AS text DEFAULT 'default@example.com'
 ```
 
@@ -101,7 +101,7 @@ $query = create()->domain('positive_int')
     ->as('int4')
     ->check('VALUE > 0');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN positive_int AS int4 CHECK (value > 0)
 ```
 
@@ -119,7 +119,7 @@ $query = create()->domain('positive_int')
     ->constraint('positive_check')
     ->check('VALUE > 0');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN positive_int AS int4 CONSTRAINT positive_check CHECK (value > 0)
 ```
 
@@ -136,7 +136,7 @@ $query = create()->domain('email')
     ->as('text')
     ->collate('en_US');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN email AS text COLLATE "en_US"
 ```
 
@@ -152,7 +152,7 @@ $query = create()->domain('email')
     ->notNull()
     ->check("VALUE ~ '^.+@.+$'");
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE DOMAIN email AS text NOT NULL CHECK (value ~ '^.+@.+$')
 ```
 
@@ -168,7 +168,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->setNotNull();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email SET NOT NULL
 ```
 
@@ -182,7 +182,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->dropNotNull();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email DROP NOT NULL
 ```
 
@@ -196,7 +196,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->setDefault("'default@example.com'");
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email SET DEFAULT 'default@example.com'
 ```
 
@@ -210,7 +210,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->dropDefault();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email DROP DEFAULT
 ```
 
@@ -224,7 +224,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->addConstraint('valid_email', "VALUE ~ '^.+@.+$'");
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email ADD CONSTRAINT valid_email CHECK (value ~ '^.+@.+$')
 ```
 
@@ -238,7 +238,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->dropConstraint('valid_email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email DROP CONSTRAINT valid_email
 ```
 
@@ -253,7 +253,7 @@ $query = alter()->domain('email')
     ->dropConstraint('valid_email')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email DROP CONSTRAINT valid_email CASCADE
 ```
 
@@ -269,7 +269,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('email')
     ->validateConstraint('valid_email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN email VALIDATE CONSTRAINT valid_email
 ```
 
@@ -283,7 +283,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->domain('public.email')
     ->setNotNull();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER DOMAIN public.email SET NOT NULL
 ```
 
@@ -298,7 +298,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP DOMAIN email
 ```
 
@@ -312,7 +312,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->domain('email')
     ->ifExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP DOMAIN IF EXISTS email
 ```
 
@@ -328,7 +328,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->domain('email')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP DOMAIN email CASCADE
 ```
 
@@ -344,7 +344,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->domain('email')
     ->restrict();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP DOMAIN email
 ```
 
@@ -357,7 +357,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email', 'phone', 'url');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP DOMAIN email, phone, url
 ```
 
@@ -372,7 +372,7 @@ $query = drop()->domain('email')
     ->ifExists()
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP DOMAIN IF EXISTS email CASCADE
 ```
 

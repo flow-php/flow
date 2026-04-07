@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\ValueConverter;
 
 use Dom\{HTMLDocument, HTMLElement};
 use Flow\ETL\Adapter\PostgreSql\ValueConverter\HTMLConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
 final class HTMLConverterTest extends TestCase
@@ -63,6 +63,6 @@ final class HTMLConverterTest extends TestCase
     {
         $converter = new HTMLConverter();
 
-        self::assertSame([PostgreSqlType::TEXT], $converter->supportedTypes());
+        self::assertSame([ValueType::TEXT], $converter->supportedTypes());
     }
 }

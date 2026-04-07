@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
+use function Flow\PostgreSql\DSL\{cast, column_type_char, column_type_text, column_type_varchar, literal, param, select};
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class StringConverterTest extends ConverterTestCase
+final class StringConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
@@ -45,14 +47,14 @@ final class StringConverterTest extends ConverterTestCase
     #[DataProvider('provide_char_values')]
     public function test_char_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::char(10) AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
 
         self::assertSame($expected, $result);
     }
 
     public function test_null_text() : void
     {
-        $result = $this->fetchValue('SELECT NULL::text AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql());
 
         self::assertNull($result);
     }
@@ -60,7 +62,7 @@ final class StringConverterTest extends ConverterTestCase
     #[DataProvider('provide_text_values')]
     public function test_text_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::text AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
 
         self::assertSame($expected, $result);
     }
@@ -68,7 +70,7 @@ final class StringConverterTest extends ConverterTestCase
     #[DataProvider('provide_varchar_values')]
     public function test_varchar_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::varchar(255) AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
 
         self::assertSame($expected, $result);
     }

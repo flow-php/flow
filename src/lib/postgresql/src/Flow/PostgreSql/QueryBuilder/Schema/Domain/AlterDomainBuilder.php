@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Domain;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{AlterDomainStmt, ConstrType, Constraint, DropBehavior, Node, PBString};
 use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterDomainFinalStep
 {
@@ -18,7 +18,7 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         private ?string $schema = null,
         private string $subtype = '',
         private ?string $constraintName = null,
-        private ?string $expression = null,
+        private ?Expression $expression = null,
         private int $behavior = DropBehavior::DROP_RESTRICT,
         private bool $missingOk = false,
     ) {
@@ -31,14 +31,14 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function addConstraint(string $name, string $expression) : AlterDomainFinalStep
+    public function addConstraint(string $name, Condition $condition) : AlterDomainFinalStep
     {
         return new self(
             $this->name,
             $this->schema,
             'C',
             $name,
-            $expression,
+            $condition,
             $this->behavior,
             $this->missingOk,
         );
@@ -122,7 +122,7 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         );
     }
 
-    public function setDefault(string $expression) : AlterDomainFinalStep
+    public function setDefault(Expression $expression) : AlterDomainFinalStep
     {
         return new self(
             $this->name,
@@ -178,7 +178,7 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         if ($this->subtype === 'C' && $this->expression !== null) {
             $constraint = new Constraint();
             $constraint->setContype(ConstrType::CONSTR_CHECK);
-            $constraint->setRawExpr($this->parseExpression($this->expression));
+            $constraint->setRawExpr($this->expression->toAst());
 
             if ($this->constraintName !== null) {
                 $constraint->setConname($this->constraintName);
@@ -188,7 +188,7 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
             $defNode->setConstraint($constraint);
             $stmt->setDef($defNode);
         } elseif ($this->subtype === 'T' && $this->expression !== null) {
-            $stmt->setDef($this->parseExpression($this->expression));
+            $stmt->setDef($this->expression->toAst());
         }
 
         $stmt->setBehavior($this->behavior);
@@ -208,45 +208,5 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
             $this->behavior,
             $this->missingOk,
         );
-    }
-
-    private function parseExpression(string $expression) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT {$expression} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
     }
 }

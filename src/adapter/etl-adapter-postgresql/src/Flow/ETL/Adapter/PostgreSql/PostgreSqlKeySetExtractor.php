@@ -11,7 +11,7 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final class PostgreSqlKeySetExtractor implements Extractor
 {
@@ -26,7 +26,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
      */
     public function __construct(
         private readonly Client $client,
-        private readonly string|SqlQuery $query,
+        private readonly string|Sql $query,
         private readonly KeySet $keySet,
         private readonly array $parameters = [],
     ) {
@@ -35,7 +35,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         $uri = 'postgresql://keyset';
-        $sql = $this->query instanceof SqlQuery ? $this->query->toSql() : $this->query;
+        $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
         $totalFetched = 0;
         $cursorValues = null;

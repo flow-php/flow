@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, StringEscaper, ValueConverter};
+use Flow\PostgreSql\Client\Types\{StringEscaper, ValueConverter, ValueType};
 
 final class JsonArrayConverter implements ValueConverter
 {
     public function supportedTypes() : array
     {
         return [
-            PostgreSqlType::JSON_ARRAY,
-            PostgreSqlType::JSONB_ARRAY,
+            ValueType::JSON_ARRAY,
+            ValueType::JSONB_ARRAY,
         ];
     }
 

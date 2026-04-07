@@ -156,7 +156,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\all(" + "$" + "{" + "1:functions" + "}" + ")"),
         boost: 10
     },                {
-        label: "all_sub_select",
+        label: "all_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -171,7 +171,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\all_sub_select(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:subquery" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\all_(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:subquery" + "}" + ")"),
         boost: 10
     },                {
         label: "alter",
@@ -276,7 +276,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\any(" + "$" + "{" + "1:values" + "}" + ")"),
         boost: 10
     },                {
-        label: "any_sub_select",
+        label: "any_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -291,7 +291,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\any_sub_select(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:subquery" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\any_(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:operator" + "}" + ", " + "$" + "{" + "3:subquery" + "}" + ")"),
         boost: 10
     },                {
         label: "append",
@@ -1725,7 +1725,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\conditions()"),
         boost: 10
     },                {
-        label: "cond_and",
+        label: "and_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -1740,7 +1740,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_and(" + "$" + "{" + "1:conditions" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\and_(" + "$" + "{" + "1:conditions" + "}" + ")"),
         boost: 10
     },                {
         label: "cond_false",
@@ -1761,7 +1761,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_false()"),
         boost: 10
     },                {
-        label: "cond_not",
+        label: "not_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -1776,10 +1776,10 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_not(" + "$" + "{" + "1:condition" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\not_(" + "$" + "{" + "1:condition" + "}" + ")"),
         boost: 10
     },                {
-        label: "cond_or",
+        label: "or_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -1794,7 +1794,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\cond_or(" + "$" + "{" + "1:conditions" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\or_(" + "$" + "{" + "1:conditions" + "}" + ")"),
         boost: 10
     },                {
         label: "cond_true",
@@ -4566,7 +4566,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\gt(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },                {
-        label: "gte",
+        label: "ge",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -4581,7 +4581,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\gte(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ge(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },                {
         label: "hash",
@@ -4995,7 +4995,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\int_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },                {
-        label: "is_distinct_from",
+        label: "distinct_from",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -5010,10 +5010,10 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\is_distinct_from(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ", " + "$" + "{" + "3:not" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\distinct_from(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ", " + "$" + "{" + "3:not" + "}" + ")"),
         boost: 10
     },                {
-        label: "is_in",
+        label: "in_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -5028,7 +5028,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\is_in(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\in_(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
         boost: 10
     },                {
         label: "is_null",
@@ -5634,7 +5634,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\lt(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },                {
-        label: "lte",
+        label: "le",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -5649,7 +5649,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\lte(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\le(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },                {
         label: "manual_detector",
@@ -6018,7 +6018,7 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\native_local_filesystem()"),
         boost: 10
     },                {
-        label: "neq",
+        label: "ne",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
@@ -6033,7 +6033,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\neq(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\ne(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },                {
         label: "not",

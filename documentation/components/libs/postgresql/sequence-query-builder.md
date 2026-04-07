@@ -18,7 +18,7 @@ use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq
 ```
 
@@ -31,7 +31,7 @@ use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq', 'public');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE public.user_id_seq
 ```
 
@@ -44,7 +44,7 @@ use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')->ifNotExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE IF NOT EXISTS user_id_seq
 ```
 
@@ -59,7 +59,7 @@ use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('temp_seq')->temporary();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE TEMPORARY SEQUENCE temp_seq
 ```
 
@@ -74,7 +74,7 @@ use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('fast_seq')->unlogged();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE UNLOGGED SEQUENCE fast_seq
 ```
 
@@ -90,7 +90,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->startWith(100);
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq START 100
 ```
 
@@ -106,7 +106,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->incrementBy(10);
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq INCREMENT 10
 ```
 
@@ -123,14 +123,14 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->minValue(1);
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq MINVALUE 1
 
 // Remove minimum bound
 $query = create()->sequence('user_id_seq')
     ->noMinValue();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq NO MINVALUE
 ```
 
@@ -147,14 +147,14 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->maxValue(9999999);
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq MAXVALUE 9999999
 
 // Remove maximum bound
 $query = create()->sequence('user_id_seq')
     ->noMaxValue();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq NO MAXVALUE
 ```
 
@@ -170,7 +170,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->cache(20);
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq CACHE 20
 ```
 
@@ -187,14 +187,14 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->cycle();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq CYCLE
 
 // Disable cycling (explicit)
 $query = create()->sequence('user_id_seq')
     ->noCycle();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq NO CYCLE
 ```
 
@@ -210,7 +210,7 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->asType('bigint');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq AS bigint
 ```
 
@@ -227,21 +227,21 @@ use function Flow\PostgreSql\DSL\create;
 $query = create()->sequence('user_id_seq')
     ->ownedBy('users', 'id');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq OWNED BY users.id
 
 // With schema-qualified table
 $query = create()->sequence('user_id_seq')
     ->ownedBy('public.users', 'id');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq OWNED BY public.users.id
 
 // Remove ownership
 $query = create()->sequence('user_id_seq')
     ->ownedByNone();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq OWNED BY "none"
 ```
 
@@ -261,7 +261,7 @@ $query = create()->sequence('user_id_seq')
     ->cache(1)
     ->noCycle();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CREATE SEQUENCE user_id_seq AS bigint START 1 INCREMENT 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 NO CYCLE
 ```
 
@@ -280,14 +280,14 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->sequence('user_id_seq')
     ->restart();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq RESTART
 
 // Restart at specific value
 $query = alter()->sequence('user_id_seq')
     ->restartWith(1000);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq RESTART 1000
 ```
 
@@ -304,7 +304,7 @@ $query = alter()->sequence('user_id_seq')
     ->ifExists()
     ->incrementBy(10);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE IF EXISTS user_id_seq INCREMENT 10
 ```
 
@@ -318,7 +318,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->sequence('user_id_seq', 'public')
     ->incrementBy(10);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE public.user_id_seq INCREMENT 10
 ```
 
@@ -337,7 +337,7 @@ $query = alter()->sequence('user_id_seq')
     ->maxValue(1000000)
     ->cache(5);
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq INCREMENT 10 MINVALUE 1 MAXVALUE 1000000 CACHE 5
 ```
 
@@ -353,7 +353,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->sequence('old_seq')
     ->renameTo('new_seq');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE old_seq RENAME TO new_seq
 ```
 
@@ -369,7 +369,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->sequence('user_id_seq')
     ->setSchema('new_schema');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq SET SCHEMA new_schema
 ```
 
@@ -385,7 +385,7 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->sequence('user_id_seq')
     ->ownerTo('new_owner');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq OWNER TO new_owner
 ```
 
@@ -402,14 +402,14 @@ use function Flow\PostgreSql\DSL\alter;
 $query = alter()->sequence('user_id_seq')
     ->setLogged();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq SET LOGGED
 
 // Make the sequence unlogged
 $query = alter()->sequence('user_id_seq')
     ->setUnlogged();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ALTER SEQUENCE user_id_seq SET UNLOGGED
 ```
 
@@ -424,7 +424,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE user_id_seq
 ```
 
@@ -437,7 +437,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('public.user_id_seq');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE public.user_id_seq
 ```
 
@@ -450,7 +450,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq')->ifExists();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE IF EXISTS user_id_seq
 ```
 
@@ -463,7 +463,7 @@ use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq', 'order_id_seq', 'product_id_seq');
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE user_id_seq, order_id_seq, product_id_seq
 ```
 
@@ -479,7 +479,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->sequence('user_id_seq')
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE user_id_seq CASCADE
 ```
 
@@ -495,7 +495,7 @@ use function Flow\PostgreSql\DSL\drop;
 $query = drop()->sequence('user_id_seq')
     ->restrict();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE user_id_seq
 ```
 
@@ -510,7 +510,7 @@ $query = drop()->sequence('user_id_seq')
     ->ifExists()
     ->cascade();
 
-echo $query->toSQL();
+echo $query->toSql();
 // DROP SEQUENCE IF EXISTS user_id_seq CASCADE
 ```
 

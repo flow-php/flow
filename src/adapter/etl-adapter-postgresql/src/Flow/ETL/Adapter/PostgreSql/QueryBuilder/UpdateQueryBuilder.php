@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{col, cond_and, eq, param, update};
+use function Flow\PostgreSql\DSL\{and_, col, eq, param, update};
 use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\UpdateOptions};
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\{Row, Row\Entry};
 use Flow\PostgreSql\Client\TypedValue;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final readonly class UpdateQueryBuilder
 {
@@ -20,7 +20,7 @@ final readonly class UpdateQueryBuilder
     }
 
     /**
-     * @return array{null|SqlQuery, list<null|TypedValue>}
+     * @return array{null|Sql, list<null|TypedValue>}
      */
     public function build(Row $row, UpdateOptions $options) : array
     {
@@ -66,7 +66,7 @@ final readonly class UpdateQueryBuilder
         $query = update()
             ->update($this->table)
             ->setAll($assignments)
-            ->where(cond_and(...$conditions));
+            ->where(and_(...$conditions));
 
         return [$query, $params];
     }

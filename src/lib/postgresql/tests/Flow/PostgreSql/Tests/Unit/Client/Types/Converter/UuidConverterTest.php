@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\UuidConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -64,7 +64,7 @@ final class UuidConverterTest extends TestCase
     public function test_supported_types() : void
     {
         $converter = new UuidConverter();
-        self::assertContains(PostgreSqlType::UUID, $converter->supportedTypes());
+        self::assertContains(ValueType::UUID, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]

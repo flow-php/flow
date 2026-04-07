@@ -19,7 +19,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum();
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM
 ```
 
@@ -32,7 +32,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM users
 ```
 
@@ -45,7 +45,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->tables('users', 'orders', 'products');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM users, orders, products
 ```
 
@@ -58,7 +58,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->table('public.users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM public.users
 ```
 
@@ -71,7 +71,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->table('users', 'email', 'name');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM users (email, name)
 ```
 
@@ -86,7 +86,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->full()->tables('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (FULL) users
 ```
 
@@ -101,7 +101,7 @@ use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->analyze()->tables('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (ANALYZE) users
 ```
 
@@ -120,7 +120,7 @@ $query = vacuum()
     ->verbose()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (FULL, FREEZE, VERBOSE, ANALYZE) users
 
 // Skip locked tables
@@ -128,7 +128,7 @@ $query = vacuum()
     ->skipLocked()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (SKIP_LOCKED) users
 
 // Parallel vacuum
@@ -136,7 +136,7 @@ $query = vacuum()
     ->parallel(4)
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (PARALLEL 4) users
 
 // Index cleanup options
@@ -144,7 +144,7 @@ $query = vacuum()
     ->indexCleanup(IndexCleanup::OFF)
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (INDEX_CLEANUP off) users
 
 // Process options
@@ -153,7 +153,7 @@ $query = vacuum()
     ->processToast(false)
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (PROCESS_MAIN true, PROCESS_TOAST false) users
 
 // Truncate option
@@ -161,7 +161,7 @@ $query = vacuum()
     ->truncate(true)
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (TRUNCATE true) users
 
 // Freeze option
@@ -169,7 +169,7 @@ $query = vacuum()
     ->freeze()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (FREEZE) users
 
 // Disable page skipping
@@ -177,7 +177,7 @@ $query = vacuum()
     ->disablePageSkipping()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // VACUUM (DISABLE_PAGE_SKIPPING) users
 ```
 
@@ -194,7 +194,7 @@ use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ANALYZE
 ```
 
@@ -207,7 +207,7 @@ use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze()->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ANALYZE users
 ```
 
@@ -220,7 +220,7 @@ use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze()->table('users', 'email', 'name');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ANALYZE users (email, name)
 ```
 
@@ -233,7 +233,7 @@ use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze()->tables('users', 'orders', 'products');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ANALYZE users, orders, products
 ```
 
@@ -249,7 +249,7 @@ $query = analyze()
     ->verbose()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ANALYZE (VERBOSE) users
 
 // Skip locked tables
@@ -257,7 +257,7 @@ $query = analyze()
     ->skipLocked()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ANALYZE (SKIP_LOCKED) users
 ```
 
@@ -274,7 +274,7 @@ use function Flow\PostgreSql\DSL\{explain, select};
 
 $query = explain(select()->from('users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN SELECT * FROM users
 ```
 
@@ -289,7 +289,7 @@ use function Flow\PostgreSql\DSL\{explain, select};
 
 $query = explain(select()->from('users'))->analyze();
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (ANALYZE) SELECT * FROM users
 ```
 
@@ -303,7 +303,7 @@ use function Flow\PostgreSql\DSL\{explain, select};
 $query = explain(select()->from('users'))
     ->verbose();
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (VERBOSE) SELECT * FROM users
 ```
 
@@ -319,21 +319,21 @@ use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 $query = explain(select()->from('users'))
     ->format(ExplainFormat::JSON);
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (FORMAT json) SELECT * FROM users
 
 // XML format
 $query = explain(select()->from('users'))
     ->format(ExplainFormat::XML);
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (FORMAT xml) SELECT * FROM users
 
 // YAML format
 $query = explain(select()->from('users'))
     ->format(ExplainFormat::YAML);
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (FORMAT yaml) SELECT * FROM users
 ```
 
@@ -353,7 +353,7 @@ $query = explain(select()->from('users'))
     ->costs(true)
     ->format(ExplainFormat::JSON);
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (ANALYZE, VERBOSE, BUFFERS true, TIMING true, COSTS true, FORMAT json) SELECT * FROM users
 ```
 
@@ -368,14 +368,14 @@ use function Flow\PostgreSql\DSL\{explain, select};
 $query = explain(select()->from('users'))
     ->costs(true);
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (COSTS true) SELECT * FROM users
 
 // Without costs
 $query = explain(select()->from('users'))
     ->costs(false);
 
-echo $query->toSQL();
+echo $query->toSql();
 // EXPLAIN (COSTS false) SELECT * FROM users
 ```
 
@@ -392,7 +392,7 @@ use function Flow\PostgreSql\DSL\lock_table;
 
 $query = lock_table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users
 ```
 
@@ -406,40 +406,40 @@ use Flow\PostgreSql\QueryBuilder\Utility\LockMode;
 
 // Using mode shortcuts
 $query = lock_table('users')->accessShare();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN ACCESS SHARE MODE
 
 $query = lock_table('users')->rowShare();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN ROW SHARE MODE
 
 $query = lock_table('users')->rowExclusive();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN ROW EXCLUSIVE MODE
 
 $query = lock_table('users')->shareUpdateExclusive();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN SHARE UPDATE EXCLUSIVE MODE
 
 $query = lock_table('users')->share();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN SHARE MODE
 
 $query = lock_table('users')->shareRowExclusive();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE
 
 $query = lock_table('users')->exclusive();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN EXCLUSIVE MODE
 
 $query = lock_table('users')->accessExclusive();
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN ACCESS EXCLUSIVE MODE
 
 // Using enum
 $query = lock_table('users')->inMode(LockMode::EXCLUSIVE);
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN EXCLUSIVE MODE
 ```
 
@@ -453,7 +453,7 @@ use function Flow\PostgreSql\DSL\lock_table;
 $query = lock_table('users', 'orders')
     ->exclusive();
 
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users, orders IN EXCLUSIVE MODE
 ```
 
@@ -468,7 +468,7 @@ $query = lock_table('users')
     ->exclusive()
     ->nowait();
 
-echo $query->toSQL();
+echo $query->toSql();
 // LOCK TABLE users IN EXCLUSIVE MODE NOWAIT
 ```
 
@@ -500,7 +500,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 $query = comment(CommentTarget::TABLE, 'users')
     ->is('User accounts table');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMENT ON TABLE users IS 'User accounts table'
 ```
 
@@ -515,7 +515,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 $query = comment(CommentTarget::COLUMN, 'users.email')
     ->is('User email address');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMENT ON COLUMN users.email IS 'User email address'
 ```
 
@@ -530,7 +530,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 $query = comment(CommentTarget::INDEX, 'idx_users_email')
     ->is('Email lookup index');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMENT ON INDEX idx_users_email IS 'Email lookup index'
 ```
 
@@ -545,7 +545,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 $query = comment(CommentTarget::SCHEMA, 'public')
     ->is('Default schema');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMENT ON SCHEMA public IS 'Default schema'
 ```
 
@@ -560,7 +560,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 $query = comment(CommentTarget::TABLE, 'users')
     ->isNull();
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMENT ON TABLE users IS NULL
 ```
 
@@ -598,7 +598,7 @@ use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster();
 
-echo $query->toSQL();
+echo $query->toSql();
 // CLUSTER
 ```
 
@@ -611,7 +611,7 @@ use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster()->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CLUSTER users
 ```
 
@@ -625,7 +625,7 @@ use function Flow\PostgreSql\DSL\cluster;
 $query = cluster()->table('users')
     ->using('idx_users_pkey');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CLUSTER users USING idx_users_pkey
 ```
 
@@ -638,7 +638,7 @@ use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster()->table('public.users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CLUSTER public.users
 ```
 
@@ -653,7 +653,7 @@ $query = cluster()
     ->verbose()
     ->table('users');
 
-echo $query->toSQL();
+echo $query->toSql();
 // CLUSTER (VERBOSE) users
 ```
 
@@ -671,7 +671,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::ALL);
 
-echo $query->toSQL();
+echo $query->toSql();
 // DISCARD ALL
 ```
 
@@ -685,7 +685,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::PLANS);
 
-echo $query->toSQL();
+echo $query->toSql();
 // DISCARD PLANS
 ```
 
@@ -699,7 +699,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::SEQUENCES);
 
-echo $query->toSQL();
+echo $query->toSql();
 // DISCARD SEQUENCES
 ```
 
@@ -713,7 +713,7 @@ use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::TEMP);
 
-echo $query->toSQL();
+echo $query->toSql();
 // DISCARD TEMP
 ```
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
 use Flow\PostgreSql\Protobuf\AST\AlterRoleStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface AlterRoleFinalStep extends SqlQuery
+interface AlterRoleFinalStep extends Sql
 {
     public function bypassRls() : self;
 

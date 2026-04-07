@@ -6,9 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Index\CreateIndex;
 
 use Flow\PostgreSql\Protobuf\AST\IndexStmt;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface CreateIndexFinalStep extends SqlQuery
+interface CreateIndexFinalStep extends Sql
 {
     public function include(string ...$columns) : self;
 

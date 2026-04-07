@@ -22,7 +22,7 @@ $query = merge('target_table', 't')
         'value' => col('s.value'),
     ]);
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO target_table t USING source_table s ON t.id = s.id WHEN MATCHED THEN UPDATE SET name = s.name, value = s.value
 ```
 
@@ -39,7 +39,7 @@ $query = merge('target_table', 't')
     ->whenMatched()
     ->thenDelete();
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO target_table t USING source_table s ON t.id = s.id WHEN MATCHED THEN DELETE
 ```
 
@@ -59,7 +59,7 @@ $query = merge('customers')
         [col('nc.id'), col('nc.name'), col('nc.email')]
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO customers USING new_customers nc ON customers.id = nc.id WHEN NOT MATCHED THEN INSERT (id, name, email) VALUES (nc.id, nc.name, nc.email)
 ```
 
@@ -82,7 +82,7 @@ $query = merge('users')
         'status' => literal('active'),
     ]);
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO users USING new_users n ON users.id = n.id WHEN NOT MATCHED THEN INSERT (id, name, status) VALUES (n.id, n.name, 'active')
 ```
 
@@ -109,7 +109,7 @@ $query = merge('inventory', 'i')
         [col('u.product_id'), col('u.quantity')]
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO inventory i USING updates u ON i.product_id = u.product_id WHEN MATCHED THEN UPDATE SET quantity = u.quantity, updated_at = u.updated_at WHEN NOT MATCHED THEN INSERT (product_id, quantity) VALUES (u.product_id, u.quantity)
 ```
 
@@ -130,7 +130,7 @@ $query = merge('products', 'p')
         'price' => col('pu.price'),
     ]);
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO products p USING price_updates pu ON p.id = pu.product_id WHEN MATCHED AND pu.price > 0 THEN UPDATE SET price = pu.price
 ```
 
@@ -147,7 +147,7 @@ $query = merge('products')
     ->whenMatched()
     ->thenDoNothing();
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO products USING updates u ON products.id = u.id WHEN MATCHED THEN DO NOTHING
 ```
 
@@ -173,7 +173,7 @@ $query = merge('users')
         'email' => col('src.email'),
     ]);
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO users USING (SELECT id, name, email FROM staged_data) src ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name, email = src.email
 ```
 
@@ -219,7 +219,7 @@ $query = merge('accounts')
         'balance' => param(1),
     ]);
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO accounts USING transactions t ON accounts.id = t.account_id WHEN MATCHED THEN UPDATE SET balance = $1
 ```
 
@@ -238,7 +238,7 @@ $query = merge('target', 't')
     ->whenNotMatchedBySource()
     ->thenDelete();
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO target t USING source s ON t.id = s.id WHEN NOT MATCHED BY SOURCE THEN DELETE
 ```
 
@@ -255,7 +255,7 @@ $query = merge('myschema.users', 'u')
     ->whenMatched()
     ->thenDoNothing();
 
-echo $query->toSQL();
+echo $query->toSql();
 // MERGE INTO myschema.users u USING public.updates s ON u.id = s.id WHEN MATCHED THEN DO NOTHING
 ```
 

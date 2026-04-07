@@ -7,9 +7,9 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use function Flow\PostgreSql\DSL\{
     col,
     column,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_serial,
-    data_type_varchar,
     desc,
     insert,
     literal,
@@ -19,8 +19,9 @@ use function Flow\PostgreSql\DSL\{
     table,
     truncate_table
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class TruncateDatabaseTest extends DatabaseTestCase
+final class TruncateDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_truncate_schema';
 
@@ -34,23 +35,23 @@ final class TruncateDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_ONE)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_TWO)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
@@ -60,7 +61,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_TWO)
                 ->columns('name')
@@ -72,43 +73,37 @@ final class TruncateDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_TWO);
-        $this->dropTableIfExists(self::TABLE_ONE);
-        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_TWO);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_ONE);
+        $this->pgsqlContext()->client()->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
 
         parent::tearDown();
     }
 
     public function test_truncate_cascade() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE)->cascade()->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
         self::assertCount(0, $rows);
     }
 
     public function test_truncate_continue_identity() : void
     {
-        $lastRow = $this->fetchOne(
-            $this->execute(
-                select(col('id'))->from(table(self::TABLE_ONE))->orderBy(desc(col('id')))->limit(1)->toSql()
-            )
+        $lastRow = $this->pgsqlContext()->client()->fetchOne(
+            select(col('id'))->from(table(self::TABLE_ONE))->orderBy(desc(col('id')))->limit(1)->toSql()
         );
         $lastId = (int) $lastRow['id'];
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE)->continueIdentity()->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
@@ -116,45 +111,37 @@ final class TruncateDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
 
-        self::assertSame((string) ($lastId + 1), $row['id']);
+        self::assertSame($lastId + 1, $row['id']);
     }
 
     public function test_truncate_multiple_tables() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE, self::TABLE_TWO)->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $rowsOne = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $rowsOne = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
         self::assertCount(0, $rowsOne);
 
-        $rowsTwo = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TWO))->toSql()
-            )
+        $rowsTwo = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TWO))->toSql()
         );
         self::assertCount(0, $rowsTwo);
     }
 
     public function test_truncate_restart_identity() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE)->restartIdentity()->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
@@ -162,74 +149,58 @@ final class TruncateDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
 
-        self::assertSame('1', $row['id']);
+        self::assertSame(1, $row['id']);
         self::assertSame('NewRow', $row['name']);
     }
 
     public function test_truncate_restrict() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE)->restrict()->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
         self::assertCount(0, $rows);
     }
 
     public function test_truncate_single_table() : void
     {
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
         self::assertCount(3, $rows);
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE)->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
         self::assertCount(0, $rows);
 
-        $rowsTwo = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TWO))->toSql()
-            )
+        $rowsTwo = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TWO))->toSql()
         );
         self::assertCount(2, $rowsTwo);
     }
 
     public function test_truncate_with_restart_identity_and_cascade() : void
     {
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::TABLE_ONE, self::TABLE_TWO)
                 ->restartIdentity()
                 ->cascade()
                 ->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
@@ -237,28 +208,26 @@ final class TruncateDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $row = $this->fetchOne(
-            $this->execute(
-                select(star())->from(table(self::TABLE_ONE))->toSql()
-            )
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(star())->from(table(self::TABLE_ONE))->toSql()
         );
 
-        self::assertSame('1', $row['id']);
+        self::assertSame(1, $row['id']);
     }
 
     public function test_truncate_with_schema_qualified_table() : void
     {
-        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+        $this->pgsqlContext()->client()->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
                 ->columns('name')
@@ -267,23 +236,17 @@ final class TruncateDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))->toSql()
         );
         self::assertCount(2, $rows);
 
-        $result = $this->execute(
+        $this->pgsqlContext()->client()->execute(
             truncate_table(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)->toSql()
         );
 
-        self::assertNotFalse($result);
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))->toSql()
         );
         self::assertCount(0, $rows);
     }

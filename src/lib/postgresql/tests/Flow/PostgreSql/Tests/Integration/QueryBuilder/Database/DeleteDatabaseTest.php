@@ -8,24 +8,25 @@ use function Flow\PostgreSql\DSL\{
     agg_count,
     col,
     column,
-    cond_or,
+    column_type_integer,
+    column_type_serial,
+    column_type_text,
+    column_type_timestamp,
+    column_type_varchar,
     create,
-    data_type_integer,
-    data_type_serial,
-    data_type_text,
-    data_type_timestamp,
-    data_type_varchar,
     delete,
     eq,
     insert,
     literal,
+    or_,
     primary_key,
     select,
     star,
     table
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class DeleteDatabaseTest extends DatabaseTestCase
+final class DeleteDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_delete_schema';
 
@@ -39,25 +40,25 @@ final class DeleteDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_LOGS)
-                ->column(column('id', data_type_serial()))
-                ->column(column('level', data_type_varchar(20))->notNull())
-                ->column(column('message', data_type_text()))
-                ->column(column('created_at', data_type_timestamp()))
+                ->column(column('id', column_type_serial()))
+                ->column(column('level', column_type_varchar(20))->notNull())
+                ->column(column('message', column_type_text()))
+                ->column(column('created_at', column_type_timestamp()))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_ARCHIVE)
-                ->column(column('id', data_type_serial()))
-                ->column(column('log_id', data_type_integer())->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('log_id', column_type_integer())->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_LOGS)
                 ->columns('level', 'message')
@@ -69,7 +70,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_ARCHIVE)
                 ->columns('log_id')
@@ -81,9 +82,9 @@ final class DeleteDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_ARCHIVE);
-        $this->dropTableIfExists(self::TABLE_LOGS);
-        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_ARCHIVE);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_LOGS);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
 
         parent::tearDown();
     }
@@ -93,18 +94,14 @@ final class DeleteDatabaseTest extends DatabaseTestCase
         $query = delete()
             ->from(self::TABLE_ARCHIVE);
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_ARCHIVE))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
-        self::assertSame('0', $row['cnt']);
+        self::assertSame(0, $row['cnt']);
     }
 
     public function test_delete_with_multiple_conditions() : void
@@ -112,16 +109,13 @@ final class DeleteDatabaseTest extends DatabaseTestCase
         $query = delete()
             ->from(self::TABLE_LOGS)
             ->where(
-                cond_or(
+                or_(
                     eq(col('level'), literal('INFO')),
                     eq(col('level'), literal('WARNING'))
                 )
             );
 
-        $result = $this->execute($query->toSql());
-
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
     }
 
     public function test_delete_with_returning() : void
@@ -131,17 +125,15 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             ->where(eq(col('level'), literal('ERROR')))
             ->returning(col('id'), col('level'), col('message'));
 
-        $result = $this->execute($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
 
-        self::assertNotFalse($result);
-        $row = $this->fetchOne($result);
         self::assertSame('ERROR', $row['level']);
         self::assertSame('Error occurred', $row['message']);
     }
 
     public function test_delete_with_returning_all() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_LOGS)
                 ->columns('level', 'message')
@@ -154,10 +146,8 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             ->where(eq(col('level'), literal('TRACE')))
             ->returningAll();
 
-        $result = $this->execute($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
 
-        self::assertNotFalse($result);
-        $row = $this->fetchOne($result);
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('level', $row);
         self::assertArrayHasKey('message', $row);
@@ -166,18 +156,18 @@ final class DeleteDatabaseTest extends DatabaseTestCase
 
     public function test_delete_with_schema_qualified_table() : void
     {
-        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+        $this->pgsqlContext()->client()->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('level', data_type_varchar(20))->notNull())
-                ->column(column('message', data_type_text()))
+                ->column(column('id', column_type_serial()))
+                ->column(column('level', column_type_varchar(20))->notNull())
+                ->column(column('message', column_type_text()))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
                 ->columns('level', 'message')
@@ -190,18 +180,14 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             ->from(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
             ->where(eq(col('level'), literal('DEBUG')));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
-        self::assertSame('1', $row['cnt']);
+        self::assertSame(1, $row['cnt']);
     }
 
     public function test_delete_with_using() : void
@@ -216,10 +202,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
                 )
             );
 
-        $result = $this->execute($query->toSql());
-
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
     }
 
     public function test_delete_with_where() : void
@@ -228,18 +211,14 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             ->from(self::TABLE_LOGS)
             ->where(eq(col('level'), literal('DEBUG')));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_LOGS))
                 ->where(eq(col('level'), literal('DEBUG')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
-        self::assertSame('0', $row['cnt']);
+        self::assertSame(0, $row['cnt']);
     }
 }

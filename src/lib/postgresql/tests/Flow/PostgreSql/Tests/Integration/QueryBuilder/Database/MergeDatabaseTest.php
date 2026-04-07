@@ -7,10 +7,10 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use function Flow\PostgreSql\DSL\{
     col,
     column,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     eq,
     gt,
     insert,
@@ -22,8 +22,9 @@ use function Flow\PostgreSql\DSL\{
     star,
     table
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class MergeDatabaseTest extends DatabaseTestCase
+final class MergeDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_merge_schema';
 
@@ -39,25 +40,25 @@ final class MergeDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_TARGET)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('value', data_type_integer())->default(0))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('value', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_SOURCE)
-                ->column(column('id', data_type_integer())->notNull())
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('value', data_type_integer())->default(0))
+                ->column(column('id', column_type_integer())->notNull())
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('value', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_TARGET)
                 ->columns('name', 'value')
@@ -66,7 +67,7 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_SOURCE)
                 ->columns('id', 'name', 'value')
@@ -79,9 +80,9 @@ final class MergeDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_SOURCE);
-        $this->dropTableIfExists(self::TABLE_TARGET);
-        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_SOURCE);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_TARGET);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
 
         parent::tearDown();
     }
@@ -94,15 +95,10 @@ final class MergeDatabaseTest extends DatabaseTestCase
             ->whenMatched()
             ->thenDelete();
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->toSql()
         );
 
         self::assertCount(0, $rows);
@@ -116,14 +112,10 @@ final class MergeDatabaseTest extends DatabaseTestCase
             ->whenMatched()
             ->thenDoNothing();
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
         );
 
         self::assertCount(2, $rows);
@@ -142,20 +134,15 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 'value' => col('s.value'),
             ]);
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
         );
 
         self::assertCount(3, $rows);
         self::assertSame('Charlie', $rows[2]['name']);
-        self::assertSame('300', $rows[2]['value']);
+        self::assertSame(300, $rows[2]['value']);
     }
 
     public function test_merge_update_and_insert() : void
@@ -174,15 +161,10 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 'value' => col('s.value'),
             ]);
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(3, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(3, $this->affectedRows($result));
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
         );
 
         self::assertCount(3, $rows);
@@ -202,22 +184,17 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 'value' => col('s.value'),
             ]);
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
         );
 
         self::assertCount(2, $rows);
         self::assertSame('Alice Updated', $rows[0]['name']);
-        self::assertSame('150', $rows[0]['value']);
+        self::assertSame(150, $rows[0]['value']);
         self::assertSame('Bob Updated', $rows[1]['name']);
-        self::assertSame('250', $rows[1]['value']);
+        self::assertSame(250, $rows[1]['value']);
     }
 
     public function test_merge_using_subquery() : void
@@ -239,18 +216,14 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 'value' => col('s.value'),
             ]);
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
         );
 
         self::assertCount(3, $rows);
-        self::assertSame('250', $rows[1]['value']);
+        self::assertSame(250, $rows[1]['value']);
         self::assertSame('Charlie', $rows[2]['name']);
     }
 
@@ -264,45 +237,40 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 'value' => col('s.value'),
             ]);
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())->from(table(self::TABLE_TARGET))->orderBy(order_by(col('id')))->toSql()
         );
 
         self::assertCount(2, $rows);
-        self::assertSame('100', $rows[0]['value']);
-        self::assertSame('250', $rows[1]['value']);
+        self::assertSame(100, $rows[0]['value']);
+        self::assertSame(250, $rows[1]['value']);
     }
 
     public function test_merge_with_schema_qualified_tables() : void
     {
-        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+        $this->pgsqlContext()->client()->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_TARGET, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('value', data_type_integer())->default(0))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('value', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_SOURCE, self::SCHEMA_NAME)
-                ->column(column('id', data_type_integer())->notNull())
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('value', data_type_integer())->default(0))
+                ->column(column('id', column_type_integer())->notNull())
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('value', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TARGET)
                 ->columns('name', 'value')
@@ -310,7 +278,7 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_SOURCE)
                 ->columns('id', 'name', 'value')
@@ -333,24 +301,19 @@ final class MergeDatabaseTest extends DatabaseTestCase
                 'value' => col('s.value'),
             ]);
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
-
-        $rows = $this->fetchAll(
-            $this->execute(
-                select(star())
-                    ->from(table(self::SCHEMA_TARGET, self::SCHEMA_NAME))
-                    ->orderBy(order_by(col('id')))
-                    ->toSql()
-            )
+        $rows = $this->pgsqlContext()->client()->fetchAll(
+            select(star())
+                ->from(table(self::SCHEMA_TARGET, self::SCHEMA_NAME))
+                ->orderBy(order_by(col('id')))
+                ->toSql()
         );
 
         self::assertCount(2, $rows);
         self::assertSame('Updated Row', $rows[0]['name']);
-        self::assertSame('200', $rows[0]['value']);
+        self::assertSame(200, $rows[0]['value']);
         self::assertSame('New Row', $rows[1]['name']);
-        self::assertSame('300', $rows[1]['value']);
+        self::assertSame(300, $rows[1]['value']);
     }
 }

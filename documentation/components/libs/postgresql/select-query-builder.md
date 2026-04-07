@@ -17,14 +17,14 @@ use function Flow\PostgreSql\DSL\{select, col, star, table};
 $query = select(col('id'), col('name'))
     ->from(table('users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT id, name FROM users
 
 // Select all columns
 $query = select(star())
     ->from(table('users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users
 ```
 
@@ -35,9 +35,9 @@ echo $query->toSQL();
 
 use function Flow\PostgreSql\DSL\{
     select, star, table, col,
-    eq, gt, lt, gte, lte, neq, between, is_in, like, is_null,
+    eq, gt, lt, ge, le, ne, between, in_, like, is_null,
     literal, literal,
-    cond_and, cond_or, cond_not
+    and_, or_, not_
 };
 
 // Simple condition
@@ -45,37 +45,37 @@ $query = select(star())
     ->from(table('users'))
     ->where(eq(col('active'), literal(true)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE active = true
 
 // Multiple conditions with AND
 $query = select(star())
     ->from(table('products'))
     ->where(
-        cond_and(
+        and_(
             gt(col('price'), literal(10)),
             lt(col('price'), literal(100)),
             eq(col('in_stock'), literal(true))
         )
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE price > 10 AND price < 100 AND in_stock = true
 
 // Complex conditions with AND/OR
 $query = select(star())
     ->from(table('users'))
     ->where(
-        cond_and(
+        and_(
             eq(col('status'), literal('active')),
-            cond_or(
-                gte(col('age'), literal(18)),
+            or_(
+                ge(col('age'), literal(18)),
                 eq(col('guardian_approved'), literal(true))
             )
         )
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE status = 'active' AND (age >= 18 OR guardian_approved = true)
 
 // BETWEEN condition
@@ -83,19 +83,19 @@ $query = select(star())
     ->from(table('products'))
     ->where(between(col('price'), literal(10), literal(100)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE price BETWEEN 10 AND 100
 
 // IN condition
 $query = select(star())
     ->from(table('users'))
-    ->where(is_in(col('status'), [
+    ->where(in_(col('status'), [
         literal('active'),
         literal('pending'),
         literal('verified')
     ]));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE status IN ('active', 'pending', 'verified')
 
 // LIKE condition
@@ -103,7 +103,7 @@ $query = select(star())
     ->from(table('users'))
     ->where(like(col('email'), literal('%@example.com')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE email LIKE '%@example.com'
 ```
 
@@ -126,7 +126,7 @@ $query = select(col('u.name'), col('o.total'))
         eq(col('u.id'), col('o.user_id'))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id
 
 // LEFT JOIN
@@ -137,7 +137,7 @@ $query = select(col('u.name'), col('o.total'))
         eq(col('u.id'), col('o.user_id'))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT u.name, o.total FROM users u LEFT JOIN orders o ON u.id = o.user_id
 
 // RIGHT JOIN
@@ -148,7 +148,7 @@ $query = select(star())
         eq(col('o.user_id'), col('u.id'))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM orders o RIGHT JOIN users u ON o.user_id = u.id
 
 // FULL JOIN
@@ -159,7 +159,7 @@ $query = select(star())
         eq(col('a.key'), col('b.key'))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM table_a a FULL JOIN table_b b ON a.key = b.key
 
 // CROSS JOIN
@@ -167,7 +167,7 @@ $query = select(star())
     ->from(table('colors'))
     ->crossJoin(table('sizes'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM colors CROSS JOIN sizes
 ```
 
@@ -187,7 +187,7 @@ $query = select(star())
     ->from(table('users'))
     ->orderBy(asc(col('name')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users ORDER BY name ASC
 
 // Multiple columns
@@ -198,7 +198,7 @@ $query = select(star())
         desc(col('first_name'))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users ORDER BY last_name ASC, first_name DESC
 
 // NULLS FIRST / NULLS LAST
@@ -209,7 +209,7 @@ $query = select(star())
         order_by(col('name'), SortDirection::DESC, NullsPosition::LAST)
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products ORDER BY price ASC NULLS FIRST, name DESC NULLS LAST
 ```
 
@@ -226,7 +226,7 @@ $query = select(star())
     ->limit(10)
     ->offset(20);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users ORDER BY id ASC LIMIT 10 OFFSET 20
 ```
 
@@ -253,7 +253,7 @@ $query = with(
     ->select(star())
     ->from(table('active_users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // WITH active_users AS (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users
 
 // Multiple CTEs
@@ -264,7 +264,7 @@ $query = with(
     ->select(star())
     ->from(table('users_cte'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // WITH users_cte AS (SELECT id, name FROM users), orders_cte AS (SELECT id, user_id FROM orders) SELECT * FROM users_cte
 
 // Recursive CTE
@@ -273,7 +273,7 @@ $query = with(cte('tree', $recursiveQuery))
     ->select(star())
     ->from(table('tree'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // WITH RECURSIVE tree AS (...) SELECT * FROM tree
 
 // Materialized CTE
@@ -290,7 +290,7 @@ $query = with(
     ->select(star())
     ->from(table('active_users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // WITH active_users AS MATERIALIZED (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users
 ```
 
@@ -314,7 +314,7 @@ $query = select(col('u.name'), col('o.total'))
         eq(col('u.id'), col('o.user_id'))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT u.name, o.total FROM users u LEFT JOIN (SELECT user_id, sum(amount) AS total FROM orders GROUP BY user_id) o ON u.id = o.user_id
 ```
 
@@ -324,7 +324,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    select, star, table, col, derived, lateral, desc, eq, raw_cond
+    select, star, table, col, derived, lateral, desc, eq, is_true, literal
 };
 
 $lateralQuery = select(star())
@@ -338,10 +338,10 @@ $query = select()
     ->from(table('users')->as('u'))
     ->leftJoin(
         lateral(derived($lateralQuery, 'recent')),
-        raw_cond('true')
+        is_true(literal(true))
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT u.name, recent.id FROM users u LEFT JOIN LATERAL (SELECT * FROM orders WHERE orders.user_id = u.id ORDER BY created_at DESC LIMIT 3) recent ON true
 ```
 
@@ -353,7 +353,7 @@ The query builder provides native support for PostgreSQL JSONB operators:
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    select, star, table, col, literal, raw_expr,
+    select, star, table, col, literal, array_expr,
     json_contains, json_contained_by, json_get, json_get_text,
     json_path, json_path_text, json_exists, json_exists_any, json_exists_all
 };
@@ -363,7 +363,7 @@ $query = select(star())
     ->from(table('products'))
     ->where(json_contains(col('metadata'), literal('{"category": "electronics"}')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE metadata @> '{"category": "electronics"}'
 
 // JSONB is contained by (<@)
@@ -371,35 +371,35 @@ $query = select(star())
     ->from(table('products'))
     ->where(json_contained_by(col('metadata'), literal('{"category": "electronics", "price": 100}')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE metadata <@ '{"category": "electronics", "price": 100}'
 
 // JSON field access (->) - returns JSON
 $query = select(json_get(col('metadata'), literal('category'))->as('category'))
     ->from(table('products'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT metadata -> 'category' AS category FROM products
 
 // JSON field access (->>) - returns text
 $query = select(json_get_text(col('metadata'), literal('name'))->as('product_name'))
     ->from(table('products'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT metadata ->> 'name' AS product_name FROM products
 
 // JSON path access (#>) - returns JSON
 $query = select(json_path(col('metadata'), literal('{category,name}'))->as('nested'))
     ->from(table('products'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT metadata #> '{category,name}' AS nested FROM products
 
 // JSON path access (#>>) - returns text
 $query = select(json_path_text(col('metadata'), literal('{category,name}'))->as('nested_text'))
     ->from(table('products'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT metadata #>> '{category,name}' AS nested_text FROM products
 
 // Key exists (?)
@@ -407,23 +407,23 @@ $query = select(star())
     ->from(table('products'))
     ->where(json_exists(col('metadata'), literal('category')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE metadata ? 'category'
 
 // Any key exists (?|)
 $query = select(star())
     ->from(table('products'))
-    ->where(json_exists_any(col('metadata'), raw_expr("array['category', 'name']")));
+    ->where(json_exists_any(col('metadata'), array_expr([literal('category'), literal('name')])));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE metadata ?| array['category', 'name']
 
 // All keys exist (?&)
 $query = select(star())
     ->from(table('products'))
-    ->where(json_exists_all(col('metadata'), raw_expr("array['category', 'name']")));
+    ->where(json_exists_all(col('metadata'), array_expr([literal('category'), literal('name')])));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE metadata ?& array['category', 'name']
 ```
 
@@ -435,32 +435,32 @@ PostgreSQL array operators are also supported:
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    select, star, table, col, raw_expr,
+    select, star, table, col, literal, array_expr,
     array_contains, array_contained_by, array_overlap
 };
 
 // Array contains (@>)
 $query = select(star())
     ->from(table('products'))
-    ->where(array_contains(col('tags'), raw_expr("ARRAY['sale']")));
+    ->where(array_contains(col('tags'), array_expr([literal('sale')])));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE tags @> ARRAY['sale']
 
 // Array is contained by (<@)
 $query = select(star())
     ->from(table('products'))
-    ->where(array_contained_by(col('tags'), raw_expr("ARRAY['sale', 'featured', 'new']")));
+    ->where(array_contained_by(col('tags'), array_expr([literal('sale'), literal('featured'), literal('new')])));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE tags <@ ARRAY['sale', 'featured', 'new']
 
 // Array overlap (&&)
 $query = select(star())
     ->from(table('products'))
-    ->where(array_overlap(col('tags'), raw_expr("ARRAY['sale', 'featured']")));
+    ->where(array_overlap(col('tags'), array_expr([literal('sale'), literal('featured')])));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM products WHERE tags && ARRAY['sale', 'featured']
 ```
 
@@ -481,7 +481,7 @@ $query = select(star())
     ->from(table('users'))
     ->where(regex_match(col('email'), literal('.*@gmail\\.com')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE email ~ '.*@gmail\.com'
 
 // Case-insensitive regex match (~*)
@@ -489,7 +489,7 @@ $query = select(star())
     ->from(table('users'))
     ->where(regex_imatch(col('email'), literal('.*@gmail\\.com')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE email ~* '.*@gmail\.com'
 
 // Does not match (!~)
@@ -497,7 +497,7 @@ $query = select(star())
     ->from(table('users'))
     ->where(not_regex_match(col('email'), literal('.*@spam\\.com')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE email !~ '.*@spam\.com'
 
 // Does not match case-insensitive (!~*)
@@ -505,8 +505,78 @@ $query = select(star())
     ->from(table('users'))
     ->where(not_regex_imatch(col('email'), literal('.*@spam\\.com')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE email !~* '.*@spam\.com'
+```
+
+## SIMILAR TO
+
+SQL-standard pattern matching (like LIKE but supports full regex character classes):
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{select, star, table, col, literal, similar_to};
+
+$query = select(star())
+    ->from(table('users'))
+    ->where(similar_to(col('email'), literal('%@(gmail|yahoo)\\.com')));
+
+echo $query->toSql();
+// SELECT * FROM users WHERE email SIMILAR TO '%@(gmail|yahoo)\.com'
+```
+
+## NOT LIKE
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{select, star, table, col, literal, not_like};
+
+$query = select(star())
+    ->from(table('users'))
+    ->where(not_like(col('name'), literal('pg_%')));
+
+echo $query->toSql();
+// SELECT * FROM users WHERE name NOT LIKE 'pg_%'
+```
+
+## IS DISTINCT FROM
+
+NULL-safe comparison (treats NULL as a known value):
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{select, star, table, col, literal, distinct_from};
+
+$query = select(star())
+    ->from(table('users'))
+    ->where(distinct_from(col('email'), literal('test@example.com')));
+
+echo $query->toSql();
+// SELECT * FROM users WHERE email IS DISTINCT FROM 'test@example.com'
+```
+
+## ALL Condition
+
+Compare against all values from a subquery or array:
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{
+    select, star, table, col,
+    all_
+};
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+
+$query = select(star())
+    ->from(table('products'))
+    ->where(all_(col('price'), ComparisonOperator::GT, col('thresholds')));
+
+echo $query->toSql();
+// SELECT * FROM products WHERE price > ALL(thresholds)
 ```
 
 ## Full-Text Search
@@ -517,14 +587,14 @@ PostgreSQL full-text search operator:
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    select, star, table, col, raw_expr, text_search_match
+    select, star, table, col, literal, func, text_search_match
 };
 
 $query = select(star())
     ->from(table('documents'))
-    ->where(text_search_match(col('content'), raw_expr("to_tsquery('english', 'hello & world')")));
+    ->where(text_search_match(col('content'), func('to_tsquery', [literal('english'), literal('hello & world')])));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM documents WHERE content @@ to_tsquery('english', 'hello & world')
 ```
 
@@ -550,7 +620,7 @@ $query = select(
     ->from(table('orders'))
     ->groupBy(col('category'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT category, count(*), sum(amount), avg(price), min(created_at), max(updated_at) FROM orders GROUP BY category
 
 // GROUP BY with HAVING
@@ -559,14 +629,14 @@ $query = select(col('category'), agg_count()->as('cnt'))
     ->groupBy(col('category'))
     ->having(gt(agg_count(), literal(5)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT category, count(*) AS cnt FROM products GROUP BY category HAVING count(*) > 5
 
 // COUNT DISTINCT
 $query = select(agg_count(col('user_id'), true)->as('unique_users'))
     ->from(table('orders'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT count(DISTINCT user_id) AS unique_users FROM orders
 ```
 
@@ -586,25 +656,25 @@ $query2 = select(col('name'))
 // UNION
 $query = $query1->union($query2);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT name FROM users UNION SELECT name FROM admins
 
 // UNION ALL
 $query = $query1->unionAll($query2);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT name FROM users UNION ALL SELECT name FROM admins
 
 // INTERSECT
 $query = $query1->intersect($query2);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT name FROM users INTERSECT SELECT name FROM admins
 
 // EXCEPT
 $query = $query1->except($query2);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT name FROM users EXCEPT SELECT name FROM admins
 ```
 
@@ -629,7 +699,7 @@ $query = select(
     )
     ->from(table('users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT name, (SELECT count(*) FROM orders WHERE orders.user_id = users.id) AS order_count FROM users
 
 // EXISTS subquery
@@ -641,7 +711,7 @@ $query = select(star())
     ->from(table('users'))
     ->where(exists($subquery));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE EXISTS (SELECT 1 FROM orders WHERE orders.user_id = users.id)
 ```
 
@@ -658,7 +728,7 @@ $query = select(star())
     ->from(table('users'))
     ->where(eq(col('id'), param(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM users WHERE id = $1
 ```
 
@@ -674,7 +744,7 @@ $query = select(star())
     ->where(eq(col('id'), literal(1)))
     ->forUpdate();
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM accounts WHERE id = 1 FOR UPDATE
 
 $query = select(star())
@@ -682,7 +752,7 @@ $query = select(star())
     ->where(eq(col('id'), literal(1)))
     ->forShare();
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT * FROM accounts WHERE id = 1 FOR SHARE
 ```
 
@@ -699,7 +769,7 @@ $query = select(
     )
     ->from(table('users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT first_name AS fname, last_name AS lname FROM users
 ```
 
@@ -715,7 +785,7 @@ $query = select()
     ->selectDistinct(col('city'))
     ->from(table('users'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT DISTINCT city FROM users
 
 // DISTINCT ON
@@ -728,7 +798,7 @@ $query = select()
     ->from(table('employees'))
     ->orderBy(asc(col('department')), desc(col('salary')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // SELECT DISTINCT ON (department) name, salary FROM employees ORDER BY department ASC, salary DESC
 ```
 

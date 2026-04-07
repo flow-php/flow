@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, BoolExpr, BoolExprType, Node, PBString};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
 
 final readonly class Like implements Condition
 {
@@ -15,6 +15,7 @@ final readonly class Like implements Condition
         public Expression $pattern,
         public bool $caseInsensitive = false,
         public ?Expression $escape = null,
+        public bool $negated = false,
     ) {
     }
 
@@ -59,6 +60,11 @@ final readonly class Like implements Condition
         return new AndCondition($this, $other);
     }
 
+    public function as(string $alias) : AliasedExpression
+    {
+        return new AliasedExpression($this, $alias);
+    }
+
     public function not() : NotCondition
     {
         return new NotCondition($this);
@@ -83,6 +89,16 @@ final readonly class Like implements Condition
             'rexpr' => $this->pattern->toAst(),
         ]);
 
-        return new Node(['a_expr' => $aExpr]);
+        $likeNode = new Node(['a_expr' => $aExpr]);
+
+        if ($this->negated) {
+            $boolExpr = new BoolExpr();
+            $boolExpr->setBoolop(BoolExprType::NOT_EXPR);
+            $boolExpr->setArgs([$likeNode]);
+
+            return new Node(['bool_expr' => $boolExpr]);
+        }
+
+        return $likeNode;
     }
 }

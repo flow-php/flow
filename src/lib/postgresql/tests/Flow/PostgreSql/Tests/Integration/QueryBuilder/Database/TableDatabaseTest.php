@@ -5,22 +5,34 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PostgreSql\DSL\{
+    agg_count,
     alter,
+    and_,
+    asc,
     check_constraint,
+    col,
     column,
+    column_type_integer,
+    column_type_serial,
+    column_type_text,
+    column_type_varchar,
     create,
-    data_type_integer,
-    data_type_serial,
-    data_type_text,
-    data_type_varchar,
     drop,
+    eq,
     foreign_key,
+    func,
+    ge,
+    insert,
+    literal,
     primary_key,
+    select,
+    table,
     truncate_table,
     unique_constraint
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class TableDatabaseTest extends DatabaseTestCase
+final class TableDatabaseTest extends PostgreSqlTestCase
 {
     private const TABLE_CHILD = 'flow_postgres_child_table';
 
@@ -30,9 +42,9 @@ final class TableDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_CHILD);
-        $this->dropTableIfExists(self::TABLE_TEST);
-        $this->dropTableIfExists(self::TABLE_PARENT);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_CHILD);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_TEST);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_PARENT);
 
         parent::tearDown();
     }
@@ -40,60 +52,71 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_alter_table_add_column() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100)));
-        $this->execute($createQuery->toSql());
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100)));
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
         $alterQuery = alter()->table(self::TABLE_TEST)
-            ->addColumn(column('email', data_type_varchar(255)));
+            ->addColumn(column('email', column_type_varchar(255)));
 
-        $result = $this->execute($alterQuery->toSql());
+        $this->pgsqlContext()->client()->execute($alterQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT column_name FROM information_schema.columns WHERE table_name = '" . self::TABLE_TEST . "' AND column_name = 'email'");
-        $columns = $this->fetchAll($check);
+        $columns = $this->pgsqlContext()->client()->fetchAll(
+            select(col('column_name'))
+                ->from(table('information_schema.columns'))
+                ->where(and_(
+                    eq(col('table_name'), literal(self::TABLE_TEST)),
+                    eq(col('column_name'), literal('email'))
+                ))
+                ->toSql()
+        );
         self::assertCount(1, $columns);
     }
 
     public function test_alter_table_drop_column() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100)))
-            ->column(column('to_drop', data_type_text()));
-        $this->execute($createQuery->toSql());
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100)))
+            ->column(column('to_drop', column_type_text()));
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
         $alterQuery = alter()->table(self::TABLE_TEST)
             ->dropColumn('to_drop');
 
-        $result = $this->execute($alterQuery->toSql());
+        $this->pgsqlContext()->client()->execute($alterQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT column_name FROM information_schema.columns WHERE table_name = '" . self::TABLE_TEST . "' AND column_name = 'to_drop'");
-        $columns = $this->fetchAll($check);
+        $columns = $this->pgsqlContext()->client()->fetchAll(
+            select(col('column_name'))
+                ->from(table('information_schema.columns'))
+                ->where(and_(
+                    eq(col('table_name'), literal(self::TABLE_TEST)),
+                    eq(col('column_name'), literal('to_drop'))
+                ))
+                ->toSql()
+        );
         self::assertCount(0, $columns);
     }
 
     public function test_create_table_with_check_constraint() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()))
-            ->column(column('age', data_type_integer()))
-            ->constraint(check_constraint('age >= 0'));
+            ->column(column('id', column_type_serial()))
+            ->column(column('age', column_type_integer()))
+            ->constraint(check_constraint(ge(col('age'), literal(0))));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("
-            SELECT pg_get_constraintdef(c.oid) as def
-            FROM pg_constraint c
-            JOIN pg_class t ON c.conrelid = t.oid
-            WHERE t.relname = '" . self::TABLE_TEST . "' AND c.contype = 'c'
-        ");
-        $constraints = $this->fetchAll($check);
+        $constraints = $this->pgsqlContext()->client()->fetchAll(
+            select(func('pg_get_constraintdef', [col('oid', 'c')])->as('def'))
+                ->from(table('pg_constraint')->as('c'))
+                ->join(table('pg_class')->as('t'), eq(col('conrelid', 'c'), col('oid', 't')))
+                ->where(and_(
+                    eq(col('relname', 't'), literal(self::TABLE_TEST)),
+                    eq(col('contype', 'c'), literal('c'))
+                ))
+                ->toSql()
+        );
         self::assertGreaterThanOrEqual(1, \count($constraints));
 
         $hasAgeConstraint = false;
@@ -111,16 +134,19 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_columns() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100))->notNull())
-            ->column(column('description', data_type_text()));
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100))->notNull())
+            ->column(column('description', column_type_text()));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT column_name FROM information_schema.columns WHERE table_name = '" . self::TABLE_TEST . "' ORDER BY ordinal_position");
-        $columns = $this->fetchAll($check);
+        $columns = $this->pgsqlContext()->client()->fetchAll(
+            select(col('column_name'))
+                ->from(table('information_schema.columns'))
+                ->where(eq(col('table_name'), literal(self::TABLE_TEST)))
+                ->orderBy(asc(col('ordinal_position')))
+                ->toSql()
+        );
 
         self::assertCount(3, $columns);
         self::assertSame('id', $columns[0]['column_name']);
@@ -131,28 +157,31 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_foreign_key() : void
     {
         $parentQuery = create()->table(self::TABLE_PARENT)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100)))
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100)))
             ->constraint(primary_key('id'));
-        $this->execute($parentQuery->toSql());
+        $this->pgsqlContext()->client()->execute($parentQuery->toSql());
 
         $childQuery = create()->table(self::TABLE_CHILD)
-            ->column(column('id', data_type_serial()))
-            ->column(column('parent_id', data_type_integer())->notNull())
+            ->column(column('id', column_type_serial()))
+            ->column(column('parent_id', column_type_integer())->notNull())
             ->constraint(foreign_key(['parent_id'], self::TABLE_PARENT, ['id']));
 
-        $result = $this->execute($childQuery->toSql());
+        $this->pgsqlContext()->client()->execute($childQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("
-            SELECT tc.constraint_type, ccu.table_name AS foreign_table_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.constraint_column_usage ccu
-                ON tc.constraint_name = ccu.constraint_name
-            WHERE tc.table_name = '" . self::TABLE_CHILD . "' AND tc.constraint_type = 'FOREIGN KEY'
-        ");
-        $constraints = $this->fetchAll($check);
+        $constraints = $this->pgsqlContext()->client()->fetchAll(
+            select(col('constraint_type', 'tc'), col('table_name', 'ccu')->as('foreign_table_name'))
+                ->from(table('information_schema.table_constraints')->as('tc'))
+                ->join(
+                    table('information_schema.constraint_column_usage')->as('ccu'),
+                    eq(col('constraint_name', 'tc'), col('constraint_name', 'ccu'))
+                )
+                ->where(and_(
+                    eq(col('table_name', 'tc'), literal(self::TABLE_CHILD)),
+                    eq(col('constraint_type', 'tc'), literal('FOREIGN KEY'))
+                ))
+                ->toSql()
+        );
         self::assertCount(1, $constraints);
         self::assertSame(self::TABLE_PARENT, $constraints[0]['foreign_table_name']);
     }
@@ -160,75 +189,87 @@ final class TableDatabaseTest extends DatabaseTestCase
     public function test_create_table_with_primary_key() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_integer())->notNull())
-            ->column(column('name', data_type_varchar(100)))
+            ->column(column('id', column_type_integer())->notNull())
+            ->column(column('name', column_type_varchar(100)))
             ->constraint(primary_key('id'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("
-            SELECT constraint_type FROM information_schema.table_constraints
-            WHERE table_name = '" . self::TABLE_TEST . "' AND constraint_type = 'PRIMARY KEY'
-        ");
-        $constraints = $this->fetchAll($check);
+        $constraints = $this->pgsqlContext()->client()->fetchAll(
+            select(col('constraint_type'))
+                ->from(table('information_schema.table_constraints'))
+                ->where(and_(
+                    eq(col('table_name'), literal(self::TABLE_TEST)),
+                    eq(col('constraint_type'), literal('PRIMARY KEY'))
+                ))
+                ->toSql()
+        );
         self::assertCount(1, $constraints);
     }
 
     public function test_create_table_with_unique_constraint() : void
     {
         $query = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()))
-            ->column(column('email', data_type_varchar(255))->notNull())
+            ->column(column('id', column_type_serial()))
+            ->column(column('email', column_type_varchar(255))->notNull())
             ->constraint(unique_constraint('email'));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("
-            SELECT constraint_type FROM information_schema.table_constraints
-            WHERE table_name = '" . self::TABLE_TEST . "' AND constraint_type = 'UNIQUE'
-        ");
-        $constraints = $this->fetchAll($check);
+        $constraints = $this->pgsqlContext()->client()->fetchAll(
+            select(col('constraint_type'))
+                ->from(table('information_schema.table_constraints'))
+                ->where(and_(
+                    eq(col('table_name'), literal(self::TABLE_TEST)),
+                    eq(col('constraint_type'), literal('UNIQUE'))
+                ))
+                ->toSql()
+        );
         self::assertCount(1, $constraints);
     }
 
     public function test_drop_table() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()));
-        $this->execute($createQuery->toSql());
+            ->column(column('id', column_type_serial()));
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
         $dropQuery = drop()->table(self::TABLE_TEST);
 
-        $result = $this->execute($dropQuery->toSql());
+        $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute("SELECT table_name FROM information_schema.tables WHERE table_name = '" . self::TABLE_TEST . "'");
-        $tables = $this->fetchAll($check);
+        $tables = $this->pgsqlContext()->client()->fetchAll(
+            select(col('table_name'))
+                ->from(table('information_schema.tables'))
+                ->where(eq(col('table_name'), literal(self::TABLE_TEST)))
+                ->toSql()
+        );
         self::assertCount(0, $tables);
     }
 
     public function test_truncate_table() : void
     {
         $createQuery = create()->table(self::TABLE_TEST)
-            ->column(column('id', data_type_serial()))
-            ->column(column('name', data_type_varchar(100)));
-        $this->execute($createQuery->toSql());
+            ->column(column('id', column_type_serial()))
+            ->column(column('name', column_type_varchar(100)));
+        $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
-        $this->execute('INSERT INTO ' . self::TABLE_TEST . " (name) VALUES ('test1'), ('test2')");
+        $this->pgsqlContext()->client()->execute(
+            insert()
+                ->into(self::TABLE_TEST)
+                ->columns('name')
+                ->values(literal('test1'))
+                ->values(literal('test2'))
+                ->toSql()
+        );
 
         $truncateQuery = truncate_table(self::TABLE_TEST);
 
-        $result = $this->execute($truncateQuery->toSql());
+        $this->pgsqlContext()->client()->execute($truncateQuery->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute('SELECT COUNT(*) as cnt FROM ' . self::TABLE_TEST);
-        $row = $this->fetchOne($check);
-        self::assertSame('0', $row['cnt']);
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(agg_count()->as('cnt'))->from(table(self::TABLE_TEST))->toSql()
+        );
+        self::assertSame(0, $row['cnt']);
     }
 }

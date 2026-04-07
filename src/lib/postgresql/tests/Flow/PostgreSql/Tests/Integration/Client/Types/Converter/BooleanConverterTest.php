@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_boolean, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class BooleanConverterTest extends ConverterTestCase
+final class BooleanConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, bool}>
@@ -37,7 +38,7 @@ final class BooleanConverterTest extends ConverterTestCase
     #[DataProvider('provide_boolean_values')]
     public function test_boolean_round_trip(bool $input, bool $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::bool AS val', [typed($input, PostgreSqlType::BOOL)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [typed($input, ValueType::BOOL)]);
 
         self::assertSame($expected, $result);
     }
@@ -45,14 +46,14 @@ final class BooleanConverterTest extends ConverterTestCase
     #[DataProvider('provide_boolean_strings')]
     public function test_boolean_string_conversion(string $input, bool $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::bool AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [$input]);
 
         self::assertSame($expected, $result);
     }
 
     public function test_null_boolean() : void
     {
-        $result = $this->fetchValue('SELECT NULL::bool AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_boolean())->as('val'))->toSql());
 
         self::assertNull($result);
     }

@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\TextArrayConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -67,8 +67,8 @@ final class TextArrayConverterTest extends TestCase
         $converter = new TextArrayConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(PostgreSqlType::TEXT_ARRAY, $types);
-        self::assertContains(PostgreSqlType::VARCHAR_ARRAY, $types);
+        self::assertContains(ValueType::TEXT_ARRAY, $types);
+        self::assertContains(ValueType::VARCHAR_ARRAY, $types);
         self::assertCount(2, $types);
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Delete;
 
+use function Flow\PostgreSql\DSL\{any_, col, delete, eq, literal, param, select, table};
 use Flow\PostgreSql\{ParsedQuery, Parser};
 use Flow\PostgreSql\Protobuf\AST\{DeleteStmt, Node, RawStmt, SelectStmt};
 use Flow\PostgreSql\QueryBuilder\Clause\{CTE, WithClause};
@@ -240,6 +241,15 @@ final class DeleteBuilderTest extends TestCase
         self::assertSame('DELETE FROM order_items oi USING orders o, customers c WHERE oi.order_id = o.id AND o.customer_id = c.id', $deparsed);
     }
 
+    public function test_delete_with_parameters() : void
+    {
+        $query = delete()
+            ->from('users')
+            ->where(eq(col('id'), param(1)));
+
+        self::assertSame('DELETE FROM users WHERE id = $1', $query->toSql());
+    }
+
     public function test_delete_with_returning() : void
     {
         $query = DeleteBuilder::create()
@@ -267,6 +277,16 @@ final class DeleteBuilderTest extends TestCase
         $secondVal = $secondReturn->getVal();
         self::assertNotNull($secondVal);
         self::assertTrue($secondVal->hasColumnRef());
+    }
+
+    public function test_delete_with_returning_all() : void
+    {
+        $query = delete()
+            ->from('users')
+            ->where(eq(col('id'), literal(1)))
+            ->returningAll();
+
+        self::assertSame('DELETE FROM users WHERE id = 1 RETURNING *', $query->toSql());
     }
 
     public function test_delete_with_returning_deparsed_output() : void
@@ -327,6 +347,19 @@ final class DeleteBuilderTest extends TestCase
 
         self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
         self::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
+    }
+
+    public function test_delete_with_subquery_in_where() : void
+    {
+        $subquery = select()
+            ->select(col('user_id'))
+            ->from(table('inactive_users'));
+
+        $query = delete()
+            ->from('users')
+            ->where(any_(col('id'), ComparisonOperator::EQ, $subquery));
+
+        self::assertSame('DELETE FROM users WHERE id = ANY (SELECT user_id FROM inactive_users)', $query->toSql());
     }
 
     public function test_delete_with_using() : void

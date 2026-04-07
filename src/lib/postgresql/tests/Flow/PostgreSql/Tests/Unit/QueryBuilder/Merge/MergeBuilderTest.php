@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Merge;
 
+use function Flow\PostgreSql\DSL\{col, cte, eq, gt, literal, merge, param, select, table, with};
+
 use Flow\PostgreSql\{ParsedQuery, Parser};
 use Flow\PostgreSql\Protobuf\AST\{MergeStmt, Node, RawStmt, SelectStmt};
 use Flow\PostgreSql\QueryBuilder\Clause\{CTE, WithClause};
@@ -144,6 +146,21 @@ final class MergeBuilderTest extends TestCase
         self::assertSame(3, MergeMatchKind::NOT_MATCHED_BY_TARGET->value);
     }
 
+    public function test_merge_simple_update_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO target USING source s ON target.id = s.id WHEN MATCHED THEN UPDATE SET value = s.value',
+            merge('target')
+                ->using('source', 's')
+                ->on(eq(col('target.id'), col('s.id')))
+                ->whenMatched()
+                ->thenUpdate([
+                    'value' => col('s.value'),
+                ])
+                ->toSql()
+        );
+    }
+
     public function test_merge_using_parses_schema_and_table() : void
     {
         $query = MergeBuilder::create()
@@ -166,6 +183,27 @@ final class MergeBuilderTest extends TestCase
         $alias = $rangeVar->getAlias();
         self::assertNotNull($alias);
         self::assertSame('s', $alias->getAliasname());
+    }
+
+    public function test_merge_using_subquery_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO users USING (SELECT id, name, email FROM staged_data) src ON users.id = src.id WHEN MATCHED THEN UPDATE SET name = src.name, email = src.email',
+            merge('users')
+                ->using(
+                    select()
+                        ->select(col('id'), col('name'), col('email'))
+                        ->from(table('staged_data')),
+                    'src'
+                )
+                ->on(eq(col('users.id'), col('src.id')))
+                ->whenMatched()
+                ->thenUpdate([
+                    'name' => col('src.name'),
+                    'email' => col('src.email'),
+                ])
+                ->toSql()
+        );
     }
 
     public function test_merge_when_clause_data_structure() : void
@@ -436,6 +474,97 @@ final class MergeBuilderTest extends TestCase
         self::assertTrue($whenClause->hasCondition());
     }
 
+    public function test_merge_with_conditional_when_matched_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO products p USING price_updates pu ON p.id = pu.product_id WHEN MATCHED AND pu.price > 0 THEN UPDATE SET price = pu.price',
+            merge('products', 'p')
+                ->using('price_updates', 'pu')
+                ->on(eq(col('p.id'), col('pu.product_id')))
+                ->whenMatchedAnd(gt(col('pu.price'), literal(0)))
+                ->thenUpdate([
+                    'price' => col('pu.price'),
+                ])
+                ->toSql()
+        );
+    }
+
+    public function test_merge_with_cte_to_sql() : void
+    {
+        self::assertSame(
+            'WITH staged_data AS (SELECT id, name FROM raw_input) MERGE INTO users USING staged_data s ON users.id = s.id WHEN MATCHED THEN UPDATE SET name = s.name',
+            with(cte('staged_data', select()
+                ->select(col('id'), col('name'))
+                ->from(table('raw_input'))))->merge('users')
+                ->using('staged_data', 's')
+                ->on(eq(col('users.id'), col('s.id')))
+                ->whenMatched()
+                ->thenUpdate([
+                    'name' => col('s.name'),
+                ])
+                ->toSql()
+        );
+    }
+
+    public function test_merge_with_delete_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO target_table t USING source_table s ON t.id = s.id WHEN MATCHED THEN DELETE',
+            merge('target_table', 't')
+                ->using('source_table', 's')
+                ->on(eq(col('t.id'), col('s.id')))
+                ->whenMatched()
+                ->thenDelete()
+                ->toSql()
+        );
+    }
+
+    public function test_merge_with_do_nothing_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO products USING updates u ON products.id = u.id WHEN MATCHED THEN DO NOTHING',
+            merge('products')
+                ->using('updates', 'u')
+                ->on(eq(col('products.id'), col('u.id')))
+                ->whenMatched()
+                ->thenDoNothing()
+                ->toSql()
+        );
+    }
+
+    public function test_merge_with_insert_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO customers USING new_customers nc ON customers.id = nc.id WHEN NOT MATCHED THEN INSERT (id, name, email) VALUES (nc.id, nc.name, nc.email)',
+            merge('customers')
+                ->using('new_customers', 'nc')
+                ->on(eq(col('customers.id'), col('nc.id')))
+                ->whenNotMatched()
+                ->thenInsert(
+                    ['id', 'name', 'email'],
+                    [col('nc.id'), col('nc.name'), col('nc.email')]
+                )
+                ->toSql()
+        );
+    }
+
+    public function test_merge_with_insert_values_to_sql() : void
+    {
+        self::assertSame(
+            "MERGE INTO users USING new_users n ON users.id = n.id WHEN NOT MATCHED THEN INSERT (id, name, status) VALUES (n.id, n.name, 'active')",
+            merge('users')
+                ->using('new_users', 'n')
+                ->on(eq(col('users.id'), col('n.id')))
+                ->whenNotMatched()
+                ->thenInsertValues([
+                    'id' => col('n.id'),
+                    'name' => col('n.name'),
+                    'status' => literal('active'),
+                ])
+                ->toSql()
+        );
+    }
+
     public function test_merge_with_multiple_when_clauses() : void
     {
         $query = MergeBuilder::create()
@@ -461,6 +590,21 @@ final class MergeBuilderTest extends TestCase
         self::assertNotNull($secondClause);
         self::assertSame(MergeMatchKind::NOT_MATCHED_BY_TARGET->value, $secondClause->getMatchKind());
         self::assertSame(MergeActionType::INSERT->value, $secondClause->getCommandType());
+    }
+
+    public function test_merge_with_parameters_to_sql() : void
+    {
+        self::assertSame(
+            'MERGE INTO accounts USING transactions t ON accounts.id = t.account_id WHEN MATCHED THEN UPDATE SET balance = $1',
+            merge('accounts')
+                ->using('transactions', 't')
+                ->on(eq(col('accounts.id'), col('t.account_id')))
+                ->whenMatched()
+                ->thenUpdate([
+                    'balance' => param(1),
+                ])
+                ->toSql()
+        );
     }
 
     public function test_merge_with_source_subquery() : void

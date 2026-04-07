@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
 use Flow\PostgreSql\Protobuf\AST\GrantStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface GrantFinalStep extends SqlQuery
+interface GrantFinalStep extends Sql
 {
     public function toAst() : GrantStmt;
 

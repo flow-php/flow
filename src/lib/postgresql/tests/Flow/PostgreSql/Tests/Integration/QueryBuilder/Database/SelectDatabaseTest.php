@@ -6,15 +6,15 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PostgreSql\DSL\{
     agg_sum,
+    and_,
     col,
     column,
-    cond_and,
+    column_type_decimal,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     create,
     cte,
-    data_type_decimal,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     desc,
     eq,
     gt,
@@ -26,8 +26,9 @@ use function Flow\PostgreSql\DSL\{
     table,
     with
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class SelectDatabaseTest extends DatabaseTestCase
+final class SelectDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_select_schema';
 
@@ -41,27 +42,27 @@ final class SelectDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_USERS)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('email', data_type_varchar(255)))
-                ->column(column('age', data_type_integer())->default(0))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('email', column_type_varchar(255)))
+                ->column(column('age', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_ORDERS)
-                ->column(column('id', data_type_serial()))
-                ->column(column('user_id', data_type_integer()))
-                ->column(column('amount', data_type_decimal(10, 2))->notNull())
-                ->column(column('status', data_type_varchar(50))->default('pending'))
+                ->column(column('id', column_type_serial()))
+                ->column(column('user_id', column_type_integer()))
+                ->column(column('amount', column_type_decimal(10, 2))->notNull())
+                ->column(column('status', column_type_varchar(50))->default('pending'))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_USERS)
                 ->columns('name', 'email', 'age')
@@ -71,7 +72,7 @@ final class SelectDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_ORDERS)
                 ->columns('user_id', 'amount', 'status')
@@ -85,9 +86,9 @@ final class SelectDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_ORDERS);
-        $this->dropTableIfExists(self::TABLE_USERS);
-        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_ORDERS);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_USERS);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
 
         parent::tearDown();
     }
@@ -96,10 +97,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
     {
         $query = select(star())->from(table(self::TABLE_USERS));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(3, $rows);
     }
 
@@ -109,10 +108,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->selectDistinct(col('status'))
             ->from(table(self::TABLE_ORDERS));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(2, $rows);
     }
 
@@ -121,10 +118,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
         $query = select(col('name'), col('email'))
             ->from(table(self::TABLE_USERS));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(3, $rows);
         self::assertArrayHasKey('name', $rows[0]);
         self::assertArrayHasKey('email', $rows[0]);
@@ -143,10 +138,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->from(table('order_totals'))
             ->where(gt(col('total'), literal(200)));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertGreaterThanOrEqual(1, \count($rows));
     }
 
@@ -156,10 +149,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->from(table(self::TABLE_ORDERS))
             ->groupBy(col('user_id'));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(3, $rows);
     }
 
@@ -172,10 +163,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
                 eq(col('id', self::TABLE_USERS), col('user_id', self::TABLE_ORDERS))
             );
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(4, $rows);
     }
 
@@ -184,16 +173,14 @@ final class SelectDatabaseTest extends DatabaseTestCase
         $query = select(star())
             ->from(table(self::TABLE_USERS))
             ->where(
-                cond_and(
+                and_(
                     gt(col('age'), literal(20)),
                     gt(col('age'), literal(25))
                 )
             );
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(2, $rows);
     }
 
@@ -204,10 +191,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->orderBy(desc(col('age')))
             ->limit(2);
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(2, $rows);
         self::assertSame('Bob Wilson', $rows[0]['name']);
         self::assertSame('John Doe', $rows[1]['name']);
@@ -215,18 +200,20 @@ final class SelectDatabaseTest extends DatabaseTestCase
 
     public function test_select_with_schema_qualified_table() : void
     {
-        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+        $this->pgsqlContext()->client()->execute(
+            create()->schema(self::SCHEMA_NAME)->ifNotExists()->toSql()
+        );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('email', data_type_varchar(255)))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('email', column_type_varchar(255)))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
                 ->columns('name', 'email')
@@ -237,10 +224,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
         $query = select(star())
             ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(1, $rows);
         self::assertSame('Schema User', $rows[0]['name']);
         self::assertSame('schema@example.com', $rows[0]['email']);
@@ -252,10 +237,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->from(table(self::TABLE_USERS))
             ->where(eq(col('name'), literal('John Doe')));
 
-        $result = $this->execute($query->toSql());
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        self::assertNotFalse($result);
-        $rows = $this->fetchAll($result);
         self::assertCount(1, $rows);
         self::assertSame('John Doe', $rows[0]['name']);
     }

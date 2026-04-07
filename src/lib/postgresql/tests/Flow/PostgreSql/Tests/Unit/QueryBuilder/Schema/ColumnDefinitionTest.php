@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema;
 
-use function Flow\PostgreSql\DSL\{current_date, current_time, current_timestamp};
+use function Flow\PostgreSql\DSL\{col, concat, current_date, current_time, current_timestamp, gt, literal};
 use Flow\PostgreSql\Protobuf\AST\{ColumnDef, ConstrType};
 use Flow\PostgreSql\QueryBuilder\Expression\SQLValueFunctionExpression;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, DataType};
-
+use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
+use Flow\PostgreSql\Schema\IdentityGeneration;
 use PHPUnit\Framework\TestCase;
 
 final class ColumnDefinitionTest extends TestCase
@@ -22,7 +22,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_basic_column() : void
     {
-        $column = ColumnDefinition::create('id', DataType::integer());
+        $column = ColumnDefinition::create('id', ColumnType::integer());
 
         $ast = $column->toAst();
 
@@ -33,8 +33,8 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_check_constraint() : void
     {
-        $column = ColumnDefinition::create('age', DataType::integer())
-            ->check('age > 0');
+        $column = ColumnDefinition::create('age', ColumnType::integer())
+            ->check(gt(col('age'), literal(0)));
 
         $ast = $column->toAst();
 
@@ -45,7 +45,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_default_with_current_date() : void
     {
-        $column = ColumnDefinition::create('birth_date', DataType::date())
+        $column = ColumnDefinition::create('birth_date', ColumnType::date())
             ->default(current_date());
 
         $ast = $column->toAst();
@@ -57,7 +57,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_default_with_current_time() : void
     {
-        $column = ColumnDefinition::create('check_in_time', DataType::time())
+        $column = ColumnDefinition::create('check_in_time', ColumnType::time())
             ->default(current_time());
 
         $ast = $column->toAst();
@@ -69,7 +69,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_default_with_current_timestamp() : void
     {
-        $column = ColumnDefinition::create('created_at', DataType::timestamp())
+        $column = ColumnDefinition::create('created_at', ColumnType::timestamp())
             ->default(current_timestamp());
 
         $ast = $column->toAst();
@@ -81,7 +81,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_default_with_expression() : void
     {
-        $column = ColumnDefinition::create('created_at', DataType::timestamp())
+        $column = ColumnDefinition::create('created_at', ColumnType::timestamp())
             ->default(SQLValueFunctionExpression::currentTimestamp());
 
         $ast = $column->toAst();
@@ -93,7 +93,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_with_boolean_default_false() : void
     {
-        $column = ColumnDefinition::create('is_active', DataType::boolean())
+        $column = ColumnDefinition::create('is_active', ColumnType::boolean())
             ->default(false);
 
         $ast = $column->toAst();
@@ -105,7 +105,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_with_boolean_default_true() : void
     {
-        $column = ColumnDefinition::create('is_active', DataType::boolean())
+        $column = ColumnDefinition::create('is_active', ColumnType::boolean())
             ->default(true);
 
         $ast = $column->toAst();
@@ -117,7 +117,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_with_default_integer() : void
     {
-        $column = ColumnDefinition::create('status', DataType::integer())
+        $column = ColumnDefinition::create('status', ColumnType::integer())
             ->default(0);
 
         $ast = $column->toAst();
@@ -129,7 +129,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_with_default_null() : void
     {
-        $column = ColumnDefinition::create('optional', DataType::text())
+        $column = ColumnDefinition::create('optional', ColumnType::text())
             ->default(null);
 
         $ast = $column->toAst();
@@ -141,8 +141,8 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_with_default_raw_expression() : void
     {
-        $column = ColumnDefinition::create('created_at', DataType::timestamp())
-            ->defaultRaw('CURRENT_TIMESTAMP');
+        $column = ColumnDefinition::create('created_at', ColumnType::timestamp())
+            ->defaultRaw(current_timestamp());
 
         $ast = $column->toAst();
 
@@ -153,7 +153,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_column_with_default_string() : void
     {
-        $column = ColumnDefinition::create('name', DataType::varchar(100))
+        $column = ColumnDefinition::create('name', ColumnType::varchar(100))
             ->default('Unknown');
 
         $ast = $column->toAst();
@@ -165,8 +165,8 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_generated_column() : void
     {
-        $column = ColumnDefinition::create('full_name', DataType::text())
-            ->generatedAs("first_name || ' ' || last_name");
+        $column = ColumnDefinition::create('full_name', ColumnType::text())
+            ->generatedAs(concat(col('first_name'), literal(' '), col('last_name')));
 
         $ast = $column->toAst();
 
@@ -178,29 +178,37 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_identity_always() : void
     {
-        $column = ColumnDefinition::create('id', DataType::integer())
-            ->identity('ALWAYS');
+        $column = ColumnDefinition::create('id', ColumnType::integer())
+            ->identity(IdentityGeneration::ALWAYS);
 
         $ast = $column->toAst();
 
         self::assertInstanceOf(ColumnDef::class, $ast);
-        self::assertSame('a', $ast->getIdentity());
+
+        $constraints = $ast->getConstraints();
+        self::assertCount(1, $constraints);
+        self::assertSame(ConstrType::CONSTR_IDENTITY, $constraints[0]->getConstraint()->getContype());
+        self::assertSame('a', $constraints[0]->getConstraint()->getGeneratedWhen());
     }
 
     public function test_identity_by_default() : void
     {
-        $column = ColumnDefinition::create('id', DataType::integer())
-            ->identity('BY DEFAULT');
+        $column = ColumnDefinition::create('id', ColumnType::integer())
+            ->identity(IdentityGeneration::BY_DEFAULT);
 
         $ast = $column->toAst();
 
         self::assertInstanceOf(ColumnDef::class, $ast);
-        self::assertSame('d', $ast->getIdentity());
+
+        $constraints = $ast->getConstraints();
+        self::assertCount(1, $constraints);
+        self::assertSame(ConstrType::CONSTR_IDENTITY, $constraints[0]->getConstraint()->getContype());
+        self::assertSame('d', $constraints[0]->getConstraint()->getGeneratedWhen());
     }
 
     public function test_immutability() : void
     {
-        $original = ColumnDefinition::create('id', DataType::integer());
+        $original = ColumnDefinition::create('id', ColumnType::integer());
         $modified = $original->notNull();
 
         self::assertNotSame($original, $modified);
@@ -211,7 +219,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_multiple_constraints() : void
     {
-        $column = ColumnDefinition::create('id', DataType::integer())
+        $column = ColumnDefinition::create('id', ColumnType::integer())
             ->notNull()
             ->primaryKey();
 
@@ -225,7 +233,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_not_null_column() : void
     {
-        $column = ColumnDefinition::create('name', DataType::varchar(100))
+        $column = ColumnDefinition::create('name', ColumnType::varchar(100))
             ->notNull();
 
         $ast = $column->toAst();
@@ -237,7 +245,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_nullable_column() : void
     {
-        $column = ColumnDefinition::create('name', DataType::varchar(100))
+        $column = ColumnDefinition::create('name', ColumnType::varchar(100))
             ->notNull()
             ->nullable();
 
@@ -249,7 +257,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_primary_key_constraint() : void
     {
-        $column = ColumnDefinition::create('id', DataType::integer())
+        $column = ColumnDefinition::create('id', ColumnType::integer())
             ->primaryKey();
 
         $ast = $column->toAst();
@@ -261,7 +269,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_references_constraint() : void
     {
-        $column = ColumnDefinition::create('user_id', DataType::integer())
+        $column = ColumnDefinition::create('user_id', ColumnType::integer())
             ->references('users', 'id');
 
         $ast = $column->toAst();
@@ -275,7 +283,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_references_with_schema() : void
     {
-        $column = ColumnDefinition::create('user_id', DataType::integer())
+        $column = ColumnDefinition::create('user_id', ColumnType::integer())
             ->references('users', 'id', 'public');
 
         $ast = $column->toAst();
@@ -288,7 +296,7 @@ final class ColumnDefinitionTest extends TestCase
 
     public function test_unique_constraint() : void
     {
-        $column = ColumnDefinition::create('email', DataType::varchar(255))
+        $column = ColumnDefinition::create('email', ColumnType::varchar(255))
             ->unique();
 
         $ast = $column->toAst();

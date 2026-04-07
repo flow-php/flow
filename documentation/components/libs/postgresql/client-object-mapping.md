@@ -12,7 +12,7 @@ methods. This is useful for working with DTOs, entities, or value objects.
 ```php
 <?php
 
-use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection, pgsql_mapper};
+use function Flow\PostgreSql\DSL\{constructor_mapper, pgsql_client, pgsql_connection};
 
 // Define a DTO
 readonly class User
@@ -25,15 +25,14 @@ readonly class User
     ) {}
 }
 
-// Create client with mapper
+// Create client
 $client = pgsql_client(
     pgsql_connection('host=localhost dbname=mydb'),
-    mapper: pgsql_mapper(),
 );
 
 // Fetch single object (or null)
 $user = $client->fetchInto(
-    User::class,
+    constructor_mapper(User::class),
     'SELECT id, name, email, active FROM users WHERE id = $1',
     [1]
 );
@@ -51,7 +50,7 @@ Returns the first row mapped to an object, or `null` if no rows:
 <?php
 
 $user = $client->fetchInto(
-    User::class,
+    constructor_mapper(User::class),
     'SELECT id, name, email, active FROM users WHERE email = $1',
     ['john@example.com']
 );
@@ -68,7 +67,7 @@ use Flow\PostgreSql\Client\Exception\QueryException;
 
 try {
     $user = $client->fetchOneInto(
-        User::class,
+        constructor_mapper(User::class),
         'SELECT id, name, email, active FROM users WHERE id = $1',
         [1]
     );
@@ -86,7 +85,7 @@ Returns an array of objects:
 
 /** @var User[] $users */
 $users = $client->fetchAllInto(
-    User::class,
+    constructor_mapper(User::class),
     'SELECT id, name, email, active FROM users WHERE active = $1 ORDER BY name',
     [true]
 );
@@ -98,7 +97,7 @@ foreach ($users as $user) {
 
 ## ConstructorMapper
 
-The default `pgsql_mapper()` creates a `ConstructorMapper` that:
+The `constructor_mapper(ClassName::class)` DSL function creates a `ConstructorMapper` that:
 
 1. Maps column names directly to constructor parameter names (1:1 matching)
 2. Passes values as-is to the constructor (no type coercion)
@@ -119,7 +118,7 @@ readonly class Product
 }
 
 $products = $client->fetchAllInto(
-    Product::class,
+    constructor_mapper(Product::class),
     'SELECT id, name, price, description FROM products'
 );
 ```
@@ -144,7 +143,7 @@ readonly class UserProfile
 
 // Alias snake_case columns to match parameter names
 $profile = $client->fetchInto(
-    UserProfile::class,
+    constructor_mapper(UserProfile::class),
     'SELECT id, first_name AS firstName, last_name AS lastName, created_at AS createdAt
      FROM users WHERE id = $1',
     [1]
@@ -165,7 +164,7 @@ readonly class UserMapper implements RowMapper
     /**
      * @param array<string, mixed> $row
      */
-    public function map(string $class, array $row): object
+    public function map(array $row): object
     {
         return new User(
             id: (int) $row['id'],
@@ -176,18 +175,15 @@ readonly class UserMapper implements RowMapper
     }
 }
 
-// Use custom mapper
 $client = pgsql_client(
     pgsql_connection('host=localhost dbname=mydb'),
-    mapper: new UserMapper(),
 );
 
-// Or override per-call
+// Use custom mapper
 $user = $client->fetchInto(
-    User::class,
+    new UserMapper(),
     'SELECT * FROM users WHERE id = $1',
     [1],
-    mapper: new UserMapper(),
 );
 ```
 
@@ -200,7 +196,7 @@ Map objects while streaming large result sets:
 
 $cursor = $client->cursor('SELECT * FROM large_table');
 
-foreach ($cursor->map(User::class) as $user) {
+foreach ($cursor->map(constructor_mapper(User::class)) as $user) {
     // Process one object at a time
     processUser($user);
 }
@@ -226,7 +222,7 @@ readonly class OrderWithUser
 
 readonly class OrderMapper implements RowMapper
 {
-    public function map(string $class, array $row): object
+    public function map(array $row): object
     {
         $user = new User(
             id: (int) $row['user_id'],
@@ -244,12 +240,11 @@ readonly class OrderMapper implements RowMapper
 }
 
 $order = $client->fetchInto(
-    OrderWithUser::class,
+    new OrderMapper(),
     'SELECT o.id AS order_id, o.total, u.id AS user_id, u.name AS user_name, u.email AS user_email
      FROM orders o JOIN users u ON o.user_id = u.id
      WHERE o.id = $1',
     [1],
-    mapper: new OrderMapper(),
 );
 ```
 

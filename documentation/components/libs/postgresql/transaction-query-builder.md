@@ -17,7 +17,7 @@ use function Flow\PostgreSql\DSL\begin;
 
 $query = begin();
 
-echo $query->toSQL();
+echo $query->toSql();
 // BEGIN
 ```
 
@@ -32,7 +32,7 @@ use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 $query = begin()
     ->isolationLevel(IsolationLevel::SERIALIZABLE);
 
-echo $query->toSQL();
+echo $query->toSql();
 // BEGIN ISOLATION LEVEL SERIALIZABLE
 ```
 
@@ -47,14 +47,14 @@ use function Flow\PostgreSql\DSL\begin;
 $query = begin()
     ->readOnly();
 
-echo $query->toSQL();
+echo $query->toSql();
 // BEGIN READ ONLY
 
 // Read-write transaction (explicit)
 $query = begin()
     ->readWrite();
 
-echo $query->toSQL();
+echo $query->toSql();
 // BEGIN READ WRITE
 ```
 
@@ -73,7 +73,7 @@ $query = begin()
     ->readOnly()
     ->deferrable();
 
-echo $query->toSQL();
+echo $query->toSql();
 // BEGIN ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE
 ```
 
@@ -88,7 +88,7 @@ use function Flow\PostgreSql\DSL\commit;
 
 $query = commit();
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMIT
 ```
 
@@ -104,7 +104,7 @@ use function Flow\PostgreSql\DSL\commit;
 $query = commit()
     ->andChain();
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMIT AND CHAIN
 ```
 
@@ -119,7 +119,7 @@ use function Flow\PostgreSql\DSL\rollback;
 
 $query = rollback();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ROLLBACK
 ```
 
@@ -135,7 +135,7 @@ use function Flow\PostgreSql\DSL\rollback;
 $query = rollback()
     ->toSavepoint('my_savepoint');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ROLLBACK TO SAVEPOINT my_savepoint
 ```
 
@@ -149,7 +149,7 @@ use function Flow\PostgreSql\DSL\rollback;
 $query = rollback()
     ->andChain();
 
-echo $query->toSQL();
+echo $query->toSql();
 // ROLLBACK AND CHAIN
 ```
 
@@ -164,7 +164,7 @@ use function Flow\PostgreSql\DSL\savepoint;
 
 $query = savepoint('my_savepoint');
 
-echo $query->toSQL();
+echo $query->toSql();
 // SAVEPOINT my_savepoint
 ```
 
@@ -177,7 +177,7 @@ use function Flow\PostgreSql\DSL\release_savepoint;
 
 $query = release_savepoint('my_savepoint');
 
-echo $query->toSQL();
+echo $query->toSql();
 // RELEASE my_savepoint
 ```
 
@@ -194,7 +194,7 @@ use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 $query = set_transaction()
     ->isolationLevel(IsolationLevel::SERIALIZABLE);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 ```
 
@@ -208,7 +208,7 @@ use function Flow\PostgreSql\DSL\set_transaction;
 $query = set_transaction()
     ->readOnly();
 
-echo $query->toSQL();
+echo $query->toSql();
 // SET TRANSACTION READ ONLY
 ```
 
@@ -225,7 +225,7 @@ $query = set_transaction()
     ->readOnly()
     ->deferrable();
 
-echo $query->toSQL();
+echo $query->toSql();
 // SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE
 ```
 
@@ -242,7 +242,7 @@ use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 $query = set_session_transaction()
     ->isolationLevel(IsolationLevel::SERIALIZABLE);
 
-echo $query->toSQL();
+echo $query->toSql();
 // SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE
 ```
 
@@ -257,7 +257,7 @@ use function Flow\PostgreSql\DSL\transaction_snapshot;
 
 $query = transaction_snapshot('00000003-0000001A-1');
 
-echo $query->toSQL();
+echo $query->toSql();
 // SET TRANSACTION SNAPSHOT '00000003-0000001A-1'
 ```
 
@@ -274,7 +274,7 @@ use function Flow\PostgreSql\DSL\prepare_transaction;
 
 $query = prepare_transaction('my_transaction');
 
-echo $query->toSQL();
+echo $query->toSql();
 // PREPARE TRANSACTION 'my_transaction'
 ```
 
@@ -287,7 +287,7 @@ use function Flow\PostgreSql\DSL\commit_prepared;
 
 $query = commit_prepared('my_transaction');
 
-echo $query->toSQL();
+echo $query->toSql();
 // COMMIT PREPARED 'my_transaction'
 ```
 
@@ -300,7 +300,7 @@ use function Flow\PostgreSql\DSL\rollback_prepared;
 
 $query = rollback_prepared('my_transaction');
 
-echo $query->toSQL();
+echo $query->toSql();
 // ROLLBACK PREPARED 'my_transaction'
 ```
 

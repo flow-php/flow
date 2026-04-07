@@ -31,14 +31,14 @@ final class ValueConverters
         return new self(self::defaultConverters($version));
     }
 
-    public function forPostgreSqlType(PostgreSqlType $type) : ValueConverter
+    public function forValueType(ValueType $type) : ValueConverter
     {
         if (isset($this->pgTypeConverters[$type->value])) {
             return $this->pgTypeConverters[$type->value];
         }
 
         if ($this->isArrayType($type)) {
-            return $this->pgTypeConverters[PostgreSqlType::TEXT_ARRAY->value]
+            return $this->pgTypeConverters[ValueType::TEXT_ARRAY->value]
                 ?? $this->fallbackConverter;
         }
 
@@ -48,7 +48,7 @@ final class ValueConverters
     /**
      * Check if a converter exists for the given PostgreSQL type.
      */
-    public function has(PostgreSqlType $type) : bool
+    public function has(ValueType $type) : bool
     {
         return isset($this->pgTypeConverters[$type->value]) || $this->isArrayType($type);
     }
@@ -66,25 +66,25 @@ final class ValueConverters
     /**
      * Unregister a converter for the given PostgreSQL type.
      */
-    public function unregister(PostgreSqlType $type) : void
+    public function unregister(ValueType $type) : void
     {
         unset($this->pgTypeConverters[$type->value]);
     }
 
-    private function isArrayType(PostgreSqlType $type) : bool
+    private function isArrayType(ValueType $type) : bool
     {
         return match ($type) {
-            PostgreSqlType::BOOL_ARRAY,
-            PostgreSqlType::INT2_ARRAY,
-            PostgreSqlType::INT4_ARRAY,
-            PostgreSqlType::INT8_ARRAY,
-            PostgreSqlType::TEXT_ARRAY,
-            PostgreSqlType::FLOAT4_ARRAY,
-            PostgreSqlType::FLOAT8_ARRAY,
-            PostgreSqlType::VARCHAR_ARRAY,
-            PostgreSqlType::UUID_ARRAY,
-            PostgreSqlType::JSON_ARRAY,
-            PostgreSqlType::JSONB_ARRAY => true,
+            ValueType::BOOL_ARRAY,
+            ValueType::INT2_ARRAY,
+            ValueType::INT4_ARRAY,
+            ValueType::INT8_ARRAY,
+            ValueType::TEXT_ARRAY,
+            ValueType::FLOAT4_ARRAY,
+            ValueType::FLOAT8_ARRAY,
+            ValueType::VARCHAR_ARRAY,
+            ValueType::UUID_ARRAY,
+            ValueType::JSON_ARRAY,
+            ValueType::JSONB_ARRAY => true,
             default => false,
         };
     }

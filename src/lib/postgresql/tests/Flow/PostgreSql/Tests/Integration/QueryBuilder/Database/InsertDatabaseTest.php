@@ -7,12 +7,12 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use function Flow\PostgreSql\DSL\{
     col,
     column,
+    column_type_decimal,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     conflict_columns,
     create,
-    data_type_decimal,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     eq,
     insert,
     literal,
@@ -23,8 +23,9 @@ use function Flow\PostgreSql\DSL\{
     table,
     unique_constraint
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class InsertDatabaseTest extends DatabaseTestCase
+final class InsertDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_insert_schema';
 
@@ -36,13 +37,13 @@ final class InsertDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_PRODUCTS)
-                ->column(column('id', data_type_serial()))
-                ->column(column('sku', data_type_varchar(50))->notNull())
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('price', data_type_decimal(10, 2))->default(0))
-                ->column(column('stock', data_type_integer())->default(0))
+                ->column(column('id', column_type_serial()))
+                ->column(column('sku', column_type_varchar(50))->notNull())
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('price', column_type_decimal(10, 2))->default(0))
+                ->column(column('stock', column_type_integer())->default(0))
                 ->constraint(primary_key('id'))
                 ->constraint(unique_constraint('sku'))
                 ->toSql()
@@ -51,8 +52,8 @@ final class InsertDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_PRODUCTS);
-        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_PRODUCTS);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
 
         parent::tearDown();
     }
@@ -64,18 +65,14 @@ final class InsertDatabaseTest extends DatabaseTestCase
             ->columns('sku', 'name', 'price')
             ->values(literal('SKU001'), literal('Product A'), literal(100));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('name'))
                 ->from(table(self::TABLE_PRODUCTS))
                 ->where(eq(col('sku'), literal('SKU001')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('Product A', $row['name']);
     }
 
@@ -87,15 +84,12 @@ final class InsertDatabaseTest extends DatabaseTestCase
             ->values(literal('SKU002'), literal('Product B'), literal(200))
             ->values(literal('SKU003'), literal('Product C'), literal(300));
 
-        $result = $this->execute($query->toSql());
-
-        self::assertNotFalse($result);
-        self::assertSame(2, $this->affectedRows($result));
+        self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
     }
 
     public function test_insert_on_conflict_do_nothing() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_PRODUCTS)
                 ->columns('sku', 'name')
@@ -109,23 +103,20 @@ final class InsertDatabaseTest extends DatabaseTestCase
             ->values(literal('SKU006'), literal('Duplicate'))
             ->onConflict(on_conflict_nothing(conflict_columns(['sku'])));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('name'))
                 ->from(table(self::TABLE_PRODUCTS))
                 ->where(eq(col('sku'), literal('SKU006')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('Original', $row['name']);
     }
 
     public function test_insert_on_conflict_do_update() : void
     {
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_PRODUCTS)
                 ->columns('sku', 'name', 'price')
@@ -144,17 +135,14 @@ final class InsertDatabaseTest extends DatabaseTestCase
                 )
             );
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('name'), col('price'))
                 ->from(table(self::TABLE_PRODUCTS))
                 ->where(eq(col('sku'), literal('SKU007')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('Updated', $row['name']);
         self::assertSame('999.00', $row['price']);
     }
@@ -167,10 +155,8 @@ final class InsertDatabaseTest extends DatabaseTestCase
             ->values(literal('SKU004'), literal('Product D'), literal(400))
             ->returning(col('id'), col('sku'));
 
-        $result = $this->execute($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
 
-        self::assertNotFalse($result);
-        $row = $this->fetchOne($result);
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('sku', $row);
         self::assertSame('SKU004', $row['sku']);
@@ -184,10 +170,8 @@ final class InsertDatabaseTest extends DatabaseTestCase
             ->values(literal('SKU005'), literal('Product E'), literal(500))
             ->returningAll();
 
-        $result = $this->execute($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
 
-        self::assertNotFalse($result);
-        $row = $this->fetchOne($result);
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('sku', $row);
         self::assertArrayHasKey('name', $row);
@@ -197,13 +181,15 @@ final class InsertDatabaseTest extends DatabaseTestCase
 
     public function test_insert_with_schema_qualified_table() : void
     {
-        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+        $this->pgsqlContext()->client()->execute(
+            create()->schema(self::SCHEMA_NAME)->ifNotExists()->toSql()
+        );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('sku', data_type_varchar(50))->notNull())
-                ->column(column('name', data_type_varchar(100))->notNull())
+                ->column(column('id', column_type_serial()))
+                ->column(column('sku', column_type_varchar(50))->notNull())
+                ->column(column('name', column_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
@@ -213,18 +199,14 @@ final class InsertDatabaseTest extends DatabaseTestCase
             ->columns('sku', 'name')
             ->values(literal('SCHEMA-SKU'), literal('Schema Product'));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('name'))
                 ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
                 ->where(eq(col('sku'), literal('SCHEMA-SKU')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('Schema Product', $row['name']);
     }
 }

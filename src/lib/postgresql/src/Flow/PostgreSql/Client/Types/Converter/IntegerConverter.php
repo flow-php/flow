@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final class IntegerConverter implements ValueConverter
 {
     public function supportedTypes() : array
     {
         return [
-            PostgreSqlType::INT2,
-            PostgreSqlType::INT4,
-            PostgreSqlType::INT8,
+            ValueType::INT2,
+            ValueType::INT4,
+            ValueType::INT8,
         ];
     }
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
 use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface GrantRoleFinalStep extends SqlQuery
+interface GrantRoleFinalStep extends Sql
 {
     public function toAst() : GrantRoleStmt;
 

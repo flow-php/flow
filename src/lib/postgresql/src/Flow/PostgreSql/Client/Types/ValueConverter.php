@@ -12,7 +12,7 @@ interface ValueConverter
     /**
      * Get the PostgreSQL types this converter handles.
      *
-     * @return array<PostgreSqlType>
+     * @return array<ValueType>
      */
     public function supportedTypes() : array;
 

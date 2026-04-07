@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema;
 
-use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Protobuf\AST\{ColumnDef, ConstrType, Constraint, Node, RangeVar};
-use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\Protobuf\AST\{A_Const, Boolean as PBBoolean, ColumnDef, ConstrType, Constraint, Integer as PBInteger, Node, PBFloat, PBString, RangeVar};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\Schema\IdentityGeneration;
 
 final readonly class ColumnDefinition
 {
@@ -17,25 +16,25 @@ final readonly class ColumnDefinition
      */
     private function __construct(
         private string $name,
-        private DataType $type,
+        private ColumnType $type,
         private bool $notNull = false,
         private ?Node $defaultValue = null,
-        private ?string $identity = null,
+        private ?IdentityGeneration $identity = null,
         private ?Node $generatedExpression = null,
         private array $constraints = [],
     ) {
     }
 
-    public static function create(string $name, DataType $type) : self
+    public static function create(string $name, ColumnType $type) : self
     {
         return new self($name, $type);
     }
 
-    public function check(string $expression) : self
+    public function check(Condition $condition) : self
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
-        $constraint->setRawExpr($this->parseExpression($expression));
+        $constraint->setRawExpr($condition->toAst());
 
         return new self(
             $this->name,
@@ -65,20 +64,20 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function defaultRaw(string $expression) : self
+    public function defaultRaw(Expression $expression) : self
     {
         return new self(
             $this->name,
             $this->type,
             $this->notNull,
-            $this->parseExpression($expression),
+            $expression->toAst(),
             $this->identity,
             $this->generatedExpression,
             $this->constraints,
         );
     }
 
-    public function generatedAs(string $expression) : self
+    public function generatedAs(Expression $expression) : self
     {
         return new self(
             $this->name,
@@ -86,21 +85,19 @@ final readonly class ColumnDefinition
             $this->notNull,
             $this->defaultValue,
             $this->identity,
-            $this->parseExpression($expression),
+            $expression->toAst(),
             $this->constraints,
         );
     }
 
-    public function identity(string $type = 'ALWAYS') : self
+    public function identity(IdentityGeneration $type = IdentityGeneration::ALWAYS) : self
     {
-        $identityChar = \strtoupper($type) === 'ALWAYS' ? 'a' : 'd';
-
         return new self(
             $this->name,
             $this->type,
             $this->notNull,
             $this->defaultValue,
-            $identityChar,
+            $type,
             $this->generatedExpression,
             $this->constraints,
         );
@@ -184,10 +181,6 @@ final readonly class ColumnDefinition
         $columnDef->setTypeName($this->type->toAst());
         $columnDef->setIsLocal(true);
 
-        if ($this->identity !== null) {
-            $columnDef->setIdentity($this->identity);
-        }
-
         $allConstraints = [];
 
         if ($this->notNull) {
@@ -205,6 +198,13 @@ final readonly class ColumnDefinition
 
         foreach ($this->constraints as $constraint) {
             $allConstraints[] = $constraint;
+        }
+
+        if ($this->identity !== null) {
+            $identityConstraint = new Constraint();
+            $identityConstraint->setContype(ConstrType::CONSTR_IDENTITY);
+            $identityConstraint->setGeneratedWhen($this->identity->value);
+            $allConstraints[] = $identityConstraint;
         }
 
         if ($this->generatedExpression !== null) {
@@ -251,50 +251,26 @@ final readonly class ColumnDefinition
 
     private function createLiteralNode(bool|float|int|string|null $value) : Node
     {
-        $parser = new Parser();
+        $aConst = new A_Const();
 
-        $literal = match (true) {
-            $value === null => 'NULL',
-            \is_bool($value) => $value ? 'TRUE' : 'FALSE',
-            \is_string($value) => "'" . \str_replace("'", "''", $value) . "'",
-            default => (string) $value,
-        };
-
-        $parsed = $parser->parse("SELECT {$literal} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
+        if ($value === null) {
+            $aConst->setIsnull(true);
+        } elseif (\is_bool($value)) {
+            /** @phpstan-ignore-next-line */
+            $aConst->setBoolval((new PBBoolean())->setBoolval($value));
+        } elseif (\is_int($value)) {
+            /** @phpstan-ignore-next-line */
+            $aConst->setIval((new PBInteger())->setIval($value));
+        } elseif (\is_float($value)) {
+            $aConst->setFval((new PBFloat())->setFval((string) $value));
+        } else {
+            $aConst->setSval((new PBString())->setSval($value));
         }
 
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
+        $node = new Node();
+        $node->setAConst($aConst);
 
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
+        return $node;
     }
 
     private function createStringNode(string $value) : Node
@@ -306,45 +282,5 @@ final readonly class ColumnDefinition
         $node->setString($str);
 
         return $node;
-    }
-
-    private function parseExpression(string $expression) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT {$expression} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
     }
 }

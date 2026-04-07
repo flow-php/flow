@@ -20,6 +20,8 @@ composer require flow-php/symfony-telemetry-bundle:~--FLOW_PHP_VERSION--
 
 ## Core Dependencies
 
+- [flow-php/telemetry](/documentation/installation/packages/telemetry.md)
+- [flow-php/symfony-http-foundation-telemetry-bridge](/documentation/installation/packages/symfony-http-foundation-telemetry-bridge.md)
 - [symfony/config](https://packagist.org/packages/symfony/config)
 - [symfony/console](https://packagist.org/packages/symfony/console)
 - [symfony/dependency-injection](https://packagist.org/packages/symfony/dependency-injection)
@@ -27,19 +29,12 @@ composer require flow-php/symfony-telemetry-bundle:~--FLOW_PHP_VERSION--
 
 ## Suggested Dependencies
 
-```bash
-# For Doctrine DBAL tracing
-composer require doctrine/dbal
+- [flow-php/symfony-postgresql-bundle](/documentation/installation/packages/symfony-postgresql-bundle.md) — for PostgreSQL database management and migrations with telemetry support
+- [flow-php/psr18-telemetry-bridge](/documentation/installation/packages/psr18-telemetry-bridge.md) — for PSR-18 HTTP client tracing
+- [flow-php/telemetry-otlp-bridge](/documentation/installation/packages/telemetry-otlp-bridge.md) — for OTLP exporter support
+- [symfony/messenger](https://packagist.org/packages/symfony/messenger) — for Messenger tracing middleware
+- [twig/twig](https://packagist.org/packages/twig/twig) — for Twig template tracing
 
-# For PSR-18 HTTP client tracing
-composer require flow-php/psr18-telemetry-bridge:~--FLOW_PHP_VERSION--
+## Optional Dependencies
 
-# For OTLP exporter support
-composer require flow-php/telemetry-otlp-bridge:~--FLOW_PHP_VERSION--
-
-# For Messenger tracing middleware
-composer require symfony/messenger
-
-# For Twig template tracing
-composer require twig/twig
-```
+- [doctrine/dbal](https://packagist.org/packages/doctrine/dbal) — for Doctrine DBAL tracing

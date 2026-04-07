@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Extension;
 
+use function Flow\PostgreSql\DSL\{alter, create, drop};
 use Flow\PostgreSql\Protobuf\AST\{AlterExtensionContentsStmt, AlterExtensionStmt, CreateExtensionStmt, DropBehavior, DropStmt, ObjectType};
 use Flow\PostgreSql\QueryBuilder\Schema\Extension\{AlterExtensionBuilder, CreateExtensionBuilder, DropExtensionBuilder};
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame(1, $ast->getAction());
     }
 
+    public function test_alter_extension_add_function_to_sql() : void
+    {
+        self::assertSame('ALTER EXTENSION postgis ADD FUNCTION st_distance', alter()->extension('postgis')->addFunction('st_distance')->toSql());
+    }
+
     public function test_alter_extension_add_table_ast_type() : void
     {
         $builder = AlterExtensionBuilder::create('postgis')
@@ -39,6 +45,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertInstanceOf(AlterExtensionContentsStmt::class, $ast);
         self::assertSame(ObjectType::OBJECT_TABLE, $ast->getObjtype());
         self::assertSame(1, $ast->getAction());
+    }
+
+    public function test_alter_extension_add_table_to_sql() : void
+    {
+        self::assertSame('ALTER EXTENSION postgis ADD TABLE spatial_ref_sys', alter()->extension('postgis')->addTable('spatial_ref_sys')->toSql());
     }
 
     public function test_alter_extension_drop_function_ast_type() : void
@@ -53,6 +64,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame(-1, $ast->getAction());
     }
 
+    public function test_alter_extension_drop_function_to_sql() : void
+    {
+        self::assertSame('ALTER EXTENSION postgis DROP FUNCTION st_distance', alter()->extension('postgis')->dropFunction('st_distance')->toSql());
+    }
+
     public function test_alter_extension_drop_table_ast_type() : void
     {
         $builder = AlterExtensionBuilder::create('postgis')
@@ -63,6 +79,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertInstanceOf(AlterExtensionContentsStmt::class, $ast);
         self::assertSame(ObjectType::OBJECT_TABLE, $ast->getObjtype());
         self::assertSame(-1, $ast->getAction());
+    }
+
+    public function test_alter_extension_drop_table_to_sql() : void
+    {
+        self::assertSame('ALTER EXTENSION postgis DROP TABLE spatial_ref_sys', alter()->extension('postgis')->dropTable('spatial_ref_sys')->toSql());
     }
 
     public function test_alter_extension_update_ast_type() : void
@@ -103,6 +124,16 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame('new_version', $defElem->getDefname());
     }
 
+    public function test_alter_extension_update_to_sql() : void
+    {
+        self::assertSame('ALTER EXTENSION postgis UPDATE', alter()->extension('postgis')->update()->toSql());
+    }
+
+    public function test_alter_extension_update_to_version_to_sql() : void
+    {
+        self::assertSame('ALTER EXTENSION postgis UPDATE TO "3.1"', alter()->extension('postgis')->updateTo('3.1')->toSql());
+    }
+
     public function test_create_extension_ast_type() : void
     {
         $builder = CreateExtensionBuilder::create('uuid-ossp');
@@ -127,6 +158,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame('cascade', $defElem->getDefname());
     }
 
+    public function test_create_extension_full_to_sql() : void
+    {
+        self::assertSame('CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public VERSION "3.0" CASCADE', create()->extension('postgis')->ifNotExists()->schema('public')->version('3.0')->cascade()->toSql());
+    }
+
     public function test_create_extension_if_not_exists_sets_flag() : void
     {
         $builder = CreateExtensionBuilder::create('postgis')
@@ -135,6 +171,11 @@ final class ExtensionBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertTrue($ast->getIfNotExists());
+    }
+
+    public function test_create_extension_if_not_exists_to_sql() : void
+    {
+        self::assertSame('CREATE EXTENSION IF NOT EXISTS postgis', create()->extension('postgis')->ifNotExists()->toSql());
     }
 
     public function test_create_extension_immutability() : void
@@ -170,6 +211,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame('postgis', $ast->getExtname());
     }
 
+    public function test_create_extension_simple_to_sql() : void
+    {
+        self::assertSame('CREATE EXTENSION "uuid-ossp"', create()->extension('uuid-ossp')->toSql());
+    }
+
     public function test_create_extension_version_sets_option() : void
     {
         $builder = CreateExtensionBuilder::create('postgis')
@@ -183,6 +229,21 @@ final class ExtensionBuilderTest extends TestCase
         $defElem = $options[0]->getDefElem();
         self::assertNotNull($defElem);
         self::assertSame('new_version', $defElem->getDefname());
+    }
+
+    public function test_create_extension_with_cascade_to_sql() : void
+    {
+        self::assertSame('CREATE EXTENSION postgis CASCADE', create()->extension('postgis')->cascade()->toSql());
+    }
+
+    public function test_create_extension_with_schema_to_sql() : void
+    {
+        self::assertSame('CREATE EXTENSION postgis SCHEMA public', create()->extension('postgis')->schema('public')->toSql());
+    }
+
+    public function test_create_extension_with_version_to_sql() : void
+    {
+        self::assertSame('CREATE EXTENSION postgis VERSION "3.0"', create()->extension('postgis')->version('3.0')->toSql());
     }
 
     public function test_drop_extension_ast_type() : void
@@ -205,6 +266,16 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame(DropBehavior::DROP_CASCADE, $ast->getBehavior());
     }
 
+    public function test_drop_extension_cascade_to_sql() : void
+    {
+        self::assertSame('DROP EXTENSION postgis CASCADE', drop()->extension('postgis')->cascade()->toSql());
+    }
+
+    public function test_drop_extension_if_exists_cascade_to_sql() : void
+    {
+        self::assertSame('DROP EXTENSION IF EXISTS postgis CASCADE', drop()->extension('postgis')->ifExists()->cascade()->toSql());
+    }
+
     public function test_drop_extension_if_exists_sets_flag() : void
     {
         $builder = DropExtensionBuilder::create('postgis')
@@ -213,6 +284,11 @@ final class ExtensionBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertTrue($ast->getMissingOk());
+    }
+
+    public function test_drop_extension_if_exists_to_sql() : void
+    {
+        self::assertSame('DROP EXTENSION IF EXISTS postgis', drop()->extension('postgis')->ifExists()->toSql());
     }
 
     public function test_drop_extension_immutability() : void
@@ -233,6 +309,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertCount(3, $ast->getObjects());
     }
 
+    public function test_drop_extension_multiple_to_sql() : void
+    {
+        self::assertSame('DROP EXTENSION postgis, pg_trgm, "uuid-ossp"', drop()->extension('postgis', 'pg_trgm', 'uuid-ossp')->toSql());
+    }
+
     public function test_drop_extension_restrict_sets_behavior() : void
     {
         $builder = DropExtensionBuilder::create('postgis')
@@ -243,6 +324,11 @@ final class ExtensionBuilderTest extends TestCase
         self::assertSame(DropBehavior::DROP_RESTRICT, $ast->getBehavior());
     }
 
+    public function test_drop_extension_restrict_to_sql() : void
+    {
+        self::assertSame('DROP EXTENSION postgis', drop()->extension('postgis')->restrict()->toSql());
+    }
+
     public function test_drop_extension_sets_name() : void
     {
         $builder = DropExtensionBuilder::create('postgis');
@@ -250,5 +336,10 @@ final class ExtensionBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         self::assertCount(1, $ast->getObjects());
+    }
+
+    public function test_drop_extension_simple_to_sql() : void
+    {
+        self::assertSame('DROP EXTENSION postgis', drop()->extension('postgis')->toSql());
     }
 }

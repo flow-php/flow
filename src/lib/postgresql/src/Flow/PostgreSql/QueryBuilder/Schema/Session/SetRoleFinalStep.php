@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Session;
 
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface SetRoleFinalStep extends SqlQuery
+interface SetRoleFinalStep extends Sql
 {
     public function toAst() : VariableSetStmt;
 

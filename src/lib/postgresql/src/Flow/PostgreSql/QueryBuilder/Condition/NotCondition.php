@@ -7,11 +7,12 @@ namespace Flow\PostgreSql\QueryBuilder\Condition;
 use Flow\PostgreSql\Protobuf\AST\{A_Expr_Kind, SubLinkType};
 use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
 use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
 
 final readonly class NotCondition implements Condition
 {
     public function __construct(
-        private Condition $condition,
+        private Expression $expression,
     ) {
     }
 
@@ -46,12 +47,17 @@ final readonly class NotCondition implements Condition
 
         $argNode = $args[0];
 
-        return new self(self::conditionFromNode($argNode));
+        return new self(self::expressionFromNode($argNode));
     }
 
     public function and(Condition $other) : AndCondition
     {
         return new AndCondition($this, $other);
+    }
+
+    public function as(string $alias) : AliasedExpression
+    {
+        return new AliasedExpression($this, $alias);
     }
 
     public function not() : self
@@ -68,7 +74,7 @@ final readonly class NotCondition implements Condition
     {
         $boolExpr = new BoolExpr();
         $boolExpr->setBoolop(BoolExprType::NOT_EXPR);
-        $boolExpr->setArgs([$this->condition->toAst()]);
+        $boolExpr->setArgs([$this->expression->toAst()]);
 
         $node = new Node();
         $node->setBoolExpr($boolExpr);
@@ -76,7 +82,7 @@ final readonly class NotCondition implements Condition
         return $node;
     }
 
-    private static function conditionFromNode(Node $node) : Condition
+    private static function expressionFromNode(Node $node) : Expression
     {
         if ($node->hasBoolExpr()) {
             $boolExpr = $node->getBoolExpr();
@@ -132,6 +138,6 @@ final readonly class NotCondition implements Condition
             };
         }
 
-        throw UnsupportedNodeException::forNodeType('unknown node type in condition');
+        return ExpressionFactory::fromAst($node);
     }
 }

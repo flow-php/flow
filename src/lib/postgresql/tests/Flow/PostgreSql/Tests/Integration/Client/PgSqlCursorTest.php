@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client;
 
-use function Flow\PostgreSql\DSL\{func, literal, select};
+use function Flow\PostgreSql\DSL\{cast, column_type_boolean, column_type_integer, constructor_mapper, func, is_true, literal, row_expr, select, star, values_table};
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class PgSqlCursorTest extends ClientTestCase
+final class PgSqlCursorTest extends PostgreSqlTestCase
 {
     public function test_cursor_count() : void
     {
-        $cursor = $this->client->cursor(
+        $cursor = $this->pgsqlContext()->client()->cursor(
             select(func('generate_series', [literal(1), literal(5)])->as('num'))
         );
 
@@ -19,7 +20,7 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_cursor_free() : void
     {
-        $cursor = $this->client->cursor(
+        $cursor = $this->pgsqlContext()->client()->cursor(
             select(literal(1)->as('num'))
         );
 
@@ -31,7 +32,7 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_cursor_iterate_method() : void
     {
-        $cursor = $this->client->cursor(
+        $cursor = $this->pgsqlContext()->client()->cursor(
             select(func('generate_series', [literal(1), literal(2)])->as('num'))
         );
 
@@ -42,7 +43,7 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_cursor_iterates_rows() : void
     {
-        $cursor = $this->client->cursor(
+        $cursor = $this->pgsqlContext()->client()->cursor(
             select(func('generate_series', [literal(1), literal(3)])->as('num'))
         );
 
@@ -60,11 +61,16 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_cursor_map_to_objects() : void
     {
-        $cursor = $this->client->cursor(
-            "SELECT * FROM (VALUES (1, 'Alice'), (2, 'Bob')) AS t(id, name)"
+        $cursor = $this->pgsqlContext()->client()->cursor(
+            select(star())->from(
+                values_table(
+                    row_expr([literal(1), literal('Alice')]),
+                    row_expr([literal(2), literal('Bob')])
+                )->as('t', ['id', 'name'])
+            )
         );
 
-        $objects = \iterator_to_array($cursor->map(CursorTestUser::class));
+        $objects = \iterator_to_array($cursor->map(constructor_mapper(CursorTestUser::class)));
 
         self::assertCount(2, $objects);
         self::assertInstanceOf(CursorTestUser::class, $objects[0]);
@@ -75,7 +81,7 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_cursor_next_method() : void
     {
-        $cursor = $this->client->cursor(
+        $cursor = $this->pgsqlContext()->client()->cursor(
             select(func('generate_series', [literal(1), literal(3)])->as('num'))
         );
 
@@ -96,8 +102,8 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_cursor_with_type_conversion() : void
     {
-        $cursor = $this->client->cursor(
-            'SELECT 42::integer AS num, true::boolean AS flag'
+        $cursor = $this->pgsqlContext()->client()->cursor(
+            select(cast(literal(42), column_type_integer())->as('num'), cast(literal(true), column_type_boolean())->as('flag'))
         );
 
         $row = $cursor->next();
@@ -109,7 +115,7 @@ final class PgSqlCursorTest extends ClientTestCase
 
     public function test_empty_cursor() : void
     {
-        $cursor = $this->client->cursor('SELECT 1 WHERE false');
+        $cursor = $this->pgsqlContext()->client()->cursor(select(literal(1))->where(is_true(literal(false))));
 
         self::assertSame(0, $cursor->count());
         self::assertNull($cursor->next());

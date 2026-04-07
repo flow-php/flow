@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\NumericConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -53,7 +53,7 @@ final class NumericConverterTest extends TestCase
     public function test_supported_types() : void
     {
         $converter = new NumericConverter();
-        self::assertContains(PostgreSqlType::NUMERIC, $converter->supportedTypes());
+        self::assertContains(ValueType::NUMERIC, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]

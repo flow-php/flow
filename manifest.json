@@ -182,6 +182,11 @@
       "type": "bridge"
     },
     {
+      "name": "flow-php/symfony-postgresql-bundle",
+      "path": "src/bridge/symfony/postgresql-bundle",
+      "type": "bridge"
+    },
+    {
       "name": "flow-php/symfony-telemetry-bundle",
       "path": "src/bridge/symfony/telemetry-bundle",
       "type": "bridge"

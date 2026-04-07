@@ -6,14 +6,14 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PostgreSql\DSL\{
     agg_count,
+    and_,
     col,
     column,
-    cond_and,
+    column_type_decimal,
+    column_type_integer,
+    column_type_serial,
+    column_type_varchar,
     create,
-    data_type_decimal,
-    data_type_integer,
-    data_type_serial,
-    data_type_varchar,
     eq,
     gt,
     insert,
@@ -24,8 +24,9 @@ use function Flow\PostgreSql\DSL\{
     table,
     update
 };
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class UpdateDatabaseTest extends DatabaseTestCase
+final class UpdateDatabaseTest extends PostgreSqlTestCase
 {
     private const SCHEMA_NAME = 'flow_postgres_test_update_schema';
 
@@ -39,27 +40,27 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_DEPARTMENTS)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('bonus_rate', data_type_decimal(3, 2))->default(1))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('bonus_rate', column_type_decimal(3, 2))->default(1))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::TABLE_EMPLOYEES)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('salary', data_type_decimal(10, 2))->default(0))
-                ->column(column('department_id', data_type_integer()))
-                ->column(column('status', data_type_varchar(50))->default('active'))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('salary', column_type_decimal(10, 2))->default(0))
+                ->column(column('department_id', column_type_integer()))
+                ->column(column('status', column_type_varchar(50))->default('active'))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_DEPARTMENTS)
                 ->columns('name', 'bonus_rate')
@@ -69,7 +70,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::TABLE_EMPLOYEES)
                 ->columns('name', 'salary', 'department_id', 'status')
@@ -83,9 +84,9 @@ final class UpdateDatabaseTest extends DatabaseTestCase
 
     protected function tearDown() : void
     {
-        $this->dropTableIfExists(self::TABLE_EMPLOYEES);
-        $this->dropTableIfExists(self::TABLE_DEPARTMENTS);
-        $this->execute('DROP SCHEMA IF EXISTS ' . self::SCHEMA_NAME . ' CASCADE');
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_EMPLOYEES);
+        $this->pgsqlContext()->dropTableIfExists(self::TABLE_DEPARTMENTS);
+        $this->pgsqlContext()->dropSchemaIfExists(self::SCHEMA_NAME);
 
         parent::tearDown();
     }
@@ -96,19 +97,15 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->update(self::TABLE_EMPLOYEES)
             ->set('status', literal('updated'));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(4, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(4, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_EMPLOYEES))
                 ->where(eq(col('status'), literal('updated')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
-        self::assertSame('4', $row['cnt']);
+        self::assertSame(4, $row['cnt']);
     }
 
     public function test_update_multiple_columns() : void
@@ -119,17 +116,14 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->set('status', literal('promoted'))
             ->where(eq(col('name'), literal('Bob')));
 
-        $result = $this->execute($query->toSql());
+        $this->pgsqlContext()->client()->execute($query->toSql());
 
-        self::assertNotFalse($result);
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('salary'), col('status'))
                 ->from(table(self::TABLE_EMPLOYEES))
                 ->where(eq(col('name'), literal('Bob')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('75000.00', $row['salary']);
         self::assertSame('promoted', $row['status']);
     }
@@ -141,7 +135,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->set('status', literal('bonus_applied'))
             ->from(table(self::TABLE_DEPARTMENTS))
             ->where(
-                cond_and(
+                and_(
                     eq(
                         col('department_id', self::TABLE_EMPLOYEES),
                         col('id', self::TABLE_DEPARTMENTS)
@@ -150,10 +144,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
                 )
             );
 
-        $result = $this->execute($query->toSql());
-
-        self::assertNotFalse($result);
-        self::assertGreaterThanOrEqual(1, $this->affectedRows($result));
+        self::assertGreaterThanOrEqual(1, $this->pgsqlContext()->client()->execute($query->toSql()));
     }
 
     public function test_update_with_returning() : void
@@ -164,10 +155,8 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->where(eq(col('name'), literal('Charlie')))
             ->returning(col('id'), col('name'), col('salary'));
 
-        $result = $this->execute($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
 
-        self::assertNotFalse($result);
-        $row = $this->fetchOne($result);
         self::assertSame('Charlie', $row['name']);
         self::assertSame('80000.00', $row['salary']);
     }
@@ -180,10 +169,8 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->where(eq(col('name'), literal('Diana')))
             ->returningAll();
 
-        $result = $this->execute($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
 
-        self::assertNotFalse($result);
-        $row = $this->fetchOne($result);
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('name', $row);
         self::assertArrayHasKey('salary', $row);
@@ -194,18 +181,20 @@ final class UpdateDatabaseTest extends DatabaseTestCase
 
     public function test_update_with_schema_qualified_table() : void
     {
-        $this->execute('CREATE SCHEMA IF NOT EXISTS ' . self::SCHEMA_NAME);
+        $this->pgsqlContext()->client()->execute(
+            create()->schema(self::SCHEMA_NAME)->ifNotExists()->toSql()
+        );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             create()->table(self::SCHEMA_TABLE, self::SCHEMA_NAME)
-                ->column(column('id', data_type_serial()))
-                ->column(column('name', data_type_varchar(100))->notNull())
-                ->column(column('status', data_type_varchar(50))->default('active'))
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_varchar(100))->notNull())
+                ->column(column('status', column_type_varchar(50))->default('active'))
                 ->constraint(primary_key('id'))
                 ->toSql()
         );
 
-        $this->execute(
+        $this->pgsqlContext()->client()->execute(
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::SCHEMA_TABLE)
                 ->columns('name', 'status')
@@ -218,18 +207,14 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->set('status', literal('updated'))
             ->where(eq(col('name'), literal('Alice')));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('status'))
                 ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
                 ->where(eq(col('name'), literal('Alice')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('updated', $row['status']);
     }
 
@@ -240,18 +225,14 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             ->set('salary', literal(70000))
             ->where(eq(col('name'), literal('Alice')));
 
-        $result = $this->execute($query->toSql());
+        self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        self::assertNotFalse($result);
-        self::assertSame(1, $this->affectedRows($result));
-
-        $check = $this->execute(
+        $row = $this->pgsqlContext()->client()->fetchOne(
             select(col('salary'))
                 ->from(table(self::TABLE_EMPLOYEES))
                 ->where(eq(col('name'), literal('Alice')))
                 ->toSql()
         );
-        $row = $this->fetchOne($check);
         self::assertSame('70000.00', $row['salary']);
     }
 }

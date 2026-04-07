@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final class CidrConverter implements ValueConverter
 {
     public function supportedTypes() : array
     {
-        return [PostgreSqlType::CIDR];
+        return [ValueType::CIDR];
     }
 
     public function toDatabase(mixed $value) : ?string

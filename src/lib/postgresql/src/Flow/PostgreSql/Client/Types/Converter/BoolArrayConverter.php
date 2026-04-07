@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final class BoolArrayConverter implements ValueConverter
 {
     public function supportedTypes() : array
     {
-        return [PostgreSqlType::BOOL_ARRAY];
+        return [ValueType::BOOL_ARRAY];
     }
 
     public function toDatabase(mixed $value) : ?string

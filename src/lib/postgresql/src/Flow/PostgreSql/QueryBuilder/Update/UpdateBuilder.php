@@ -142,8 +142,20 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self(with: $with);
     }
 
-    public function from(TableReference ...$tables) : UpdateWhereStep
+    public function from(string|TableReference ...$tables) : UpdateWhereStep
     {
+        $tables = \array_map(
+            static function (string|TableReference $t) : TableReference {
+                if ($t instanceof TableReference) {
+                    return $t;
+                }
+                $id = QualifiedIdentifier::parse($t);
+
+                return new Table($id->name(), $id->schema());
+            },
+            $tables,
+        );
+
         return new self(
             with: $this->with,
             table: $this->table,

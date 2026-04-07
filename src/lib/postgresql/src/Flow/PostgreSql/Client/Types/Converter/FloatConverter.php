@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final class FloatConverter implements ValueConverter
 {
     public function supportedTypes() : array
     {
         return [
-            PostgreSqlType::FLOAT4,
-            PostgreSqlType::FLOAT8,
+            ValueType::FLOAT4,
+            ValueType::FLOAT8,
         ];
     }
 

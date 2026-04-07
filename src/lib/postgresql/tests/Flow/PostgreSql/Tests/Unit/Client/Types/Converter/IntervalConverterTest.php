@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\IntervalConverter;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -60,7 +60,7 @@ final class IntervalConverterTest extends TestCase
     public function test_supported_types() : void
     {
         $converter = new IntervalConverter();
-        self::assertContains(PostgreSqlType::INTERVAL, $converter->supportedTypes());
+        self::assertContains(ValueType::INTERVAL, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]

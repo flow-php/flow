@@ -1,0 +1,108 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection;
+
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
+
+final class Configuration implements ConfigurationInterface
+{
+    public function getConfigTreeBuilder() : TreeBuilder
+    {
+        $treeBuilder = new TreeBuilder('flow_postgresql');
+
+        $treeBuilder->getRootNode()
+            ->children()
+                ->arrayNode('connections')
+                    ->requiresAtLeastOneElement()
+                    ->useAttributeAsKey('name')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('dsn')
+                                ->isRequired()
+                                ->cannotBeEmpty()
+                                ->info('PostgreSQL connection DSN (e.g. postgresql://user:pass@localhost:5432/dbname)')
+                            ->end()
+                            ->arrayNode('telemetry')
+                                ->children()
+                                    ->scalarNode('service_id')
+                                        ->isRequired()
+                                        ->cannotBeEmpty()
+                                        ->info('Service ID of the Telemetry instance (e.g. flow.telemetry)')
+                                    ->end()
+                                    ->scalarNode('clock_service_id')
+                                        ->defaultNull()
+                                        ->info('Service ID of a PSR ClockInterface implementation. Default: creates SystemClock')
+                                    ->end()
+                                    ->booleanNode('trace_queries')->defaultTrue()->end()
+                                    ->booleanNode('trace_transactions')->defaultTrue()->end()
+                                    ->booleanNode('collect_metrics')->defaultTrue()->end()
+                                    ->booleanNode('log_queries')->defaultFalse()->end()
+                                    ->integerNode('max_query_length')->defaultValue(1000)->min(0)->end()
+                                    ->booleanNode('include_parameters')->defaultFalse()->end()
+                                    ->integerNode('max_parameters')->defaultValue(10)->min(0)->end()
+                                    ->integerNode('max_parameter_length')->defaultValue(100)->min(0)->end()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('migrations')
+                    ->canBeEnabled()
+                    ->children()
+                        ->scalarNode('directory')
+                            ->defaultValue('%kernel.project_dir%/migrations')
+                            ->cannotBeEmpty()
+                        ->end()
+                        ->scalarNode('namespace')
+                            ->defaultValue('App\\Migrations')
+                            ->cannotBeEmpty()
+                        ->end()
+                        ->scalarNode('table_name')
+                            ->defaultValue('flow_migrations')
+                            ->cannotBeEmpty()
+                        ->end()
+                        ->scalarNode('table_schema')
+                            ->defaultValue('public')
+                            ->cannotBeEmpty()
+                        ->end()
+                        ->scalarNode('migration_file_name')
+                            ->defaultValue('migration.php')
+                            ->cannotBeEmpty()
+                        ->end()
+                        ->scalarNode('rollback_file_name')
+                            ->defaultValue('rollback.php')
+                            ->cannotBeEmpty()
+                        ->end()
+                        ->booleanNode('all_or_nothing')
+                            ->defaultFalse()
+                            ->info('Wrap all migrations in a single transaction (default: false)')
+                        ->end()
+                        ->booleanNode('generate_rollback')
+                            ->defaultTrue()
+                            ->info('Generate rollback files when creating migrations (default: true)')
+                        ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('catalog_providers')
+                    ->info('List of catalog providers to merge into the target schema. Each entry must have either "catalog_provider_id" or "catalog".')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('catalog_provider_id')
+                                ->defaultNull()
+                                ->info('Service ID of Flow\\PostgreSql\\Schema\\CatalogProvider')
+                            ->end()
+                            ->variableNode('catalog')
+                                ->defaultNull()
+                                ->info('Inline catalog definition matching Catalog::fromArray() shape')
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end();
+
+        return $treeBuilder;
+    }
+}

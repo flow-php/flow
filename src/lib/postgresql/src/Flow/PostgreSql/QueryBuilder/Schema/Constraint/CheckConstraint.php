@@ -4,32 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node};
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 
 final readonly class CheckConstraint implements TableConstraint
 {
     private function __construct(
-        private string $expression,
+        private Condition $condition,
         private ?string $name = null,
         private bool $noInherit = false,
     ) {
     }
 
-    public static function create(string $expression) : self
+    public static function create(Condition $condition) : self
     {
-        return new self($expression);
+        return new self($condition);
     }
 
     public function name(string $name) : self
     {
-        return new self($this->expression, $name, $this->noInherit);
+        return new self($this->condition, $name, $this->noInherit);
     }
 
     public function noInherit() : self
     {
-        return new self($this->expression, $this->name, true);
+        return new self($this->condition, $this->name, true);
     }
 
     public function toAst() : Constraint
@@ -45,48 +44,8 @@ final readonly class CheckConstraint implements TableConstraint
             $constraint->setIsNoInherit(true);
         }
 
-        $constraint->setRawExpr($this->parseExpression($this->expression));
+        $constraint->setRawExpr($this->condition->toAst());
 
         return $constraint;
-    }
-
-    private function parseExpression(string $expression) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT {$expression} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
     }
 }

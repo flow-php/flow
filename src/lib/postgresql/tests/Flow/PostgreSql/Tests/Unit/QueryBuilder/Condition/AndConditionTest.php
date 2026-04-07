@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
+use function Flow\PostgreSql\DSL\{col, eq, literal};
 use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition, RawCondition};
+use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+
 use PHPUnit\Framework\TestCase;
 
 final class AndConditionTest extends TestCase
@@ -20,9 +22,9 @@ final class AndConditionTest extends TestCase
 
     public function test_and_flattens_multiple_and_conditions() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
-        $cond3 = new RawCondition('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $and1 = new AndCondition($cond1, $cond2);
         $and2 = $and1->and($cond3);
@@ -39,8 +41,8 @@ final class AndConditionTest extends TestCase
 
     public function test_and_method_returns_new_instance() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $original = new AndCondition($cond1);
         $modified = $original->and($cond2);
@@ -50,10 +52,10 @@ final class AndConditionTest extends TestCase
 
     public function test_and_with_another_and_condition_flattens() : void
     {
-        $cond1 = new RawCondition('a = 1');
-        $cond2 = new RawCondition('b = 2');
-        $cond3 = new RawCondition('c = 3');
-        $cond4 = new RawCondition('d = 4');
+        $cond1 = eq(col('a'), literal(1));
+        $cond2 = eq(col('b'), literal(2));
+        $cond3 = eq(col('c'), literal(3));
+        $cond4 = eq(col('d'), literal(4));
 
         $and1 = new AndCondition($cond1, $cond2);
         $and2 = new AndCondition($cond3, $cond4);
@@ -70,8 +72,8 @@ final class AndConditionTest extends TestCase
 
     public function test_and_with_single_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $and = new AndCondition($cond1, $cond2);
         $ast = $and->toAst();
@@ -99,8 +101,8 @@ final class AndConditionTest extends TestCase
 
     public function test_from_ast_reconstructs_and_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $original = new AndCondition($cond1, $cond2);
         $ast = $original->toAst();
@@ -142,8 +144,8 @@ final class AndConditionTest extends TestCase
 
     public function test_not_returns_not_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $and = new AndCondition($cond1, $cond2);
         $not = $and->not();
@@ -153,9 +155,9 @@ final class AndConditionTest extends TestCase
 
     public function test_or_returns_or_condition() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
-        $cond3 = new RawCondition('z = 3');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
+        $cond3 = eq(col('z'), literal(3));
 
         $and = new AndCondition($cond1, $cond2);
         $or = $and->or($cond3);
@@ -165,8 +167,8 @@ final class AndConditionTest extends TestCase
 
     public function test_to_ast_creates_bool_expr() : void
     {
-        $cond1 = new RawCondition('x = 1');
-        $cond2 = new RawCondition('y = 2');
+        $cond1 = eq(col('x'), literal(1));
+        $cond2 = eq(col('y'), literal(2));
 
         $and = new AndCondition($cond1, $cond2);
         $ast = $and->toAst();

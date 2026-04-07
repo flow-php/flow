@@ -4,53 +4,59 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client;
 
-use function Flow\PostgreSql\DSL\{agg_count, asc, col, insert, literal, select, table};
+use function Flow\PostgreSql\DSL\{agg_count, asc, col, column, column_type_serial, column_type_text, create, insert, literal, primary_key, select, table};
 use Flow\PostgreSql\Client\Exception\TransactionException;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
-final class TransactionTest extends ClientTestCase
+final class TransactionTest extends PostgreSqlTestCase
 {
     protected function setUp() : void
     {
         parent::setUp();
 
-        $this->client->execute('CREATE TEMP TABLE test_transaction (id serial PRIMARY KEY, name text)');
+        $this->pgsqlContext()->client()->execute(
+            create()->temporaryTable('test_transaction')
+                ->column(column('id', column_type_serial()))
+                ->column(column('name', column_type_text()))
+                ->constraint(primary_key('id'))
+        );
     }
 
     public function test_auto_commit_default_is_true() : void
     {
-        self::assertTrue($this->client->isAutoCommit());
+        self::assertTrue($this->pgsqlContext()->client()->isAutoCommit());
     }
 
     public function test_auto_commit_disabled_allows_rollback() : void
     {
-        $this->client->setAutoCommit(false);
+        $this->pgsqlContext()->client()->setAutoCommit(false);
 
-        $this->client->execute(insert()->into('test_transaction')->columns('name')->values(literal('will be rolled back')));
+        $this->pgsqlContext()->client()->execute(insert()->into('test_transaction')->columns('name')->values(literal('will be rolled back')));
 
-        $this->client->rollBack();
+        $this->pgsqlContext()->client()->rollBack();
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(0, $count);
 
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
     }
 
     public function test_auto_commit_disabled_starts_transaction() : void
     {
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->setAutoCommit(false);
+        $this->pgsqlContext()->client()->setAutoCommit(false);
 
-        self::assertFalse($this->client->isAutoCommit());
-        self::assertSame(1, $this->client->getTransactionNestingLevel());
+        self::assertFalse($this->pgsqlContext()->client()->isAutoCommit());
+        self::assertSame(1, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->execute(insert()->into('test_transaction')->columns('name')->values(literal('in transaction')));
+        $this->pgsqlContext()->client()->execute(insert()->into('test_transaction')->columns('name')->values(literal('in transaction')));
 
-        $this->client->setAutoCommit(true);
-        self::assertTrue($this->client->isAutoCommit());
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        $this->pgsqlContext()->client()->setAutoCommit(true);
+        self::assertTrue($this->pgsqlContext()->client()->isAutoCommit());
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(1, $count);
     }
 
@@ -59,12 +65,12 @@ final class TransactionTest extends ClientTestCase
         $this->expectException(TransactionException::class);
         $this->expectExceptionMessage('no active transaction');
 
-        $this->client->commit();
+        $this->pgsqlContext()->client()->commit();
     }
 
     public function test_deeply_nested_transactions() : void
     {
-        $this->client->transaction(static function ($client) : void {
+        $this->pgsqlContext()->client()->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('level1')));
 
             $client->transaction(static function ($client) : void {
@@ -76,46 +82,46 @@ final class TransactionTest extends ClientTestCase
             });
         });
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(3, $count);
     }
 
     public function test_explicit_begin_commit() : void
     {
-        $this->client->beginTransaction();
-        $this->client->execute(insert()->into('test_transaction')->columns('name')->values(literal('explicit')));
-        $this->client->commit();
+        $this->pgsqlContext()->client()->beginTransaction();
+        $this->pgsqlContext()->client()->execute(insert()->into('test_transaction')->columns('name')->values(literal('explicit')));
+        $this->pgsqlContext()->client()->commit();
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(1, $count);
     }
 
     public function test_explicit_begin_rollback() : void
     {
-        $this->client->beginTransaction();
-        $this->client->execute(insert()->into('test_transaction')->columns('name')->values(literal('will_rollback')));
-        $this->client->rollBack();
+        $this->pgsqlContext()->client()->beginTransaction();
+        $this->pgsqlContext()->client()->execute(insert()->into('test_transaction')->columns('name')->values(literal('will_rollback')));
+        $this->pgsqlContext()->client()->rollBack();
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(0, $count);
     }
 
     public function test_multiple_operations_in_transaction() : void
     {
-        $this->client->transaction(static function ($client) : void {
+        $this->pgsqlContext()->client()->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('first')));
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('second')));
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('third')));
         });
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
 
         self::assertSame(3, $count);
     }
 
     public function test_nested_transaction_commits() : void
     {
-        $this->client->transaction(static function ($client) : void {
+        $this->pgsqlContext()->client()->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('outer')));
 
             $client->transaction(static function ($client) : void {
@@ -123,13 +129,13 @@ final class TransactionTest extends ClientTestCase
             });
         });
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(2, $count);
     }
 
     public function test_nested_transaction_inner_rollback() : void
     {
-        $this->client->transaction(static function ($client) : void {
+        $this->pgsqlContext()->client()->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('outer')));
 
             try {
@@ -144,10 +150,10 @@ final class TransactionTest extends ClientTestCase
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('after inner')));
         });
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(2, $count);
 
-        $names = $this->client->fetchAll(select(col('name'))->from(table('test_transaction'))->orderBy(asc(col('id'))));
+        $names = $this->pgsqlContext()->client()->fetchAll(select(col('name'))->from(table('test_transaction'))->orderBy(asc(col('id'))));
         self::assertSame('outer', $names[0]['name']);
         self::assertSame('after inner', $names[1]['name']);
     }
@@ -155,7 +161,7 @@ final class TransactionTest extends ClientTestCase
     public function test_nested_transaction_outer_rollback_includes_inner() : void
     {
         try {
-            $this->client->transaction(static function ($client) : void {
+            $this->pgsqlContext()->client()->transaction(static function ($client) : void {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('outer')));
 
                 $client->transaction(static function ($client) : void {
@@ -167,25 +173,25 @@ final class TransactionTest extends ClientTestCase
         } catch (\RuntimeException) {
         }
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
         self::assertSame(0, $count);
     }
 
     public function test_nesting_level_tracking() : void
     {
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->beginTransaction();
-        self::assertSame(1, $this->client->getTransactionNestingLevel());
+        $this->pgsqlContext()->client()->beginTransaction();
+        self::assertSame(1, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->beginTransaction();
-        self::assertSame(2, $this->client->getTransactionNestingLevel());
+        $this->pgsqlContext()->client()->beginTransaction();
+        self::assertSame(2, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->commit();
-        self::assertSame(1, $this->client->getTransactionNestingLevel());
+        $this->pgsqlContext()->client()->commit();
+        self::assertSame(1, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->rollBack();
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        $this->pgsqlContext()->client()->rollBack();
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
     }
 
     public function test_rollback_without_transaction_throws() : void
@@ -193,23 +199,23 @@ final class TransactionTest extends ClientTestCase
         $this->expectException(TransactionException::class);
         $this->expectExceptionMessage('no active transaction');
 
-        $this->client->rollBack();
+        $this->pgsqlContext()->client()->rollBack();
     }
 
     public function test_set_auto_commit_same_value_does_nothing() : void
     {
-        self::assertTrue($this->client->isAutoCommit());
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        self::assertTrue($this->pgsqlContext()->client()->isAutoCommit());
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
 
-        $this->client->setAutoCommit(true);
+        $this->pgsqlContext()->client()->setAutoCommit(true);
 
-        self::assertTrue($this->client->isAutoCommit());
-        self::assertSame(0, $this->client->getTransactionNestingLevel());
+        self::assertTrue($this->pgsqlContext()->client()->isAutoCommit());
+        self::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
     }
 
     public function test_transaction_can_query_within() : void
     {
-        $result = $this->client->transaction(static function ($client) {
+        $result = $this->pgsqlContext()->client()->transaction(static function ($client) {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('query test')));
 
             return $client->fetchScalar(select(agg_count())->from(table('test_transaction')));
@@ -220,18 +226,18 @@ final class TransactionTest extends ClientTestCase
 
     public function test_transaction_commits_on_success() : void
     {
-        $this->client->transaction(static function ($client) : void {
+        $this->pgsqlContext()->client()->transaction(static function ($client) : void {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('committed')));
         });
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
 
         self::assertSame(1, $count);
     }
 
     public function test_transaction_returns_callback_value() : void
     {
-        $result = $this->client->transaction(static function ($client) {
+        $result = $this->pgsqlContext()->client()->transaction(static function ($client) {
             $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('test')));
 
             return 'success';
@@ -243,7 +249,7 @@ final class TransactionTest extends ClientTestCase
     public function test_transaction_rollbacks_on_exception() : void
     {
         try {
-            $this->client->transaction(static function ($client) : void {
+            $this->pgsqlContext()->client()->transaction(static function ($client) : void {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('will be rolled back')));
 
                 throw new \RuntimeException('Simulated failure');
@@ -251,7 +257,7 @@ final class TransactionTest extends ClientTestCase
         } catch (\RuntimeException) {
         }
 
-        $count = $this->client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+        $count = $this->pgsqlContext()->client()->fetchScalar(select(agg_count())->from(table('test_transaction')));
 
         self::assertSame(0, $count);
     }

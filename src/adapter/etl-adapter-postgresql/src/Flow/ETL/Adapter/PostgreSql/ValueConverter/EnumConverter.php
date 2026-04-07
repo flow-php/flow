@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\ValueConverter;
 
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 final readonly class EnumConverter implements ValueConverter
 {
@@ -15,7 +15,7 @@ final readonly class EnumConverter implements ValueConverter
 
     public function supportedTypes() : array
     {
-        return [PostgreSqlType::TEXT];
+        return [ValueType::TEXT];
     }
 
     public function toDatabase(mixed $value) : ?string

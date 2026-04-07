@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\CreateIndex;
 
 use Flow\PostgreSql\Protobuf\AST\{IndexElem, IndexStmt, Node, RangeVar};
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
 
@@ -165,6 +165,12 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
 
     public function on(string $table, ?string $schema = null) : CreateIndexColumnsStep
     {
+        if ($schema === null) {
+            $identifier = QualifiedIdentifier::parse($table);
+            $table = $identifier->name();
+            $schema = $identifier->schema();
+        }
+
         return new self(
             $this->name,
             $table,
@@ -184,6 +190,12 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
 
     public function onOnly(string $table, ?string $schema = null) : CreateIndexColumnsStep
     {
+        if ($schema === null) {
+            $identifier = QualifiedIdentifier::parse($table);
+            $table = $identifier->name();
+            $schema = $identifier->schema();
+        }
+
         return new self(
             $this->name,
             $table,

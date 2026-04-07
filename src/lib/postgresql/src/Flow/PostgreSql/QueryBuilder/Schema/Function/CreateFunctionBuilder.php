@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, FunctionParameterMode, Integer, Node, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\AstToSql;
-use Flow\PostgreSql\QueryBuilder\Schema\DataType;
+use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, CreateFunctionFinalStep, CreateFunctionOptionsStep, CreateFunctionReturnsStep
 {
@@ -15,13 +15,14 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
     /**
      * @param list<FunctionArgument> $arguments
      * @param list<array{name: string, arg: ?Node}> $options
-     * @param null|array<string, DataType> $tableColumns
+     * @param null|array<string, ColumnType> $tableColumns
      */
     private function __construct(
         private string $name,
+        private ?string $schema = null,
         private bool $replace = false,
         private array $arguments = [],
-        private ?DataType $returnType = null,
+        private ?ColumnType $returnType = null,
         private bool $setof = false,
         private ?array $tableColumns = null,
         private array $options = [],
@@ -30,13 +31,16 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
 
     public static function create(string $name) : CreateFunctionArgsStep
     {
-        return new self($name);
+        $identifier = QualifiedIdentifier::parse($name);
+
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function arguments(FunctionArgument ...$args) : CreateFunctionReturnsStep
     {
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             \array_values($args),
             $this->returnType,
@@ -80,6 +84,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
     {
         return new self(
             $this->name,
+            $this->schema,
             true,
             $this->arguments,
             $this->returnType,
@@ -94,10 +99,11 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $this->withStringOption('parallel', $safety->value);
     }
 
-    public function returns(DataType $type) : CreateFunctionOptionsStep
+    public function returns(ColumnType $type) : CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             $type,
@@ -107,10 +113,11 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function returnsSetOf(DataType $type) : CreateFunctionOptionsStep
+    public function returnsSetOf(ColumnType $type) : CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             $type,
@@ -121,12 +128,13 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
     }
 
     /**
-     * @param array<string, DataType> $columns
+     * @param array<string, ColumnType> $columns
      */
     public function returnsTable(array $columns) : CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             null,
@@ -140,9 +148,10 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
     {
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
-            DataType::custom('void'),
+            ColumnType::custom('void'),
             false,
             null,
             $this->options,
@@ -188,6 +197,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
 
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             $this->returnType,
@@ -214,6 +224,15 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         $stmt->setReplace($this->replace);
 
         $funcnameNodes = [];
+
+        if ($this->schema !== null) {
+            $str = new PBString();
+            $str->setSval($this->schema);
+            $node = new Node();
+            $node->setString($str);
+            $funcnameNodes[] = $node;
+        }
+
         $str = new PBString();
         $str->setSval($this->name);
         $node = new Node();
@@ -373,6 +392,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
 
         return new self(
             $this->name,
+            $this->schema,
             $this->replace,
             $this->arguments,
             $this->returnType,

@@ -18,7 +18,7 @@ $query = update()
     ->set('name', literal('John'))
     ->where(eq(col('id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET name = 'John' WHERE id = 1
 ```
 
@@ -36,7 +36,7 @@ $query = update()
     ->set('name', param(1))
     ->where(eq(col('id'), param(2)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET name = $1 WHERE id = $2
 ```
 
@@ -54,7 +54,7 @@ $query = update()
     ->set('email', literal('john@example.com'))
     ->where(eq(col('id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1
 
 // Or use setAll() for multiple columns at once
@@ -66,7 +66,7 @@ $query = update()
     ])
     ->where(eq(col('id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1
 ```
 
@@ -82,7 +82,7 @@ $query = update()
     ->set('name', literal('John'))
     ->where(eq(col('u.id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users u SET name = 'John' WHERE u.id = 1
 ```
 
@@ -101,7 +101,7 @@ $query = update()
     ->from(table('users'))
     ->where(eq(col('orders.user_id'), col('users.id')));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE orders SET status = 'completed' FROM users WHERE orders.user_id = users.id
 ```
 
@@ -124,7 +124,7 @@ $query = update()
     ->set('price', sub_select($subquery))
     ->where(eq(col('id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE products SET price = (SELECT avg_price FROM price_stats WHERE category = products.category) WHERE id = 1
 ```
 
@@ -140,7 +140,7 @@ $query = update()
     ->set('price', col('original_price'))
     ->where(eq(col('id'), literal(1)));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE products SET price = original_price WHERE id = 1
 ```
 
@@ -158,7 +158,7 @@ $query = update()
     ->where(eq(col('id'), literal(1)))
     ->returning(col('id'), col('name'));
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET name = 'John' WHERE id = 1 RETURNING id, name
 
 // Return all columns
@@ -168,7 +168,7 @@ $query = update()
     ->where(eq(col('id'), literal(1)))
     ->returningAll();
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET name = 'John' WHERE id = 1 RETURNING *
 ```
 
@@ -179,20 +179,20 @@ echo $query->toSQL();
 
 use function Flow\PostgreSql\DSL\{
     update, literal, literal,
-    col, eq, gt, cond_and
+    col, eq, gt, and_
 };
 
 $query = update()
     ->update('users')
     ->set('status', literal('premium'))
     ->where(
-        cond_and(
+        and_(
             eq(col('active'), literal(true)),
             gt(col('orders_count'), literal(100))
         )
     );
 
-echo $query->toSQL();
+echo $query->toSql();
 // UPDATE users SET status = 'premium' WHERE active = true AND orders_count > 100
 ```
 

@@ -34,19 +34,16 @@ interface Cursor extends \Countable, \IteratorAggregate
     public function iterate() : \Generator;
 
     /**
-     * Iterate all remaining rows, mapping each to an object.
-     * Memory efficient - one object at a time.
+     * Iterate all remaining rows, mapping each using the provided mapper.
+     * Memory efficient - one result at a time.
      *
-     * Uses the client's default mapper unless overridden.
+     * @template T
      *
-     * @template T of object
-     *
-     * @param class-string<T> $class Target class for mapping
-     * @param null|RowMapper $mapper Override default mapper for this iteration
+     * @param RowMapper<T> $mapper Mapper to apply to each row
      *
      * @return \Generator<int, T>
      */
-    public function map(string $class, ?RowMapper $mapper = null) : \Generator;
+    public function map(RowMapper $mapper) : \Generator;
 
     /**
      * Fetch the next row. Returns null when exhausted.

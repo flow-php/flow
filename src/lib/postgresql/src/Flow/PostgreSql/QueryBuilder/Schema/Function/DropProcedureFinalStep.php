@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\DropStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface DropProcedureFinalStep extends SqlQuery
+interface DropProcedureFinalStep extends Sql
 {
     public function arguments(FunctionArgument ...$args) : self;
 

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use function Flow\PostgreSql\DSL\{cast, column_type_timestamp, column_type_timestamptz, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class DateTimeConverterTest extends ConverterTestCase
+final class DateTimeConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{\DateTimeImmutable, string}>
@@ -53,7 +54,7 @@ final class DateTimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_datetime_objects')]
     public function test_datetime_object_to_timestamp(\DateTimeImmutable $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::timestamp AS val', [typed($input, PostgreSqlType::TIMESTAMP)]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_timestamp())->as('val'))->toSql(), [typed($input, ValueType::TIMESTAMP)]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -61,14 +62,14 @@ final class DateTimeConverterTest extends ConverterTestCase
 
     public function test_null_timestamp() : void
     {
-        $result = $this->fetchValue('SELECT NULL::timestamp AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_timestamp())->as('val'))->toSql());
 
         self::assertNull($result);
     }
 
     public function test_null_timestamptz() : void
     {
-        $result = $this->fetchValue('SELECT NULL::timestamptz AS val');
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_timestamptz())->as('val'))->toSql());
 
         self::assertNull($result);
     }
@@ -76,7 +77,7 @@ final class DateTimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_timestamp_values')]
     public function test_timestamp_round_trip(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::timestamp AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_timestamp())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertSame($expected, $result);
@@ -85,7 +86,7 @@ final class DateTimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_timestamp_with_microseconds')]
     public function test_timestamp_with_microseconds(string $input, string $expected) : void
     {
-        $result = $this->fetchValue('SELECT $1::timestamp AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_timestamp())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
         self::assertStringStartsWith($expected, $result);
@@ -94,7 +95,7 @@ final class DateTimeConverterTest extends ConverterTestCase
     #[DataProvider('provide_timestamptz_values')]
     public function test_timestamptz_round_trip(string $input) : void
     {
-        $result = $this->fetchValue('SELECT $1::timestamptz AS val', [$input]);
+        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_timestamptz())->as('val'))->toSql(), [$input]);
 
         self::assertIsString($result);
     }

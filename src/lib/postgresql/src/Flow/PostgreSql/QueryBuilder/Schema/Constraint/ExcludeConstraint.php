@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, PBString};
 use Flow\PostgreSql\Protobuf\AST\PBList;
-use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 final readonly class ExcludeConstraint implements TableConstraint
 {
     /**
-     * @param list<array{element: string, operator: string}> $elements
+     * @param list<array{element: Expression, operator: string}> $elements
      */
     private function __construct(
         private string $accessMethod,
         private array $elements = [],
         private ?string $name = null,
-        private ?string $whereClause = null,
+        private ?Condition $whereCondition = null,
     ) {
     }
 
@@ -27,13 +27,13 @@ final readonly class ExcludeConstraint implements TableConstraint
         return new self($accessMethod);
     }
 
-    public function element(string $element, string $operator) : self
+    public function element(Expression $element, string $operator) : self
     {
         return new self(
             $this->accessMethod,
             [...$this->elements, ['element' => $element, 'operator' => $operator]],
             $this->name,
-            $this->whereClause,
+            $this->whereCondition,
         );
     }
 
@@ -43,7 +43,7 @@ final readonly class ExcludeConstraint implements TableConstraint
             $this->accessMethod,
             $this->elements,
             $name,
-            $this->whereClause,
+            $this->whereCondition,
         );
     }
 
@@ -61,27 +61,27 @@ final readonly class ExcludeConstraint implements TableConstraint
             $exclusions = [];
 
             foreach ($this->elements as $element) {
-                $exclusions[] = $this->parseExpression($element['element']);
+                $exclusions[] = $element['element']->toAst();
                 $exclusions[] = $this->createOperatorNode($element['operator']);
             }
 
             $constraint->setExclusions($exclusions);
         }
 
-        if ($this->whereClause !== null) {
-            $constraint->setWhereClause($this->parseExpression($this->whereClause));
+        if ($this->whereCondition !== null) {
+            $constraint->setWhereClause($this->whereCondition->toAst());
         }
 
         return $constraint;
     }
 
-    public function where(string $whereClause) : self
+    public function where(Condition $condition) : self
     {
         return new self(
             $this->accessMethod,
             $this->elements,
             $this->name,
-            $whereClause,
+            $condition,
         );
     }
 
@@ -103,45 +103,5 @@ final readonly class ExcludeConstraint implements TableConstraint
         $resultNode->setList($operatorList);
 
         return $resultNode;
-    }
-
-    private function parseExpression(string $expression) : Node
-    {
-        $parser = new Parser();
-        $parsed = $parser->parse("SELECT {$expression} AS x");
-
-        $stmts = $parsed->raw()->getStmts();
-
-        if ($stmts === null || \count($stmts) === 0) {
-            throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
-        }
-
-        $firstStmt = $stmts[0];
-        $selectStmt = $firstStmt->getStmt()?->getSelectStmt();
-
-        if ($selectStmt === null) {
-            throw InvalidAstException::unexpectedNodeType('SelectStmt', 'unknown');
-        }
-
-        $targetList = $selectStmt->getTargetList();
-
-        if ($targetList === null || \count($targetList) === 0) {
-            throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
-        }
-
-        $firstTarget = $targetList[0];
-        $resTarget = $firstTarget->getResTarget();
-
-        if ($resTarget === null) {
-            throw InvalidAstException::unexpectedNodeType('ResTarget', 'unknown');
-        }
-
-        $val = $resTarget->getVal();
-
-        if ($val === null) {
-            throw InvalidAstException::missingRequiredField('val', 'ResTarget');
-        }
-
-        return $val;
     }
 }

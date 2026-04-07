@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Truncate;
 
 use Flow\PostgreSql\Protobuf\AST\TruncateStmt;
-use Flow\PostgreSql\QueryBuilder\SqlQuery;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface TruncateFinalStep extends SqlQuery
+interface TruncateFinalStep extends Sql
 {
     public function cascade() : self;
 
