@@ -5,6 +5,7 @@
 - [#2290](https://github.com/flow-php/flow/pull/2290) - **flow-php/symfony-postgresql-bundle** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [eb94a1](https://github.com/flow-php/flow/commit/eb94a1f4b93d4a30c8a54ea1a52b251a742e30f4) - **chore: updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [e82db9](https://github.com/flow-php/flow/commit/e82db95ab15360066e83ef0be74f6f636093a16b) - **chore: update arrow-ext installation instructions with precompiled binaries** - [@norberttech](https://github.com/norberttech)
 
 ## [0.34.3] - 2026-03-27
