@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-04-07
 
 ### Added
+- [#2291](https://github.com/flow-php/flow/pull/2291) - **flow-php/symfony-filesystem-bundle** - [@norberttech](https://github.com/norberttech)
 - [#2290](https://github.com/flow-php/flow/pull/2290) - **migrations to flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
 - [#2290](https://github.com/flow-php/flow/pull/2290) - **flow-php/symfony-postgresql-bundle** - [@norberttech](https://github.com/norberttech)
 
