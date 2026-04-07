@@ -1,0 +1,127 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Command;
+
+use function Flow\PostgreSql\DSL\sql_format;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
+
+final class FormatSqlCommandTest extends CommandTestCase
+{
+    public function test_check_option_against_directory_reports_unformatted() : void
+    {
+        $this->fs->writeFile('dirty.sql', 'select  id   from users');
+        $this->fs->writeFile('clean.sql', sql_format('SELECT id FROM users'));
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $this->fs->path()->path(), '--check' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Not formatted', $tester->getDisplay());
+        self::assertStringContainsString('dirty.sql', $tester->getDisplay());
+    }
+
+    public function test_check_option_fails_for_unformatted_sql() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['sql' => 'select id,name   from users', '--check' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('not formatted', $tester->getDisplay());
+    }
+
+    public function test_check_option_succeeds_for_already_formatted_sql() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['sql' => sql_format('SELECT id, name FROM users WHERE id = 1'), '--check' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('already formatted', $tester->getDisplay());
+    }
+
+    public function test_fails_when_no_input_provided() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute([]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Either a SQL string argument or --path option must be provided', $tester->getDisplay());
+    }
+
+    public function test_formats_directory_recursively() : void
+    {
+        $this->fs->writeFile('a.sql', 'select 1');
+        $this->fs->writeFile('sub/b.sql', 'select 2');
+        $this->fs->writeFile('ignored.txt', 'select 3');
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $this->fs->path()->path(), '--write' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('SELECT', $this->fs->readFile('a.sql'));
+        self::assertStringContainsString('SELECT', $this->fs->readFile('sub/b.sql'));
+        self::assertSame('select 3', $this->fs->readFile('ignored.txt'));
+    }
+
+    public function test_formats_glob_pattern() : void
+    {
+        $this->fs->writeFile('one.sql', 'select 1');
+        $this->fs->writeFile('two.sql', 'select 2');
+        $this->fs->writeFile('skip.txt', 'select 3');
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $this->fs->path()->path() . '/*.sql']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('one.sql', $tester->getDisplay());
+        self::assertStringContainsString('two.sql', $tester->getDisplay());
+        self::assertStringNotContainsString('skip.txt', $tester->getDisplay());
+    }
+
+    public function test_formats_single_file_to_stdout() : void
+    {
+        $file = $this->fs->writeFile('query.sql', 'select id,name from users where id=1');
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $file->path()]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('SELECT', $tester->getDisplay());
+        self::assertSame('select id,name from users where id=1', $this->fs->readFile('query.sql'));
+    }
+
+    public function test_formats_sql_string_argument() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['sql' => 'select id,name from users where id=1']);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('SELECT', $tester->getDisplay());
+        self::assertStringContainsString('FROM users', $tester->getDisplay());
+    }
+
+    public function test_reports_when_no_sql_files_found() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $this->fs->path()->path()]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('No .sql files found', $tester->getDisplay());
+    }
+
+    public function test_writes_formatted_file_back_with_write_option() : void
+    {
+        $file = $this->fs->writeFile('query.sql', 'select id,name from users');
+
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['--path' => $file->path(), '--write' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringContainsString('Formatted:', $tester->getDisplay());
+        $contents = $this->fs->readFile('query.sql');
+        self::assertStringContainsString('SELECT', $contents);
+        self::assertStringContainsString('FROM users', $contents);
+    }
+}

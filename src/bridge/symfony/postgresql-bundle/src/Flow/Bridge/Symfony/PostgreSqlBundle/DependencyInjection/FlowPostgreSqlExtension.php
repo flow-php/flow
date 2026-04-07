@@ -60,6 +60,7 @@ final class FlowPostgreSqlExtension extends Extension
 
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('database.php');
+        $loader->load('format.php');
 
         if ($config['migrations']['enabled']) {
             $isFirst = true;
