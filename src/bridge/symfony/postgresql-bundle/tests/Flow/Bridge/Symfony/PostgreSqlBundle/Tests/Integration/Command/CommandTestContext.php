@@ -114,6 +114,14 @@ final class CommandTestContext
         ]);
     }
 
+    public function command(string $serviceId) : Command
+    {
+        /** @var Command $command */
+        $command = $this->container()->get($serviceId);
+
+        return $command;
+    }
+
     public function container() : ContainerInterface
     {
         return $this->symfonyContext->getContainer();
