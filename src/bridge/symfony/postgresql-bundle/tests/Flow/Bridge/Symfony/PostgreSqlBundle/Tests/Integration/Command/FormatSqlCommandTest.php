@@ -41,6 +41,19 @@ final class FormatSqlCommandTest extends CommandTestCase
         self::assertStringContainsString('already formatted', $tester->getDisplay());
     }
 
+    public function test_commas_at_start_of_line_option_is_applied() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute([
+            'sql' => 'SELECT id, name, email, created_at, updated_at FROM users',
+            '--commas-start-of-line' => true,
+            '--max-line-length' => '20',
+        ]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertMatchesRegularExpression('/\n\s*,\s*\w/', $tester->getDisplay());
+    }
+
     public function test_fails_when_no_input_provided() : void
     {
         $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
@@ -100,6 +113,15 @@ final class FormatSqlCommandTest extends CommandTestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         self::assertStringContainsString('SELECT', $tester->getDisplay());
         self::assertStringContainsString('FROM users', $tester->getDisplay());
+    }
+
+    public function test_no_pretty_print_outputs_single_line_sql() : void
+    {
+        $tester = new CommandTester($this->context->command('flow.postgresql.command.sql_format'));
+        $tester->execute(['sql' => 'SELECT id, name FROM users WHERE id = 1', '--no-pretty-print' => true]);
+
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertStringNotContainsString("\n  ", $tester->getDisplay());
     }
 
     public function test_reports_when_no_sql_files_found() : void
