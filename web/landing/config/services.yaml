@@ -6,7 +6,7 @@ parameters:
     documentation_base_path: '%flow_root_dir%/documentation'
     scheme: '%env(SCHEME)%'
     domain: '%env(DOMAIN)%'
-    router.request_context.base_url: '%env(SCHEME)%://%env(BASE_URL)%'
+    router.request_context.base_url: '%env(SCHEME)%://%env(DOMAIN)%'
     router.request_context.host: '%env(DOMAIN)%'
     router.request_context.scheme: '%env(SCHEME)%'
     flow_version: '%env(FLOW_VERSION)%'
