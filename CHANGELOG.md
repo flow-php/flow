@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-04-07
+## [0.35.0] - 2026-04-07
 
 ### Added
 - [#2292](https://github.com/flow-php/flow/pull/2292) - **flow:sql:format CLI command to flow-php/symfony-postgresql-bundle** - [@norberttech](https://github.com/norberttech)
