@@ -107,6 +107,7 @@
         "flow-php/psr7-telemetry-bridge": "self.version",
         "flow-php/psr18-telemetry-bridge": "self.version",
         "flow-php/snappy": "self.version",
+        "flow-php/symfony-filesystem-bundle": "self.version",
         "flow-php/symfony-http-foundation-bridge": "self.version",
         "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
         "flow-php/symfony-postgresql-bundle": "self.version",
@@ -143,6 +144,7 @@
                 "src/bridge/openapi/specification/src/Flow",
                 "src/bridge/psr7/telemetry/src/Flow",
                 "src/bridge/psr18/telemetry/src/Flow",
+                "src/bridge/symfony/filesystem-bundle/src/Flow",
                 "src/bridge/symfony/http-foundation-telemetry/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
                 "src/bridge/symfony/postgresql-bundle/src/Flow",
@@ -242,6 +244,7 @@
                 "src/bridge/openapi/specification/tests/Flow",
                 "src/bridge/psr7/telemetry/tests/Flow",
                 "src/bridge/psr18/telemetry/tests/Flow",
+                "src/bridge/symfony/filesystem-bundle/tests/Flow",
                 "src/bridge/symfony/http-foundation-telemetry/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
                 "src/bridge/symfony/postgresql-bundle/tests/Flow",
@@ -318,6 +321,7 @@
             "@test:bridge:phpunit-telemetry",
             "@test:bridge:psr7-telemetry",
             "@test:bridge:psr18-telemetry",
+            "@test:bridge:symfony-filesystem-bundle",
             "@test:bridge:symfony-http-foundation",
             "@test:bridge:symfony-http-foundation-telemetry",
             "@test:bridge:symfony-postgresql-bundle",
@@ -409,6 +413,10 @@
         "test:bridge:psr18-telemetry": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-psr18-telemetry-unit --log-junit ./var/phpunit/logs/bridge-psr18-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-psr18-telemetry-unit.coverage.xml",
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-psr18-telemetry-integration --log-junit ./var/phpunit/logs/bridge-psr18-telemetry-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-psr18-telemetry-integration.coverage.xml"
+        ],
+        "test:bridge:symfony-filesystem-bundle": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-filesystem-bundle-unit --log-junit ./var/phpunit/logs/bridge-symfony-filesystem-bundle-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-filesystem-bundle-unit.coverage.xml",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-filesystem-bundle-integration --log-junit ./var/phpunit/logs/bridge-symfony-filesystem-bundle-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-filesystem-bundle-integration.coverage.xml"
         ],
         "test:bridge:symfony-http-foundation": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-unit.coverage.xml",

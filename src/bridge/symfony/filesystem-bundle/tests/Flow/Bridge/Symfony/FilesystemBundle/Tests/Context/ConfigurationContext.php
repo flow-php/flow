@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Context;
+
+use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+final readonly class ConfigurationContext
+{
+    private SymfonyContext $symfony;
+
+    public function __construct()
+    {
+        $this->symfony = new SymfonyContext();
+    }
+
+    /**
+     * @param array<string, mixed> $flowFilesystemConfig
+     * @param null|callable(ContainerBuilder): void $containerConfigurator
+     *
+     * @return array{default_fstab: string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry: array{enabled: bool, telemetry_service_id: null|string, clock_service_id: null|string, options: array{trace_streams: bool, collect_metrics: bool}}}>}
+     */
+    public function processConfig(array $flowFilesystemConfig, ?callable $containerConfigurator = null) : array
+    {
+        $kernel = $this->symfony->bootKernel([
+            'config' => static function (TestKernel $kernel) use ($flowFilesystemConfig, $containerConfigurator) : void {
+                $kernel->addTestExtensionConfig('flow_filesystem', $flowFilesystemConfig);
+
+                if ($containerConfigurator !== null) {
+                    $kernel->addTestContainerConfigurator($containerConfigurator);
+                }
+            },
+        ]);
+
+        /** @var array{default_fstab: string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry: array{enabled: bool, telemetry_service_id: null|string, clock_service_id: null|string, options: array{trace_streams: bool, collect_metrics: bool}}}>} $config */
+        $config = $kernel->getContainer()->getParameter('flow_filesystem.config');
+
+        return $config;
+    }
+
+    public function shutdown() : void
+    {
+        $this->symfony->shutdown();
+    }
+}

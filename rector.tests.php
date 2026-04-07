@@ -218,7 +218,11 @@ return RectorConfig::configure()
         RemoveParentCallWithoutParentRector::class,
         RemoveExtraParametersRector::class,
         FunctionFirstClassCallableRector::class,
-        ArrowFunctionDelegatingCallToFirstClassCallableRector::class
+        ArrowFunctionDelegatingCallToFirstClassCallableRector::class,
+        \Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector::class => [
+            __DIR__ . '/src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit/DependencyInjection/Compiler/BuildFstabsPassTest.php',
+            __DIR__ . '/src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit/ConfigurationTest.php',
+        ],
     ])
     ->withCache(__DIR__ . '/var/rector/tests')
     ->withSkipPath(__DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift')

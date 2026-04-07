@@ -149,6 +149,12 @@
         <testsuite name="bridge-symfony-http-foundation-telemetry-integration">
             <directory>src/bridge/symfony/http-foundation-telemetry/tests/Flow/Bridge/Symfony/HttpFoundationTelemetry/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-symfony-filesystem-bundle-unit">
+            <directory>src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-filesystem-bundle-integration">
+            <directory>src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-postgresql-bundle-unit">
             <directory>src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Unit</directory>
         </testsuite>

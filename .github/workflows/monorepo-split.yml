@@ -90,6 +90,8 @@ jobs:
             split_repository: 'psr7-telemetry-bridge'
           - local_path: 'src/bridge/psr18/telemetry'
             split_repository: 'psr18-telemetry-bridge'
+          - local_path: 'src/bridge/symfony/filesystem-bundle'
+            split_repository: 'symfony-filesystem-bundle'
           - local_path: 'src/bridge/symfony/http-foundation'
             split_repository: 'symfony-http-foundation-bridge'
           - local_path: 'src/bridge/symfony/http-foundation-telemetry'

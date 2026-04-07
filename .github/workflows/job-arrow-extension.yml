@@ -58,8 +58,18 @@ jobs:
       - name: Set LIBCLANG_PATH (Ubuntu)
         if: runner.os == 'Linux'
         run: |
-          LIBCLANG_SO=$(find /usr/lib -name 'libclang*.so' -o -name 'libclang*.so.*' 2>/dev/null | head -1)
+          # Find the canonical libclang.so shared library, excluding the
+          # Clang runtime support libraries under llvm-*/lib/clang/*/lib/.
+          LIBCLANG_SO=$(find /usr/lib \
+            \( -name 'libclang.so' -o -name 'libclang.so.*' -o -name 'libclang-*.so' -o -name 'libclang-*.so.*' \) \
+            -not -path '*/clang/*/lib/*' \
+            2>/dev/null | head -1)
+          if [ -z "$LIBCLANG_SO" ]; then
+            echo "Could not locate libclang.so under /usr/lib" >&2
+            exit 1
+          fi
           echo "LIBCLANG_PATH=$(dirname "$LIBCLANG_SO")" >> $GITHUB_ENV
+          echo "Detected libclang at: $LIBCLANG_SO"
 
       - name: Build extension
         working-directory: src/extension/arrow-ext
@@ -130,8 +140,18 @@ jobs:
       - name: Set LIBCLANG_PATH (Ubuntu)
         if: runner.os == 'Linux'
         run: |
-          LIBCLANG_SO=$(find /usr/lib -name 'libclang*.so' -o -name 'libclang*.so.*' 2>/dev/null | head -1)
+          # Find the canonical libclang.so shared library, excluding the
+          # Clang runtime support libraries under llvm-*/lib/clang/*/lib/.
+          LIBCLANG_SO=$(find /usr/lib \
+            \( -name 'libclang.so' -o -name 'libclang.so.*' -o -name 'libclang-*.so' -o -name 'libclang-*.so.*' \) \
+            -not -path '*/clang/*/lib/*' \
+            2>/dev/null | head -1)
+          if [ -z "$LIBCLANG_SO" ]; then
+            echo "Could not locate libclang.so under /usr/lib" >&2
+            exit 1
+          fi
           echo "LIBCLANG_PATH=$(dirname "$LIBCLANG_SO")" >> $GITHUB_ENV
+          echo "Detected libclang at: $LIBCLANG_SO"
 
       - name: Install PIE
         run: |

@@ -182,6 +182,11 @@
       "type": "bridge"
     },
     {
+      "name": "flow-php/symfony-filesystem-bundle",
+      "path": "src/bridge/symfony/filesystem-bundle",
+      "type": "bridge"
+    },
+    {
       "name": "flow-php/symfony-postgresql-bundle",
       "path": "src/bridge/symfony/postgresql-bundle",
       "type": "bridge"
