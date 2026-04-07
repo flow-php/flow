@@ -141,6 +141,7 @@ jobs:
       - name: "Test - Bridges"
         run: "composer test:bridges"
         env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"
           AZURITE_ACCOUNT_NAME: "flowphpaccount01"
