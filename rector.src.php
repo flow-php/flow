@@ -29,6 +29,7 @@ return RectorConfig::configure()
         // Symfony DI requires array format for setFactory(), first-class callable syntax is not supported
         ArrayToFirstClassCallableRector::class => [
             __DIR__ . '/src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php',
+            __DIR__ . '/src/bridge/symfony/filesystem-bundle/src/Flow/Bridge/Symfony/FilesystemBundle/DependencyInjection/Compiler/BuildFstabsPass.php',
         ],
     ])
     ->withCache(__DIR__ . '/var/rector/src')

@@ -100,6 +100,10 @@ component_management:
       name: bridge-symfony-http-foundation-telemetry
       paths:
         - src/bridge/symfony/http-foundation-telemetry/**
+    - component_id: bridge-symfony-filesystem-bundle
+      name: bridge-symfony-filesystem-bundle
+      paths:
+        - src/bridge/symfony/filesystem-bundle/**
     - component_id: bridge-symfony-postgresql-bundle
       name: bridge-symfony-postgresql-bundle
       paths:
