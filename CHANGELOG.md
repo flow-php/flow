@@ -1,4 +1,8 @@
-## [Unreleased] - 2026-03-29
+## [Unreleased] - 2026-04-07
+
+### Added
+- [#2290](https://github.com/flow-php/flow/pull/2290) - **migrations to flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
+- [#2290](https://github.com/flow-php/flow/pull/2290) - **flow-php/symfony-postgresql-bundle** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [e82db9](https://github.com/flow-php/flow/commit/e82db95ab15360066e83ef0be74f6f636093a16b) - **chore: update arrow-ext installation instructions with precompiled binaries** - [@norberttech](https://github.com/norberttech)
