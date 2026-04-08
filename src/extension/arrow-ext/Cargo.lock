@@ -519,9 +519,9 @@ dependencies = [
 
 [[package]]
 name = "ext-php-rs"
-version = "0.15.7"
+version = "0.15.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83b57e00633bee412187a6c91888906c34a4dc11901b7c978fdcf572591c59b1"
+checksum = "4cac21b7a62e6b23f4b14241cdda38ef8a321da093ac2cad3fd66775324baa20"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -548,7 +548,7 @@ dependencies = [
  "bitflags",
  "cexpr",
  "ext-php-rs-clang-sys",
- "itertools 0.13.0",
+ "itertools",
  "log",
  "prettyplease",
  "proc-macro2",
@@ -581,13 +581,13 @@ dependencies = [
 
 [[package]]
 name = "ext-php-rs-derive"
-version = "0.11.9"
+version = "0.11.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e6f16a7ba2aa9026014c70402fafc0782f3ed3144a0e09eacfca8ed21bbadc1"
+checksum = "67eabe5d508fde240a60d9e4476e9dfab25d6320e32949a3102e509347460864"
 dependencies = [
  "convert_case",
  "darling",
- "itertools 0.14.0",
+ "itertools",
  "proc-macro2",
  "quote",
  "syn",
@@ -829,15 +829,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "009ae045c87e7082cb72dab0ccd01ae075dd00141ddc108f43a0ea150a9e7227"
 dependencies = [
  "rustversion",
-]
-
-[[package]]
-name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
 ]
 
 [[package]]
