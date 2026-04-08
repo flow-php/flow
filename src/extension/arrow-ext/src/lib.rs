@@ -21,7 +21,24 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_end!();
 }
 
+pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 {
+    if let Err(e) = stream::output_stream::register() {
+        eprintln!("arrow: failed to register Flow\\Arrow\\OutputStream: {e}");
+        return -1;
+    }
+    if let Err(e) = stream::random_access_file::register() {
+        eprintln!("arrow: failed to register Flow\\Arrow\\RandomAccessFile: {e}");
+        return -1;
+    }
+    if let Err(e) = parquet::exception::register() {
+        eprintln!("arrow: failed to register Flow\\Arrow\\Parquet\\Exception: {e}");
+        return -1;
+    }
+    0
+}
+
 #[php_module]
+#[php(startup = "module_startup")]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .info_function(php_module_info)

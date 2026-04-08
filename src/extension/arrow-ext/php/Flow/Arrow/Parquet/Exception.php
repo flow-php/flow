@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Arrow\Parquet;
 
-final class Exception extends \RuntimeException
+if (\extension_loaded('arrow')) {
+    return;
+}
+
+final class Exception extends \Exception
 {
 }
