@@ -17,6 +17,8 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Overview
 
+This bundle is built on top of [flow-php/telemetry](/documentation/components/libs/telemetry.md) — see that page for the underlying `Telemetry`, tracer/meter/logger API, and processor/exporter primitives. For exporting to OTLP-compatible backends, it also uses the [Telemetry OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md).
+
 This bundle integrates Flow PHP's Telemetry library with Symfony applications. It provides:
 
 - **Automatic resource detection** - Detects service name, version, environment, OS, host, and process information

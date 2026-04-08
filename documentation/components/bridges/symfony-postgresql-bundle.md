@@ -16,6 +16,10 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Overview
 
+This bundle is built on top of [flow-php/postgresql](/documentation/components/libs/postgresql.md) and [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) — see those pages for the underlying client, query builders, catalog, and migration engine.
+
+For telemetry support (tracing, metrics, query logging per connection), the [Symfony Telemetry Bundle](/documentation/components/bridges/symfony-telemetry-bundle.md) is required and must expose a configured `Telemetry` service referenced via `telemetry.service_id`.
+
 This bundle integrates Flow PHP's PostgreSQL library with Symfony applications. It provides:
 
 - **Multiple database connections** - Configure and manage several PostgreSQL connections independently

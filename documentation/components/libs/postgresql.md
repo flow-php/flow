@@ -335,6 +335,135 @@ $client->execute(
 
 See [Type System](/documentation/components/libs/postgresql/client-types.md) for all supported array types.
 
+### Row Mappers
+
+A `RowMapper` turns a raw database row (an associative `array<string, mixed>`) into a typed result. Mappers are
+passed to the `fetchInto`, `fetchOneInto`, `fetchAllInto`, and `Cursor::map()` methods so the client can return
+objects, value objects, or typed arrays instead of plain arrays.
+
+The contract is a single method:
+
+```php
+<?php
+
+namespace Flow\PostgreSql\Client;
+
+/**
+ * @template T
+ */
+interface RowMapper
+{
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @throws Exception\MappingException
+     *
+     * @return T
+     */
+    public function map(array $row) : mixed;
+}
+```
+
+The library ships two default mappers, both available via DSL functions.
+
+#### ConstructorMapper
+
+`constructor_mapper(ClassName::class)` maps row columns directly to constructor parameters by name (1:1). Use SQL
+aliases when column names don't match parameter names. Nullable parameters receive `null` for missing columns.
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{constructor_mapper, pgsql_client, pgsql_connection};
+
+readonly class User
+{
+    public function __construct(
+        public int $id,
+        public string $name,
+        public string $email,
+        public ?string $nickname,
+    ) {}
+}
+
+$client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
+
+$user = $client->fetchOneInto(
+    constructor_mapper(User::class),
+    'SELECT id, name, email, nickname FROM users WHERE id = $1',
+    [1],
+);
+
+// Alias snake_case to camelCase when needed
+$users = $client->fetchAllInto(
+    constructor_mapper(User::class),
+    'SELECT id, name, email, nick_name AS nickname FROM users',
+);
+```
+
+#### TypeMapper
+
+`type_mapper($type)` uses [flow-php/types](/documentation/components/libs/types.md) to assert the row against a
+structural type, returning a typed array. Useful when you want runtime type guarantees without defining a DTO
+class.
+
+Because `Type<T>` carries the shape as a generic parameter, static analysis tools like **PHPStan** and **Mago**
+infer the exact row shape from the `type_mapper()` call. Every `fetch*Into()` result — individual fields,
+array-of-rows, cursor iterations — is recognized with full key/value types, so accessing a non-existent field
+or using a value with the wrong type is caught at analysis time without a single PHPDoc annotation on your
+side.
+
+```php
+<?php
+
+use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection, type_mapper};
+use function Flow\Types\DSL\{type_int, type_string, type_structure};
+
+$client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
+
+$userType = type_structure([
+    'id' => type_int(),
+    'name' => type_string(),
+    'email' => type_string(),
+]);
+
+$users = $client->fetchAllInto(
+    type_mapper($userType),
+    'SELECT id, name, email FROM users WHERE active = $1',
+    [true],
+);
+// $users is an array of arrays matching $userType
+```
+
+#### Writing a Custom RowMapper
+
+Implement `RowMapper` directly for custom logic — type coercion, nested objects, conditional construction, etc.
+
+```php
+<?php
+
+use Flow\PostgreSql\Client\RowMapper;
+
+/** @implements RowMapper<User> */
+readonly class UserMapper implements RowMapper
+{
+    public function map(array $row) : User
+    {
+        return new User(
+            id: (int) $row['id'],
+            name: $row['name'],
+            email: $row['email'],
+            active: $row['active'] === 't',
+        );
+    }
+}
+
+$user = $client->fetchInto(new UserMapper(), 'SELECT * FROM users WHERE id = $1', [1]);
+```
+
+See [Object Mapping](/documentation/components/libs/postgresql/client-object-mapping.md) for more examples
+including nested objects and cursor streaming.
+
 ### Detailed Documentation
 
 - [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing,

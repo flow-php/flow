@@ -72,18 +72,18 @@ $client->execute('INSERT INTO events (data) VALUES ($1)', [['key' => 'value']]);
 
 // Use typed() to be explicit
 use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 
 // As JSON
 $client->execute(
     'INSERT INTO events (data) VALUES ($1)',
-    [typed(['key' => 'value'], PostgreSqlType::JSON)]
+    [typed(['key' => 'value'], ValueType::JSON)]
 );
 
 // As PostgreSQL array
 $client->execute(
     'INSERT INTO tags (names) VALUES ($1)',
-    [typed(['php', 'postgresql'], PostgreSqlType::TEXT_ARRAY)]
+    [typed(['php', 'postgresql'], ValueType::TEXT_ARRAY)]
 );
 ```
 
@@ -126,17 +126,17 @@ $client->execute(
 );
 ```
 
-You can also use `PostgreSqlType` enum directly if you prefer:
+You can also use the `ValueType` enum directly if you prefer:
 
 ```php
 <?php
 
 use function Flow\PostgreSql\DSL\typed;
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 
 $client->execute(
     'INSERT INTO events (payload) VALUES ($1)',
-    [typed(['event' => 'login'], PostgreSqlType::JSON)]
+    [typed(['event' => 'login'], ValueType::JSON)]
 );
 ```
 
@@ -244,7 +244,7 @@ Implement `ValueConverter` for custom type handling:
 ```php
 <?php
 
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, ValueConverter};
+use Flow\PostgreSql\Client\Types\{ValueConverter, ValueType};
 
 // Example: Custom Money type
 readonly class Money
@@ -259,7 +259,7 @@ readonly class CustomMoneyConverter implements ValueConverter
 {
     public function supportedTypes(): array
     {
-        return [PostgreSqlType::MONEY, PostgreSqlType::NUMERIC];
+        return [ValueType::MONEY, ValueType::NUMERIC];
     }
 
     public function toDatabase(mixed $value): ?string
@@ -288,9 +288,9 @@ use Flow\PostgreSql\Client\Types\ValueConverters;
 
 use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection};
 
-// Create converters with defaults + custom
-$converters = ValueConverters::create()
-    ->with(new CustomMoneyConverter());
+// Create converters with defaults + register a custom one
+$converters = ValueConverters::create();
+$converters->register(new CustomMoneyConverter());
 
 $client = pgsql_client(
     pgsql_connection('host=localhost dbname=mydb'),
@@ -305,58 +305,62 @@ The `ValueConverters` class manages type converters:
 ```php
 <?php
 
-use Flow\PostgreSql\Client\Types\{PostgreSqlType, PostgreSqlVersion, ValueConverters};
+use Flow\PostgreSql\Client\Types\{PostgreSqlVersion, ValueConverters, ValueType};
 
 // Create with defaults for PostgreSQL version
 $converters = ValueConverters::create(PostgreSqlVersion::V16);
 
-// Add custom converter (returns new immutable instance)
-$converters = $converters->with(new CustomMoneyConverter());
+// Register a custom converter (mutates the registry in place)
+$converters->register(new CustomMoneyConverter());
 
-// Check if converter exists for type
-if ($converters->hasConverterFor(PostgreSqlType::UUID)) {
+// Check if a converter exists for a type
+if ($converters->has(ValueType::UUID)) {
     // UUID converter is registered
 }
 
-// Get converter for specific PostgreSQL type
-$converter = $converters->forPostgreSqlType(PostgreSqlType::JSONB);
+// Get converter for a specific PostgreSQL type
+$converter = $converters->forValueType(ValueType::JSONB);
+
+// Remove a converter
+$converters->unregister(ValueType::MONEY);
 ```
 
 ## PostgreSQL Type Reference
 
-Types are identified by OID (Object ID) in PostgreSQL. The `PostgreSqlType` enum provides common OIDs:
+PostgreSQL types are identified by OID (Object ID). The `ValueType` enum exposes the common OIDs used by the
+client's converters and by `typed()`:
 
 ```php
 <?php
 
-use Flow\PostgreSql\Client\Types\PostgreSqlType;
+use Flow\PostgreSql\Client\Types\ValueType;
 
 // Scalar types
-PostgreSqlType::TEXT      // 25
-PostgreSqlType::INT4      // 23
-PostgreSqlType::INT8      // 20
-PostgreSqlType::FLOAT8    // 701
-PostgreSqlType::BOOL      // 16
-PostgreSqlType::BYTEA     // 17
+ValueType::TEXT      // 25
+ValueType::INT4      // 23
+ValueType::INT8      // 20
+ValueType::FLOAT8    // 701
+ValueType::BOOL      // 16
+ValueType::BYTEA     // 17
 
 // Date/time types
-PostgreSqlType::TIMESTAMP   // 1114
-PostgreSqlType::TIMESTAMPTZ // 1184
-PostgreSqlType::DATE        // 1082
-PostgreSqlType::TIME        // 1083
-PostgreSqlType::INTERVAL    // 1186
+ValueType::TIMESTAMP   // 1114
+ValueType::TIMESTAMPTZ // 1184
+ValueType::DATE        // 1082
+ValueType::TIME        // 1083
+ValueType::INTERVAL    // 1186
 
 // Special types
-PostgreSqlType::UUID      // 2950
-PostgreSqlType::JSON      // 114
-PostgreSqlType::JSONB     // 3802
-PostgreSqlType::NUMERIC   // 1700
-PostgreSqlType::MONEY     // 790
+ValueType::UUID      // 2950
+ValueType::JSON      // 114
+ValueType::JSONB     // 3802
+ValueType::NUMERIC   // 1700
+ValueType::MONEY     // 790
 
 // Array types
-PostgreSqlType::TEXT_ARRAY // 1009
-PostgreSqlType::INT4_ARRAY // 1007
-PostgreSqlType::UUID_ARRAY // 2951
+ValueType::TEXT_ARRAY // 1009
+ValueType::INT4_ARRAY // 1007
+ValueType::UUID_ARRAY // 2951
 ```
 
 ## Handling NULL Values
@@ -381,6 +385,6 @@ if ($user['bio'] === null) {
 // Typed NULL (when type matters for schema validation)
 $client->execute(
     'INSERT INTO events (metadata) VALUES ($1)',
-    [typed(null, PostgreSqlType::JSON)]
+    [typed(null, ValueType::JSON)]
 );
 ```
