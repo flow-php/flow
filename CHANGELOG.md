@@ -1,9 +1,10 @@
-## [Unreleased] - 2026-04-08
+## [Unreleased] - 2026-04-09
 
 ### Changed
 - [#2294](https://github.com/flow-php/flow/pull/2294) - **updated ext-php-rs in arrow-ext** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [dd19c1](https://github.com/flow-php/flow/commit/dd19c1f5f7ad52c9fa29685578e94076f74a93d7) - **fragile failing tests** - [@norberttech](https://github.com/norberttech)
 - [#2294](https://github.com/flow-php/flow/pull/2294) - **missing interfaces/exceptions in arrow-ext** - [@norberttech](https://github.com/norberttech)
 - [f1e3d8](https://github.com/flow-php/flow/commit/f1e3d81ce34458e0b883b8124f0d24c58c0558c1) - **postgresql documentation examples** - [@norberttech](https://github.com/norberttech)
 
