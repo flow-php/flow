@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-04-09
+## [0.35.1] - 2026-04-09
 
 ### Changed
 - [#2294](https://github.com/flow-php/flow/pull/2294) - **updated ext-php-rs in arrow-ext** - [@norberttech](https://github.com/norberttech)
