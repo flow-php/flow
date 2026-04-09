@@ -69,13 +69,13 @@ final class TestKernel extends Kernel
     #[\Override]
     public function getCacheDir() : string
     {
-        return \sys_get_temp_dir() . '/flow_postgresql_bundle_test/' . $this->environment . '/' . $this->testId . '/cache';
+        return \dirname(__DIR__, 7) . '/var/tests/kernel/' . $this->environment . '/' . $this->testId . '/cache';
     }
 
     #[\Override]
     public function getLogDir() : string
     {
-        return \sys_get_temp_dir() . '/flow_postgresql_bundle_test/' . $this->environment . '/' . $this->testId . '/log';
+        return \dirname(__DIR__, 7) . '/var/tests/kernel/' . $this->environment . '/' . $this->testId . '/log';
     }
 
     #[\Override]

@@ -17,7 +17,7 @@ final readonly class FilesystemContext
     public function __construct(string $prefix = 'flow_test_')
     {
         $this->filesystem = native_local_filesystem();
-        $this->workDir = path($this->filesystem->getSystemTmpDir()->path() . '/' . $prefix . \bin2hex(\random_bytes(4)));
+        $this->workDir = path(\dirname(__DIR__, 7) . '/var/tests/' . $prefix . \bin2hex(\random_bytes(4)));
         $this->filesystem->writeTo(path($this->workDir->path() . '/.keep'))->append('')->close();
     }
 

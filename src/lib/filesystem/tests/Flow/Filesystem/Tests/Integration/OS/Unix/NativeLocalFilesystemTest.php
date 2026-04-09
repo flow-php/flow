@@ -47,6 +47,34 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $fs->rm(path(__DIR__ . '/../var/some_path_to'));
     }
 
+    public function test_status_on_non_existent_path_does_not_walk_parent_directory() : void
+    {
+        if (!\function_exists('chmod')) {
+            self::markTestSkipped('chmod functionality not available');
+        }
+
+        if (\function_exists('posix_geteuid') && \posix_geteuid() === 0) {
+            self::markTestSkipped('Cannot test permission restrictions as root');
+        }
+
+        $parent = \sys_get_temp_dir() . '/flow_status_regression_' . \bin2hex(\random_bytes(4));
+        $unreadable = $parent . '/unreadable_sibling';
+
+        \mkdir($parent, 0755, true);
+        \mkdir($unreadable, 0755);
+        \chmod($unreadable, 0000);
+
+        try {
+            $status = native_local_filesystem()->status(path($parent . '/does_not_exist'));
+
+            self::assertNull($status);
+        } finally {
+            \chmod($unreadable, 0755);
+            \rmdir($unreadable);
+            \rmdir($parent);
+        }
+    }
+
     public function test_tmp_dir_unix_uri_format() : void
     {
         $fs = native_local_filesystem();

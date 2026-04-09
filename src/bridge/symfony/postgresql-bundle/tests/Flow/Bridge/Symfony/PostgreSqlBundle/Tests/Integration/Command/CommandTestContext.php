@@ -31,7 +31,7 @@ final class CommandTestContext
         $this->symfonyContext = new SymfonyContext();
         $this->filesystem = native_local_filesystem();
         $this->testDsn = \getenv('PGSQL_DATABASE_URL') ?: 'postgresql://postgres:postgres@localhost:5432/postgres';
-        $this->migrationsDir = \sys_get_temp_dir() . '/flow_test_migrations_' . \bin2hex(\random_bytes(4));
+        $this->migrationsDir = \dirname(__DIR__, 8) . '/var/tests/flow_test_migrations_' . \bin2hex(\random_bytes(4));
         \mkdir($this->migrationsDir, 0755, true);
 
         $client = PgSqlClient::connect((new DsnParser())->parse($this->testDsn));

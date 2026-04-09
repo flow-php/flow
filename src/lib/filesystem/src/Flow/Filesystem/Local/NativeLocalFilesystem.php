@@ -140,7 +140,11 @@ final class NativeLocalFilesystem implements Filesystem
     {
         $this->protocol()->validateScheme($path);
 
-        if (!$path->isPattern() && \file_exists($path->path())) {
+        if (!$path->isPattern()) {
+            if (!\file_exists($path->path())) {
+                return null;
+            }
+
             return new FileStatus(
                 $path,
                 \is_file($path->path())
