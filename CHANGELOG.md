@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-04-10
+
+### Fixed
+- [#2295](https://github.com/flow-php/flow/pull/2295) - **using type_array for structure array like assertions** - [@norberttech](https://github.com/norberttech)
+
 ## [0.35.1] - 2026-04-09
 
 ### Changed
