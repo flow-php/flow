@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_boolean,
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
     type_datetime,
     type_float,
     type_from_array,
     type_integer,
     type_list,
     type_map,
+    type_mixed,
     type_optional,
     type_string,
     type_structure};
@@ -103,6 +105,52 @@ final class StructureTypeTest extends TestCase
         yield 'valid structure with extra field when allow_extra is true' => [
             'value' => ['id' => 1, 'name' => 'test', 'active' => false],
             'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid structure with type_array field containing a list of structures' => [
+            'value' => [
+                'id' => 'test-id',
+                'size' => 123,
+                'schema' => [
+                    ['ref' => 'col1', 'type' => ['key' => 'value'], 'metadata' => [], 'nullable' => true],
+                    ['ref' => 'col2', 'type' => ['key2' => 'value2'], 'metadata' => [], 'nullable' => false],
+                ],
+                'rows_count' => 10,
+                'processed_rows' => 5,
+                'synchronization_id' => 'sync-123',
+            ],
+            'structureType' => type_structure([
+                'id' => type_string(),
+                'size' => type_integer(),
+                'schema' => type_array(),
+                'rows_count' => type_integer(),
+                'processed_rows' => type_integer(),
+                'synchronization_id' => type_string(),
+            ]),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid structure with type_list(type_mixed()) field containing a list of structures' => [
+            'value' => [
+                'id' => 'test-id',
+                'size' => 123,
+                'schema' => [
+                    ['ref' => 'col1', 'type' => ['key' => 'value'], 'metadata' => [], 'nullable' => true],
+                    ['ref' => 'col2', 'type' => ['key2' => 'value2'], 'metadata' => [], 'nullable' => false],
+                ],
+                'rows_count' => 10,
+                'processed_rows' => 5,
+                'synchronization_id' => 'sync-123',
+            ],
+            'structureType' => type_structure([
+                'id' => type_string(),
+                'size' => type_integer(),
+                'schema' => type_list(type_mixed()),
+                'rows_count' => type_integer(),
+                'processed_rows' => type_integer(),
+                'synchronization_id' => type_string(),
+            ]),
             'exceptionClass' => null,
         ];
 

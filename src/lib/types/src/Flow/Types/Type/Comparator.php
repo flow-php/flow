@@ -14,7 +14,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     OptionalType,
     StructureType,
     TimeType};
-use Flow\Types\Type\Native\{FloatType, IntegerType, NullType, StringType, UnionType};
+use Flow\Types\Type\Native\{ArrayType, FloatType, IntegerType, NullType, StringType, UnionType};
 
 final class Comparator
 {
@@ -66,6 +66,14 @@ final class Comparator
 
         if (\in_array($left::class, [StringType::class, JsonType::class], true) && \in_array($right::class, [StringType::class, JsonType::class], true)) {
             return true;
+        }
+
+        if ($left instanceof ArrayType) {
+            return $right instanceof ArrayType || $right instanceof ListType || $right instanceof MapType || $right instanceof StructureType;
+        }
+
+        if ($right instanceof ArrayType) {
+            return $left instanceof ListType || $left instanceof MapType || $left instanceof StructureType;
         }
 
         return type_equals($left, $right);

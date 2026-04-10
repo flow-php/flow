@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{type_boolean,
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
     type_equals,
     type_float,
     type_integer,
@@ -41,6 +42,14 @@ final class ComparatorTest extends TestCase
         yield [type_union(type_integer(), type_null()), type_integer()];
         yield [type_union(type_integer(), type_null()), type_float()];
         yield [type_integer(), type_string()];
+
+        yield [type_array(), type_array()];
+        yield [type_array(), type_list(type_string())];
+        yield [type_array(), type_map(type_string(), type_integer())];
+        yield [type_array(), type_structure(['id' => type_integer()])];
+        yield [type_list(type_string()), type_array()];
+        yield [type_map(type_string(), type_integer()), type_array()];
+        yield [type_structure(['id' => type_integer()]), type_array()];
     }
 
     public static function type_comparison_data_provider() : \Generator
@@ -70,6 +79,10 @@ final class ComparatorTest extends TestCase
     {
         yield [type_integer(), type_union(type_float(), type_integer())];
         yield [type_integer(), type_boolean()];
+        yield [type_array(), type_string()];
+        yield [type_array(), type_integer()];
+        yield [type_array(), type_boolean()];
+        yield [type_string(), type_array()];
     }
 
     /**
