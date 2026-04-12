@@ -16,12 +16,20 @@ final class FlowFilesystemBundleTest extends TestCase
         $container = new ContainerBuilder();
         (new FlowFilesystemBundle())->build($container);
 
-        $autoconfigured = $container->getAutoconfiguredAttributes();
-
-        self::assertArrayHasKey(AsFilesystemFactory::class, $autoconfigured);
-
         $childDefinition = new ChildDefinition('parent');
-        $autoconfigured[AsFilesystemFactory::class]($childDefinition, new AsFilesystemFactory(protocol: 'my-fs'), new \ReflectionClass(\stdClass::class));
+
+        if (\method_exists($container, 'getAttributeAutoconfigurators')) {
+            $autoconfigured = $container->getAttributeAutoconfigurators();
+            self::assertArrayHasKey(AsFilesystemFactory::class, $autoconfigured);
+
+            foreach ($autoconfigured[AsFilesystemFactory::class] as $configurator) {
+                $configurator($childDefinition, new AsFilesystemFactory(protocol: 'my-fs'), new \ReflectionClass(\stdClass::class));
+            }
+        } else {
+            $autoconfigured = $container->getAutoconfiguredAttributes();
+            self::assertArrayHasKey(AsFilesystemFactory::class, $autoconfigured);
+            $autoconfigured[AsFilesystemFactory::class]($childDefinition, new AsFilesystemFactory(protocol: 'my-fs'), new \ReflectionClass(\stdClass::class));
+        }
 
         $tags = $childDefinition->getTag('flow_filesystem.factory');
         self::assertCount(1, $tags);
