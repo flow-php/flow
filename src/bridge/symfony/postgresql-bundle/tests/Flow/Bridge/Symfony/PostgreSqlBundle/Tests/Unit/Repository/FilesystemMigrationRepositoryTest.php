@@ -7,9 +7,10 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\Repository;
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double\TemporaryDirectory;
 use Flow\PostgreSql\Migrations\{Configuration, Migration, Rollback, Version};
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
-use Flow\PostgreSql\Migrations\Tests\Double\{FakeCatalogProvider, SpyClient, TemporaryDirectory};
+use Flow\PostgreSql\Migrations\Tests\Double\{FakeCatalogProvider, SpyClient};
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 

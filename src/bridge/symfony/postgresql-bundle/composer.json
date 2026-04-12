@@ -21,7 +21,12 @@
         "twig/twig": "^3.0"
     },
     "require-dev": {
-        "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0"
+        "flow-php/symfony-postgresql-messenger-bridge": "self.version",
+        "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0",
+        "symfony/messenger": "^6.4 || ^7.4 || ^8.0"
+    },
+    "suggest": {
+        "flow-php/symfony-postgresql-messenger-bridge": "For Symfony Messenger PostgreSQL transport support"
     },
     "config": {
         "optimize-autoloader": true,

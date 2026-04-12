@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
-use function Flow\PostgreSql\DSL\{begin, commit, release_savepoint, rollback, savepoint};
+use function Flow\PostgreSql\DSL\{begin, commit, listen, release_savepoint, rollback, savepoint, unlisten};
 use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper, TransactionContext, TypedValue};
+use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, Notification, RowMapper, TransactionContext, TypedValue};
 use Flow\PostgreSql\Client\Exception\{ConnectionException, PostgreSqlError, QueryException, ResultException, TransactionException, ValueConversionException};
 use Flow\PostgreSql\Client\Types\{ResultCaster, ValueConverters, ValueType};
 use Flow\PostgreSql\Explain\ExplainParser;
@@ -18,6 +18,9 @@ use PgSql\{Connection, Result};
 final class PgSqlClient implements Client
 {
     private bool $autoCommit = true;
+
+    /** @var array<string, true> */
+    private array $listeningChannels = [];
 
     private readonly ResultCaster $resultCaster;
 
@@ -339,6 +342,16 @@ final class PgSqlClient implements Client
         return $result;
     }
 
+    public function listen(string $channel) : void
+    {
+        if (\array_key_exists($channel, $this->listeningChannels)) {
+            return;
+        }
+
+        $this->execute(listen($channel));
+        $this->listeningChannels[$channel] = true;
+    }
+
     public function parameters() : ConnectionParameters
     {
         return $this->connectionParameters;
@@ -390,6 +403,91 @@ final class PgSqlClient implements Client
             $this->rollBack();
 
             throw $e;
+        }
+    }
+
+    public function unlisten(string $channel) : void
+    {
+        if (!\array_key_exists($channel, $this->listeningChannels)) {
+            return;
+        }
+
+        $this->execute(unlisten($channel));
+        unset($this->listeningChannels[$channel]);
+    }
+
+    public function wait(int $milliseconds) : ?Notification
+    {
+        if ($milliseconds < 0) {
+            throw new \InvalidArgumentException(
+                \sprintf('Timeout must be non-negative, got %d', $milliseconds),
+            );
+        }
+
+        $this->assertConnected();
+
+        /** @var Connection $connection */
+        $connection = $this->connection;
+
+        $immediate = @\pg_get_notify($connection, \PGSQL_ASSOC);
+
+        if (\is_array($immediate)) {
+            return self::notificationFromRaw($immediate);
+        }
+
+        if ($milliseconds === 0) {
+            return null;
+        }
+
+        $socket = @\pg_socket($connection);
+
+        if ($socket === false) {
+            throw ConnectionException::notificationWaitFailed('pg_socket() failed to return connection socket');
+        }
+
+        $deadlineNs = \hrtime(true) + $milliseconds * 1_000_000;
+
+        while (true) {
+            $remainingNs = $deadlineNs - \hrtime(true);
+
+            if ($remainingNs <= 0) {
+                return null;
+            }
+
+            $read = [$socket];
+            $write = null;
+            $except = null;
+            $selected = @\stream_select(
+                $read,
+                $write,
+                $except,
+                (int) \intdiv($remainingNs, 1_000_000_000),
+                (int) \intdiv($remainingNs % 1_000_000_000, 1000),
+            );
+
+            if ($selected === false) {
+                $lastError = \error_get_last();
+
+                throw ConnectionException::notificationWaitFailed(
+                    'stream_select() failed: ' . ($lastError['message'] ?? 'unknown error'),
+                );
+            }
+
+            if ($selected === 0) {
+                return null;
+            }
+
+            if (!@\pg_consume_input($connection)) {
+                throw ConnectionException::notificationWaitFailed(
+                    'pg_consume_input() failed: ' . \pg_last_error($connection),
+                );
+            }
+
+            $raw = @\pg_get_notify($connection, \PGSQL_ASSOC);
+
+            if (\is_array($raw)) {
+                return self::notificationFromRaw($raw);
+            }
         }
     }
 
@@ -542,5 +640,23 @@ final class PgSqlClient implements Client
         }
 
         return $result;
+    }
+
+    /**
+     * @param array<array-key, mixed> $raw
+     */
+    private static function notificationFromRaw(array $raw) : Notification
+    {
+        $channel = $raw['message'] ?? '';
+        $payload = $raw['payload'] ?? '';
+        $pid = $raw['pid'] ?? 0;
+
+        if (!\is_string($channel) || !\is_string($payload) || !\is_int($pid)) {
+            throw ConnectionException::notificationWaitFailed(
+                'Malformed notification payload from pg_get_notify()',
+            );
+        }
+
+        return new Notification($channel, $payload, $pid);
     }
 }

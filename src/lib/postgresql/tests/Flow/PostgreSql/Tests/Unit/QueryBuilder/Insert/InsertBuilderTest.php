@@ -96,6 +96,30 @@ final class InsertBuilderTest extends TestCase
         self::assertNull($selectStmtNode);
     }
 
+    public function test_insert_into_schema_qualified_table_reference() : void
+    {
+        self::assertSame(
+            "INSERT INTO public.users (name) VALUES ('John')",
+            insert()
+                ->into(table('users', 'public'))
+                ->columns('name')
+                ->values(literal('John'))
+                ->toSql()
+        );
+    }
+
+    public function test_insert_into_table_reference() : void
+    {
+        self::assertSame(
+            "INSERT INTO users (name) VALUES ('John')",
+            insert()
+                ->into(table('users'))
+                ->columns('name')
+                ->values(literal('John'))
+                ->toSql()
+        );
+    }
+
     public function test_insert_multiple_rows() : void
     {
         $query = InsertBuilder::create()

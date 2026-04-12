@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Telemetry;
 
+use function Flow\PostgreSql\DSL\{listen, unlisten};
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper};
+use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, Notification, RowMapper};
 use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
@@ -378,6 +379,23 @@ final class TraceableClient implements Client
         return $this->client->lastInsertId($sequenceName);
     }
 
+    public function listen(string $channel) : void
+    {
+        $query = listen($channel)->toSql();
+
+        $this->traceQuery(
+            $query,
+            [],
+            function () use ($channel, $query) : int {
+                $this->logQuery($query, []);
+                $this->client->listen($channel);
+
+                return 0;
+            },
+            static fn (int $_) => 0,
+        );
+    }
+
     public function parameters() : ConnectionParameters
     {
         return $this->client->parameters();
@@ -420,6 +438,28 @@ final class TraceableClient implements Client
 
             throw $e;
         }
+    }
+
+    public function unlisten(string $channel) : void
+    {
+        $query = unlisten($channel)->toSql();
+
+        $this->traceQuery(
+            $query,
+            [],
+            function () use ($channel, $query) : int {
+                $this->logQuery($query, []);
+                $this->client->unlisten($channel);
+
+                return 0;
+            },
+            static fn (int $_) => 0,
+        );
+    }
+
+    public function wait(int $milliseconds) : ?Notification
+    {
+        return $this->client->wait($milliseconds);
     }
 
     /**

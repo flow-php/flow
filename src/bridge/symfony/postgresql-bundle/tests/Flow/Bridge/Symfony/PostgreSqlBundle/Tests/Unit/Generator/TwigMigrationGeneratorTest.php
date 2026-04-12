@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\Generator;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double\TemporaryDirectory;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\PostgreSql\Migrations\{Configuration, Version};
-use Flow\PostgreSql\Migrations\Tests\Double\{FakeCatalogProvider, FixedVersionGenerator, SpyClient, TemporaryDirectory};
+use Flow\PostgreSql\Migrations\Tests\Double\{FakeCatalogProvider, FixedVersionGenerator, SpyClient};
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;

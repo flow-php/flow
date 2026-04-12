@@ -296,14 +296,21 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return $updateStmt;
     }
 
-    public function update(string $table, ?string $alias = null) : UpdateSetStep
+    public function update(string|Table $table, ?string $alias = null) : UpdateSetStep
     {
-        $identifier = QualifiedIdentifier::parse($table);
+        if ($table instanceof Table) {
+            $name = $table->name;
+            $schema = $table->schema;
+        } else {
+            $identifier = QualifiedIdentifier::parse($table);
+            $name = $identifier->name();
+            $schema = $identifier->schema();
+        }
 
         return new self(
             with: $this->with,
-            table: $identifier->name(),
-            schema: $identifier->schema(),
+            table: $name,
+            schema: $schema,
             alias: $alias,
             assignments: $this->assignments,
             from: $this->from,

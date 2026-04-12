@@ -386,6 +386,30 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
+    public function forUpdateSkipLocked(string ...$tables) : SelectFinalStep
+    {
+        $lock = LockingClause::forUpdate(\array_values($tables))->skipLocked();
+
+        return new self(
+            with: $this->with,
+            selectList: $this->selectList,
+            distinct: $this->distinct,
+            distinctOn: $this->distinctOn,
+            from: $this->from,
+            joins: $this->joins,
+            where: $this->where,
+            groupBy: $this->groupBy,
+            having: $this->having,
+            windows: $this->windows,
+            setOp: $this->setOp,
+            setOpRhs: $this->setOpRhs,
+            orderBy: $this->orderBy,
+            limit: $this->limit,
+            offset: $this->offset,
+            locks: [...$this->locks, $lock],
+        );
+    }
+
     public function from(string|TableReference ...$tables) : SelectJoinStep
     {
         $tables = \array_map(

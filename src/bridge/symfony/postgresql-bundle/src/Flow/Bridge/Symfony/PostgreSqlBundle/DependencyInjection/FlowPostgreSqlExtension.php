@@ -8,7 +8,9 @@ use function Flow\Types\DSL\type_string;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, DsnParser};
@@ -22,7 +24,8 @@ use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\VersionGenerator\TimestampVersionGenerator;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference, ServiceLocator};
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Twig\Environment;
@@ -43,7 +46,7 @@ final class FlowPostgreSqlExtension extends Extension
     {
         $configuration = new Configuration();
 
-        /** @var array{connections: array<string, array{dsn: string, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
+        /** @var array{connections: array<string, array{dsn: string, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $isFirst = true;
@@ -75,6 +78,8 @@ final class FlowPostgreSqlExtension extends Extension
 
             $loader->load('migrations.php');
         }
+
+        $this->registerMessenger($config['messenger'], $connectionNames, $container);
     }
 
     /**
@@ -128,6 +133,44 @@ final class FlowPostgreSqlExtension extends Extension
             $container->setAlias(Client::class, "flow.postgresql.{$name}.client");
             $container->setAlias(ConnectionParameters::class, "flow.postgresql.{$name}.connection_parameters");
         }
+    }
+
+    /**
+     * @param array{enabled: bool, table_name: string, schema: string} $messengerConfig
+     * @param list<string> $connectionNames
+     */
+    private function registerMessenger(array $messengerConfig, array $connectionNames, ContainerBuilder $container) : void
+    {
+        if (!\class_exists(FlowPostgreSqlTransportFactory::class)) {
+            return;
+        }
+
+        if (!$messengerConfig['enabled']) {
+            return;
+        }
+
+        $catalogProviderDef = new Definition(MessengerCatalogProvider::class, [
+            $messengerConfig['table_name'],
+            $messengerConfig['schema'],
+        ]);
+        $catalogProviderDef->addTag('flow.postgresql.catalog_provider');
+        $container->setDefinition('flow.postgresql.messenger.catalog_provider', $catalogProviderDef);
+
+        $locatorServices = [];
+
+        foreach ($connectionNames as $name) {
+            $locatorServices[$name] = new ServiceClosureArgument(new Reference("flow.postgresql.{$name}.client"));
+        }
+
+        $locatorDef = new Definition(ServiceLocator::class, [$locatorServices]);
+        $locatorDef->addTag('container.service_locator');
+        $container->setDefinition('flow.postgresql.messenger.client_locator', $locatorDef);
+
+        $factoryDef = new Definition(FlowPostgreSqlTransportFactory::class, [
+            new Reference('flow.postgresql.messenger.client_locator'),
+        ]);
+        $factoryDef->addTag('messenger.transport_factory');
+        $container->setDefinition('flow.postgresql.messenger.transport_factory', $factoryDef);
     }
 
     /**

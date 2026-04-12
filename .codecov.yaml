@@ -108,6 +108,10 @@ component_management:
       name: bridge-symfony-postgresql-bundle
       paths:
         - src/bridge/symfony/postgresql-bundle/**
+    - component_id: bridge-symfony-postgresql-messenger
+      name: bridge-symfony-postgresql-messenger
+      paths:
+        - src/bridge/symfony/postgresql-messenger/**
     - component_id: bridge-symfony-telemetry-bundle
       name: bridge-symfony-telemetry-bundle
       paths:

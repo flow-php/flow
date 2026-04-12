@@ -299,6 +299,65 @@ Target a specific connection with any command:
 php bin/console flow:migrations:migrate --connection=reporting
 ```
 
+## Symfony Messenger Integration
+
+The bundle integrates with [flow-php/symfony-postgresql-messenger-bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md) to provide a Symfony Messenger transport backed by Flow's native PostgreSQL client — no Doctrine DBAL required.
+
+### Setup
+
+1. Install the messenger bridge:
+
+```bash
+composer require flow-php/symfony-postgresql-messenger-bridge:~--FLOW_PHP_VERSION--
+```
+
+2. Enable messenger:
+
+```yaml
+flow_postgresql:
+  connections:
+    default:
+      dsn: '%env(DATABASE_URL)%'
+
+  messenger:
+    enabled: true
+    table_name: messenger_messages  # default
+    schema: public                  # default
+```
+
+3. Configure the Symfony Messenger transport:
+
+```yaml
+# config/packages/messenger.yaml
+framework:
+  messenger:
+    transports:
+      async:
+        dsn: 'flow-pgsql://default'
+    routing:
+      App\Message\MyMessage: async
+```
+
+4. Generate and run the migration to create the messenger table:
+
+```bash
+php bin/console flow:migrations:diff
+php bin/console flow:migrations:migrate
+```
+
+The `MessengerCatalogProvider` is registered automatically when `messenger.enabled: true`, so the `messenger_messages` table appears in schema diffs alongside your other catalog-managed tables.
+
+### Configuration Options
+
+| Option | Default | Location | Description |
+|--------|---------|----------|-------------|
+| `table_name` | `messenger_messages` | `flow_postgresql.messenger` | Table name in the database |
+| `schema` | `public` | `flow_postgresql.messenger` | Schema owning the table |
+| `queue_name` | `default` | `framework.messenger.transports.*.options` | Queue name for message routing |
+| `redeliver_timeout` | `3600` | `framework.messenger.transports.*.options` | Seconds before unacknowledged messages are redelivered |
+
+For full documentation, see the [Symfony PostgreSQL Messenger Bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md).
+
 ## Complete Example
 
 ```yaml
@@ -315,6 +374,9 @@ flow_postgresql:
         collect_metrics: true
         log_queries: false
         max_query_length: 1000
+
+  messenger:
+    enabled: true
 
   migrations:
     enabled: true
