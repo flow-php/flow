@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-04-12
 
 ### Added
+- [#2299](https://github.com/flow-php/flow/pull/2299) - **phpunit extensions that wraps tests in transactions** - [@norberttech](https://github.com/norberttech)
+- [#2299](https://github.com/flow-php/flow/pull/2299) - **phpunit postgresql bridge as optional dependency of postgresql bundle** - [@norberttech](https://github.com/norberttech)
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge** - [@norberttech](https://github.com/norberttech)
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **listen/unlisen to postgresql client** - [@norberttech](https://github.com/norberttech)
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge to postgersql symfony bundle** - [@norberttech](https://github.com/norberttech)
