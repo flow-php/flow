@@ -12,6 +12,7 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory, Star};
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
+use Flow\PostgreSql\QueryBuilder\Table\Table;
 
 final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertIntoStep
 {
@@ -250,14 +251,21 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function into(string $table, ?string $alias = null) : InsertColumnsStep
+    public function into(string|Table $table, ?string $alias = null) : InsertColumnsStep
     {
-        $identifier = QualifiedIdentifier::parse($table);
+        if ($table instanceof Table) {
+            $name = $table->name;
+            $schema = $table->schema;
+        } else {
+            $identifier = QualifiedIdentifier::parse($table);
+            $name = $identifier->name();
+            $schema = $identifier->schema();
+        }
 
         return new self(
             $this->with,
-            $identifier->name(),
-            $identifier->schema(),
+            $name,
+            $schema,
             $alias,
             $this->columns,
             $this->valuesList,

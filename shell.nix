@@ -25,6 +25,24 @@ let
         config = {
             allowUnfree = true;
         };
+        overlays = [
+            # Blackfire upstream republishes the same versioned tarball with different
+            # bytes when they rebuild, invalidating the sha256 pinned in nixpkgs. Override
+            # just the CLI agent's src on macOS arm64 with the current upstream hash.
+            # Linux and other platforms keep nixpkgs' original src untouched. The PHP
+            # extension (php83.extensions.blackfire) uses a separate upstream URL and is
+            # unaffected on every platform.
+            (final: prev:
+                if prev.stdenv.hostPlatform.system == "aarch64-darwin" then {
+                    blackfire = prev.blackfire.overrideAttrs (old: {
+                        src = prev.fetchurl {
+                            url = "https://packages.blackfire.io/blackfire/2.29.7/blackfire-darwin_arm64.pkg.tar.gz";
+                            sha256 = "sha256-e0oTxGFxgURMyUoTNh+NFGVoO9qGKrHNKud3IFD0fec=";
+                        };
+                    });
+                } else {}
+            )
+        ];
     };
 
     base-php = if php-version == 8.3 then

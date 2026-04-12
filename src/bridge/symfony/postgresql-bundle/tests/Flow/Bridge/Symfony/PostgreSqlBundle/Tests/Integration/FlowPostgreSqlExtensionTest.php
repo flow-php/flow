@@ -6,7 +6,9 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\{CreateDatabaseCommand, DropDatabaseCommand, GenerateCommand, RunSqlCommand, UpToDateCommand};
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\FlowPostgreSqlExtension;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\{AttributeTestCatalogProvider, TestKernel, VoidTelemetryFactory};
+use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryOptions, TraceableClient};
 use Flow\PostgreSql\Migrations\{Configuration as MigrationsConfiguration, MigrationsFactory, Migrator, VersionResolver};
@@ -391,6 +393,88 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         ]);
 
         self::assertInstanceOf(SpyClient::class, $this->getContainer()->get(Client::class));
+    }
+
+    public function test_messenger_catalog_provider_registered_when_enabled() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'messenger' => [
+                        'enabled' => true,
+                        'table_name' => 'custom_queue',
+                        'schema' => 'messaging',
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertTrue($this->getContainer()->has('flow.postgresql.messenger.catalog_provider'));
+
+        $provider = $this->getContainer()->get('flow.postgresql.messenger.catalog_provider');
+        self::assertInstanceOf(MessengerCatalogProvider::class, $provider);
+
+        $catalog = $provider->get();
+        self::assertTrue($catalog->has('messaging'));
+        self::assertSame('custom_queue', $catalog->get('messaging')->tables[0]->name);
+    }
+
+    public function test_messenger_not_registered_when_disabled() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertFalse($this->getContainer()->has('flow.postgresql.messenger.catalog_provider'));
+        self::assertFalse($this->getContainer()->has('flow.postgresql.messenger.transport_factory'));
+    }
+
+    public function test_messenger_transport_factory_has_access_to_all_connections() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                    $container->register('flow.postgresql.analytics.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                        'analytics' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/analytics',
+                        ],
+                    ],
+                    'messenger' => [
+                        'enabled' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertTrue($this->getContainer()->has('flow.postgresql.messenger.transport_factory'));
+        self::assertInstanceOf(FlowPostgreSqlTransportFactory::class, $this->getContainer()->get('flow.postgresql.messenger.transport_factory'));
+        self::assertTrue($this->getContainer()->has('flow.postgresql.messenger.catalog_provider'));
     }
 
     public function test_migration_commands_registered_when_migrations_enabled() : void

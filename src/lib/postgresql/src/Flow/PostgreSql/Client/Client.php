@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client;
 
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Client\Exception\{QueryException, TransactionException};
+use Flow\PostgreSql\Client\Exception\{ConnectionException, QueryException, TransactionException};
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -255,6 +255,17 @@ interface Client
     public function lastInsertId(string $sequenceName) : int|string;
 
     /**
+     * Subscribe the current connection to a PostgreSQL notification channel.
+     * Subsequent NOTIFY statements on `$channel` (from this or any other
+     * session) will be queued for this connection until a waitForNotification()
+     * call drains them. Calling listen() for a channel already being listened
+     * on is a no-op.
+     *
+     * @throws QueryException
+     */
+    public function listen(string $channel) : void;
+
+    /**
      * Get the connection parameters used to establish this connection.
      */
     public function parameters() : ConnectionParameters;
@@ -291,4 +302,27 @@ interface Client
      * @return T
      */
     public function transaction(callable $callback) : mixed;
+
+    /**
+     * Unsubscribe the current connection from a PostgreSQL notification
+     * channel. Calling unlisten() for a channel that was not being listened on
+     * is a no-op. Pass a specific channel name — the `UNLISTEN *` wildcard is
+     * not expressible through this API.
+     *
+     * @throws QueryException
+     */
+    public function unlisten(string $channel) : void;
+
+    /**
+     * Block until a notification arrives on any channel the connection is
+     * listening to, or until the timeout elapses. Returns null on timeout,
+     * otherwise a Notification describing the received message.
+     *
+     * @param int $milliseconds Must be >= 0. A value of 0 performs a
+     *                          non-blocking check and returns
+     *                          immediately.
+     *
+     * @throws ConnectionException when the underlying socket read fails
+     */
+    public function wait(int $milliseconds) : ?Notification;
 }

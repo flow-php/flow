@@ -88,6 +88,22 @@ final class DeleteBuilderTest extends TestCase
         self::assertCount(3, $returningList);
     }
 
+    public function test_delete_from_schema_qualified_table_reference() : void
+    {
+        self::assertSame(
+            'DELETE FROM public.users',
+            delete()->from(table('users', 'public'))->toSql()
+        );
+    }
+
+    public function test_delete_from_table_reference() : void
+    {
+        self::assertSame(
+            'DELETE FROM users',
+            delete()->from(table('users'))->toSql()
+        );
+    }
+
     public function test_delete_only_from_is_valid() : void
     {
         $query = DeleteBuilder::create()

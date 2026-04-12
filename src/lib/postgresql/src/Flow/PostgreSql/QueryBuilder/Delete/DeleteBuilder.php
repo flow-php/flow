@@ -145,14 +145,21 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self(with: $with);
     }
 
-    public function from(string $table, ?string $alias = null) : DeleteUsingStep
+    public function from(string|Table $table, ?string $alias = null) : DeleteUsingStep
     {
-        $identifier = QualifiedIdentifier::parse($table);
+        if ($table instanceof Table) {
+            $name = $table->name;
+            $schema = $table->schema;
+        } else {
+            $identifier = QualifiedIdentifier::parse($table);
+            $name = $identifier->name();
+            $schema = $identifier->schema();
+        }
 
         return new self(
             with: $this->with,
-            table: $identifier->name(),
-            schema: $identifier->schema(),
+            table: $name,
+            schema: $schema,
             alias: $alias,
             using: $this->using,
             where: $this->where,

@@ -25,4 +25,9 @@ interface SelectLockingStep extends SelectFinalStep
      * @param string ...$tables
      */
     public function forUpdate(string ...$tables) : SelectFinalStep;
+
+    /**
+     * @param string ...$tables
+     */
+    public function forUpdateSkipLocked(string ...$tables) : SelectFinalStep;
 }

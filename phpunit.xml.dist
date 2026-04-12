@@ -161,6 +161,12 @@
         <testsuite name="bridge-symfony-postgresql-bundle-integration">
             <directory>src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-symfony-postgresql-messenger-unit">
+            <directory>src/bridge/symfony/postgresql-messenger/tests/Flow/Bridge/Symfony/PostgreSQLMessenger/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-postgresql-messenger-integration">
+            <directory>src/bridge/symfony/postgresql-messenger/tests/Flow/Bridge/Symfony/PostgreSQLMessenger/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-telemetry-bundle-unit">
             <directory>src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Unit</directory>
         </testsuite>

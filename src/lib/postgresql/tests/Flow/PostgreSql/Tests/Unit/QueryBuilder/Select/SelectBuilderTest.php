@@ -649,6 +649,20 @@ final class SelectBuilderTest extends TestCase
         self::assertCount(1, $lockingClause);
     }
 
+    public function test_select_with_for_update_skip_locked() : void
+    {
+        $query = SelectBuilder::create()
+            ->select(Star::all())
+            ->from(new Table('users'))
+            ->forUpdateSkipLocked();
+
+        $ast = $query->toAst();
+        $lockingClause = $ast->getLockingClause();
+
+        self::assertNotNull($lockingClause);
+        self::assertCount(1, $lockingClause);
+    }
+
     public function test_select_with_full_join() : void
     {
         $query = SelectBuilder::create()

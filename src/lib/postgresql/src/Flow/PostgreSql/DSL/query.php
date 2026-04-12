@@ -58,7 +58,9 @@ use Flow\PostgreSql\QueryBuilder\Expression\{
 };
 use Flow\PostgreSql\QueryBuilder\Factory\CopyFactory;
 use Flow\PostgreSql\QueryBuilder\Insert\{BulkInsert, InsertBuilder, InsertIntoStep};
+use Flow\PostgreSql\QueryBuilder\Listen\{ListenBuilder, ListenFinalStep};
 use Flow\PostgreSql\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
+use Flow\PostgreSql\QueryBuilder\Notify\{NotifyBuilder, NotifyFinalStep};
 use Flow\PostgreSql\QueryBuilder\{QualifiedIdentifier, Sql};
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Select\{ParsedSelect, SelectBuilder, SelectFinalStep, SelectSelectStep};
@@ -85,6 +87,7 @@ use Flow\PostgreSql\QueryBuilder\Transaction\{
     SetTransactionFinalStep,
     SetTransactionOptionsStep
 };
+use Flow\PostgreSql\QueryBuilder\Unlisten\{UnlistenBuilder, UnlistenFinalStep};
 use Flow\PostgreSql\QueryBuilder\Update\{UpdateBuilder, UpdateTableStep};
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
 
@@ -200,6 +203,43 @@ function merge(string $table, ?string $alias = null) : MergeUsingStep
 function copy() : CopyFactory
 {
     return new CopyFactory();
+}
+
+/**
+ * Create a LISTEN statement to subscribe the current session to a notification channel.
+ *
+ * Usage:
+ *   listen('my_channel')->toSql()  // LISTEN my_channel
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function listen(string $channel) : ListenFinalStep
+{
+    return ListenBuilder::create($channel);
+}
+
+/**
+ * Create an UNLISTEN statement to unsubscribe the current session from a notification channel.
+ *
+ * Usage:
+ *   unlisten('my_channel')->toSql()  // UNLISTEN my_channel
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function unlisten(string $channel) : UnlistenFinalStep
+{
+    return UnlistenBuilder::create($channel);
+}
+
+/**
+ * Create a NOTIFY statement to send a notification on a channel, optionally with a payload.
+ *
+ * Usage:
+ *   notify('my_channel')->toSql()                           // NOTIFY my_channel
+ *   notify('my_channel')->withPayload('hello')->toSql()     // NOTIFY my_channel, 'hello'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function notify(string $channel) : NotifyFinalStep
+{
+    return NotifyBuilder::create($channel);
 }
 
 /**
@@ -356,6 +396,15 @@ function agg_count(string|Expression|null $expr = null, bool $distinct = false) 
     }
 
     return new AggregateCall(['count'], [$expr instanceof Expression ? $expr : col($expr)], false, $distinct);
+}
+
+/**
+ * Create COUNT(*) aggregate.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function count_all() : AggregateCall
+{
+    return new AggregateCall(['count'], [], true, false);
 }
 
 /**

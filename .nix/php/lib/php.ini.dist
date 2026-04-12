@@ -8,3 +8,5 @@ upload_max_filesize = 150M
 file_uploads = On
 max_file_uploads = 20
 short_open_tag = off
+opcache.enable=1
+opcache.enable_cli=0

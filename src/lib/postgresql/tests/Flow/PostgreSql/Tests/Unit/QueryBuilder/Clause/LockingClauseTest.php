@@ -61,6 +61,14 @@ final class LockingClauseTest extends TestCase
         self::assertSame(LockWaitPolicy::DEFAULT, $lock->waitPolicy());
     }
 
+    public function test_for_update_skip_locked() : void
+    {
+        $lock = LockingClause::forUpdate()->skipLocked();
+
+        self::assertSame(LockStrength::UPDATE, $lock->strength());
+        self::assertSame(LockWaitPolicy::SKIP_LOCKED, $lock->waitPolicy());
+    }
+
     public function test_for_update_with_tables() : void
     {
         $lock = LockingClause::forUpdate(['users']);

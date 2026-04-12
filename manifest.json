@@ -192,6 +192,11 @@
       "type": "bridge"
     },
     {
+      "name": "flow-php/symfony-postgresql-messenger-bridge",
+      "path": "src/bridge/symfony/postgresql-messenger",
+      "type": "bridge"
+    },
+    {
       "name": "flow-php/symfony-telemetry-bundle",
       "path": "src/bridge/symfony/telemetry-bundle",
       "type": "bridge"

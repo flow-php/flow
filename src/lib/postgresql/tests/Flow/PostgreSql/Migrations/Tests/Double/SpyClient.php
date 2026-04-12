@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations\Tests\Double;
 
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, RowMapper};
+use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, Notification, RowMapper};
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -133,6 +133,11 @@ final class SpyClient implements Client
         throw new \RuntimeException('Not implemented');
     }
 
+    public function listen(string $channel) : void
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
     public function parameters() : ConnectionParameters
     {
         throw new \RuntimeException('Not implemented');
@@ -163,5 +168,15 @@ final class SpyClient implements Client
 
             throw $e;
         }
+    }
+
+    public function unlisten(string $channel) : void
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    public function wait(int $milliseconds) : ?Notification
+    {
+        throw new \RuntimeException('Not implemented');
     }
 }

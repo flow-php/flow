@@ -650,6 +650,17 @@ final class UpdateBuilderTest extends TestCase
         self::assertSame("UPDATE public.users SET name = 'John'", $deparsed);
     }
 
+    public function test_update_with_schema_qualified_table_reference() : void
+    {
+        self::assertSame(
+            "UPDATE public.users SET name = 'John'",
+            update()
+                ->update(table('users', 'public'))
+                ->set('name', literal('John'))
+                ->toSql()
+        );
+    }
+
     public function test_update_with_schema_round_trip() : void
     {
         $original = UpdateBuilder::create()
@@ -697,6 +708,17 @@ final class UpdateBuilderTest extends TestCase
             ->where(eq(col('id'), literal(1)));
 
         self::assertSame('UPDATE products SET price = (SELECT avg_price FROM price_stats WHERE category = products.category) WHERE id = 1', $query->toSql());
+    }
+
+    public function test_update_with_table_reference() : void
+    {
+        self::assertSame(
+            "UPDATE users SET name = 'John'",
+            update()
+                ->update(table('users'))
+                ->set('name', literal('John'))
+                ->toSql()
+        );
     }
 
     public function test_update_with_where() : void

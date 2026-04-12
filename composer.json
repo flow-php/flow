@@ -111,6 +111,7 @@
         "flow-php/symfony-http-foundation-bridge": "self.version",
         "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
         "flow-php/symfony-postgresql-bundle": "self.version",
+        "flow-php/symfony-postgresql-messenger-bridge": "self.version",
         "flow-php/symfony-telemetry-bundle": "self.version",
         "flow-php/telemetry": "self.version",
         "flow-php/telemetry-otlp-bridge": "self.version",
@@ -148,6 +149,7 @@
                 "src/bridge/symfony/http-foundation-telemetry/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
                 "src/bridge/symfony/postgresql-bundle/src/Flow",
+                "src/bridge/symfony/postgresql-messenger/src/Flow",
                 "src/bridge/symfony/telemetry-bundle/src/Flow",
                 "src/bridge/telemetry/otlp/src/Flow",
                 "src/bridge/phpunit/telemetry/src/Flow",
@@ -248,6 +250,7 @@
                 "src/bridge/symfony/http-foundation-telemetry/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
                 "src/bridge/symfony/postgresql-bundle/tests/Flow",
+                "src/bridge/symfony/postgresql-messenger/tests/Flow",
                 "src/bridge/symfony/telemetry-bundle/tests/Flow",
                 "src/bridge/telemetry/otlp/tests/Flow",
                 "src/bridge/phpunit/telemetry/tests/Flow",
@@ -325,6 +328,7 @@
             "@test:bridge:symfony-http-foundation",
             "@test:bridge:symfony-http-foundation-telemetry",
             "@test:bridge:symfony-postgresql-bundle",
+            "@test:bridge:symfony-postgresql-messenger",
             "@test:bridge:symfony-telemetry-bundle",
             "@test:bridge:telemetry-otlp"
         ],
@@ -429,6 +433,10 @@
         "test:bridge:symfony-postgresql-bundle": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-postgresql-bundle-unit --log-junit ./var/phpunit/logs/bridge-symfony-postgresql-bundle-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-postgresql-bundle-unit.coverage.xml",
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-postgresql-bundle-integration --log-junit ./var/phpunit/logs/bridge-symfony-postgresql-bundle-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-postgresql-bundle-integration.coverage.xml"
+        ],
+        "test:bridge:symfony-postgresql-messenger": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-postgresql-messenger-unit --log-junit ./var/phpunit/logs/bridge-symfony-postgresql-messenger-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-postgresql-messenger-unit.coverage.xml",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-postgresql-messenger-integration --log-junit ./var/phpunit/logs/bridge-symfony-postgresql-messenger-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-postgresql-messenger-integration.coverage.xml"
         ],
         "test:bridge:symfony-telemetry-bundle": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-telemetry-bundle-unit --log-junit ./var/phpunit/logs/bridge-symfony-telemetry-bundle-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-telemetry-bundle-unit.coverage.xml",

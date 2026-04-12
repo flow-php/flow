@@ -112,6 +112,51 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_messenger_custom_table_and_schema() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'messenger' => [
+                'enabled' => true,
+                'table_name' => 'custom_queue',
+                'schema' => 'app',
+            ],
+        ]]);
+
+        self::assertTrue($config['messenger']['enabled']);
+        self::assertSame('custom_queue', $config['messenger']['table_name']);
+        self::assertSame('app', $config['messenger']['schema']);
+    }
+
+    public function test_messenger_defaults() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'messenger' => [
+                'enabled' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['messenger']['enabled']);
+        self::assertSame('messenger_messages', $config['messenger']['table_name']);
+        self::assertSame('public', $config['messenger']['schema']);
+    }
+
+    public function test_messenger_disabled_by_default() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]]);
+
+        self::assertFalse($config['messenger']['enabled']);
+    }
+
     public function test_migrations_default_values() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
