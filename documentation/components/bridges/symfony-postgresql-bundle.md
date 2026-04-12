@@ -358,6 +358,54 @@ The `MessengerCatalogProvider` is registered automatically when `messenger.enabl
 
 For full documentation, see the [Symfony PostgreSQL Messenger Bridge](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md).
 
+## Test Transaction Rollback
+
+The bundle integrates with [flow-php/phpunit-postgresql-bridge](/documentation/components/bridges/phpunit-postgresql-bridge.md) to automatically wrap each PHPUnit test in a database transaction and roll it back after the test finishes — keeping your test database clean without manual teardown.
+
+### Setup
+
+1. Install the PHPUnit bridge:
+
+```bash
+composer require --dev flow-php/phpunit-postgresql-bridge:~--FLOW_PHP_VERSION--
+```
+
+2. Register the PHPUnit extension in `phpunit.xml.dist`:
+
+```xml
+<extensions>
+    <bootstrap class="Flow\Bridge\PHPUnit\PostgreSQL\PostgreSQLExtension"/>
+</extensions>
+```
+
+3. Enable transaction rollback per connection in a test-environment config:
+
+```yaml
+# config/packages/test/flow_postgresql.yaml
+flow_postgresql:
+    connections:
+        default:
+            test_transaction_rollback: true
+        readonly:
+            test_transaction_rollback: false  # default, no wrapping
+```
+
+When `test_transaction_rollback` is `true`, the bundle replaces `PgSqlClient::connect` with `StaticClient::connect` for that connection. This ensures the exact same `Client` instance is reused across kernel reboots within the same test, so the transaction started by the PHPUnit extension covers all database operations performed by your services.
+
+### How It Works
+
+1. PHPUnit starts → extension enables `StaticClient` caching
+2. Before each test → extension rolls back the previous transaction and begins a new one
+3. Symfony kernel boots → bundle creates the client via `StaticClient::connect()` → returns the cached instance with an active transaction
+4. Test runs → all queries go through the same cached client, inside the transaction
+5. Next test starts → extension rolls back all changes from the previous test
+
+PostgreSQL supports transactional DDL, so even `CREATE TABLE` and `ALTER TABLE` statements are rolled back.
+
+### Skipping Rollback
+
+Use the `#[SkipTransactionRollback]` attribute to opt out for specific tests, classes, or abstract parent classes. See the [PHPUnit PostgreSQL Bridge documentation](/documentation/components/bridges/phpunit-postgresql-bridge.md) for details.
+
 ## Complete Example
 
 ```yaml

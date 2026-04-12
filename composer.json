@@ -116,6 +116,7 @@
         "flow-php/telemetry": "self.version",
         "flow-php/telemetry-otlp-bridge": "self.version",
         "flow-php/types": "self.version",
+        "flow-php/phpunit-postgresql-bridge": "self.version",
         "flow-php/phpunit-telemetry": "self.version",
         "flow-php/phpunit-telemetry-bridge": "self.version"
     },
@@ -152,6 +153,7 @@
                 "src/bridge/symfony/postgresql-messenger/src/Flow",
                 "src/bridge/symfony/telemetry-bundle/src/Flow",
                 "src/bridge/telemetry/otlp/src/Flow",
+                "src/bridge/phpunit/postgresql/src/Flow",
                 "src/bridge/phpunit/telemetry/src/Flow",
                 "src/cli/src/Flow",
                 "src/core/etl/src/Flow",
@@ -194,6 +196,7 @@
             "src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php",
             "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
             "src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php",
+            "src/bridge/phpunit/postgresql/src/Flow/Bridge/PHPUnit/PostgreSQL/DSL/functions.php",
             "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
             "src/bridge/psr7/telemetry/src/Flow/Bridge/Psr7/Telemetry/DSL/functions.php",
             "src/bridge/psr18/telemetry/src/Flow/Bridge/Psr18/Telemetry/DSL/functions.php",
@@ -253,6 +256,7 @@
                 "src/bridge/symfony/postgresql-messenger/tests/Flow",
                 "src/bridge/symfony/telemetry-bundle/tests/Flow",
                 "src/bridge/telemetry/otlp/tests/Flow",
+                "src/bridge/phpunit/postgresql/tests/Flow",
                 "src/bridge/phpunit/telemetry/tests/Flow",
                 "src/cli/tests/Flow",
                 "src/core/etl/tests/Flow",
@@ -321,6 +325,7 @@
             "@test:bridge:monolog-http",
             "@test:bridge:monolog-telemetry",
             "@test:bridge:openapi-specification",
+            "@test:bridge:phpunit-postgresql",
             "@test:bridge:phpunit-telemetry",
             "@test:bridge:psr7-telemetry",
             "@test:bridge:psr18-telemetry",
@@ -495,6 +500,10 @@
         "test:adapter:postgresql": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-postgresql-unit --log-junit ./var/phpunit/logs/adapter-postgresql-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-postgresql-unit.coverage.xml",
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-postgresql-integration --log-junit ./var/phpunit/logs/adapter-postgresql-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-postgresql-integration.coverage.xml"
+        ],
+        "test:bridge:phpunit-postgresql": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-phpunit-postgresql-unit --log-junit ./var/phpunit/logs/bridge-phpunit-postgresql-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-phpunit-postgresql-unit.coverage.xml",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-phpunit-postgresql-integration --log-junit ./var/phpunit/logs/bridge-phpunit-postgresql-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-phpunit-postgresql-integration.coverage.xml"
         ],
         "test:bridge:phpunit-telemetry": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-phpunit-telemetry-unit --log-junit ./var/phpunit/logs/bridge-phpunit-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-phpunit-telemetry-unit.coverage.xml"

@@ -104,6 +104,8 @@ jobs:
             split_repository: 'symfony-telemetry-bundle'
           - local_path: 'src/bridge/telemetry/otlp'
             split_repository: 'telemetry-otlp-bridge'
+          - local_path: 'src/bridge/phpunit/postgresql'
+            split_repository: 'phpunit-postgresql-bridge'
           - local_path: 'src/bridge/phpunit/telemetry'
             split_repository: 'phpunit-telemetry-bridge'
 

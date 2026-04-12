@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
 use function Flow\ETL\DSL\df;
-use function Flow\PostgreSql\DSL\{asc, col, column, column_type_integer, column_type_text, create, delete, drop, insert, literal, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, column_type_integer, column_type_text, create, delete, insert, literal, select, star, table};
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
 final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
@@ -18,27 +18,12 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         parent::setUp();
 
         $this->client->execute(
-            drop()->table($this->tableName)->ifExists()->cascade()
-        );
-
-        $this->client->execute(
             create()->table($this->tableName)
                 ->column(column('id', column_type_integer())->primaryKey())
                 ->column(column('name', column_type_text()))
         );
 
         $this->insertTestData(25);
-    }
-
-    protected function tearDown() : void
-    {
-        if (isset($this->client)) {
-            $this->client->execute(
-                drop()->table($this->tableName)->ifExists()->cascade()
-            );
-        }
-
-        parent::tearDown();
     }
 
     public function test_extracts_all_rows_with_cursor() : void

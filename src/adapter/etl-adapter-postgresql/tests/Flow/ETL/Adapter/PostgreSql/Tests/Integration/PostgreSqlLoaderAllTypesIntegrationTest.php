@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_limit_offset, to_pgsql_table};
 use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, df, enum_entry, float_entry, from_rows, int_entry, json_entry, list_entry, map_entry, row, rows, str_entry, structure_entry, time_entry, uuid_entry, xml_element_entry, xml_entry};
-use function Flow\PostgreSql\DSL\{asc, col, column, column_type_bigint, column_type_boolean, column_type_custom, column_type_date, column_type_double_precision, column_type_jsonb, column_type_serial, column_type_text, column_type_time, column_type_timestamptz, column_type_uuid, create, drop, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, column_type_bigint, column_type_boolean, column_type_custom, column_type_date, column_type_double_precision, column_type_jsonb, column_type_serial, column_type_text, column_type_time, column_type_timestamptz, column_type_uuid, create, select, star, table};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\PostgreSql\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
@@ -18,10 +18,6 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
     protected function setUp() : void
     {
         parent::setUp();
-
-        $this->client->execute(
-            drop()->table($this->tableName)->ifExists()->cascade()
-        );
 
         $this->client->execute(
             create()->table($this->tableName)
@@ -44,17 +40,6 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
                 ->column(column('col_map', column_type_jsonb()))
                 ->column(column('col_structure', column_type_jsonb()))
         );
-    }
-
-    protected function tearDown() : void
-    {
-        if (isset($this->client)) {
-            $this->client->execute(
-                drop()->table($this->tableName)->ifExists()->cascade()
-            );
-        }
-
-        parent::tearDown();
     }
 
     public function test_inserts_all_entry_types() : void
