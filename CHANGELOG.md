@@ -9,6 +9,7 @@
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge to postgersql symfony bundle** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [d4ba4a](https://github.com/flow-php/flow/commit/d4ba4a4008a0c17d09d8fca88defd1cba88df23f) - **failing scheduled nightly tests** - [@norberttech](https://github.com/norberttech)
 - [#2295](https://github.com/flow-php/flow/pull/2295) - **using type_array for structure array like assertions** - [@norberttech](https://github.com/norberttech)
 
 ## [0.35.1] - 2026-04-09
