@@ -1,0 +1,41 @@
+{
+    "name": "flow-php/phpunit-postgresql-bridge",
+    "type": "library",
+    "description": "Flow PHP - PHPUnit PostgreSQL Bridge",
+    "keywords": [
+        "flow-php",
+        "phpunit",
+        "postgresql",
+        "testing",
+        "transactions",
+        "bridge"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/postgresql": "self.version",
+        "phpunit/phpunit": "^11"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Bridge/PHPUnit/PostgreSQL/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

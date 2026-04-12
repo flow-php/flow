@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection;
 
 use function Flow\Types\DSL\type_string;
 
+use Flow\Bridge\PHPUnit\PostgreSQL\StaticClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
@@ -46,7 +47,7 @@ final class FlowPostgreSqlExtension extends Extension
     {
         $configuration = new Configuration();
 
-        /** @var array{connections: array<string, array{dsn: string, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
+        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $isFirst = true;
@@ -105,7 +106,7 @@ final class FlowPostgreSqlExtension extends Extension
     }
 
     /**
-     * @param array{dsn: string, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
+     * @param array{dsn: string, test_transaction_rollback: bool, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
      */
     private function registerConnection(string $name, array $connectionConfig, ContainerBuilder $container, bool $isFirst) : void
     {
@@ -124,6 +125,10 @@ final class FlowPostgreSqlExtension extends Extension
         $clientDef->setArguments([new Reference("flow.postgresql.{$name}.connection_parameters")]);
         $clientDef->setPublic(true);
         $container->setDefinition("flow.postgresql.{$name}.client", $clientDef);
+
+        if ($connectionConfig['test_transaction_rollback']) {
+            $this->registerStaticConnection($name, $container);
+        }
 
         if (\array_key_exists('telemetry', $connectionConfig)) {
             $this->registerTelemetry($name, $connectionConfig['telemetry'], $container);
@@ -276,6 +281,19 @@ final class FlowPostgreSqlExtension extends Extension
             $container->setAlias(MigrationGenerator::class, "flow.postgresql.{$name}.migrations.generator");
             $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.{$name}.migrations.diff_generator");
         }
+    }
+
+    private function registerStaticConnection(string $name, ContainerBuilder $container) : void
+    {
+        if (!\class_exists(StaticClient::class)) {
+            throw new \LogicException(\sprintf(
+                'Connection "%s" has test_transaction_rollback set to true, but flow-php/phpunit-postgresql-bridge is not installed. Run "composer require --dev flow-php/phpunit-postgresql-bridge".',
+                $name,
+            ));
+        }
+
+        $container->getDefinition("flow.postgresql.{$name}.client")
+            ->setFactory([StaticClient::class, 'connect']);
     }
 
     /**

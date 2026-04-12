@@ -247,6 +247,12 @@
         <testsuite name="adapter-xml-integration">
             <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-phpunit-postgresql-unit">
+            <directory>src/bridge/phpunit/postgresql/tests/Flow/Bridge/PHPUnit/PostgreSQL/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-phpunit-postgresql-integration">
+            <directory>src/bridge/phpunit/postgresql/tests/Flow/Bridge/PHPUnit/PostgreSQL/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-phpunit-telemetry-unit">
             <directory>src/bridge/phpunit/telemetry/tests/Flow/Bridge/PHPUnit/Telemetry/Tests/Unit</directory>
         </testsuite>
@@ -303,5 +309,6 @@
             <parameter name="emit_test_spans" value="false"/>
             <parameter name="emit_test_case_spans" value="false"/>
         </bootstrap>
+        <bootstrap class="Flow\Bridge\PHPUnit\PostgreSQL\PostgreSQLExtension"/>
     </extensions>
 </phpunit>

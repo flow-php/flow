@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_limit_offset, pgsql_delete_options, pgsql_insert_options, pgsql_update_options, to_pgsql_table};
 use function Flow\ETL\DSL\{df, from_array};
-use function Flow\PostgreSql\DSL\{asc, col, column, column_type_integer, column_type_text, create, drop, select, star, table};
+use function Flow\PostgreSql\DSL\{asc, col, column, column_type_integer, column_type_text, create, select, star, table};
 use Flow\ETL\Adapter\PostgreSql\Operation;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
@@ -19,26 +19,11 @@ final class PostgreSqlLoaderIntegrationTest extends IntegrationTestCase
         parent::setUp();
 
         $this->client->execute(
-            drop()->table($this->tableName)->ifExists()->cascade()
-        );
-
-        $this->client->execute(
             create()->table($this->tableName)
                 ->column(column('id', column_type_integer())->primaryKey())
                 ->column(column('name', column_type_text()))
                 ->column(column('email', column_type_text())->unique())
         );
-    }
-
-    protected function tearDown() : void
-    {
-        if (isset($this->client)) {
-            $this->client->execute(
-                drop()->table($this->tableName)->ifExists()->cascade()
-            );
-        }
-
-        parent::tearDown();
     }
 
     public function test_deletes_rows_by_primary_key() : void
