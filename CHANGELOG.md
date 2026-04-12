@@ -1,4 +1,9 @@
-## [Unreleased] - 2026-04-10
+## [Unreleased] - 2026-04-12
+
+### Added
+- [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge** - [@norberttech](https://github.com/norberttech)
+- [#2298](https://github.com/flow-php/flow/pull/2298) - **listen/unlisen to postgresql client** - [@norberttech](https://github.com/norberttech)
+- [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge to postgersql symfony bundle** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
 - [#2295](https://github.com/flow-php/flow/pull/2295) - **using type_array for structure array like assertions** - [@norberttech](https://github.com/norberttech)
