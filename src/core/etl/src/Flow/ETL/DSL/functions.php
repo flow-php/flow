@@ -749,7 +749,7 @@ function rows(Row ...$row) : Rows
 
 /**
  * @param array<Row> $rows
- * @param array<\Flow\Filesystem\Partition|string>|Partitions $partitions
+ * @param array<Partition|string>|Partitions $partitions
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function rows_partitioned(array $rows, array|Partitions $partitions) : Rows
@@ -1876,7 +1876,7 @@ function compare_any(Comparison ...$comparisons) : Comparison\Any
 }
 
 /**
- * @param array<\Flow\ETL\Join\Comparison|string>|Comparison $comparisons
+ * @param array<Comparison|string>|Comparison $comparisons
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 #[DocumentationExample(topic: 'join', example: 'join')]

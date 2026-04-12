@@ -27,7 +27,7 @@
         "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "google/apiclient": "^2.13",
-        "google/protobuf": "^4.0",
+        "google/protobuf": "^4.0 || ^5.0",
         "halaxa/json-machine": "^1.1",
         "monolog/monolog": "^3.0",
         "openspout/openspout": "^5.2",
