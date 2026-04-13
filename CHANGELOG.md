@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-04-12
+## [Unreleased] - 2026-04-13
 
 ### Added
 - [#2300](https://github.com/flow-php/flow/pull/2300) - **support for protobuf ^4 | ^5** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +9,8 @@
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge to postgersql symfony bundle** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2301](https://github.com/flow-php/flow/pull/2301) - **added validation to IN statement to avoid segfaults** - [@norberttech](https://github.com/norberttech)
+- [#2301](https://github.com/flow-php/flow/pull/2301) - **stale connections in static postgresql client used in tests** - [@norberttech](https://github.com/norberttech)
 - [d4ba4a](https://github.com/flow-php/flow/commit/d4ba4a4008a0c17d09d8fca88defd1cba88df23f) - **failing scheduled nightly tests** - [@norberttech](https://github.com/norberttech)
 - [#2295](https://github.com/flow-php/flow/pull/2295) - **using type_array for structure array like assertions** - [@norberttech](https://github.com/norberttech)
 
