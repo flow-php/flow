@@ -77,30 +77,12 @@ final class InTest extends TestCase
         In::fromAst($node);
     }
 
-    public function test_in_empty_values_to_ast() : void
+    public function test_in_empty_values_throws() : void
     {
-        $in = new In(
-            Column::name('id'),
-            []
-        );
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('IN condition requires at least 1 value');
 
-        $ast = $in->toAst();
-
-        self::assertInstanceOf(Node::class, $ast);
-        self::assertTrue($ast->hasAExpr());
-
-        $aExpr = $ast->getAExpr();
-        self::assertNotNull($aExpr);
-        self::assertSame(A_Expr_Kind::AEXPR_IN, $aExpr->getKind());
-
-        $rexpr = $aExpr->getRexpr();
-        self::assertNotNull($rexpr);
-        self::assertTrue($rexpr->hasList());
-
-        $list = $rexpr->getList();
-        self::assertNotNull($list);
-        $items = $list->getItems();
-        self::assertCount(0, $items);
+        new In(Column::name('id'), []);
     }
 
     public function test_in_multiple_values_to_ast() : void
