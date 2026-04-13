@@ -26,6 +26,10 @@ final class StaticClient
         self::$transactionActive = true;
 
         foreach (self::$clients as $client) {
+            if (!$client->isConnected()) {
+                continue;
+            }
+
             if ($client->getTransactionNestingLevel() === 0) {
                 $client->beginTransaction();
             }
@@ -55,7 +59,7 @@ final class StaticClient
 
         $key = \sha1(\sprintf('%s:%d:%s:%s', $params->host(), $params->port(), $params->database(), $params->user() ?? ''));
 
-        if (!\array_key_exists($key, self::$clients)) {
+        if (!\array_key_exists($key, self::$clients) || !self::$clients[$key]->isConnected()) {
             self::$clients[$key] = PgSqlClient::connect($params, $converters);
 
             if (self::$transactionActive) {
@@ -93,6 +97,10 @@ final class StaticClient
         self::$transactionActive = false;
 
         foreach (self::$clients as $client) {
+            if (!$client->isConnected()) {
+                continue;
+            }
+
             while ($client->getTransactionNestingLevel() > 0) {
                 $client->rollBack();
             }

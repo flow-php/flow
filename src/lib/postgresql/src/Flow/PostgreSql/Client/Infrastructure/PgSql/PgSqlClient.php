@@ -363,13 +363,13 @@ final class PgSqlClient implements Client
 
         $savepointName = $this->transactionContext->rollBack();
 
-        /** @var Connection $connection */
-        $connection = $this->connection;
-
         if ($savepointName === null) {
-            @\pg_query($connection, rollback()->toSql());
+            $this->executeTransactionCommand(rollback(), TransactionException::rollbackFailed(...));
         } else {
-            @\pg_query($connection, rollback()->toSavepoint($savepointName)->toSql());
+            $this->executeTransactionCommand(
+                rollback()->toSavepoint($savepointName),
+                static fn (string $error) => TransactionException::rollbackToSavepointFailed($savepointName, $error)
+            );
         }
     }
 
@@ -628,6 +628,9 @@ final class PgSqlClient implements Client
                 $query,
                 $this->extractError($connection, null)
             );
+        }
+
+        while (\pg_get_result($connection) !== false) {
         }
 
         $status = \pg_result_status($result);

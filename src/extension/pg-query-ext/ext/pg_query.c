@@ -65,6 +65,7 @@ PHP_MINIT_FUNCTION(pg_query)
 
 PHP_MSHUTDOWN_FUNCTION(pg_query)
 {
+    pg_query_exit();
     return SUCCESS;
 }
 
@@ -115,6 +116,12 @@ PHP_FUNCTION(pg_query_parse)
         pg_query_free_parse_result(result);
 
         zend_throw_exception_ex(spl_ce_RuntimeException, cursor_pos, "%s", error_msg);
+        RETURN_THROWS();
+    }
+
+    if (result.parse_tree == NULL) {
+        pg_query_free_parse_result(result);
+        zend_throw_exception(spl_ce_RuntimeException, "libpg_query returned NULL parse tree", 0);
         RETURN_THROWS();
     }
 
@@ -180,6 +187,11 @@ PHP_FUNCTION(pg_query_fingerprint)
         RETURN_FALSE;
     }
 
+    if (result.fingerprint_str == NULL) {
+        pg_query_free_fingerprint_result(result);
+        RETURN_FALSE;
+    }
+
     zend_string *fingerprint = zend_string_init(result.fingerprint_str,
                                                 strlen(result.fingerprint_str), 0);
     pg_query_free_fingerprint_result(result);
@@ -203,6 +215,11 @@ PHP_FUNCTION(pg_query_normalize)
         RETURN_FALSE;
     }
 
+    if (result.normalized_query == NULL) {
+        pg_query_free_normalize_result(result);
+        RETURN_FALSE;
+    }
+
     zend_string *normalized = zend_string_init(result.normalized_query,
                                               strlen(result.normalized_query), 0);
     pg_query_free_normalize_result(result);
@@ -222,6 +239,11 @@ PHP_FUNCTION(pg_query_normalize_utility)
     PgQueryNormalizeResult result = pg_query_normalize_utility(sql);
 
     if (result.error) {
+        pg_query_free_normalize_result(result);
+        RETURN_FALSE;
+    }
+
+    if (result.normalized_query == NULL) {
         pg_query_free_normalize_result(result);
         RETURN_FALSE;
     }
@@ -257,6 +279,12 @@ PHP_FUNCTION(pg_query_parse_plpgsql)
         pg_query_free_plpgsql_parse_result(result);
 
         zend_throw_exception(spl_ce_RuntimeException, error_msg, 0);
+        RETURN_THROWS();
+    }
+
+    if (result.plpgsql_funcs == NULL) {
+        pg_query_free_plpgsql_parse_result(result);
+        zend_throw_exception(spl_ce_RuntimeException, "libpg_query returned NULL PL/pgSQL result", 0);
         RETURN_THROWS();
     }
 
@@ -297,10 +325,22 @@ PHP_FUNCTION(pg_query_split)
     array_init(return_value);
 
     for (int i = 0; i < result.n_stmts; i++) {
-        int stmt_len = result.stmts[i]->stmt_len;
+        if (result.stmts[i] == NULL) {
+            continue;
+        }
+
         int stmt_location = result.stmts[i]->stmt_location;
+        int stmt_len = result.stmts[i]->stmt_len;
+
+        if (stmt_location < 0 || (size_t)stmt_location > sql_len) {
+            continue;
+        }
 
         if (stmt_len == 0 && i == result.n_stmts - 1) {
+            stmt_len = sql_len - stmt_location;
+        }
+
+        if (stmt_len < 0 || (size_t)(stmt_location + stmt_len) > sql_len) {
             stmt_len = sql_len - stmt_location;
         }
 
@@ -381,6 +421,12 @@ PHP_FUNCTION(pg_query_deparse)
         RETURN_THROWS();
     }
 
+    if (result.query == NULL) {
+        pg_query_free_deparse_result(result);
+        zend_throw_exception(spl_ce_RuntimeException, "libpg_query returned NULL deparse result", 0);
+        RETURN_THROWS();
+    }
+
     zend_string *sql = zend_string_init(result.query, strlen(result.query), 0);
     pg_query_free_deparse_result(result);
 
@@ -435,6 +481,12 @@ PHP_FUNCTION(pg_query_deparse_opts)
         pg_query_free_deparse_result(result);
 
         zend_throw_exception(spl_ce_RuntimeException, error_msg, 0);
+        RETURN_THROWS();
+    }
+
+    if (result.query == NULL) {
+        pg_query_free_deparse_result(result);
+        zend_throw_exception(spl_ce_RuntimeException, "libpg_query returned NULL deparse result", 0);
         RETURN_THROWS();
     }
 
@@ -506,10 +558,12 @@ PHP_FUNCTION(pg_query_is_utility_stmt)
     }
 
     bool has_utility = false;
-    for (int i = 0; i < result.length; i++) {
-        if (result.items[i]) {
-            has_utility = true;
-            break;
+    if (result.items != NULL) {
+        for (int i = 0; i < result.length; i++) {
+            if (result.items[i]) {
+                has_utility = true;
+                break;
+            }
         }
     }
 

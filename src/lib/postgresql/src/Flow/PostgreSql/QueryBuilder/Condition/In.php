@@ -18,6 +18,9 @@ final readonly class In implements Condition
         public Expression $expression,
         public array $values,
     ) {
+        if ($values === []) {
+            throw new \InvalidArgumentException('IN condition requires at least 1 value');
+        }
     }
 
     public static function fromAst(Node $node) : static

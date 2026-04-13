@@ -125,7 +125,9 @@ function between(string|Expression $expr, string|Expression $low, string|Express
  * Create an IN condition.
  *
  * @param Expression|string $expr Expression to check
- * @param list<Expression> $values List of values
+ * @param list<Expression> $values List of values (must be non-empty)
+ *
+ * @throws \InvalidArgumentException when values array is empty
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function in_(string|Expression $expr, array $values) : In

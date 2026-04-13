@@ -26,6 +26,16 @@ final class TransactionException extends ClientException
         return new self(\sprintf('Failed to release savepoint "%s": %s', $name, $error));
     }
 
+    public static function rollbackFailed(string $error) : self
+    {
+        return new self(\sprintf('Failed to rollback transaction: %s', $error));
+    }
+
+    public static function rollbackToSavepointFailed(string $name, string $error) : self
+    {
+        return new self(\sprintf('Failed to rollback to savepoint "%s": %s', $name, $error));
+    }
+
     public static function savepointFailed(string $name, string $error) : self
     {
         return new self(\sprintf('Failed to create savepoint "%s": %s', $name, $error));
