@@ -340,7 +340,7 @@ final class TableTest extends TestCase
     {
         $sqls = schema_table('users', [
             schema_column('id', column_type_integer(), nullable: false),
-            schema_column('status', column_type_varchar(50), default: "'active'"),
+            schema_column('status', column_type_varchar(50), default: 'active'),
         ])->toSql();
 
         self::assertCount(1, $sqls);
@@ -354,7 +354,7 @@ final class TableTest extends TestCase
     {
         $sqls = schema_table('products', [
             schema_column('id', column_type_integer(), nullable: false),
-            schema_column('quantity', column_type_integer(), default: '0'),
+            schema_column('quantity', column_type_integer(), default: 0),
         ])->toSql();
 
         self::assertCount(1, $sqls);

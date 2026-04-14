@@ -95,9 +95,9 @@ final class SortByCollectorTest extends TestCase
         self::assertNull($collector->leave($sortBy));
     }
 
-    public function test_node_class_returns_sort_by_class() : void
+    public function test_node_classes_returns_sort_by_class() : void
     {
-        self::assertSame(SortBy::class, SortByCollector::nodeClass());
+        self::assertSame([SortBy::class], SortByCollector::nodeClasses());
     }
 
     public function test_reset_clears_collected_sort_by_clauses() : void

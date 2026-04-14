@@ -17,9 +17,9 @@ final class RangeVarCollector implements NodeVisitor
      */
     private array $rangeVars = [];
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return RangeVar::class;
+        return [RangeVar::class];
     }
 
     public function enter(object $node) : ?int

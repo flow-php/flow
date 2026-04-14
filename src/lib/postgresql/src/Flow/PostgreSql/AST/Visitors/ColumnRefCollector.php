@@ -17,9 +17,9 @@ final class ColumnRefCollector implements NodeVisitor
      */
     private array $columnRefs = [];
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return ColumnRef::class;
+        return [ColumnRef::class];
     }
 
     public function enter(object $node) : ?int

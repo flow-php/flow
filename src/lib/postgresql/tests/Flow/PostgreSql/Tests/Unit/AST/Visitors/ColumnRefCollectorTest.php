@@ -99,9 +99,9 @@ final class ColumnRefCollectorTest extends TestCase
         self::assertNull($collector->leave($columnRef));
     }
 
-    public function test_node_class_returns_column_ref_class() : void
+    public function test_node_classes_returns_column_ref_class() : void
     {
-        self::assertSame(ColumnRef::class, ColumnRefCollector::nodeClass());
+        self::assertSame([ColumnRef::class], ColumnRefCollector::nodeClasses());
     }
 
     public function test_reset_clears_collected_column_refs() : void

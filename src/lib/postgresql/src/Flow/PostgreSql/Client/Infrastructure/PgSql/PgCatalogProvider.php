@@ -245,11 +245,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $row['name'],
                 $this->columnTypeParser->parse($row['type_name']),
                 $row['nullable'],
-                $isGenerated ? null : $this->normalizeDefault($defaultValue),
+                $isGenerated || $isIdentity ? null : $this->normalizeDefault($defaultValue),
                 $isIdentity,
                 $isIdentity ? IdentityGeneration::from($row['identity']) : null,
                 $isGenerated,
-                $isGenerated ? $this->normalizeDefault($defaultValue) : null,
+                $isGenerated && $defaultValue !== null ? $this->expressionParser->normalize($defaultValue) : null,
                 $row['ordinal_position'],
             );
         }
@@ -848,7 +848,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
                 ->leftJoin(table('pg_depend', 'pg_catalog')->as('d'), and_(
                     eq(col('objid', 'd'), col('seqrelid', 's')),
-                    eq(col('deptype', 'd'), literal('a')),
+                    in_(col('deptype', 'd'), [literal('a'), literal('i')]),
                 ))
                 ->leftJoin(table('pg_class', 'pg_catalog')->as('dep_c'), eq(col('oid', 'dep_c'), col('refobjid', 'd')))
                 ->leftJoin(table('pg_attribute', 'pg_catalog')->as('dep_a'), and_(

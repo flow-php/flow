@@ -17,9 +17,9 @@ final class FuncCallCollector implements NodeVisitor
      */
     private array $funcCalls = [];
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return FuncCall::class;
+        return [FuncCall::class];
     }
 
     public function enter(object $node) : ?int

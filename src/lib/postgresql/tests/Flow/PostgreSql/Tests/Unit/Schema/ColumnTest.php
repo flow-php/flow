@@ -25,7 +25,7 @@ final class ColumnTest extends TestCase
         $column = schema_column('full_name', column_type_text(), isGenerated: true, generationExpression: "first_name || ' ' || last_name");
 
         self::assertTrue($column->isGenerated);
-        self::assertSame("first_name || ' ' || last_name", $column->generationExpression);
+        self::assertSame("(first_name || ' ') || last_name", $column->generationExpression);
     }
 
     public function test_column_identity() : void
@@ -38,7 +38,7 @@ final class ColumnTest extends TestCase
 
     public function test_column_with_default() : void
     {
-        $column = schema_column('name', column_type_varchar(255), default: "'unknown'");
+        $column = schema_column('name', column_type_varchar(255), default: 'unknown');
 
         self::assertSame("'unknown'", $column->default);
     }
@@ -53,8 +53,8 @@ final class ColumnTest extends TestCase
 
     public function test_is_equal_returns_false_when_default_differs() : void
     {
-        $a = schema_column('name', column_type_text(), default: "'hello'");
-        $b = schema_column('name', column_type_text(), default: "'world'");
+        $a = schema_column('name', column_type_text(), default: 'hello');
+        $b = schema_column('name', column_type_text(), default: 'world');
 
         self::assertFalse($a->isEqual($b));
     }
@@ -109,8 +109,8 @@ final class ColumnTest extends TestCase
 
     public function test_is_equal_structure_returns_false_when_default_differs() : void
     {
-        $a = schema_column('name', column_type_text(), default: "'a'");
-        $b = schema_column('name', column_type_text(), default: "'b'");
+        $a = schema_column('name', column_type_text(), default: 'a');
+        $b = schema_column('name', column_type_text(), default: 'b');
 
         self::assertFalse($a->isEqualStructure($b));
     }

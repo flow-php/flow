@@ -40,14 +40,14 @@ final class Traverser
         $modifiers = [];
 
         foreach ($handlers as $handler) {
-            $nodeClass = $handler::nodeClass();
+            foreach ($handler::nodeClasses() as $nodeClass) {
+                if ($handler instanceof NodeModifier) {
+                    $modifiers[$nodeClass][] = $handler;
+                }
 
-            if ($handler instanceof NodeModifier) {
-                $modifiers[$nodeClass][] = $handler;
-            }
-
-            if ($handler instanceof NodeVisitor) {
-                $visitors[$nodeClass][] = $handler;
+                if ($handler instanceof NodeVisitor) {
+                    $visitors[$nodeClass][] = $handler;
+                }
             }
         }
 
@@ -190,6 +190,34 @@ final class Traverser
         }
 
         if (($inner = $node->getParamRef()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getBooleanTest()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getRowExpr()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getAArrayExpr()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getAIndirection()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getMinMaxExpr()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getNamedArgExpr()) !== null) {
+            $nodes[] = $inner;
+        }
+
+        if (($inner = $node->getXmlExpr()) !== null) {
             $nodes[] = $inner;
         }
 
@@ -521,6 +549,52 @@ final class Traverser
 
         if ($rangeFunction !== null) {
             $this->traverseRepeatedField($rangeFunction->getFunctions());
+        }
+
+        $booleanTest = $node->getBooleanTest();
+
+        if ($booleanTest !== null && $booleanTest->getArg() !== null) {
+            $this->traverseNode($booleanTest->getArg());
+        }
+
+        $rowExpr = $node->getRowExpr();
+
+        if ($rowExpr !== null) {
+            $this->traverseRepeatedField($rowExpr->getArgs());
+        }
+
+        $arrayExpr = $node->getAArrayExpr();
+
+        if ($arrayExpr !== null) {
+            $this->traverseRepeatedField($arrayExpr->getElements());
+        }
+
+        $indirection = $node->getAIndirection();
+
+        if ($indirection !== null) {
+            if ($indirection->getArg() !== null) {
+                $this->traverseNode($indirection->getArg());
+            }
+            $this->traverseRepeatedField($indirection->getIndirection());
+        }
+
+        $minMaxExpr = $node->getMinMaxExpr();
+
+        if ($minMaxExpr !== null) {
+            $this->traverseRepeatedField($minMaxExpr->getArgs());
+        }
+
+        $namedArgExpr = $node->getNamedArgExpr();
+
+        if ($namedArgExpr !== null && $namedArgExpr->getArg() !== null) {
+            $this->traverseNode($namedArgExpr->getArg());
+        }
+
+        $xmlExpr = $node->getXmlExpr();
+
+        if ($xmlExpr !== null) {
+            $this->traverseRepeatedField($xmlExpr->getArgs());
+            $this->traverseRepeatedField($xmlExpr->getNamedArgs());
         }
     }
 

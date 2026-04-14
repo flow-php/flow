@@ -8,7 +8,7 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgCatalogProvider;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\{Client, Parser};
-use Flow\PostgreSql\Parser\ColumnTypeParser;
+use Flow\PostgreSql\Parser\{ColumnTypeParser, ExpressionParser};
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
@@ -100,7 +100,12 @@ use Flow\PostgreSql\Schema\Constraint\{
     UniqueConstraint as SchemaUniqueConstraint
 };
 use Flow\PostgreSql\Schema\Diff\{AstViewDependencyResolver, CatalogComparator, NoopViewDependencyResolver, RenameStrategy, ViewDependencyResolver};
-use Flow\PostgreSql\Schema\{ExecutionOrderStrategy, ForeignKeyDependencyOrder, MaterializedViewDependencyOrder, NoExecutionOrder, ViewDependencyOrder};
+use Flow\PostgreSql\Schema\{ExecutionOrderStrategy,
+    ForeignKeyDependencyOrder,
+    MaterializedViewDependencyOrder,
+    NoExecutionOrder,
+    Schema,
+    ViewDependencyOrder};
 
 /**
  * Create a column definition for CREATE TABLE.
@@ -112,6 +117,15 @@ use Flow\PostgreSql\Schema\{ExecutionOrderStrategy, ForeignKeyDependencyOrder, M
 function column(string $name, ColumnType $type) : ColumnDefinition
 {
     return ColumnDefinition::create($name, $type);
+}
+
+/**
+ * @param list<Schema> $schemas
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function catalog(array $schemas) : Catalog
+{
+    return new Catalog($schemas);
 }
 
 /**
@@ -1387,37 +1401,75 @@ function schema_table(
     return new SchemaTable($schema, $name, $columns, $primaryKey, $indexes, $foreignKeys, $uniqueConstraints, $checkConstraints, $excludeConstraints, $triggers, $unlogged, $partitionStrategy, $partitionColumns, $inherits, $tablespace);
 }
 
+/**
+ * Normalize a typed default value into the canonical SQL literal string stored on
+ * SchemaColumn / SchemaDomain. Scalars are converted to their PG literal form, strings
+ * are single-quote-wrapped (with embedded quotes doubled), and Expression objects are
+ * deparsed via pg_query. This is the single choke point the schema DSL uses to accept
+ * PHP values instead of hand-crafted SQL text.
+ *
+ * @internal
+ */
+function normalize_schema_default(bool|float|int|string|Expression|null $value) : ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    if ($value instanceof Expression) {
+        return \substr(select($value)->toSql(), 7);
+    }
+
+    if (\is_bool($value)) {
+        return $value ? 'true' : 'false';
+    }
+
+    if (\is_int($value)) {
+        return (string) $value;
+    }
+
+    if (\is_float($value)) {
+        return (string) $value;
+    }
+
+    return "'" . \str_replace("'", "''", $value) . "'";
+}
+
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function schema_column(
     string $name,
     ColumnType $type,
     bool $nullable = true,
-    ?string $default = null,
+    bool|float|int|string|Expression|null $default = null,
     bool $isIdentity = false,
     ?IdentityGeneration $identityGeneration = null,
     bool $isGenerated = false,
     ?string $generationExpression = null,
     ?int $ordinalPosition = null,
 ) : SchemaColumn {
-    return new SchemaColumn($name, $type, $nullable, $default, $isIdentity, $identityGeneration, $isGenerated, $generationExpression, $ordinalPosition);
+    if ($generationExpression !== null) {
+        $generationExpression = (new ExpressionParser(new Parser()))->normalize($generationExpression);
+    }
+
+    return new SchemaColumn($name, $type, $nullable, normalize_schema_default($default), $isIdentity, $identityGeneration, $isGenerated, $generationExpression, $ordinalPosition);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_integer(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_integer(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::integer(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::integer(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_smallint(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_smallint(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::smallint(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::smallint(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_bigint(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_bigint(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::bigint(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::bigint(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
@@ -1439,117 +1491,117 @@ function schema_column_big_serial(string $name) : SchemaColumn
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_boolean(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_boolean(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::boolean(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::boolean(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_text(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_text(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::text(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::text(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_varchar(string $name, int $length, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_varchar(string $name, int $length, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::varchar($length), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::varchar($length), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_char(string $name, int $length, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_char(string $name, int $length, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::char($length), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::char($length), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_numeric(string $name, ?int $precision = null, ?int $scale = null, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_numeric(string $name, ?int $precision = null, ?int $scale = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::numeric($precision, $scale), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::numeric($precision, $scale), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_real(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_real(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::real(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::real(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_double_precision(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_double_precision(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::doublePrecision(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::doublePrecision(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_date(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_date(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::date(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::date(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_time(string $name, ?int $precision = null, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_time(string $name, ?int $precision = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::time($precision), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::time($precision), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_timestamp(string $name, ?int $precision = null, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_timestamp(string $name, ?int $precision = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::timestamp($precision), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::timestamp($precision), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_timestamp_tz(string $name, ?int $precision = null, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_timestamp_tz(string $name, ?int $precision = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::timestamptz($precision), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::timestamptz($precision), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_interval(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_interval(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::interval(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::interval(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_uuid(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_uuid(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::uuid(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::uuid(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_json(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_json(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::json(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::json(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_jsonb(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_jsonb(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::jsonb(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::jsonb(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_bytea(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_bytea(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::bytea(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::bytea(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_inet(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_inet(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::inet(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::inet(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_cidr(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_cidr(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::cidr(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::cidr(), $nullable, normalize_schema_default($default));
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_macaddr(string $name, bool $nullable = true, ?string $default = null) : SchemaColumn
+function schema_column_macaddr(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
 {
-    return new SchemaColumn($name, ColumnType::macaddr(), $nullable, $default);
+    return new SchemaColumn($name, ColumnType::macaddr(), $nullable, normalize_schema_default($default));
 }
 
 /**
@@ -1700,10 +1752,10 @@ function schema_domain(
     string $name,
     ColumnType $baseType,
     bool $nullable = true,
-    ?string $default = null,
+    bool|float|int|string|Expression|null $default = null,
     array $checkConstraints = [],
 ) : SchemaDomain {
-    return new SchemaDomain($name, $baseType, $nullable, $default, $checkConstraints);
+    return new SchemaDomain($name, $baseType, $nullable, normalize_schema_default($default), $checkConstraints);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

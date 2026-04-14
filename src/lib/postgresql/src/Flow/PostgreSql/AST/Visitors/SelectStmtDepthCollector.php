@@ -16,9 +16,9 @@ final class SelectStmtDepthCollector implements NodeVisitor
 
     private int $maxDepth = 0;
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return SelectStmt::class;
+        return [SelectStmt::class];
     }
 
     public function enter(object $node) : ?int

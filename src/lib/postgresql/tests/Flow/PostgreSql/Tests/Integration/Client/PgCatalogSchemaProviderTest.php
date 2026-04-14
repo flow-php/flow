@@ -170,6 +170,10 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         self::assertTrue($schema->hasTable('audit_log'));
         self::assertCount(3, $schema->tables);
 
+        $auditLog = $schema->table('audit_log');
+        self::assertTrue($auditLog->column('id')->isIdentity);
+        self::assertNull($auditLog->column('id')->default);
+
         $users = $schema->table('users');
         self::assertFalse($users->column('id')->nullable);
         self::assertFalse($users->column('email')->nullable);
@@ -192,6 +196,10 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         self::assertTrue($posts->triggers[0]->forEachRow);
 
         self::assertTrue($schema->hasSequence('invoice_number_seq'));
+
+        $sequenceNames = \array_map(static fn ($seq) => $seq->name, $schema->sequences);
+        self::assertNotContains('audit_log_id_seq', $sequenceNames);
+        self::assertContains('invoice_number_seq', $sequenceNames);
 
         self::assertCount(1, $schema->views);
         self::assertSame('active_users_view', $schema->views[0]->name);

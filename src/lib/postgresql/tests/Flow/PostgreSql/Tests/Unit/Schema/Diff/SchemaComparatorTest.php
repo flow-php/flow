@@ -79,7 +79,7 @@ final class SchemaComparatorTest extends TestCase
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', domains: [schema_domain('d1', ColumnType::text(), default: null)]);
-        $target = new Schema('public', domains: [schema_domain('d1', ColumnType::text(), default: "'hello'")]);
+        $target = new Schema('public', domains: [schema_domain('d1', ColumnType::text(), default: 'hello')]);
 
         $diff = $comparator->compare($source, $target);
 

@@ -596,9 +596,9 @@ class ColumnCounter implements NodeVisitor
 {
     public int $count = 0;
 
-    public static function nodeClass(): string
+    public static function nodeClasses(): array
     {
-        return ColumnRef::class;
+        return [ColumnRef::class];
     }
 
     public function enter(object $node): ?int
@@ -629,15 +629,15 @@ interface NodeVisitor
     public const DONT_TRAVERSE_CHILDREN = 1;
     public const STOP_TRAVERSAL = 2;
 
-    /** @return class-string */
-    public static function nodeClass(): string;
+    /** @return list<class-string> */
+    public static function nodeClasses(): array;
 
     public function enter(object $node): ?int;
     public function leave(object $node): ?int;
 }
 ```
 
-Visitors declare which node type they handle via `nodeClass()`. Return values:
+Visitors declare which node types they handle via `nodeClasses()` (one or many). Return values:
 
 - `null` - continue traversal
 - `DONT_TRAVERSE_CHILDREN` - skip children (from `enter()` only)
@@ -663,9 +663,9 @@ use function Flow\PostgreSql\DSL\{sql_parse, sql_deparse};
 
 final readonly class AddDistinctModifier implements NodeModifier
 {
-    public static function nodeClass(): string
+    public static function nodeClasses(): array
     {
-        return SelectStmt::class;
+        return [SelectStmt::class];
     }
 
     public function modify(object $node, ModificationContext $context): int|object|null
@@ -690,8 +690,8 @@ echo sql_deparse($query); // SELECT DISTINCT id, name FROM users
 ```php
 interface NodeModifier
 {
-    /** @return class-string */
-    public static function nodeClass(): string;
+    /** @return list<class-string> */
+    public static function nodeClasses(): array;
 
     public function modify(object $node, ModificationContext $context): int|object|null;
 }

@@ -90,9 +90,9 @@ final class FuncCallCollectorTest extends TestCase
         self::assertNull($collector->leave($funcCall));
     }
 
-    public function test_node_class_returns_func_call_class() : void
+    public function test_node_classes_returns_func_call_class() : void
     {
-        self::assertSame(FuncCall::class, FuncCallCollector::nodeClass());
+        self::assertSame([FuncCall::class], FuncCallCollector::nodeClasses());
     }
 
     public function test_reset_clears_collected_func_calls() : void

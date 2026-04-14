@@ -26,7 +26,7 @@ final class DomainTest extends TestCase
             'positive_int',
             column_type_integer(),
             nullable: false,
-            default: '0',
+            default: 0,
             checkConstraints: [schema_check('VALUE > 0', 'chk_positive')],
         );
 
@@ -52,7 +52,7 @@ final class DomainTest extends TestCase
                 'positive_int',
                 column_type_integer(),
                 nullable: false,
-                default: '0',
+                default: 0,
                 checkConstraints: [schema_check('VALUE > 0', 'chk_positive')],
             )->toSql()->toSql(),
         );

@@ -26,9 +26,9 @@ use Flow\PostgreSql\Protobuf\AST\A_Star;
  */
 final readonly class CountModifier implements NodeModifier
 {
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return SelectStmt::class;
+        return [SelectStmt::class];
     }
 
     /** @phpstan-ignore return.unusedType (interface requires full signature) */

@@ -50,7 +50,7 @@ final class TableComparatorTest extends TestCase
     {
         $comparator = new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), new ConstraintComparator(), new GreedySimilarityRenameStrategy(new SimilarTextStrategy()));
         $source = schema_table('users', [schema_column('status', ColumnType::text(), default: null)]);
-        $target = schema_table('users', [schema_column('status', ColumnType::text(), default: "'active'")]);
+        $target = schema_table('users', [schema_column('status', ColumnType::text(), default: 'active')]);
 
         $diff = $comparator->compare($source, $target);
 
