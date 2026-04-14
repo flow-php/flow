@@ -171,7 +171,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $constraints[] = new CheckConstraint(
-                $this->stripCheckWrapper($row['definition']),
+                $this->expressionParser->normalize($this->stripCheckWrapper($row['definition'])),
                 $row['name'],
                 $row['no_inherit'],
             );
@@ -291,7 +291,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $constraints[] = new CheckConstraint(
-                $this->stripCheckWrapper($row['definition']),
+                $this->expressionParser->normalize($this->stripCheckWrapper($row['definition'])),
                 $row['name'],
             );
         }

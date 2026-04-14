@@ -1644,7 +1644,11 @@ function schema_unique(array $columns, ?string $name = null, bool $nullsNotDisti
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function schema_check(string $expression, ?string $name = null, bool $noInherit = false) : SchemaCheckConstraint
 {
-    return new SchemaCheckConstraint($expression, $name, $noInherit);
+    return new SchemaCheckConstraint(
+        (new ExpressionParser(new Parser()))->normalize($expression),
+        $name,
+        $noInherit,
+    );
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
