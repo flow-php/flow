@@ -335,7 +335,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $row['name'],
                 $this->columnTypeParser->parse($row['base_type']),
                 $row['nullable'],
-                $row['default_value'] ?? null,
+                $this->normalizeDefault($row['default_value'] ?? null),
                 $this->readDomainCheckConstraints($row['name'], $schemaName),
             );
         }
