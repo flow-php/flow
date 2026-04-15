@@ -17,9 +17,9 @@ final class SortByCollector implements NodeVisitor
      */
     private array $sortByClauses = [];
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return SortBy::class;
+        return [SortBy::class];
     }
 
     public function enter(object $node) : ?int

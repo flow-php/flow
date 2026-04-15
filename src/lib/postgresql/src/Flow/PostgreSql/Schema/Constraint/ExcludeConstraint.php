@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Constraint;
 
+use Flow\PostgreSql\Parser\{ExcludeDefinitionParser, ExpressionParser, ParsedExcludeDefinition};
+
 /**
  * @phpstan-type ExcludeConstraintShape = array{definition: string, name: ?string}
  */
 final readonly class ExcludeConstraint
 {
+    private ParsedExcludeDefinition $parsed;
+
     public function __construct(
         public string $definition,
         public ?string $name = null,
     ) {
+        $this->parsed = (new ExcludeDefinitionParser(new ExpressionParser()))->parse($definition);
     }
 
     /**
@@ -33,7 +38,7 @@ final readonly class ExcludeConstraint
 
     public function isEqualStructure(self $other) : bool
     {
-        return $this->definition === $other->definition;
+        return $this->parsed->equals($other->parsed);
     }
 
     /**

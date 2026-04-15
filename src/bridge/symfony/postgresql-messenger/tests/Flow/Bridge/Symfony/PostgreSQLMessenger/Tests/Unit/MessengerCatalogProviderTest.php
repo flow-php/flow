@@ -64,9 +64,17 @@ final class MessengerCatalogProviderTest extends TestCase
             $provider->get()->get('public')->tables[0]->indexes,
         );
 
-        self::assertContains('my_queue_queue_name_idx', $indexNames);
-        self::assertContains('my_queue_available_at_idx', $indexNames);
-        self::assertContains('my_queue_delivered_at_idx', $indexNames);
+        self::assertContains('idx_my_queue_queue_name', $indexNames);
+        self::assertContains('idx_my_queue_available_at', $indexNames);
+        self::assertContains('idx_my_queue_delivered_at', $indexNames);
+    }
+
+    public function test_queue_name_has_default_value() : void
+    {
+        $provider = new MessengerCatalogProvider();
+        $queueNameColumn = $provider->get()->get('public')->tables[0]->column('queue_name');
+
+        self::assertSame("'default'", $queueNameColumn->default);
     }
 
     public function test_table_has_custom_name_and_schema() : void

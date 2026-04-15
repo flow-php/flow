@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST;
 
+use Google\Protobuf\Internal\Message;
+
 /**
  * Interface for AST node modifiers.
  *
@@ -23,11 +25,14 @@ interface NodeModifier
     public const STOP_TRAVERSAL = 2;
 
     /**
-     * Returns the fully qualified class name of the node type this modifier handles.
+     * Returns the fully qualified class names of the node types this modifier handles.
      *
-     * @return class-string The node class this modifier is registered for
+     * A modifier may handle more than one node type; the traverser will dispatch it
+     * for every type listed here.
+     *
+     * @return list<class-string<Message>> The node classes this modifier is registered for
      */
-    public static function nodeClass() : string;
+    public static function nodeClasses() : array;
 
     /**
      * Called to modify a node of the registered type.
@@ -38,7 +43,7 @@ interface NodeModifier
      * - Return STOP_TRAVERSAL to stop the entire traversal
      * - Return a new node to replace the current node (used for wrapping operations)
      *
-     * @param object $node The node instance to modify (type depends on nodeClass())
+     * @param object $node The node instance to modify (one of the types listed in nodeClasses())
      * @param ModificationContext $context Context providing parent information
      *
      * @return null|int|object

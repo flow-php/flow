@@ -6,7 +6,6 @@ namespace Flow\PostgreSql\Schema;
 
 use function Flow\PostgreSql\DSL\{column, create};
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
@@ -208,7 +207,7 @@ final readonly class Table
             }
 
             if ($col->default !== null) {
-                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($col->default)));
+                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser())->parse($col->default)));
             }
 
             if ($col->isIdentity) {
@@ -216,7 +215,7 @@ final readonly class Table
             }
 
             if ($col->isGenerated && $col->generationExpression !== null) {
-                $colDef = $colDef->generatedAs(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($col->generationExpression)));
+                $colDef = $colDef->generatedAs(ExpressionFactory::fromAst((new ExpressionParser())->parse($col->generationExpression)));
             }
 
             $tableBuilder = $tableBuilder->column($colDef);
@@ -245,7 +244,7 @@ final readonly class Table
         }
 
         foreach ($this->checkConstraints as $cc) {
-            $constraint = CheckConstraintBuilder::create(ConditionFactory::fromAst((new ExpressionParser(new Parser()))->parse($cc->expression)));
+            $constraint = CheckConstraintBuilder::create(ConditionFactory::fromAst((new ExpressionParser())->parse($cc->expression)));
 
             if ($cc->name !== null) {
                 $constraint = $constraint->name($cc->name);

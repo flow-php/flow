@@ -37,9 +37,9 @@ final readonly class PaginationModifier implements NodeModifier
     ) {
     }
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return SelectStmt::class;
+        return [SelectStmt::class];
     }
 
     public function modify(object $node, ModificationContext $context) : int|object|null

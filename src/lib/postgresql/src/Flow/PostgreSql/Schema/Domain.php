@@ -6,10 +6,9 @@ namespace Flow\PostgreSql\Schema;
 
 use function Flow\PostgreSql\DSL\create;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
-use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
@@ -32,6 +31,25 @@ final readonly class Domain
         public ?string $default = null,
         public array $checkConstraints = [],
     ) {
+    }
+
+    /**
+     * @param list<CheckConstraint> $checkConstraints
+     */
+    public static function create(
+        string $name,
+        ColumnType $baseType,
+        bool $nullable = true,
+        bool|float|int|string|Expression|null $default = null,
+        array $checkConstraints = [],
+    ) : self {
+        return new self(
+            $name,
+            $baseType,
+            $nullable,
+            (new ColumnDefaultFormatter())->format($default),
+            $checkConstraints,
+        );
     }
 
     /**
@@ -77,14 +95,14 @@ final readonly class Domain
         }
 
         if ($this->default !== null) {
-            $builder = $builder->default(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($this->default)));
+            $builder = $builder->default(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->default)));
         }
 
         foreach ($this->checkConstraints as $cc) {
             if ($cc->name !== null) {
                 $builder = $builder->constraint($cc->name);
             }
-            $builder = $builder->check(ConditionFactory::fromAst((new ExpressionParser(new Parser()))->parse($cc->expression)));
+            $builder = $builder->check(ConditionFactory::fromAst((new ExpressionParser())->parse($cc->expression)));
         }
 
         return $builder;

@@ -26,14 +26,14 @@ final class DomainTest extends TestCase
             'positive_int',
             column_type_integer(),
             nullable: false,
-            default: '0',
+            default: 0,
             checkConstraints: [schema_check('VALUE > 0', 'chk_positive')],
         );
 
         self::assertFalse($domain->nullable);
         self::assertSame('0', $domain->default);
         self::assertCount(1, $domain->checkConstraints);
-        self::assertSame('VALUE > 0', $domain->checkConstraints[0]->expression);
+        self::assertSame('value > 0', $domain->checkConstraints[0]->expression);
     }
 
     public function test_to_sql_generates_create_domain() : void
@@ -52,7 +52,7 @@ final class DomainTest extends TestCase
                 'positive_int',
                 column_type_integer(),
                 nullable: false,
-                default: '0',
+                default: 0,
                 checkConstraints: [schema_check('VALUE > 0', 'chk_positive')],
             )->toSql()->toSql(),
         );

@@ -170,6 +170,10 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         self::assertTrue($schema->hasTable('audit_log'));
         self::assertCount(3, $schema->tables);
 
+        $auditLog = $schema->table('audit_log');
+        self::assertTrue($auditLog->column('id')->isIdentity);
+        self::assertNull($auditLog->column('id')->default);
+
         $users = $schema->table('users');
         self::assertFalse($users->column('id')->nullable);
         self::assertFalse($users->column('email')->nullable);
@@ -192,6 +196,10 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         self::assertTrue($posts->triggers[0]->forEachRow);
 
         self::assertTrue($schema->hasSequence('invoice_number_seq'));
+
+        $sequenceNames = \array_map(static fn ($seq) => $seq->name, $schema->sequences);
+        self::assertNotContains('audit_log_id_seq', $sequenceNames);
+        self::assertContains('invoice_number_seq', $sequenceNames);
 
         self::assertCount(1, $schema->views);
         self::assertSame('active_users_view', $schema->views[0]->name);
@@ -362,6 +370,28 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         $employees = $schema->table('employees');
 
         self::assertSame(["{$s}.persons"], $employees->inherits);
+    }
+
+    public function test_read_unique_constraint_with_nulls_not_distinct() : void
+    {
+        $s = self::SCHEMA;
+
+        $this->pgsqlContext()->client()->execute(
+            create()->table('nnd_users', $s)
+                ->column(column('id', column_type_serial()))
+                ->column(column('email', column_type_varchar(255)))
+                ->constraint(primary_key('id'))
+                ->constraint(unique_constraint('email')->nullsNotDistinct())
+                ->toSql()
+        );
+
+        $table = client_catalog_provider($this->pgsqlContext()->client(), [$s])
+            ->get()
+            ->get($s)
+            ->table('nnd_users');
+
+        self::assertCount(1, $table->uniqueConstraints);
+        self::assertTrue($table->uniqueConstraints[0]->nullsNotDistinct);
     }
 
     public function test_schemas_returns_catalog_with_all_schemas_when_no_filter() : void

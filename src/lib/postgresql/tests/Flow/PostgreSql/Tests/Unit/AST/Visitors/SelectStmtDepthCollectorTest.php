@@ -104,9 +104,9 @@ final class SelectStmtDepthCollectorTest extends TestCase
         self::assertNull($collector->leave($selectStmt));
     }
 
-    public function test_node_class_returns_select_stmt_class() : void
+    public function test_node_classes_returns_select_stmt_class() : void
     {
-        self::assertSame(SelectStmt::class, SelectStmtDepthCollector::nodeClass());
+        self::assertSame([SelectStmt::class], SelectStmtDepthCollector::nodeClasses());
     }
 
     public function test_reset_clears_depth() : void

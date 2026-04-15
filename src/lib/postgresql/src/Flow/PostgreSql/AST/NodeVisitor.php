@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST;
 
+use Google\Protobuf\Internal\Message;
+
 /**
  * Interface for AST node visitors.
  *
  * Visitors are registered for specific node types and only receive nodes of that type.
- * Use the static nodeClass() method to declare which node type this visitor handles.
+ * Use the static nodeClasses() method to declare which node types this visitor handles.
  */
 interface NodeVisitor
 {
@@ -28,16 +30,19 @@ interface NodeVisitor
     public const STOP_TRAVERSAL = 2;
 
     /**
-     * Returns the fully qualified class name of the node type this visitor handles.
+     * Returns the fully qualified class names of the node types this visitor handles.
      *
-     * @return class-string The node class this visitor is registered for
+     * A visitor may handle more than one node type; the traverser will dispatch it
+     * for every type listed here.
+     *
+     * @return list<class-string<Message>> The node classes this visitor is registered for
      */
-    public static function nodeClass() : string;
+    public static function nodeClasses() : array;
 
     /**
      * Called when entering a node of the registered type.
      *
-     * @param object $node The node instance (type depends on nodeClass())
+     * @param object $node The node instance (one of the types listed in nodeClasses())
      *
      * @return null|int Return value determines traversal behavior:
      *                  - null: Continue traversal
@@ -49,7 +54,7 @@ interface NodeVisitor
     /**
      * Called when leaving a node of the registered type.
      *
-     * @param object $node The node instance (type depends on nodeClass())
+     * @param object $node The node instance (one of the types listed in nodeClasses())
      *
      * @return null|int Return value determines traversal behavior:
      *                  - null: Continue traversal

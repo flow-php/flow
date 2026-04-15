@@ -97,9 +97,9 @@ final class TableDiffTest extends TestCase
     public function test_adds_column_with_not_null_and_default() : void
     {
         $source = schema_table('users', [schema_column_integer('id', false)]);
-        $target = schema_table('users', [schema_column_integer('id', false), schema_column_text('status', false, "'active'")]);
+        $target = schema_table('users', [schema_column_integer('id', false), schema_column_text('status', false, 'active')]);
 
-        $diff = new TableDiff($source, $target, [schema_column_text('status', false, "'active'")]);
+        $diff = new TableDiff($source, $target, [schema_column_text('status', false, 'active')]);
 
         $sqls = $diff->generate();
 
@@ -138,7 +138,45 @@ final class TableDiffTest extends TestCase
         $sqls = $diff->generate();
 
         self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ADD CONSTRAINT excl_dates_overlap EXCLUDE USING gist ()', $sqls[0]->toSql());
+        self::assertSame('ALTER TABLE public.users ADD CONSTRAINT excl_dates_overlap EXCLUDE USING gist (tsrange(start_date, end_date) WITH &&)', $sqls[0]->toSql());
+    }
+
+    public function test_adds_exclude_constraint_deferrable_initially_deferred() : void
+    {
+        $table = schema_table('bookings', [schema_column_integer('id', false)]);
+
+        $diff = new TableDiff(
+            $table,
+            $table,
+            addedExcludeConstraints: [schema_exclude('USING btree (room_id WITH =) DEFERRABLE INITIALLY DEFERRED', 'exc_room_deferred')],
+        );
+
+        $sqls = $diff->generate();
+
+        self::assertCount(1, $sqls);
+        self::assertSame(
+            'ALTER TABLE public.bookings ADD CONSTRAINT exc_room_deferred EXCLUDE (room_id WITH =) DEFERRABLE INITIALLY DEFERRED',
+            $sqls[0]->toSql()
+        );
+    }
+
+    public function test_adds_exclude_constraint_with_predicate() : void
+    {
+        $table = schema_table('bookings', [schema_column_integer('id', false)]);
+
+        $diff = new TableDiff(
+            $table,
+            $table,
+            addedExcludeConstraints: [schema_exclude("USING btree (room_id WITH =) WHERE (status = 'active')", 'exc_room_active')],
+        );
+
+        $sqls = $diff->generate();
+
+        self::assertCount(1, $sqls);
+        self::assertSame(
+            "ALTER TABLE public.bookings ADD CONSTRAINT exc_room_active EXCLUDE (room_id WITH =) WHERE (status = 'active')",
+            $sqls[0]->toSql()
+        );
     }
 
     public function test_adds_foreign_key() : void
@@ -332,12 +370,12 @@ final class TableDiffTest extends TestCase
     public function test_does_not_require_view_rebuild_when_only_default_changed() : void
     {
         $source = schema_table('users', [schema_column_integer('id', false), schema_column_integer('age')]);
-        $target = schema_table('users', [schema_column_integer('id', false), schema_column_integer('age', default: '0')]);
+        $target = schema_table('users', [schema_column_integer('id', false), schema_column_integer('age', default: 0)]);
 
         $diff = new TableDiff(
             $source,
             $target,
-            modifiedColumns: [new ColumnDiff('public.users', schema_column_integer('age'), schema_column_integer('age', default: '0'))],
+            modifiedColumns: [new ColumnDiff('public.users', schema_column_integer('age'), schema_column_integer('age', default: 0))],
         );
 
         self::assertFalse($diff->requiresViewRebuild());

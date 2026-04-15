@@ -6,7 +6,6 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 use function Flow\PostgreSql\DSL\{alter, drop};
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
@@ -48,7 +47,7 @@ final readonly class DomainDiff implements Diff
         if ($this->target->default !== $this->source->default) {
             $sqls[] = $this->target->default === null
                 ? alter()->domain($this->target->name)->dropDefault()
-                : alter()->domain($this->target->name)->setDefault(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($this->target->default)));
+                : alter()->domain($this->target->name)->setDefault(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)));
         }
 
         foreach ($this->removedCheckConstraints as $cc) {
@@ -64,7 +63,7 @@ final readonly class DomainDiff implements Diff
                 throw new \RuntimeException(\sprintf('Cannot add unnamed check constraint on domain "%s". Constraint names are required for reversible migrations.', $this->target->name));
             }
 
-            $sqls[] = alter()->domain($this->target->name)->addConstraint($cc->name, ConditionFactory::fromAst((new ExpressionParser(new Parser()))->parse($cc->expression)));
+            $sqls[] = alter()->domain($this->target->name)->addConstraint($cc->name, ConditionFactory::fromAst((new ExpressionParser())->parse($cc->expression)));
         }
 
         return $sqls;

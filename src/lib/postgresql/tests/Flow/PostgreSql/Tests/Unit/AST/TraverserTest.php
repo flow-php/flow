@@ -94,9 +94,9 @@ final class TraverserTest extends TestCase
         $visitor = new class implements NodeVisitor {
             public int $nodeCount = 0;
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function enter(object $node) : int
@@ -158,9 +158,9 @@ final class TraverserTest extends TestCase
     public function test_modifier_can_mutate_node_in_place() : void
     {
         $modifier = new class implements NodeModifier {
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : int|object|null
@@ -206,9 +206,9 @@ final class TraverserTest extends TestCase
                 $this->count = &$count;
             }
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : int
@@ -238,9 +238,9 @@ final class TraverserTest extends TestCase
                 $this->count = &$count;
             }
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : int
@@ -273,9 +273,9 @@ final class TraverserTest extends TestCase
             {
             }
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : null
@@ -309,9 +309,9 @@ final class TraverserTest extends TestCase
             {
             }
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : null
@@ -346,9 +346,9 @@ final class TraverserTest extends TestCase
             {
             }
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : null
@@ -501,9 +501,9 @@ final class TraverserTest extends TestCase
         $visitor = new class implements NodeVisitor {
             public int $nodeCount = 0;
 
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return ColumnRef::class;
+                return [ColumnRef::class];
             }
 
             public function enter(object $node) : ?int
@@ -535,9 +535,9 @@ final class TraverserTest extends TestCase
         $collector = new ColumnRefCollector();
 
         $modifier = new class implements NodeModifier {
-            public static function nodeClass() : string
+            public static function nodeClasses() : array
             {
-                return SelectStmt::class;
+                return [SelectStmt::class];
             }
 
             public function modify(object $node, ModificationContext $context) : int|object|null

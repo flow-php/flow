@@ -6,11 +6,10 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 use function Flow\PostgreSql\DSL\{alter, column, create, drop};
 
-use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Parser\ExpressionParser;
+use Flow\PostgreSql\Parser\{ExcludeDefinitionParser, ExpressionParser};
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
-use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint as CheckConstraintBuilder, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint as UniqueConstraintBuilder};
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint as CheckConstraintBuilder, ExcludeConstraint as ExcludeConstraintBuilder, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint as UniqueConstraintBuilder};
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as QbTriggerEvent;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -148,7 +147,7 @@ final readonly class TableDiff implements Diff
             }
 
             if ($col->default !== null) {
-                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($col->default)));
+                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser())->parse($col->default)));
             }
 
             if ($col->isIdentity) {
@@ -156,7 +155,7 @@ final readonly class TableDiff implements Diff
             }
 
             if ($col->isGenerated && $col->generationExpression !== null) {
-                $colDef = $colDef->generatedAs(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($col->generationExpression)));
+                $colDef = $colDef->generatedAs(ExpressionFactory::fromAst((new ExpressionParser())->parse($col->generationExpression)));
             }
 
             $sqls[] = alter()->table($qualifiedName)->addColumn($colDef);
@@ -209,7 +208,7 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedCheckConstraints as $cc) {
-            $constraint = CheckConstraintBuilder::create(ConditionFactory::fromAst((new ExpressionParser(new Parser()))->parse($cc->expression)));
+            $constraint = CheckConstraintBuilder::create(ConditionFactory::fromAst((new ExpressionParser())->parse($cc->expression)));
 
             if ($cc->name !== null) {
                 $constraint = $constraint->name($cc->name);
@@ -226,9 +225,28 @@ final readonly class TableDiff implements Diff
                 throw new \RuntimeException(\sprintf('Cannot add unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
             }
 
-            $sqls[] = alter()->table($qualifiedName)->addConstraint(
-                \Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint::create()->name($ec->name),
-            );
+            $expressionParser = new ExpressionParser();
+            $parsed = (new ExcludeDefinitionParser($expressionParser))->parse($ec->definition);
+            $constraint = ExcludeConstraintBuilder::create($parsed->accessMethod)->name($ec->name);
+
+            foreach ($parsed->elements as $element) {
+                $constraint = $constraint->element(
+                    ExpressionFactory::fromAst($expressionParser->parse($element['expression'])),
+                    $element['operator'],
+                );
+            }
+
+            if ($parsed->predicate !== null) {
+                $constraint = $constraint->where(
+                    ConditionFactory::fromAst($expressionParser->parse($parsed->predicate)),
+                );
+            }
+
+            if ($parsed->deferrable) {
+                $constraint = $constraint->deferrable($parsed->initiallyDeferred);
+            }
+
+            $sqls[] = alter()->table($qualifiedName)->addConstraint($constraint);
         }
 
         foreach ($this->addedForeignKeys as $fk) {

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, IndexElem, Node, PBString};
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
-use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\{Column, Expression};
 
 final readonly class ExcludeConstraint implements TableConstraint
 {
@@ -19,12 +19,26 @@ final readonly class ExcludeConstraint implements TableConstraint
         private array $elements = [],
         private ?string $name = null,
         private ?Condition $whereCondition = null,
+        private bool $deferrable = false,
+        private bool $initiallyDeferred = false,
     ) {
     }
 
     public static function create(string $accessMethod = 'gist') : self
     {
         return new self($accessMethod);
+    }
+
+    public function deferrable(bool $initiallyDeferred = false) : self
+    {
+        return new self(
+            $this->accessMethod,
+            $this->elements,
+            $this->name,
+            $this->whereCondition,
+            true,
+            $initiallyDeferred,
+        );
     }
 
     public function element(Expression $element, string $operator) : self
@@ -34,6 +48,8 @@ final readonly class ExcludeConstraint implements TableConstraint
             [...$this->elements, ['element' => $element, 'operator' => $operator]],
             $this->name,
             $this->whereCondition,
+            $this->deferrable,
+            $this->initiallyDeferred,
         );
     }
 
@@ -44,6 +60,8 @@ final readonly class ExcludeConstraint implements TableConstraint
             $this->elements,
             $name,
             $this->whereCondition,
+            $this->deferrable,
+            $this->initiallyDeferred,
         );
     }
 
@@ -61,8 +79,16 @@ final readonly class ExcludeConstraint implements TableConstraint
             $exclusions = [];
 
             foreach ($this->elements as $element) {
-                $exclusions[] = $element['element']->toAst();
-                $exclusions[] = $this->createOperatorNode($element['operator']);
+                $indexElemNode = new Node();
+                $indexElemNode->setIndexElem($this->createIndexElem($element['element']));
+
+                $pair = new PBList();
+                $pair->setItems([$indexElemNode, $this->createOperatorNode($element['operator'])]);
+
+                $pairNode = new Node();
+                $pairNode->setList($pair);
+
+                $exclusions[] = $pairNode;
             }
 
             $constraint->setExclusions($exclusions);
@@ -70,6 +96,14 @@ final readonly class ExcludeConstraint implements TableConstraint
 
         if ($this->whereCondition !== null) {
             $constraint->setWhereClause($this->whereCondition->toAst());
+        }
+
+        if ($this->deferrable) {
+            $constraint->setDeferrable(true);
+
+            if ($this->initiallyDeferred) {
+                $constraint->setInitdeferred(true);
+            }
         }
 
         return $constraint;
@@ -82,7 +116,24 @@ final readonly class ExcludeConstraint implements TableConstraint
             $this->elements,
             $this->name,
             $condition,
+            $this->deferrable,
+            $this->initiallyDeferred,
         );
+    }
+
+    private function createIndexElem(Expression $expression) : IndexElem
+    {
+        $indexElem = new IndexElem();
+
+        if ($expression instanceof Column && \count($expression->parts()) === 1) {
+            $indexElem->setName($expression->columnName());
+
+            return $indexElem;
+        }
+
+        $indexElem->setExpr($expression->toAst());
+
+        return $indexElem;
     }
 
     private function createOperatorNode(string $operator) : Node

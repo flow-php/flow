@@ -21,9 +21,9 @@ final class ParamRefCollector implements NodeVisitor
      */
     private array $paramRefs = [];
 
-    public static function nodeClass() : string
+    public static function nodeClasses() : array
     {
-        return ParamRef::class;
+        return [ParamRef::class];
     }
 
     public function enter(object $node) : ?int

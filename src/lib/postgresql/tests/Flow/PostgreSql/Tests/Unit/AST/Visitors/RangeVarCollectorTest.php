@@ -140,9 +140,9 @@ final class RangeVarCollectorTest extends TestCase
         self::assertNull($collector->leave($rangeVar));
     }
 
-    public function test_node_class_returns_range_var_class() : void
+    public function test_node_classes_returns_range_var_class() : void
     {
-        self::assertSame(RangeVar::class, RangeVarCollector::nodeClass());
+        self::assertSame([RangeVar::class], RangeVarCollector::nodeClasses());
     }
 
     public function test_reset_clears_collected_range_vars() : void

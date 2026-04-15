@@ -31,7 +31,7 @@ final class DomainDiffTest extends TestCase
     {
         $diff = new DomainDiff(
             schema_domain('email', ColumnType::text(), default: null),
-            schema_domain('email', ColumnType::text(), default: "'unknown'"),
+            schema_domain('email', ColumnType::text(), default: 'unknown'),
         );
 
         $sqls = $diff->generate();
@@ -70,7 +70,7 @@ final class DomainDiffTest extends TestCase
     public function test_drops_default() : void
     {
         $diff = new DomainDiff(
-            schema_domain('email', ColumnType::text(), default: "'unknown'"),
+            schema_domain('email', ColumnType::text(), default: 'unknown'),
             schema_domain('email', ColumnType::text(), default: null),
         );
 
@@ -157,8 +157,8 @@ final class DomainDiffTest extends TestCase
     public function test_recreates_with_all_properties_when_base_type_changed() : void
     {
         $diff = new DomainDiff(
-            schema_domain('positive_int', ColumnType::integer(), nullable: false, default: '0', checkConstraints: [new CheckConstraint('value >= 0', 'non_negative')]),
-            schema_domain('positive_int', ColumnType::bigint(), nullable: false, default: '0', checkConstraints: [new CheckConstraint('value >= 0', 'non_negative')]),
+            schema_domain('positive_int', ColumnType::integer(), nullable: false, default: 0, checkConstraints: [new CheckConstraint('value >= 0', 'non_negative')]),
+            schema_domain('positive_int', ColumnType::bigint(), nullable: false, default: 0, checkConstraints: [new CheckConstraint('value >= 0', 'non_negative')]),
         );
 
         $sqls = $diff->generate();

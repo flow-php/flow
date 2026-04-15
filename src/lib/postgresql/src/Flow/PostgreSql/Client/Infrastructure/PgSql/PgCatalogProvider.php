@@ -8,8 +8,7 @@ use function Flow\PostgreSql\DSL\{agg, and_, any_, asc, case_when, cast, col, co
 
 use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string, type_structure, type_union};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Parser\{ColumnTypeParser, ExpressionParser};
+use Flow\PostgreSql\Parser\{CheckDefinitionParser, ColumnTypeParser, ExpressionParser, TriggerDefinitionParser};
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
@@ -19,9 +18,13 @@ use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, Forei
 
 final readonly class PgCatalogProvider implements CatalogProvider
 {
+    private CheckDefinitionParser $checkDefinitionParser;
+
     private ColumnTypeParser $columnTypeParser;
 
     private ExpressionParser $expressionParser;
+
+    private TriggerDefinitionParser $triggerDefinitionParser;
 
     /**
      * @param ?list<string> $schemaNames
@@ -33,7 +36,9 @@ final readonly class PgCatalogProvider implements CatalogProvider
         private array $excludeTables = [],
     ) {
         $this->columnTypeParser = new ColumnTypeParser();
-        $this->expressionParser = new ExpressionParser(new Parser());
+        $this->expressionParser = new ExpressionParser();
+        $this->checkDefinitionParser = new CheckDefinitionParser($this->expressionParser);
+        $this->triggerDefinitionParser = new TriggerDefinitionParser($this->expressionParser);
     }
 
     public function get() : Catalog
@@ -171,7 +176,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $constraints[] = new CheckConstraint(
-                $this->stripCheckWrapper($row['definition']),
+                $this->checkDefinitionParser->parse($row['definition']),
                 $row['name'],
                 $row['no_inherit'],
             );
@@ -245,11 +250,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $row['name'],
                 $this->columnTypeParser->parse($row['type_name']),
                 $row['nullable'],
-                $isGenerated ? null : $this->normalizeDefault($defaultValue),
+                $isGenerated || $isIdentity ? null : $this->normalizeDefault($defaultValue),
                 $isIdentity,
                 $isIdentity ? IdentityGeneration::from($row['identity']) : null,
                 $isGenerated,
-                $isGenerated ? $this->normalizeDefault($defaultValue) : null,
+                $isGenerated && $defaultValue !== null ? $this->expressionParser->normalize($defaultValue) : null,
                 $row['ordinal_position'],
             );
         }
@@ -291,7 +296,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $constraints[] = new CheckConstraint(
-                $this->stripCheckWrapper($row['definition']),
+                $this->checkDefinitionParser->parse($row['definition']),
                 $row['name'],
             );
         }
@@ -335,7 +340,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $row['name'],
                 $this->columnTypeParser->parse($row['base_type']),
                 $row['nullable'],
-                $row['default_value'] ?? null,
+                $this->normalizeDefault($row['default_value'] ?? null),
                 $this->readDomainCheckConstraints($row['name'], $schemaName),
             );
         }
@@ -848,7 +853,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
                 ->leftJoin(table('pg_depend', 'pg_catalog')->as('d'), and_(
                     eq(col('objid', 'd'), col('seqrelid', 's')),
-                    eq(col('deptype', 'd'), literal('a')),
+                    in_(col('deptype', 'd'), [literal('a'), literal('i')]),
                 ))
                 ->leftJoin(table('pg_class', 'pg_catalog')->as('dep_c'), eq(col('oid', 'dep_c'), col('refobjid', 'd')))
                 ->leftJoin(table('pg_attribute', 'pg_catalog')->as('dep_a'), and_(
@@ -967,11 +972,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'name' => type_string(),
                 'function_name' => type_string(),
                 'type' => type_integer(),
+                'trigger_def' => type_string(),
             ])),
             select(
                 col('tgname', 't')->as('name'),
                 col('proname', 'p')->as('function_name'),
                 col('tgtype', 't')->as('type'),
+                func('pg_catalog.pg_get_triggerdef', [col('oid', 't')])->as('trigger_def'),
             )
                 ->from(table('pg_trigger', 'pg_catalog')->as('t'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('tgrelid', 't')))
@@ -1028,6 +1035,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $events,
                 $row['function_name'],
                 ($tgtype & 1) !== 0,
+                whenCondition: $this->triggerDefinitionParser->parseWhenClause($row['trigger_def']),
             );
         }
 
@@ -1043,14 +1051,17 @@ final readonly class PgCatalogProvider implements CatalogProvider
             type_mapper(type_structure([
                 'name' => type_string(),
                 'columns' => type_string(),
+                'nulls_not_distinct' => type_boolean(),
             ])),
             select(
                 col('conname', 'con')->as('name'),
                 agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [col('conkey', 'con'), col('attnum', 'a')])))->as('columns'),
+                col('indnullsnotdistinct', 'i')->as('nulls_not_distinct'),
             )
                 ->from(table('pg_constraint', 'pg_catalog')->as('con'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('conrelid', 'con')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
+                ->join(table('pg_index', 'pg_catalog')->as('i'), eq(col('indexrelid', 'i'), col('conindid', 'con')))
                 ->join(table('pg_attribute', 'pg_catalog')->as('a'), and_(
                     eq(col('attrelid', 'a'), col('conrelid', 'con')),
                     any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
@@ -1060,7 +1071,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                     eq(col('nspname', 'n'), param(2)),
                     eq(col('contype', 'con'), literal('u')),
                 ))
-                ->groupBy(col('conname', 'con')),
+                ->groupBy(col('conname', 'con'), col('indnullsnotdistinct', 'i')),
             [$tableName, $schemaName],
         );
 
@@ -1070,6 +1081,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
             $constraints[] = new UniqueConstraint(
                 $this->parseArrayLiteral($row['columns']),
                 $row['name'],
+                $row['nulls_not_distinct'],
             );
         }
 
@@ -1123,14 +1135,5 @@ final readonly class PgCatalogProvider implements CatalogProvider
                     ->orderBy(asc(col('nspname'))),
             ),
         ));
-    }
-
-    private function stripCheckWrapper(string $definition) : string
-    {
-        if (\str_starts_with($definition, 'CHECK (') && \str_ends_with($definition, ')')) {
-            return \substr($definition, 7, -1);
-        }
-
-        return $definition;
     }
 }

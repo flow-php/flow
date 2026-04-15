@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Constraint;
 
+use Flow\PostgreSql\Parser\ExpressionParser;
+
 /**
  * @phpstan-type CheckConstraintShape = array{expression: string, name: ?string, no_inherit: bool}
  */
 final readonly class CheckConstraint
 {
+    public string $expression;
+
     public function __construct(
-        public string $expression,
+        string $expression,
         public ?string $name = null,
         public bool $noInherit = false,
     ) {
+        $this->expression = (new ExpressionParser())->normalize($expression);
     }
 
     /**
