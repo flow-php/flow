@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Parser;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\{ExcludeDefinitionParser, ExpressionParser};
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +17,7 @@ final class ExcludeDefinitionParserTest extends TestCase
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
-        $this->parser = new ExcludeDefinitionParser(new Parser(), new ExpressionParser(new Parser()));
+        $this->parser = new ExcludeDefinitionParser(new ExpressionParser());
     }
 
     public function test_lowercases_access_method() : void

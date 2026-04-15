@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
 use Flow\PostgreSql\AST\Transformers\TypeCastStripper;
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use PHPUnit\Framework\TestCase;
 
@@ -101,6 +100,6 @@ final class TypeCastStripperTest extends TestCase
     private function normalize(string $expression) : string
     {
         // Routes through ExpressionParser::normalize(), which uses TypeCastStripper.
-        return (new ExpressionParser(new Parser(), new TypeCastStripper()))->normalize($expression);
+        return (new ExpressionParser(new TypeCastStripper()))->normalize($expression);
     }
 }

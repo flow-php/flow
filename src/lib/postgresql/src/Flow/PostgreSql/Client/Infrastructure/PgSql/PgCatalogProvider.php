@@ -8,8 +8,7 @@ use function Flow\PostgreSql\DSL\{agg, and_, any_, asc, case_when, cast, col, co
 
 use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string, type_structure, type_union};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Parser\{CheckDefinitionParser, ColumnTypeParser, ExpressionParser};
+use Flow\PostgreSql\Parser\{CheckDefinitionParser, ColumnTypeParser, ExpressionParser, TriggerDefinitionParser};
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
@@ -25,6 +24,8 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
     private ExpressionParser $expressionParser;
 
+    private TriggerDefinitionParser $triggerDefinitionParser;
+
     /**
      * @param ?list<string> $schemaNames
      * @param list<string> $excludeTables
@@ -35,8 +36,9 @@ final readonly class PgCatalogProvider implements CatalogProvider
         private array $excludeTables = [],
     ) {
         $this->columnTypeParser = new ColumnTypeParser();
-        $this->expressionParser = new ExpressionParser(new Parser());
+        $this->expressionParser = new ExpressionParser();
         $this->checkDefinitionParser = new CheckDefinitionParser($this->expressionParser);
+        $this->triggerDefinitionParser = new TriggerDefinitionParser($this->expressionParser);
     }
 
     public function get() : Catalog
@@ -970,11 +972,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 'name' => type_string(),
                 'function_name' => type_string(),
                 'type' => type_integer(),
+                'trigger_def' => type_string(),
             ])),
             select(
                 col('tgname', 't')->as('name'),
                 col('proname', 'p')->as('function_name'),
                 col('tgtype', 't')->as('type'),
+                func('pg_catalog.pg_get_triggerdef', [col('oid', 't')])->as('trigger_def'),
             )
                 ->from(table('pg_trigger', 'pg_catalog')->as('t'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('tgrelid', 't')))
@@ -1031,6 +1035,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $events,
                 $row['function_name'],
                 ($tgtype & 1) !== 0,
+                whenCondition: $this->triggerDefinitionParser->parseWhenClause($row['trigger_def']),
             );
         }
 

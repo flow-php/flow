@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 
 /**
@@ -26,7 +25,7 @@ final readonly class Index
         ?string $predicate = null,
     ) {
         $this->predicate = $predicate !== null
-            ? (new ExpressionParser(new Parser()))->normalize($predicate)
+            ? (new ExpressionParser())->normalize($predicate)
             : null;
     }
 

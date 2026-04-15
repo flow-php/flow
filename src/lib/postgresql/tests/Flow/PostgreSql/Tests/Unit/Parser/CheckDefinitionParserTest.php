@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Parser;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\{CheckDefinitionParser, ExpressionParser};
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +17,7 @@ final class CheckDefinitionParserTest extends TestCase
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
-        $this->parser = new CheckDefinitionParser(new ExpressionParser(new Parser()));
+        $this->parser = new CheckDefinitionParser(new ExpressionParser());
     }
 
     public function test_does_not_strip_when_no_closing_paren() : void

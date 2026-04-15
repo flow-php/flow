@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
@@ -30,7 +29,7 @@ final readonly class Column
         public ?int $ordinalPosition = null,
     ) {
         $this->generationExpression = $generationExpression !== null
-            ? (new ExpressionParser(new Parser()))->normalize($generationExpression)
+            ? (new ExpressionParser())->normalize($generationExpression)
             : null;
     }
 

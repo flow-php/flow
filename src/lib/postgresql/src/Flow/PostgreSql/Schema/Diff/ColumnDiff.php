@@ -6,7 +6,6 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 use function Flow\PostgreSql\DSL\{alter, column};
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -46,11 +45,11 @@ final readonly class ColumnDiff implements Diff
             }
 
             if ($this->target->default !== null) {
-                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($this->target->default)));
+                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)));
             }
 
             if ($this->target->isGenerated && $this->target->generationExpression !== null) {
-                $colDef = $colDef->generatedAs(ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($this->target->generationExpression)));
+                $colDef = $colDef->generatedAs(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->generationExpression)));
             }
 
             if ($this->target->isIdentity) {
@@ -75,7 +74,7 @@ final readonly class ColumnDiff implements Diff
         if ($this->target->default !== $this->source->default) {
             $sqls[] = $this->target->default === null
                 ? alter()->table($this->qualifiedTableName)->alterColumnDropDefault($columnName)
-                : alter()->table($this->qualifiedTableName)->alterColumnSetDefault($columnName, ExpressionFactory::fromAst((new ExpressionParser(new Parser()))->parse($this->target->default)));
+                : alter()->table($this->qualifiedTableName)->alterColumnSetDefault($columnName, ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)));
         }
 
         return $sqls;

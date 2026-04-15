@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Parser;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +18,7 @@ final class ExpressionParserTest extends TestCase
 
     public function test_normalize_generation_expression_preserves_expression_without_casts() : void
     {
-        $parser = new ExpressionParser(new Parser());
+        $parser = new ExpressionParser();
 
         self::assertSame(
             "(first_name || ' ') || last_name",
@@ -29,7 +28,7 @@ final class ExpressionParserTest extends TestCase
 
     public function test_normalize_generation_expression_strips_casts_from_concatenation() : void
     {
-        $parser = new ExpressionParser(new Parser());
+        $parser = new ExpressionParser();
 
         self::assertSame(
             "(first_name || ' ') || last_name",
@@ -39,7 +38,7 @@ final class ExpressionParserTest extends TestCase
 
     public function test_normalize_generation_expression_strips_casts_from_function_arguments() : void
     {
-        $parser = new ExpressionParser(new Parser());
+        $parser = new ExpressionParser();
 
         self::assertSame(
             "setweight(to_tsvector('english', name), 'A')",
@@ -49,7 +48,7 @@ final class ExpressionParserTest extends TestCase
 
     public function test_normalize_generation_expression_strips_nested_casts() : void
     {
-        $parser = new ExpressionParser(new Parser());
+        $parser = new ExpressionParser();
 
         self::assertSame(
             'upper(name)',
@@ -59,7 +58,7 @@ final class ExpressionParserTest extends TestCase
 
     public function test_normalize_generation_expression_strips_simple_column_cast() : void
     {
-        $parser = new ExpressionParser(new Parser());
+        $parser = new ExpressionParser();
 
         self::assertSame(
             'name',

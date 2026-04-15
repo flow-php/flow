@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Constraint;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\{ExcludeDefinitionParser, ExpressionParser, ParsedExcludeDefinition};
 
 /**
@@ -18,10 +17,7 @@ final readonly class ExcludeConstraint
         public string $definition,
         public ?string $name = null,
     ) {
-        $this->parsed = (new ExcludeDefinitionParser(
-            new Parser(),
-            new ExpressionParser(new Parser()),
-        ))->parse($definition);
+        $this->parsed = (new ExcludeDefinitionParser(new ExpressionParser()))->parse($definition);
     }
 
     /**

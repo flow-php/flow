@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Parser;
 
-use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, ParseResult, RawStmt, ResTarget, SelectStmt, SetOperation};
+use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, ParseResult};
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class ExcludeDefinitionParser
 {
-    private const string EXPR_ALIAS = '__flow_expr';
-
     public function __construct(
-        private Parser $parser,
         private ExpressionParser $expressionParser,
     ) {
     }
@@ -26,7 +22,7 @@ final readonly class ExcludeDefinitionParser
             $trimmed = 'EXCLUDE ' . $trimmed;
         }
 
-        $parsed = $this->parser->parse('CREATE TABLE __flow_exclude_norm (' . $trimmed . ')');
+        $parsed = $this->expressionParser->parseStatement('CREATE TABLE __flow_exclude_norm (' . $trimmed . ')');
         $constraint = $this->extractConstraint($parsed->raw());
 
         return new ParsedExcludeDefinition(
@@ -36,35 +32,6 @@ final readonly class ExcludeDefinitionParser
             deferrable: $constraint->getDeferrable(),
             initiallyDeferred: $constraint->getInitdeferred(),
         );
-    }
-
-    private function deparseExpressionNode(Node $expression) : string
-    {
-        $resTarget = new ResTarget();
-        $resTarget->setName(self::EXPR_ALIAS);
-        $resTarget->setVal($expression);
-
-        $resTargetNode = new Node();
-        $resTargetNode->setResTarget($resTarget);
-
-        $selectStmt = new SelectStmt();
-        $selectStmt->setTargetList([$resTargetNode]);
-        $selectStmt->setOp(SetOperation::SETOP_NONE);
-
-        $stmtNode = new Node();
-        $stmtNode->setSelectStmt($selectStmt);
-
-        $rawStmt = new RawStmt();
-        $rawStmt->setStmt($stmtNode);
-
-        $parseResult = new ParseResult();
-        $parseResult->setVersion(170007);
-        $parseResult->setStmts([$rawStmt]);
-
-        $sql = \pg_query_deparse($parseResult->serializeToString());
-        $suffixLength = \strlen(' AS ' . self::EXPR_ALIAS);
-
-        return \substr($sql, 7, -$suffixLength);
     }
 
     private function extractConstraint(ParseResult $parseResult) : Constraint
@@ -129,7 +96,7 @@ final readonly class ExcludeDefinitionParser
             return null;
         }
 
-        return $this->expressionParser->normalize($this->deparseExpressionNode($where));
+        return $this->expressionParser->normalizeNode($where);
     }
 
     private function resolveElementExpression(Node $elementNode) : string
@@ -152,7 +119,7 @@ final readonly class ExcludeDefinitionParser
             throw InvalidAstException::invalidFieldValue('expr', 'IndexElem', 'element has neither name nor expression');
         }
 
-        return $this->expressionParser->normalize($this->deparseExpressionNode($expr));
+        return $this->expressionParser->normalizeNode($expr);
     }
 
     private function resolveOperator(Node $operatorNode) : string

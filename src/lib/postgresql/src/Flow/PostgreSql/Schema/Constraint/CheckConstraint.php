@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Constraint;
 
-use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 
 /**
@@ -19,7 +18,7 @@ final readonly class CheckConstraint
         public ?string $name = null,
         public bool $noInherit = false,
     ) {
-        $this->expression = (new ExpressionParser(new Parser()))->normalize($expression);
+        $this->expression = (new ExpressionParser())->normalize($expression);
     }
 
     /**
