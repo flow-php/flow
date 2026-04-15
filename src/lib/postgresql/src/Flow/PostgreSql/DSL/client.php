@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\DSL;
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PostgreSql\Client;
 use Flow\PostgreSql\Client\{ConnectionParameters, TypedValue};
-use Flow\PostgreSql\Client\DsnParser;
+use Flow\PostgreSql\Client\{DsnParser, RowMapper};
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\RowMapper\{ConstructorMapper, TypeMapper};
@@ -274,16 +274,18 @@ function constructor_mapper(string $class) : ConstructorMapper
 }
 
 /**
- * @template T
+ * @template TType
+ * @template TNext = never
  *
- * @param FlowType<T> $type
+ * @param FlowType<TType> $type
+ * @param null|RowMapper<TNext> $next
  *
- * @return TypeMapper<T>
+ * @return TypeMapper<TType, TNext>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function type_mapper(FlowType $type) : TypeMapper
+function type_mapper(FlowType $type, ?RowMapper $next = null) : TypeMapper
 {
-    return new TypeMapper($type);
+    return new TypeMapper($type, $next);
 }
 
 /**
