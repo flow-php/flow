@@ -16,13 +16,13 @@ final readonly class TriggerDefinitionParser
     public function parseWhenClause(string $triggerDef) : ?string
     {
         $parsed = $this->expressionParser->parseStatement($triggerDef);
-        $stmts = $parsed->raw()->getStmts();
+        $stmts = $parsed->raw()->getStmts()[0] ?? null;
 
-        if ($stmts === null || \count($stmts) === 0) {
+        if ($stmts === null) {
             throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
         }
 
-        $createTrigStmt = $stmts[0]->getStmt()?->getCreateTrigStmt();
+        $createTrigStmt = $stmts->getStmt()?->getCreateTrigStmt();
 
         if ($createTrigStmt === null) {
             throw InvalidAstException::unexpectedNodeType('CreateTrigStmt', 'unknown');
