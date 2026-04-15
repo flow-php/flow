@@ -73,15 +73,13 @@ final readonly class ExcludeDefinitionParser
                 throw InvalidAstException::unexpectedNodeType('List', 'unknown');
             }
 
-            $items = \iterator_to_array($pair->getItems());
-
-            if (\count($items) !== 2) {
+            if ($pair->getItems()->count() !== 2) {
                 throw InvalidAstException::invalidFieldValue('items', 'List', 'expected exactly 2 items in exclusion pair');
             }
 
             $elements[] = [
-                'expression' => $this->resolveElementExpression($items[0]),
-                'operator' => $this->resolveOperator($items[1]),
+                'expression' => $this->resolveElementExpression($pair->getItems()->offsetGet(0)),
+                'operator' => $this->resolveOperator($pair->getItems()->offsetGet(1)),
             ];
         }
 
@@ -130,13 +128,11 @@ final readonly class ExcludeDefinitionParser
             throw InvalidAstException::unexpectedNodeType('List', 'unknown');
         }
 
-        $items = \iterator_to_array($list->getItems());
-
-        if (\count($items) === 0) {
+        if ($list->getItems()->count() === 0) {
             throw InvalidAstException::invalidFieldValue('items', 'List', 'operator list is empty');
         }
 
-        $string = $items[0]->getString();
+        $string = $list->getItems()->offsetGet(0)->getString();
 
         if ($string === null) {
             throw InvalidAstException::unexpectedNodeType('String', 'unknown');

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdocumentor
+        configVersion="3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://www.phpdoc.org"
+>
+    <title>Flow PHP</title>
+    <paths>
+        <output>./../web/landing/build/documentation/api/bridge/postgresql/valinor</output>
+        <cache>./../var/phpdocumentor/cache/bridge/postgresql/valinor</cache>
+    </paths>
+    <version number="1.x">
+        <api format="php">
+            <source dsn="./../">
+                <path>src/bridge/postgresql/valinor/src</path>
+            </source>
+            <output>valinor</output>
+            <default-package-name>PostgreSQL Valinor Bridge</default-package-name>
+            <visibility>public</visibility>
+            <include-source>false</include-source>
+        </api>
+    </version>
+    <setting name="template.color" value="orange"/>
+</phpdocumentor>

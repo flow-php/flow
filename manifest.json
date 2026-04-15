@@ -225,6 +225,11 @@
       "name": "flow-php/pg-query-ext",
       "path": "src/extension/pg-query-ext",
       "type": "extension"
+    },
+    {
+      "name": "flow-php/postgresql-valinor-bridge",
+      "path": "src/bridge/postgresql/valinor",
+      "type": "bridge"
     }
   ]
 }

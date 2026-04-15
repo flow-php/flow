@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Client;
 /**
  * Contract for mapping database rows to typed results.
  *
- * @template T
+ * @template-covariant T
  */
 interface RowMapper
 {

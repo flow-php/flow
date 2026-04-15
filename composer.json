@@ -24,6 +24,7 @@
         "async-aws/s3": "^2.6",
         "brick/math": "^0.12 || ^0.13 || ^0.14",
         "coduo/php-humanizer": "^5.0",
+        "cuyz/valinor": "^2.4",
         "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "google/apiclient": "^2.13",
@@ -104,6 +105,7 @@
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
         "flow-php/postgresql": "self.version",
+        "flow-php/postgresql-valinor-bridge": "self.version",
         "flow-php/psr7-telemetry-bridge": "self.version",
         "flow-php/psr18-telemetry-bridge": "self.version",
         "flow-php/snappy": "self.version",
@@ -144,6 +146,7 @@
                 "src/bridge/monolog/http/src/Flow",
                 "src/bridge/monolog/telemetry/src/Flow",
                 "src/bridge/openapi/specification/src/Flow",
+                "src/bridge/postgresql/valinor/src/Flow",
                 "src/bridge/psr7/telemetry/src/Flow",
                 "src/bridge/psr18/telemetry/src/Flow",
                 "src/bridge/symfony/filesystem-bundle/src/Flow",
@@ -198,6 +201,7 @@
             "src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php",
             "src/bridge/phpunit/postgresql/src/Flow/Bridge/PHPUnit/PostgreSQL/DSL/functions.php",
             "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
+            "src/bridge/postgresql/valinor/src/Flow/PostgreSql/Bridge/Valinor/DSL/functions.php",
             "src/bridge/psr7/telemetry/src/Flow/Bridge/Psr7/Telemetry/DSL/functions.php",
             "src/bridge/psr18/telemetry/src/Flow/Bridge/Psr18/Telemetry/DSL/functions.php",
             "src/bridge/symfony/http-foundation-telemetry/src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php",
@@ -247,6 +251,7 @@
                 "src/bridge/monolog/http/tests/Flow",
                 "src/bridge/monolog/telemetry/tests/Flow",
                 "src/bridge/openapi/specification/tests/Flow",
+                "src/bridge/postgresql/valinor/tests/Flow",
                 "src/bridge/psr7/telemetry/tests/Flow",
                 "src/bridge/psr18/telemetry/tests/Flow",
                 "src/bridge/symfony/filesystem-bundle/tests/Flow",
@@ -327,6 +332,7 @@
             "@test:bridge:openapi-specification",
             "@test:bridge:phpunit-postgresql",
             "@test:bridge:phpunit-telemetry",
+            "@test:bridge:postgresql-valinor",
             "@test:bridge:psr7-telemetry",
             "@test:bridge:psr18-telemetry",
             "@test:bridge:symfony-filesystem-bundle",
@@ -414,6 +420,9 @@
         ],
         "test:bridge:openapi-specification": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-openapi-specification-unit --log-junit ./var/phpunit/logs/bridge-openapi-specification-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-openapi-specification-unit.coverage.xml"
+        ],
+        "test:bridge:postgresql-valinor": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-postgresql-valinor-unit --log-junit ./var/phpunit/logs/bridge-postgresql-valinor-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-postgresql-valinor-unit.coverage.xml"
         ],
         "test:bridge:psr7-telemetry": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-psr7-telemetry-unit --log-junit ./var/phpunit/logs/bridge-psr7-telemetry-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-psr7-telemetry-unit.coverage.xml",
@@ -586,6 +595,7 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.azure.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.monolog.http.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.openapi.specification.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.postgresql.valinor.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml"
         ],
         "build:parquet:thrift": [

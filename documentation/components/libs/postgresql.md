@@ -364,113 +364,26 @@ interface RowMapper
 }
 ```
 
-The library ships two default mappers, both available via DSL functions.
+The library ships two default mappers, both available via DSL functions, plus an optional bridge for
+[cuyz/valinor](https://valinor.cuyz.io).
 
-#### ConstructorMapper
-
-`constructor_mapper(ClassName::class)` maps row columns directly to constructor parameters by name (1:1). Use SQL
-aliases when column names don't match parameter names. Nullable parameters receive `null` for missing columns.
-
-```php
-<?php
-
-use function Flow\PostgreSql\DSL\{constructor_mapper, pgsql_client, pgsql_connection};
-
-readonly class User
-{
-    public function __construct(
-        public int $id,
-        public string $name,
-        public string $email,
-        public ?string $nickname,
-    ) {}
-}
-
-$client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
-
-$user = $client->fetchOneInto(
-    constructor_mapper(User::class),
-    'SELECT id, name, email, nickname FROM users WHERE id = $1',
-    [1],
-);
-
-// Alias snake_case to camelCase when needed
-$users = $client->fetchAllInto(
-    constructor_mapper(User::class),
-    'SELECT id, name, email, nick_name AS nickname FROM users',
-);
-```
-
-#### TypeMapper
-
-`type_mapper($type)` uses [flow-php/types](/documentation/components/libs/types.md) to assert the row against a
-structural type, returning a typed array. Useful when you want runtime type guarantees without defining a DTO
-class.
-
-Because `Type<T>` carries the shape as a generic parameter, static analysis tools like **PHPStan** and **Mago**
-infer the exact row shape from the `type_mapper()` call. Every `fetch*Into()` result — individual fields,
-array-of-rows, cursor iterations — is recognized with full key/value types, so accessing a non-existent field
-or using a value with the wrong type is caught at analysis time without a single PHPDoc annotation on your
-side.
-
-```php
-<?php
-
-use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection, type_mapper};
-use function Flow\Types\DSL\{type_int, type_string, type_structure};
-
-$client = pgsql_client(pgsql_connection('host=localhost dbname=mydb'));
-
-$userType = type_structure([
-    'id' => type_int(),
-    'name' => type_string(),
-    'email' => type_string(),
-]);
-
-$users = $client->fetchAllInto(
-    type_mapper($userType),
-    'SELECT id, name, email FROM users WHERE active = $1',
-    [true],
-);
-// $users is an array of arrays matching $userType
-```
-
-#### Writing a Custom RowMapper
-
-Implement `RowMapper` directly for custom logic — type coercion, nested objects, conditional construction, etc.
-
-```php
-<?php
-
-use Flow\PostgreSql\Client\RowMapper;
-
-/** @implements RowMapper<User> */
-readonly class UserMapper implements RowMapper
-{
-    public function map(array $row) : User
-    {
-        return new User(
-            id: (int) $row['id'],
-            name: $row['name'],
-            email: $row['email'],
-            active: $row['active'] === 't',
-        );
-    }
-}
-
-$user = $client->fetchInto(new UserMapper(), 'SELECT * FROM users WHERE id = $1', [1]);
-```
-
-See [Object Mapping](/documentation/components/libs/postgresql/client-object-mapping.md) for more examples
-including nested objects and cursor streaming.
+| Mapper | Use for |
+| --- | --- |
+| [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md) | Map row columns directly to constructor parameters by name (1:1). No type coercion. |
+| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, …). Optionally chains into another `RowMapper`. |
+| [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) ⚠️ | Strict object hydration of complex graphs via cuyz/valinor. **Requires the separate `flow-php/postgresql-valinor-bridge` package.** |
 
 ### Detailed Documentation
 
 - [Connection](/documentation/components/libs/postgresql/client-connection.md) - Connection parameters, DSN parsing,
   lifecycle
 - [Fetching Data](/documentation/components/libs/postgresql/client-fetching.md) - fetch, fetchOne, fetchAll, fetchScalar
-- [Object Mapping](/documentation/components/libs/postgresql/client-object-mapping.md) - Map rows to objects with
-  RowMapper
+- [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md) - Map rows directly to
+  constructor parameters
+- [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) - Validate and coerce rows via
+  flow-php/types; chain into another mapper
+- [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) - Strict object
+  hydration via cuyz/valinor *(optional dependency)*
 - [Cursors](/documentation/components/libs/postgresql/client-cursor.md) - Memory-efficient streaming for large result
   sets
 - [Transactions](/documentation/components/libs/postgresql/client-transactions.md) - Transaction callback pattern,

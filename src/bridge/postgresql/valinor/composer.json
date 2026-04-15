@@ -1,0 +1,39 @@
+{
+    "name": "flow-php/postgresql-valinor-bridge",
+    "type": "library",
+    "description": "Flow PHP - PostgreSQL Valinor Bridge",
+    "keywords": [
+        "flow-php",
+        "postgresql",
+        "valinor",
+        "bridge"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "cuyz/valinor": "^2.4",
+        "flow-php/postgresql": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/PostgreSql/Bridge/Valinor/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
