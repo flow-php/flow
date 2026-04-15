@@ -372,6 +372,28 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         self::assertSame(["{$s}.persons"], $employees->inherits);
     }
 
+    public function test_read_unique_constraint_with_nulls_not_distinct() : void
+    {
+        $s = self::SCHEMA;
+
+        $this->pgsqlContext()->client()->execute(
+            create()->table('nnd_users', $s)
+                ->column(column('id', column_type_serial()))
+                ->column(column('email', column_type_varchar(255)))
+                ->constraint(primary_key('id'))
+                ->constraint(unique_constraint('email')->nullsNotDistinct())
+                ->toSql()
+        );
+
+        $table = client_catalog_provider($this->pgsqlContext()->client(), [$s])
+            ->get()
+            ->get($s)
+            ->table('nnd_users');
+
+        self::assertCount(1, $table->uniqueConstraints);
+        self::assertTrue($table->uniqueConstraints[0]->nullsNotDistinct);
+    }
+
     public function test_schemas_returns_catalog_with_all_schemas_when_no_filter() : void
     {
         $catalog = client_catalog_provider($this->pgsqlContext()->client())->get();

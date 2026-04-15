@@ -1051,14 +1051,17 @@ final readonly class PgCatalogProvider implements CatalogProvider
             type_mapper(type_structure([
                 'name' => type_string(),
                 'columns' => type_string(),
+                'nulls_not_distinct' => type_boolean(),
             ])),
             select(
                 col('conname', 'con')->as('name'),
                 agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [col('conkey', 'con'), col('attnum', 'a')])))->as('columns'),
+                col('indnullsnotdistinct', 'i')->as('nulls_not_distinct'),
             )
                 ->from(table('pg_constraint', 'pg_catalog')->as('con'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('conrelid', 'con')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
+                ->join(table('pg_index', 'pg_catalog')->as('i'), eq(col('indexrelid', 'i'), col('conindid', 'con')))
                 ->join(table('pg_attribute', 'pg_catalog')->as('a'), and_(
                     eq(col('attrelid', 'a'), col('conrelid', 'con')),
                     any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
@@ -1068,7 +1071,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                     eq(col('nspname', 'n'), param(2)),
                     eq(col('contype', 'con'), literal('u')),
                 ))
-                ->groupBy(col('conname', 'con')),
+                ->groupBy(col('conname', 'con'), col('indnullsnotdistinct', 'i')),
             [$tableName, $schemaName],
         );
 
@@ -1078,6 +1081,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
             $constraints[] = new UniqueConstraint(
                 $this->parseArrayLiteral($row['columns']),
                 $row['name'],
+                $row['nulls_not_distinct'],
             );
         }
 
