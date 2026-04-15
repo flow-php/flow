@@ -1,12 +1,17 @@
 ## [Unreleased] - 2026-04-15
 
 ### Added
+- [#2306](https://github.com/flow-php/flow/pull/2306) - **flow-php/postgrsql-valinor-bridge** - [@norberttech](https://github.com/norberttech)
+- [#2306](https://github.com/flow-php/flow/pull/2306) - **RowMapper $next = null to TypeMapper** - [@norberttech](https://github.com/norberttech)
 - [#2300](https://github.com/flow-php/flow/pull/2300) - **support for protobuf ^4 | ^5** - [@norberttech](https://github.com/norberttech)
 - [#2299](https://github.com/flow-php/flow/pull/2299) - **phpunit extensions that wraps tests in transactions** - [@norberttech](https://github.com/norberttech)
 - [#2299](https://github.com/flow-php/flow/pull/2299) - **phpunit postgresql bridge as optional dependency of postgresql bundle** - [@norberttech](https://github.com/norberttech)
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge** - [@norberttech](https://github.com/norberttech)
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **listen/unlisen to postgresql client** - [@norberttech](https://github.com/norberttech)
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge to postgersql symfony bundle** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2306](https://github.com/flow-php/flow/pull/2306) - **TypeMapper now uses cast instead of assert** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
 - [#2305](https://github.com/flow-php/flow/pull/2305) - **read unique constraint nullsNotDistinct from pg_index** - [@norberttech](https://github.com/norberttech)
