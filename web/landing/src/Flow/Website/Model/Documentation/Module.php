@@ -25,6 +25,7 @@ enum Module : string
     case PG_QUERY = 'PG_QUERY';
     case POSTGRESQL = 'POSTGRESQL';
     case POSTGRESQL_MIGRATIONS = 'PostgreSQL Migrations';
+    case POSTGRESQL_VALINOR_BRIDGE = 'PostgreSQL Valinor Bridge';
     case PSR18_TELEMETRY_BRIDGE = 'PSR-18 Telemetry Bridge';
     case PSR7_TELEMETRY_BRIDGE = 'PSR-7 Telemetry Bridge';
     case S3_FILESYSTEM = 'S3 Filesystem';
@@ -73,6 +74,7 @@ enum Module : string
             self::PSR7_TELEMETRY_BRIDGE => 25,
             self::PSR18_TELEMETRY_BRIDGE => 26,
             self::POSTGRESQL_MIGRATIONS => 27,
+            self::POSTGRESQL_VALINOR_BRIDGE => 28,
             default => 99,
         };
     }

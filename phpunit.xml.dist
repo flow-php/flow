@@ -123,6 +123,12 @@
         <testsuite name="bridge-openapi-specification-unit">
             <directory>src/bridge/openapi/specification/tests/Flow/Bridge/OpenAPI/Specification/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="bridge-postgresql-valinor-unit">
+            <directory>src/bridge/postgresql/valinor/tests/Flow/PostgreSql/Bridge/Valinor/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-postgresql-valinor-integration">
+            <directory>src/bridge/postgresql/valinor/tests/Flow/PostgreSql/Bridge/Valinor/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-psr7-telemetry-unit">
             <directory>src/bridge/psr7/telemetry/tests/Flow/Bridge/Psr7/Telemetry/Tests/Unit</directory>
         </testsuite>
@@ -298,6 +304,7 @@
             <file>src/lib/telemetry/src/Flow/Telemetry/DSL/functions.php</file>
             <file>src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php</file>
             <file>src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php</file>
+            <file>src/bridge/postgresql/valinor/src/Flow/PostgreSql/Bridge/Valinor/DSL/functions.php</file>
         </exclude>
     </source>
     <extensions>

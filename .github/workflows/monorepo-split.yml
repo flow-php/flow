@@ -86,6 +86,8 @@ jobs:
             split_repository: 'monolog-telemetry-bridge'
           - local_path: 'src/bridge/openapi/specification'
             split_repository: 'openapi-specification-bridge'
+          - local_path: 'src/bridge/postgresql/valinor'
+            split_repository: 'postgresql-valinor-bridge'
           - local_path: 'src/bridge/psr7/telemetry'
             split_repository: 'psr7-telemetry-bridge'
           - local_path: 'src/bridge/psr18/telemetry'
