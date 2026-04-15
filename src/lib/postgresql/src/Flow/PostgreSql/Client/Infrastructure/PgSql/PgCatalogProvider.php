@@ -9,7 +9,7 @@ use function Flow\PostgreSql\DSL\{agg, and_, any_, asc, case_when, cast, col, co
 use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string, type_structure, type_union};
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Parser\{ColumnTypeParser, ExpressionParser};
+use Flow\PostgreSql\Parser\{CheckDefinitionParser, ColumnTypeParser, ExpressionParser};
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
@@ -19,6 +19,8 @@ use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, Forei
 
 final readonly class PgCatalogProvider implements CatalogProvider
 {
+    private CheckDefinitionParser $checkDefinitionParser;
+
     private ColumnTypeParser $columnTypeParser;
 
     private ExpressionParser $expressionParser;
@@ -34,6 +36,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     ) {
         $this->columnTypeParser = new ColumnTypeParser();
         $this->expressionParser = new ExpressionParser(new Parser());
+        $this->checkDefinitionParser = new CheckDefinitionParser($this->expressionParser);
     }
 
     public function get() : Catalog
@@ -171,7 +174,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $constraints[] = new CheckConstraint(
-                $this->expressionParser->normalize($this->stripCheckWrapper($row['definition'])),
+                $this->checkDefinitionParser->parse($row['definition']),
                 $row['name'],
                 $row['no_inherit'],
             );
@@ -291,7 +294,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         foreach ($rows as $row) {
             $constraints[] = new CheckConstraint(
-                $this->expressionParser->normalize($this->stripCheckWrapper($row['definition'])),
+                $this->checkDefinitionParser->parse($row['definition']),
                 $row['name'],
             );
         }
@@ -1123,14 +1126,5 @@ final readonly class PgCatalogProvider implements CatalogProvider
                     ->orderBy(asc(col('nspname'))),
             ),
         ));
-    }
-
-    private function stripCheckWrapper(string $definition) : string
-    {
-        if (\str_starts_with($definition, 'CHECK (') && \str_ends_with($definition, ')')) {
-            return \substr($definition, 7, -1);
-        }
-
-        return $definition;
     }
 }

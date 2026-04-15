@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Parser\ExpressionParser;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 /**
@@ -13,6 +16,8 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
  */
 final readonly class Column
 {
+    public ?string $generationExpression;
+
     public function __construct(
         public string $name,
         public ColumnType $type,
@@ -21,9 +26,36 @@ final readonly class Column
         public bool $isIdentity = false,
         public ?IdentityGeneration $identityGeneration = null,
         public bool $isGenerated = false,
-        public ?string $generationExpression = null,
+        ?string $generationExpression = null,
         public ?int $ordinalPosition = null,
     ) {
+        $this->generationExpression = $generationExpression !== null
+            ? (new ExpressionParser(new Parser()))->normalize($generationExpression)
+            : null;
+    }
+
+    public static function create(
+        string $name,
+        ColumnType $type,
+        bool $nullable = true,
+        bool|float|int|string|Expression|null $default = null,
+        bool $isIdentity = false,
+        ?IdentityGeneration $identityGeneration = null,
+        bool $isGenerated = false,
+        ?string $generationExpression = null,
+        ?int $ordinalPosition = null,
+    ) : self {
+        return new self(
+            $name,
+            $type,
+            $nullable,
+            (new ColumnDefaultFormatter())->format($default),
+            $isIdentity,
+            $identityGeneration,
+            $isGenerated,
+            $generationExpression,
+            $ordinalPosition,
+        );
     }
 
     /**

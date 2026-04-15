@@ -138,7 +138,45 @@ final class TableDiffTest extends TestCase
         $sqls = $diff->generate();
 
         self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ADD CONSTRAINT excl_dates_overlap EXCLUDE USING gist ()', $sqls[0]->toSql());
+        self::assertSame('ALTER TABLE public.users ADD CONSTRAINT excl_dates_overlap EXCLUDE USING gist (tsrange(start_date, end_date) WITH &&)', $sqls[0]->toSql());
+    }
+
+    public function test_adds_exclude_constraint_deferrable_initially_deferred() : void
+    {
+        $table = schema_table('bookings', [schema_column_integer('id', false)]);
+
+        $diff = new TableDiff(
+            $table,
+            $table,
+            addedExcludeConstraints: [schema_exclude('USING btree (room_id WITH =) DEFERRABLE INITIALLY DEFERRED', 'exc_room_deferred')],
+        );
+
+        $sqls = $diff->generate();
+
+        self::assertCount(1, $sqls);
+        self::assertSame(
+            'ALTER TABLE public.bookings ADD CONSTRAINT exc_room_deferred EXCLUDE (room_id WITH =) DEFERRABLE INITIALLY DEFERRED',
+            $sqls[0]->toSql()
+        );
+    }
+
+    public function test_adds_exclude_constraint_with_predicate() : void
+    {
+        $table = schema_table('bookings', [schema_column_integer('id', false)]);
+
+        $diff = new TableDiff(
+            $table,
+            $table,
+            addedExcludeConstraints: [schema_exclude("USING btree (room_id WITH =) WHERE (status = 'active')", 'exc_room_active')],
+        );
+
+        $sqls = $diff->generate();
+
+        self::assertCount(1, $sqls);
+        self::assertSame(
+            "ALTER TABLE public.bookings ADD CONSTRAINT exc_room_active EXCLUDE (room_id WITH =) WHERE (status = 'active')",
+            $sqls[0]->toSql()
+        );
     }
 
     public function test_adds_foreign_key() : void

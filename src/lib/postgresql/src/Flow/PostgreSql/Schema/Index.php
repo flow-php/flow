@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Parser\ExpressionParser;
+
 /**
  * @phpstan-type IndexShape = array{name: string, columns: non-empty-list<string>, unique: bool, method: string, primary: bool, predicate: ?string}
  */
 final readonly class Index
 {
+    public ?string $predicate;
+
     /**
      * @param non-empty-list<string> $columns
      */
@@ -18,8 +23,11 @@ final readonly class Index
         public bool $unique = false,
         public IndexMethod $method = IndexMethod::BTREE,
         public bool $primary = false,
-        public ?string $predicate = null,
+        ?string $predicate = null,
     ) {
+        $this->predicate = $predicate !== null
+            ? (new ExpressionParser(new Parser()))->normalize($predicate)
+            : null;
     }
 
     /**

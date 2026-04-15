@@ -9,7 +9,7 @@ use function Flow\PostgreSql\DSL\create;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
-use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
@@ -32,6 +32,25 @@ final readonly class Domain
         public ?string $default = null,
         public array $checkConstraints = [],
     ) {
+    }
+
+    /**
+     * @param list<CheckConstraint> $checkConstraints
+     */
+    public static function create(
+        string $name,
+        ColumnType $baseType,
+        bool $nullable = true,
+        bool|float|int|string|Expression|null $default = null,
+        array $checkConstraints = [],
+    ) : self {
+        return new self(
+            $name,
+            $baseType,
+            $nullable,
+            (new ColumnDefaultFormatter())->format($default),
+            $checkConstraints,
+        );
     }
 
     /**
