@@ -23,7 +23,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "polyfill.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

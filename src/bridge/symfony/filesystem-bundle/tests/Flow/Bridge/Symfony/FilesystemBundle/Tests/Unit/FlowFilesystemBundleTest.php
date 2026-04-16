@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit;
 
-use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystemFactory;
+use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFilesystemFactoriesPass;
 use Flow\Bridge\Symfony\FilesystemBundle\FlowFilesystemBundle;
+use Flow\Bridge\Symfony\FilesystemBundle\Tests\Double\AutoconfiguredStubFilesystemFactory;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\{ChildDefinition, ContainerBuilder};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class FlowFilesystemBundleTest extends TestCase
 {
@@ -15,19 +16,17 @@ final class FlowFilesystemBundleTest extends TestCase
     {
         $container = new ContainerBuilder();
         (new FlowFilesystemBundle())->build($container);
+        $container
+            ->register(AutoconfiguredStubFilesystemFactory::class, AutoconfiguredStubFilesystemFactory::class)
+            ->setAutoconfigured(true)
+            ->setPublic(true);
 
-        $childDefinition = new ChildDefinition('parent');
+        $container->compile();
 
-        $autoconfigured = $container->getAttributeAutoconfigurators();
-        self::assertArrayHasKey(AsFilesystemFactory::class, $autoconfigured);
-
-        foreach ($autoconfigured[AsFilesystemFactory::class] as $configurator) {
-            $configurator($childDefinition, new AsFilesystemFactory(protocol: 'my-fs'), new \ReflectionClass(\stdClass::class));
-        }
-
-        $tags = $childDefinition->getTag('flow_filesystem.factory');
-        self::assertCount(1, $tags);
-        self::assertSame(['protocol' => 'my-fs'], $tags[0]);
+        self::assertSame(
+            [['protocol' => 'stub-autoconfigured']],
+            $container->getDefinition(AutoconfiguredStubFilesystemFactory::class)->getTag(RegisterFilesystemFactoriesPass::TAG),
+        );
     }
 
     public function test_bundle_alias_resolves_to_flow_filesystem() : void

@@ -38,7 +38,8 @@ $finder = Finder::create()
         'Flow/ETL/Tests/Unit/Exception',
         'extension/arrow-ext/ext',
         'extension/pg-query-ext/ext',
-    ]);
+    ])
+    ->notPath('bridge/symfony/postgresql-messenger/polyfill.php');
 
 return (new Config())
     ->setParallelConfig(ParallelConfigFactory::detect())

@@ -224,6 +224,7 @@
             "src/lib/postgresql/src/Flow/PostgreSql/DSL/schema.php",
             "src/lib/postgresql/src/stubs.php",
             "src/lib/postgresql/src/Flow/PostgreSql/Migrations/DSL/functions.php",
+            "src/bridge/symfony/postgresql-messenger/polyfill.php",
             "src/lib/snappy/polyfill.php",
             "src/lib/telemetry/src/Flow/Telemetry/DSL/functions.php",
             "src/lib/types/src/Flow/Types/DSL/functions.php"
