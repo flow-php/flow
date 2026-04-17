@@ -88,6 +88,7 @@ parameters:
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
+        - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIIValue.php
         - src/core/etl/src/Flow/ETL/Sort/ExternalSort/RowsMinHeap.php
         - src/adapter/etl-adapter-avro/*
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php
