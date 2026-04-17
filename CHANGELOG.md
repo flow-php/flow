@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-04-15
+## [Unreleased] - 2026-04-17
 
 ### Added
 - [#2306](https://github.com/flow-php/flow/pull/2306) - **flow-php/postgrsql-valinor-bridge** - [@norberttech](https://github.com/norberttech)
@@ -14,6 +14,8 @@
 - [#2306](https://github.com/flow-php/flow/pull/2306) - **TypeMapper now uses cast instead of assert** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [be4bb3](https://github.com/flow-php/flow/commit/be4bb3c51f5ed3bce0b0bff9e491beb1f68488d6) - **static analysis getting stuck** - [@norberttech](https://github.com/norberttech)
+- [27e3d2](https://github.com/flow-php/flow/commit/27e3d2b1e7c20288ac15b5e265f490e4741ede7f) - **failing fragile nightly tests** - [@norberttech](https://github.com/norberttech)
 - [#2305](https://github.com/flow-php/flow/pull/2305) - **read unique constraint nullsNotDistinct from pg_index** - [@norberttech](https://github.com/norberttech)
 - [#2305](https://github.com/flow-php/flow/pull/2305) - **read trigger WHEN clause from pg_trigger, simplify Parser DI** - [@norberttech](https://github.com/norberttech)
 - [#2305](https://github.com/flow-php/flow/pull/2305) - **EXCLUDE constraint and index predicate idempotency, DSL/value-object boundary** - [@norberttech](https://github.com/norberttech)
