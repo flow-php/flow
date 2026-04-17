@@ -101,6 +101,45 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_context_accepts_arbitrary_variables() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'context' => [
+                        'tenant_id' => 42,
+                        'logger' => '@my.logger',
+                        'ttl' => '%cache.ttl%',
+                        'db_url' => '%env(DATABASE_URL)%',
+                        'tags' => ['a', 'b'],
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame([
+            'tenant_id' => 42,
+            'logger' => '@my.logger',
+            'ttl' => '%cache.ttl%',
+            'db_url' => '%env(DATABASE_URL)%',
+            'tags' => ['a', 'b'],
+        ], $config['connections']['default']['context']);
+    }
+
+    public function test_context_defaults_to_empty() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                ],
+            ],
+        ]]);
+
+        self::assertSame([], $config['connections']['default']['context']);
+    }
+
     public function test_dsn_is_required() : void
     {
         $this->expectException(InvalidConfigurationException::class);

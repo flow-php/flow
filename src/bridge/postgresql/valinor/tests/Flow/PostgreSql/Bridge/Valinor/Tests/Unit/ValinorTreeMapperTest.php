@@ -11,6 +11,7 @@ use CuyZ\Valinor\MapperBuilder;
 use Flow\PostgreSql\Bridge\Valinor\Tests\Unit\Fixture\{Address, NullableDto, SimpleDto, UserWithAddress, WithDateTime, WithTags};
 use Flow\PostgreSql\Bridge\Valinor\ValinorTreeMapper;
 use Flow\PostgreSql\Client\Exception\MappingException;
+use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
 
 final class ValinorTreeMapperTest extends TestCase
@@ -27,7 +28,7 @@ final class ValinorTreeMapperTest extends TestCase
             'name' => 'Jane',
             'email' => 'jane@example.com',
             'extra' => 'ignored',
-        ]);
+        ], MapperContextMother::any());
 
         self::assertSame(1, $result->id);
         self::assertSame('Jane', $result->name);
@@ -47,7 +48,7 @@ final class ValinorTreeMapperTest extends TestCase
         $result = $mapper->map([
             'id' => 7,
             'createdAt' => '2024-03-15 14:30:00',
-        ]);
+        ], MapperContextMother::any());
 
         self::assertInstanceOf(WithDateTime::class, $result);
         self::assertSame(7, $result->id);
@@ -72,7 +73,7 @@ final class ValinorTreeMapperTest extends TestCase
             'id' => 1,
             'name' => 'Jane',
             'address' => '{"street":"Main 1","city":"Warsaw"}',
-        ]);
+        ], MapperContextMother::any());
 
         self::assertInstanceOf(UserWithAddress::class, $result);
         self::assertInstanceOf(Address::class, $result->address);
@@ -85,7 +86,7 @@ final class ValinorTreeMapperTest extends TestCase
         $mapper = new ValinorTreeMapper((new MapperBuilder())->mapper(), SimpleDto::class);
 
         try {
-            $mapper->map(['id' => 1]);
+            $mapper->map(['id' => 1], MapperContextMother::any());
             self::fail('Expected MappingException was not thrown');
         } catch (MappingException $e) {
             self::assertStringStartsWith(
@@ -102,7 +103,7 @@ final class ValinorTreeMapperTest extends TestCase
         $result = $mapper->map([
             'id' => 1,
             'tags' => ['php', 'postgresql', 'flow'],
-        ]);
+        ], MapperContextMother::any());
 
         self::assertSame(['php', 'postgresql', 'flow'], $result->tags);
     }
@@ -118,7 +119,7 @@ final class ValinorTreeMapperTest extends TestCase
                 'street' => 'Main 1',
                 'city' => 'Warsaw',
             ],
-        ]);
+        ], MapperContextMother::any());
 
         self::assertSame(1, $result->id);
         self::assertSame('Jane', $result->name);
@@ -134,7 +135,7 @@ final class ValinorTreeMapperTest extends TestCase
             'id' => 1,
             'name' => 'Jane',
             'nickname' => null,
-        ]);
+        ], MapperContextMother::any());
 
         self::assertSame(1, $result->id);
         self::assertSame('Jane', $result->name);
@@ -149,7 +150,7 @@ final class ValinorTreeMapperTest extends TestCase
             'id' => 1,
             'name' => 'Jane',
             'email' => 'jane@example.com',
-        ]);
+        ], MapperContextMother::any());
 
         self::assertInstanceOf(SimpleDto::class, $result);
         self::assertSame(1, $result->id);
@@ -168,7 +169,7 @@ final class ValinorTreeMapperTest extends TestCase
             'name' => 'Jane',
             'email' => 'jane@example.com',
             'extra' => 'boom',
-        ]);
+        ], MapperContextMother::any());
     }
 
     public function test_wraps_mapping_error_as_mapping_exception_with_previous() : void
@@ -176,7 +177,7 @@ final class ValinorTreeMapperTest extends TestCase
         $mapper = new ValinorTreeMapper((new MapperBuilder())->mapper(), SimpleDto::class);
 
         try {
-            $mapper->map(['id' => 'not-an-int']);
+            $mapper->map(['id' => 'not-an-int'], MapperContextMother::any());
             self::fail('Expected MappingException was not thrown');
         } catch (MappingException $e) {
             self::assertInstanceOf(MappingError::class, $e->getPrevious());

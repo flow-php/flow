@@ -32,7 +32,7 @@ final readonly class TypeMapper implements RowMapper
     ) {
     }
 
-    public function map(array $row) : mixed
+    public function map(array $row, Context $context) : mixed
     {
         try {
             $result = $this->type->cast($row);
@@ -40,7 +40,7 @@ final readonly class TypeMapper implements RowMapper
             throw new MappingException('Failed to map database row to type: ' . $e->getMessage(), previous: $e);
         }
 
-        return $this->forward($result, $this->next);
+        return $this->forward($result, $this->next, $context);
     }
 
     /**
@@ -51,13 +51,13 @@ final readonly class TypeMapper implements RowMapper
      *
      * @return ($next is null ? TType : TForwardNext)
      */
-    private function forward(mixed $value, ?RowMapper $next) : mixed
+    private function forward(mixed $value, ?RowMapper $next, Context $context) : mixed
     {
         if ($next === null) {
             return $value;
         }
 
         /** @var array<string, mixed> $value */
-        return $next->map($value);
+        return $next->map($value, $context);
     }
 }

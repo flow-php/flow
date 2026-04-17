@@ -11,6 +11,7 @@ use CuyZ\Valinor\MapperBuilder;
 use Flow\PostgreSql\Bridge\Valinor\Tests\Unit\Fixture\{Address, SimpleDto, UserWithAddress};
 use Flow\PostgreSql\Bridge\Valinor\ValinorBuilderMapper;
 use Flow\PostgreSql\Client\Exception\MappingException;
+use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
 
 final class ValinorBuilderMapperTest extends TestCase
@@ -33,7 +34,7 @@ final class ValinorBuilderMapperTest extends TestCase
             'id' => 1,
             'name' => 'Jane',
             'address' => '{"street":"Main 1","city":"Warsaw"}',
-        ]);
+        ], MapperContextMother::any());
 
         self::assertInstanceOf(UserWithAddress::class, $result);
         self::assertInstanceOf(Address::class, $result->address);
@@ -45,8 +46,8 @@ final class ValinorBuilderMapperTest extends TestCase
     {
         $mapper = new ValinorBuilderMapper(new MapperBuilder(), SimpleDto::class);
 
-        $first = $mapper->map(['id' => 1, 'name' => 'Jane', 'email' => 'jane@example.com']);
-        $second = $mapper->map(['id' => 2, 'name' => 'John', 'email' => 'john@example.com']);
+        $first = $mapper->map(['id' => 1, 'name' => 'Jane', 'email' => 'jane@example.com'], MapperContextMother::any());
+        $second = $mapper->map(['id' => 2, 'name' => 'John', 'email' => 'john@example.com'], MapperContextMother::any());
 
         self::assertSame(1, $first->id);
         self::assertSame(2, $second->id);
@@ -60,7 +61,7 @@ final class ValinorBuilderMapperTest extends TestCase
             'id' => 1,
             'name' => 'Jane',
             'email' => 'jane@example.com',
-        ]);
+        ], MapperContextMother::any());
 
         self::assertInstanceOf(SimpleDto::class, $result);
         self::assertSame(1, $result->id);
@@ -73,7 +74,7 @@ final class ValinorBuilderMapperTest extends TestCase
         $mapper = new ValinorBuilderMapper(new MapperBuilder(), SimpleDto::class);
 
         try {
-            $mapper->map(['id' => 'not-an-int']);
+            $mapper->map(['id' => 'not-an-int'], MapperContextMother::any());
             self::fail('Expected MappingException was not thrown');
         } catch (MappingException $e) {
             self::assertInstanceOf(MappingError::class, $e->getPrevious());

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
 use Flow\PostgreSql\Client\{Cursor, RowMapper};
+use Flow\PostgreSql\Client\RowMapper\Context;
 use Flow\PostgreSql\Client\Types\ResultCaster;
 use PgSql\Result;
 
@@ -19,8 +20,10 @@ final class PgSqlCursor implements Cursor
 
     private readonly ResultCaster $resultCaster;
 
-    public function __construct(private ?Result $result)
-    {
+    public function __construct(
+        private ?Result $result,
+        private readonly Context $context,
+    ) {
         $this->resultCaster = new ResultCaster();
     }
 
@@ -61,7 +64,7 @@ final class PgSqlCursor implements Cursor
     public function map(RowMapper $mapper) : \Generator
     {
         foreach ($this->iterate() as $row) {
-            yield $mapper->map($row);
+            yield $mapper->map($row, $this->context);
         }
     }
 

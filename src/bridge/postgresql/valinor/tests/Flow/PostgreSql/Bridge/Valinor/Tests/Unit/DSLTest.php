@@ -8,6 +8,7 @@ use function Flow\PostgreSql\Bridge\Valinor\DSL\{valinor_builder_mapper, valinor
 use CuyZ\Valinor\MapperBuilder;
 use Flow\PostgreSql\Bridge\Valinor\Tests\Unit\Fixture\SimpleDto;
 use Flow\PostgreSql\Bridge\Valinor\{ValinorBuilderMapper, ValinorTreeMapper};
+use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
 
 final class DSLTest extends TestCase
@@ -19,7 +20,7 @@ final class DSLTest extends TestCase
         self::assertInstanceOf(ValinorBuilderMapper::class, $mapper);
         self::assertSame(
             1,
-            $mapper->map(['id' => 1, 'name' => 'Jane', 'email' => 'jane@example.com'])->id,
+            $mapper->map(['id' => 1, 'name' => 'Jane', 'email' => 'jane@example.com'], MapperContextMother::any())->id,
         );
     }
 
@@ -30,7 +31,7 @@ final class DSLTest extends TestCase
         self::assertInstanceOf(ValinorTreeMapper::class, $mapper);
         self::assertSame(
             1,
-            $mapper->map(['id' => 1, 'name' => 'Jane', 'email' => 'jane@example.com'])->id,
+            $mapper->map(['id' => 1, 'name' => 'Jane', 'email' => 'jane@example.com'], MapperContextMother::any())->id,
         );
     }
 }

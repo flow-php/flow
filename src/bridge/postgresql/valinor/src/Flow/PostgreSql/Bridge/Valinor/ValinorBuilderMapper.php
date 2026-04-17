@@ -8,6 +8,7 @@ use CuyZ\Valinor\Mapper\{MappingError, TreeMapper};
 use CuyZ\Valinor\MapperBuilder;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
+use Flow\PostgreSql\Client\RowMapper\Context;
 
 /**
  * @template T of object
@@ -33,7 +34,7 @@ final readonly class ValinorBuilderMapper implements RowMapper
      *
      * @return T
      */
-    public function map(array $row) : mixed
+    public function map(array $row, Context $context) : mixed
     {
         try {
             return $this->mapper->map($this->class, $row);

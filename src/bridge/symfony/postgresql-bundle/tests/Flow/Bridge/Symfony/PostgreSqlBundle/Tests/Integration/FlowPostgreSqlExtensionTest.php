@@ -9,7 +9,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\FlowPostgreSqlExten
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\{AttributeTestCatalogProvider, TestKernel, VoidTelemetryFactory};
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
-use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\{Client, Context};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryOptions, TraceableClient};
 use Flow\PostgreSql\Migrations\{Configuration as MigrationsConfiguration, MigrationsFactory, Migrator, VersionResolver};
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
@@ -51,10 +51,10 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        self::assertTrue($this->getContainer()->has('flow.postgresql.migrations.catalog_provider'));
-        self::assertInstanceOf(ChainCatalogProvider::class, $this->getContainer()->get('flow.postgresql.migrations.catalog_provider'));
+        self::assertTrue($this->getContainer()->has('flow.postgresql.catalog_provider'));
+        self::assertInstanceOf(ChainCatalogProvider::class, $this->getContainer()->get('flow.postgresql.catalog_provider'));
 
-        $catalog = $this->getContainer()->get('flow.postgresql.migrations.catalog_provider')->get();
+        $catalog = $this->getContainer()->get('flow.postgresql.catalog_provider')->get();
         self::assertTrue($catalog->get('public')->hasTable('attribute_test'));
     }
 
@@ -99,10 +99,10 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        self::assertTrue($this->getContainer()->has('flow.postgresql.migrations.catalog_provider'));
-        self::assertInstanceOf(ChainCatalogProvider::class, $this->getContainer()->get('flow.postgresql.migrations.catalog_provider'));
+        self::assertTrue($this->getContainer()->has('flow.postgresql.catalog_provider'));
+        self::assertInstanceOf(ChainCatalogProvider::class, $this->getContainer()->get('flow.postgresql.catalog_provider'));
 
-        $catalog = $this->getContainer()->get('flow.postgresql.migrations.catalog_provider')->get();
+        $catalog = $this->getContainer()->get('flow.postgresql.catalog_provider')->get();
         self::assertSame(['public'], $catalog->names());
         self::assertTrue($catalog->get('public')->hasTable('users'));
     }
@@ -136,8 +136,8 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        self::assertTrue($this->getContainer()->has('flow.postgresql.migrations.catalog_provider'));
-        self::assertInstanceOf(ChainCatalogProvider::class, $this->getContainer()->get('flow.postgresql.migrations.catalog_provider'));
+        self::assertTrue($this->getContainer()->has('flow.postgresql.catalog_provider'));
+        self::assertInstanceOf(ChainCatalogProvider::class, $this->getContainer()->get('flow.postgresql.catalog_provider'));
     }
 
     public function test_class_aliases_for_migration_services() : void
@@ -347,6 +347,127 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         ]);
 
         self::assertFalse($this->getContainer()->has('flow.postgresql.default.migrations.migrator'));
+    }
+
+    public function test_context_catalog_merged_with_user_data_when_both_configured() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                            'context' => [
+                                'tenant_id' => 42,
+                            ],
+                        ],
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => [
+                            ['name' => 'public', 'tables' => []],
+                        ]]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $context = $this->getContainer()->get('flow.postgresql.default.context');
+
+        self::assertInstanceOf(Context::class, $context);
+        self::assertSame(42, $context->all()['tenant_id']);
+        self::assertNotNull($context->catalog());
+        self::assertSame(['public'], $context->catalog()->names());
+    }
+
+    public function test_context_exposes_shared_catalog_for_every_connection_when_catalog_providers_configured() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                    $container->register('flow.postgresql.analytics.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                        'analytics' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/analytics',
+                        ],
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => [
+                            ['name' => 'public', 'tables' => []],
+                        ]]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $defaultContext = $this->getContainer()->get('flow.postgresql.default.context');
+        $analyticsContext = $this->getContainer()->get('flow.postgresql.analytics.context');
+
+        self::assertInstanceOf(Context::class, $defaultContext);
+        self::assertInstanceOf(Context::class, $analyticsContext);
+        self::assertNotNull($defaultContext->catalog());
+        self::assertNotNull($analyticsContext->catalog());
+        self::assertSame(['public'], $defaultContext->catalog()->names());
+        self::assertSame(['public'], $analyticsContext->catalog()->names());
+    }
+
+    public function test_context_is_not_registered_when_absent_from_config() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertFalse($this->getContainer()->has('flow.postgresql.default.context'));
+    }
+
+    public function test_context_service_is_registered_when_configured_on_connection() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                    $container->setParameter('app.cache_ttl', 3600);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                            'context' => [
+                                'tenant_id' => 42,
+                                'tags' => ['a', 'b'],
+                                'ttl' => '%app.cache_ttl%',
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $context = $this->getContainer()->get('flow.postgresql.default.context');
+
+        self::assertInstanceOf(Context::class, $context);
+        self::assertSame(42, $context->all()['tenant_id']);
+        self::assertSame(['a', 'b'], $context->all()['tags']);
+        self::assertSame(3600, $context->all()['ttl']);
     }
 
     public function test_database_commands_registered_for_any_connection() : void

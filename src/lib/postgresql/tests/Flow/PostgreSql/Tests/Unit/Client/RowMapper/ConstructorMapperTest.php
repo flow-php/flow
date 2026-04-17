@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
+use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
 
 final class ConstructorMapperTest extends TestCase
@@ -19,7 +20,7 @@ final class ConstructorMapperTest extends TestCase
             'extra_column' => 'ignored',
         ];
 
-        $result = (new ConstructorMapper(SimpleDto::class))->map($row);
+        $result = (new ConstructorMapper(SimpleDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(SimpleDto::class, $result);
         self::assertSame(1, $result->id);
@@ -33,7 +34,7 @@ final class ConstructorMapperTest extends TestCase
             'nickname' => null,
         ];
 
-        $result = (new ConstructorMapper(NullableDto::class))->map($row);
+        $result = (new ConstructorMapper(NullableDto::class))->map($row, MapperContextMother::any());
 
         self::assertNull($result->nickname);
     }
@@ -56,7 +57,7 @@ final class ConstructorMapperTest extends TestCase
             'tags' => $tags,
         ];
 
-        $result = (new ConstructorMapper(FullTypedDto::class))->map($row);
+        $result = (new ConstructorMapper(FullTypedDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(FullTypedDto::class, $result);
         self::assertSame(42, $result->id);
@@ -77,7 +78,7 @@ final class ConstructorMapperTest extends TestCase
             'tags' => $tags,
         ];
 
-        $result = (new ConstructorMapper(ArrayDto::class))->map($row);
+        $result = (new ConstructorMapper(ArrayDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(ArrayDto::class, $result);
         self::assertSame($tags, $result->tags);
@@ -91,7 +92,7 @@ final class ConstructorMapperTest extends TestCase
             'verified' => false,
         ];
 
-        $result = (new ConstructorMapper(BoolDto::class))->map($row);
+        $result = (new ConstructorMapper(BoolDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(BoolDto::class, $result);
         self::assertTrue($result->active);
@@ -106,7 +107,7 @@ final class ConstructorMapperTest extends TestCase
             'createdAt' => $createdAt,
         ];
 
-        $result = (new ConstructorMapper(DateTimeDto::class))->map($row);
+        $result = (new ConstructorMapper(DateTimeDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(DateTimeDto::class, $result);
         self::assertSame($createdAt, $result->createdAt);
@@ -120,7 +121,7 @@ final class ConstructorMapperTest extends TestCase
             'discount' => \NAN,
         ];
 
-        $result = (new ConstructorMapper(FloatDto::class))->map($row);
+        $result = (new ConstructorMapper(FloatDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(FloatDto::class, $result);
         self::assertSame(\INF, $result->price);
@@ -135,7 +136,7 @@ final class ConstructorMapperTest extends TestCase
             'discount' => 0.15,
         ];
 
-        $result = (new ConstructorMapper(FloatDto::class))->map($row);
+        $result = (new ConstructorMapper(FloatDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(FloatDto::class, $result);
         self::assertSame(99.99, $result->price);
@@ -150,7 +151,7 @@ final class ConstructorMapperTest extends TestCase
             'metadata' => $json,
         ];
 
-        $result = (new ConstructorMapper(JsonDto::class))->map($row);
+        $result = (new ConstructorMapper(JsonDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(JsonDto::class, $result);
         self::assertSame($json, $result->metadata);
@@ -163,7 +164,7 @@ final class ConstructorMapperTest extends TestCase
             'id' => 1,
         ];
 
-        $result = (new ConstructorMapper(NullableTypedDto::class))->map($row);
+        $result = (new ConstructorMapper(NullableTypedDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(NullableTypedDto::class, $result);
         self::assertSame(1, $result->id);
@@ -188,7 +189,7 @@ final class ConstructorMapperTest extends TestCase
             'tags' => $tags,
         ];
 
-        $result = (new ConstructorMapper(NullableTypedDto::class))->map($row);
+        $result = (new ConstructorMapper(NullableTypedDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(NullableTypedDto::class, $result);
         self::assertSame($createdAt, $result->createdAt);
@@ -204,7 +205,7 @@ final class ConstructorMapperTest extends TestCase
             'name' => 'John Doe',
         ];
 
-        $result = (new ConstructorMapper(NullableDto::class))->map($row);
+        $result = (new ConstructorMapper(NullableDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(NullableDto::class, $result);
         self::assertSame(1, $result->id);
@@ -220,7 +221,7 @@ final class ConstructorMapperTest extends TestCase
             'email' => 'john@example.com',
         ];
 
-        $result = (new ConstructorMapper(SimpleDto::class))->map($row);
+        $result = (new ConstructorMapper(SimpleDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(SimpleDto::class, $result);
         self::assertSame(1, $result->id);
@@ -236,7 +237,7 @@ final class ConstructorMapperTest extends TestCase
             'uuid' => $uuid,
         ];
 
-        $result = (new ConstructorMapper(UuidDto::class))->map($row);
+        $result = (new ConstructorMapper(UuidDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(UuidDto::class, $result);
         self::assertSame($uuid, $result->uuid);
@@ -247,7 +248,7 @@ final class ConstructorMapperTest extends TestCase
         $this->expectException(MappingException::class);
         $this->expectExceptionMessage('Class has no constructor');
 
-        (new ConstructorMapper(NoConstructorDto::class))->map(['id' => 1]);
+        (new ConstructorMapper(NoConstructorDto::class))->map(['id' => 1], MapperContextMother::any());
     }
 
     public function test_throws_for_missing_required_parameter() : void
@@ -259,7 +260,7 @@ final class ConstructorMapperTest extends TestCase
         $this->expectException(MappingException::class);
         $this->expectExceptionMessage('Property "name" not found');
 
-        (new ConstructorMapper(SimpleDto::class))->map($row);
+        (new ConstructorMapper(SimpleDto::class))->map($row, MapperContextMother::any());
     }
 
     public function test_uses_default_values() : void
@@ -269,7 +270,7 @@ final class ConstructorMapperTest extends TestCase
             'name' => 'John Doe',
         ];
 
-        $result = (new ConstructorMapper(DefaultValueDto::class))->map($row);
+        $result = (new ConstructorMapper(DefaultValueDto::class))->map($row, MapperContextMother::any());
 
         self::assertInstanceOf(DefaultValueDto::class, $result);
         self::assertSame(1, $result->id);
