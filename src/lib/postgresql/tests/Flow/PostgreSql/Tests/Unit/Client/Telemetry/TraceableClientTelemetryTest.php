@@ -9,6 +9,7 @@ use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryAttributes, PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions};
 use Flow\PostgreSql\Explain\Plan\{Cost, Plan, PlanNode, PlanNodeType};
+use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Clock\SystemClock;
@@ -178,7 +179,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $mockClient->method('fetchAllInto')->willReturn($users);
 
         $client = traceable_postgresql_client($mockClient, $config);
-        $client->fetchAllInto(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class), 'SELECT * FROM users');
+        $client->fetchAllInto(new SpyRowMapper(), 'SELECT * FROM users');
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
@@ -198,7 +199,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $mockClient->method('fetchInto')->willReturn($user);
 
         $client = traceable_postgresql_client($mockClient, $config);
-        $client->fetchInto(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class), 'SELECT * FROM users WHERE id = $1', [1]);
+        $client->fetchInto(new SpyRowMapper(), 'SELECT * FROM users WHERE id = $1', [1]);
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
@@ -218,7 +219,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $mockClient->method('fetchOneInto')->willReturn($user);
 
         $client = traceable_postgresql_client($mockClient, $config);
-        $client->fetchOneInto(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class), 'SELECT * FROM users WHERE id = $1', [1]);
+        $client->fetchOneInto(new SpyRowMapper(), 'SELECT * FROM users WHERE id = $1', [1]);
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);

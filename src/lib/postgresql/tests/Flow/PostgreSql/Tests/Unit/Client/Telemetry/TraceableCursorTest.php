@@ -8,6 +8,7 @@ use function Flow\PostgreSql\DSL\{pgsql_connection_params, postgresql_telemetry_
 use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
 use Flow\PostgreSql\Client\{ConnectionParameters, Cursor};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryAttributes, PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableCursor};
+use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use PHPUnit\Framework\TestCase;
@@ -147,7 +148,7 @@ final class TraceableCursorTest extends TestCase
 
         $objects = [];
 
-        foreach ($cursor->map(new \Flow\PostgreSql\Client\RowMapper\ConstructorMapper(\stdClass::class)) as $object) {
+        foreach ($cursor->map(new SpyRowMapper()) as $object) {
             $objects[] = $object;
         }
 

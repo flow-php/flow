@@ -10,7 +10,7 @@ use Flow\PostgreSql\Client\{ConnectionParameters, Context, TypedValue};
 use Flow\PostgreSql\Client\{DsnParser, RowMapper};
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
-use Flow\PostgreSql\Client\RowMapper\{ConstructorMapper, TypeMapper};
+use Flow\PostgreSql\Client\RowMapper\{ConstructorMapper, StaticFactoryMapper, TypeMapper};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableClient};
 use Flow\PostgreSql\Client\Types\{ValueConverters, ValueType};
 use Flow\PostgreSql\Schema\Catalog;
@@ -303,6 +303,26 @@ function constructor_mapper(string $class) : ConstructorMapper
 function type_mapper(FlowType $type, ?RowMapper $next = null) : TypeMapper
 {
     return new TypeMapper($type, $next);
+}
+
+/**
+ * Create a row mapper backed by a public static factory method.
+ *
+ * The factory method must accept a single array<string, mixed> $row and return
+ * an instance of the target class. If your factory needs access to the mapping
+ * Context (sql/parameters/client/catalog/user-data), implement RowMapper directly.
+ *
+ * @template T of object
+ *
+ * @param class-string<T> $class
+ * @param non-empty-string $method
+ *
+ * @return StaticFactoryMapper<T>
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function static_factory_mapper(string $class, string $method) : StaticFactoryMapper
+{
+    return new StaticFactoryMapper($class, $method);
 }
 
 /**

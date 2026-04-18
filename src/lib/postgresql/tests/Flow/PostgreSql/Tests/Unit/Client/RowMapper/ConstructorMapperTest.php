@@ -248,7 +248,7 @@ final class ConstructorMapperTest extends TestCase
         $this->expectException(MappingException::class);
         $this->expectExceptionMessage('Class has no constructor');
 
-        (new ConstructorMapper(NoConstructorDto::class))->map(['id' => 1], MapperContextMother::any());
+        new ConstructorMapper(NoConstructorDto::class);
     }
 
     public function test_throws_for_missing_required_parameter() : void
