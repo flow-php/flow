@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-04-17
+## [Unreleased] - 2026-04-19
 
 ### Added
+- [#2313](https://github.com/flow-php/flow/pull/2313) - **Context to PostgreSql RowMapper** - [@norberttech](https://github.com/norberttech)
+- [#2313](https://github.com/flow-php/flow/pull/2313) - **StaticFactory row mapper implementation for PostgreSql Client** - [@norberttech](https://github.com/norberttech)
+- [#2313](https://github.com/flow-php/flow/pull/2313) - **Custom context to PostgreSql Client - supported by Symfony Bundle** - [@norberttech](https://github.com/norberttech)
 - [#2306](https://github.com/flow-php/flow/pull/2306) - **flow-php/postgrsql-valinor-bridge** - [@norberttech](https://github.com/norberttech)
 - [#2306](https://github.com/flow-php/flow/pull/2306) - **RowMapper $next = null to TypeMapper** - [@norberttech](https://github.com/norberttech)
 - [#2300](https://github.com/flow-php/flow/pull/2300) - **support for protobuf ^4 | ^5** - [@norberttech](https://github.com/norberttech)
