@@ -6,8 +6,9 @@ namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
 use function Flow\PostgreSql\DSL\{begin, commit, listen, release_savepoint, rollback, savepoint, unlisten};
 use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, Notification, RowMapper, TransactionContext, TypedValue};
+use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context as ClientContext, Cursor, Notification, Query, RowMapper, TransactionContext, TypedValue};
 use Flow\PostgreSql\Client\Exception\{ConnectionException, PostgreSqlError, QueryException, ResultException, TransactionException, ValueConversionException};
+use Flow\PostgreSql\Client\RowMapper\Context;
 use Flow\PostgreSql\Client\Types\{ResultCaster, ValueConverters, ValueType};
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
@@ -30,6 +31,7 @@ final class PgSqlClient implements Client
         private ?Connection $connection,
         private readonly ConnectionParameters $connectionParameters,
         private readonly ValueConverters $valueConverters,
+        private readonly ClientContext $clientContext = new ClientContext(),
     ) {
         $this->resultCaster = new ResultCaster();
         $this->transactionContext = new TransactionContext();
@@ -41,6 +43,7 @@ final class PgSqlClient implements Client
     public static function connect(
         ConnectionParameters $params,
         ?ValueConverters $valueConverters = null,
+        ?ClientContext $context = null,
     ) : self {
         if (!\extension_loaded('pgsql')) {
             throw ConnectionException::extensionNotLoaded('pgsql');
@@ -59,6 +62,7 @@ final class PgSqlClient implements Client
             $connection,
             $params,
             $valueConverters ?? ValueConverters::create(),
+            $context ?? new ClientContext(),
         );
     }
 
@@ -111,7 +115,7 @@ final class PgSqlClient implements Client
     {
         $result = $this->query($sql, $parameters);
 
-        return new PgSqlCursor($result);
+        return new PgSqlCursor($result, $this->buildContext($sql, $parameters));
     }
 
     public function execute(Sql|string $sql, array $parameters = []) : int
@@ -176,8 +180,10 @@ final class PgSqlClient implements Client
         Sql|string $sql,
         array $parameters = [],
     ) : array {
+        $context = $this->buildContext($sql, $parameters);
+
         return \array_values(\array_map(
-            static fn (array $row) => $mapper->map($row),
+            static fn (array $row) => $mapper->map($row, $context),
             $this->fetchAll($sql, $parameters),
         ));
     }
@@ -193,7 +199,7 @@ final class PgSqlClient implements Client
             return null;
         }
 
-        return $mapper->map($row);
+        return $mapper->map($row, $this->buildContext($sql, $parameters));
     }
 
     public function fetchOne(Sql|string $sql, array $parameters = []) : array
@@ -232,7 +238,7 @@ final class PgSqlClient implements Client
         Sql|string $sql,
         array $parameters = [],
     ) : mixed {
-        return $mapper->map($this->fetchOne($sql, $parameters));
+        return $mapper->map($this->fetchOne($sql, $parameters), $this->buildContext($sql, $parameters));
     }
 
     public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed
@@ -496,6 +502,18 @@ final class PgSqlClient implements Client
         if (!$this->isConnected()) {
             throw ConnectionException::notConnected();
         }
+    }
+
+    /**
+     * @param array<int, mixed> $parameters
+     */
+    private function buildContext(Sql|string $sql, array $parameters) : Context
+    {
+        return new Context(
+            query: new Query($sql, $parameters),
+            client: $this,
+            clientContext: $this->clientContext,
+        );
     }
 
     /**

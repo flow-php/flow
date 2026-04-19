@@ -22,33 +22,42 @@ use Flow\PostgreSql\Client\RowMapper;
  */
 final readonly class ConstructorMapper implements RowMapper
 {
-    /**
-     * @param class-string<T> $class
-     */
-    public function __construct(private string $class)
-    {
-    }
+    /** @var list<\ReflectionParameter> */
+    private array $parameters;
+
+    /** @var \ReflectionClass<T> */
+    private \ReflectionClass $reflection;
 
     /**
-     * @return T
+     * @param class-string<T> $class
+     *
+     * @throws MappingException
      */
-    public function map(array $row) : object
+    public function __construct(private string $class)
     {
         if (!\class_exists($this->class)) {
             throw MappingException::mappingFailed($this->class, 'Class does not exist');
         }
 
-        $reflection = new \ReflectionClass($this->class);
+        $this->reflection = new \ReflectionClass($this->class);
 
-        $constructor = $reflection->getConstructor();
+        $constructor = $this->reflection->getConstructor();
 
         if ($constructor === null) {
             throw MappingException::mappingFailed($this->class, 'Class has no constructor');
         }
 
+        $this->parameters = $constructor->getParameters();
+    }
+
+    /**
+     * @return T
+     */
+    public function map(array $row, Context $context) : object
+    {
         $args = [];
 
-        foreach ($constructor->getParameters() as $param) {
+        foreach ($this->parameters as $param) {
             $paramName = $param->getName();
 
             if (\array_key_exists($paramName, $row)) {
@@ -63,7 +72,7 @@ final readonly class ConstructorMapper implements RowMapper
         }
 
         try {
-            return $reflection->newInstanceArgs($args);
+            return $this->reflection->newInstanceArgs($args);
         } catch (\Throwable $e) {
             throw MappingException::mappingFailed($this->class, $e->getMessage());
         }

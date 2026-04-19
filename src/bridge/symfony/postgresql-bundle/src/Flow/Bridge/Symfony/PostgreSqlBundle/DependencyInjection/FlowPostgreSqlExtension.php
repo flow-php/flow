@@ -14,7 +14,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepositor
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, DsnParser};
+use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context, DsnParser};
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableClient};
 use Flow\PostgreSql\Migrations\{Configuration as MigrationsConfiguration, MigrationsFactory, Migrator, VersionResolver};
@@ -47,7 +47,7 @@ final class FlowPostgreSqlExtension extends Extension
     {
         $configuration = new Configuration();
 
-        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
+        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $isFirst = true;
@@ -60,6 +60,7 @@ final class FlowPostgreSqlExtension extends Extension
 
         $this->registerCatalogProviders($config['catalog_providers'] ?? [], $container);
 
+        $container->setParameter('flow.postgresql.connections', $connectionNames);
         $container->setParameter('flow.postgresql.default_connection', $connectionNames[0]);
 
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
@@ -106,7 +107,7 @@ final class FlowPostgreSqlExtension extends Extension
     }
 
     /**
-     * @param array{dsn: string, test_transaction_rollback: bool, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
+     * @param array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
      */
     private function registerConnection(string $name, array $connectionConfig, ContainerBuilder $container, bool $isFirst) : void
     {
@@ -120,9 +121,22 @@ final class FlowPostgreSqlExtension extends Extension
 
         $paramsDef->setPublic(true);
 
+        $clientArguments = [new Reference("flow.postgresql.{$name}.connection_parameters")];
+
+        if (\array_key_exists('context', $connectionConfig) && $connectionConfig['context'] !== []) {
+            $contextDef = new Definition(Context::class, [
+                null,
+                $connectionConfig['context'],
+            ]);
+            $container->setDefinition("flow.postgresql.{$name}.context", $contextDef);
+
+            $clientArguments[] = null;
+            $clientArguments[] = new Reference("flow.postgresql.{$name}.context");
+        }
+
         $clientDef = new Definition(PgSqlClient::class);
         $clientDef->setFactory([PgSqlClient::class, 'connect']);
-        $clientDef->setArguments([new Reference("flow.postgresql.{$name}.connection_parameters")]);
+        $clientDef->setArguments($clientArguments);
         $clientDef->setPublic(true);
         $container->setDefinition("flow.postgresql.{$name}.client", $clientDef);
 
@@ -184,7 +198,7 @@ final class FlowPostgreSqlExtension extends Extension
     private function registerMigrations(string $name, array $mc, ContainerBuilder $container, bool $isFirst) : void
     {
 
-        $catalogProviderRef = new Reference('flow.postgresql.migrations.catalog_provider');
+        $catalogProviderRef = new Reference('flow.postgresql.catalog_provider');
 
         $configDef = new Definition(MigrationsConfiguration::class, [
             new Reference("flow.postgresql.{$name}.client"),

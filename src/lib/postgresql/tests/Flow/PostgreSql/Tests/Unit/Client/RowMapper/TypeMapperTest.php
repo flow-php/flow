@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\Types\DSL\{type_boolean, type_datetime, type_integer, type_list, type_optional, type_string, type_structure, type_uuid};
 use Flow\PostgreSql\Client\Exception\MappingException;
+use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\{RecordedResult, SpyRowMapper};
 use Flow\Types\Type;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -200,10 +201,28 @@ final class TypeMapperTest extends TestCase
                 ]),
             ]),
             $spy,
-        )->map(['metadata' => '{"theme":"dark"}']);
+        )->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any());
 
         self::assertInstanceOf(RecordedResult::class, $result);
         self::assertSame(['metadata' => ['theme' => 'dark']], $result->row);
+    }
+
+    public function test_chaining_forwards_same_context_to_next() : void
+    {
+        $spy = new SpyRowMapper();
+        $context = MapperContextMother::any();
+
+        type_mapper(
+            type_structure([
+                'metadata' => type_structure([
+                    'theme' => type_string(),
+                ]),
+            ]),
+            $spy,
+        )->map(['metadata' => '{"theme":"dark"}'], $context);
+
+        self::assertCount(1, $spy->receivedContexts);
+        self::assertSame($context, $spy->receivedContexts[0]);
     }
 
     public function test_chaining_is_skipped_when_cast_fails() : void
@@ -218,7 +237,7 @@ final class TypeMapperTest extends TestCase
                     ]),
                 ]),
                 $spy,
-            )->map(['metadata' => '{not valid json}']);
+            )->map(['metadata' => '{not valid json}'], MapperContextMother::any());
             self::fail('Expected MappingException was not thrown');
         } catch (MappingException) {
             self::assertSame([], $spy->receivedRows);
@@ -234,7 +253,7 @@ final class TypeMapperTest extends TestCase
     {
         $this->expectException(MappingException::class);
         $this->expectExceptionMessage('Failed to map database row to type:');
-        type_mapper($type)->map($data);
+        type_mapper($type)->map($data, MapperContextMother::any());
     }
 
     /**
@@ -244,7 +263,7 @@ final class TypeMapperTest extends TestCase
     #[DataProvider('provide_valid_mappings')]
     public function test_valid_mapping(array $data, Type $type, mixed $output) : void
     {
-        self::assertEquals($output, type_mapper($type)->map($data));
+        self::assertEquals($output, type_mapper($type)->map($data, MapperContextMother::any()));
     }
 
     public function test_when_next_is_null_returns_cast_result_directly() : void
@@ -252,7 +271,7 @@ final class TypeMapperTest extends TestCase
         $result = type_mapper(type_structure([
             'id' => type_string(),
             'name' => type_string(),
-        ]))->map(['id' => 'abc', 'name' => 'Alice']);
+        ]))->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
 
         self::assertSame(['id' => 'abc', 'name' => 'Alice'], $result);
     }
@@ -267,7 +286,7 @@ final class TypeMapperTest extends TestCase
                 'name' => type_string(),
             ]),
             $spy,
-        )->map(['id' => 'abc', 'name' => 'Alice']);
+        )->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
 
         self::assertInstanceOf(RecordedResult::class, $result);
         self::assertSame(['id' => 'abc', 'name' => 'Alice'], $result->row);

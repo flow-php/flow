@@ -6,13 +6,14 @@ namespace Flow\PostgreSql\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PostgreSql\Client;
-use Flow\PostgreSql\Client\{ConnectionParameters, TypedValue};
+use Flow\PostgreSql\Client\{ConnectionParameters, Context, TypedValue};
 use Flow\PostgreSql\Client\{DsnParser, RowMapper};
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
-use Flow\PostgreSql\Client\RowMapper\{ConstructorMapper, TypeMapper};
+use Flow\PostgreSql\Client\RowMapper\{ConstructorMapper, StaticFactoryMapper, TypeMapper};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableClient};
 use Flow\PostgreSql\Client\Types\{ValueConverters, ValueType};
+use Flow\PostgreSql\Schema\Catalog;
 use Flow\Telemetry\Telemetry;
 use Flow\Types\Type as FlowType;
 use Psr\Clock\ClockInterface;
@@ -103,6 +104,7 @@ function pgsql_connection_params(
  *
  * @param Client\ConnectionParameters $params Connection parameters
  * @param null|ValueConverters $valueConverters Custom type converters (optional)
+ * @param null|Context $context Base mapper Context — the Client enriches it with sql/parameters/self per query before handing it to RowMapper::map()
  *
  * @throws ConnectionException If connection fails
  */
@@ -110,8 +112,23 @@ function pgsql_connection_params(
 function pgsql_client(
     ConnectionParameters $params,
     ?ValueConverters $valueConverters = null,
+    ?Context $context = null,
 ) : Client\Client {
-    return PgSqlClient::connect($params, $valueConverters);
+    return PgSqlClient::connect($params, $valueConverters, $context);
+}
+
+/**
+ * Create a RowMapper Context seeded with user-supplied key/value data and an optional Catalog.
+ *
+ * The Context is later enriched with a Query (sql + parameters) and the executing Client by the
+ * PostgreSQL Client before being handed to RowMapper::map().
+ *
+ * @param array<string, mixed> $data User-supplied key/value pairs
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function postgresql_context(array $data = [], ?Catalog $catalog = null) : Context
+{
+    return new Context(catalog: $catalog, data: $data);
 }
 
 /**
@@ -286,6 +303,26 @@ function constructor_mapper(string $class) : ConstructorMapper
 function type_mapper(FlowType $type, ?RowMapper $next = null) : TypeMapper
 {
     return new TypeMapper($type, $next);
+}
+
+/**
+ * Create a row mapper backed by a public static factory method.
+ *
+ * The factory method must accept a single array<string, mixed> $row and return
+ * an instance of the target class. If your factory needs access to the mapping
+ * Context (sql/parameters/client/catalog/user-data), implement RowMapper directly.
+ *
+ * @template T of object
+ *
+ * @param class-string<T> $class
+ * @param non-empty-string $method
+ *
+ * @return StaticFactoryMapper<T>
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function static_factory_mapper(string $class, string $method) : StaticFactoryMapper
+{
+    return new StaticFactoryMapper($class, $method);
 }
 
 /**

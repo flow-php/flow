@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\PostgreSQL;
 
-use Flow\PostgreSql\Client\{Client, ConnectionParameters};
+use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context};
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 
@@ -51,16 +51,16 @@ final class StaticClient
         self::$clients = [];
     }
 
-    public static function connect(ConnectionParameters $params, ?ValueConverters $converters = null) : Client
+    public static function connect(ConnectionParameters $params, ?ValueConverters $converters = null, ?Context $context = null) : Client
     {
         if (!self::$enabled) {
-            return PgSqlClient::connect($params, $converters);
+            return PgSqlClient::connect($params, $converters, $context);
         }
 
         $key = \sha1(\sprintf('%s:%d:%s:%s', $params->host(), $params->port(), $params->database(), $params->user() ?? ''));
 
         if (!\array_key_exists($key, self::$clients) || !self::$clients[$key]->isConnected()) {
-            self::$clients[$key] = PgSqlClient::connect($params, $converters);
+            self::$clients[$key] = PgSqlClient::connect($params, $converters, $context);
 
             if (self::$transactionActive) {
                 self::$clients[$key]->beginTransaction();
