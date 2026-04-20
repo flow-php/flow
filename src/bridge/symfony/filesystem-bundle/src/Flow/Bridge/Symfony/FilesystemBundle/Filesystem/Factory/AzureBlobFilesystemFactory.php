@@ -10,7 +10,7 @@ use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Bridge\Azure\Options;
-use Flow\Filesystem\{Filesystem, Protocol};
+use Flow\Filesystem\Filesystem;
 use Http\Discovery\{Psr17FactoryDiscovery, Psr18ClientDiscovery};
 use Psr\Container\ContainerInterface;
 use Psr\Http\Client\ClientInterface;
@@ -23,29 +23,21 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
     {
     }
 
-    public function create(Protocol $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config) : Filesystem
     {
-        if (!$this->protocol()->is($protocol->name)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "%s" cannot create filesystem for protocol "%s".',
-                $this->protocol()->name,
-                $protocol->name,
-            ));
-        }
-
         $allowed = ['container', 'client_service_id', 'client', 'options'];
         $unknown = \array_diff(\array_keys($config), $allowed);
 
         if ($unknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "azure-blob" received unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "azure_blob" received unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $unknown),
                 \implode(', ', $allowed),
             ));
         }
 
         if (!\is_string($config['container'] ?? null) || $config['container'] === '') {
-            throw new InvalidArgumentException('Filesystem factory for protocol "azure-blob" requires a non-empty `container` option.');
+            throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" requires a non-empty `container` option.');
         }
 
         $container = $config['container'];
@@ -53,7 +45,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         $clientConfig = $config['client'] ?? null;
 
         if (($clientServiceId === null) === ($clientConfig === null)) {
-            throw new InvalidArgumentException('Filesystem factory for protocol "azure-blob" requires exactly one of `client_service_id` or `client`.');
+            throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" requires exactly one of `client_service_id` or `client`.');
         }
 
         if (\is_string($clientServiceId) && $clientServiceId !== '') {
@@ -69,12 +61,12 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         $options = $this->buildOptions($config['options'] ?? null);
 
-        return azure_filesystem($blobService, $options);
+        return azure_filesystem($blobService, $options, $protocol);
     }
 
-    public function protocol() : Protocol
+    public function type() : string
     {
-        return new Protocol('azure-blob');
+        return 'azure_blob';
     }
 
     /**
@@ -87,20 +79,20 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         if ($unknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "azure-blob" `client` contains unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "azure_blob" `client` contains unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $unknown),
                 \implode(', ', $allowed),
             ));
         }
 
         if (!\is_string($clientConfig['account_name'] ?? null) || $clientConfig['account_name'] === '') {
-            throw new InvalidArgumentException('Filesystem factory for protocol "azure-blob" `client.account_name` must be a non-empty string.');
+            throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" `client.account_name` must be a non-empty string.');
         }
 
         $accountName = $clientConfig['account_name'];
 
         if (!\is_array($clientConfig['auth'] ?? null) || !\is_string($clientConfig['auth']['shared_key'] ?? null) || $clientConfig['auth']['shared_key'] === '') {
-            throw new InvalidArgumentException('Filesystem factory for protocol "azure-blob" `client.auth.shared_key` must be a non-empty string.');
+            throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" `client.auth.shared_key` must be a non-empty string.');
         }
 
         $authAllowed = ['shared_key'];
@@ -108,7 +100,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         if ($authUnknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "azure-blob" `client.auth` contains unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "azure_blob" `client.auth` contains unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $authUnknown),
                 \implode(', ', $authAllowed),
             ));
@@ -148,7 +140,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         }
 
         if (!\is_array($optionsConfig)) {
-            throw new InvalidArgumentException('Filesystem factory for protocol "azure-blob" `options` must be an array.');
+            throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" `options` must be an array.');
         }
 
         $allowed = ['block_size', 'list_blob_max_results'];
@@ -156,7 +148,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         if ($unknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "azure-blob" `options` contains unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "azure_blob" `options` contains unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $unknown),
                 \implode(', ', $allowed),
             ));

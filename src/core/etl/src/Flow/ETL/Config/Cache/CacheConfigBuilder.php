@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Cache;
 
-use function Flow\Filesystem\DSL\{path_real, protocol};
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\{FilesystemCache, TraceableCache};
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
@@ -21,13 +21,15 @@ final class CacheConfigBuilder
      */
     private int $externalSortBucketsCount = 100;
 
+    private string $filesystemProtocol = 'file';
+
     public function build(FilesystemTable $fstab, Serializer $serializer, ?TelemetryConfig $telemetryConfig = null, string $dataframeName = 'flow_dataframe') : CacheConfig
     {
         $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
         $cachePath = path_real($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
 
         $cache = $this->cache ?? new FilesystemCache(
-            $fstab->for(protocol('file')),
+            $fstab->for($this->filesystemProtocol),
             $serializer,
             cacheDir: $cachePath
         );
@@ -39,7 +41,8 @@ final class CacheConfigBuilder
         return new CacheConfig(
             cache: $cache,
             localFilesystemCacheDir: $cachePath,
-            externalSortBucketsCount: $this->externalSortBucketsCount
+            externalSortBucketsCount: $this->externalSortBucketsCount,
+            filesystemProtocol: $this->filesystemProtocol,
         );
     }
 
@@ -60,6 +63,13 @@ final class CacheConfigBuilder
         }
 
         $this->externalSortBucketsCount = $externalSortBucketsCount;
+
+        return $this;
+    }
+
+    public function filesystemProtocol(string $protocol) : self
+    {
+        $this->filesystemProtocol = $protocol;
 
         return $this;
     }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use function Flow\ETL\Adapter\Parquet\to_parquet;
-use function Flow\Filesystem\DSL\{path_memory, path_stdout};
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\{Loader, Schema};
+use Flow\Filesystem\Path;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 
@@ -24,25 +24,9 @@ final readonly class ParquetOutput implements Output
     ) {
     }
 
-    public function memoryLoader(string $id) : Loader
+    public function loader(Path $path) : Loader
     {
-        $loader = to_parquet(path_memory($id, ['stream' => 'temp']))
-            ->withCompressions($this->compressions);
-
-        if ($this->options !== null) {
-            $loader->withOptions($this->options);
-        }
-
-        if ($this->schema !== null) {
-            $loader->withSchema($this->schema);
-        }
-
-        return $loader;
-    }
-
-    public function stdoutLoader() : Loader
-    {
-        $loader = to_parquet(path_stdout(['stream' => 'output']))
+        $loader = to_parquet($path)
             ->withCompressions($this->compressions);
 
         if ($this->options !== null) {

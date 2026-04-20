@@ -94,7 +94,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
 
         $fs = new FakeNativeLocalFilesystem();
 
-        $file = path($fs->protocol()->scheme() . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
+        $file = path($fs->mount()->protocol . '://' . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
 
         $streams = new FilesystemStreams(new FilesystemTable($fs));
         $streams->setMode(overwrite());

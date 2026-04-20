@@ -7,11 +7,10 @@ use function Flow\ETL\DSL\{data_frame, schema_from_json, schema_to_json, to_outp
 use Flow\ETL\Loader\StreamLoader\Output;
 use function Flow\Filesystem\DSL\fstab;
 use function Flow\Filesystem\DSL\path;
-use function Flow\Filesystem\DSL\protocol;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$fs = fstab()->for(protocol('file'));
+$fs = fstab()->for('file');
 
 if ($fs->status(path(__DIR__ . '/output/schema.json')) === null) {
     $schema = data_frame()

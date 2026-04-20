@@ -7,7 +7,6 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit\Filesystem;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\{InvalidArgumentException, LogicException};
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactoryRegistry;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Double\StubFilesystemFactory;
-use Flow\Filesystem\Protocol;
 use PHPUnit\Framework\TestCase;
 
 final class FilesystemFactoryRegistryTest extends TestCase
@@ -16,63 +15,59 @@ final class FilesystemFactoryRegistryTest extends TestCase
     {
         $registry = new FilesystemFactoryRegistry([]);
 
-        self::assertSame([], $registry->protocols());
-        self::assertFalse($registry->has(new Protocol('file')));
+        self::assertSame([], $registry->types());
+        self::assertFalse($registry->has('file'));
     }
 
-    public function test_get_throws_on_unknown_protocol() : void
+    public function test_get_throws_on_unknown_type() : void
     {
         $registry = new FilesystemFactoryRegistry([new StubFilesystemFactory('memory')]);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('No filesystem factory registered for protocol "file". Available protocols: [memory].');
+        $this->expectExceptionMessage('No filesystem factory registered for type "file". Available types: [memory].');
 
-        $registry->get(new Protocol('file'));
+        $registry->get('file');
     }
 
-    public function test_has_returns_false_for_unknown_protocol() : void
+    public function test_has_returns_false_for_unknown_type() : void
     {
-        $registry = new FilesystemFactoryRegistry([new StubFilesystemFactory('memory')]);
-
-        self::assertFalse($registry->has(new Protocol('file')));
+        self::assertFalse((new FilesystemFactoryRegistry([new StubFilesystemFactory('memory')]))->has('file'));
     }
 
-    public function test_has_returns_true_for_registered_protocol() : void
+    public function test_has_returns_true_for_registered_type() : void
     {
-        $registry = new FilesystemFactoryRegistry([new StubFilesystemFactory('memory')]);
-
-        self::assertTrue($registry->has(new Protocol('memory')));
+        self::assertTrue((new FilesystemFactoryRegistry([new StubFilesystemFactory('memory')]))->has('memory'));
     }
 
-    public function test_protocols_lists_registered_factory_protocols() : void
-    {
-        $registry = new FilesystemFactoryRegistry([
-            new StubFilesystemFactory('memory'),
-            new StubFilesystemFactory('file'),
-        ]);
-
-        self::assertSame(['memory', 'file'], $registry->protocols());
-    }
-
-    public function test_returns_factory_by_protocol() : void
+    public function test_returns_factory_by_type() : void
     {
         $memory = new StubFilesystemFactory('memory');
         $local = new StubFilesystemFactory('file');
 
         $registry = new FilesystemFactoryRegistry([$memory, $local]);
 
-        self::assertSame($memory, $registry->get(new Protocol('memory')));
-        self::assertSame($local, $registry->get(new Protocol('file')));
+        self::assertSame($memory, $registry->get('memory'));
+        self::assertSame($local, $registry->get('file'));
     }
 
-    public function test_throws_on_duplicate_factory_protocol() : void
+    public function test_throws_on_duplicate_factory_type() : void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Duplicate filesystem factory for protocol "memory".');
+        $this->expectExceptionMessage('Duplicate filesystem factory for type "memory".');
 
         new FilesystemFactoryRegistry([
             new StubFilesystemFactory('memory'),
             new StubFilesystemFactory('memory'),
         ]);
+    }
+
+    public function test_types_lists_registered_factory_types() : void
+    {
+        $registry = new FilesystemFactoryRegistry([
+            new StubFilesystemFactory('memory'),
+            new StubFilesystemFactory('file'),
+        ]);
+
+        self::assertSame(['memory', 'file'], $registry->types());
     }
 }

@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Double;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
-use Flow\Filesystem\{Filesystem, Protocol};
+use Flow\Filesystem\Filesystem;
 
 final readonly class StubFilesystemFactory implements FilesystemFactory
 {
     public function __construct(
-        private string $protocolName,
+        private string $type,
         private ?Filesystem $filesystem = null,
     ) {
     }
 
-    public function create(Protocol $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config) : Filesystem
     {
         if ($this->filesystem === null) {
             throw new \RuntimeException('StubFilesystemFactory was not configured with a Filesystem instance.');
@@ -24,8 +24,8 @@ final readonly class StubFilesystemFactory implements FilesystemFactory
         return $this->filesystem;
     }
 
-    public function protocol() : Protocol
+    public function type() : string
     {
-        return new Protocol($this->protocolName);
+        return $this->type;
     }
 }

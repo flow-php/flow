@@ -108,6 +108,13 @@ final class ConfigBuilder
         return $this;
     }
 
+    public function cacheFilesystem(string $protocol) : self
+    {
+        $this->cache->filesystemProtocol($protocol);
+
+        return $this;
+    }
+
     public function clock(ClockInterface $clocks) : self
     {
         $this->clock = $clocks;
@@ -128,6 +135,13 @@ final class ConfigBuilder
     public function externalSortBucketsCount(int $externalSortBucketsCount) : self
     {
         $this->cache->externalSortBucketsCount($externalSortBucketsCount);
+
+        return $this;
+    }
+
+    public function externalSortFilesystem(string $protocol) : self
+    {
+        $this->sort->filesystemProtocol($protocol);
 
         return $this;
     }

@@ -18,9 +18,9 @@ interface Filesystem
      */
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator;
 
-    public function mv(Path $from, Path $to) : bool;
+    public function mount() : Mount;
 
-    public function protocol() : Protocol;
+    public function mv(Path $from, Path $to) : bool;
 
     public function readFrom(Path $path) : SourceStream;
 

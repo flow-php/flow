@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Integration\Local;
 
 use function Flow\ETL\DSL\{all, config, flow_context, lit, ref};
-use function Flow\Filesystem\DSL\{memory_filesystem, path_memory};
+use function Flow\Filesystem\DSL\{memory_filesystem, path};
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
+use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\{FileStatus,
     Tests\Integration\NativeLocalFilesystemTestCase};
 use Flow\Filesystem\Path\Filter\KeepAll;
@@ -14,11 +15,19 @@ use Flow\Types\Type\AutoCaster;
 
 final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
 {
+    public function test_append_to_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+        $this->expectExceptionMessage('Scheme "file://" is not supported by this protocol. Expected scheme is "memory://"');
+
+        memory_filesystem()->appendTo(path('file:///var/foo.txt'));
+    }
+
     public function test_appending_to_existing_blob() : void
     {
         $fs = memory_filesystem();
 
-        $stream = $fs->writeTo($path = path_memory('file'));
+        $stream = $fs->writeTo($path = path('memory://file'));
         $stream->append("This is first line\n");
         $stream->close();
 
@@ -46,13 +55,13 @@ TXT
     public function test_dir_exists() : void
     {
         $fs = memory_filesystem();
-        $fs->writeTo($path = path_memory('file'));
+        $fs->writeTo($path = path('memory://file'));
 
         $status = $fs->status($path);
         self::assertNotNull($status);
         self::assertTrue($status->isFile());
         self::assertFalse($status->isDirectory());
-        self::assertNull($fs->status(path_memory('/not_existing_directory')));
+        self::assertNull($fs->status(path('memory:///not_existing_directory')));
     }
 
     public function test_file_status_on_existing_file() : void
@@ -61,26 +70,26 @@ TXT
 
         $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
         self::assertIsResource($resource);
-        $fs->writeTo(path_memory('/var/file.txt'))->fromResource($resource);
+        $fs->writeTo(path('memory:///var/file.txt'))->fromResource($resource);
 
-        $status = $fs->status(path_memory('/var/file.txt'));
+        $status = $fs->status(path('memory:///var/file.txt'));
         self::assertNotNull($status);
         self::assertTrue($status->isFile());
-        $fs->rm(path_memory('/var/file.txt'));
+        $fs->rm(path('memory:///var/file.txt'));
     }
 
     public function test_file_status_on_non_existing_file() : void
     {
         $fs = memory_filesystem();
 
-        self::assertNull($fs->status(path_memory('/var/non-existing-file.txt')));
+        self::assertNull($fs->status(path('memory:///var/non-existing-file.txt')));
     }
 
     public function test_file_status_on_non_existing_pattern() : void
     {
         $fs = memory_filesystem();
 
-        self::assertNull($fs->status(path_memory('/var/non-existing-folder/*')));
+        self::assertNull($fs->status(path('memory:///var/non-existing-folder/*')));
     }
 
     public function test_file_status_on_partial_path() : void
@@ -89,9 +98,9 @@ TXT
 
         $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
         self::assertIsResource($resource);
-        $fs->writeTo(path_memory('/var/some_path_to/file.txt'))->fromResource($resource);
+        $fs->writeTo(path('memory:///var/some_path_to/file.txt'))->fromResource($resource);
 
-        self::assertNull($fs->status(path_memory('/var/some_path')));
+        self::assertNull($fs->status(path('memory:///var/some_path')));
     }
 
     public function test_file_status_on_pattern() : void
@@ -100,13 +109,13 @@ TXT
 
         $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
         self::assertIsResource($resource);
-        $fs->writeTo(path_memory('/var/some_path_to/file.txt'))->fromResource($resource);
+        $fs->writeTo(path('memory:///var/some_path_to/file.txt'))->fromResource($resource);
 
-        $status = $fs->status(path_memory('/var/some_path_to/file.txt'));
+        $status = $fs->status(path('memory:///var/some_path_to/file.txt'));
         self::assertNotNull($status);
         self::assertTrue($status->isFile());
 
-        $patternStatus = $fs->status(path_memory('/var/some_path_to/*.txt'));
+        $patternStatus = $fs->status(path('memory:///var/some_path_to/*.txt'));
         self::assertNotNull($patternStatus);
         self::assertSame(
             'memory://var/some_path_to/file.txt',
@@ -114,32 +123,46 @@ TXT
         );
     }
 
+    public function test_list_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        \iterator_to_array(memory_filesystem()->list(path('file:///var/foo.txt')));
+    }
+
     public function test_move_blob() : void
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path_memory('/var/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/file.txt'))->append('Hello, World!');
 
         $this->expectExceptionMessage('Cannot move files around in memory');
 
-        $fs->mv(path_memory('/var/file.txt'), path_memory('/var/file_mv.txt'));
+        $fs->mv(path('memory:///var/file.txt'), path('memory:///var/file_mv.txt'));
+    }
+
+    public function test_read_from_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        memory_filesystem()->readFrom(path('file:///var/foo.txt'));
     }
 
     public function test_reading_multi_partitioned_path() : void
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-01/country=de/file.txt'))->append('Hello, World!');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-01/country=pl/file.txt'))->append('Hello, World!');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-02/country=de/file.txt'))->append('Hello, World!');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-02/country=pl/file.txt'))->append('Hello, World!');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-03/country=de/file.txt'))->append('Hello, World!');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-03/country=pl/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-01/country=de/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-01/country=pl/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-02/country=de/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-03/country=de/file.txt'))->append('Hello, World!');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt'))->append('Hello, World!');
 
         $paths = \iterator_to_array(
             $fs
                 ->list(
-                    path_memory('/var/multi_partitions/**/*.txt'),
+                    path('memory:///var/multi_partitions/**/*.txt'),
                     new ScalarFunctionFilter(
                         all(
                             ref('country')->equals(lit('pl')),
@@ -156,25 +179,20 @@ TXT
         );
         \sort($paths);
 
-        $path1 = path_memory('/var/multi_partitions/date=2022-01-02/country=pl/file.txt');
+        $path1 = path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt');
         $path1->partitions();
-        $path2 = path_memory('/var/multi_partitions/date=2022-01-03/country=pl/file.txt');
+        $path2 = path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt');
         $path2->partitions();
 
-        self::assertEquals(
-            [
-                new FileStatus($path1, true),
-                new FileStatus($path2, true),
-            ],
-            $paths
-        );
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $paths);
+        self::assertSame([$path1->uri(), $path2->uri()], $uris);
     }
 
     public function test_remove_file_when_exists() : void
     {
         $fs = memory_filesystem();
 
-        $stream = $fs->writeTo(path_memory('/var/flow-fs-test/remove_file_when_exists.txt'));
+        $stream = $fs->writeTo(path('memory:///var/flow-fs-test/remove_file_when_exists.txt'));
         $stream->append('some data to make file not empty');
 
         $status = $fs->status($stream->path());
@@ -189,47 +207,63 @@ TXT
     public function test_remove_pattern() : void
     {
         $fs = memory_filesystem();
-        $stream = $fs->writeTo(path_memory('/remove_file_when_exists.txt'))
+        $stream = $fs->writeTo(path('memory:///remove_file_when_exists.txt'))
             ->append('some data to make file not empty');
 
-        $fs->rm(path_memory('/*.txt'));
+        $fs->rm(path('memory:///*.txt'));
         self::assertNull($fs->status($stream->path()));
-        self::assertEmpty(\iterator_to_array($fs->list(path_memory('/*.txt'), new KeepAll())));
+        self::assertEmpty(\iterator_to_array($fs->list(path('memory:///*.txt'), new KeepAll())));
+    }
+
+    public function test_rm_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        memory_filesystem()->rm(path('file:///var/foo.txt'));
+    }
+
+    public function test_status_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        memory_filesystem()->status(path('file:///var/foo.txt'));
     }
 
     public function test_that_scan_sort_files_by_path_names() : void
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-03/country=de/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-02/country=pl/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-01/country=pl/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-01/country=de/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-03/country=pl/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-02/country=de/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-04/country=pl/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-05/country=de/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-04/country=de/file.txt'))->append('hello world');
-        $fs->writeTo(path_memory('/var/multi_partitions/date=2022-01-05/country=pl/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-03/country=de/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-01/country=pl/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-01/country=de/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-02/country=de/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-04/country=pl/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-05/country=de/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-04/country=de/file.txt'))->append('hello world');
+        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-05/country=pl/file.txt'))->append('hello world');
 
-        $paths = \iterator_to_array(
-            $fs->list(path_memory('/var/multi_partitions/**/*.txt'))
+        $statuses = \iterator_to_array(
+            $fs->list(path('memory:///var/multi_partitions/**/*.txt'))
         );
 
-        self::assertEquals(
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $statuses);
+
+        self::assertSame(
             [
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-01/country=de/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-01/country=pl/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-02/country=de/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-02/country=pl/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-03/country=de/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-03/country=pl/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-04/country=de/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-04/country=pl/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-05/country=de/file.txt'), true),
-                new FileStatus(path_memory('/var/multi_partitions/date=2022-01-05/country=pl/file.txt'), true),
+                path('memory:///var/multi_partitions/date=2022-01-01/country=de/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-01/country=pl/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-02/country=de/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-03/country=de/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-04/country=de/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-04/country=pl/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-05/country=de/file.txt')->uri(),
+                path('memory:///var/multi_partitions/date=2022-01-05/country=pl/file.txt')->uri(),
             ],
-            $paths
+            $uris
         );
     }
 
@@ -240,5 +274,12 @@ TXT
         $this->expectExceptionMessage('Memory does not have a system tmp directory');
 
         $fs->getSystemTmpDir();
+    }
+
+    public function test_write_to_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        memory_filesystem()->writeTo(path('file:///var/foo.txt'));
     }
 }

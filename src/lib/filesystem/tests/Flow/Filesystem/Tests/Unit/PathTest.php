@@ -205,7 +205,7 @@ final class PathTest extends TestCase
     #[DataProvider('paths')]
     public function test_parsing_path(string $uri, string $schema, string $parsedUri) : void
     {
-        self::assertEquals($schema, (path($uri))->protocol()->name);
+        self::assertEquals($schema, (path($uri))->protocol());
         self::assertEquals($parsedUri, (path($uri))->uri());
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Documentation;
 
-use function Flow\Filesystem\DSL\{fstab, path, protocol};
+use function Flow\Filesystem\DSL\{fstab, path};
 use Flow\Website\Model\Documentation\Page;
 
 final readonly class Pages
@@ -20,7 +20,7 @@ final readonly class Pages
     public function all() : array
     {
         $files = fstab()
-            ->for(protocol('file'))
+            ->for('file')
             ->list(
                 path($this->basePath . '/**/*.md')
             );

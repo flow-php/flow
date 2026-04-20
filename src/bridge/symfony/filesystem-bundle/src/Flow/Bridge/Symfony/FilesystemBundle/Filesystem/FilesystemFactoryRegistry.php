@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\{InvalidArgumentException, LogicException};
-use Flow\Filesystem\Protocol;
 
 final class FilesystemFactoryRegistry
 {
-    /** @var array<string, FilesystemFactory> */
+    /** @var array<string, FilesystemFactory> keyed by factory type */
     private array $factories = [];
 
     /**
@@ -18,38 +17,38 @@ final class FilesystemFactoryRegistry
     public function __construct(iterable $factories)
     {
         foreach ($factories as $factory) {
-            $name = $factory->protocol()->name;
+            $type = $factory->type();
 
-            if (\array_key_exists($name, $this->factories)) {
-                throw new LogicException(\sprintf('Duplicate filesystem factory for protocol "%s".', $name));
+            if (\array_key_exists($type, $this->factories)) {
+                throw new LogicException(\sprintf('Duplicate filesystem factory for type "%s".', $type));
             }
 
-            $this->factories[$name] = $factory;
+            $this->factories[$type] = $factory;
         }
     }
 
-    public function get(Protocol $protocol) : FilesystemFactory
+    public function get(string $type) : FilesystemFactory
     {
-        if (!\array_key_exists($protocol->name, $this->factories)) {
+        if (!\array_key_exists($type, $this->factories)) {
             throw new InvalidArgumentException(\sprintf(
-                'No filesystem factory registered for protocol "%s". Available protocols: [%s].',
-                $protocol->name,
+                'No filesystem factory registered for type "%s". Available types: [%s].',
+                $type,
                 \implode(', ', \array_keys($this->factories)),
             ));
         }
 
-        return $this->factories[$protocol->name];
+        return $this->factories[$type];
     }
 
-    public function has(Protocol $protocol) : bool
+    public function has(string $type) : bool
     {
-        return \array_key_exists($protocol->name, $this->factories);
+        return \array_key_exists($type, $this->factories);
     }
 
     /**
      * @return list<string>
      */
-    public function protocols() : array
+    public function types() : array
     {
         return \array_keys($this->factories);
     }

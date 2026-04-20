@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\StdOut;
 
-use function Flow\Types\DSL\type_string;
-use Flow\Filesystem\{DestinationStream, Exception\InvalidArgumentException, Exception\RuntimeException, Path};
+use Flow\Filesystem\{DestinationStream, Exception\RuntimeException, Path};
 
 final class StdOutDestinationStream implements DestinationStream
 {
@@ -14,23 +13,24 @@ final class StdOutDestinationStream implements DestinationStream
      */
     private $handle;
 
-    public function __construct(private readonly Path $path, ?\php_user_filter $filter = null)
-    {
-        $outputStream = \mb_strtolower(type_string()->cast($this->path->getOption('stream', 'stdout')));
-
-        if (!\in_array($outputStream, ['stdout', 'stderr', 'output'], true)) {
-            throw new InvalidArgumentException('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: ' . $outputStream);
-        }
-
+    /**
+     * @param 'output'|'stderr'|'stdout' $target
+     */
+    public function __construct(
+        private readonly Path $path,
+        string $target = 'stdout',
+        ?\php_user_filter $filter = null,
+        private readonly ?\Closure $onClose = null,
+    ) {
         if ($filter !== null) {
             stream_filter_register($filter::class, $filter::class);
             /** @phpstan-ignore-next-line */
-            $this->handle = fopen('php://' . $outputStream, 'wb');
+            $this->handle = fopen('php://' . $target, 'wb');
             /** @phpstan-ignore-next-line */
             stream_filter_append($this->handle, $filter::class);
         } else {
             /** @phpstan-ignore-next-line */
-            $this->handle = fopen('php://' . $outputStream, 'wb');
+            $this->handle = fopen('php://' . $target, 'wb');
         }
     }
 
@@ -51,6 +51,10 @@ final class StdOutDestinationStream implements DestinationStream
     {
         if (\is_resource($this->handle)) {
             \fclose($this->handle);
+        }
+
+        if ($this->onClose !== null) {
+            ($this->onClose)();
         }
     }
 

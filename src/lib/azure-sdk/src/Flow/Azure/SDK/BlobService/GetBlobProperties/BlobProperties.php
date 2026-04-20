@@ -17,6 +17,19 @@ final readonly class BlobProperties
         return (string) $this->response->getBody();
     }
 
+    public function lastModifiedAt() : ?\DateTimeImmutable
+    {
+        $raw = $this->response->getHeaderLine('Last-Modified');
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::RFC7231, $raw);
+
+        return $parsed === false ? null : $parsed;
+    }
+
     public function size() : int
     {
         return (int) $this->response->getHeaderLine('Content-Length');

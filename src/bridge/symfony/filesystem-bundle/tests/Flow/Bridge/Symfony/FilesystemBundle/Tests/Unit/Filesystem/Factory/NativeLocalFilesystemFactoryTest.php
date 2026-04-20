@@ -6,36 +6,30 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit\Filesystem\Factory;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\NativeLocalFilesystemFactory;
-use Flow\Filesystem\Protocol;
 use PHPUnit\Framework\TestCase;
 
 final class NativeLocalFilesystemFactoryTest extends TestCase
 {
-    public function test_creates_filesystem_with_matching_protocol() : void
+    public function test_creates_filesystem_with_given_mount_protocol() : void
     {
-        $filesystem = (new NativeLocalFilesystemFactory())->create(new Protocol('file'), []);
-
-        self::assertSame('file', $filesystem->protocol()->name);
+        self::assertSame('file', (new NativeLocalFilesystemFactory())->create('file', [])->mount()->protocol);
     }
 
-    public function test_protocol_returns_expected_name() : void
+    public function test_creates_filesystem_with_non_canonical_mount_protocol() : void
     {
-        self::assertSame('file', (new NativeLocalFilesystemFactory())->protocol()->name);
-    }
-
-    public function test_throws_on_protocol_mismatch() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Filesystem factory for protocol "file" cannot create filesystem for protocol "memory".');
-
-        (new NativeLocalFilesystemFactory())->create(new Protocol('memory'), []);
+        self::assertSame('project-root', (new NativeLocalFilesystemFactory())->create('project-root', [])->mount()->protocol);
     }
 
     public function test_throws_on_unknown_options() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Filesystem factory for protocol "file" does not accept any options. Unknown keys: [foo, bar].');
+        $this->expectExceptionMessage('Filesystem factory for type "file" does not accept any options. Unknown keys: [foo, bar].');
 
-        (new NativeLocalFilesystemFactory())->create(new Protocol('file'), ['foo' => 1, 'bar' => 2]);
+        (new NativeLocalFilesystemFactory())->create('file', ['foo' => 1, 'bar' => 2]);
+    }
+
+    public function test_type_returns_file() : void
+    {
+        self::assertSame('file', (new NativeLocalFilesystemFactory())->type());
     }
 }

@@ -9,7 +9,7 @@ use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Function\{ExecutionMode, Functions};
 use Flow\ETL\Row\EntryFactory;
-use Flow\Filesystem\{Filesystem, Path, Protocol};
+use Flow\Filesystem\{Filesystem, Path};
 
 /**
  * Mutable Flow execution context.
@@ -44,7 +44,7 @@ final class FlowContext
         return $this->errorHandler;
     }
 
-    public function filesystem(Path|Protocol $path) : Filesystem
+    public function filesystem(Path|string $path) : Filesystem
     {
         return $this->config->fstab()->for($path);
     }

@@ -410,6 +410,7 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-integration --log-junit ./var/phpunit/logs/bridge-filesystem-azure-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-azure-integration.coverage.xml"
         ],
         "test:bridge:filesystem-async-aws": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-async-aws-unit --log-junit ./var/phpunit/logs/bridge-filesystem-async-aws-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-async-aws-unit.coverage.xml",
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-async-aws-integration --log-junit ./var/phpunit/logs/bridge-filesystem-async-aws-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-async-aws-integration.coverage.xml"
         ],
         "test:bridge:monolog-http": [

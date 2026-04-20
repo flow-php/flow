@@ -4,48 +4,70 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use function Flow\Filesystem\DSL\protocol;
 use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
-use Flow\Filesystem\{Filesystem, FilesystemTable};
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\{Filesystem, FilesystemTable, Mount};
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
 final class FilesystemTableTest extends TestCase
 {
+    public function test_duplicate_protocol_throws() : void
+    {
+        $first = $this->filesystem('warehouse');
+        $second = $this->filesystem('warehouse');
+
+        $fstab = new FilesystemTable($first);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Mount 'warehouse' is already registered.");
+
+        $fstab->mount($second);
+    }
+
+    public function test_for_resolves_by_protocol_string() : void
+    {
+        $fs = $this->filesystem('warehouse');
+        $fstab = new FilesystemTable($fs);
+
+        self::assertSame($fs, $fstab->for('warehouse'));
+    }
+
+    public function test_for_throws_when_protocol_not_mounted() : void
+    {
+        $fstab = new FilesystemTable();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Filesystem with protocol missing is not mounted.');
+
+        $fstab->for('missing');
+    }
+
     public function test_mount_does_not_double_wrap_traceable_filesystem() : void
     {
         $fstab = new FilesystemTable();
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
-        $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('s3'));
-
-        $traceableFs = new TraceableFilesystem($mockFilesystem, $config);
+        $fs = $this->filesystem('s3');
+        $traceableFs = new TraceableFilesystem($fs, $config);
 
         $fstab->withTelemetry($config);
         $fstab->mount($traceableFs);
 
-        $filesystem = $fstab->for(protocol('s3'));
-
-        self::assertInstanceOf(TraceableFilesystem::class, $filesystem);
-        self::assertSame($traceableFs, $filesystem);
+        self::assertSame($traceableFs, $fstab->for('s3'));
     }
 
     public function test_mount_does_not_wrap_when_telemetry_not_configured() : void
     {
         $fstab = new FilesystemTable();
+        $fs = $this->filesystem('azure');
 
-        $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('azure'));
+        $fstab->mount($fs);
 
-        $fstab->mount($mockFilesystem);
-
-        $filesystem = $fstab->for(protocol('azure'));
-
-        self::assertNotInstanceOf(TraceableFilesystem::class, $filesystem);
-        self::assertSame($mockFilesystem, $filesystem);
+        self::assertNotInstanceOf(TraceableFilesystem::class, $fstab->for('azure'));
+        self::assertSame($fs, $fstab->for('azure'));
     }
 
     public function test_mount_wraps_new_filesystem_when_telemetry_configured() : void
@@ -55,15 +77,32 @@ final class FilesystemTableTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
         $fstab->withTelemetry($config);
+        $fstab->mount($this->filesystem('gcs'));
 
-        $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('gcs'));
+        self::assertInstanceOf(TraceableFilesystem::class, $fstab->for('gcs'));
+    }
 
-        $fstab->mount($mockFilesystem);
+    public function test_unmount_removes_the_mount() : void
+    {
+        $fs = $this->filesystem('warehouse');
+        $fstab = new FilesystemTable($fs);
 
-        $filesystem = $fstab->for(protocol('gcs'));
+        $fstab->unmount($fs);
 
-        self::assertInstanceOf(TraceableFilesystem::class, $filesystem);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Filesystem with protocol warehouse is not mounted.');
+
+        $fstab->for('warehouse');
+    }
+
+    public function test_unmount_throws_when_protocol_not_mounted() : void
+    {
+        $fstab = new FilesystemTable();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Filesystem with protocol missing is not mounted.');
+
+        $fstab->unmount($this->filesystem('missing'));
     }
 
     public function test_with_telemetry_skips_already_traceable_filesystems() : void
@@ -71,33 +110,30 @@ final class FilesystemTableTest extends TestCase
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
-        $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('sftp'));
-
-        $traceableFs = new TraceableFilesystem($mockFilesystem, $config);
+        $traceableFs = new TraceableFilesystem($this->filesystem('sftp'), $config);
         $fstab = new FilesystemTable($traceableFs);
 
         $fstab->withTelemetry($config);
 
-        $filesystem = $fstab->for(protocol('sftp'));
-
-        self::assertInstanceOf(TraceableFilesystem::class, $filesystem);
-        self::assertSame($traceableFs, $filesystem);
+        self::assertSame($traceableFs, $fstab->for('sftp'));
     }
 
     public function test_with_telemetry_wraps_existing_filesystems_in_traceable() : void
     {
-        $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('ftp'));
-
-        $fstab = new FilesystemTable($mockFilesystem);
+        $fstab = new FilesystemTable($this->filesystem('ftp'));
         $spanProcessor = memory_span_processor(void_span_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
         $fstab->withTelemetry($config);
 
-        $filesystem = $fstab->for(protocol('ftp'));
+        self::assertInstanceOf(TraceableFilesystem::class, $fstab->for('ftp'));
+    }
 
-        self::assertInstanceOf(TraceableFilesystem::class, $filesystem);
+    private function filesystem(string $protocol) : Filesystem
+    {
+        $mock = $this->createMock(Filesystem::class);
+        $mock->method('mount')->willReturn(new Mount($protocol));
+
+        return $mock;
     }
 }

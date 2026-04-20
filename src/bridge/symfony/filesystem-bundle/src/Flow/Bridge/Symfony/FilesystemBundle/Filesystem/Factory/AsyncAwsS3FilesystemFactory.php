@@ -9,7 +9,7 @@ use AsyncAws\S3\S3Client;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Bridge\AsyncAWS\Options;
-use Flow\Filesystem\{Filesystem, Protocol};
+use Flow\Filesystem\Filesystem;
 use Psr\Container\ContainerInterface;
 
 final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
@@ -18,29 +18,21 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
     {
     }
 
-    public function create(Protocol $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config) : Filesystem
     {
-        if (!$this->protocol()->is($protocol->name)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "%s" cannot create filesystem for protocol "%s".',
-                $this->protocol()->name,
-                $protocol->name,
-            ));
-        }
-
         $allowed = ['bucket', 'client_service_id', 'client', 'options'];
         $unknown = \array_diff(\array_keys($config), $allowed);
 
         if ($unknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "aws-s3" received unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "aws_s3" received unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $unknown),
                 \implode(', ', $allowed),
             ));
         }
 
         if (!\is_string($config['bucket'] ?? null) || $config['bucket'] === '') {
-            throw new InvalidArgumentException('Filesystem factory for protocol "aws-s3" requires a non-empty `bucket` option.');
+            throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" requires a non-empty `bucket` option.');
         }
 
         $bucket = $config['bucket'];
@@ -48,7 +40,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         $clientConfig = $config['client'] ?? null;
 
         if (($clientServiceId === null) === ($clientConfig === null)) {
-            throw new InvalidArgumentException('Filesystem factory for protocol "aws-s3" requires exactly one of `client_service_id` or `client`.');
+            throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" requires exactly one of `client_service_id` or `client`.');
         }
 
         if (\is_string($clientServiceId) && $clientServiceId !== '') {
@@ -64,12 +56,12 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 
         $options = $this->buildOptions($config['options'] ?? null);
 
-        return aws_s3_filesystem($bucket, $client, $options);
+        return aws_s3_filesystem($bucket, $client, $options, $protocol);
     }
 
-    public function protocol() : Protocol
+    public function type() : string
     {
-        return new Protocol('aws-s3');
+        return 'aws_s3';
     }
 
     /**
@@ -82,7 +74,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 
         if ($unknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "aws-s3" `client` contains unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "aws_s3" `client` contains unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $unknown),
                 \implode(', ', $allowed),
             ));
@@ -149,7 +141,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         }
 
         if (!\is_array($optionsConfig)) {
-            throw new InvalidArgumentException('Filesystem factory for protocol "aws-s3" `options` must be an array.');
+            throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" `options` must be an array.');
         }
 
         $allowed = ['block_size'];
@@ -157,7 +149,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 
         if ($unknown !== []) {
             throw new InvalidArgumentException(\sprintf(
-                'Filesystem factory for protocol "aws-s3" `options` contains unknown keys: [%s]. Allowed: [%s].',
+                'Filesystem factory for backend "aws_s3" `options` contains unknown keys: [%s]. Allowed: [%s].',
                 \implode(', ', $unknown),
                 \implode(', ', $allowed),
             ));

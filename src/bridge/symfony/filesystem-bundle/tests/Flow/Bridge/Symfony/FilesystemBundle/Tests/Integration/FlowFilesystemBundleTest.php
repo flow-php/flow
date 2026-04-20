@@ -17,7 +17,7 @@ final class FlowFilesystemBundleTest extends KernelTestCase
                     'fstabs' => [
                         'default' => [
                             'filesystems' => [
-                                'file' => ['type' => 'native_local'],
+                                'file' => ['type' => 'file'],
                             ],
                         ],
                     ],

@@ -32,18 +32,33 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
                 'extra' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
         ]);
 
         self::assertSame('default', $config['default_fstab']);
+    }
+
+    public function test_empty_mount_type_throws() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => ''],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     public function test_invalid_default_fstab_points_to_missing_fstab_throws() : void
@@ -55,7 +70,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
             ],
@@ -88,12 +103,12 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'primary' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
                 'secondary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -108,7 +123,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        '1bad' => [],
+                        '1bad' => ['type' => 'file'],
                     ],
                 ],
             ],
@@ -123,7 +138,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'bad/protocol' => [],
+                        'bad/protocol' => ['type' => 'file'],
                     ],
                 ],
             ],
@@ -138,7 +153,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                     'telemetry' => ['enabled' => true, 'telemetry_service_id' => 'x'],
                 ],
@@ -154,9 +169,24 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                     'telemetry' => ['enabled' => true, 'clock_service_id' => 'x'],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_missing_mount_type_throws() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => [],
+                    ],
                 ],
             ],
         ]);
@@ -168,7 +198,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'primary' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
             ],
@@ -177,14 +207,14 @@ final class ConfigurationTest extends TestCase
         self::assertSame('primary', $config['default_fstab']);
     }
 
-    public function test_valid_hyphenated_protocol_keys_are_preserved_without_normalization() : void
+    public function test_valid_hyphenated_mount_names_are_preserved_without_normalization() : void
     {
         $config = $this->context->processConfig([
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'aws-s3' => ['bucket' => 'b', 'client_service_id' => 'x'],
-                        'azure-blob' => ['container' => 'c', 'client_service_id' => 'y'],
+                        'aws-s3' => ['type' => 'aws_s3', 'bucket' => 'b', 'client_service_id' => 'x'],
+                        'azure-blob' => ['type' => 'azure_blob', 'container' => 'c', 'client_service_id' => 'y'],
                     ],
                 ],
             ],
@@ -202,7 +232,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
             ],
@@ -219,12 +249,12 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'primary' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
                 'secondary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -241,7 +271,7 @@ final class ConfigurationTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
             ],
@@ -257,7 +287,7 @@ final class ConfigurationTest extends TestCase
                 'fstabs' => [
                     'default' => [
                         'filesystems' => [
-                            'file' => [],
+                            'file' => ['type' => 'file'],
                         ],
                         'telemetry' => [
                             'enabled' => true,

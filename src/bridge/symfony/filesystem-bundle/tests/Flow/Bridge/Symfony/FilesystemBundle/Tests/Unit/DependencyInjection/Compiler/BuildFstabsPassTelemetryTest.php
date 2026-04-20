@@ -27,7 +27,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                     'telemetry' => [
                         'enabled' => true,
@@ -66,7 +66,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                     'telemetry' => ['enabled' => false],
                 ],
@@ -86,7 +86,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                     'telemetry' => [
                         'enabled' => true,
@@ -109,7 +109,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                     'telemetry' => [
                         'enabled' => true,

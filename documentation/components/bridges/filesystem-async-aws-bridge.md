@@ -29,10 +29,16 @@ $aws = aws_s3_filesystem(
 $fstab = fstab($aws);
 ```
 
+The **mount protocol** — the URI scheme under which the filesystem is registered in the
+`FilesystemTable` — defaults to `'aws-s3'`. Override by passing a fourth argument (e.g.
+`aws_s3_filesystem($bucket, $client, options: new Options(), protocol: 'warehouse')`) when you
+need to mount the same bucket twice under distinct names or pick a scheme more meaningful to
+your application.
+
 ## Usage with Flow
 
 To use the AWS S3 filesystem with Flow, you need to mount the filesystem to the configuration.
-This operation will mount the S3 filesystem to fstab instance available in the DataFrame runtime.
+This operation will mount the S3 filesystem to the fstab instance available in the DataFrame runtime.
 
 ```php
 $config = config_builder()
@@ -46,9 +52,13 @@ $config = config_builder()
             ])
         )
     );
-    
+
 data_frame($config)
     ->read(from_csv(path('aws-s3://test.csv')))
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
-    ->run();    
+    ->run();
 ```
+
+`FileStatus` values returned from `list()` and `status()` carry `size` (from S3 `Size` / `ContentLength`)
+and `lastModifiedAt` (from `LastModified`) populated directly from the S3 response — no extra HEAD call
+is issued when the CLI `flow:filesystem:ls --long` or `flow:filesystem:stat` prints them.

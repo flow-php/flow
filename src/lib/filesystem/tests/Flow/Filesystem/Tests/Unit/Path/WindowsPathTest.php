@@ -260,7 +260,7 @@ final class WindowsPathTest extends PathTestCase
         $path = new WindowsPath($input);
 
         self::assertEquals($expectedPath, $path->path());
-        self::assertEquals($expectedScheme, $path->protocol()->name);
+        self::assertEquals($expectedScheme, $path->protocol());
     }
 
     /**
@@ -405,16 +405,7 @@ final class WindowsPathTest extends PathTestCase
     {
         $path = new WindowsPath('custom://path/to/file.txt');
 
-        self::assertEquals('custom', $path->protocol()->name);
-        self::assertTrue($path->protocol()->is('custom'));
-        self::assertFalse($path->protocol()->is('file'));
-    }
-
-    public function test_protocol_scheme_method() : void
-    {
-        $path = new WindowsPath('s3://bucket/file.txt');
-
-        self::assertEquals('s3://', $path->protocol()->scheme());
+        self::assertSame('custom', $path->protocol());
     }
 
     public function test_randomization() : void

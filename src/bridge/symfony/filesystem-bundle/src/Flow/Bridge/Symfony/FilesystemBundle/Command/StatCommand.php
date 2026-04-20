@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
 use function Flow\Types\DSL\{type_null, type_string, type_union};
+use Flow\Filesystem\SizeUnits;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
@@ -25,7 +26,7 @@ final class StatCommand extends Command
             ->addArgument('path', InputArgument::REQUIRED, 'File or directory URI')
             ->addOption('fstab', 'f', InputOption::VALUE_REQUIRED, 'Fstab name; defaults to the bundle default fstab.')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: "human" (default) or "json".', 'human')
-            ->setHelp('Prints metadata (URI, protocol, type, size) for the given URI.');
+            ->setHelp('Prints metadata (URI, protocol, type, size, modified) for the given URI. Size and modified come from the backend listing/head response — no extra stream is opened.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
@@ -45,6 +46,13 @@ final class StatCommand extends Command
 
             $table = $this->resolver->resolve($fstabName);
             $path = $this->resolver->parseUri($rawPath);
+
+            if ($path->isPattern()) {
+                $io->getErrorStyle()->error(\sprintf('Pattern paths are not supported by stat. Got: %s', $path->uri()));
+
+                return Command::FAILURE;
+            }
+
             $filesystem = $table->for($path);
 
             $status = $filesystem->status($path);
@@ -56,8 +64,9 @@ final class StatCommand extends Command
             }
 
             $type = $status->isFile() ? 'file' : 'directory';
-            $size = $status->isFile() ? $filesystem->readFrom($status->path)->size() : null;
-            $protocolName = $status->path->protocol()->name;
+            $size = $status->size;
+            $modified = $status->lastModifiedAt?->format(\DateTimeImmutable::ATOM);
+            $protocolName = $status->path->protocol();
             $uri = $status->path->uri();
             $cleanPath = $status->path->path();
         } catch (\Throwable $e) {
@@ -73,7 +82,8 @@ final class StatCommand extends Command
                 'path' => $cleanPath,
                 'type' => $type,
                 'size' => $size,
-            ]));
+                'modified' => $modified,
+            ], JSON_THROW_ON_ERROR));
 
             return Command::SUCCESS;
         }
@@ -83,7 +93,8 @@ final class StatCommand extends Command
             ['Protocol' => $protocolName],
             ['Path' => $cleanPath],
             ['Type' => $type],
-            ['Size' => $size === null ? '-' : (string) $size],
+            ['Size' => SizeUnits::humanReadable($size)],
+            ['Modified' => $modified ?? '-'],
         );
 
         return Command::SUCCESS;

@@ -24,7 +24,7 @@ final class FlowFilesystemBundleTest extends TestCase
         $container->compile();
 
         self::assertSame(
-            [['protocol' => 'stub-autoconfigured']],
+            [['type' => 'file']],
             $container->getDefinition(AutoconfiguredStubFilesystemFactory::class)->getTag(RegisterFilesystemFactoriesPass::TAG),
         );
     }
@@ -52,7 +52,7 @@ final class FlowFilesystemBundleTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'file' => [],
+                        'file' => ['type' => 'file'],
                     ],
                 ],
             ],

@@ -4,23 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local;
 
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
-use Flow\Filesystem\Exception\RuntimeException;
+use function Flow\Types\DSL\type_string;
+use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, SourceStream};
+use Flow\Filesystem\Exception\{InvalidArgumentException, InvalidSchemeException, RuntimeException};
 use Flow\Filesystem\Local\StdOut\StdOutDestinationStream;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
-final readonly class StdOutFilesystem implements Filesystem
+final class StdOutFilesystem implements Filesystem
 {
-    public function __construct(private ?\php_user_filter $filter = null)
-    {
+    /** @var array<string, true> php:// targets currently held by an open destination stream */
+    private array $heldTargets = [];
+
+    public function __construct(
+        private readonly Mount $mount = new Mount('stdout'),
+        private readonly ?\php_user_filter $filter = null,
+    ) {
     }
 
     public function appendTo(Path $path) : DestinationStream
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
-        return new StdOutDestinationStream($path, $this->filter);
+        $target = $this->resolveTarget($path);
+        $this->acquireTarget($target);
+
+        return new StdOutDestinationStream($path, $target, $this->filter, function () use ($target) : void {
+            $this->releaseTarget($target);
+        });
     }
 
     public function getSystemTmpDir() : Path
@@ -33,14 +44,14 @@ final readonly class StdOutFilesystem implements Filesystem
         yield from [];
     }
 
+    public function mount() : Mount
+    {
+        return $this->mount;
+    }
+
     public function mv(Path $from, Path $to) : bool
     {
         throw new RuntimeException('Cannot move files around in stdout');
-    }
-
-    public function protocol() : Protocol
-    {
-        return new Protocol('stdout');
     }
 
     public function readFrom(Path $path) : SourceStream
@@ -50,7 +61,7 @@ final readonly class StdOutFilesystem implements Filesystem
 
     public function rm(Path $path) : bool
     {
-        throw new RuntimeException('Cannot read from stdout');
+        throw new RuntimeException('Cannot remove files from stdout');
     }
 
     public function status(Path $path) : ?FileStatus
@@ -60,8 +71,40 @@ final readonly class StdOutFilesystem implements Filesystem
 
     public function writeTo(Path $path) : DestinationStream
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
-        return new StdOutDestinationStream($path, $this->filter);
+        $target = $this->resolveTarget($path);
+        $this->acquireTarget($target);
+
+        return new StdOutDestinationStream($path, $target, $this->filter, function () use ($target) : void {
+            $this->releaseTarget($target);
+        });
+    }
+
+    private function acquireTarget(string $target) : void
+    {
+        if (\array_key_exists($target, $this->heldTargets)) {
+            throw new RuntimeException(\sprintf('Only one stream can be open at the same time for php://%s', $target));
+        }
+
+        $this->heldTargets[$target] = true;
+    }
+
+    private function releaseTarget(string $target) : void
+    {
+        unset($this->heldTargets[$target]);
+    }
+
+    /**
+     * @return 'output'|'stderr'|'stdout'
+     */
+    private function resolveTarget(Path $path) : string
+    {
+        $target = \mb_strtolower(type_string()->cast($path->getOption('stream', 'stdout')));
+
+        return match ($target) {
+            'stdout', 'stderr', 'output' => $target,
+            default => throw new InvalidArgumentException('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: ' . $target),
+        };
     }
 }

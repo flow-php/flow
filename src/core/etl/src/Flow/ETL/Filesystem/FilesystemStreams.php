@@ -211,14 +211,6 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $destinationPathUri = $destination->uri();
 
         if (!\array_key_exists($destinationPathUri, $this->writingStreams[$pathUri])) {
-            if ($path->protocol()->is('stdout') && \count($this->writingStreams) > 0) {
-                foreach ($this->getIterator() as $writingStream) {
-                    if ($writingStream->path()->protocol()->is('stdout')) {
-                        throw new RuntimeException('Only one stdout filesystem stream can be open at the same time');
-                    }
-                }
-            }
-
             $fs = $this->fstab->for($path);
 
             $outputPath = $destination;

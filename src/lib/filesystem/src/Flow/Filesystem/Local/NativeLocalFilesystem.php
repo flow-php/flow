@@ -5,25 +5,30 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Local;
 
 use function Flow\Filesystem\DSL\path_real;
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Path\Filter, Protocol, SourceStream};
-use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
+use function Flow\Types\DSL\type_string;
+use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, Path\Filter, SourceStream};
+use Flow\Filesystem\Exception\{InvalidArgumentException, InvalidSchemeException, RuntimeException};
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream, NativeLocalSourceStream};
-use Webmozart\Glob\Glob;
+use Webmozart\Glob\Iterator\GlobIterator;
 
 /**
  * This implementation is based on the native PHP filesystem functions documented here: https://www.php.net/manual/en/book.filesystem.php
  * Additionally, in order to support glob pattern `\/**\/` for matching zero or more directories it's using webmozart/glob library.
  */
-final class NativeLocalFilesystem implements Filesystem
+final readonly class NativeLocalFilesystem implements Filesystem
 {
+    public function __construct(private Mount $mount = new Mount('file'))
+    {
+    }
+
     public function appendTo(Path $path) : DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -45,10 +50,10 @@ final class NativeLocalFilesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
-            if ($pathFilter->accept($status = new FileStatus($path, \is_file($path->path())))) {
+            if ($pathFilter->accept($status = self::statFor($path, $path->path()))) {
                 yield $status;
             }
 
@@ -56,8 +61,9 @@ final class NativeLocalFilesystem implements Filesystem
 
         }
 
-        foreach (Glob::glob($path->path()) as $filePath) {
-            $status = new FileStatus(path_real($filePath, $path->options()), \is_file($filePath));
+        foreach (new GlobIterator($path->path()) as $filePath) {
+            $filePath = type_string()->assert($filePath);
+            $status = self::statFor(path_real($filePath, $path->options()), $filePath);
 
             if ($pathFilter->accept($status)) {
                 yield $status;
@@ -65,10 +71,15 @@ final class NativeLocalFilesystem implements Filesystem
         }
     }
 
+    public function mount() : Mount
+    {
+        return $this->mount;
+    }
+
     public function mv(Path $from, Path $to) : bool
     {
-        $this->protocol()->validateScheme($from);
-        $this->protocol()->validateScheme($to);
+        $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
 
         if (\file_exists($to->path())) {
             $this->rm($to);
@@ -81,14 +92,9 @@ final class NativeLocalFilesystem implements Filesystem
         return true;
     }
 
-    public function protocol() : Protocol
-    {
-        return new Protocol('file');
-    }
-
     public function readFrom(Path $path) : SourceStream
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be open: " . $path->uri());
@@ -105,7 +111,7 @@ final class NativeLocalFilesystem implements Filesystem
 
     public function rm(Path $path) : bool
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
             if (!\file_exists($path->path())) {
@@ -123,7 +129,9 @@ final class NativeLocalFilesystem implements Filesystem
 
         $deletedCount = 0;
 
-        foreach (Glob::glob($path->path()) as $filePath) {
+        foreach (new GlobIterator($path->path()) as $filePath) {
+            $filePath = type_string()->assert($filePath);
+
             if (\is_dir($filePath)) {
                 $this->rmdir($filePath);
             } else {
@@ -138,22 +146,21 @@ final class NativeLocalFilesystem implements Filesystem
 
     public function status(Path $path) : ?FileStatus
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
             if (!\file_exists($path->path())) {
                 return null;
             }
 
-            return new FileStatus(
-                $path,
-                \is_file($path->path())
-            );
+            return self::statFor($path, $path->path());
         }
 
-        foreach (Glob::glob($path->path()) as $filePath) {
+        foreach (new GlobIterator($path->path()) as $filePath) {
+            $filePath = type_string()->assert($filePath);
+
             if (\file_exists($filePath)) {
-                return new FileStatus(\Flow\Filesystem\DSL\path($filePath, $path->options()), true);
+                return self::statFor(\Flow\Filesystem\DSL\path($filePath, $path->options()), $filePath);
             }
         }
 
@@ -166,7 +173,7 @@ final class NativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -212,5 +219,15 @@ final class NativeLocalFilesystem implements Filesystem
         }
 
         \rmdir($dirPath);
+    }
+
+    private static function statFor(Path $path, string $absolutePath) : FileStatus
+    {
+        $isFile = \is_file($absolutePath);
+        $size = $isFile ? (\filesize($absolutePath) ?: null) : null;
+        $mtime = \filemtime($absolutePath);
+        $lastModifiedAt = $mtime !== false ? new \DateTimeImmutable('@' . $mtime) : null;
+
+        return new FileStatus($path, $isFile, $size, $lastModifiedAt);
     }
 }

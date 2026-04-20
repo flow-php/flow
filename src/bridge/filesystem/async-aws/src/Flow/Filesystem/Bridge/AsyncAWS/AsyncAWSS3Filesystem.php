@@ -8,18 +8,19 @@ use AsyncAws\S3\Exception\NoSuchKeyException;
 use AsyncAws\S3\S3Client;
 use Flow\Filesystem\{DestinationStream,
     Exception\InvalidArgumentException,
+    Exception\InvalidSchemeException,
     Exception\RuntimeException,
     FileStatus,
     Filesystem,
+    Mount,
     Path,
-    Protocol,
     SourceStream};
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 final readonly class AsyncAWSS3Filesystem implements Filesystem
 {
-    public function __construct(private string $bucket, private S3Client $s3Client, private Options $options)
+    public function __construct(private Mount $mount, private string $bucket, private S3Client $s3Client, private Options $options)
     {
         if ($bucket === '') {
             throw new InvalidArgumentException('Bucket name can not be empty');
@@ -32,7 +33,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         return AsyncAWSS3DestinationStream::openAppend($this->s3Client, $this->bucket, $path, $this->options->blockFactory(), $this->options->partSize());
     }
@@ -44,7 +45,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             $prefix = \ltrim($path->staticPart()->path(), DIRECTORY_SEPARATOR);
@@ -62,8 +63,13 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             ]);
 
             foreach ($result->getContents() as $object) {
-                $objectPath = \Flow\Filesystem\DSL\path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR), $path->options());
-                $objectFileStatus = new FileStatus($objectPath, (bool) $objectPath->extension());
+                $objectPath = \Flow\Filesystem\DSL\path($path->protocol() . '://' . DIRECTORY_SEPARATOR . \ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR), $path->options());
+                $objectFileStatus = new FileStatus(
+                    $objectPath,
+                    (bool) $objectPath->extension(),
+                    $object->getSize(),
+                    $object->getLastModified(),
+                );
 
                 if ($path->isPattern() && !$path->matches($objectPath)) {
                     continue;
@@ -78,10 +84,15 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         } while ($continuationToken);
     }
 
+    public function mount() : Mount
+    {
+        return $this->mount;
+    }
+
     public function mv(Path $from, Path $to) : bool
     {
-        $this->protocol()->validateScheme($from);
-        $this->protocol()->validateScheme($to);
+        $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
 
         $this->s3Client->copyObject([
             'Bucket' => $this->bucket,
@@ -97,13 +108,10 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         return true;
     }
 
-    public function protocol() : Protocol
-    {
-        return new Protocol('aws-s3');
-    }
-
     public function readFrom(Path $path) : SourceStream
     {
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+
         return new AsyncAWSS3SourceStream($path, $this->bucket, $this->s3Client);
     }
 
@@ -112,6 +120,8 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         if ($path->isEqual($this->getSystemTmpDir())) {
             return false;
         }
+
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             $deletedCount = 0;
@@ -170,7 +180,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             return new FileStatus($path, false);
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
             if ($path->path() === '/') {
@@ -184,7 +194,12 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
                 ]);
                 $headObject->resolve();
 
-                return new FileStatus($path, true);
+                return new FileStatus(
+                    $path,
+                    true,
+                    $headObject->getContentLength(),
+                    $headObject->getLastModified(),
+                );
             } catch (NoSuchKeyException) {
                 /**
                  * Since S3 doesn't have a concept of folders, before we check if the intention is not to delete
@@ -214,7 +229,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         return AsyncAWSS3DestinationStream::openBlank($this->s3Client, $this->bucket, $path, $this->options->blockFactory(), $this->options->partSize());
     }

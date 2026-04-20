@@ -9,7 +9,6 @@ use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\{MemoryFilesystemFactory, NativeLocalFilesystemFactory};
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\{FilesystemFactoryRegistry, FstabBuilder};
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Double\CapturingFilesystemFactory;
-use Flow\Filesystem\Protocol;
 use PHPUnit\Framework\TestCase;
 
 final class FstabBuilderTest extends TestCase
@@ -30,10 +29,10 @@ final class FstabBuilderTest extends TestCase
         $table = FstabBuilder::build(
             new FilesystemFactoryRegistry([new MemoryFilesystemFactory()]),
             'default',
-            ['memory' => []],
+            ['memory' => ['type' => 'memory']],
         );
 
-        self::assertSame('memory', $table->for(new Protocol('memory'))->protocol()->name);
+        self::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
     public function test_mounts_multiple_filesystems() : void
@@ -45,51 +44,55 @@ final class FstabBuilderTest extends TestCase
             ]),
             'default',
             [
-                'file' => [],
-                'memory' => [],
+                'file' => ['type' => 'file'],
+                'memory' => ['type' => 'memory'],
             ],
         );
 
-        self::assertSame('file', $table->for(new Protocol('file'))->protocol()->name);
-        self::assertSame('memory', $table->for(new Protocol('memory'))->protocol()->name);
+        self::assertSame('file', $table->for('file')->mount()->protocol);
+        self::assertSame('memory', $table->for('memory')->mount()->protocol);
+    }
+
+    public function test_mounts_two_filesystems_of_same_type_under_different_protocols() : void
+    {
+        $table = FstabBuilder::build(
+            new FilesystemFactoryRegistry([new MemoryFilesystemFactory()]),
+            'default',
+            [
+                'warehouse' => ['type' => 'memory'],
+                'archive' => ['type' => 'memory'],
+            ],
+        );
+
+        self::assertSame('warehouse', $table->for('warehouse')->mount()->protocol);
+        self::assertSame('archive', $table->for('archive')->mount()->protocol);
+        self::assertNotSame($table->for('warehouse'), $table->for('archive'));
     }
 
     public function test_passes_entry_options_to_factory() : void
     {
-        $capturing = new CapturingFilesystemFactory('my-fs', native_local_filesystem());
+        $capturing = new CapturingFilesystemFactory('file', native_local_filesystem('my-fs'));
 
         FstabBuilder::build(
             new FilesystemFactoryRegistry([$capturing]),
             'default',
             [
-                'my-fs' => ['foo' => 'bar'],
+                'my-fs' => ['type' => 'file', 'foo' => 'bar'],
             ],
         );
 
-        self::assertSame([['protocol' => 'my-fs', 'config' => ['foo' => 'bar']]], $capturing->calls);
+        self::assertSame([['mount' => 'my-fs', 'config' => ['foo' => 'bar']]], $capturing->calls);
     }
 
-    public function test_throws_when_factory_missing_for_protocol() : void
+    public function test_throws_when_factory_missing_for_type() : void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Fstab "primary" protocol "memory": No filesystem factory registered for protocol "memory".');
+        $this->expectExceptionMessage('Fstab "primary" mount "memory": No filesystem factory registered for type "memory"');
 
         FstabBuilder::build(
             new FilesystemFactoryRegistry([]),
             'primary',
-            ['memory' => []],
-        );
-    }
-
-    public function test_throws_when_protocol_name_is_invalid() : void
-    {
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Fstab "default" protocol "1bad"');
-
-        FstabBuilder::build(
-            new FilesystemFactoryRegistry([]),
-            'default',
-            ['1bad' => []],
+            ['memory' => ['type' => 'memory']],
         );
     }
 }

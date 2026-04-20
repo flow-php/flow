@@ -23,11 +23,11 @@ final class BuildFstabsPassContext
         $container->setDefinition('.flow_filesystem.factory_registry', $registry);
 
         $memoryFactory = new Definition(MemoryFilesystemFactory::class);
-        $memoryFactory->addTag('flow_filesystem.factory', ['protocol' => 'memory']);
+        $memoryFactory->addTag('flow_filesystem.factory', ['type' => 'memory']);
         $container->setDefinition('.flow_filesystem.factory.memory', $memoryFactory);
 
         $nativeFactory = new Definition(NativeLocalFilesystemFactory::class);
-        $nativeFactory->addTag('flow_filesystem.factory', ['protocol' => 'file']);
+        $nativeFactory->addTag('flow_filesystem.factory', ['type' => 'file']);
         $container->setDefinition('.flow_filesystem.factory.file', $nativeFactory);
 
         return $container;

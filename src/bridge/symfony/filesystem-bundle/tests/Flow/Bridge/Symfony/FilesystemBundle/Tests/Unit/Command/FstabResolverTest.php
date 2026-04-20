@@ -43,7 +43,7 @@ final class FstabResolverTest extends TestCase
     public function test_parse_uri_assumes_local_filesystem_for_absolute_path() : void
     {
         $path = $this->context->resolver()->parseUri('/tmp/file.txt');
-        self::assertSame('file', $path->protocol()->name);
+        self::assertSame('file', $path->protocol());
         self::assertSame('/tmp/file.txt', $path->path());
     }
 
@@ -51,7 +51,7 @@ final class FstabResolverTest extends TestCase
     {
         $cwd = (string) \getcwd();
         $path = $this->context->resolver()->parseUri('file.txt');
-        self::assertSame('file', $path->protocol()->name);
+        self::assertSame('file', $path->protocol());
         self::assertSame($cwd . '/file.txt', $path->path());
     }
 

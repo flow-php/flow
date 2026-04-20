@@ -18,10 +18,8 @@ final class AsFilesystemFactoryTest extends TestCase
         self::assertSame(\Attribute::TARGET_CLASS, $attributes[0]->newInstance()->flags);
     }
 
-    public function test_exposes_protocol_as_public_readonly() : void
+    public function test_exposes_type_as_public_readonly() : void
     {
-        $attribute = new AsFilesystemFactory('my-fs');
-
-        self::assertSame('my-fs', $attribute->protocol);
+        self::assertSame('file', (new AsFilesystemFactory(type: 'file'))->type);
     }
 }

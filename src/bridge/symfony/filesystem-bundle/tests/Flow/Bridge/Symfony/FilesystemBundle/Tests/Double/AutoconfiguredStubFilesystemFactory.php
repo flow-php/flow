@@ -6,18 +6,18 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Double;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
-use Flow\Filesystem\{Filesystem, Protocol};
+use Flow\Filesystem\Filesystem;
 
-#[AsFilesystemFactory(protocol: 'stub-autoconfigured')]
+#[AsFilesystemFactory(type: 'file')]
 final readonly class AutoconfiguredStubFilesystemFactory implements FilesystemFactory
 {
-    public function create(Protocol $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config) : Filesystem
     {
         throw new \RuntimeException('AutoconfiguredStubFilesystemFactory is a fixture and cannot create filesystems.');
     }
 
-    public function protocol() : Protocol
+    public function type() : string
     {
-        return new Protocol('stub-autoconfigured');
+        return 'file';
     }
 }

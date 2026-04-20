@@ -40,7 +40,7 @@ final class TraceableDestinationStream implements DestinationStream
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
                     FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol()->name,
+                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
                 ]
             );
         }

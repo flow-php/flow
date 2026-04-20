@@ -8,10 +8,10 @@ use Flow\Filesystem\{DestinationStream,
     FileStatus,
     Filesystem,
     Local\Memory\Memory,
+    Mount,
     Path,
-    Protocol,
     SourceStream};
-use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Exception\{InvalidSchemeException, RuntimeException};
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
@@ -19,14 +19,14 @@ final readonly class MemoryFilesystem implements Filesystem
 {
     private Memory $memory;
 
-    public function __construct(?\php_user_filter $filter = null)
+    public function __construct(private Mount $mount = new Mount('memory'), ?\php_user_filter $filter = null)
     {
         $this->memory = new Memory($filter);
     }
 
     public function appendTo(Path $path) : DestinationStream
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         return $this->memory->for($path);
     }
@@ -38,10 +38,10 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
-            if ($this->memory->has($path) && $pathFilter->accept($status = new FileStatus($path, true))) {
+            if ($this->memory->has($path) && $pathFilter->accept($status = $this->statFor($path))) {
                 yield $status;
             }
 
@@ -54,10 +54,15 @@ final readonly class MemoryFilesystem implements Filesystem
         \usort($paths, static fn (Path $a, Path $b) : int => $a->path() <=> $b->path());
 
         foreach ($paths as $nextPath) {
-            if ($path->matches($nextPath) && $pathFilter->accept($status = new FileStatus($nextPath, true))) {
+            if ($path->matches($nextPath) && $pathFilter->accept($status = $this->statFor($nextPath))) {
                 yield $status;
             }
         }
+    }
+
+    public function mount() : Mount
+    {
+        return $this->mount;
     }
 
     public function mv(Path $from, Path $to) : bool
@@ -65,14 +70,9 @@ final readonly class MemoryFilesystem implements Filesystem
         throw new RuntimeException('Cannot move files around in memory');
     }
 
-    public function protocol() : Protocol
-    {
-        return new Protocol('memory');
-    }
-
     public function readFrom(Path $path) : SourceStream
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$this->memory->has($path)) {
             throw new RuntimeException('File not found in memory: ' . $path->uri());
@@ -83,7 +83,7 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function rm(Path $path) : bool
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
             if (!$this->memory->has($path)) {
@@ -109,19 +109,19 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function status(Path $path) : ?FileStatus
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
             if (!$this->memory->has($path)) {
                 return null;
             }
 
-            return new FileStatus($path, true);
+            return $this->statFor($path);
         }
 
         foreach ($this->memory->paths() as $nextPath) {
             if ($path->matches($nextPath)) {
-                return new FileStatus($nextPath, true);
+                return $this->statFor($nextPath);
             }
         }
 
@@ -130,12 +130,17 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function writeTo(Path $path) : DestinationStream
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($this->status($path) !== null) {
             $this->memory->close($path);
         }
 
         return $this->memory->for($path);
+    }
+
+    private function statFor(Path $path) : FileStatus
+    {
+        return new FileStatus($path, true, $this->memory->size($path), $this->memory->lastModifiedAt($path));
     }
 }
