@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-04-19
+## [Unreleased] - 2026-04-21
 
 ### Added
 - [#2313](https://github.com/flow-php/flow/pull/2313) - **Context to PostgreSql RowMapper** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +17,7 @@
 - [#2306](https://github.com/flow-php/flow/pull/2306) - **TypeMapper now uses cast instead of assert** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2320](https://github.com/flow-php/flow/pull/2320) - **allow to register multiple filesystems of the same type in fstab** - [@norberttech](https://github.com/norberttech)
 - [be4bb3](https://github.com/flow-php/flow/commit/be4bb3c51f5ed3bce0b0bff9e491beb1f68488d6) - **static analysis getting stuck** - [@norberttech](https://github.com/norberttech)
 - [27e3d2](https://github.com/flow-php/flow/commit/27e3d2b1e7c20288ac15b5e265f490e4741ede7f) - **failing fragile nightly tests** - [@norberttech](https://github.com/norberttech)
 - [#2305](https://github.com/flow-php/flow/pull/2305) - **read unique constraint nullsNotDistinct from pg_index** - [@norberttech](https://github.com/norberttech)
