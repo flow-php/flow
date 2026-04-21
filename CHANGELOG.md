@@ -14,6 +14,7 @@
 - [#2298](https://github.com/flow-php/flow/pull/2298) - **postgresql symfony messenger bridge to postgersql symfony bundle** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2321](https://github.com/flow-php/flow/pull/2321) - **update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2306](https://github.com/flow-php/flow/pull/2306) - **TypeMapper now uses cast instead of assert** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
