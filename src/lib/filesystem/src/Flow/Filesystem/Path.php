@@ -94,7 +94,7 @@ final readonly class Path
 
     public function isLocal() : bool
     {
-        return $this->implementation->protocol()->is('file');
+        return $this->implementation->protocol() === 'file';
     }
 
     public function isPattern() : bool
@@ -144,7 +144,7 @@ final readonly class Path
         return $this->implementation->path();
     }
 
-    public function protocol() : Protocol
+    public function protocol() : string
     {
         return $this->implementation->protocol();
     }

@@ -18,6 +18,7 @@ final readonly class CacheConfig
         public Cache $cache,
         public Path $localFilesystemCacheDir,
         public int $externalSortBucketsCount,
+        public string $filesystemProtocol = 'file',
     ) {
     }
 }

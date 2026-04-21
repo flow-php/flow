@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Path;
 
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Filesystem\{Partition, Partitions, Protocol};
+use Flow\Filesystem\{Partition, Partitions};
 
 final readonly class UnixPath
 {
@@ -13,7 +13,7 @@ final readonly class UnixPath
 
     private string $path;
 
-    private Protocol $protocol;
+    private string $protocol;
 
     /**
      * @param array<array-key, null|bool|float|int|string|\UnitEnum>|Options $options
@@ -23,10 +23,10 @@ final readonly class UnixPath
         $this->options = \is_array($options) ? new Options($options) : $options;
 
         if (\preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches)) {
-            $this->protocol = new Protocol($matches[1]);
+            $this->protocol = $matches[1];
             $path = \str_replace($matches[1] . '://', '', $uri);
         } else {
-            $this->protocol = new Protocol('file');
+            $this->protocol = 'file';
             $path = $uri;
         }
 
@@ -107,9 +107,9 @@ final readonly class UnixPath
         $partitionsString = \implode('/', \array_map(static fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
 
         return match ($dirname) {
-            '', '.' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
-            '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
-            default => new self($this->protocol->scheme() . $dirname . '/' . $partitionsString . '/' . $basename, $this->options),
+            '', '.' => new self($this->protocol . ':///' . $partitionsString . '/' . $basename, $this->options),
+            '/', '\\' => new self($this->protocol . ':///' . $partitionsString . '/' . $basename, $this->options),
+            default => new self($this->protocol . '://' . $dirname . '/' . $partitionsString . '/' . $basename, $this->options),
         };
     }
 
@@ -125,7 +125,7 @@ final readonly class UnixPath
         $basename = $pathInfo['basename'] ?? '';
 
         return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $prefix . $basename : $dirname . '/' . $prefix . $basename),
+            $this->protocol . '://' . (($dirname === '' || $dirname === '.') ? $prefix . $basename : $dirname . '/' . $prefix . $basename),
             $this->options
         );
     }
@@ -182,8 +182,8 @@ final readonly class UnixPath
         $dirname = \pathinfo($this->path)['dirname'] ?? '';
 
         return match ($dirname) {
-            '', '.', '/', '\\' => new self($this->protocol->scheme() . '/', $this->options),
-            default => new self($this->protocol->scheme() . $dirname, $this->options),
+            '', '.', '/', '\\' => new self($this->protocol . ':///', $this->options),
+            default => new self($this->protocol . '://' . $dirname, $this->options),
         };
     }
 
@@ -222,7 +222,7 @@ final readonly class UnixPath
             $partitionsString = \implode('/', \array_map(static fn (Partition $p) => $p->name . '=' . $p->value, $currentPartitionsList));
 
             $paths[] = new self(
-                $this->protocol->scheme() . (($dirname === '' || $dirname === '.')
+                $this->protocol . '://' . (($dirname === '' || $dirname === '.')
                     ? $partitionsString
                     : \preg_replace('#/' . \preg_quote($partitionsString, '#') . '/.*$#', '/' . $partitionsString, $dirname)),
                 $this->options
@@ -237,7 +237,7 @@ final readonly class UnixPath
         return $this->path;
     }
 
-    public function protocol() : Protocol
+    public function protocol() : string
     {
         return $this->protocol;
     }
@@ -253,7 +253,7 @@ final readonly class UnixPath
         $newBasename = $extension !== '' ? $newFilename . '.' . $extension : $newFilename;
 
         return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $newBasename : $dirname . '/' . $newBasename),
+            $this->protocol . '://' . (($dirname === '' || $dirname === '.') ? $newBasename : $dirname . '/' . $newBasename),
             $this->options
         );
     }
@@ -270,7 +270,7 @@ final readonly class UnixPath
         $filename = $pathInfo['filename'] ?? '';
 
         return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $filename : $dirname . '/' . $filename) . '.' . $extension,
+            $this->protocol . '://' . (($dirname === '' || $dirname === '.') ? $filename : $dirname . '/' . $filename) . '.' . $extension,
             $this->options
         );
     }
@@ -285,7 +285,7 @@ final readonly class UnixPath
             return null;
         }
 
-        return new self($this->protocol->scheme() . \implode('/', $remainingParts), $this->options);
+        return new self($this->protocol . '://' . \implode('/', $remainingParts), $this->options);
     }
 
     public function staticPart() : self
@@ -304,7 +304,7 @@ final readonly class UnixPath
         }
 
         return new self(
-            $this->protocol->scheme() . (\count($staticParts) === 0 ? '/' : \ltrim('/' . \implode('/', $staticParts), '/')),
+            $this->protocol . '://' . (\count($staticParts) === 0 ? '/' : \ltrim('/' . \implode('/', $staticParts), '/')),
             $this->options
         );
     }
@@ -312,14 +312,14 @@ final readonly class UnixPath
     public function suffix(string $string) : self
     {
         return new self(
-            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : \rtrim($this->path, '/') . '/' . \ltrim($string, '/')),
+            $this->protocol . '://' . ($this->path === '/' ? '/' . \ltrim($string, '/') : \rtrim($this->path, '/') . '/' . \ltrim($string, '/')),
             $this->options
         );
     }
 
     public function uri() : string
     {
-        return $this->protocol->scheme() . \ltrim($this->path, '/');
+        return $this->protocol . '://' . \ltrim($this->path, '/');
     }
 
     public function withOptions(Options $options) : self

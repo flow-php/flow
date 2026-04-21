@@ -13,6 +13,8 @@ final class SortConfigBuilder
 
     private SortAlgorithms $algorithm = SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT;
 
+    private string $filesystemProtocol = 'file';
+
     private ?Unit $sortMemoryLimit = null;
 
     public function algorithm(SortAlgorithms $algorithm) : self
@@ -42,8 +44,16 @@ final class SortConfigBuilder
 
         return new SortConfig(
             $this->algorithm,
-            $this->sortMemoryLimit
+            $this->sortMemoryLimit,
+            $this->filesystemProtocol,
         );
+    }
+
+    public function filesystemProtocol(string $protocol) : self
+    {
+        $this->filesystemProtocol = $protocol;
+
+        return $this;
     }
 
     public function sortMemoryLimit(Unit $sortMemoryLimit) : self

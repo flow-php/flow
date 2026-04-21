@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_options, path, protocol};
+use function Flow\Filesystem\DSL\{filesystem_telemetry_options, path};
 use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, SourceStream};
+use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, SourceStream};
 use Flow\Filesystem\Telemetry\{TraceableDestinationStream, TraceableFilesystem, TraceableSourceStream};
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +26,7 @@ final class TraceableFilesystemTest extends TestCase
         $mockStream->method('path')->willReturn($path);
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('readFrom')->willReturn($mockStream);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -44,7 +44,7 @@ final class TraceableFilesystemTest extends TestCase
         $exception = new \RuntimeException('Append failed');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('appendTo')->willThrowException($exception);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -65,7 +65,7 @@ final class TraceableFilesystemTest extends TestCase
         $mockStream->method('path')->willReturn($path);
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('appendTo')->with($path)->willReturn($mockStream);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -96,7 +96,7 @@ final class TraceableFilesystemTest extends TestCase
         $path = path('file://tmp/**/*.txt');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('list')->willReturnCallback(static function () : \Generator {
             yield from [];
         });
@@ -104,6 +104,21 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         \iterator_to_array($fs->list($path));
 
+        self::assertEmpty($spanProcessor->endedSpans());
+    }
+
+    public function test_mount_delegates_to_underlying_filesystem() : void
+    {
+        $spanProcessor = memory_span_processor(void_span_exporter());
+        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
+        $mount = new Mount('s3');
+
+        $mockFilesystem = $this->createMock(Filesystem::class);
+        $mockFilesystem->method('mount')->willReturn($mount);
+
+        $fs = new TraceableFilesystem($mockFilesystem, $config);
+
+        self::assertSame($mount, $fs->mount());
         self::assertEmpty($spanProcessor->endedSpans());
     }
 
@@ -115,28 +130,13 @@ final class TraceableFilesystemTest extends TestCase
         $to = Path::realpath('/tmp/dest.txt');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('mv')->willReturn(true);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $result = $fs->mv($from, $to);
 
         self::assertTrue($result);
-        self::assertEmpty($spanProcessor->endedSpans());
-    }
-
-    public function test_protocol_delegates_to_underlying_filesystem() : void
-    {
-        $spanProcessor = memory_span_processor(void_span_exporter());
-        $config = FilesystemTelemetryConfigMother::create($spanProcessor);
-        $protocol = protocol('s3');
-
-        $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn($protocol);
-
-        $fs = new TraceableFilesystem($mockFilesystem, $config);
-
-        self::assertSame($protocol, $fs->protocol());
         self::assertEmpty($spanProcessor->endedSpans());
     }
 
@@ -148,7 +148,7 @@ final class TraceableFilesystemTest extends TestCase
         $exception = new \RuntimeException('Read failed');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('readFrom')->willThrowException($exception);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -169,7 +169,7 @@ final class TraceableFilesystemTest extends TestCase
         $mockStream->method('path')->willReturn($path);
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('readFrom')->with($path)->willReturn($mockStream);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -185,7 +185,7 @@ final class TraceableFilesystemTest extends TestCase
         $path = Path::realpath('/tmp/test.txt');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('rm')->willReturn(true);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -203,7 +203,7 @@ final class TraceableFilesystemTest extends TestCase
         $fileStatus = new FileStatus($path, true);
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('status')->willReturn($fileStatus);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -225,7 +225,7 @@ final class TraceableFilesystemTest extends TestCase
         $mockStream->method('path')->willReturn($path);
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('readFrom')->willReturn($mockStream);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -242,7 +242,7 @@ final class TraceableFilesystemTest extends TestCase
         $exception = new \RuntimeException('Write failed');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('writeTo')->willThrowException($exception);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
@@ -263,7 +263,7 @@ final class TraceableFilesystemTest extends TestCase
         $mockStream->method('path')->willReturn($path);
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('file'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem->method('writeTo')->with($path)->willReturn($mockStream);
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);

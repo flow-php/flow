@@ -16,7 +16,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 final class FlowFilesystemBundle extends AbstractBundle
 {
-    private const string PROTOCOL_REGEX = '/^[a-zA-Z][a-zA-Z0-9+.-]+$/';
+    private const string MOUNT_REGEX = '/^[a-zA-Z][a-zA-Z0-9+.-]+$/';
 
     #[\Override]
     public function build(ContainerBuilder $container) : void
@@ -30,7 +30,7 @@ final class FlowFilesystemBundle extends AbstractBundle
         $container->registerAttributeForAutoconfiguration(
             AsFilesystemFactory::class,
             static function (ChildDefinition $definition, AsFilesystemFactory $attribute, \Reflector $reflector) : void {
-                $definition->addTag(RegisterFilesystemFactoriesPass::TAG, ['protocol' => $attribute->protocol]);
+                $definition->addTag(RegisterFilesystemFactoriesPass::TAG, ['type' => $attribute->type]);
             },
         );
     }
@@ -63,23 +63,26 @@ final class FlowFilesystemBundle extends AbstractBundle
                                 ->isRequired()
                                 ->requiresAtLeastOneElement()
                                 ->normalizeKeys(false)
-                                ->useAttributeAsKey('protocol')
+                                ->useAttributeAsKey('mount')
                                 ->validate()
                                     ->ifTrue(static function (array $filesystems) : bool {
-                                        foreach (\array_keys($filesystems) as $protocol) {
-                                            if (!\is_string($protocol) || \preg_match(self::PROTOCOL_REGEX, $protocol) !== 1) {
+                                        foreach (\array_keys($filesystems) as $mount) {
+                                            if (!\is_string($mount) || \preg_match(self::MOUNT_REGEX, $mount) !== 1) {
                                                 return true;
                                             }
                                         }
 
                                         return false;
                                     })
-                                    ->thenInvalid('Protocol name must match ' . self::PROTOCOL_REGEX . '.')
+                                    ->thenInvalid('Mount name must match ' . self::MOUNT_REGEX . '.')
                                 ->end()
-                                ->variablePrototype()
-                                    ->validate()
-                                        ->ifTrue(static fn ($v) : bool => $v !== null && !\is_array($v))
-                                        ->thenInvalid('Filesystem entry must be an array of options (or omitted entirely).')
+                                ->arrayPrototype()
+                                    ->ignoreExtraKeys(false)
+                                    ->children()
+                                        ->scalarNode('type')
+                                            ->isRequired()
+                                            ->cannotBeEmpty()
+                                        ->end()
                                     ->end()
                                 ->end()
                             ->end()
@@ -96,16 +99,10 @@ final class FlowFilesystemBundle extends AbstractBundle
     #[\Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder) : void
     {
-        /** @var array<string, array{filesystems: array<string, null|array<string, mixed>>}> $fstabs */
+        /** @var array<string, array{filesystems: array<string, array<string, mixed>>}> $fstabs */
         $fstabs = $config['fstabs'] ?? [];
         /** @var null|string $defaultFstab */
         $defaultFstab = $config['default_fstab'] ?? null;
-
-        foreach ($fstabs as $fstabName => $fstabConfig) {
-            foreach ($fstabConfig['filesystems'] as $protocol => $entry) {
-                $fstabs[$fstabName]['filesystems'][$protocol] = \is_array($entry) ? $entry : [];
-            }
-        }
 
         $config['fstabs'] = $fstabs;
 

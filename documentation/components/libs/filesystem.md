@@ -56,29 +56,71 @@ DestinationStream::append(string $data) : self;
 DestinationStream::fromResource($resource) : self;
 ```
 
+- `Mount` - a value object identifying a filesystem mount by its URI protocol (`file`, `memory`, `aws-s3`, `warehouse`, …)
+
+```php
+<?php
+
+final readonly class Mount
+{
+    public string $protocol;
+
+    public function __construct(string $protocol); // validates the protocol against PROTOCOL_REGEX
+    public function supports(Path|string $path) : bool; // true when $path's URI protocol matches
+}
+```
+
 - `Filesystem` - filesystem interface represents a remote/local filesystem
 
 ```php
 <?php
 
-Filesystem::list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator;
+Filesystem::appendTo(Path $path) : DestinationStream;
+Filesystem::getSystemTmpDir() : Path;
+Filesystem::list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator; // yields FileStatus
+Filesystem::mount() : Mount;
 Filesystem::mv(Path $from, Path $to) : bool;
-Filesystem::protocol() : Protocol;
 Filesystem::readFrom(Path $path) : SourceStream;
 Filesystem::rm(Path $path) : bool;
 Filesystem::status(Path $path) : ?FileStatus;
 Filesystem::writeTo(Path $path) : DestinationStream;
 ```
 
-- `FilesystemTable` - a registry for all filesystems
+- `FileStatus` - metadata returned from `status()` / `list()`
 
 ```php
 <?php
 
-FilesystemTable::for(Path|Protocol $path) : Filesystem
-FilesystemTable::mount(Filesystem $filesystem) : void
-FilesystemTable::unmount(Filesystem $filesystem) : void
+final readonly class FileStatus
+{
+    public Path $path;
+    public ?int $size;                        // bytes, null for directories
+    public ?\DateTimeImmutable $lastModifiedAt; // populated when the backend exposes it
+
+    public function isFile() : bool;
+    public function isDirectory() : bool;
+}
 ```
+
+`size` and `lastModifiedAt` come from the backend's list/head response for free — no extra stream is
+opened, no extra HTTP call made. They're `null` when the backend can't provide them (e.g. `StdOutFilesystem`).
+
+- `Path::protocol() : string` — returns the raw URI scheme (`'file'`, `'aws-s3'`, `'warehouse'`).
+
+- `FilesystemTable` - a registry of filesystems keyed by mount protocol
+
+```php
+<?php
+
+FilesystemTable::for(Path|string $protocol) : Filesystem;
+FilesystemTable::mount(Filesystem $filesystem) : void;
+FilesystemTable::unmount(Filesystem $filesystem) : void;
+```
+
+Every mount must have a unique protocol. Two mounts of the same protocol throw
+`InvalidArgumentException`. A filesystem can be mounted under any protocol you choose — e.g. two S3
+buckets mounted under `warehouse` and `archive` — and resolved at runtime via
+`$table->for('warehouse')` or `$table->for($path)`.
 
 ## Usage
 
@@ -92,7 +134,6 @@ use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
 use function Flow\Filesystem\DSL\fstab;
 use function Flow\Filesystem\DSL\path;
-use function Flow\Filesystem\DSL\protocol;
 
 $fstab = fstab(
     azure_filesystem(
@@ -104,14 +145,65 @@ $fstab = fstab(
     )
 );
 
-
-$stream = $fstab->for(protocol('azure-blob'))->writeTo(path('azure-blob://orders.csv'));
+$stream = $fstab->for('azure-blob')->writeTo(path('azure-blob://orders.csv'));
 
 $stream->append('id,name,active');
 $stream->append('1,norbert,true');
 $stream->append('2,john,true');
 $stream->append('3,jane,true');
 $stream->close();
+```
+
+## Cross-filesystem copy & move
+
+`FilesystemTable` coupled with the `Copy` / `Move` operations lets you copy or move files between any
+two mounted filesystems. Same-filesystem moves use the backend's native `mv` (local rename, S3
+CopyObject + DeleteObject, Azure CopyBlob + DeleteBlob). Cross-filesystem moves stream bytes from
+source to destination in chunks and remove the source afterwards — **not atomic**: if the source
+removal fails after a successful write, the destination is present and the source remains; re-running
+is idempotent.
+
+```php
+<?php
+
+use function Flow\Filesystem\DSL\{file_copy, file_move, fstab, memory_filesystem, native_local_filesystem, operation_options, path};
+
+$table = fstab(memory_filesystem(), native_local_filesystem());
+
+// Seed a memory file
+$table->for('memory')->writeTo(path('memory://hello.txt'))->append('hello')->close();
+
+// Cross-filesystem copy: memory → local
+file_copy($table)->execute(path('memory://hello.txt'), path('/tmp/hello.txt'));
+
+// Cross-filesystem move with custom chunk size
+file_move($table, operation_options(chunkSize: 64 * 1024))
+    ->execute(path('memory://hello.txt'), path('/tmp/moved.txt'));
+```
+
+`operation_options()` accepts a single `chunkSize` (default `8192`) that controls the byte-chunk
+size for cross-filesystem streaming copies.
+
+## Size formatting
+
+`Flow\Filesystem\SizeUnits::humanReadable()` formats byte counts using binary units
+(B, KiB, MiB, GiB, TiB, PiB). It mirrors PHP's `number_format` signature for the fractional part:
+
+```php
+<?php
+
+use Flow\Filesystem\SizeUnits;
+
+SizeUnits::humanReadable(0);          // "0 B"
+SizeUnits::humanReadable(1023);       // "1,023 B"
+SizeUnits::humanReadable(1536);       // "1.50 KiB"
+SizeUnits::humanReadable(1_048_576);  // "1.00 MiB"
+SizeUnits::humanReadable(null);       // "-"
+
+// Custom formatting
+SizeUnits::humanReadable(1536, decimals: 0);                  // "2 KiB"
+SizeUnits::humanReadable(1536, decimalSeparator: ',');        // "1,50 KiB"
+SizeUnits::humanReadable(null, null: 'n/a');                  // "n/a"
 ```
 
 ## Telemetry

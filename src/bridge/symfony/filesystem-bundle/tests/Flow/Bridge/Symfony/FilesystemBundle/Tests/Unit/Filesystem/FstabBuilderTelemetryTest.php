@@ -7,7 +7,6 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit\Filesystem;
 use function Flow\Telemetry\DSL\{resource, telemetry};
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\MemoryFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\{FilesystemFactoryRegistry, FstabBuilder};
-use Flow\Filesystem\Protocol;
 use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use PHPUnit\Framework\TestCase;
@@ -19,10 +18,10 @@ final class FstabBuilderTelemetryTest extends TestCase
         $table = FstabBuilder::build(
             new FilesystemFactoryRegistry([new MemoryFilesystemFactory()]),
             'default',
-            ['memory' => []],
+            ['memory' => ['type' => 'memory']],
         );
 
-        self::assertNotInstanceOf(TraceableFilesystem::class, $table->for(new Protocol('memory')));
+        self::assertNotInstanceOf(TraceableFilesystem::class, $table->for('memory'));
     }
 
     public function test_wraps_mounted_filesystems_with_traceable_when_telemetry_enabled() : void
@@ -32,10 +31,10 @@ final class FstabBuilderTelemetryTest extends TestCase
         $table = FstabBuilder::build(
             new FilesystemFactoryRegistry([new MemoryFilesystemFactory()]),
             'default',
-            ['memory' => []],
+            ['memory' => ['type' => 'memory']],
             $config,
         );
 
-        self::assertInstanceOf(TraceableFilesystem::class, $table->for(new Protocol('memory')));
+        self::assertInstanceOf(TraceableFilesystem::class, $table->for('memory'));
     }
 }

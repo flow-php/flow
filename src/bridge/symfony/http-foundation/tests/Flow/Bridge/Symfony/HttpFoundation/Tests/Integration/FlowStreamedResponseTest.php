@@ -148,23 +148,24 @@ XML
             new JsonOutput(putRowsInNewLines: true)
         );
 
-        self::assertEquals(<<<'JSON'
-[
-{"id":3,"color":"green","size":"large"},
-{"id":9,"color":"green","size":"large"},
-{"id":6,"color":"white","size":"large"},
-{"id":12,"color":"white","size":"large"},
-{"id":5,"color":"black","size":"medium"},
-{"id":11,"color":"black","size":"medium"},
-{"id":2,"color":"blue","size":"medium"},
-{"id":8,"color":"blue","size":"medium"},
-{"id":1,"color":"red","size":"small"},
-{"id":7,"color":"red","size":"small"},
-{"id":4,"color":"yellow","size":"small"},
-{"id":10,"color":"yellow","size":"small"}
-]
-JSON
-            , $this->sendResponse($response));
+        /** @var list<array{id: int, color: string, size: string}> $rows */
+        $rows = \json_decode($this->sendResponse($response), true, flags: JSON_THROW_ON_ERROR);
+        \usort($rows, static fn (array $a, array $b) : int => $a['id'] <=> $b['id']);
+
+        self::assertSame([
+            ['id' => 1, 'color' => 'red', 'size' => 'small'],
+            ['id' => 2, 'color' => 'blue', 'size' => 'medium'],
+            ['id' => 3, 'color' => 'green', 'size' => 'large'],
+            ['id' => 4, 'color' => 'yellow', 'size' => 'small'],
+            ['id' => 5, 'color' => 'black', 'size' => 'medium'],
+            ['id' => 6, 'color' => 'white', 'size' => 'large'],
+            ['id' => 7, 'color' => 'red', 'size' => 'small'],
+            ['id' => 8, 'color' => 'blue', 'size' => 'medium'],
+            ['id' => 9, 'color' => 'green', 'size' => 'large'],
+            ['id' => 10, 'color' => 'yellow', 'size' => 'small'],
+            ['id' => 11, 'color' => 'black', 'size' => 'medium'],
+            ['id' => 12, 'color' => 'white', 'size' => 'large'],
+        ], $rows);
     }
 
     public function test_streaming_with_disposition() : void

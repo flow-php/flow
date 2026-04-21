@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
 use function Flow\ETL\DSL\df;
+use function Flow\Filesystem\DSL\path;
 use Flow\Bridge\Symfony\HttpFoundation\{Output, StreamClosure};
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\{Config, Extractor, Transformation};
@@ -26,6 +27,7 @@ class FlowStreamedResponse extends StreamedResponse
         array $headers = [],
         Config|ConfigBuilder|null $config = null,
         private readonly ?StreamClosure $streamClosure = null,
+        private readonly string $filesystem = 'stdout',
     ) {
         $this->config = $config ?? Config::default();
 
@@ -38,11 +40,13 @@ class FlowStreamedResponse extends StreamedResponse
 
     private function stream() : void
     {
+        $stdoutPath = path($this->filesystem . '://' . \bin2hex(\random_bytes(16)) . '.stdout', ['stream' => 'output']);
+
         $report = df($this->config)
             ->read($this->extractor)
             ->with($this->transformations)
             ->dropPartitions()
-            ->write($this->output->stdoutLoader())
+            ->write($this->output->loader($stdoutPath))
             ->run();
 
         if ($this->streamClosure !== null) {

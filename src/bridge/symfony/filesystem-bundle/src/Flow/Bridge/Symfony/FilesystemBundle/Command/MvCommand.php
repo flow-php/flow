@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
+use function Flow\Filesystem\DSL\file_move;
 use function Flow\Types\DSL\{type_null, type_string, type_union};
+use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
@@ -44,10 +46,31 @@ final class MvCommand extends Command
             $table = $this->resolver->resolve($fstabName);
             $source = $this->resolver->parseUri($rawSource);
             $dest = $this->resolver->parseUri($rawDest);
+            $activeFstab = $fstabName ?? $this->resolver->defaultFstabName();
 
-            CpCommand::streamCopy($table, $source, $dest, $fstabName ?? $this->resolver->defaultFstabName());
+            try {
+                $sourceFs = $table->for($source);
+            } catch (\Throwable $e) {
+                throw new InvalidArgumentException(\sprintf('in fstab "%s": source: %s', $activeFstab, $e->getMessage()), 0, $e);
+            }
 
-            $table->for($source)->rm($source);
+            try {
+                $table->for($dest);
+            } catch (\Throwable $e) {
+                throw new InvalidArgumentException(\sprintf('in fstab "%s": destination: %s', $activeFstab, $e->getMessage()), 0, $e);
+            }
+
+            $sourceStatus = $sourceFs->status($source);
+
+            if ($sourceStatus === null) {
+                throw new InvalidArgumentException(\sprintf('Source not found: %s', $source->uri()));
+            }
+
+            if ($sourceStatus->isDirectory()) {
+                throw new InvalidArgumentException(\sprintf('Refusing to move directory: %s', $source->uri()));
+            }
+
+            file_move($table)->execute($source, $dest);
         } catch (\Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 

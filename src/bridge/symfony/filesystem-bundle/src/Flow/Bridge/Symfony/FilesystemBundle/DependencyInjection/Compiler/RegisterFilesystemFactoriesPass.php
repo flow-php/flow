@@ -25,26 +25,26 @@ final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 
         foreach ($container->findTaggedServiceIds(self::TAG) as $serviceId => $tags) {
             foreach ($tags as $tag) {
-                if (!\array_key_exists('protocol', $tag) || !\is_string($tag['protocol']) || $tag['protocol'] === '') {
+                if (!\array_key_exists('type', $tag) || !\is_string($tag['type']) || $tag['type'] === '') {
                     throw new LogicException(\sprintf(
-                        'Service "%s" is tagged with "%s" but is missing a non-empty "protocol" attribute.',
+                        'Service "%s" is tagged with "%s" but is missing a non-empty "type" attribute.',
                         $serviceId,
                         self::TAG,
                     ));
                 }
 
-                $protocol = $tag['protocol'];
+                $type = $tag['type'];
 
-                if (\array_key_exists($protocol, $seen)) {
+                if (\array_key_exists($type, $seen)) {
                     throw new LogicException(\sprintf(
-                        'Duplicate filesystem factory for protocol "%s" (services "%s" and "%s").',
-                        $protocol,
-                        $seen[$protocol],
+                        'Duplicate filesystem factory for type "%s" (services "%s" and "%s").',
+                        $type,
+                        $seen[$type],
                         $serviceId,
                     ));
                 }
 
-                $seen[$protocol] = $serviceId;
+                $seen[$type] = $serviceId;
                 $references[] = new Reference($serviceId);
             }
         }

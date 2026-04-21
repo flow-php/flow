@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Telemetry;
 
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
+use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, SourceStream};
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Telemetry\Logger\Logger;
@@ -51,16 +51,16 @@ final readonly class TraceableFilesystem implements Filesystem
         yield from $this->filesystem->list($path, $pathFilter);
     }
 
+    public function mount() : Mount
+    {
+        return $this->filesystem->mount();
+    }
+
     public function mv(Path $from, Path $to) : bool
     {
         $this->logOperation('mv', $from, $to);
 
         return $this->filesystem->mv($from, $to);
-    }
-
-    public function protocol() : Protocol
-    {
-        return $this->filesystem->protocol();
     }
 
     public function readFrom(Path $path) : SourceStream
@@ -104,7 +104,7 @@ final readonly class TraceableFilesystem implements Filesystem
     private function logOperation(string $operation, Path $path, ?Path $toPath = null) : void
     {
         $attributes = [
-            FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->protocol()->name,
+            FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->filesystem->mount()->protocol,
             FilesystemTelemetryAttributes::ATTR_FILESYSTEM_OPERATION => $operation,
             FilesystemTelemetryAttributes::ATTR_PATH_URI => $path->uri(),
         ];

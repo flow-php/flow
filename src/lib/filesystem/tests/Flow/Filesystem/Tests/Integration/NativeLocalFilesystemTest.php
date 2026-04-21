@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{all, config, flow_context, lit, ref};
 use function Flow\Filesystem\DSL\{native_local_filesystem, path_real};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
+use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\{FileStatus, Stream\NativeLocalDestinationStream};
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Types\Type\AutoCaster;
@@ -19,6 +20,14 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         if (!\file_exists(__DIR__ . '/var')) {
             \mkdir(__DIR__ . '/var');
         }
+    }
+
+    public function test_append_to_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+        $this->expectExceptionMessage('Scheme "memory://" is not supported by this protocol. Expected scheme is "file://"');
+
+        native_local_filesystem()->appendTo(path('memory:///var/foo.txt'));
     }
 
     public function test_appending_to_existing_blob() : void
@@ -147,6 +156,13 @@ TXT
         self::assertTrue($status->isDirectory());
     }
 
+    public function test_list_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        \iterator_to_array(native_local_filesystem()->list(path('memory:///var/foo.txt')));
+    }
+
     public function test_move_blob() : void
     {
         $fs = native_local_filesystem();
@@ -157,6 +173,20 @@ TXT
 
         self::assertNull($fs->status(path(__DIR__ . '/var/file.txt')));
         self::assertSame('Hello, World!', $fs->readFrom(path(__DIR__ . '/var/file_mv.txt'))->content());
+    }
+
+    public function test_mv_rejects_mismatched_destination_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        native_local_filesystem()->mv(path(__DIR__ . '/var/a.txt'), path('memory:///var/b.txt'));
+    }
+
+    public function test_mv_rejects_mismatched_source_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        native_local_filesystem()->mv(path('memory:///var/a.txt'), path(__DIR__ . '/var/b.txt'));
     }
 
     public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern() : void
@@ -207,6 +237,13 @@ TXT
         self::assertInstanceOf(NativeLocalDestinationStream::class, $stream);
     }
 
+    public function test_read_from_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        native_local_filesystem()->readFrom(path('memory:///var/foo.txt'));
+    }
+
     public function test_reading_multi_partitioned_path() : void
     {
         $paths = \iterator_to_array(
@@ -234,26 +271,22 @@ TXT
         $path2 = path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt');
         $path2->partitions();
 
-        self::assertEquals(
-            [
-                new FileStatus($path1, true),
-                new FileStatus($path2, true),
-            ],
-            $paths
-        );
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $paths);
+        self::assertSame([$path1->uri(), $path2->uri()], $uris);
     }
 
     public function test_reading_partitioned_folder() : void
     {
-        $paths = \iterator_to_array((native_local_filesystem())->list(path(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new KeepAll()));
-        \sort($paths);
+        $statuses = \iterator_to_array((native_local_filesystem())->list(path(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new KeepAll()));
+        \sort($statuses);
 
-        self::assertEquals(
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $statuses);
+        self::assertSame(
             [
-                new FileStatus(path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt'), true),
+                path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt')->uri(),
+                path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt')->uri(),
             ],
-            $paths
+            $uris
         );
     }
 
@@ -262,31 +295,30 @@ TXT
         $path = path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt');
         $path->partitions();
 
-        self::assertEquals(
-            [
-                new FileStatus($path, true),
-            ],
-            \iterator_to_array(
-                (native_local_filesystem())
-                    ->list(
-                        path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), flow_context(config())->entryFactory(), new AutoCaster(), flow_context())
-                    )
-            )
+        $statuses = \iterator_to_array(
+            (native_local_filesystem())
+                ->list(
+                    path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
+                    new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), flow_context(config())->entryFactory(), new AutoCaster(), flow_context())
+                )
         );
+
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $statuses);
+        self::assertSame([$path->uri()], $uris);
     }
 
     public function test_reading_partitioned_folder_with_pattern() : void
     {
-        $paths = \iterator_to_array((native_local_filesystem())->list(path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'), new KeepAll()));
-        \sort($paths);
+        $statuses = \iterator_to_array((native_local_filesystem())->list(path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'), new KeepAll()));
+        \sort($statuses);
 
-        self::assertEquals(
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $statuses);
+        self::assertSame(
             [
-                new FileStatus(path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt'), true),
+                path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt')->uri(),
+                path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt')->uri(),
             ],
-            $paths
+            $uris
         );
     }
 
@@ -419,30 +451,47 @@ TXT
         self::assertNull($fs->status(path(__DIR__ . '/var/nested/orders/orders_01.csv')));
     }
 
-    public function test_that_scan_sort_files_by_path_names() : void
+    public function test_rm_rejects_mismatched_scheme() : void
     {
-        $paths = \iterator_to_array(
+        $this->expectException(InvalidSchemeException::class);
+
+        native_local_filesystem()->rm(path('memory:///var/foo.txt'));
+    }
+
+    public function test_scan_yields_all_matching_files() : void
+    {
+        $statuses = \iterator_to_array(
             (native_local_filesystem())
                 ->list(
                     path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
                 )
         );
 
-        self::assertEquals(
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $statuses);
+        \sort($uris);
+
+        self::assertSame(
             [
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=de/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=pl/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=de/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=de/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=de/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=pl/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=de/file.txt'), true),
-                new FileStatus(path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=pl/file.txt'), true),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=de/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=pl/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=de/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=de/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=de/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=pl/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=de/file.txt')->uri(),
+                path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=pl/file.txt')->uri(),
             ],
-            $paths
+            $uris
         );
+    }
+
+    public function test_status_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        native_local_filesystem()->status(path('memory:///var/foo.txt'));
     }
 
     public function test_tmp_dir_status() : void
@@ -452,6 +501,13 @@ TXT
         $status = $fs->status($fs->getSystemTmpDir());
         self::assertNotNull($status);
         self::assertTrue($status->isDirectory());
+    }
+
+    public function test_write_to_rejects_mismatched_scheme() : void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        native_local_filesystem()->writeTo(path('memory:///var/foo.txt'));
     }
 
     public function test_write_to_tmp_dir() : void

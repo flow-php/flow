@@ -22,7 +22,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
             $signal = yield array_to_rows([
                 'path' => $fileStatus->path->path(),
-                'protocol' => $fileStatus->path->protocol()->name,
+                'protocol' => $fileStatus->path->protocol(),
                 'file_name' => $fileStatus->path->filename(),
                 'base_name' => $fileStatus->path->basename(),
                 'is_file' => $fileStatus->isFile(),

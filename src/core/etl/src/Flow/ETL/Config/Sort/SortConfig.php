@@ -14,6 +14,7 @@ final readonly class SortConfig
     public function __construct(
         public SortAlgorithms $algorithm,
         public Unit $memoryLimit,
+        public string $filesystemProtocol = 'file',
     ) {
     }
 }

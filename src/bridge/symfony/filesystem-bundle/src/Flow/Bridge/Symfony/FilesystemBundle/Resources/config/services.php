@@ -16,32 +16,32 @@ return static function (ContainerConfigurator $container) : void {
     $services
         ->set('.flow_filesystem.factory.file', NativeLocalFilesystemFactory::class)
         ->private()
-        ->tag('flow_filesystem.factory', ['protocol' => 'file']);
+        ->tag('flow_filesystem.factory', ['type' => 'file']);
 
     $services
         ->set('.flow_filesystem.factory.memory', MemoryFilesystemFactory::class)
         ->private()
-        ->tag('flow_filesystem.factory', ['protocol' => 'memory']);
+        ->tag('flow_filesystem.factory', ['type' => 'memory']);
 
     $services
         ->set('.flow_filesystem.factory.stdout', StdoutFilesystemFactory::class)
         ->private()
-        ->tag('flow_filesystem.factory', ['protocol' => 'stdout']);
+        ->tag('flow_filesystem.factory', ['type' => 'stdout']);
 
     if (\class_exists(AsyncAWSS3Filesystem::class)) {
         $services
-            ->set('.flow_filesystem.factory.aws-s3', AsyncAwsS3FilesystemFactory::class)
+            ->set('.flow_filesystem.factory.aws_s3', AsyncAwsS3FilesystemFactory::class)
             ->private()
             ->args([service('service_container')])
-            ->tag('flow_filesystem.factory', ['protocol' => 'aws-s3']);
+            ->tag('flow_filesystem.factory', ['type' => 'aws_s3']);
     }
 
     if (\class_exists(AzureBlobFilesystem::class)) {
         $services
-            ->set('.flow_filesystem.factory.azure-blob', AzureBlobFilesystemFactory::class)
+            ->set('.flow_filesystem.factory.azure_blob', AzureBlobFilesystemFactory::class)
             ->private()
             ->args([service('service_container')])
-            ->tag('flow_filesystem.factory', ['protocol' => 'azure-blob']);
+            ->tag('flow_filesystem.factory', ['type' => 'azure_blob']);
     }
 
     $services

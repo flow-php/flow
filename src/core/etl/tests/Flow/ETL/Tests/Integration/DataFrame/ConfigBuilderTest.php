@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{analyze, config_builder, telemetry_options};
-use function Flow\Filesystem\DSL\{filesystem_telemetry_options, protocol};
+use function Flow\Filesystem\DSL\{filesystem_telemetry_options, native_local_filesystem};
 use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Sort\SortAlgorithms;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\{Filesystem, Mount};
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
@@ -23,6 +23,16 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . $this->cacheDir->path());
 
         parent::tearDown();
+    }
+
+    public function test_cache_filesystem_protocol_override() : void
+    {
+        $config = config_builder()
+            ->mount(native_local_filesystem('custom-cache'))
+            ->cacheFilesystem('custom-cache')
+            ->build();
+
+        self::assertSame('custom-cache', $config->cache->filesystemProtocol);
     }
 
     public function test_config_builder_with_analyze() : void
@@ -65,6 +75,20 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_default_cache_filesystem_protocol_is_file() : void
+    {
+        $config = config_builder()->build();
+
+        self::assertSame('file', $config->cache->filesystemProtocol);
+    }
+
+    public function test_default_external_sort_filesystem_protocol_is_file() : void
+    {
+        $config = config_builder()->build();
+
+        self::assertSame('file', $config->sort->filesystemProtocol);
+    }
+
     public function test_default_sorting_algorithm() : void
     {
         $config = config_builder()->build();
@@ -75,19 +99,28 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_external_sort_filesystem_protocol_override() : void
+    {
+        $config = config_builder()
+            ->externalSortFilesystem('custom-sort')
+            ->build();
+
+        self::assertSame('custom-sort', $config->sort->filesystemProtocol);
+    }
+
     public function test_filesystems_mounted_after_telemetry_are_wrapped() : void
     {
         $telemetry = $this->createTelemetry();
 
         $mockFilesystem = $this->createMock(Filesystem::class);
-        $mockFilesystem->method('protocol')->willReturn(protocol('gcs'));
+        $mockFilesystem->method('mount')->willReturn(new Mount('gcs'));
 
         $config = config_builder()
             ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: true)))
             ->mount($mockFilesystem)
             ->build();
 
-        $filesystem = $config->fstab()->for(protocol('gcs'));
+        $filesystem = $config->fstab()->for('gcs');
 
         self::assertInstanceOf(TraceableFilesystem::class, $filesystem);
     }

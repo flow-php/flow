@@ -9,7 +9,7 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ## Upgrading from 0.35.x to 0.36.x
 
-### 1) PostgreSQL Library: `RawCondition` and `RawExpression` removed
+### 1) `flow-php/postgresql` - `RawCondition` and `RawExpression` removed
 
 The `raw_cond()` and `raw_expr()` escape hatches have been removed. All query builder operations are now covered by
 type-safe DSL functions.
@@ -27,7 +27,7 @@ type-safe DSL functions.
 | `RawCondition` class                  | Use specific condition classes                                            |
 | `RawExpression` class                 | Use specific expression classes                                           |
 
-### 2) PostgreSQL Library: `Condition` now extends `Expression`
+### 2) `flow-php/postgresql` - `Condition` now extends `Expression`
 
 Conditions are now expressions — they can be used in SELECT lists, CASE WHEN, ORDER BY, etc.
 
@@ -42,7 +42,7 @@ not_(col('is_deleted'))->as('is_active');
 case_when([when(eq(col('x'), literal(0)), literal('zero'))]);
 ```
 
-### 3) PostgreSQL Library: DSL condition function renames
+### 3) `flow-php/postgresql` - DSL condition function renames
 
 Function names have been unified following standard SQL builder conventions (jOOQ, Diesel, SQLAlchemy).
 
@@ -100,7 +100,7 @@ select(col('name'))
     ));
 ```
 
-### 4) PostgreSQL Library: Schema builder methods accept `Expression`/`Condition` instead of strings
+### 4) `flow-php/postgresql` - Schema builder methods accept `Expression`/`Condition` instead of strings
 
 Methods that previously accepted raw SQL strings now require typed `Expression` or `Condition` objects.
 
@@ -119,7 +119,7 @@ Methods that previously accepted raw SQL strings now require typed `Expression` 
 | `AlterTableBuilder::alterColumnSetDefault()` | `->alterColumnSetDefault('col', "'val'")` | `->alterColumnSetDefault('col', literal('val'))`        |
 | `CreateRuleBuilder::where()`                 | `->where("OLD.role = 'admin'")`           | `->where(eq(col('role', 'OLD'), literal('admin')))`     |
 
-### 5) PostgreSQL Library: DSL functions split into separate files
+### 5) `flow-php/postgresql` - DSL functions split into separate files
 
 The monolithic `functions.php` has been split into 5 focused files (same namespace, no import changes needed):
 
@@ -131,11 +131,230 @@ The monolithic `functions.php` has been split into 5 focused files (same namespa
 | `client.php`    | Connections, telemetry, mappers                                                            |
 | `parser.php`    | SQL parsing, formatting, analysis                                                          |
 
+### 6) `flow-php/filesystem` - `Protocol` and `Backend` removed, `Mount` rewritten
+
+The filesystem library has been redesigned around a single mount-protocol string. The `Protocol` and
+`Backend` value types are gone; `Mount` now wraps just a protocol name.
+
+**`Protocol` class removed.** `Path::protocol()` now returns `string` instead of a `Protocol` object.
+Callsites that unpacked `Protocol::$name` / `Protocol::scheme()` / `Protocol::is()` are mechanical updates:
+
+| Before                                   | After                                                                                              |
+|------------------------------------------|----------------------------------------------------------------------------------------------------|
+| `$path->protocol()->name`                | `$path->protocol()`                                                                                |
+| `$path->protocol()->scheme()`            | `$path->protocol() . '://'`                                                                        |
+| `$path->protocol()->is('file')`          | `$path->protocol() === 'file'`                                                                     |
+| `$fs->protocol()->validateScheme($path)` | `$fs->mount()->supports($path) \|\| throw new InvalidSchemeException(...)`                         |
+| `new Protocol('file')`                   | `new Mount('file')` (if you need a Mount) or plain `'file'` (FilesystemTable::for accepts strings) |
+
+**`Backend` enum removed.** There's no closed set of backends anymore — any filesystem can mount
+under any protocol. The Symfony bundle schema now uses a plain string `type:` field (see below). If
+you branched on `Backend` cases in application code, replace with string comparisons against the
+factory `type()` or the mount protocol, whichever fits.
+
+**`Mount` rewritten.** The shape is now:
+
+```php
+final readonly class Mount
+{
+    public string $protocol;
+
+    public function __construct(string $protocol); // validates against PROTOCOL_REGEX
+    public function supports(Path|string $path) : bool;
+}
+```
+
+**`Filesystem::protocol()` renamed to `Filesystem::mount()`.** The return type changed from
+`Protocol` to `Mount`. Every `Filesystem` implementation must rename the method.
+
+**`Filesystem` ctors take `Mount` directly.** `NativeLocalFilesystem`, `MemoryFilesystem`,
+`StdOutFilesystem`, `AsyncAWSS3Filesystem`, `AzureBlobFilesystem` now accept `Mount` as the first
+constructor argument (local filesystems have a sensible default). DSL factory functions
+(`native_local_filesystem`, `memory_filesystem`, `stdout_filesystem`, `aws_s3_filesystem`,
+`azure_filesystem`) accept `string $protocol` as the **last** argument with a sensible default
+(`'file'`, `'memory'`, `'stdout'`, `'aws-s3'`, `'azure-blob'`) and build the `Mount` internally — no
+caller change needed unless you instantiate the filesystem class directly or mount two filesystems of
+the same backend under distinct protocols.
+
+**Auto-alias dropped.** Previously, mounting a single filesystem of a given backend would auto-register
+its canonical scheme as an additional alias (e.g. mounting S3 as `warehouse` also made `aws-s3`
+available). That behavior is gone — every mount is registered under exactly the protocol you pick. If
+you need two protocols for the same filesystem, mount it twice explicitly.
+
+**`FilesystemTable::for(Path|Protocol)` → `for(Path|string)`.** Pass a `Path` or a plain protocol string.
+
+### 7) `flow-php/filesystem` - `NativeLocalFilesystem::list()` no longer sorts results
+
+`Glob::glob()` was replaced with lazy `Webmozart\Glob\Iterator\GlobIterator` to avoid materializing
+the entire matching set up front (this gives a ~30× speedup on large trees when the caller only needs
+the first N entries).
+
+**Side effect:** `NativeLocalFilesystem::list()` no longer returns results in alphabetical order.
+Output now follows filesystem traversal order. If your code depends on sort order, sort client-side
+after consuming the generator:
+
+```php
+$statuses = iterator_to_array($fs->list(path('/some/dir/**/*.txt')));
+usort($statuses, static fn (FileStatus $a, FileStatus $b) => $a->path->uri() <=> $b->path->uri());
+```
+
+### 8) `flow-php/symfony-filesystem-bundle` - YAML schema now uses `type:` + protocol-as-key
+
+The configuration schema changed significantly. The YAML key under `filesystems:` is now the **mount
+protocol** (any valid URI scheme), and a separate `type:` field picks the factory.
+
+**Before:**
+
+```yaml
+flow_filesystem:
+  fstabs:
+    default:
+      filesystems:
+        file: ~
+        memory: ~
+        aws-s3:
+          bucket: '%env(S3_BUCKET)%'
+```
+
+**After:**
+
+```yaml
+flow_filesystem:
+  fstabs:
+    default:
+      filesystems:
+        file:
+          type: file
+        memory:
+          type: memory
+        aws-s3: # mount protocol — can be any valid URI scheme
+          type: aws_s3               # factory lookup key
+          bucket: '%env(S3_BUCKET)%'
+```
+
+Benefits of the new shape:
+
+- Mount the same backend twice under different protocols (e.g. `warehouse` + `archive` both `type: aws_s3` with
+  different buckets).
+- Protocol names are no longer tied to factory names — pick whatever reads well in your application.
+
+Built-in `type` values: `file`, `memory`, `stdout`, `aws_s3`, `azure_blob`.
+
+### 9) `flow-php/symfony-filesystem-bundle` - `FilesystemFactory` interface and attribute changed
+
+```php
+// Before
+interface FilesystemFactory
+{
+    public function protocol() : Protocol;
+    public function create(string $mountName, array $config) : Filesystem;
+}
+
+#[AsFilesystemFactory(protocol: 'my-fs')]
+
+// After
+interface FilesystemFactory
+{
+    public function type() : string;
+    public function create(string $protocol, array $config) : Filesystem;
+}
+
+#[AsFilesystemFactory(type: 'my_backend')]
+```
+
+The DI tag attribute is renamed from `protocol` to `type`. `FilesystemFactoryRegistry::get()` takes a
+`string $type` instead of a `Backend`.
+
+### 10) `flow-php/symfony-filesystem-bundle` - `flow:filesystem:ls` CLI flags reshuffled
+
+| Before                       | After                                                        |
+|------------------------------|--------------------------------------------------------------|
+| `--long` (default: off)      | 4-column output is now the default; use `--short` to drop it |
+| `--no-limit`                 | Removed — default is unlimited now. Use `--limit=N` to cap.  |
+| (no `--page-size`)           | New `--page-size=N` (default `10`) controls table page size  |
+| (no `--offset`)              | New `--offset=N` skips the first N entries                   |
+| `--format=json` → JSON array | `--format=json` now emits NDJSON (one JSON object per line)  |
+
+Default behavior: list all entries, paginated in tables of 10 rows; interactive terminals prompt
+between pages (Enter continues, "no" stops), piped output flows continuously. Size is formatted with
+binary units, Modified as ISO-8601 — both read from the backend listing response, no per-file HEAD.
+
+### 11) `flow-php/symfony-filesystem-bundle` - `flow:filesystem:stat` rejects pattern paths
+
+`stat` now returns `Command::FAILURE` with a clear error when given a pattern path (`memory://*.txt`,
+`**/*.parquet`, …). Previously it returned metadata for the first match — confusing semantics. Use
+`flow:filesystem:ls` for pattern inspection.
+
+### 12) `flow-php/filesystem-async-aws-bridge`, `flow-php/filesystem-azure-bridge` - DSL protocol is the last argument with a default
+
+The DSL factories expose the mount protocol as an optional last argument, defaulted to the
+conventional scheme. Common cases work without passing it:
+
+```php
+aws_s3_filesystem($bucket, $client);                              // mounts under 'aws-s3'
+azure_filesystem($blobService);                                   // mounts under 'azure-blob'
+
+// Pick a different protocol — e.g. mount the same bucket twice
+aws_s3_filesystem($bucket, $client, protocol: 'warehouse');
+azure_filesystem($blobService, protocol: 'archive');
+```
+
+### 13) `flow-php/filesystem` - `path_memory()` and `path_stdout()` DSL helpers removed
+
+Build `Path` directly instead:
+
+```php
+// Before
+$mem = path_memory();
+$out = path_stdout(['stream' => 'output']);
+
+// After
+$mem = path('memory://' . bin2hex(random_bytes(16)) . '.memory');
+$out = path('stdout://' . bin2hex(random_bytes(16)) . '.stdout', ['stream' => 'output']);
+```
+
+### 14) `flow-php/etl` - `ConfigBuilder::cacheFilesystem()` and `externalSortFilesystem()` added
+
+Point cache and external-sort mechanisms at any mounted protocol; defaults remain `'file'`. The
+`CacheConfig` and `SortConfig` value objects expose the chosen protocol as `->filesystemProtocol`.
+
+```php
+$config = config_builder()
+    ->mount(aws_s3_filesystem($bucket, $client, protocol: 'sort-scratch'))
+    ->externalSortFilesystem('sort-scratch')
+    ->build();
+```
+
+### 15) `flow-php/symfony-http-foundation-bridge` - `Output` interface collapsed to a single `loader(Path)`
+
+`Output::memoryLoader(string $id)` and `Output::stdoutLoader()` were replaced by
+`Output::loader(Path $path)`. `FlowBufferedResponse` gained a `string $filesystem = 'memory'`
+constructor argument (buffer protocol); `FlowStreamedResponse` gained
+`string $stdoutFilesystemProtocol = 'stdout'`. Each response builds the path with its configured
+protocol and passes it to the Output.
+
+```php
+// Before
+new FlowBufferedResponse($extractor, new CsvOutput(), $transformations);
+
+// After — same defaults, new constructor param available
+new FlowBufferedResponse($extractor, new CsvOutput(), $transformations, filesystem: 'memory');
+```
+
+### 16) `flow-php/filesystem` - `StdOutFilesystem` tracks open streams per php:// target
+
+Previously the "only one stdout stream" guard lived in `FilesystemStreams` (ETL core) and fired when
+two writing streams used the `stdout://` protocol. The check now lives in `StdOutFilesystem` itself
+and is precise per underlying php:// target (`stdout` / `stderr` / `output`): two streams with
+`['stream' => 'stdout']` conflict; one stdout stream + one stderr stream do not. Error message
+changed from *"Only one stdout filesystem stream can be open at the same time"* to
+*"Only one stream can be open at the same time for php://{target}"*.
+
 ---
 
 ## Upgrading from 0.34.x to 0.35.x
 
-### 1) PostgreSQL Library: `DataType` renamed to `ColumnType`
+### 1) `flow-php/postgresql` - `DataType` renamed to `ColumnType`
 
 The `DataType` class used for schema/DDL definitions has been renamed to `ColumnType` to better communicate its purpose.
 All related DSL functions have been renamed from `data_type_*` to `column_type_*`.
@@ -198,7 +417,7 @@ column('name', column_type_varchar(255));
 cast(ref('id'), ColumnType::bigint());
 ```
 
-### 2) PostgreSQL Library: `PostgreSqlType` renamed to `ValueType`
+### 2) `flow-php/postgresql` - `PostgreSqlType` renamed to `ValueType`
 
 The `PostgreSqlType` enum used for value binding/casting has been renamed to `ValueType` to better communicate its
 purpose.

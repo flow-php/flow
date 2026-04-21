@@ -6,18 +6,19 @@ namespace Flow\Filesystem\Bridge\Azure;
 
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Filesystem\{DestinationStream,
+    Exception\InvalidSchemeException,
     Exception\RuntimeException,
     FileStatus,
     Filesystem,
+    Mount,
     Path,
-    Protocol,
     SourceStream};
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 final readonly class AzureBlobFilesystem implements Filesystem
 {
-    public function __construct(private BlobServiceInterface $blobService, private Options $options)
+    public function __construct(private Mount $mount, private BlobServiceInterface $blobService, private Options $options)
     {
     }
 
@@ -27,7 +28,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         return AzureBlobDestinationStream::openAppend(
             $this->blobService,
@@ -44,7 +45,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             $prefix = \ltrim($path->staticPart()->path(), DIRECTORY_SEPARATOR);
@@ -59,8 +60,13 @@ final readonly class AzureBlobFilesystem implements Filesystem
         }
 
         foreach ($this->blobService->listBlobs($options) as $blob) {
-            $blobPath = \Flow\Filesystem\DSL\path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim($blob->name(), DIRECTORY_SEPARATOR), $path->options());
-            $blobFileStatus = new FileStatus($blobPath, (bool) $blobPath->extension());
+            $blobPath = \Flow\Filesystem\DSL\path($path->protocol() . '://' . DIRECTORY_SEPARATOR . \ltrim($blob->name(), DIRECTORY_SEPARATOR), $path->options());
+            $blobFileStatus = new FileStatus(
+                $blobPath,
+                (bool) $blobPath->extension(),
+                $blob->size(),
+                $blob->lastModifiedAt(),
+            );
 
             if ($path->isPattern() && !$path->matches($blobPath)) {
                 continue;
@@ -72,10 +78,15 @@ final readonly class AzureBlobFilesystem implements Filesystem
         }
     }
 
+    public function mount() : Mount
+    {
+        return $this->mount;
+    }
+
     public function mv(Path $from, Path $to) : bool
     {
-        $this->protocol()->validateScheme($from);
-        $this->protocol()->validateScheme($to);
+        $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
 
         $this->blobService->copyBlob($from->path(), $to->path());
         $this->blobService->deleteBlob($from->path());
@@ -83,13 +94,10 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return true;
     }
 
-    public function protocol() : Protocol
-    {
-        return new Protocol('azure-blob');
-    }
-
     public function readFrom(Path $path) : SourceStream
     {
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+
         return new AzureBlobSourceStream($path, $this->blobService);
     }
 
@@ -99,7 +107,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
             return false;
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if ($path->isPattern()) {
             $deletedCount = 0;
@@ -146,7 +154,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
             return new FileStatus($path, false);
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern()) {
             if ($path->path() === '/') {
@@ -170,7 +178,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
                 return null;
             }
 
-            return new FileStatus($path, true);
+            return new FileStatus($path, true, $blobProperties->size(), $blobProperties->lastModifiedAt());
         }
 
         foreach ($this->list($path) as $fileStatus) {
@@ -186,7 +194,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->protocol()->validateScheme($path);
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         return AzureBlobDestinationStream::openBlank(
             $this->blobService,

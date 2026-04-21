@@ -9,20 +9,21 @@ use Flow\Filesystem\{Filesystem,
     FilesystemTable,
     Local\MemoryFilesystem,
     Local\StdOutFilesystem,
+    Mount,
     Partition,
     Partitions,
-    Path,
-    Protocol};
+    Path};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Operations\{Copy, Move, OperationOptions};
 use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
 use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function protocol(string $protocol) : Protocol
+function mount(string $protocol) : Mount
 {
-    return new Protocol($protocol);
+    return new Mount($protocol);
 }
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
@@ -57,33 +58,6 @@ function path(string $path, array|Options $options = []) : Path
 }
 
 /**
- * Create a path to php stdout stream.
- *
- * @param null|array{'stream': 'output'|'stderr'|'stdout'} $options
- *
- * @return Path
- */
-#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function path_stdout(?array $options = null) : Path
-{
-    return Path::from('stdout://' . \bin2hex(\random_bytes(16)) . '.stdout', $options ?? []);
-}
-
-/**
- * Create a path to php memory stream.
- *
- * @param string $path - default = '' - path is used as an identifier in memory filesystem, so we can write multiple files to memory at once, each path is a new handle
- * @param null|array{'stream': 'memory'|'temp'} $options - when nothing is provided, 'temp' stream is used by default
- *
- * @return Path
- */
-#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function path_memory(string $path = '', ?array $options = null) : Path
-{
-    return Path::from('memory://' . (strlen($path) ? $path : \bin2hex(\random_bytes(16)) . '.memory'), $options ?? []);
-}
-
-/**
  * Resolve real path from given path.
  *
  * @param array<string, null|bool|float|int|string|\UnitEnum> $options
@@ -95,9 +69,9 @@ function path_real(string $path, array $options = []) : Path
 }
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function native_local_filesystem() : NativeLocalFilesystem
+function native_local_filesystem(string $protocol = 'file') : NativeLocalFilesystem
 {
-    return new NativeLocalFilesystem();
+    return new NativeLocalFilesystem(new Mount($protocol));
 }
 
 /**
@@ -105,18 +79,18 @@ function native_local_filesystem() : NativeLocalFilesystem
  * The main use case is for streaming datasets over http.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function stdout_filesystem() : StdOutFilesystem
+function stdout_filesystem(string $protocol = 'stdout') : StdOutFilesystem
 {
-    return new StdOutFilesystem();
+    return new StdOutFilesystem(new Mount($protocol));
 }
 
 /**
  * Create a new memory filesystem and writes data to it in memory.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function memory_filesystem() : MemoryFilesystem
+function memory_filesystem(string $protocol = 'memory') : MemoryFilesystem
 {
-    return new MemoryFilesystem();
+    return new MemoryFilesystem(new Mount($protocol));
 }
 
 /**
@@ -175,4 +149,37 @@ function filesystem_telemetry_options(
         $traceStreams,
         $collectMetrics,
     );
+}
+
+/**
+ * Copy a file from one path to another, across any filesystems mounted in the table.
+ * Always streams bytes; same-filesystem copies do not use server-side optimizations
+ * because `Filesystem::mv` is a move, not a copy.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function file_copy(FilesystemTable $table, ?OperationOptions $options = null) : Copy
+{
+    return new Copy($table, $options ?? new OperationOptions());
+}
+
+/**
+ * Move a file from one path to another, across any filesystems mounted in the table.
+ * Intra-filesystem moves delegate to `Filesystem::mv` for server-side optimizations;
+ * cross-filesystem moves stream-copy then remove the source (non-atomic).
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function file_move(FilesystemTable $table, ?OperationOptions $options = null) : Move
+{
+    return new Move($table, $options ?? new OperationOptions());
+}
+
+/**
+ * Options shared by filesystem operations.
+ *
+ * @param int $chunkSize Number of bytes read/written per iteration when streaming across filesystems (default: 8192)
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function operation_options(int $chunkSize = 8192) : OperationOptions
+{
+    return new OperationOptions($chunkSize);
 }

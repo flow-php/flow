@@ -25,7 +25,7 @@ final class BuildFstabsPass implements CompilerPassInterface
             return;
         }
 
-        /** @var array{default_fstab: null|string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry?: array<string, mixed>}>} $config */
+        /** @var array{default_fstab: null|string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>&array{type: string}>, telemetry?: array<string, mixed>}>} $config */
         $config = $container->getParameter(self::CONFIG_PARAMETER);
 
         $fstabs = $config['fstabs'];
@@ -39,22 +39,19 @@ final class BuildFstabsPass implements CompilerPassInterface
             ));
         }
 
-        $availableProtocols = $this->collectAvailableProtocols($container);
+        $availableTypes = $this->collectAvailableTypes($container);
 
         foreach ($fstabs as $fstabName => $fstabConfig) {
-            $entries = [];
-
-            foreach ($fstabConfig['filesystems'] as $protocolName => $entry) {
-                if (!\array_key_exists($protocolName, $availableProtocols)) {
+            foreach ($fstabConfig['filesystems'] as $mountName => $entry) {
+                if (!\array_key_exists($entry['type'], $availableTypes)) {
                     throw new LogicException(\sprintf(
-                        'Fstab "%s" protocol "%s": no filesystem factory registered for this protocol. Available protocols: [%s].',
+                        'Fstab "%s" mount "%s": no filesystem factory registered for type "%s". Available types: [%s].',
                         $fstabName,
-                        $protocolName,
-                        \implode(', ', \array_keys($availableProtocols)),
+                        $mountName,
+                        $entry['type'],
+                        \implode(', ', \array_keys($availableTypes)),
                     ));
                 }
-
-                $entries[$protocolName] = $entry;
             }
 
             $telemetryReference = $this->buildTelemetryConfigReference($container, $fstabName, $fstabConfig['telemetry'] ?? []);
@@ -64,7 +61,7 @@ final class BuildFstabsPass implements CompilerPassInterface
             $definition->setArguments([
                 new Reference(RegisterFilesystemFactoriesPass::REGISTRY_SERVICE_ID),
                 $fstabName,
-                $entries,
+                $fstabConfig['filesystems'],
                 $telemetryReference,
             ]);
             $definition->setPublic(false);
@@ -132,18 +129,18 @@ final class BuildFstabsPass implements CompilerPassInterface
     /**
      * @return array<string, string>
      */
-    private function collectAvailableProtocols(ContainerBuilder $container) : array
+    private function collectAvailableTypes(ContainerBuilder $container) : array
     {
-        $protocols = [];
+        $types = [];
 
         foreach ($container->findTaggedServiceIds(RegisterFilesystemFactoriesPass::TAG) as $serviceId => $tags) {
             foreach ($tags as $tag) {
-                if (\array_key_exists('protocol', $tag) && \is_string($tag['protocol']) && $tag['protocol'] !== '') {
-                    $protocols[$tag['protocol']] = $serviceId;
+                if (\array_key_exists('type', $tag) && \is_string($tag['type']) && $tag['type'] !== '') {
+                    $types[$tag['type']] = $serviceId;
                 }
             }
         }
 
-        return $protocols;
+        return $types;
     }
 }

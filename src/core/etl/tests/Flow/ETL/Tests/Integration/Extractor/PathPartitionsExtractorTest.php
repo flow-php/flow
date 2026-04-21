@@ -28,6 +28,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
         self::assertSame(7, $rows->count());
 
         $actualData = $rows->toArray();
+        \usort($actualData, static fn (array $a, array $b) : int => $a['path'] <=> $b['path']);
 
         self::assertEquals(
             [

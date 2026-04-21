@@ -40,7 +40,7 @@ final class TraceableSourceStream implements SourceStream
                 [
                     FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
                     FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol()->name,
+                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
                 ]
             );
         }

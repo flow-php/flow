@@ -5,7 +5,6 @@ declare(strict_types=1);
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\Filesystem\DSL\fstab;
-use function Flow\Filesystem\DSL\protocol;
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\Adapter\XML\to_xml;
@@ -16,7 +15,7 @@ use Symfony\Component\Dotenv\Dotenv;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$fs = fstab()->for(protocol('file'));
+$fs = fstab()->for('file');
 
 if ($fs->status(path(__DIR__ . '/.env')) === null) {
     print 'Example skipped. Please create .env file with AWS S3 credentials.' . PHP_EOL;

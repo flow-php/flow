@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use function Flow\Filesystem\DSL\protocol;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\{FlowContext, Processor, Rows};
 use Flow\ETL\Row\References;
@@ -45,7 +44,7 @@ final readonly class SortingProcessor implements Processor
     {
         return (new ExternalSort(
             new FilesystemBucketsCache(
-                $context->filesystem(protocol('file')),
+                $context->filesystem($context->config->sort->filesystemProtocol),
                 $context->config->serializer(),
                 100,
                 $context->config->cache->localFilesystemCacheDir->suffix('/flow-php-external-sort/')

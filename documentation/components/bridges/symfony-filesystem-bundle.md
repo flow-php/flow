@@ -28,9 +28,9 @@ return [
 
 This bundle integrates Flow PHP's Filesystem library with Symfony applications. It provides:
 
-- **Protocol-keyed routing** — mount filesystems under URI protocols (`file://`, `memory://`, `aws-s3://`, `azure-blob://`, …) and resolve them at runtime via `$table->for(...)`
-- **Pluggable filesystem factories** — register custom protocols with the `#[AsFilesystemFactory]` attribute or a DI tag
-- **Built-in factories** — `file`, `memory`, `stdout`, `aws-s3`, and `azure-blob` ship out of the box
+- **Mount-protocol routing** — mount filesystems under URI protocols of your choice (`file`, `memory`, `aws-s3`, `warehouse`, `archive`, …) and resolve them at runtime via `$table->for(...)`
+- **Pluggable filesystem factories** — register custom backends with the `#[AsFilesystemFactory]` attribute or a DI tag
+- **Built-in factories** — `file`, `memory`, `stdout`, `aws_s3`, and `azure_blob` ship out of the box
 - **Console commands** — `flow:filesystem:*` (alias `flow:fs:*`) for `ls`, `cat`, `cp`, `mv`, `rm`, `stat`, `touch` against any configured filesystem
 - **Telemetry integration** — wrap every filesystem in `TraceableFilesystem` via OpenTelemetry
 - **Multi-fstab support** *(advanced)* — configure several independent `FilesystemTable` services when you really need them
@@ -46,15 +46,19 @@ flow_filesystem:
   fstabs:
     default:
       filesystems:
-        file: ~
-        memory: ~
+        file:
+          type: file
+        memory:
+          type: memory
 ```
+
+The YAML key under `filesystems:` (`file`, `memory`) is the **mount protocol** the filesystem will be
+registered under. The `type:` field identifies which built-in (or custom) factory builds it.
 
 Inject the table anywhere via autowiring:
 
 ```php
 use Flow\Filesystem\FilesystemTable;
-use Flow\Filesystem\Protocol;
 
 final class ReportBuilder
 {
@@ -64,10 +68,13 @@ final class ReportBuilder
 
     public function read(string $uri) : string
     {
-        return $this->fstab->for(new Protocol('file'))->readFrom(/* path */)->content();
+        return $this->fstab->for('file')->readFrom(/* path */)->content();
     }
 }
 ```
+
+`FilesystemTable::for()` accepts either a raw protocol string (`'file'`, `'aws-s3'`, `'warehouse'`) or a
+`Path` — when given a `Path`, the table resolves the filesystem by the path's URI scheme.
 
 > Most applications need exactly one fstab with multiple filesystems mounted under it. Multi-fstab support
 > exists for advanced cases — see [Multi-Fstab Support](#multi-fstab-support).
@@ -76,18 +83,40 @@ final class ReportBuilder
 
 ### Fstabs
 
-At least one fstab is required. Each fstab defines a set of filesystems keyed by protocol. The YAML key
-under `filesystems:` is the protocol the filesystem will be mounted under.
+At least one fstab is required. Each fstab declares a set of filesystems. The YAML key under
+`filesystems:` is the mount protocol and must match the regex `/^[a-zA-Z][a-zA-Z0-9+.-]+$/` (letters,
+digits, `.`, `-`, `+`). The `type:` field picks the factory that builds the filesystem.
 
 ```yaml
 flow_filesystem:
   fstabs:
     default:
       filesystems:
-        file: ~
-        memory: ~
-        aws-s3:
+        file:
+          type: file
+        memory:
+          type: memory
+        warehouse:                  # mount protocol
+          type: aws_s3              # factory lookup key
           bucket: '%env(S3_BUCKET)%'
+```
+
+Because protocol and `type` are independent, one fstab can mount the same backend multiple times under
+different protocols — two S3 buckets as `warehouse` and `archive`, for example. Mount each explicitly:
+
+```yaml
+flow_filesystem:
+  fstabs:
+    default:
+      filesystems:
+        warehouse:
+          type: aws_s3
+          bucket: '%env(S3_WAREHOUSE_BUCKET)%'
+          client_service_id: app.s3_client
+        archive:
+          type: aws_s3
+          bucket: '%env(S3_ARCHIVE_BUCKET)%'
+          client_service_id: app.s3_client
 ```
 
 The fstab is wired as a private `.flow_filesystem.fstab.<name>` service and aliased to
@@ -117,26 +146,28 @@ flow_filesystem:
           trace_streams: true                       # Record stream open/close in traces
           collect_metrics: true                     # Collect read/write metrics
       filesystems:
-        file: ~
-        memory: ~
+        file:
+          type: file
+        memory:
+          type: memory
 ```
 
 With `telemetry.enabled: false` (the default) the fstab is wired without any telemetry overhead.
 
 ## Built-in Filesystems
 
-The bundle ships with factories for these protocols out of the box:
+The bundle ships with factories for these types out of the box:
 
-| Protocol | Options | Notes |
-|----------|---------|-------|
-| `file` | none | Local filesystem via native PHP calls. |
-| `memory` | none | In-memory filesystem, lifetime of the kernel. |
-| `stdout` | none | Write-only sink that targets STDOUT. |
-| `aws-s3` | `bucket`, `client*`, `options` | Requires `flow-php/filesystem-async-aws-bridge`. |
-| `azure-blob` | `container`, `client*`, `options` | Requires `flow-php/filesystem-azure-bridge`. |
+| `type`       | Options | Notes |
+|--------------|---------|-------|
+| `file`       | none | Local filesystem via native PHP calls. |
+| `memory`     | none | In-memory filesystem, lifetime of the kernel. |
+| `stdout`     | none | Write-only sink that targets STDOUT. |
+| `aws_s3`     | `bucket`, `client*`, `options` | Requires `flow-php/filesystem-async-aws-bridge`. |
+| `azure_blob` | `container`, `client*`, `options` | Requires `flow-php/filesystem-azure-bridge`. |
 
-The protocol used as a YAML key is matched against a registered `FilesystemFactory` via that factory's
-`protocol()` value. To mount a custom protocol, register your own factory (see [Custom Filesystem Factory](#custom-filesystem-factory)).
+Each entry under `filesystems:` is resolved against a registered `FilesystemFactory` by its `type()`
+value. To introduce a new type, register your own factory (see [Custom Filesystem Factory](#custom-filesystem-factory)).
 
 ### AWS S3
 
@@ -154,6 +185,7 @@ flow_filesystem:
     default:
       filesystems:
         aws-s3:
+          type: aws_s3
           bucket: my-bucket
           client_service_id: app.async_aws_s3_client
 ```
@@ -166,6 +198,7 @@ flow_filesystem:
     default:
       filesystems:
         aws-s3:
+          type: aws_s3
           bucket: my-bucket
           client:
             region: '%env(AWS_REGION)%'
@@ -200,6 +233,7 @@ flow_filesystem:
     default:
       filesystems:
         azure-blob:
+          type: azure_blob
           container: my-container
           client_service_id: app.azure_blob_service
 ```
@@ -212,6 +246,7 @@ flow_filesystem:
     default:
       filesystems:
         azure-blob:
+          type: azure_blob
           container: my-container
           client:
             account_name: '%env(AZURE_ACCOUNT_NAME)%'
@@ -263,10 +298,35 @@ Each command also has a shorter `flow:fs:*` alias (e.g. `flow:fs:ls`).
 
 | Command | Options |
 |---------|---------|
-| `ls` | `--recursive` (`-r`), `--long` (`-l`), `--format=json` |
+| `ls` | `--recursive` (`-r`), `--short` (`-s`), `--limit=N`, `--offset=N`, `--page-size=N`, `--format=json` |
 | `rm` | `--recursive` (`-r`) — required for directories |
 | `stat` | `--format=json` |
 | `touch` | `--force` (`-F`) — overwrite existing file with empty content |
+
+### `ls` output
+
+By default `ls` prints a table with **Type**, **Size**, **Modified**, **URI** columns. Size is formatted
+with binary units (`3.12 MiB`, `2.50 KiB`, raw bytes below 1 KiB). Modified is ISO-8601. Both come from
+the backend's listing response — no per-file HEAD or GET is issued.
+
+- `--short` drops the metadata columns, leaves only URI.
+- `--format=json` emits newline-delimited JSON (NDJSON), one object per line — pipe-friendly for
+  scripting.
+
+Results are always paginated in tables of `--page-size` rows (default **10**). When stdout is attached
+to an interactive terminal, `ls` prompts between pages with "Show next N entries? [yes/no] (yes)" —
+Enter continues, `no` stops. Piped or redirected output flows all pages continuously without prompting.
+
+`--limit=N` caps total entries (no cap by default). When limit is reached, the command emits a
+truncated warning and skips the page prompt. `--offset=N` skips the first N entries before listing;
+note that offset is client-side, so on S3 the backend still walks the skipped keys — deep offsets on
+huge buckets are slow.
+
+### `stat` output
+
+`stat` prints a definition list with URI, Protocol, Path, Type, Size (human-readable), and Modified.
+Same metadata source as `ls --long` (now default) — the backend's single `status()` call, no extra
+stream opened. Pattern paths (`memory://*.txt`, `**/*.parquet`) are rejected with a clear error.
 
 ### URI Format
 
@@ -282,7 +342,21 @@ bin/console flow:filesystem:ls memory://reports   # explicit protocol
 ### Examples
 
 ```bash
-bin/console flow:filesystem:ls memory://reports --long
+# Paginated table with type/size/modified; press Enter to go through pages
+bin/console flow:filesystem:ls aws-s3://bucket/
+
+# Top 50 entries only, skipping the first 20
+bin/console flow:filesystem:ls aws-s3://bucket/ --offset=20 --limit=50
+
+# Larger pages for a bigger terminal
+bin/console flow:filesystem:ls aws-s3://bucket/ --page-size=50
+
+# URI-only output, piped into another command
+bin/console flow:filesystem:ls aws-s3://bucket/ --short --limit=1000 | sort
+
+# NDJSON for scripts
+bin/console flow:filesystem:ls aws-s3://bucket/ --format=json | jq '.uri'
+
 bin/console flow:filesystem:cat file:///tmp/dump.csv
 bin/console flow:filesystem:cp memory://staging/out.parquet file:///var/lib/flow/out.parquet
 bin/console flow:filesystem:mv memory://tmp/result.json aws-s3://bucket/result.json
@@ -294,12 +368,19 @@ bin/console flow:filesystem:touch file:///tmp/.flow_smoke_test
 ### `cp` / `mv` work across protocols, not across fstabs
 
 `cp` and `mv` happily copy between any two protocols mounted in the same fstab — e.g.
-`memory://… → aws-s3://…` or `file:///… → azure-blob://…`. What they do **not** do is bridge two
-separate fstabs: source and destination must resolve through the same `FilesystemTable`. Since most apps
-use a single fstab with everything mounted under it, this is rarely a real constraint.
+`memory://… → aws-s3://…` or `file:///… → azure-blob://…`. Internally they use the
+`Flow\Filesystem\Operations\Copy` / `Move` operations which stream in 8 KiB chunks by default, so large
+files don't blow up memory. Same-filesystem moves (e.g. `aws-s3://a → aws-s3://b`) use the backend's
+native `mv` for server-side optimizations (rename on local, `CopyObject+DeleteObject` on S3,
+`CopyBlob+DeleteBlob` on Azure).
 
-If you genuinely need to move data between two fstabs, run two commands and stage through a temporary
-location:
+Cross-filesystem `mv` is **not atomic**: if the source removal fails after a successful write, the
+destination is present and the source remains; re-running is idempotent.
+
+What these commands do **not** do is bridge two separate fstabs: source and destination must resolve
+through the same `FilesystemTable`. Since most apps use a single fstab with everything mounted under it,
+this is rarely a real constraint. If you genuinely need to move data between two fstabs, run two
+commands and stage through a temporary location:
 
 ```bash
 bin/console flow:filesystem:cp aws-s3://bucket/file.csv file:///tmp/file.csv --fstab=warehouse
@@ -315,9 +396,9 @@ omits the command entirely. Directories appear when files appear inside them.
 ## Multi-Fstab Support
 
 > **Advanced.** Most applications should stick to a single fstab with multiple filesystems mounted under
-> it. Reach for multi-fstab only when you need fully isolated tables — e.g. the same protocol mounted
-> against two different backends (two S3 buckets, two Azure containers), or strict separation between
-> read-only archive storage and a read/write working area.
+> it. Reach for multi-fstab only when you need fully isolated tables — e.g. strict separation between
+> read-only archive storage and a read/write working area, or two completely independent configurations
+> that should never bleed across to one another.
 
 The bundle supports multiple independent fstabs, each with its own protocol keyspace:
 
@@ -327,16 +408,20 @@ flow_filesystem:
   fstabs:
     primary:
       filesystems:
-        file: ~
+        file:
+          type: file
 
     analytics:
       filesystems:
-        memory: ~
-        file: ~
+        memory:
+          type: memory
+        file:
+          type: file
 
     archive:
       filesystems:
         aws-s3:
+          type: aws_s3
           bucket: '%env(ARCHIVE_BUCKET)%'
 ```
 
@@ -347,7 +432,6 @@ named-argument autowiring:
 
 ```php
 use Flow\Filesystem\FilesystemTable;
-use Flow\Filesystem\Protocol;
 
 final class ReportBuilder
 {
@@ -360,7 +444,7 @@ final class ReportBuilder
 
     public function read() : string
     {
-        return $this->fstab->for(new Protocol('file'))->readFrom(/* path */)->content();
+        return $this->fstab->for('file')->readFrom(/* path */)->content();
     }
 }
 ```
@@ -374,29 +458,32 @@ bin/console flow:filesystem:ls aws-s3://bucket/reports --fstab=archive
 ## Custom Filesystem Factory
 
 The bundle has no concept of "custom" filesystems — every filesystem is created by a `FilesystemFactory`.
-To plug in your own protocol, implement
+To plug in your own backend, implement
 `Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory`:
 
 ```php
 namespace App\Flow;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
-use Flow\Filesystem\{Filesystem, Protocol};
+use Flow\Filesystem\Filesystem;
 
 final class MyFilesystemFactory implements FilesystemFactory
 {
-    public function protocol() : Protocol
+    public function type() : string
     {
-        return new Protocol('my-fs');
+        return 'my_backend';
     }
 
-    public function create(Protocol $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config) : Filesystem
     {
-        // build and return the Filesystem; $config is the array under
-        // filesystems.<protocol> in YAML.
+        // $protocol is the YAML key (mount protocol) the user chose.
+        // $config is the array under filesystems.<protocol> in YAML with `type` already stripped.
     }
 }
 ```
+
+`type()` returns the factory lookup key — it's what users put under `type:` in YAML. The mount protocol
+is a separate concept and comes from the YAML key (passed to `create()` as `$protocol`).
 
 There are two ways to register the factory.
 
@@ -409,18 +496,18 @@ namespace App\Flow;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
-use Flow\Filesystem\{Filesystem, Protocol};
+use Flow\Filesystem\Filesystem;
 
-#[AsFilesystemFactory(protocol: 'my-fs')]
+#[AsFilesystemFactory(type: 'my_backend')]
 final class MyFilesystemFactory implements FilesystemFactory
 {
-    public function protocol() : Protocol { return new Protocol('my-fs'); }
-    public function create(Protocol $protocol, array $config) : Filesystem { /* ... */ }
+    public function type() : string { return 'my_backend'; }
+    public function create(string $protocol, array $config) : Filesystem { /* ... */ }
 }
 ```
 
 As long as your service is autoconfigured (the default in `services.yaml` for everything under your `App\`
-namespace), the bundle automatically attaches the `flow_filesystem.factory` tag with the right `protocol`
+namespace), the bundle automatically attaches the `flow_filesystem.factory` tag with the right `type`
 attribute.
 
 ### Explicit Tag
@@ -430,40 +517,41 @@ namespaces, manual definitions):
 
 ```yaml
 services:
-  app.flow_filesystem.factory.my_fs:
+  app.flow_filesystem.factory.my_backend:
     class: App\Flow\MyFilesystemFactory
     tags:
-      - { name: flow_filesystem.factory, protocol: my-fs }
+      - { name: flow_filesystem.factory, type: my_backend }
 ```
 
-Either way, you can then mount the protocol in any fstab:
+Either way, you can then mount the backend under any protocol in any fstab:
 
 ```yaml
 flow_filesystem:
   fstabs:
     default:
       filesystems:
-        my-fs:
+        my-mount:
+          type: my_backend
           foo: bar    # arbitrary options handed to the factory's create()
 ```
 
 **Notes:**
 
-- The `protocol` attribute on the tag (or on `#[AsFilesystemFactory]`) must match `protocol()->name` exactly.
-  The bundle does not enforce this at compile time, but the registry will fail at boot if mismatched.
-- A protocol can be served by exactly **one** factory; registering two factories for the same protocol
-  fails at compile time.
-- Within a single fstab, a protocol can be mounted exactly **once** — this is enforced by `FilesystemTable`
-  itself. To use the same backend twice (e.g. two S3 buckets), put each one in its own fstab.
+- The `type` attribute on the tag (or on `#[AsFilesystemFactory]`) must match `type()` exactly.
+- A `type` can be served by exactly **one** factory; registering two factories for the same type fails
+  at compile time.
+- Within a single fstab, a mount protocol (the YAML key under `filesystems:`) can be used exactly
+  **once** — this is enforced by `FilesystemTable` itself. To mount the same backend twice with
+  different options (e.g. two S3 buckets), use two distinct mount protocols pointing to the same `type`.
 
 ## Comparison with `league/flysystem-bundle`
 
 - **Multi-fstab:** each fstab is an independent `FilesystemTable` service with its own protocol keyspace.
   Flysystem Bundle wires individual filesystems keyed only by name.
-- **Protocol-keyed routing:** filesystems inside a fstab are resolved at runtime via
-  `$table->for(new Protocol('...'))`, so application code can hand-off across protocols without knowing
-  service ids.
-- **Factory tag:** filesystem protocols are pluggable via a standard `flow_filesystem.factory` DI tag;
+- **Mount-protocol routing:** filesystems inside a fstab are resolved at runtime via
+  `$table->for('warehouse')` / `$table->for($path)`, so application code can hand-off across protocols
+  without knowing service ids.
+- **Factory tag:** filesystem types are pluggable via a standard `flow_filesystem.factory` DI tag;
   third-party libraries can ship their own factory without bundle changes.
 - **CLI commands:** `flow:filesystem:*` ship with the bundle and operate on any configured fstab.
   Flysystem Bundle does not ship any console commands.
@@ -489,9 +577,12 @@ flow_filesystem:
           trace_streams: true
           collect_metrics: true
       filesystems:
-        file: ~
-        memory: ~
+        file:
+          type: file
+        memory:
+          type: memory
         aws-s3:
+          type: aws_s3
           bucket: '%env(S3_BUCKET)%'
           client:
             region: '%env(AWS_REGION)%'

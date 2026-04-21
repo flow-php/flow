@@ -28,7 +28,7 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'my_warehouse' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -46,7 +46,7 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'primary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -73,7 +73,7 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => ['foo' => 'bar'],
+                        'memory' => ['type' => 'memory', 'foo' => 'bar'],
                     ],
                 ],
             ],
@@ -82,7 +82,7 @@ final class BuildFstabsPassTest extends TestCase
         (new BuildFstabsPass())->process($container);
 
         $arguments = $container->getDefinition('.flow_filesystem.fstab.default')->getArguments();
-        self::assertSame(['memory' => ['foo' => 'bar']], $arguments[2]);
+        self::assertSame(['memory' => ['type' => 'memory', 'foo' => 'bar']], $arguments[2]);
     }
 
     public function test_passes_registry_reference_and_fstab_name_as_first_arguments() : void
@@ -92,7 +92,7 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -113,12 +113,12 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'primary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
                 'secondary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -139,7 +139,7 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -161,12 +161,12 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
                 'secondary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -190,7 +190,7 @@ final class BuildFstabsPassTest extends TestCase
             'fstabs' => [
                 'primary' => [
                     'filesystems' => [
-                        'memory' => [],
+                        'memory' => ['type' => 'memory'],
                     ],
                 ],
             ],
@@ -202,21 +202,21 @@ final class BuildFstabsPassTest extends TestCase
         (new BuildFstabsPass())->process($container);
     }
 
-    public function test_throws_on_unknown_protocol_at_compile_time() : void
+    public function test_throws_on_unknown_type_at_compile_time() : void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',
             'fstabs' => [
                 'default' => [
                     'filesystems' => [
-                        'ftp' => [],
+                        'ftp' => ['type' => 'aws_s3'],
                     ],
                 ],
             ],
         ]);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Fstab "default" protocol "ftp": no filesystem factory registered for this protocol');
+        $this->expectExceptionMessage('Fstab "default" mount "ftp": no filesystem factory registered for type "aws_s3"');
 
         (new BuildFstabsPass())->process($container);
     }

@@ -13,6 +13,25 @@ final readonly class Blob
     {
     }
 
+    public function lastModifiedAt() : ?\DateTimeImmutable
+    {
+        $properties = $this->data['Properties'] ?? null;
+
+        if (!\is_array($properties)) {
+            return null;
+        }
+
+        $raw = $properties['Last-Modified'] ?? null;
+
+        if (!\is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::RFC7231, $raw);
+
+        return $parsed === false ? null : $parsed;
+    }
+
     public function name() : string
     {
         $name = $this->data['Name'] ?? null;

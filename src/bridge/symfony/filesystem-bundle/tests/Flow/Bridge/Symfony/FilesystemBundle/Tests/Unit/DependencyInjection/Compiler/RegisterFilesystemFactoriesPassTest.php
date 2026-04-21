@@ -28,11 +28,11 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
         $container->setDefinition('.flow_filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));
 
         $memory = new Definition(MemoryFilesystemFactory::class);
-        $memory->addTag('flow_filesystem.factory', ['protocol' => 'memory']);
+        $memory->addTag('flow_filesystem.factory', ['type' => 'memory']);
         $container->setDefinition('.flow_filesystem.factory.memory', $memory);
 
         $native = new Definition(NativeLocalFilesystemFactory::class);
-        $native->addTag('flow_filesystem.factory', ['protocol' => 'file']);
+        $native->addTag('flow_filesystem.factory', ['type' => 'file']);
         $container->setDefinition('.flow_filesystem.factory.file', $native);
 
         (new RegisterFilesystemFactoriesPass())->process($container);
@@ -57,26 +57,26 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
         self::assertSame([], $container->getDefinition('.flow_filesystem.factory_registry')->getArgument(0));
     }
 
-    public function test_throws_on_duplicate_protocol_across_services() : void
+    public function test_throws_on_duplicate_type_across_services() : void
     {
         $container = new ContainerBuilder();
         $container->setDefinition('.flow_filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));
 
         $a = new Definition(MemoryFilesystemFactory::class);
-        $a->addTag('flow_filesystem.factory', ['protocol' => 'memory']);
+        $a->addTag('flow_filesystem.factory', ['type' => 'memory']);
         $container->setDefinition('.flow_filesystem.factory.a', $a);
 
         $b = new Definition(MemoryFilesystemFactory::class);
-        $b->addTag('flow_filesystem.factory', ['protocol' => 'memory']);
+        $b->addTag('flow_filesystem.factory', ['type' => 'memory']);
         $container->setDefinition('.flow_filesystem.factory.b', $b);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Duplicate filesystem factory for protocol "memory"');
+        $this->expectExceptionMessage('Duplicate filesystem factory for type "memory"');
 
         (new RegisterFilesystemFactoriesPass())->process($container);
     }
 
-    public function test_throws_on_tag_without_protocol_attribute() : void
+    public function test_throws_on_tag_without_type_attribute() : void
     {
         $container = new ContainerBuilder();
         $container->setDefinition('.flow_filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));
@@ -86,7 +86,7 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
         $container->setDefinition('.flow_filesystem.factory.memory', $memory);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('missing a non-empty "protocol" attribute');
+        $this->expectExceptionMessage('missing a non-empty "type" attribute');
 
         (new RegisterFilesystemFactoriesPass())->process($container);
     }

@@ -9,11 +9,10 @@ use Symfony\Component\HttpClient\{MockHttpClient, Psr18Client};
 use Symfony\Component\HttpClient\Response\MockResponse;
 use function Flow\Filesystem\DSL\fstab;
 use function Flow\Filesystem\DSL\path;
-use function Flow\Filesystem\DSL\protocol;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$fs = fstab()->for(protocol('file'));
+$fs = fstab()->for('file');
 
 $htmlContent = $fs->readFrom(path(__DIR__ . '/input/example.com.html'))?->content();
 

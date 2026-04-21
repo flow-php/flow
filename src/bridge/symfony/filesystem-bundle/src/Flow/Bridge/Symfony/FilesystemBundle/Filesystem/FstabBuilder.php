@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\{InvalidArgumentException, LogicException};
-use Flow\Filesystem\{FilesystemTable, Protocol};
+use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 
 final class FstabBuilder
 {
     /**
-     * @param array<string, array<string, mixed>> $filesystems
+     * @param array<string, array<string, mixed>&array{type: string}> $filesystems each entry is keyed by mount protocol and must contain `type`
      */
     public static function build(
         FilesystemFactoryRegistry $registry,
@@ -25,16 +25,19 @@ final class FstabBuilder
             $table = $table->withTelemetry($telemetryConfig);
         }
 
-        foreach ($filesystems as $protocolName => $entry) {
+        foreach ($filesystems as $protocol => $entry) {
+            $type = $entry['type'];
+            $options = $entry;
+            unset($options['type']);
+
             try {
-                $protocol = new Protocol($protocolName);
-                $factory = $registry->get($protocol);
-                $filesystem = $factory->create($protocol, $entry);
+                $factory = $registry->get($type);
+                $filesystem = $factory->create($protocol, $options);
             } catch (InvalidArgumentException|\Flow\ETL\Exception\InvalidArgumentException $e) {
                 throw new LogicException(\sprintf(
-                    'Fstab "%s" protocol "%s": %s',
+                    'Fstab "%s" mount "%s": %s',
                     $fstabName,
-                    $protocolName,
+                    $protocol,
                     $e->getMessage(),
                 ), 0, $e);
             }

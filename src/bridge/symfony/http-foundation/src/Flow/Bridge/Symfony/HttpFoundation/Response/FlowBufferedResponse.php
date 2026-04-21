@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
 use function Flow\ETL\DSL\df;
-use function Flow\Filesystem\DSL\{path_memory, protocol};
+use function Flow\Filesystem\DSL\path;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\{Config, Extractor, Transformation, Transformations};
@@ -27,6 +27,7 @@ final class FlowBufferedResponse extends Response
         int $status = 200,
         array $headers = [],
         Config|ConfigBuilder|null $config = null,
+        private readonly string $filesystem = 'memory',
     ) {
         $this->config = $config ?? Config::default();
 
@@ -59,16 +60,19 @@ final class FlowBufferedResponse extends Response
 
         $config = $this->config instanceof ConfigBuilder ? $this->config->build() : $this->config;
 
+        $id = \bin2hex(\random_bytes(16)) . '.memory';
+        $bufferPath = path($this->filesystem . '://' . $id, ['stream' => 'temp']);
+
         df($config)
             ->read($this->extractor)
             ->with($this->transformations)
             ->dropPartitions()
-            ->write($this->output->memoryLoader($id = \bin2hex(\random_bytes(16)) . '.memory'))
+            ->write($this->output->loader($bufferPath))
             ->run();
 
-        $fs = $config->fstab()->for(protocol('memory'));
+        $fs = $config->fstab()->for($this->filesystem);
 
-        if ($fs->status(path_memory($id)) === null) {
+        if ($fs->status($bufferPath) === null) {
             $this->buffered = true;
             $this->content = '';
             $this->statusCode = self::HTTP_NO_CONTENT;
@@ -76,7 +80,7 @@ final class FlowBufferedResponse extends Response
             return;
         }
 
-        $this->content = $fs->readFrom(path_memory($id))->content();
+        $this->content = $fs->readFrom($bufferPath)->content();
         $this->buffered = true;
     }
 }

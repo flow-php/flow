@@ -278,20 +278,21 @@ TXT
 
         self::assertTrue($fs->status(path('aws-s3://multi_partitions/**/*.txt'))?->isFile());
 
-        self::assertEquals(
+        $uris = \array_map(static fn (FileStatus $s) : string => $s->path->uri(), $paths);
+        self::assertSame(
             [
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-01/country=de/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-01/country=pl/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-02/country=de/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-02/country=pl/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-03/country=de/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-03/country=pl/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-04/country=de/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-04/country=pl/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-05/country=de/file.txt'), true),
-                new FileStatus(path('aws-s3://multi_partitions/date=2022-01-05/country=pl/file.txt'), true),
+                path('aws-s3://multi_partitions/date=2022-01-01/country=de/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-01/country=pl/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-02/country=de/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-02/country=pl/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-03/country=de/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-03/country=pl/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-04/country=de/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-04/country=pl/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-05/country=de/file.txt')->uri(),
+                path('aws-s3://multi_partitions/date=2022-01-05/country=pl/file.txt')->uri(),
             ],
-            $paths
+            $uris
         );
     }
 

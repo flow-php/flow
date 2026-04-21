@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Integration\Command;
 
 use function Flow\Filesystem\DSL\path;
-use Flow\Bridge\Symfony\FilesystemBundle\Command\{CpCommand, FstabResolver, LsCommand, MvCommand};
+use Flow\Bridge\Symfony\FilesystemBundle\Command\{CatCommand, CpCommand, FstabResolver, LsCommand, MvCommand, RmCommand, StatCommand, TouchCommand};
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Integration\KernelTestCase;
+use Flow\Filesystem\FilesystemTable;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -29,14 +30,24 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         parent::tearDown();
     }
 
+    public function test_cat_prints_file_contents() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+        $this->seed($table, 'memory://cat.txt', 'line-1');
+
+        $tester = new CommandTester(new CatCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://cat.txt']);
+
+        self::assertSame(Command::SUCCESS, $exit);
+        self::assertStringContainsString('line-1', $tester->getDisplay());
+    }
+
     public function test_cp_between_protocols_in_same_fstab() : void
     {
         $resolver = $this->bootWithMultiFstab();
-
         $table = $resolver->resolve(null);
-        $stream = $table->for(path('memory://src.txt'))->writeTo(path('memory://src.txt'));
-        $stream->append('integration-payload');
-        $stream->close();
+        $this->seed($table, 'memory://src.txt', 'integration-payload');
 
         $dir = $this->makeTempDir();
         $destUri = 'file://' . $dir . '/out.txt';
@@ -52,11 +63,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
     public function test_cp_fails_when_protocol_missing_in_chosen_fstab() : void
     {
         $resolver = $this->bootWithMultiFstab();
-
-        $secondary = $resolver->resolve('secondary');
-        $stream = $secondary->for(path('memory://only.txt'))->writeTo(path('memory://only.txt'));
-        $stream->append('x');
-        $stream->close();
+        $this->seed($resolver->resolve('secondary'), 'memory://only.txt', 'x');
 
         $tester = new CommandTester(new CpCommand($resolver));
         $exit = $tester->execute([
@@ -69,14 +76,84 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         self::assertStringContainsString('secondary', $tester->getDisplay());
     }
 
-    public function test_fstab_option_routes_to_secondary() : void
+    public function test_ls_default_emits_size_and_modified_columns() : void
     {
         $resolver = $this->bootWithMultiFstab();
+        $this->seed($resolver->resolve(null), 'memory://long/a.txt', 'hello');
 
-        $secondary = $resolver->resolve('secondary');
-        $stream = $secondary->for(path('memory://data/hello.txt'))->writeTo(path('memory://data/hello.txt'));
-        $stream->append('secondary-only');
-        $stream->close();
+        $tester = new CommandTester(new LsCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://long']);
+
+        self::assertSame(Command::SUCCESS, $exit);
+        $display = $tester->getDisplay();
+        self::assertStringContainsString('Type', $display);
+        self::assertStringContainsString('Size', $display);
+        self::assertStringContainsString('Modified', $display);
+        self::assertStringContainsString('5 B', $display);
+    }
+
+    public function test_ls_does_not_prompt_when_limit_exactly_equals_page_size() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+
+        for ($i = 0; $i < 25; $i++) {
+            $this->seed($table, \sprintf('memory://cap/f%03d.txt', $i), 'x');
+        }
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(
+            ['path' => 'memory://cap', '--limit' => '10', '--page-size' => '10'],
+            ['interactive' => true],
+        );
+
+        $display = $tester->getDisplay();
+        self::assertStringNotContainsString('Show next', $display);
+        self::assertSame(10, \substr_count($display, 'memory://cap/'));
+        self::assertStringContainsString('truncated at 10 entries', $display);
+    }
+
+    public function test_ls_fails_on_negative_offset() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $tester = new CommandTester(new LsCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://', '--offset' => '-1']);
+
+        self::assertSame(Command::FAILURE, $exit);
+        self::assertStringContainsString('--offset must be a non-negative integer', $tester->getDisplay());
+    }
+
+    public function test_ls_fails_on_non_positive_limit() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $tester = new CommandTester(new LsCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://', '--limit' => '0']);
+
+        self::assertSame(Command::FAILURE, $exit);
+        self::assertStringContainsString('--limit must be a positive integer', $tester->getDisplay());
+    }
+
+    public function test_ls_flows_all_pages_without_prompt_when_not_interactive() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+
+        for ($i = 0; $i < 25; $i++) {
+            $this->seed($table, \sprintf('memory://flow/f%03d.txt', $i), 'x');
+        }
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(['path' => 'memory://flow'], ['interactive' => false]);
+
+        $display = $tester->getDisplay();
+        self::assertStringNotContainsString('Show next', $display);
+        self::assertSame(25, \substr_count($display, 'memory://flow/'));
+    }
+
+    public function test_ls_fstab_option_routes_to_secondary() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $this->seed($resolver->resolve('secondary'), 'memory://data/hello.txt', 'secondary-only');
 
         $tester = new CommandTester(new LsCommand($resolver));
         $exit = $tester->execute(['path' => 'memory://data', '--fstab' => 'secondary']);
@@ -85,14 +162,114 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         self::assertStringContainsString('memory://data/hello.txt', $tester->getDisplay());
     }
 
+    public function test_ls_json_format_emits_ndjson_per_entry() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+        $this->seed($table, 'memory://j/a.txt', 'A');
+        $this->seed($table, 'memory://j/b.txt', 'BB');
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(['path' => 'memory://j', '--format' => 'json']);
+
+        $lines = \array_values(\array_filter(\explode("\n", \trim($tester->getDisplay()))));
+        self::assertCount(2, $lines);
+
+        /** @var array{uri: string, size: null|int} $first */
+        $first = \json_decode($lines[0], true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('memory://j/a.txt', $first['uri']);
+        self::assertSame(1, $first['size']);
+    }
+
+    public function test_ls_limit_truncates_and_warns() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->seed($table, 'memory://lim/f' . $i . '.txt', 'x');
+        }
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(['path' => 'memory://lim', '--limit' => '2']);
+
+        $display = $tester->getDisplay();
+        self::assertSame(2, \substr_count($display, 'memory://lim/'));
+        self::assertStringContainsString('truncated at 2 entries', $display);
+    }
+
+    public function test_ls_offset_skips_first_n_entries() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->seed($table, 'memory://off/f' . $i . '.txt', 'x');
+        }
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(['path' => 'memory://off', '--offset' => '2', '--limit' => '10']);
+
+        $display = $tester->getDisplay();
+        self::assertSame(3, \substr_count($display, 'memory://off/'));
+        self::assertStringNotContainsString('memory://off/f0.txt', $display);
+        self::assertStringNotContainsString('memory://off/f1.txt', $display);
+        self::assertStringContainsString('memory://off/f2.txt', $display);
+    }
+
+    public function test_ls_prompts_between_pages_on_interactive_tty() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+
+        for ($i = 0; $i < 25; $i++) {
+            $this->seed($table, \sprintf('memory://pg/f%03d.txt', $i), 'x');
+        }
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->setInputs(['no']);
+        $tester->execute(['path' => 'memory://pg'], ['interactive' => true]);
+
+        $display = $tester->getDisplay();
+        self::assertStringContainsString('Show next 10 entries?', $display);
+        self::assertSame(10, \substr_count($display, 'memory://pg/'));
+    }
+
+    public function test_ls_returns_all_entries_in_single_page_when_under_page_size() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->seed($table, 'memory://nl/f' . $i . '.txt', 'x');
+        }
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(['path' => 'memory://nl']);
+
+        self::assertSame(3, \substr_count($tester->getDisplay(), 'memory://nl/'));
+        self::assertStringNotContainsString('truncated', $tester->getDisplay());
+    }
+
+    public function test_ls_short_drops_metadata_columns() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $this->seed($resolver->resolve(null), 'memory://short/a.txt', 'hello');
+
+        $tester = new CommandTester(new LsCommand($resolver));
+        $tester->execute(['path' => 'memory://short', '--short' => true]);
+
+        $display = $tester->getDisplay();
+        self::assertStringNotContainsString('Type', $display);
+        self::assertStringNotContainsString('Modified', $display);
+        self::assertStringContainsString('memory://short/a.txt', $display);
+    }
+
     public function test_mv_removes_source_after_success() : void
     {
         $resolver = $this->bootWithMultiFstab();
-
         $table = $resolver->resolve(null);
-        $stream = $table->for(path('memory://src.txt'))->writeTo(path('memory://src.txt'));
-        $stream->append('moving');
-        $stream->close();
+        $this->seed($table, 'memory://src.txt', 'moving');
 
         $dir = $this->makeTempDir();
         $destUri = 'file://' . $dir . '/moved.txt';
@@ -105,14 +282,93 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         self::assertNull($table->for(path('memory://src.txt'))->status(path('memory://src.txt')));
     }
 
+    public function test_rm_removes_existing_file() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $table = $resolver->resolve(null);
+        $this->seed($table, 'memory://rm/f.txt', 'x');
+
+        $tester = new CommandTester(new RmCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://rm/f.txt']);
+
+        self::assertSame(Command::SUCCESS, $exit);
+        self::assertNull($table->for(path('memory://rm/f.txt'))->status(path('memory://rm/f.txt')));
+    }
+
+    public function test_stat_fails_on_missing_path() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $tester = new CommandTester(new StatCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://absent.txt']);
+
+        self::assertSame(Command::FAILURE, $exit);
+        self::assertStringContainsString('not found', $tester->getDisplay());
+    }
+
+    public function test_stat_json_format_includes_metadata() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $this->seed($resolver->resolve(null), 'memory://stat.bin', 'abcd');
+
+        $tester = new CommandTester(new StatCommand($resolver));
+        $tester->execute(['path' => 'memory://stat.bin', '--format' => 'json']);
+
+        /** @var array{uri: string, type: string, size: null|int, modified: null|string} $data */
+        $data = \json_decode(\trim($tester->getDisplay()), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertSame('memory://stat.bin', $data['uri']);
+        self::assertSame(4, $data['size']);
+        self::assertNotNull($data['modified']);
+    }
+
+    public function test_stat_prints_size_and_modified() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $this->seed($resolver->resolve(null), 'memory://stat.txt', 'abcd');
+
+        $tester = new CommandTester(new StatCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://stat.txt']);
+
+        self::assertSame(Command::SUCCESS, $exit);
+        $display = $tester->getDisplay();
+        self::assertStringContainsString('memory://stat.txt', $display);
+        self::assertStringContainsString('file', $display);
+        self::assertStringContainsString('Size', $display);
+        self::assertStringContainsString('4', $display);
+        self::assertStringContainsString('Modified', $display);
+    }
+
+    public function test_stat_rejects_pattern_paths() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $tester = new CommandTester(new StatCommand($resolver));
+        $exit = $tester->execute(['path' => 'memory://*.txt']);
+
+        self::assertSame(Command::FAILURE, $exit);
+        self::assertStringContainsString('Pattern paths are not supported by stat', $tester->getDisplay());
+    }
+
+    public function test_touch_creates_empty_file() : void
+    {
+        $resolver = $this->bootWithMultiFstab();
+        $dir = $this->makeTempDir();
+        $target = 'file://' . $dir . '/touched.txt';
+
+        $tester = new CommandTester(new TouchCommand($resolver));
+        $exit = $tester->execute(['path' => $target]);
+
+        self::assertSame(Command::SUCCESS, $exit);
+        self::assertTrue(\file_exists($dir . '/touched.txt'));
+        self::assertSame('', \file_get_contents($dir . '/touched.txt'));
+    }
+
     private function bootWithMultiFstab() : FstabResolver
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_filesystem', [
                     'fstabs' => [
-                        'default' => ['filesystems' => ['memory' => [], 'file' => []]],
-                        'secondary' => ['filesystems' => ['memory' => []]],
+                        'default' => ['filesystems' => ['memory' => ['type' => 'memory'], 'file' => ['type' => 'file']]],
+                        'secondary' => ['filesystems' => ['memory' => ['type' => 'memory']]],
                     ],
                 ]);
 
@@ -165,5 +421,13 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         }
 
         @\rmdir($dir);
+    }
+
+    private function seed(FilesystemTable $table, string $uri, string $content) : void
+    {
+        $path = path($uri);
+        $stream = $table->for($path)->writeTo($path);
+        $stream->append($content);
+        $stream->close();
     }
 }

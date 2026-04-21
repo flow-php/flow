@@ -11,21 +11,17 @@ use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, TraceableFilesystem};
 final class FilesystemTable
 {
     /**
-     * @var array<string, Filesystem>
+     * @var array<string, Filesystem> keyed by mount protocol
      */
-    private array $fstab;
+    private array $mounts = [];
 
     private ?FilesystemTelemetryConfig $telemetryConfig = null;
 
     public function __construct(Filesystem ...$filesystems)
     {
-        $fstab = [];
-
         foreach ($filesystems as $filesystem) {
-            $fstab[$filesystem->protocol()->name] = $filesystem;
+            $this->mount($filesystem);
         }
-
-        $this->fstab = $fstab;
     }
 
     /**
@@ -33,52 +29,54 @@ final class FilesystemTable
      */
     public function filesystems() : array
     {
-        return array_values($this->fstab);
+        return \array_values($this->mounts);
     }
 
-    public function for(Path|Protocol $path) : Filesystem
+    public function for(Path|string $protocol) : Filesystem
     {
-        $protocol = $path instanceof Path ? $path->protocol() : $path;
+        $name = $protocol instanceof Path ? $protocol->protocol() : $protocol;
 
-        if (!\array_key_exists($protocol->name, $this->fstab)) {
-            throw new InvalidArgumentException("Filesystem with protocol {$protocol->name} is not mounted.");
+        if (!\array_key_exists($name, $this->mounts)) {
+            throw new InvalidArgumentException("Filesystem with protocol {$name} is not mounted.");
         }
 
-        return $this->fstab[$protocol->name];
+        return $this->mounts[$name];
     }
 
     public function mount(Filesystem $filesystem) : void
     {
-        if (isset($this->fstab[$filesystem->protocol()->name])) {
-            throw new InvalidArgumentException("Filesystem with protocol {$filesystem->protocol()->name} is already mounted.");
+        $protocol = $filesystem->mount()->protocol;
+
+        if (\array_key_exists($protocol, $this->mounts)) {
+            throw new InvalidArgumentException("Mount '{$protocol}' is already registered.");
         }
 
-        $this->fstab[$filesystem->protocol()->name] = $this->telemetryConfig
-            ? $filesystem instanceof TraceableFilesystem
-                ? $filesystem
-                : traceable_filesystem($filesystem, $this->telemetryConfig)
+        $this->mounts[$protocol] = $this->telemetryConfig !== null && !$filesystem instanceof TraceableFilesystem
+            ? traceable_filesystem($filesystem, $this->telemetryConfig)
             : $filesystem;
     }
 
     public function unmount(Filesystem $filesystem) : void
     {
-        if (!isset($this->fstab[$filesystem->protocol()->name])) {
-            throw new InvalidArgumentException("Filesystem with protocol {$filesystem->protocol()->name} is not mounted.");
+        $protocol = $filesystem->mount()->protocol;
+
+        if (!\array_key_exists($protocol, $this->mounts)) {
+            throw new InvalidArgumentException("Filesystem with protocol {$protocol} is not mounted.");
         }
 
-        unset($this->fstab[$filesystem->protocol()->name]);
+        unset($this->mounts[$protocol]);
     }
 
     public function withTelemetry(FilesystemTelemetryConfig $config) : self
     {
         $this->telemetryConfig = $config;
 
-        foreach ($this->fstab as $protocol => $filesystem) {
+        foreach ($this->mounts as $protocol => $filesystem) {
             if ($filesystem instanceof TraceableFilesystem) {
                 continue;
             }
 
-            $this->fstab[$protocol] = traceable_filesystem($filesystem, $config);
+            $this->mounts[$protocol] = traceable_filesystem($filesystem, $config);
         }
 
         return $this;

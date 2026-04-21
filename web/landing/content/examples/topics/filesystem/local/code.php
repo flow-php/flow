@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use function Flow\Filesystem\DSL\{fstab, path, protocol};
+use function Flow\Filesystem\DSL\{fstab, path};
 
 require __DIR__ . '/vendor/autoload.php';
 
-$filesystem = fstab()->for(protocol('file'));
+$filesystem = fstab()->for('file');
 $outputStream = $filesystem->writeTo(path(__DIR__ . '/output.txt'));
 
 $outputStream->append("Files List\n\n");

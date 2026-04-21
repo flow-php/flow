@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
-use Flow\Filesystem\{FilesystemTable, Protocol};
+use Flow\Filesystem\FilesystemTable;
 
 final class FstabServiceRegistrationTest extends KernelTestCase
 {
@@ -18,12 +18,12 @@ final class FstabServiceRegistrationTest extends KernelTestCase
                     'fstabs' => [
                         'primary' => [
                             'filesystems' => [
-                                'file' => [],
+                                'file' => ['type' => 'file'],
                             ],
                         ],
                         'secondary' => [
                             'filesystems' => [
-                                'memory' => [],
+                                'memory' => ['type' => 'memory'],
                             ],
                         ],
                     ],
@@ -33,7 +33,7 @@ final class FstabServiceRegistrationTest extends KernelTestCase
 
         $table = $this->symfonyContext()->getService(FilesystemTable::class, FilesystemTable::class);
 
-        self::assertSame('memory', $table->for(new Protocol('memory'))->protocol()->name);
+        self::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
     public function test_named_argument_alias_resolves_to_fstab() : void
@@ -44,7 +44,7 @@ final class FstabServiceRegistrationTest extends KernelTestCase
                     'fstabs' => [
                         'default' => [
                             'filesystems' => [
-                                'memory' => [],
+                                'memory' => ['type' => 'memory'],
                             ],
                         ],
                     ],
@@ -55,7 +55,7 @@ final class FstabServiceRegistrationTest extends KernelTestCase
         $aliasId = FilesystemTable::class . ' $defaultFstab';
         $table = $this->symfonyContext()->getService($aliasId, FilesystemTable::class);
 
-        self::assertSame('memory', $table->for(new Protocol('memory'))->protocol()->name);
+        self::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
     public function test_registers_default_fstab_with_multiple_filesystems() : void
@@ -66,8 +66,8 @@ final class FstabServiceRegistrationTest extends KernelTestCase
                     'fstabs' => [
                         'default' => [
                             'filesystems' => [
-                                'file' => [],
-                                'memory' => [],
+                                'file' => ['type' => 'file'],
+                                'memory' => ['type' => 'memory'],
                             ],
                         ],
                     ],
@@ -77,8 +77,8 @@ final class FstabServiceRegistrationTest extends KernelTestCase
 
         $table = $this->symfonyContext()->getService(FilesystemTable::class . ' $defaultFstab', FilesystemTable::class);
 
-        self::assertSame('file', $table->for(new Protocol('file'))->protocol()->name);
-        self::assertSame('memory', $table->for(new Protocol('memory'))->protocol()->name);
+        self::assertSame('file', $table->for('file')->mount()->protocol);
+        self::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
     public function test_registers_secondary_fstab_separately() : void
@@ -89,13 +89,13 @@ final class FstabServiceRegistrationTest extends KernelTestCase
                     'fstabs' => [
                         'default' => [
                             'filesystems' => [
-                                'file' => [],
-                                'memory' => [],
+                                'file' => ['type' => 'file'],
+                                'memory' => ['type' => 'memory'],
                             ],
                         ],
                         'secondary' => [
                             'filesystems' => [
-                                'memory' => [],
+                                'memory' => ['type' => 'memory'],
                             ],
                         ],
                     ],
