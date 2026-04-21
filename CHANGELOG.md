@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-04-21
+## [0.36.0] - 2026-04-21
 
 ### Added
 - [#2313](https://github.com/flow-php/flow/pull/2313) - **Context to PostgreSql RowMapper** - [@norberttech](https://github.com/norberttech)
