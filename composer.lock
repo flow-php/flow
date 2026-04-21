@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f44b2b3219936cf62612d5cb7ae12fa3",
+    "content-hash": "272db85b8ccc8f8694b3575a72a72684",
     "packages": [
         {
             "name": "async-aws/core",
-            "version": "1.28.1",
+            "version": "1.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/async-aws/core.git",
-                "reference": "e8b02ac30b17afaf1352cbd352dceb789d792d39"
+                "reference": "70899695fcc7b23a9247926ff8b581668583b993"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/async-aws/core/zipball/e8b02ac30b17afaf1352cbd352dceb789d792d39",
-                "reference": "e8b02ac30b17afaf1352cbd352dceb789d792d39",
+                "url": "https://api.github.com/repos/async-aws/core/zipball/70899695fcc7b23a9247926ff8b581668583b993",
+                "reference": "70899695fcc7b23a9247926ff8b581668583b993",
                 "shasum": ""
             },
             "require": {
@@ -43,7 +43,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.28-dev"
+                    "dev-master": "1.29-dev"
                 }
             },
             "autoload": {
@@ -64,7 +64,7 @@
                 "sts"
             ],
             "support": {
-                "source": "https://github.com/async-aws/core/tree/1.28.1"
+                "source": "https://github.com/async-aws/core/tree/1.29.0"
             },
             "funding": [
                 {
@@ -76,20 +76,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-16T10:24:54+00:00"
+            "time": "2026-04-18T17:06:10+00:00"
         },
         {
             "name": "async-aws/s3",
-            "version": "2.10.0",
+            "version": "3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/async-aws/s3.git",
-                "reference": "9c826ab620dbdc99528f0ad0b728ef9d478714db"
+                "reference": "39dcee8af248a26b99c1af109e9b577c8bd51b67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/async-aws/s3/zipball/9c826ab620dbdc99528f0ad0b728ef9d478714db",
-                "reference": "9c826ab620dbdc99528f0ad0b728ef9d478714db",
+                "url": "https://api.github.com/repos/async-aws/s3/zipball/39dcee8af248a26b99c1af109e9b577c8bd51b67",
+                "reference": "39dcee8af248a26b99c1af109e9b577c8bd51b67",
                 "shasum": ""
             },
             "require": {
@@ -98,12 +98,17 @@
                 "ext-filter": "*",
                 "ext-hash": "*",
                 "ext-simplexml": "*",
-                "php": "^7.2.5 || ^8.0"
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.5.42",
+                "symfony/error-handler": "^7.3.2 || ^8.0",
+                "symfony/phpunit-bridge": "^7.3.2 || ^8.0"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.10-dev"
+                    "dev-master": "3.2-dev"
                 }
             },
             "autoload": {
@@ -124,7 +129,7 @@
                 "sdk"
             ],
             "support": {
-                "source": "https://github.com/async-aws/s3/tree/2.10.0"
+                "source": "https://github.com/async-aws/s3/tree/3.2.0"
             },
             "funding": [
                 {
@@ -136,7 +141,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-08-11T10:03:27+00:00"
+            "time": "2026-04-18T17:06:10+00:00"
         },
         {
             "name": "brick/math",
@@ -749,16 +754,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.437.0",
+            "version": "v0.438.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "1a7dd2368adb7ee4d5d07f828ae2dd7ecc43247c"
+                "reference": "09887192685c6fbe8de893523a44a8df8baeb15b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/1a7dd2368adb7ee4d5d07f828ae2dd7ecc43247c",
-                "reference": "1a7dd2368adb7ee4d5d07f828ae2dd7ecc43247c",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/09887192685c6fbe8de893523a44a8df8baeb15b",
+                "reference": "09887192685c6fbe8de893523a44a8df8baeb15b",
                 "shasum": ""
             },
             "require": {
@@ -787,9 +792,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.437.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.438.0"
             },
-            "time": "2026-04-13T01:26:28+00:00"
+            "time": "2026-04-20T01:14:23+00:00"
         },
         {
             "name": "google/auth",

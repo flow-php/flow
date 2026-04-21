@@ -16,7 +16,7 @@
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "flow-php/filesystem": "self.version",
-        "async-aws/s3": "^2.6"
+        "async-aws/s3": "^2.6 || ^3.0"
     },
     "config": {
         "optimize-autoloader": true,
