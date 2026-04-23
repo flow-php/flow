@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-04-23
+
+### Changed
+- [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
+
 ## [0.36.0] - 2026-04-21
 
 ### Added
