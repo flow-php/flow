@@ -77,6 +77,14 @@ difference!
 
 [![Star History Chart](https://api.star-history.com/svg?repos=flow-php/flow&type=Date)](https://star-history.com/#flow-php/flow&Date)
 
+<a href="https://starmapper.bruniaux.com/flow-php/flow">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://starmapper.bruniaux.com/api/map-image/flow-php/flow?theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://starmapper.bruniaux.com/api/map-image/flow-php/flow?theme=light" />
+    <img alt="StarMapper" src="https://starmapper.bruniaux.com/api/map-image/flow-php/flow" />
+  </picture>
+</a>
+
 ## Sponsors
 
 Flow PHP is sponsored by:
