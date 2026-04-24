@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed>
+    <entry xmlns:g="http://example.com/first">
+        <g:note>first</g:note>
+    </entry>
+    <entry>
+        <plain>second</plain>
+    </entry>
+</feed>
