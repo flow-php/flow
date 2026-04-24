@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Mother;
 
-use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\{Configuration, CurlTransportConfig, SerializerType};
 
 final class ConfigurationMother
 {
@@ -12,7 +12,7 @@ final class ConfigurationMother
     {
         return new Configuration(
             serviceName: 'phpunit',
-            otelCollectorUrl: 'http://localhost:4318',
+            transport: self::defaultTransport(),
             emitTraces: true,
             emitMetrics: true,
             emitTestSpans: true,
@@ -20,11 +20,31 @@ final class ConfigurationMother
         );
     }
 
+    public static function defaultTransport(string $endpoint = Configuration::DEFAULT_ENDPOINT) : CurlTransportConfig
+    {
+        return new CurlTransportConfig(
+            endpoint: $endpoint,
+            headers: [],
+            timeout: 30,
+            connectTimeout: 10,
+            compression: false,
+            followRedirects: true,
+            maxRedirects: 3,
+            proxy: null,
+            sslVerifyPeer: true,
+            sslVerifyHost: true,
+            sslCertPath: null,
+            sslKeyPath: null,
+            caInfoPath: null,
+            serializer: SerializerType::JSON,
+        );
+    }
+
     public static function withCustomServiceName(string $serviceName) : Configuration
     {
         return new Configuration(
             serviceName: $serviceName,
-            otelCollectorUrl: 'http://localhost:4318',
+            transport: self::defaultTransport(),
             emitTraces: true,
             emitMetrics: true,
             emitTestSpans: true,
@@ -36,7 +56,7 @@ final class ConfigurationMother
     {
         return new Configuration(
             serviceName: 'phpunit',
-            otelCollectorUrl: $url,
+            transport: self::defaultTransport($url),
             emitTraces: true,
             emitMetrics: true,
             emitTestSpans: true,
@@ -48,7 +68,7 @@ final class ConfigurationMother
     {
         return new Configuration(
             serviceName: 'phpunit',
-            otelCollectorUrl: 'http://localhost:4318',
+            transport: self::defaultTransport(),
             emitTraces: true,
             emitMetrics: false,
             emitTestSpans: true,
@@ -60,7 +80,7 @@ final class ConfigurationMother
     {
         return new Configuration(
             serviceName: 'phpunit',
-            otelCollectorUrl: 'http://localhost:4318',
+            transport: self::defaultTransport(),
             emitTraces: true,
             emitMetrics: true,
             emitTestSpans: true,
@@ -72,7 +92,7 @@ final class ConfigurationMother
     {
         return new Configuration(
             serviceName: 'phpunit',
-            otelCollectorUrl: 'http://localhost:4318',
+            transport: self::defaultTransport(),
             emitTraces: true,
             emitMetrics: true,
             emitTestSpans: false,
@@ -84,7 +104,7 @@ final class ConfigurationMother
     {
         return new Configuration(
             serviceName: 'phpunit',
-            otelCollectorUrl: 'http://localhost:4318',
+            transport: self::defaultTransport(),
             emitTraces: false,
             emitMetrics: true,
             emitTestSpans: true,

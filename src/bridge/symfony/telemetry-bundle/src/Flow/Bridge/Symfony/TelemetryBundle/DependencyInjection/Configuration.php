@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\{ArrayNodeDefinition, TreeBuilder};
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 final class Configuration implements ConfigurationInterface
 {
@@ -403,6 +404,17 @@ final class Configuration implements ConfigurationInterface
                         ->arrayNode('transport')
                             ->info('OTLP transport configuration')
                             ->addDefaultsIfNotSet()
+                            ->beforeNormalization()
+                                ->always(static function (mixed $v) : mixed {
+                                    if (\is_array($v) && ($v['type'] ?? null) === 'grpc' && \array_key_exists('timeout', $v)) {
+                                        throw new InvalidConfigurationException(
+                                            'The "timeout" parameter is not supported when transport.type is "grpc".',
+                                        );
+                                    }
+
+                                    return $v;
+                                })
+                            ->end()
                             ->children()
                                 ->enumNode('type')
                                     ->values(['curl', 'http', 'grpc', 'service'])
@@ -414,7 +426,7 @@ final class Configuration implements ConfigurationInterface
                                     ->cannotBeEmpty()
                                 ->end()
                                 ->integerNode('timeout')
-                                    ->info('Request timeout in seconds')
+                                    ->info('Request timeout in seconds (not supported for grpc transport)')
                                     ->defaultValue(30)
                                     ->min(1)
                                 ->end()

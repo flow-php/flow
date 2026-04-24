@@ -310,7 +310,7 @@
     <extensions>
         <bootstrap class="Flow\Bridge\PHPUnit\Telemetry\TelemetryExtension">
             <parameter name="service_name" value="flow-php-test-suite"/>
-            <parameter name="otel_collector_url" value="http://localhost:4318"/>
+            <parameter name="endpoint" value="http://localhost:4318"/>
             <parameter name="emit_traces" value="true"/>
             <parameter name="emit_metrics" value="true"/>
             <parameter name="emit_test_spans" value="false"/>

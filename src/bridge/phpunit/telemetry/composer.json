@@ -19,6 +19,16 @@
         "flow-php/telemetry-otlp-bridge": "self.version",
         "phpunit/phpunit": "^11"
     },
+    "require-dev": {
+        "google/protobuf": "^4.0 || ^5.0",
+        "grpc/grpc": "^1.74",
+        "open-telemetry/gen-otlp-protobuf": "^1.8"
+    },
+    "suggest": {
+        "ext-grpc": "Required for the gRPC transport",
+        "google/protobuf": "Required for the gRPC transport and for curl transport with protobuf serializer",
+        "open-telemetry/gen-otlp-protobuf": "Generated PHP classes for OTLP protobuf messages (required for gRPC transport)"
+    },
     "autoload": {
         "psr-4": {
             "Flow\\": [

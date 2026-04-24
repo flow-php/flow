@@ -440,12 +440,11 @@ otlp:
 
 #### grpc
 
-gRPC transport.
+gRPC transport
 
 | Option     | Type    | Default | Description                  |
 |------------|---------|---------|------------------------------|
 | `endpoint` | string  | -       | OTLP endpoint URL (required) |
-| `timeout`  | integer | `30`    | Request timeout in seconds   |
 | `insecure` | boolean | `false` | Allow insecure connections   |
 
 ```yaml
@@ -453,7 +452,6 @@ otlp:
   transport:
     type: grpc
     endpoint: 'http://otel-collector:4317'
-    timeout: 30
     insecure: true
 ```
 
