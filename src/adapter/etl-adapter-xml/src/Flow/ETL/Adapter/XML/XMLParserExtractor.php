@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext, Schema};
@@ -31,6 +32,11 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
      * @var array<string>
      */
     private array $elements = [];
+
+    /**
+     * @var list<array<string, string>>
+     */
+    private array $namespaceStack = [];
 
     private ?\XMLParser $parser = null;
 
@@ -79,6 +85,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         }
 
         array_pop($this->currentPath);
+        array_pop($this->namespaceStack);
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -165,21 +172,39 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     public function startElementHandler(\XMLParser $parser, string $name, array $attrs) : void
     {
         $this->currentPath[] = $name;
-        $currentPathString = implode('/', $this->currentPath);
 
-        if ($currentPathString === $this->xmlNodePath || ($this->xmlNodePath === '' && \count($this->currentPath) === 1)) {
+        $namespaceDeclarations = [];
+        $otherAttributes = [];
+
+        foreach ($attrs as $key => $value) {
+            if ($key === 'xmlns' || str_starts_with($key, 'xmlns:')) {
+                $namespaceDeclarations[$key] = \is_scalar($value) ? type_string()->cast($value) : '';
+            } else {
+                $otherAttributes[$key] = $value;
+            }
+        }
+
+        $this->namespaceStack[] = $namespaceDeclarations;
+
+        $isCapturedRoot = implode('/', $this->currentPath) === $this->xmlNodePath || ($this->xmlNodePath === '' && \count($this->currentPath) === 1);
+
+        if ($isCapturedRoot) {
             $this->capturing = true;
-            $this->writer()->startElement($name);
-
-            foreach ($attrs as $key => $value) {
-                $this->writer()->writeAttribute($key, \is_scalar($value) ? (string) $value : '');
-            }
+            $namespacesToEmit = array_merge(...$this->namespaceStack);
         } elseif ($this->capturing) {
-            $this->writer()->startElement($name);
+            $namespacesToEmit = $namespaceDeclarations;
+        } else {
+            return;
+        }
 
-            foreach ($attrs as $key => $value) {
-                $this->writer()->writeAttribute($key, \is_scalar($value) ? (string) $value : '');
-            }
+        $this->writer()->startElement($name);
+
+        foreach ($namespacesToEmit as $nsKey => $nsValue) {
+            $this->writer()->writeAttribute($nsKey, $nsValue);
+        }
+
+        foreach ($otherAttributes as $key => $value) {
+            $this->writer()->writeAttribute($key, \is_scalar($value) ? type_string()->cast($value) : '');
         }
     }
 
@@ -221,6 +246,9 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
             xml_parser_free($this->parser);
             $this->parser = null;
         }
+
+        $this->namespaceStack = [];
+        $this->currentPath = [];
     }
 
     private function parser() : \XMLParser

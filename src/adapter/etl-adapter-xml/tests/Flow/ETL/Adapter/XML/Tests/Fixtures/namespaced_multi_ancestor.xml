@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:a="http://example.com/a">
+    <group xmlns:b="http://example.com/b">
+        <entry>
+            <a:alpha>A</a:alpha>
+            <b:beta>B</b:beta>
+        </entry>
+    </group>
+</feed>

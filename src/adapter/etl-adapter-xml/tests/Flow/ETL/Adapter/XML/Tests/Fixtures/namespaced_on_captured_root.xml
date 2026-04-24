@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed>
+    <entry xmlns:g="http://base.google.com/ns/1.0">
+        <g:title>Product 1</g:title>
+    </entry>
+</feed>
