@@ -578,6 +578,29 @@ final class ConfigurationTest extends TestCase
         self::assertSame('unknown', $config['tracers']['cache']['version']);
     }
 
+    public function test_otlp_curl_transport_accepts_explicit_timeout() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => [
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [
+                                'type' => 'curl',
+                                'endpoint' => 'http://otel:4318',
+                                'timeout' => 60,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame(60, $config['tracer_provider']['processor']['exporter']['otlp']['transport']['timeout']);
+    }
+
     public function test_otlp_curl_transport_options() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -640,6 +663,55 @@ final class ConfigurationTest extends TestCase
                         'otlp' => [
                             'transport' => [
                                 'type' => 'curl',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_otlp_grpc_transport_accepts_config_without_timeout() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => [
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [
+                                'type' => 'grpc',
+                                'endpoint' => 'otel:4317',
+                                'insecure' => false,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('grpc', $config['tracer_provider']['processor']['exporter']['otlp']['transport']['type']);
+        self::assertSame('otel:4317', $config['tracer_provider']['processor']['exporter']['otlp']['transport']['endpoint']);
+        self::assertFalse($config['tracer_provider']['processor']['exporter']['otlp']['transport']['insecure']);
+    }
+
+    public function test_otlp_grpc_transport_rejects_explicit_timeout() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The "timeout" parameter is not supported when transport.type is "grpc"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => [
+                    'exporter' => [
+                        'type' => 'otlp',
+                        'otlp' => [
+                            'transport' => [
+                                'type' => 'grpc',
+                                'endpoint' => 'otel:4317',
+                                'timeout' => 30,
                             ],
                         ],
                     ],

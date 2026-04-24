@@ -630,9 +630,8 @@ final class FlowTelemetryExtension extends Extension
                 $definition = new Definition(GrpcTransport::class);
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, new Reference($serializerServiceId));
-                $definition->setArgument(2, $timeout);
-                $definition->setArgument(3, $headers);
-                $definition->setArgument(4, $insecure);
+                $definition->setArgument(2, $headers);
+                $definition->setArgument(3, $insecure);
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;
