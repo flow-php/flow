@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\{df, flow_context, schema, xml_schema};
+use function Flow\ETL\DSL\{df, flow_context, ref, schema, xml_schema};
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\Extractor\Signal;
@@ -111,6 +111,71 @@ XML,
         );
     }
 
+    public function test_reading_xml_with_ancestor_namespace_declaration() : void
+    {
+        $rows = df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_feed.xml', 'feed/entry'))
+            ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
+            ->fetch();
+
+        self::assertSame(
+            ['Product 1', 'Product 2'],
+            [$rows[0]->valueOf('title'), $rows[1]->valueOf('title')],
+        );
+
+        $node = type_string()->cast($rows[0]->valueOf('node'));
+
+        self::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
+        self::assertStringContainsString('xmlns:c="http://example.com/custom"', $node);
+    }
+
+    public function test_reading_xml_with_default_namespace_declaration() : void
+    {
+        $node = type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_default.xml', 'feed/entry'))
+            ->fetch()[0]
+            ->valueOf('node'));
+
+        self::assertStringContainsString('xmlns="http://example.com/default"', $node);
+    }
+
+    public function test_reading_xml_with_multi_ancestor_namespace_merge() : void
+    {
+        $node = type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_multi_ancestor.xml', 'feed/group/entry'))
+            ->fetch()[0]
+            ->valueOf('node'));
+
+        self::assertStringContainsString('xmlns:a="http://example.com/a"', $node);
+        self::assertStringContainsString('xmlns:b="http://example.com/b"', $node);
+    }
+
+    public function test_reading_xml_with_namespace_on_captured_root() : void
+    {
+        $rows = df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_on_captured_root.xml', 'feed/entry'))
+            ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
+            ->fetch();
+
+        self::assertSame('Product 1', $rows[0]->valueOf('title'));
+        self::assertStringContainsString(
+            'xmlns:g="http://base.google.com/ns/1.0"',
+            type_string()->cast($rows[0]->valueOf('node')),
+        );
+    }
+
+    public function test_reading_xml_with_prefixed_attribute() : void
+    {
+        $node = type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_prefixed_attribute.xml', 'feed/entry'))
+            ->fetch()[0]
+            ->valueOf('node'));
+
+        self::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
+        self::assertStringContainsString('xml:lang="en"', $node);
+        self::assertStringContainsString('g:priority="high"', $node);
+    }
+
     public function test_reading_xml_with_schema() : void
     {
         $rows = df()
@@ -131,6 +196,50 @@ XML,
             self::assertNotNull($row['node']);
             self::assertNull($row['missing']);
         }
+    }
+
+    public function test_reading_xml_with_shadowed_namespace_declaration() : void
+    {
+        $node = type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_nested.xml', 'feed/group/entry'))
+            ->fetch()[0]
+            ->valueOf('node'));
+
+        self::assertStringContainsString('xmlns:g="http://example.com/override"', $node);
+        self::assertStringContainsString('xmlns:x="http://example.com/extra"', $node);
+        self::assertStringNotContainsString('http://base.google.com/ns/1.0', $node);
+    }
+
+    public function test_reading_xml_with_sibling_namespace_isolation() : void
+    {
+        $rows = df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_sibling_isolation.xml', 'feed/entry'))
+            ->fetch()
+            ->toArray();
+
+        $firstNode = type_string()->cast($rows[0]['node']);
+        $secondNode = type_string()->cast($rows[1]['node']);
+
+        self::assertStringContainsString('xmlns:g="http://example.com/first"', $firstNode);
+        self::assertStringNotContainsString('xmlns:g', $secondNode);
+        self::assertStringNotContainsString('http://example.com/first', $secondNode);
+    }
+
+    public function test_reading_xml_without_namespaces_is_unchanged() : void
+    {
+        self::assertXmlStringEqualsXmlString(
+            <<<'XML'
+<item item_attribute_01="1">
+  <id id_attribute_01="1">1</id>
+</item>
+XML,
+            type_string()->cast(
+                df()
+                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+                    ->fetch()[0]
+                    ->valueOf('node')
+            )
+        );
     }
 
     public function test_signal_stop() : void

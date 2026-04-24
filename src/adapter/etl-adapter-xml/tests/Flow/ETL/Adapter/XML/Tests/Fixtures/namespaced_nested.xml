@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:g="http://base.google.com/ns/1.0">
+    <group xmlns:g="http://example.com/override" xmlns:x="http://example.com/extra">
+        <entry>
+            <g:id>1</g:id>
+            <x:note>hello</x:note>
+        </entry>
+    </group>
+</feed>

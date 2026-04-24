@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:g="http://base.google.com/ns/1.0" xmlns:c="http://example.com/custom">
+    <entry>
+        <g:id>1</g:id>
+        <g:title>Product 1</g:title>
+        <c:tag>alpha</c:tag>
+    </entry>
+    <entry>
+        <g:id>2</g:id>
+        <g:title>Product 2</g:title>
+        <c:tag>beta</c:tag>
+    </entry>
+</feed>

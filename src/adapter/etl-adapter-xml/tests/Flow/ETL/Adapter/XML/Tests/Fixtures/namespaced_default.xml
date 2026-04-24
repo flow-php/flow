@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://example.com/default">
+    <entry>
+        <title>Product 1</title>
+    </entry>
+</feed>
