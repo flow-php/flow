@@ -14,6 +14,8 @@ final class Options
 {
     private readonly BlockFactory $blockFactory;
 
+    private bool $fileFastPath = true;
+
     private int $partSize = 1024 * 1024 * 5;
 
     private readonly Path $tmpDir;
@@ -27,6 +29,11 @@ final class Options
     public function blockFactory() : BlockFactory
     {
         return $this->blockFactory;
+    }
+
+    public function fileFastPath() : bool
+    {
+        return $this->fileFastPath;
     }
 
     public function partSize() : int
@@ -46,6 +53,19 @@ final class Options
         }
 
         $this->partSize = $bytes;
+
+        return $this;
+    }
+
+    /**
+     * When enabled (default), list() on a single-file path will first attempt a HEAD on the object.
+     * If the object exists, list() yields just that single FileStatus and never issues listObjectsV2.
+     * This avoids the s3:ListBucket permission requirement and an extra round-trip when reading single files.
+     * Disable if your workloads typically pass folder/prefix paths to list(), to skip the (failing) HEAD.
+     */
+    public function withFileFastPath(bool $enabled = true) : self
+    {
+        $this->fileFastPath = $enabled;
 
         return $this;
     }

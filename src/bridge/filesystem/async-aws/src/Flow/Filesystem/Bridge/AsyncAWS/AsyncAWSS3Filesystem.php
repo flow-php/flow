@@ -47,6 +47,34 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
+        if (!$path->isPattern()
+            && $this->options->fileFastPath()
+            && $path->extension() !== false
+            && !\str_ends_with($path->path(), DIRECTORY_SEPARATOR)) {
+            try {
+                $headObject = $this->s3Client->headObject([
+                    'Bucket' => $this->bucket,
+                    'Key' => \ltrim($path->path(), DIRECTORY_SEPARATOR),
+                ]);
+                $headObject->resolve();
+
+                $fileStatus = new FileStatus(
+                    $path,
+                    true,
+                    $headObject->getContentLength(),
+                    $headObject->getLastModified(),
+                );
+
+                if ($pathFilter->accept($fileStatus)) {
+                    yield $fileStatus;
+                }
+
+                return;
+            } catch (NoSuchKeyException) {
+                // Not a single object - fall through to listing.
+            }
+        }
+
         if ($path->isPattern()) {
             $prefix = \ltrim($path->staticPart()->path(), DIRECTORY_SEPARATOR);
         } else {
