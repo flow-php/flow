@@ -451,6 +451,19 @@ TXT
         self::assertNull($fs->status(path(__DIR__ . '/var/nested/orders/orders_01.csv')));
     }
 
+    public function test_removing_pattern_with_redundant_slashes() : void
+    {
+        $fs = native_local_filesystem();
+
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(path(__DIR__ . '/var/redundant_slash/file.txt'))->fromResource($resource);
+
+        $fs->rm(path(__DIR__ . '/var/redundant_slash//*.txt'));
+
+        self::assertNull($fs->status(path(__DIR__ . '/var/redundant_slash/file.txt')));
+    }
+
     public function test_removing_recursive_pattern_with_nested_directories() : void
     {
         $fs = native_local_filesystem();

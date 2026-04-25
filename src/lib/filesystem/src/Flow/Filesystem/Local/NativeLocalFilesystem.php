@@ -195,22 +195,28 @@ final readonly class NativeLocalFilesystem implements Filesystem
      */
     private function matchChildFirst(string $glob) : \Iterator
     {
+        $glob = self::canonicalizePath($glob);
         $basePath = Glob::getBasePath($glob);
 
         if (!\is_dir($basePath)) {
             return new \EmptyIterator();
         }
 
+        $recursive = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(
+                $basePath,
+                \RecursiveDirectoryIterator::CURRENT_AS_PATHNAME | \RecursiveDirectoryIterator::SKIP_DOTS
+            ),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
         return new GlobFilterIterator(
             $glob,
-            new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator(
-                    $basePath,
-                    \RecursiveDirectoryIterator::CURRENT_AS_PATHNAME
-                    | \RecursiveDirectoryIterator::SKIP_DOTS
-                ),
-                \RecursiveIteratorIterator::CHILD_FIRST
-            ),
+            (static function () use ($recursive) {
+                foreach ($recursive as $path) {
+                    yield self::canonicalizePath(type_string()->assert($path));
+                }
+            })(),
             GlobFilterIterator::FILTER_VALUE
         );
     }
@@ -248,13 +254,21 @@ final readonly class NativeLocalFilesystem implements Filesystem
         \rmdir($dirPath);
     }
 
+    private static function canonicalizePath(string $path) : string
+    {
+        return type_string()->cast(\preg_replace('#/+#', '/', \str_replace('\\', '/', $path)));
+    }
+
     private static function statFor(Path $path, string $absolutePath) : FileStatus
     {
         $isFile = \is_file($absolutePath);
-        $size = $isFile ? (\filesize($absolutePath) ?: null) : null;
         $mtime = \filemtime($absolutePath);
-        $lastModifiedAt = $mtime !== false ? new \DateTimeImmutable('@' . $mtime) : null;
 
-        return new FileStatus($path, $isFile, $size, $lastModifiedAt);
+        return new FileStatus(
+            $path,
+            $isFile,
+            $isFile ? (\filesize($absolutePath) ?: null) : null,
+            $mtime !== false ? new \DateTimeImmutable('@' . $mtime) : null
+        );
     }
 }
