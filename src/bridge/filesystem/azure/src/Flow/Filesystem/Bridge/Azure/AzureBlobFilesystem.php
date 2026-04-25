@@ -47,6 +47,28 @@ final readonly class AzureBlobFilesystem implements Filesystem
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
+        if (!$path->isPattern()
+            && $this->options->fileFastPath()
+            && $path->extension() !== false
+            && !\str_ends_with($path->path(), DIRECTORY_SEPARATOR)) {
+            $blobProperties = $this->blobService->getBlobProperties(\ltrim($path->path(), DIRECTORY_SEPARATOR));
+
+            if ($blobProperties !== null) {
+                $fileStatus = new FileStatus(
+                    $path,
+                    true,
+                    $blobProperties->size(),
+                    $blobProperties->lastModifiedAt(),
+                );
+
+                if ($pathFilter->accept($fileStatus)) {
+                    yield $fileStatus;
+                }
+
+                return;
+            }
+        }
+
         if ($path->isPattern()) {
             $prefix = \ltrim($path->staticPart()->path(), DIRECTORY_SEPARATOR);
         } else {

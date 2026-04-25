@@ -15,6 +15,8 @@ final class Options
 
     private int $blockSize = 1024 * 1024 * 4;
 
+    private bool $fileFastPath = true;
+
     /**
      * @var null|array<OptionInclude>
      */
@@ -40,6 +42,11 @@ final class Options
     public function blockSize() : int
     {
         return $this->blockSize;
+    }
+
+    public function fileFastPath() : bool
+    {
+        return $this->fileFastPath;
     }
 
     public function listBlobOptions() : ListBlobOptions
@@ -76,6 +83,19 @@ final class Options
     public function withBlockSize(int $blockSize) : self
     {
         $this->blockSize = $blockSize;
+
+        return $this;
+    }
+
+    /**
+     * When enabled (default), list() on a single-file path will first attempt getBlobProperties on the blob.
+     * If it exists, list() yields just that single FileStatus and never issues listBlobs.
+     * This avoids the container-list permission requirement and an extra round-trip when reading single files.
+     * Disable if your workloads typically pass folder/prefix paths to list(), to skip the (failing) properties call.
+     */
+    public function withFileFastPath(bool $enabled = true) : self
+    {
+        $this->fileFastPath = $enabled;
 
         return $this;
     }
