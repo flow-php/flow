@@ -451,6 +451,29 @@ TXT
         self::assertNull($fs->status(path(__DIR__ . '/var/nested/orders/orders_01.csv')));
     }
 
+    public function test_removing_recursive_pattern_with_nested_directories() : void
+    {
+        $fs = native_local_filesystem();
+
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource1);
+        $fs->writeTo(path(__DIR__ . '/var/recursive_rm/dir_a/file1.txt'))->fromResource($resource1);
+
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource2);
+        $fs->writeTo(path(__DIR__ . '/var/recursive_rm/dir_a/nested/file2.txt'))->fromResource($resource2);
+
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource3);
+        $fs->writeTo(path(__DIR__ . '/var/recursive_rm/dir_b/file3.txt'))->fromResource($resource3);
+
+        $fs->rm(path(__DIR__ . '/var/recursive_rm/**/*'));
+
+        self::assertNull($fs->status(path(__DIR__ . '/var/recursive_rm/dir_a/file1.txt')));
+        self::assertNull($fs->status(path(__DIR__ . '/var/recursive_rm/dir_a/nested/file2.txt')));
+        self::assertNull($fs->status(path(__DIR__ . '/var/recursive_rm/dir_b/file3.txt')));
+    }
+
     public function test_rm_rejects_mismatched_scheme() : void
     {
         $this->expectException(InvalidSchemeException::class);
