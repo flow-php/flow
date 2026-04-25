@@ -10,7 +10,8 @@ use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, Pat
 use Flow\Filesystem\Exception\{InvalidArgumentException, InvalidSchemeException, RuntimeException};
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream, NativeLocalSourceStream};
-use Webmozart\Glob\Iterator\GlobIterator;
+use Webmozart\Glob\Glob;
+use Webmozart\Glob\Iterator\{GlobFilterIterator, GlobIterator};
 
 /**
  * This implementation is based on the native PHP filesystem functions documented here: https://www.php.net/manual/en/book.filesystem.php
@@ -129,7 +130,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         $deletedCount = 0;
 
-        foreach (new GlobIterator($path->path()) as $filePath) {
+        foreach ($this->matchChildFirst($path->path()) as $filePath) {
             $filePath = type_string()->assert($filePath);
 
             if (\is_dir($filePath)) {
@@ -188,6 +189,38 @@ final readonly class NativeLocalFilesystem implements Filesystem
         return NativeLocalDestinationStream::openBlank($path);
     }
 
+    /**
+     * Lazy iterator over glob matches in CHILD_FIRST order so callers can safely delete each match
+     * without confusing webmozart/glob's internal RecursiveIteratorIterator (which descends with SELF_FIRST).
+     */
+    private function matchChildFirst(string $glob) : \Iterator
+    {
+        $glob = self::canonicalizePath($glob);
+        $basePath = Glob::getBasePath($glob);
+
+        if (!\is_dir($basePath)) {
+            return new \EmptyIterator();
+        }
+
+        $recursive = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(
+                $basePath,
+                \RecursiveDirectoryIterator::CURRENT_AS_PATHNAME | \RecursiveDirectoryIterator::SKIP_DOTS
+            ),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        return new GlobFilterIterator(
+            $glob,
+            (static function () use ($recursive) {
+                foreach ($recursive as $path) {
+                    yield self::canonicalizePath(type_string()->assert($path));
+                }
+            })(),
+            GlobFilterIterator::FILTER_VALUE
+        );
+    }
+
     private function rmdir(string $dirPath) : void
     {
         if (!\is_dir($dirPath)) {
@@ -221,13 +254,21 @@ final readonly class NativeLocalFilesystem implements Filesystem
         \rmdir($dirPath);
     }
 
+    private static function canonicalizePath(string $path) : string
+    {
+        return type_string()->cast(\preg_replace('#/+#', '/', \str_replace('\\', '/', $path)));
+    }
+
     private static function statFor(Path $path, string $absolutePath) : FileStatus
     {
         $isFile = \is_file($absolutePath);
-        $size = $isFile ? (\filesize($absolutePath) ?: null) : null;
         $mtime = \filemtime($absolutePath);
-        $lastModifiedAt = $mtime !== false ? new \DateTimeImmutable('@' . $mtime) : null;
 
-        return new FileStatus($path, $isFile, $size, $lastModifiedAt);
+        return new FileStatus(
+            $path,
+            $isFile,
+            $isFile ? (\filesize($absolutePath) ?: null) : null,
+            $mtime !== false ? new \DateTimeImmutable('@' . $mtime) : null
+        );
     }
 }
