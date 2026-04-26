@@ -1,9 +1,10 @@
-## [Unreleased] - 2026-04-25
+## [Unreleased] - 2026-04-26
 
 ### Added
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: support for env vars** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [43b399](https://github.com/flow-php/flow/commit/43b3991dfa45de0c18b5e12d7067216ec5f2a3ee) - **chore: update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2331](https://github.com/flow-php/flow/pull/2331) - **Avoid listing the remote storages when direct file path is used** - [@norberttech](https://github.com/norberttech)
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: allow to configure transport** - [@norberttech](https://github.com/norberttech)
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: unify parameter names** - [@norberttech](https://github.com/norberttech)
