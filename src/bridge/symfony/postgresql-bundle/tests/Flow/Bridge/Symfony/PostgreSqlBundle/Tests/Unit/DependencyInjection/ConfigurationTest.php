@@ -341,6 +341,103 @@ final class ConfigurationTest extends TestCase
         self::assertSame('postgresql://user:pass@localhost:5432/db2', $config['connections']['analytics']['dsn']);
     }
 
+    public function test_session_default_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]]);
+
+        self::assertFalse($config['session']['enabled']);
+    }
+
+    public function test_session_defaults_when_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+            ],
+        ]]);
+
+        $session = $config['session'];
+        self::assertTrue($session['enabled']);
+        self::assertNull($session['connection']);
+        self::assertSame('sessions', $session['table_name']);
+        self::assertSame('public', $session['schema']);
+        self::assertSame('sess_id', $session['id_col']);
+        self::assertSame('sess_data', $session['data_col']);
+        self::assertSame('sess_lifetime', $session['lifetime_col']);
+        self::assertSame('sess_time', $session['time_col']);
+        self::assertSame('transactional', $session['lock_mode']);
+        self::assertNull($session['ttl']);
+    }
+
+    public function test_session_lock_mode_rejects_invalid_value() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'lock_mode' => 'pessimistic',
+            ],
+        ]]);
+    }
+
+    public function test_session_overrides() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'connection' => 'default',
+                'table_name' => 'app_sessions',
+                'schema' => 'sess',
+                'id_col' => 'sid',
+                'data_col' => 'sdata',
+                'lifetime_col' => 'sttl',
+                'time_col' => 'sts',
+                'lock_mode' => 'advisory',
+                'ttl' => 7200,
+            ],
+        ]]);
+
+        $session = $config['session'];
+        self::assertSame('default', $session['connection']);
+        self::assertSame('app_sessions', $session['table_name']);
+        self::assertSame('sess', $session['schema']);
+        self::assertSame('sid', $session['id_col']);
+        self::assertSame('sdata', $session['data_col']);
+        self::assertSame('sttl', $session['lifetime_col']);
+        self::assertSame('sts', $session['time_col']);
+        self::assertSame('advisory', $session['lock_mode']);
+        self::assertSame(7200, $session['ttl']);
+    }
+
+    public function test_session_ttl_rejects_negative() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'ttl' => -1,
+            ],
+        ]]);
+    }
+
     public function test_single_connection_with_defaults() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[

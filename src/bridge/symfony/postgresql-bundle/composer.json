@@ -24,6 +24,7 @@
         "flow-php/phpunit-postgresql-bridge": "self.version",
         "flow-php/symfony-postgresql-cache-bridge": "self.version",
         "flow-php/symfony-postgresql-messenger-bridge": "self.version",
+        "flow-php/symfony-postgresql-session-bridge": "self.version",
         "symfony/cache": "^6.4 || ^7.4 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0",
         "symfony/messenger": "^6.4 || ^7.4 || ^8.0"
@@ -31,7 +32,8 @@
     "suggest": {
         "flow-php/phpunit-postgresql-bridge": "For PHPUnit PostgreSQL transaction rollback support in tests",
         "flow-php/symfony-postgresql-cache-bridge": "For Symfony Cache PostgreSQL adapter support",
-        "flow-php/symfony-postgresql-messenger-bridge": "For Symfony Messenger PostgreSQL transport support"
+        "flow-php/symfony-postgresql-messenger-bridge": "For Symfony Messenger PostgreSQL transport support",
+        "flow-php/symfony-postgresql-session-bridge": "For Symfony Session PostgreSQL handler support"
     },
     "config": {
         "optimize-autoloader": true,

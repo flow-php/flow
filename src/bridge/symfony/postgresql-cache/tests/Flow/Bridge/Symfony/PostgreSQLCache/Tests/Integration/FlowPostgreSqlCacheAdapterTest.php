@@ -53,14 +53,14 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 
         $expired = $adapter->getItem('will_expire');
         $expired->set('gone');
-        $expired->expiresAfter(1);
+        $expired->expiresAfter(60);
         $adapter->save($expired);
 
         $alive = $adapter->getItem('still_here');
         $alive->set('alive');
         $adapter->save($alive);
 
-        \sleep(2);
+        $this->cacheContext()->expireAllExpirableCacheItems();
 
         self::assertTrue($adapter->prune());
 

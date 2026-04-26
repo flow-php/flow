@@ -38,4 +38,5 @@ composer require flow-php/symfony-postgresql-bundle:~--FLOW_PHP_VERSION--
 
 - [flow-php/symfony-postgresql-messenger-bridge](/documentation/installation/packages/symfony-postgresql-messenger-bridge.md) — for Symfony Messenger PostgreSQL transport support (replaces `symfony/doctrine-messenger`)
 - [flow-php/symfony-postgresql-cache-bridge](/documentation/installation/packages/symfony-postgresql-cache-bridge.md) — for Symfony Cache PostgreSQL adapter support (replaces `symfony/doctrine-dbal-adapter`)
+- [flow-php/symfony-postgresql-session-bridge](/documentation/installation/packages/symfony-postgresql-session-bridge.md) — for Symfony Session PostgreSQL handler support (replaces `PdoSessionHandler`)
 - [flow-php/symfony-telemetry-bundle](/documentation/installation/packages/symfony-telemetry-bundle.md) — for telemetry integration (distributed tracing, metrics, logging)

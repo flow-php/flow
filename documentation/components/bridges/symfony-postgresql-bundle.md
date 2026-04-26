@@ -461,6 +461,100 @@ the same key is fetched again or `cache:pool:prune` runs.
 For full documentation, see
 the [Symfony PostgreSQL Cache Bridge](/documentation/components/bridges/symfony-postgresql-cache-bridge.md).
 
+## Symfony Session Integration
+
+The bundle integrates
+with [flow-php/symfony-postgresql-session-bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md)
+to provide a Symfony session handler backed by Flow's native PostgreSQL client — no PDO or Doctrine DBAL required. The
+table layout is byte-compatible with `PdoSessionHandler`, so existing session rows can be reused as-is.
+
+### Setup
+
+1. Install the session bridge:
+
+```bash
+composer require flow-php/symfony-postgresql-session-bridge:~--FLOW_PHP_VERSION--
+```
+
+2. Enable the session handler:
+
+```yaml
+flow_postgresql:
+  connections:
+    default:
+      dsn: '%env(DATABASE_URL)%'
+
+  session:
+    enabled: true
+    connection: default            # optional; defaults to the first connection
+    table_name: sessions           # default
+    schema: public                 # default
+    lock_mode: transactional       # one of: none | advisory | transactional
+    ttl: 86400                     # optional; falls back to session.gc_maxlifetime
+```
+
+Enabling the section registers three services:
+
+- `flow.postgresql.session.handler` — the `FlowPostgreSqlSessionHandler` (public, also aliased to
+  `\SessionHandlerInterface`).
+- `flow.postgresql.session.catalog_provider` — tagged `flow.postgresql.catalog_provider`, so the `sessions` table is
+  included in `flow:migrations:diff`.
+- `flow.postgresql.session.purge_command` — see [Purging Sessions](#purging-sessions).
+
+3. Wire the handler into Symfony's session framework:
+
+```yaml
+# config/packages/framework.yaml
+framework:
+  session:
+    handler_id: flow.postgresql.session.handler
+    cookie_secure: auto
+    cookie_samesite: lax
+```
+
+4. Generate and run the migration to create the sessions table:
+
+```bash
+php bin/console flow:migrations:diff
+php bin/console flow:migrations:migrate
+```
+
+### Configuration Options
+
+| Option         | Default                       | Description                                                                          |
+|----------------|-------------------------------|--------------------------------------------------------------------------------------|
+| `enabled`      | `false`                       | Master switch for the session integration                                            |
+| `connection`   | first connection              | `flow_postgresql.connections` key the handler uses                                   |
+| `table_name`   | `sessions`                    | Table storing sessions                                                               |
+| `schema`       | `public`                      | Schema owning the table                                                              |
+| `id_col`       | `sess_id`                     | Column override                                                                      |
+| `data_col`     | `sess_data`                   | Column override                                                                      |
+| `lifetime_col` | `sess_lifetime`               | Column override                                                                      |
+| `time_col`     | `sess_time`                   | Column override                                                                      |
+| `lock_mode`    | `transactional`               | One of `none`, `advisory`, `transactional`. See bridge docs for the trade-offs       |
+| `ttl`          | `null`                        | Session lifetime in seconds; `null` falls back to ini `session.gc_maxlifetime`       |
+
+### Purging Sessions
+
+PHP's normal probabilistic GC (`session.gc_probability`) already triggers expired-row cleanup at request close, so most
+applications don't need extra wiring. For deterministic cleanup on a cron, the bundle exposes:
+
+```bash
+# Delete only sessions whose sess_lifetime is in the past (default behavior)
+php bin/console flow:postgresql:session:purge
+
+# Or explicitly:
+php bin/console flow:postgresql:session:purge --expired
+
+# Wipe every session (logs everyone out — destructive)
+php bin/console flow:postgresql:session:purge --all
+```
+
+`--expired` and `--all` are mutually exclusive; passing both returns a non-zero exit code.
+
+For full documentation, see
+the [Symfony PostgreSQL Session Bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md).
+
 ## Test Transaction Rollback
 
 The bundle integrates
