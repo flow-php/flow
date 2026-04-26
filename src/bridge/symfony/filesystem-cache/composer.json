@@ -1,0 +1,35 @@
+{
+    "name": "flow-php/symfony-filesystem-cache-bridge",
+    "type": "library",
+    "description": "PHP ETL - Symfony Filesystem Cache bridge",
+    "keywords": [
+        "symfony",
+        "filesystem",
+        "cache",
+        "bridge"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/filesystem": "self.version",
+        "symfony/cache": "^6.4 || ^7.4 || ^8.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

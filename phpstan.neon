@@ -33,8 +33,11 @@ parameters:
         - src/bridge/symfony/http-foundation/src
         - src/bridge/symfony/http-foundation-telemetry/src
         - src/bridge/symfony/filesystem-bundle/src
+        - src/bridge/symfony/filesystem-cache/src
         - src/bridge/symfony/postgresql-bundle/src
+        - src/bridge/symfony/postgresql-cache/src
         - src/bridge/symfony/postgresql-messenger/src
+        - src/bridge/symfony/postgresql-session/src
         - src/bridge/symfony/telemetry-bundle/src
         - src/bridge/telemetry/otlp/src
         - src/lib/array-dot/src
@@ -79,8 +82,11 @@ parameters:
         - src/bridge/symfony/http-foundation/tests
         - src/bridge/symfony/http-foundation-telemetry/tests
         - src/bridge/symfony/filesystem-bundle/tests
+        - src/bridge/symfony/filesystem-cache/tests
         - src/bridge/symfony/postgresql-bundle/tests
+        - src/bridge/symfony/postgresql-cache/tests
         - src/bridge/symfony/postgresql-messenger/tests
+        - src/bridge/symfony/postgresql-session/tests
         - src/bridge/symfony/telemetry-bundle/tests
         - src/bridge/telemetry/otlp/tests
         - src/lib/telemetry/tests
