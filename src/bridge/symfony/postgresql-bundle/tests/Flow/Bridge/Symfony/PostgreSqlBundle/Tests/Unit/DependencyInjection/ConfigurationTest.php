@@ -11,6 +11,95 @@ use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
 {
+    public function test_cache_pool_connection_can_be_null() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => [],
+                ],
+            ],
+        ]]);
+
+        self::assertNull($config['cache']['pools']['app']['connection']);
+    }
+
+    public function test_cache_pools_custom_columns_and_namespace() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'sessions' => [
+                        'connection' => 'default',
+                        'table_name' => 'app_cache',
+                        'schema' => 'caching',
+                        'id_col' => 'k',
+                        'data_col' => 'v',
+                        'lifetime_col' => 'ttl',
+                        'time_col' => 'ts',
+                        'namespace' => 'sess.',
+                        'default_lifetime' => 3600,
+                        'marshaller_service_id' => 'app.marshaller',
+                    ],
+                ],
+            ],
+        ]]);
+
+        $pool = $config['cache']['pools']['sessions'];
+        self::assertSame('default', $pool['connection']);
+        self::assertSame('app_cache', $pool['table_name']);
+        self::assertSame('caching', $pool['schema']);
+        self::assertSame('k', $pool['id_col']);
+        self::assertSame('v', $pool['data_col']);
+        self::assertSame('ttl', $pool['lifetime_col']);
+        self::assertSame('ts', $pool['time_col']);
+        self::assertSame('sess.', $pool['namespace']);
+        self::assertSame(3600, $pool['default_lifetime']);
+        self::assertSame('app.marshaller', $pool['marshaller_service_id']);
+    }
+
+    public function test_cache_pools_default_table_and_schema() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => [],
+                ],
+            ],
+        ]]);
+
+        $pool = $config['cache']['pools']['app'];
+        self::assertSame('cache_items', $pool['table_name']);
+        self::assertSame('public', $pool['schema']);
+        self::assertSame('item_id', $pool['id_col']);
+        self::assertSame('item_data', $pool['data_col']);
+        self::assertSame('item_lifetime', $pool['lifetime_col']);
+        self::assertSame('item_time', $pool['time_col']);
+        self::assertSame('', $pool['namespace']);
+        self::assertSame(0, $pool['default_lifetime']);
+        self::assertNull($pool['marshaller_service_id']);
+    }
+
+    public function test_cache_section_can_be_omitted() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]]);
+
+        self::assertSame([], $config['cache']['pools']);
+    }
+
     public function test_catalog_providers_at_top_level_with_inline_catalog() : void
     {
         $catalogData = [

@@ -11,6 +11,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
+use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -47,7 +48,7 @@ final class FlowPostgreSqlExtension extends Extension
     {
         $configuration = new Configuration();
 
-        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
+        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string}>}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $isFirst = true;
@@ -82,6 +83,76 @@ final class FlowPostgreSqlExtension extends Extension
         }
 
         $this->registerMessenger($config['messenger'], $connectionNames, $container);
+        $this->registerCache($config['cache'] ?? [], $connectionNames, $container);
+    }
+
+    /**
+     * @param array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string}>} $cacheConfig
+     * @param list<string> $connectionNames
+     */
+    private function registerCache(array $cacheConfig, array $connectionNames, ContainerBuilder $container) : void
+    {
+        if (!\class_exists(FlowPostgreSqlCacheAdapter::class)) {
+            return;
+        }
+
+        $pools = $cacheConfig['pools'] ?? [];
+
+        if ($pools === []) {
+            return;
+        }
+
+        foreach ($pools as $name => $poolConfig) {
+            $this->registerCachePool((string) $name, $poolConfig, $connectionNames, $container);
+        }
+    }
+
+    /**
+     * @param array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string} $poolConfig
+     * @param list<string> $connectionNames
+     */
+    private function registerCachePool(string $name, array $poolConfig, array $connectionNames, ContainerBuilder $container) : void
+    {
+        $connectionName = $poolConfig['connection'] ?? $connectionNames[0];
+
+        if (!\in_array($connectionName, $connectionNames, true)) {
+            throw new \LogicException(\sprintf(
+                'Cache pool "%s" references unknown connection "%s". Declared connections: %s',
+                $name,
+                $connectionName,
+                \implode(', ', $connectionNames),
+            ));
+        }
+
+        $catalogDef = new Definition(CacheCatalogProvider::class, [
+            $poolConfig['table_name'],
+            $poolConfig['schema'],
+            $poolConfig['id_col'],
+            $poolConfig['data_col'],
+            $poolConfig['lifetime_col'],
+            $poolConfig['time_col'],
+        ]);
+        $catalogDef->addTag('flow.postgresql.catalog_provider');
+        $container->setDefinition("flow.postgresql.cache.pool.{$name}.catalog_provider", $catalogDef);
+
+        $adapterDef = new Definition(FlowPostgreSqlCacheAdapter::class, [
+            new Reference("flow.postgresql.{$connectionName}.client"),
+            $poolConfig['namespace'],
+            $poolConfig['default_lifetime'],
+            [
+                'db_table' => $poolConfig['table_name'],
+                'db_schema' => $poolConfig['schema'],
+                'db_id_col' => $poolConfig['id_col'],
+                'db_data_col' => $poolConfig['data_col'],
+                'db_lifetime_col' => $poolConfig['lifetime_col'],
+                'db_time_col' => $poolConfig['time_col'],
+            ],
+            $poolConfig['marshaller_service_id'] !== null
+                ? new Reference($poolConfig['marshaller_service_id'])
+                : null,
+        ]);
+        $adapterDef->setPublic(true);
+        $container->setDefinition("flow.postgresql.cache.pool.{$name}", $adapterDef);
     }
 
     /**

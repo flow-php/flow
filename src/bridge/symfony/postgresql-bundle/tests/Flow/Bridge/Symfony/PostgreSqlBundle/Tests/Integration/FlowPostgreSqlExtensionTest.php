@@ -7,7 +7,9 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\{CreateDatabaseCommand, DropDatabaseCommand, GenerateCommand, RunSqlCommand, UpToDateCommand};
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\FlowPostgreSqlExtension;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double\CacheSpyClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\{AttributeTestCatalogProvider, TestKernel, VoidTelemetryFactory};
+use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\PostgreSql\Client\{Client, Context};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryOptions, TraceableClient};
@@ -56,6 +58,228 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
 
         $catalog = $this->getContainer()->get('flow.postgresql.catalog_provider')->get();
         self::assertTrue($catalog->get('public')->hasTable('attribute_test'));
+    }
+
+    public function test_cache_catalog_provider_is_merged_into_chain_when_migrations_enabled() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'app' => [
+                                'table_name' => 'cache_app',
+                            ],
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                    ],
+                ]);
+            },
+        ]);
+
+        /** @var ChainCatalogProvider $chain */
+        $chain = $this->getContainer()->get('flow.postgresql.catalog_provider');
+        self::assertTrue($chain->get()->get('public')->hasTable('cache_app'));
+    }
+
+    public function test_cache_pool_registers_adapter_service() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'app' => [],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertTrue($this->getContainer()->has('flow.postgresql.cache.pool.app'));
+        self::assertInstanceOf(FlowPostgreSqlCacheAdapter::class, $this->getContainer()->get('flow.postgresql.cache.pool.app'));
+    }
+
+    public function test_cache_pool_registers_catalog_provider_with_tag() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'sessions' => [
+                                'table_name' => 'session_cache',
+                                'schema' => 'sess',
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertTrue($this->getContainer()->has('flow.postgresql.cache.pool.sessions.catalog_provider'));
+
+        /** @var CacheCatalogProvider $provider */
+        $provider = $this->getContainer()->get('flow.postgresql.cache.pool.sessions.catalog_provider');
+        self::assertInstanceOf(CacheCatalogProvider::class, $provider);
+
+        $catalog = $provider->get();
+        self::assertTrue($catalog->has('sess'));
+        self::assertSame('session_cache', $catalog->get('sess')->tables[0]->name);
+    }
+
+    public function test_cache_pool_unknown_connection_throws() : void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('references unknown connection "missing"');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'broken' => [
+                                'connection' => 'missing',
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+    }
+
+    public function test_cache_pool_uses_first_connection_when_connection_omitted() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.primary.client', CacheSpyClient::class)->setPublic(true);
+                    $container->register('flow.postgresql.secondary.client', CacheSpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'primary' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/primary',
+                        ],
+                        'secondary' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/secondary',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'app' => [],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        /** @var FlowPostgreSqlCacheAdapter $adapter */
+        $adapter = $this->getContainer()->get('flow.postgresql.cache.pool.app');
+        $adapter->getItem('probe');
+
+        /** @var CacheSpyClient $primary */
+        $primary = $this->getContainer()->get('flow.postgresql.primary.client');
+        /** @var CacheSpyClient $secondary */
+        $secondary = $this->getContainer()->get('flow.postgresql.secondary.client');
+
+        self::assertNotSame([], $primary->executedQueries);
+        self::assertSame([], $secondary->executedQueries);
+    }
+
+    public function test_cache_pool_uses_named_connection_when_specified() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.primary.client', CacheSpyClient::class)->setPublic(true);
+                    $container->register('flow.postgresql.secondary.client', CacheSpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'primary' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/primary',
+                        ],
+                        'secondary' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/secondary',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'app' => ['connection' => 'secondary'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        /** @var FlowPostgreSqlCacheAdapter $adapter */
+        $adapter = $this->getContainer()->get('flow.postgresql.cache.pool.app');
+        $adapter->getItem('probe');
+
+        /** @var CacheSpyClient $primary */
+        $primary = $this->getContainer()->get('flow.postgresql.primary.client');
+        /** @var CacheSpyClient $secondary */
+        $secondary = $this->getContainer()->get('flow.postgresql.secondary.client');
+
+        self::assertSame([], $primary->executedQueries);
+        self::assertNotSame([], $secondary->executedQueries);
+    }
+
+    public function test_cache_section_omitted_does_not_register_any_pool() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        self::assertFalse($this->getContainer()->has('flow.postgresql.cache.pool.app'));
     }
 
     public function test_catalog_providers_with_inline_catalog() : void
