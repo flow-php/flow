@@ -10,8 +10,8 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 {
     public function test_clear_with_namespace_only_deletes_matching_keys() : void
     {
-        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client, namespace: 'app');
-        $other = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client, namespace: 'other');
+        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters, namespace: 'app');
+        $other = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters, namespace: 'other');
 
         $a = $adapter->getItem('one');
         $a->set('app-one');
@@ -29,7 +29,7 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 
     public function test_delete_removes_value() : void
     {
-        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client);
+        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
         $item = $adapter->getItem('to_delete');
         $item->set('present');
@@ -42,14 +42,14 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 
     public function test_get_returns_miss_for_unknown_key() : void
     {
-        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client);
+        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
         self::assertFalse($adapter->getItem('never_saved')->isHit());
     }
 
     public function test_prune_removes_expired_items() : void
     {
-        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client);
+        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
         $expired = $adapter->getItem('will_expire');
         $expired->set('gone');
@@ -70,7 +70,7 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 
     public function test_save_overwrites_existing_value() : void
     {
-        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client);
+        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
         $first = $adapter->getItem('key');
         $first->set('first');
@@ -85,7 +85,7 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 
     public function test_save_then_get_round_trip() : void
     {
-        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->client);
+        $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
         $item = $adapter->getItem('hello');
         $item->set(['greeting' => 'world', 'count' => 7]);

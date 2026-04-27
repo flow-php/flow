@@ -27,20 +27,30 @@ For Symfony framework integration (config-driven handler registration, automatic
 - **`gc()`** records the request's expiry cutoff and defers the actual `DELETE FROM sessions WHERE sess_lifetime < now()` until `close()` — same contract as `PdoSessionHandler`, so the deletion does not run while the session row is locked.
 - **`purgeExpired()` / `purgeAll()`** are explicit maintenance methods that bypass the request lifecycle.
 
+## Connection Ownership
+
+The handler accepts either `ConnectionParameters` or a `Client`:
+
+- **Pass `ConnectionParameters`** *(recommended default)* — the handler opens (and owns) its own `pg_connect`. The connection is created lazily on first use; `close()` releases it along with the rest of the per-request state. Required for safe `LOCK_TRANSACTIONAL` semantics.
+- **Pass a `Client`** — the handler reuses the supplied connection and never closes it (the caller owns the lifetime). Use this only when you know what you are doing (tight connection budget, explicit need to share state).
+
 ## Usage
 
 ```php
 use Flow\Bridge\Symfony\PostgreSQLSession\{FlowPostgreSqlSessionHandler, SessionCatalogProvider};
 use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection_dsn};
 
-$client = pgsql_client(pgsql_connection_dsn(getenv('DATABASE_URL')));
+$params = pgsql_connection_dsn(getenv('DATABASE_URL'));
 
-// Create the table once (or manage it via your migration tool of choice)
+// Create the table once (or manage it via your migration tool of choice).
+// The setup client below is unrelated to the connection the handler owns.
+$setup = pgsql_client($params);
 foreach ((new SessionCatalogProvider())->get()->get('public')->table('sessions')->toSql() as $sql) {
-    $client->execute($sql);
+    $setup->execute($sql);
 }
+$setup->close();
 
-$handler = new FlowPostgreSqlSessionHandler($client, [
+$handler = new FlowPostgreSqlSessionHandler($params, [
     'lock_mode' => FlowPostgreSqlSessionHandler::LOCK_TRANSACTIONAL,
     'ttl' => 86400,
 ]);
@@ -52,7 +62,7 @@ session_set_save_handler($handler, true);
 
 ```php
 new FlowPostgreSqlSessionHandler(
-    Client $client,
+    ConnectionParameters|Client $connection,
     array $options = [],
 );
 ```

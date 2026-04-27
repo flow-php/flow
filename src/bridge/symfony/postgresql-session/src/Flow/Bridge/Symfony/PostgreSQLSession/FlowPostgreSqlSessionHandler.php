@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLSession;
 
-use function Flow\PostgreSql\DSL\{col, conflict_columns, delete, eq, func, insert, lt, on_conflict_update, param, select, table, truncate_table, typed, update};
+use function Flow\PostgreSql\DSL\{col, conflict_columns, delete, eq, func, insert, lt, on_conflict_update, param, pgsql_client, select, table, truncate_table, typed, update};
 
 use Flow\Bridge\Symfony\PostgreSQLSession\Exception\SessionException;
-use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\{Client, ConnectionParameters};
 use Flow\PostgreSql\Client\Types\ValueType;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler;
 
@@ -18,6 +18,12 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
     public const int LOCK_NONE = 0;
 
     public const int LOCK_TRANSACTIONAL = 2;
+
+    private ?Client $client;
+
+    private readonly \Closure $clientFactory;
+
+    private readonly ?ConnectionParameters $connectionParameters;
 
     private readonly string $dataCol;
 
@@ -55,11 +61,21 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
      *     lock_mode?: int,
      *     ttl?: null|int,
      * } $options
+     * @param ?\Closure(ConnectionParameters): Client $clientFactory Internal — for tests. Defaults to `pgsql_client(...)`.
      */
     public function __construct(
-        private readonly Client $client,
+        ConnectionParameters|Client $connection,
         array $options = [],
+        ?\Closure $clientFactory = null,
     ) {
+        if ($connection instanceof Client) {
+            $this->client = $connection;
+            $this->connectionParameters = null;
+        } else {
+            $this->client = null;
+            $this->connectionParameters = $connection;
+        }
+
         $this->table = $options['db_table'] ?? 'sessions';
         $this->schema = $options['db_schema'] ?? 'public';
         $this->idCol = $options['db_id_col'] ?? 'sess_id';
@@ -67,6 +83,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         $this->lifetimeCol = $options['db_lifetime_col'] ?? 'sess_lifetime';
         $this->timeCol = $options['db_time_col'] ?? 'sess_time';
         $this->ttl = $options['ttl'] ?? null;
+        $this->clientFactory = $clientFactory ?? static fn (ConnectionParameters $params) : Client => pgsql_client($params);
 
         $lockMode = $options['lock_mode'] ?? self::LOCK_TRANSACTIONAL;
 
@@ -82,22 +99,31 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
     public function close() : bool
     {
+        if ($this->client === null && !$this->gcCalled) {
+            return true;
+        }
+
         $this->releaseAdvisoryLocks();
 
         if ($this->transactionOpen) {
-            $this->client->commit();
+            $this->client()->commit();
             $this->transactionOpen = false;
         }
 
         if ($this->gcCalled) {
             $this->gcCalled = false;
 
-            $this->client->execute(
+            $this->client()->execute(
                 delete()
                     ->from(table($this->table, $this->schema))
                     ->where(lt(col($this->lifetimeCol), param(1))),
                 [\time()],
             );
+        }
+
+        if ($this->client !== null && $this->connectionParameters !== null) {
+            $this->client->close();
+            $this->client = null;
         }
 
         return true;
@@ -112,14 +138,14 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
     public function purgeAll() : int
     {
-        $this->client->execute(truncate_table($this->schema . '.' . $this->table));
+        $this->client()->execute(truncate_table($this->schema . '.' . $this->table));
 
         return 0;
     }
 
     public function purgeExpired() : int
     {
-        return $this->client->execute(
+        return $this->client()->execute(
             delete()
                 ->from(table($this->table, $this->schema))
                 ->where(lt(col($this->lifetimeCol), param(1))),
@@ -139,7 +165,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         $now = \time();
         $expiry = $now + $this->resolveTtl();
 
-        $this->client->execute(
+        $this->client()->execute(
             update()
                 ->update(table($this->table, $this->schema))
                 ->set($this->lifetimeCol, param(1))
@@ -156,7 +182,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
     protected function doDestroy(#[\SensitiveParameter] string $sessionId) : bool
     {
-        $this->client->execute(
+        $this->client()->execute(
             delete()
                 ->from(table($this->table, $this->schema))
                 ->where(eq(col($this->idCol), param(1))),
@@ -181,7 +207,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
             $select = $select->forUpdate();
         }
 
-        $row = $this->client->fetch($select, [$sessionId]);
+        $row = $this->client()->fetch($select, [$sessionId]);
 
         if ($row === null) {
             return '';
@@ -221,7 +247,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         $now = \time();
         $expiry = $now + $this->resolveTtl();
 
-        $this->client->execute(
+        $this->client()->execute(
             insert()
                 ->into(table($this->table, $this->schema))
                 ->columns($this->idCol, $this->dataCol, $this->lifetimeCol, $this->timeCol)
@@ -252,7 +278,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
     {
         if ($this->lockMode === self::LOCK_TRANSACTIONAL) {
             if (!$this->transactionOpen) {
-                $this->client->beginTransaction();
+                $this->client()->beginTransaction();
                 $this->transactionOpen = true;
             }
 
@@ -261,7 +287,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
         if ($this->lockMode === self::LOCK_ADVISORY) {
             $key = $this->convertSessionIdToLockKey($sessionId);
-            $this->client->fetch(
+            $this->client()->fetch(
                 select(func('pg_advisory_lock', [param(1)])),
                 [$key],
             );
@@ -269,10 +295,23 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         }
     }
 
+    private function client() : Client
+    {
+        if ($this->client !== null) {
+            return $this->client;
+        }
+
+        if ($this->connectionParameters === null) {
+            throw new \LogicException('FlowPostgreSqlSessionHandler has no client and no connection parameters.');
+        }
+
+        return $this->client = ($this->clientFactory)($this->connectionParameters);
+    }
+
     private function commitTransactionalLock() : void
     {
         if ($this->lockMode === self::LOCK_TRANSACTIONAL && $this->transactionOpen) {
-            $this->client->commit();
+            $this->client()->commit();
             $this->transactionOpen = false;
         }
     }
@@ -305,7 +344,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         }
 
         foreach ($this->lockedSessions as $key) {
-            $this->client->fetch(
+            $this->client()->fetch(
                 select(func('pg_advisory_unlock', [param(1)])),
                 [$key],
             );
@@ -319,7 +358,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         if ($this->lockMode === self::LOCK_ADVISORY && \array_key_exists($sessionId, $this->lockedSessions)) {
             $key = $this->lockedSessions[$sessionId];
             unset($this->lockedSessions[$sessionId]);
-            $this->client->fetch(
+            $this->client()->fetch(
                 select(func('pg_advisory_unlock', [param(1)])),
                 [$key],
             );

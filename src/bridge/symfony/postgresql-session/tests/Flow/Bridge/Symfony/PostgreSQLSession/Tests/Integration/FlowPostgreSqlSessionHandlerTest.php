@@ -10,93 +10,125 @@ final class FlowPostgreSqlSessionHandlerTest extends SessionIntegrationTestCase
 {
     public function test_close_after_gc_purges_expired_rows() : void
     {
-        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->client, ['ttl' => 3600]);
-
-        $handler->write('sid-expire', 'soon');
-        $handler->write('sid-keep', 'forever');
+        $writer = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['ttl' => 3600]);
+        $writer->write('sid-expire', 'soon');
+        $writer->write('sid-keep', 'forever');
+        $writer->close();
         $this->sessionContext()->markSessionExpired('sid-expire');
 
-        $handler->gc(0);
-        $handler->close();
+        $gc = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        $gc->gc(0);
+        $gc->close();
 
-        self::assertSame('', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-expire'));
-        self::assertSame('forever', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-keep'));
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('', $reader->read('sid-expire'));
+        self::assertSame('forever', $reader->read('sid-keep'));
+        $reader->close();
     }
 
     public function test_destroy_removes_row() : void
     {
-        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->client);
+        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
         $handler->open('', 'PHPSESSID');
         $handler->write('sid-destroy', 'data');
+        $handler->close();
 
-        self::assertSame('data', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-destroy'));
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('data', $reader->read('sid-destroy'));
+        $reader->close();
 
-        self::assertTrue($handler->destroy('sid-destroy'));
-        self::assertSame('', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-destroy'));
+        $destroyer = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        $destroyer->open('', 'PHPSESSID');
+        self::assertTrue($destroyer->destroy('sid-destroy'));
+        $destroyer->close();
+
+        $verifier = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('', $verifier->read('sid-destroy'));
+        $verifier->close();
     }
 
     public function test_purge_all_removes_every_row() : void
     {
-        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->client);
-        $handler->write('a', 'one');
-        $handler->write('b', 'two');
+        $writer = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        $writer->write('a', 'one');
+        $writer->write('b', 'two');
+        $writer->close();
 
-        self::assertSame(0, $handler->purgeAll());
+        $purger = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        self::assertSame(0, $purger->purgeAll());
+        $purger->close();
 
-        self::assertSame('', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('a'));
-        self::assertSame('', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('b'));
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('', $reader->read('a'));
+        self::assertSame('', $reader->read('b'));
+        $reader->close();
     }
 
     public function test_purge_expired_returns_count() : void
     {
-        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->client, ['ttl' => 3600]);
-
-        $handler->write('expired-1', 'x');
-        $handler->write('expired-2', 'y');
-        $handler->write('alive', 'z');
+        $writer = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['ttl' => 3600]);
+        $writer->write('expired-1', 'x');
+        $writer->write('expired-2', 'y');
+        $writer->write('alive', 'z');
+        $writer->close();
         $this->sessionContext()->markSessionExpired('expired-1');
         $this->sessionContext()->markSessionExpired('expired-2');
 
-        self::assertSame(2, $handler->purgeExpired());
-        self::assertSame('z', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('alive'));
+        $purger = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        self::assertSame(2, $purger->purgeExpired());
+        $purger->close();
+
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('z', $reader->read('alive'));
+        $reader->close();
     }
 
     public function test_read_returns_empty_when_session_already_expired() : void
     {
-        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->client);
-        $handler->write('sid-stale', 'old-payload');
+        $writer = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        $writer->write('sid-stale', 'old-payload');
+        $writer->close();
         $this->sessionContext()->markSessionExpired('sid-stale');
 
-        self::assertSame('', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-stale'));
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('', $reader->read('sid-stale'));
+        $reader->close();
     }
 
     public function test_update_timestamp_extends_stored_lifetime() : void
     {
-        $shortLived = new FlowPostgreSqlSessionHandler($this->sessionContext()->client, ['ttl' => 1]);
+        $shortLived = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['ttl' => 1]);
         $shortLived->write('sid-touch', 'original');
+        $shortLived->close();
         $beforeLifetime = $this->sessionContext()->fetchSessionLifetime('sid-touch');
 
-        $longLived = new FlowPostgreSqlSessionHandler($this->sessionContext()->client, ['ttl' => 3600]);
+        $longLived = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['ttl' => 3600]);
         $longLived->updateTimestamp('sid-touch', 'unused');
+        $longLived->close();
         $afterLifetime = $this->sessionContext()->fetchSessionLifetime('sid-touch');
 
         self::assertGreaterThan($beforeLifetime + 100, $afterLifetime);
-        self::assertSame('original', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-touch'));
+
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('original', $reader->read('sid-touch'));
+        $reader->close();
     }
 
     public function test_write_then_read_round_trip() : void
     {
-        $handler = new FlowPostgreSqlSessionHandler($this->sessionContext()->client);
+        $writer = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters);
+        self::assertTrue($writer->write('sid-1', 'hello world'));
+        $writer->close();
 
-        self::assertTrue($handler->write('sid-1', 'hello world'));
-
-        self::assertSame('hello world', (new FlowPostgreSqlSessionHandler($this->sessionContext()->client))->read('sid-1'));
+        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->connectionParameters, ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
+        self::assertSame('hello world', $reader->read('sid-1'));
+        $reader->close();
     }
 
     public function test_write_then_read_round_trip_with_advisory_lock() : void
     {
         $writer = new FlowPostgreSqlSessionHandler(
-            $this->sessionContext()->client,
+            $this->sessionContext()->connectionParameters,
             ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_ADVISORY],
         );
 
@@ -104,7 +136,7 @@ final class FlowPostgreSqlSessionHandlerTest extends SessionIntegrationTestCase
         self::assertTrue($writer->close());
 
         $reader = new FlowPostgreSqlSessionHandler(
-            $this->sessionContext()->client,
+            $this->sessionContext()->connectionParameters,
             ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_ADVISORY],
         );
         self::assertSame('advisory-payload', $reader->read('sid-adv'));
@@ -114,14 +146,19 @@ final class FlowPostgreSqlSessionHandlerTest extends SessionIntegrationTestCase
     public function test_write_then_read_round_trip_with_transactional_lock() : void
     {
         $writer = new FlowPostgreSqlSessionHandler(
-            $this->sessionContext()->client,
+            $this->sessionContext()->connectionParameters,
             ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_TRANSACTIONAL],
         );
 
         $writer->read('sid-tx');
         self::assertTrue($writer->write('sid-tx', 'tx-payload'));
+        $writer->close();
 
-        $reader = new FlowPostgreSqlSessionHandler($this->sessionContext()->client);
+        $reader = new FlowPostgreSqlSessionHandler(
+            $this->sessionContext()->connectionParameters,
+            ['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE],
+        );
         self::assertSame('tx-payload', $reader->read('sid-tx'));
+        $reader->close();
     }
 }

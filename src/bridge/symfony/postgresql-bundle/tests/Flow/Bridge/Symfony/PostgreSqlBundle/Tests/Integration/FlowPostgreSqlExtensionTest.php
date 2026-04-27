@@ -7,7 +7,6 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\{CreateDatabaseCommand, DropDatabaseCommand, GenerateCommand, RunSqlCommand, SessionPurgeCommand, UpToDateCommand};
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\FlowPostgreSqlExtension;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
-use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double\CacheSpyClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\{AttributeTestCatalogProvider, TestKernel, VoidTelemetryFactory};
 use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
@@ -157,6 +156,35 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         self::assertSame('session_cache', $catalog->get('sess')->tables[0]->name);
     }
 
+    public function test_cache_pool_share_connection_wires_client_reference() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'cache' => [
+                        'pools' => [
+                            'app' => ['share_connection' => true],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $sharedClient = $this->getContainer()->get('flow.postgresql.default.client');
+        $adapter = $this->getContainer()->get('flow.postgresql.cache.pool.app');
+
+        self::assertSame($sharedClient, $this->symfonyContext()->readPrivateProperty($adapter, 'client'));
+        self::assertNull($this->symfonyContext()->readPrivateProperty($adapter, 'connectionParameters'));
+    }
+
     public function test_cache_pool_unknown_connection_throws() : void
     {
         $this->expectException(\LogicException::class);
@@ -189,10 +217,6 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('flow.postgresql.primary.client', CacheSpyClient::class)->setPublic(true);
-                    $container->register('flow.postgresql.secondary.client', CacheSpyClient::class)->setPublic(true);
-                });
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
                         'primary' => [
@@ -211,27 +235,16 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        /** @var FlowPostgreSqlCacheAdapter $adapter */
+        $expected = $this->getContainer()->get('flow.postgresql.primary.connection_parameters');
         $adapter = $this->getContainer()->get('flow.postgresql.cache.pool.app');
-        $adapter->getItem('probe');
 
-        /** @var CacheSpyClient $primary */
-        $primary = $this->getContainer()->get('flow.postgresql.primary.client');
-        /** @var CacheSpyClient $secondary */
-        $secondary = $this->getContainer()->get('flow.postgresql.secondary.client');
-
-        self::assertNotSame([], $primary->executedQueries);
-        self::assertSame([], $secondary->executedQueries);
+        self::assertSame($expected, $this->symfonyContext()->readPrivateProperty($adapter, 'connectionParameters'));
     }
 
     public function test_cache_pool_uses_named_connection_when_specified() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('flow.postgresql.primary.client', CacheSpyClient::class)->setPublic(true);
-                    $container->register('flow.postgresql.secondary.client', CacheSpyClient::class)->setPublic(true);
-                });
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
                         'primary' => [
@@ -250,17 +263,10 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        /** @var FlowPostgreSqlCacheAdapter $adapter */
+        $expected = $this->getContainer()->get('flow.postgresql.secondary.connection_parameters');
         $adapter = $this->getContainer()->get('flow.postgresql.cache.pool.app');
-        $adapter->getItem('probe');
 
-        /** @var CacheSpyClient $primary */
-        $primary = $this->getContainer()->get('flow.postgresql.primary.client');
-        /** @var CacheSpyClient $secondary */
-        $secondary = $this->getContainer()->get('flow.postgresql.secondary.client');
-
-        self::assertSame([], $primary->executedQueries);
-        self::assertNotSame([], $secondary->executedQueries);
+        self::assertSame($expected, $this->symfonyContext()->readPrivateProperty($adapter, 'connectionParameters'));
     }
 
     public function test_cache_section_omitted_does_not_register_any_pool() : void
@@ -1139,6 +1145,34 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         self::assertSame('tagged_sessions', $catalog->get('sess')->tables[0]->name);
     }
 
+    public function test_session_share_connection_wires_client_reference() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'session' => [
+                        'enabled' => true,
+                        'share_connection' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $sharedClient = $this->getContainer()->get('flow.postgresql.default.client');
+        $handler = $this->getContainer()->get('flow.postgresql.session.handler');
+
+        self::assertSame($sharedClient, $this->symfonyContext()->readPrivateProperty($handler, 'client'));
+        self::assertNull($this->symfonyContext()->readPrivateProperty($handler, 'connectionParameters'));
+    }
+
     public function test_session_unknown_connection_throws() : void
     {
         $this->expectException(\LogicException::class);
@@ -1168,10 +1202,6 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('flow.postgresql.primary.client', CacheSpyClient::class)->setPublic(true);
-                    $container->register('flow.postgresql.secondary.client', CacheSpyClient::class)->setPublic(true);
-                });
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
                         'primary' => [
@@ -1188,27 +1218,16 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        /** @var FlowPostgreSqlSessionHandler $handler */
+        $expected = $this->getContainer()->get('flow.postgresql.primary.connection_parameters');
         $handler = $this->getContainer()->get('flow.postgresql.session.handler');
-        $handler->purgeExpired();
 
-        /** @var CacheSpyClient $primary */
-        $primary = $this->getContainer()->get('flow.postgresql.primary.client');
-        /** @var CacheSpyClient $secondary */
-        $secondary = $this->getContainer()->get('flow.postgresql.secondary.client');
-
-        self::assertNotSame([], $primary->executedQueries);
-        self::assertSame([], $secondary->executedQueries);
+        self::assertSame($expected, $this->symfonyContext()->readPrivateProperty($handler, 'connectionParameters'));
     }
 
     public function test_session_uses_named_connection_when_specified() : void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('flow.postgresql.primary.client', CacheSpyClient::class)->setPublic(true);
-                    $container->register('flow.postgresql.secondary.client', CacheSpyClient::class)->setPublic(true);
-                });
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
                         'primary' => [
@@ -1226,17 +1245,10 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        /** @var FlowPostgreSqlSessionHandler $handler */
+        $expected = $this->getContainer()->get('flow.postgresql.secondary.connection_parameters');
         $handler = $this->getContainer()->get('flow.postgresql.session.handler');
-        $handler->purgeExpired();
 
-        /** @var CacheSpyClient $primary */
-        $primary = $this->getContainer()->get('flow.postgresql.primary.client');
-        /** @var CacheSpyClient $secondary */
-        $secondary = $this->getContainer()->get('flow.postgresql.secondary.client');
-
-        self::assertSame([], $primary->executedQueries);
-        self::assertNotSame([], $secondary->executedQueries);
+        self::assertSame($expected, $this->symfonyContext()->readPrivateProperty($handler, 'connectionParameters'));
     }
 
     public function test_single_connection_registers_client() : void

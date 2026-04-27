@@ -12,6 +12,8 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 final class SpyClient implements Client
 {
+    public bool $closed = false;
+
     /**
      * @var list<array{sql: string, parameters: array<int, mixed>}>
      */
@@ -39,7 +41,7 @@ final class SpyClient implements Client
 
     public function close() : void
     {
-        throw new \RuntimeException('Not implemented');
+        $this->closed = true;
     }
 
     public function commit() : void

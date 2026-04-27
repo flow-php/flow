@@ -374,6 +374,10 @@ with [flow-php/symfony-postgresql-cache-bridge](/documentation/components/bridge
 provide PSR-6 / Symfony Cache pools backed by Flow's native PostgreSQL client — no Doctrine DBAL required. The adapter
 implements `PruneableInterface`, so `cache:pool:prune` works out of the box.
 
+Each pool is wired with the named connection's `ConnectionParameters` and opens its **own** `pg_connect`, isolated from
+the `Client` services used by application code. This isolation is what keeps `$cache->save(...)` from accidentally
+participating in (and being rolled back by) a transaction held by the caller.
+
 ### Setup
 
 1. Install the cache bridge:
@@ -446,6 +450,18 @@ php bin/console flow:migrations:migrate
 | `namespace`                                         | `''`                                                    | Cache pool namespace; chars in `[-+.A-Za-z0-9]` only |
 | `default_lifetime`                                  | `0`                                                     | Default TTL in seconds; `0` means no expiry          |
 | `marshaller_service_id`                             | `null`                                                  | Service ID of a custom `MarshallerInterface`         |
+| `share_connection`                                  | `false`                                                 | Reuse the named connection's `Client` instead of opening a dedicated `pg_connect`. See "Sharing the Connection" below |
+
+### Sharing the Connection
+
+By default each pool opens its own `pg_connect` derived from the named connection's parameters. That isolation is what keeps `$cache->save(...)` from being rolled back if the caller's transaction fails.
+
+Set `share_connection: true` to reuse the existing `flow.postgresql.<connection>.client` service instead. Trade-offs:
+
+- **Pro:** one fewer `pg_connect` per worker per pool. Useful when connection budget is tight.
+- **Con:** cache writes participate in whatever transaction the calling code happens to be inside. A rollback on the caller's transaction also rolls back the cache write.
+
+Use `share_connection: true` only when you have an explicit reason to share state (e.g. transactional outbox, cache writes that should logically belong to the caller's unit of work).
 
 ### Pruning
 
@@ -467,6 +483,10 @@ The bundle integrates
 with [flow-php/symfony-postgresql-session-bridge](/documentation/components/bridges/symfony-postgresql-session-bridge.md)
 to provide a Symfony session handler backed by Flow's native PostgreSQL client — no PDO or Doctrine DBAL required. The
 table layout is byte-compatible with `PdoSessionHandler`, so existing session rows can be reused as-is.
+
+The handler is wired with the named connection's `ConnectionParameters` and opens its **own** `pg_connect`, isolated
+from the `Client` services used by application code. This is what makes `LOCK_TRANSACTIONAL` safe by default — the
+session's transaction lives on a dedicated connection and never wraps unrelated request work.
 
 ### Setup
 
@@ -533,6 +553,13 @@ php bin/console flow:migrations:migrate
 | `time_col`     | `sess_time`                   | Column override                                                                      |
 | `lock_mode`    | `transactional`               | One of `none`, `advisory`, `transactional`. See bridge docs for the trade-offs       |
 | `ttl`          | `null`                        | Session lifetime in seconds; `null` falls back to ini `session.gc_maxlifetime`       |
+| `share_connection` | `false`                   | Reuse the named connection's `Client` instead of opening a dedicated `pg_connect`. See "Sharing the Connection" below |
+
+### Sharing the Connection
+
+By default the handler opens its own `pg_connect` derived from the named connection's parameters. That isolation is what keeps the session handler's transactions / locks from leaking into the connection used by application code.
+
+Set `share_connection: true` to reuse the existing `flow.postgresql.<connection>.client` service instead. Use only when you have an explicit reason — tight connection budget or a deliberate need to keep session state on the same connection as application code.
 
 ### Purging Sessions
 

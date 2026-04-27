@@ -27,6 +27,22 @@ final class ConfigurationTest extends TestCase
         self::assertNull($config['cache']['pools']['app']['connection']);
     }
 
+    public function test_cache_pool_share_connection_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['share_connection' => true],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['cache']['pools']['app']['share_connection']);
+    }
+
     public function test_cache_pools_custom_columns_and_namespace() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -87,6 +103,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame('', $pool['namespace']);
         self::assertSame(0, $pool['default_lifetime']);
         self::assertNull($pool['marshaller_service_id']);
+        self::assertFalse($pool['share_connection']);
     }
 
     public function test_cache_section_can_be_omitted() : void
@@ -374,6 +391,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame('sess_time', $session['time_col']);
         self::assertSame('transactional', $session['lock_mode']);
         self::assertNull($session['ttl']);
+        self::assertFalse($session['share_connection']);
     }
 
     public function test_session_lock_mode_rejects_invalid_value() : void
@@ -421,6 +439,21 @@ final class ConfigurationTest extends TestCase
         self::assertSame('sts', $session['time_col']);
         self::assertSame('advisory', $session['lock_mode']);
         self::assertSame(7200, $session['ttl']);
+    }
+
+    public function test_session_share_connection_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'share_connection' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['session']['share_connection']);
     }
 
     public function test_session_ttl_rejects_negative() : void

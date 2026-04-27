@@ -7,11 +7,13 @@ namespace Flow\Bridge\Symfony\PostgreSQLSession\Tests\Integration;
 use function Flow\PostgreSql\DSL\{col, drop, eq, param, pgsql_client, pgsql_connection_dsn, select, table, update};
 
 use Flow\Bridge\Symfony\PostgreSQLSession\SessionCatalogProvider;
-use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\{Client, ConnectionParameters};
 
 final readonly class SessionTestContext
 {
     public Client $client;
+
+    public ConnectionParameters $connectionParameters;
 
     public function __construct()
     {
@@ -21,7 +23,8 @@ final readonly class SessionTestContext
             throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
         }
 
-        $this->client = pgsql_client(pgsql_connection_dsn($dsn));
+        $this->connectionParameters = pgsql_connection_dsn($dsn);
+        $this->client = pgsql_client($this->connectionParameters);
     }
 
     public function close() : void

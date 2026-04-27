@@ -27,20 +27,30 @@ For Symfony framework integration (config-driven pool registration, automatic mi
 - **`prune()`** runs a single bulk `DELETE` of every expired row, optionally restricted to the pool namespace.
 - **Marshalling** uses Symfony's `DefaultMarshaller` by default; pass a custom `MarshallerInterface` to the constructor to override.
 
+## Connection Ownership
+
+The adapter accepts either `ConnectionParameters` or a `Client`:
+
+- **Pass `ConnectionParameters`** *(recommended default)* — the adapter opens (and owns) its own `pg_connect`. Cache writes never participate in transactions running on a `Client` shared with application code, so a caller's rollback can't silently undo cached values.
+- **Pass a `Client`** — the adapter reuses the supplied connection. Lifetime and transaction semantics are the caller's responsibility. Use this only when you know what you are doing (tight connection budget, explicit need to share state).
+
 ## Usage
 
 ```php
 use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
 use function Flow\PostgreSql\DSL\{pgsql_client, pgsql_connection_dsn};
 
-$client = pgsql_client(pgsql_connection_dsn(getenv('DATABASE_URL')));
+$params = pgsql_connection_dsn(getenv('DATABASE_URL'));
 
-// Create the table once (or manage it via your migration tool of choice)
+// Create the table once (or manage it via your migration tool of choice).
+// The setup client below is unrelated to the connection the adapter owns.
+$setup = pgsql_client($params);
 foreach ((new CacheCatalogProvider())->get()->get('public')->table('cache_items')->toSql() as $sql) {
-    $client->execute($sql);
+    $setup->execute($sql);
 }
+$setup->close();
 
-$cache = new FlowPostgreSqlCacheAdapter($client, namespace: 'app', defaultLifetime: 3600);
+$cache = new FlowPostgreSqlCacheAdapter($params, namespace: 'app', defaultLifetime: 3600);
 
 $item = $cache->getItem('greeting');
 
@@ -57,7 +67,7 @@ echo $cache->getItem('greeting')->get();
 
 ```php
 new FlowPostgreSqlCacheAdapter(
-    Client $client,
+    ConnectionParameters|Client $connection,
     string $namespace = '',
     int $defaultLifetime = 0,
     array $options = [],

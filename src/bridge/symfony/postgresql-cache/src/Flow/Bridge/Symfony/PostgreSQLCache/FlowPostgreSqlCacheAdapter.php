@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLCache;
 
-use function Flow\PostgreSql\DSL\{and_, binary_expr, case_when, col, conflict_columns, delete, eq, gt, in_, insert, is_null, le, like, literal, on_conflict_update, or_, param, select, table, truncate_table, typed, when};
+use function Flow\PostgreSql\DSL\{and_, binary_expr, case_when, col, conflict_columns, delete, eq, gt, in_, insert, is_null, le, like, literal, on_conflict_update, or_, param, pgsql_client, select, table, truncate_table, typed, when};
 
 use Flow\Bridge\Symfony\PostgreSQLCache\Exception\CacheException;
-use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\{Client, ConnectionParameters};
 use Flow\PostgreSql\Client\Types\ValueType;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
@@ -17,6 +17,12 @@ use Symfony\Component\Cache\PruneableInterface;
 class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInterface
 {
     private const int MAX_KEY_LENGTH = 255;
+
+    private ?Client $client;
+
+    private readonly \Closure $clientFactory;
+
+    private readonly ?ConnectionParameters $connectionParameters;
 
     private readonly string $dataCol;
 
@@ -36,16 +42,26 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
 
     /**
      * @param array{db_table?: string, db_schema?: string, db_id_col?: string, db_data_col?: string, db_lifetime_col?: string, db_time_col?: string} $options
+     * @param ?\Closure(ConnectionParameters): Client $clientFactory Internal — for tests. Defaults to `pgsql_client(...)`.
      */
     public function __construct(
-        private readonly Client $client,
+        ConnectionParameters|Client $connection,
         string $namespace = '',
         int $defaultLifetime = 0,
         array $options = [],
         ?MarshallerInterface $marshaller = null,
+        ?\Closure $clientFactory = null,
     ) {
         if (isset($namespace[0]) && \preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
             throw new InvalidArgumentException(\sprintf('Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.', $match[0]));
+        }
+
+        if ($connection instanceof Client) {
+            $this->client = $connection;
+            $this->connectionParameters = null;
+        } else {
+            $this->client = null;
+            $this->connectionParameters = $connection;
         }
 
         $this->maxIdLength = self::MAX_KEY_LENGTH;
@@ -57,6 +73,7 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
         $this->lifetimeCol = $options['db_lifetime_col'] ?? 'item_lifetime';
         $this->timeCol = $options['db_time_col'] ?? 'item_time';
         $this->marshaller = $marshaller ?? new DefaultMarshaller();
+        $this->clientFactory = $clientFactory ?? static fn (ConnectionParameters $params) : Client => pgsql_client($params);
 
         parent::__construct($namespace, $defaultLifetime);
     }
@@ -74,7 +91,7 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
             $parameters[] = $this->poolNamespace . '%';
         }
 
-        $this->client->execute(
+        $this->client()->execute(
             delete()
                 ->from(table($this->table, $this->schema))
                 ->where(and_(...$conditions)),
@@ -87,12 +104,12 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
     protected function doClear(string $namespace) : bool
     {
         if ($namespace === '') {
-            $this->client->execute(truncate_table($this->schema . '.' . $this->table));
+            $this->client()->execute(truncate_table($this->schema . '.' . $this->table));
 
             return true;
         }
 
-        $this->client->execute(
+        $this->client()->execute(
             delete()
                 ->from(table($this->table, $this->schema))
                 ->where(like(col($this->idCol), param(1))),
@@ -119,7 +136,7 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
             $placeholders[] = param($position++);
         }
 
-        $this->client->execute(
+        $this->client()->execute(
             delete()
                 ->from(table($this->table, $this->schema))
                 ->where(in_(col($this->idCol), $placeholders)),
@@ -163,7 +180,7 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
             elseResult: literal(null),
         );
 
-        $rows = $this->client->fetchAll(
+        $rows = $this->client()->fetchAll(
             select(col($this->idCol), $dataExpression->as($this->dataCol))
                 ->from(table($this->table, $this->schema))
                 ->where(in_(col($this->idCol), $placeholders)),
@@ -200,7 +217,7 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
 
     protected function doHave(string $id) : bool
     {
-        $row = $this->client->fetch(
+        $row = $this->client()->fetch(
             select(literal(1))
                 ->from(table($this->table, $this->schema))
                 ->where(and_(
@@ -231,7 +248,7 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
             return $failed ?? [];
         }
 
-        $this->client->transaction(function (Client $client) use ($marshalled, $lifetime) : void {
+        $this->client()->transaction(function (Client $client) use ($marshalled, $lifetime) : void {
             $now = \time();
             $expiry = $lifetime > 0 ? $lifetime : null;
 
@@ -260,5 +277,18 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
         });
 
         return $failed ?? [];
+    }
+
+    private function client() : Client
+    {
+        if ($this->client !== null) {
+            return $this->client;
+        }
+
+        if ($this->connectionParameters === null) {
+            throw new \LogicException('FlowPostgreSqlCacheAdapter has no client and no connection parameters.');
+        }
+
+        return $this->client = ($this->clientFactory)($this->connectionParameters);
     }
 }

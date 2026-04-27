@@ -63,6 +63,15 @@ final class SymfonyContext
         return type_instance_of($typeClass)->assert($this->getContainer()->get($serviceId));
     }
 
+    /**
+     * Useful for verifying that the bundle wired the right collaborator
+     * into a service whose collaborator is not exposed via a getter.
+     */
+    public function readPrivateProperty(object $service, string $propertyName) : mixed
+    {
+        return (new \ReflectionProperty($service, $propertyName))->getValue($service);
+    }
+
     public function shutdown() : void
     {
         if ($this->kernel === null) {
