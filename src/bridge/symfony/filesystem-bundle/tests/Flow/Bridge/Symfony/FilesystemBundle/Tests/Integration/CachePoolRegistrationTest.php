@@ -31,7 +31,7 @@ final class CachePoolRegistrationTest extends KernelTestCase
             },
         ]);
 
-        self::assertInstanceOf(FlowFilesystemCacheAdapter::class, $this->getContainer()->get('flow_filesystem.cache.pool.app'));
+        self::assertInstanceOf(FlowFilesystemCacheAdapter::class, $this->getContainer()->get('flow.filesystem.cache.pool.app'));
     }
 
     public function test_cache_pool_with_marshaller_service_id_injects_marshaller() : void
@@ -62,7 +62,7 @@ final class CachePoolRegistrationTest extends KernelTestCase
         ]);
 
         $container = $this->getContainer();
-        $adapter = $container->get('flow_filesystem.cache.pool.app');
+        $adapter = $container->get('flow.filesystem.cache.pool.app');
         self::assertInstanceOf(FlowFilesystemCacheAdapter::class, $adapter);
 
         $marshaller = (new \ReflectionObject($adapter))->getProperty('marshaller')->getValue($adapter);
@@ -92,7 +92,7 @@ final class CachePoolRegistrationTest extends KernelTestCase
             },
         ]);
 
-        self::assertInstanceOf(FlowFilesystemCacheAdapter::class, $this->getContainer()->get('flow_filesystem.cache.pool.app'));
+        self::assertInstanceOf(FlowFilesystemCacheAdapter::class, $this->getContainer()->get('flow.filesystem.cache.pool.app'));
     }
 
     public function test_no_cache_pool_services_when_cache_section_is_omitted() : void
@@ -107,6 +107,6 @@ final class CachePoolRegistrationTest extends KernelTestCase
             },
         ]);
 
-        self::assertFalse($this->getContainer()->has('flow_filesystem.cache.pool.app'));
+        self::assertFalse($this->getContainer()->has('flow.filesystem.cache.pool.app'));
     }
 }

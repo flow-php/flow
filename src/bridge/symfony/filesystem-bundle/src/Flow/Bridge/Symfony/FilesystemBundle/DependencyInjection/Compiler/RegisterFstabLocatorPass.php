@@ -9,9 +9,9 @@ use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Referen
 
 final class RegisterFstabLocatorPass implements CompilerPassInterface
 {
-    public const string DEFAULT_FSTAB_PARAMETER = 'flow_filesystem.default_fstab';
+    public const string DEFAULT_FSTAB_PARAMETER = 'flow.filesystem.default_fstab';
 
-    public const string LOCATOR_SERVICE_ID = 'flow_filesystem.fstab_locator';
+    public const string LOCATOR_SERVICE_ID = 'flow.filesystem.fstab_locator';
 
     public function process(ContainerBuilder $container) : void
     {

@@ -120,7 +120,7 @@ flow_filesystem:
           client_service_id: app.s3_client
 ```
 
-The fstab is wired as a private `.flow_filesystem.fstab.<name>` service and aliased to
+The fstab is wired as a private `.flow.filesystem.fstab.<name>` service and aliased to
 `Flow\Filesystem\FilesystemTable` for autowiring.
 
 ### Default Fstab
@@ -458,7 +458,7 @@ flow_filesystem:
                 default_lifetime: 86400
 ```
 
-Each pool registers as `flow_filesystem.cache.pool.<name>` (public).
+Each pool registers as `flow.filesystem.cache.pool.<name>` (public).
 
 3. Wire the pools into Symfony's cache framework via `cache.adapter.psr6`:
 
@@ -469,11 +469,11 @@ framework:
         pools:
             cache.app_fs:
                 adapter: cache.adapter.psr6
-                provider: flow_filesystem.cache.pool.app
+                provider: flow.filesystem.cache.pool.app
 
             cache.sessions_fs:
                 adapter: cache.adapter.psr6
-                provider: flow_filesystem.cache.pool.sessions
+                provider: flow.filesystem.cache.pool.sessions
 ```
 
 The `cache.adapter.psr6` wrapper is required because Symfony's `CachePoolPass` overwrites the first constructor argument of any service used directly as `adapter:`, which conflicts with this bridge's strict `Filesystem` typing on argument 0.
@@ -539,7 +539,7 @@ flow_filesystem:
           bucket: '%env(ARCHIVE_BUCKET)%'
 ```
 
-Each fstab gets its own `.flow_filesystem.fstab.<name>` service. The default fstab is automatically aliased
+Each fstab gets its own `.flow.filesystem.fstab.<name>` service. The default fstab is automatically aliased
 to `Flow\Filesystem\FilesystemTable`, allowing direct type-hint injection without specifying a fstab name.
 Each named fstab is also aliased as `Flow\Filesystem\FilesystemTable $<camelCasedName>Fstab` for
 named-argument autowiring:
@@ -621,7 +621,7 @@ final class MyFilesystemFactory implements FilesystemFactory
 ```
 
 As long as your service is autoconfigured (the default in `services.yaml` for everything under your `App\`
-namespace), the bundle automatically attaches the `flow_filesystem.factory` tag with the right `type`
+namespace), the bundle automatically attaches the `flow.filesystem.factory` tag with the right `type`
 attribute.
 
 ### Explicit Tag
@@ -631,10 +631,10 @@ namespaces, manual definitions):
 
 ```yaml
 services:
-  app.flow_filesystem.factory.my_backend:
+  app.flow.filesystem.factory.my_backend:
     class: App\Flow\MyFilesystemFactory
     tags:
-      - { name: flow_filesystem.factory, type: my_backend }
+      - { name: flow.filesystem.factory, type: my_backend }
 ```
 
 Either way, you can then mount the backend under any protocol in any fstab:
@@ -665,7 +665,7 @@ flow_filesystem:
 - **Mount-protocol routing:** filesystems inside a fstab are resolved at runtime via
   `$table->for('warehouse')` / `$table->for($path)`, so application code can hand-off across protocols
   without knowing service ids.
-- **Factory tag:** filesystem types are pluggable via a standard `flow_filesystem.factory` DI tag;
+- **Factory tag:** filesystem types are pluggable via a standard `flow.filesystem.factory` DI tag;
   third-party libraries can ship their own factory without bundle changes.
 - **CLI commands:** `flow:filesystem:*` ship with the bundle and operate on any configured fstab.
   Flysystem Bundle does not ship any console commands.

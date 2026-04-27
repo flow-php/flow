@@ -97,7 +97,7 @@ final class FlowFilesystemBundle extends AbstractBundle
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->arrayNode('pools')
-                            ->info('Named cache pools. Each becomes a service "flow_filesystem.cache.pool.<name>" usable as adapter: <id> in framework.cache.pools.')
+                            ->info('Named cache pools. Each becomes a service "flow.filesystem.cache.pool.<name>" usable as adapter: <id> in framework.cache.pools.')
                             ->useAttributeAsKey('name')
                             ->arrayPrototype()
                                 ->children()
@@ -163,7 +163,7 @@ final class FlowFilesystemBundle extends AbstractBundle
 
         $config['default_fstab'] = $defaultFstab;
 
-        $builder->setParameter('flow_filesystem.config', $config);
+        $builder->setParameter('flow.filesystem.config', $config);
 
         $container->import(__DIR__ . '/Resources/config/services.php');
 
@@ -213,16 +213,16 @@ final class FlowFilesystemBundle extends AbstractBundle
             $filesystemDef = new Definition(Filesystem::class);
             $filesystemDef->setFactory([new Reference(BuildFstabsPass::FSTAB_SERVICE_PREFIX . $fstabName), 'for']);
             $filesystemDef->setArguments([$poolConfig['filesystem']]);
-            $builder->setDefinition("flow_filesystem.cache.pool.{$name}.filesystem", $filesystemDef);
+            $builder->setDefinition("flow.filesystem.cache.pool.{$name}.filesystem", $filesystemDef);
 
             $pathDef = new Definition(Path::class);
             $pathDef->setFactory([Path::class, 'from']);
             $pathDef->setArguments([$poolConfig['path']]);
-            $builder->setDefinition("flow_filesystem.cache.pool.{$name}.path", $pathDef);
+            $builder->setDefinition("flow.filesystem.cache.pool.{$name}.path", $pathDef);
 
             $adapterDef = new Definition(FlowFilesystemCacheAdapter::class, [
-                new Reference("flow_filesystem.cache.pool.{$name}.filesystem"),
-                new Reference("flow_filesystem.cache.pool.{$name}.path"),
+                new Reference("flow.filesystem.cache.pool.{$name}.filesystem"),
+                new Reference("flow.filesystem.cache.pool.{$name}.path"),
                 $poolConfig['namespace'],
                 $poolConfig['default_lifetime'],
                 $poolConfig['marshaller_service_id'] !== null
@@ -230,7 +230,7 @@ final class FlowFilesystemBundle extends AbstractBundle
                     : null,
             ]);
             $adapterDef->setPublic(true);
-            $builder->setDefinition("flow_filesystem.cache.pool.{$name}", $adapterDef);
+            $builder->setDefinition("flow.filesystem.cache.pool.{$name}", $adapterDef);
         }
     }
 

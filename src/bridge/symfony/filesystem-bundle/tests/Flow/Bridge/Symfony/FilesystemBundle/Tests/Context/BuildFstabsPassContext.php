@@ -16,19 +16,19 @@ final class BuildFstabsPassContext
     public function containerWithConfig(array $config) : ContainerBuilder
     {
         $container = new ContainerBuilder();
-        $container->setParameter('flow_filesystem.config', $config);
+        $container->setParameter('flow.filesystem.config', $config);
 
         $registry = new Definition(FilesystemFactoryRegistry::class);
         $registry->setArgument(0, []);
-        $container->setDefinition('.flow_filesystem.factory_registry', $registry);
+        $container->setDefinition('.flow.filesystem.factory_registry', $registry);
 
         $memoryFactory = new Definition(MemoryFilesystemFactory::class);
-        $memoryFactory->addTag('flow_filesystem.factory', ['type' => 'memory']);
-        $container->setDefinition('.flow_filesystem.factory.memory', $memoryFactory);
+        $memoryFactory->addTag('flow.filesystem.factory', ['type' => 'memory']);
+        $container->setDefinition('.flow.filesystem.factory.memory', $memoryFactory);
 
         $nativeFactory = new Definition(NativeLocalFilesystemFactory::class);
-        $nativeFactory->addTag('flow_filesystem.factory', ['type' => 'file']);
-        $container->setDefinition('.flow_filesystem.factory.file', $nativeFactory);
+        $nativeFactory->addTag('flow.filesystem.factory', ['type' => 'file']);
+        $container->setDefinition('.flow.filesystem.factory.file', $nativeFactory);
 
         return $container;
     }
