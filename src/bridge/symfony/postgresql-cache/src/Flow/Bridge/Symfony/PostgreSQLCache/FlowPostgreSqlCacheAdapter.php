@@ -14,7 +14,7 @@ use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\{DefaultMarshaller, MarshallerInterface};
 use Symfony\Component\Cache\PruneableInterface;
 
-class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInterface
+final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInterface
 {
     private const int MAX_KEY_LENGTH = 255;
 
@@ -237,9 +237,9 @@ class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInt
     /**
      * @param array<string, mixed> $values
      *
-     * @return array<int, string>|bool
+     * @return array<int, string>
      */
-    protected function doSave(array $values, int $lifetime) : array|bool
+    protected function doSave(array $values, int $lifetime) : array
     {
         $failed = [];
         $marshalled = $this->marshaller->marshall($values, $failed);

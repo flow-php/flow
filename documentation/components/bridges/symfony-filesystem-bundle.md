@@ -32,6 +32,7 @@ This bundle integrates Flow PHP's Filesystem library with Symfony applications. 
 - **Pluggable filesystem factories** — register custom backends with the `#[AsFilesystemFactory]` attribute or a DI tag
 - **Built-in factories** — `file`, `memory`, `stdout`, `aws_s3`, and `azure_blob` ship out of the box
 - **Console commands** — `flow:filesystem:*` (alias `flow:fs:*`) for `ls`, `cat`, `cp`, `mv`, `rm`, `stat`, `touch` against any configured filesystem
+- **Symfony Cache pools** — register PSR-6 cache pools backed by any mounted filesystem (local disk, S3, Azure Blob …) when [flow-php/symfony-filesystem-cache-bridge](/documentation/components/bridges/symfony-filesystem-cache-bridge.md) is installed
 - **Telemetry integration** — wrap every filesystem in `TraceableFilesystem` via OpenTelemetry
 - **Multi-fstab support** *(advanced)* — configure several independent `FilesystemTable` services when you really need them
 
@@ -392,6 +393,119 @@ bin/console flow:filesystem:cp file:///tmp/file.csv azure-blob://container/file.
 Remote object stores (S3, Azure Blob, …) do not have a real concept of directories — they expose flat
 keyspaces with `/` as a convention. Rather than emulate `mkdir` inconsistently across backends, the bundle
 omits the command entirely. Directories appear when files appear inside them.
+
+## Symfony Cache Integration
+
+The bundle integrates with [flow-php/symfony-filesystem-cache-bridge](/documentation/components/bridges/symfony-filesystem-cache-bridge.md) to provide PSR-6 / Symfony Cache pools backed by any filesystem already mounted in a fstab — local disk, S3, Azure Blob, anything the bundle's factories can build. The adapter implements `PruneableInterface`, so `cache:pool:prune` works out of the box.
+
+Each pool resolves its filesystem **through a fstab mount**, not by referencing a service id directly. Filesystems must already be declared under `flow_filesystem.fstabs.<fstab>.filesystems.<protocol>` before a cache pool can target them. This keeps fstab the single place where filesystems live and avoids the cache and the rest of the app drifting into separate filesystem definitions.
+
+### Setup
+
+1. Install the cache bridge:
+
+```bash
+composer require flow-php/symfony-filesystem-cache-bridge:~--FLOW_PHP_VERSION--
+```
+
+2. Define one or more pools under `flow_filesystem.cache.pools`. Each pool names a fstab mount (the YAML key under `filesystems:`) and a base path inside it:
+
+```yaml
+# config/packages/flow_filesystem.yaml
+flow_filesystem:
+    fstabs:
+        default:
+            filesystems:
+                file:
+                    type: file
+
+    cache:
+        pools:
+            app:
+                filesystem: file                                       # mount protocol from the default fstab
+                path: '%kernel.project_dir%/var/cache/flow/app'
+                default_lifetime: 3600
+
+            sessions:
+                filesystem: file
+                path: '%kernel.project_dir%/var/cache/flow/sessions'
+                namespace: 'sess.'
+                default_lifetime: 86400
+```
+
+`fstab` is optional and defaults to the bundle's resolved default fstab — same rule the `flow:filesystem:*` CLI commands follow. Set it explicitly when you want a pool to use a non-default fstab:
+
+```yaml
+flow_filesystem:
+    default_fstab: primary
+    fstabs:
+        primary:
+            filesystems:
+                file:
+                    type: file
+        archive:
+            filesystems:
+                aws-s3:
+                    type: aws_s3
+                    bucket: '%env(ARCHIVE_BUCKET)%'
+
+    cache:
+        pools:
+            cold_storage:
+                fstab: archive
+                filesystem: aws-s3
+                path: '/cache/cold'
+                default_lifetime: 86400
+```
+
+Each pool registers as `flow_filesystem.cache.pool.<name>` (public).
+
+3. Wire the pools into Symfony's cache framework via `cache.adapter.psr6`:
+
+```yaml
+# config/packages/framework.yaml
+framework:
+    cache:
+        pools:
+            cache.app_fs:
+                adapter: cache.adapter.psr6
+                provider: flow_filesystem.cache.pool.app
+
+            cache.sessions_fs:
+                adapter: cache.adapter.psr6
+                provider: flow_filesystem.cache.pool.sessions
+```
+
+The `cache.adapter.psr6` wrapper is required because Symfony's `CachePoolPass` overwrites the first constructor argument of any service used directly as `adapter:`, which conflicts with this bridge's strict `Filesystem` typing on argument 0.
+
+### Configuration Options (per pool)
+
+| Option                   | Default        | Description                                                                                            |
+|--------------------------|----------------|--------------------------------------------------------------------------------------------------------|
+| `fstab`                  | default fstab  | Fstab name. Defaults to the bundle's resolved default fstab when omitted.                              |
+| `filesystem`             | *required*     | Mount protocol within the chosen fstab (the YAML key under `filesystems:`).                            |
+| `path`                   | *required*     | Base directory inside the chosen filesystem where cache files are stored.                              |
+| `namespace`              | `''`           | Cache pool namespace; chars in `[-+.A-Za-z0-9]` only.                                                  |
+| `default_lifetime`       | `0`            | Default TTL in seconds; `0` means no expiry.                                                           |
+| `marshaller_service_id`  | `null`         | Service ID of a custom `MarshallerInterface`.                                                          |
+
+Validation runs at container compile time:
+
+- A pool referencing a missing fstab fails with `flow_filesystem.cache.pools.<name>: fstab "<x>" is not declared. Available fstabs: [...]`.
+- A pool referencing a mount protocol that is not registered in the chosen fstab fails with `flow_filesystem.cache.pools.<name>: filesystem "<x>" is not mounted in fstab "<y>". Available mounts: [...]`.
+- `flow_filesystem.cache.pools` is configured but `flow-php/symfony-filesystem-cache-bridge` is not installed → fails fast with a message pointing at the missing package.
+
+### Pruning
+
+Schedule the standard Symfony command on a cron to remove expired files:
+
+```bash
+php bin/console cache:pool:prune
+```
+
+Without pruning, expired files accumulate under each pool's directory. They are filtered out on read but only deleted when either the same key is fetched again or `cache:pool:prune` runs.
+
+For full documentation, see the [Symfony Filesystem Cache Bridge](/documentation/components/bridges/symfony-filesystem-cache-bridge.md).
 
 ## Multi-Fstab Support
 

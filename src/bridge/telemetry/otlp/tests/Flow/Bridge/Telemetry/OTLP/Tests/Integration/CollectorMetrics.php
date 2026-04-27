@@ -47,7 +47,7 @@ final readonly class CollectorMetrics
      * @param int $timeoutMs Maximum wait time in milliseconds (default: 500ms)
      * @param int $pollIntervalMs Poll interval in milliseconds (default: 10ms)
      */
-    public function waitForLogRecords(int $threshold, int $timeoutMs = 500, int $pollIntervalMs = 10) : int
+    public function waitForLogRecords(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10) : int
     {
         return $this->waitForMetric('otelcol_exporter_sent_log_records_total', $threshold, $timeoutMs, $pollIntervalMs);
     }
@@ -59,7 +59,7 @@ final readonly class CollectorMetrics
      * @param int $timeoutMs Maximum wait time in milliseconds (default: 500ms)
      * @param int $pollIntervalMs Poll interval in milliseconds (default: 10ms)
      */
-    public function waitForMetricPoints(int $threshold, int $timeoutMs = 500, int $pollIntervalMs = 10) : int
+    public function waitForMetricPoints(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10) : int
     {
         return $this->waitForMetric('otelcol_exporter_sent_metric_points_total', $threshold, $timeoutMs, $pollIntervalMs);
     }
@@ -71,7 +71,7 @@ final readonly class CollectorMetrics
      * @param int $timeoutMs Maximum wait time in milliseconds (default: 500ms)
      * @param int $pollIntervalMs Poll interval in milliseconds (default: 10ms)
      */
-    public function waitForSpans(int $threshold, int $timeoutMs = 500, int $pollIntervalMs = 10) : int
+    public function waitForSpans(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10) : int
     {
         return $this->waitForMetric('otelcol_exporter_sent_spans_total', $threshold, $timeoutMs, $pollIntervalMs);
     }

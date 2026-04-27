@@ -11,7 +11,7 @@ use Flow\PostgreSql\Client\{Client, ConnectionParameters};
 use Flow\PostgreSql\Client\Types\ValueType;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler;
 
-class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
+final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 {
     public const int LOCK_ADVISORY = 1;
 
@@ -129,7 +129,7 @@ class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         return true;
     }
 
-    public function gc(int $max_lifetime) : int|false
+    public function gc(int $max_lifetime) : int
     {
         $this->gcCalled = true;
 

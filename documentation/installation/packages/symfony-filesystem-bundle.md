@@ -36,4 +36,5 @@ Mount remote object stores by installing the matching bridge alongside the bundl
 
 ## Suggested Dependencies
 
+- [flow-php/symfony-filesystem-cache-bridge](/documentation/installation/packages/symfony-filesystem-cache-bridge.md) — for PSR-6 / Symfony Cache pools backed by any mounted filesystem (local disk, S3, Azure Blob)
 - [flow-php/symfony-telemetry-bundle](/documentation/installation/packages/symfony-telemetry-bundle.md) — for telemetry integration (distributed tracing, metrics, logging)
