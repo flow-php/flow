@@ -20,8 +20,11 @@ use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 final readonly class LeagueCommonMarkConverterFactory
 {
-    public function __construct(private ContainerBagInterface $parameters, private Packages $packages)
-    {
+    public function __construct(
+        private ContainerBagInterface $parameters,
+        private Packages $packages,
+        private string $manifestPath,
+    ) {
     }
 
     public function __invoke() : CommonMarkConverter
@@ -75,7 +78,8 @@ final readonly class LeagueCommonMarkConverterFactory
             ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
             ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
             ->addRenderer(TableOfContents::class, new TableOfContentsRenderer(), 10)
-            ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')));
+            ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')))
+            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifestPath));
 
         return $converter;
     }
