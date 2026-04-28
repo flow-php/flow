@@ -21,11 +21,14 @@
     "require-dev": {
         "flow-php/filesystem-async-aws-bridge": "self.version",
         "flow-php/filesystem-azure-bridge": "self.version",
+        "flow-php/symfony-filesystem-cache-bridge": "self.version",
+        "symfony/cache": "^6.4 || ^7.4 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0"
     },
     "suggest": {
         "flow-php/filesystem-async-aws-bridge": "Required for the `aws_s3` filesystem type.",
-        "flow-php/filesystem-azure-bridge": "Required for the `azure_blob` filesystem type."
+        "flow-php/filesystem-azure-bridge": "Required for the `azure_blob` filesystem type.",
+        "flow-php/symfony-filesystem-cache-bridge": "For Symfony Cache filesystem-backed adapter support."
     },
     "autoload": {
         "psr-4": {

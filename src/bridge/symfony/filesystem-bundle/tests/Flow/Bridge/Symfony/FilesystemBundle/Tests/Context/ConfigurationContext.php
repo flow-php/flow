@@ -20,7 +20,7 @@ final readonly class ConfigurationContext
      * @param array<string, mixed> $flowFilesystemConfig
      * @param null|callable(ContainerBuilder): void $containerConfigurator
      *
-     * @return array{default_fstab: string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry: array{enabled: bool, telemetry_service_id: null|string, clock_service_id: null|string, options: array{trace_streams: bool, collect_metrics: bool}}}>}
+     * @return array{default_fstab: string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry: array{enabled: bool, telemetry_service_id: null|string, clock_service_id: null|string, options: array{trace_streams: bool, collect_metrics: bool}}}>, cache: array{pools: array<string, array{fstab: null|string, filesystem: string, path: string, namespace: string, default_lifetime: int, marshaller_service_id: null|string}>}}
      */
     public function processConfig(array $flowFilesystemConfig, ?callable $containerConfigurator = null) : array
     {
@@ -34,8 +34,8 @@ final readonly class ConfigurationContext
             },
         ]);
 
-        /** @var array{default_fstab: string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry: array{enabled: bool, telemetry_service_id: null|string, clock_service_id: null|string, options: array{trace_streams: bool, collect_metrics: bool}}}>} $config */
-        $config = $kernel->getContainer()->getParameter('flow_filesystem.config');
+        /** @var array{default_fstab: string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>>, telemetry: array{enabled: bool, telemetry_service_id: null|string, clock_service_id: null|string, options: array{trace_streams: bool, collect_metrics: bool}}}>, cache: array{pools: array<string, array{fstab: null|string, filesystem: string, path: string, namespace: string, default_lifetime: int, marshaller_service_id: null|string}>}} $config */
+        $config = $kernel->getContainer()->getParameter('flow.filesystem.config');
 
         return $config;
     }

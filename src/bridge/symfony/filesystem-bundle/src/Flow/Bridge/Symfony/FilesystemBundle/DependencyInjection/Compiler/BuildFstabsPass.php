@@ -13,11 +13,11 @@ use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Referen
 
 final class BuildFstabsPass implements CompilerPassInterface
 {
-    public const string CONFIG_PARAMETER = 'flow_filesystem.config';
+    public const string CONFIG_PARAMETER = 'flow.filesystem.config';
 
-    public const string FSTAB_SERVICE_PREFIX = '.flow_filesystem.fstab.';
+    public const string FSTAB_SERVICE_PREFIX = '.flow.filesystem.fstab.';
 
-    public const string TELEMETRY_CONFIG_SERVICE_PREFIX = '.flow_filesystem.telemetry_config.';
+    public const string TELEMETRY_CONFIG_SERVICE_PREFIX = '.flow.filesystem.telemetry_config.';
 
     public function process(ContainerBuilder $container) : void
     {

@@ -41,8 +41,8 @@ final class BuildFstabsPassTelemetryTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        self::assertTrue($container->hasDefinition('.flow_filesystem.telemetry_config.default'));
-        $configDefinition = $container->getDefinition('.flow_filesystem.telemetry_config.default');
+        self::assertTrue($container->hasDefinition('.flow.filesystem.telemetry_config.default'));
+        $configDefinition = $container->getDefinition('.flow.filesystem.telemetry_config.default');
         self::assertSame(FilesystemTelemetryConfig::class, $configDefinition->getClass());
 
         $configArgs = $configDefinition->getArguments();
@@ -54,9 +54,9 @@ final class BuildFstabsPassTelemetryTest extends TestCase
         self::assertSame(FilesystemTelemetryOptions::class, $configArgs[2]->getClass());
         self::assertSame([false, true], $configArgs[2]->getArguments());
 
-        $fstabArgs = $container->getDefinition('.flow_filesystem.fstab.default')->getArguments();
+        $fstabArgs = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
         self::assertInstanceOf(Reference::class, $fstabArgs[3]);
-        self::assertSame('.flow_filesystem.telemetry_config.default', (string) $fstabArgs[3]);
+        self::assertSame('.flow.filesystem.telemetry_config.default', (string) $fstabArgs[3]);
     }
 
     public function test_passes_null_telemetry_when_disabled() : void
@@ -75,7 +75,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        $arguments = $container->getDefinition('.flow_filesystem.fstab.default')->getArguments();
+        $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
         self::assertNull($arguments[3]);
     }
 

@@ -63,7 +63,7 @@ final class BuildFstabsPassTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        self::assertFalse($container->hasDefinition('.flow_filesystem.fstab.default'));
+        self::assertFalse($container->hasDefinition('.flow.filesystem.fstab.default'));
     }
 
     public function test_passes_entries_as_third_argument() : void
@@ -81,7 +81,7 @@ final class BuildFstabsPassTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        $arguments = $container->getDefinition('.flow_filesystem.fstab.default')->getArguments();
+        $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
         self::assertSame(['memory' => ['type' => 'memory', 'foo' => 'bar']], $arguments[2]);
     }
 
@@ -100,9 +100,9 @@ final class BuildFstabsPassTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        $arguments = $container->getDefinition('.flow_filesystem.fstab.default')->getArguments();
+        $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
         self::assertInstanceOf(Reference::class, $arguments[0]);
-        self::assertSame('.flow_filesystem.factory_registry', (string) $arguments[0]);
+        self::assertSame('.flow.filesystem.factory_registry', (string) $arguments[0]);
         self::assertSame('default', $arguments[1]);
     }
 
@@ -128,7 +128,7 @@ final class BuildFstabsPassTest extends TestCase
 
         self::assertTrue($container->hasAlias(FilesystemTable::class));
         $alias = $container->getAlias(FilesystemTable::class);
-        self::assertSame('.flow_filesystem.fstab.secondary', (string) $alias);
+        self::assertSame('.flow.filesystem.fstab.secondary', (string) $alias);
         self::assertTrue($alias->isPublic());
     }
 
@@ -150,7 +150,7 @@ final class BuildFstabsPassTest extends TestCase
         $aliasId = FilesystemTable::class . ' $defaultFstab';
         self::assertTrue($container->hasAlias($aliasId));
         $alias = $container->getAlias($aliasId);
-        self::assertSame('.flow_filesystem.fstab.default', (string) $alias);
+        self::assertSame('.flow.filesystem.fstab.default', (string) $alias);
         self::assertTrue($alias->isPublic());
     }
 
@@ -174,13 +174,13 @@ final class BuildFstabsPassTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        $defaultDef = $container->getDefinition('.flow_filesystem.fstab.default');
+        $defaultDef = $container->getDefinition('.flow.filesystem.fstab.default');
         self::assertSame(FilesystemTable::class, $defaultDef->getClass());
         self::assertFalse($defaultDef->isPublic());
         self::assertSame([FstabBuilder::class, 'build'], $defaultDef->getFactory());
 
-        self::assertTrue($container->hasDefinition('.flow_filesystem.fstab.secondary'));
-        self::assertFalse($container->getDefinition('.flow_filesystem.fstab.secondary')->isPublic());
+        self::assertTrue($container->hasDefinition('.flow.filesystem.fstab.secondary'));
+        self::assertFalse($container->getDefinition('.flow.filesystem.fstab.secondary')->isPublic());
     }
 
     public function test_throws_on_unknown_default_fstab() : void

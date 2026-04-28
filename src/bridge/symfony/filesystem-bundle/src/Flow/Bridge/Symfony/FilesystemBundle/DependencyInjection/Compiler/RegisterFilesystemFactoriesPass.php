@@ -10,9 +10,9 @@ use Symfony\Component\DependencyInjection\{ContainerBuilder, Reference};
 
 final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 {
-    public const string REGISTRY_SERVICE_ID = '.flow_filesystem.factory_registry';
+    public const string REGISTRY_SERVICE_ID = '.flow.filesystem.factory_registry';
 
-    public const string TAG = 'flow_filesystem.factory';
+    public const string TAG = 'flow.filesystem.factory';
 
     public function process(ContainerBuilder $container) : void
     {

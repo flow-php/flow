@@ -104,14 +104,26 @@ component_management:
       name: bridge-symfony-filesystem-bundle
       paths:
         - src/bridge/symfony/filesystem-bundle/**
+    - component_id: bridge-symfony-filesystem-cache
+      name: bridge-symfony-filesystem-cache
+      paths:
+        - src/bridge/symfony/filesystem-cache/**
     - component_id: bridge-symfony-postgresql-bundle
       name: bridge-symfony-postgresql-bundle
       paths:
         - src/bridge/symfony/postgresql-bundle/**
+    - component_id: bridge-symfony-postgresql-cache
+      name: bridge-symfony-postgresql-cache
+      paths:
+        - src/bridge/symfony/postgresql-cache/**
     - component_id: bridge-symfony-postgresql-messenger
       name: bridge-symfony-postgresql-messenger
       paths:
         - src/bridge/symfony/postgresql-messenger/**
+    - component_id: bridge-symfony-postgresql-session
+      name: bridge-symfony-postgresql-session
+      paths:
+        - src/bridge/symfony/postgresql-session/**
     - component_id: bridge-symfony-telemetry-bundle
       name: bridge-symfony-telemetry-bundle
       paths:

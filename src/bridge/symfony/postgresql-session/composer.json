@@ -1,0 +1,35 @@
+{
+    "name": "flow-php/symfony-postgresql-session-bridge",
+    "type": "library",
+    "description": "PHP ETL - Symfony PostgreSQL Session bridge",
+    "keywords": [
+        "symfony",
+        "postgresql",
+        "session",
+        "bridge"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/postgresql": "self.version",
+        "symfony/http-foundation": "^6.4 || ^7.4 || ^8.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

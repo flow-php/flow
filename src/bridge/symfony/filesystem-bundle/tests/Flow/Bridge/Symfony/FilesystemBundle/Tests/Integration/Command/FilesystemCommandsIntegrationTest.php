@@ -376,8 +376,8 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
                     $container->addCompilerPass(new class implements CompilerPassInterface {
                         public function process(ContainerBuilder $container) : void
                         {
-                            if ($container->hasDefinition('.flow_filesystem.command.fstab_resolver')) {
-                                $container->getDefinition('.flow_filesystem.command.fstab_resolver')->setPublic(true);
+                            if ($container->hasDefinition('.flow.filesystem.command.fstab_resolver')) {
+                                $container->getDefinition('.flow.filesystem.command.fstab_resolver')->setPublic(true);
                             }
                         }
                     });
@@ -386,7 +386,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         ]);
 
         /** @var FstabResolver $resolver */
-        $resolver = $this->getContainer()->get('.flow_filesystem.command.fstab_resolver');
+        $resolver = $this->getContainer()->get('.flow.filesystem.command.fstab_resolver');
 
         return $resolver;
     }

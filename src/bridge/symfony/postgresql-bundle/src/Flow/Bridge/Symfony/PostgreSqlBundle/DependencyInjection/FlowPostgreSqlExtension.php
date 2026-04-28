@@ -8,10 +8,13 @@ use function Flow\Types\DSL\type_string;
 
 use Flow\Bridge\PHPUnit\PostgreSQL\StaticClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Command\SessionPurgeCommand;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
+use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
+use Flow\Bridge\Symfony\PostgreSQLSession\{FlowPostgreSqlSessionHandler, SessionCatalogProvider};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context, DsnParser};
@@ -47,7 +50,7 @@ final class FlowPostgreSqlExtension extends Extension
     {
         $configuration = new Configuration();
 
-        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
+        /** @var array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $isFirst = true;
@@ -82,6 +85,81 @@ final class FlowPostgreSqlExtension extends Extension
         }
 
         $this->registerMessenger($config['messenger'], $connectionNames, $container);
+        $this->registerCache($config['cache'] ?? [], $connectionNames, $container);
+        $this->registerSession($config['session'] ?? [], $connectionNames, $container);
+    }
+
+    /**
+     * @param array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>} $cacheConfig
+     * @param list<string> $connectionNames
+     */
+    private function registerCache(array $cacheConfig, array $connectionNames, ContainerBuilder $container) : void
+    {
+        if (!\class_exists(FlowPostgreSqlCacheAdapter::class)) {
+            return;
+        }
+
+        $pools = $cacheConfig['pools'] ?? [];
+
+        if ($pools === []) {
+            return;
+        }
+
+        foreach ($pools as $name => $poolConfig) {
+            $this->registerCachePool((string) $name, $poolConfig, $connectionNames, $container);
+        }
+    }
+
+    /**
+     * @param array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool} $poolConfig
+     * @param list<string> $connectionNames
+     */
+    private function registerCachePool(string $name, array $poolConfig, array $connectionNames, ContainerBuilder $container) : void
+    {
+        $connectionName = $poolConfig['connection'] ?? $connectionNames[0];
+
+        if (!\in_array($connectionName, $connectionNames, true)) {
+            throw new \LogicException(\sprintf(
+                'Cache pool "%s" references unknown connection "%s". Declared connections: %s',
+                $name,
+                $connectionName,
+                \implode(', ', $connectionNames),
+            ));
+        }
+
+        $catalogDef = new Definition(CacheCatalogProvider::class, [
+            $poolConfig['table_name'],
+            $poolConfig['schema'],
+            $poolConfig['id_col'],
+            $poolConfig['data_col'],
+            $poolConfig['lifetime_col'],
+            $poolConfig['time_col'],
+        ]);
+        $catalogDef->addTag('flow.postgresql.catalog_provider');
+        $container->setDefinition("flow.postgresql.cache.pool.{$name}.catalog_provider", $catalogDef);
+
+        $connectionRef = ($poolConfig['share_connection'] ?? false)
+            ? new Reference("flow.postgresql.{$connectionName}.client")
+            : new Reference("flow.postgresql.{$connectionName}.connection_parameters");
+
+        $adapterDef = new Definition(FlowPostgreSqlCacheAdapter::class, [
+            $connectionRef,
+            $poolConfig['namespace'],
+            $poolConfig['default_lifetime'],
+            [
+                'db_table' => $poolConfig['table_name'],
+                'db_schema' => $poolConfig['schema'],
+                'db_id_col' => $poolConfig['id_col'],
+                'db_data_col' => $poolConfig['data_col'],
+                'db_lifetime_col' => $poolConfig['lifetime_col'],
+                'db_time_col' => $poolConfig['time_col'],
+            ],
+            $poolConfig['marshaller_service_id'] !== null
+                ? new Reference($poolConfig['marshaller_service_id'])
+                : null,
+        ]);
+        $adapterDef->setPublic(true);
+        $container->setDefinition("flow.postgresql.cache.pool.{$name}", $adapterDef);
     }
 
     /**
@@ -295,6 +373,81 @@ final class FlowPostgreSqlExtension extends Extension
             $container->setAlias(MigrationGenerator::class, "flow.postgresql.{$name}.migrations.generator");
             $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.{$name}.migrations.diff_generator");
         }
+    }
+
+    /**
+     * @param array{enabled?: bool, connection?: ?string, table_name?: string, schema?: string, id_col?: string, data_col?: string, lifetime_col?: string, time_col?: string, lock_mode?: string, ttl?: ?int, share_connection?: bool} $sessionConfig
+     * @param list<string> $connectionNames
+     */
+    private function registerSession(array $sessionConfig, array $connectionNames, ContainerBuilder $container) : void
+    {
+        if (!\class_exists(FlowPostgreSqlSessionHandler::class)) {
+            return;
+        }
+
+        if (!($sessionConfig['enabled'] ?? false)) {
+            return;
+        }
+
+        $connectionName = $sessionConfig['connection'] ?? $connectionNames[0];
+
+        if (!\in_array($connectionName, $connectionNames, true)) {
+            throw new \LogicException(\sprintf(
+                'Session references unknown connection "%s". Declared connections: %s',
+                $connectionName,
+                \implode(', ', $connectionNames),
+            ));
+        }
+
+        $tableName = $sessionConfig['table_name'] ?? 'sessions';
+        $schema = $sessionConfig['schema'] ?? 'public';
+        $idCol = $sessionConfig['id_col'] ?? 'sess_id';
+        $dataCol = $sessionConfig['data_col'] ?? 'sess_data';
+        $lifetimeCol = $sessionConfig['lifetime_col'] ?? 'sess_lifetime';
+        $timeCol = $sessionConfig['time_col'] ?? 'sess_time';
+
+        $catalogDef = new Definition(SessionCatalogProvider::class, [
+            $tableName,
+            $schema,
+            $idCol,
+            $dataCol,
+            $lifetimeCol,
+            $timeCol,
+        ]);
+        $catalogDef->addTag('flow.postgresql.catalog_provider');
+        $container->setDefinition('flow.postgresql.session.catalog_provider', $catalogDef);
+
+        $lockMode = match ($sessionConfig['lock_mode'] ?? 'transactional') {
+            'none' => FlowPostgreSqlSessionHandler::LOCK_NONE,
+            'advisory' => FlowPostgreSqlSessionHandler::LOCK_ADVISORY,
+            default => FlowPostgreSqlSessionHandler::LOCK_TRANSACTIONAL,
+        };
+
+        $connectionRef = ($sessionConfig['share_connection'] ?? false)
+            ? new Reference("flow.postgresql.{$connectionName}.client")
+            : new Reference("flow.postgresql.{$connectionName}.connection_parameters");
+
+        $handlerDef = new Definition(FlowPostgreSqlSessionHandler::class, [
+            $connectionRef,
+            [
+                'db_table' => $tableName,
+                'db_schema' => $schema,
+                'db_id_col' => $idCol,
+                'db_data_col' => $dataCol,
+                'db_lifetime_col' => $lifetimeCol,
+                'db_time_col' => $timeCol,
+                'lock_mode' => $lockMode,
+                'ttl' => $sessionConfig['ttl'] ?? null,
+            ],
+        ]);
+        $handlerDef->setPublic(true);
+        $container->setDefinition('flow.postgresql.session.handler', $handlerDef);
+
+        $commandDef = new Definition(SessionPurgeCommand::class, [
+            new Reference('flow.postgresql.session.handler'),
+        ]);
+        $commandDef->addTag('console.command');
+        $container->setDefinition('flow.postgresql.session.purge_command', $commandDef);
     }
 
     private function registerStaticConnection(string $name, ContainerBuilder $container) : void

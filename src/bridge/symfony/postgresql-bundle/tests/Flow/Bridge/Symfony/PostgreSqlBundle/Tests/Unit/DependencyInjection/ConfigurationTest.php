@@ -11,6 +11,112 @@ use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
 {
+    public function test_cache_pool_connection_can_be_null() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => [],
+                ],
+            ],
+        ]]);
+
+        self::assertNull($config['cache']['pools']['app']['connection']);
+    }
+
+    public function test_cache_pool_share_connection_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['share_connection' => true],
+                ],
+            ],
+        ]]);
+
+        self::assertTrue($config['cache']['pools']['app']['share_connection']);
+    }
+
+    public function test_cache_pools_custom_columns_and_namespace() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'sessions' => [
+                        'connection' => 'default',
+                        'table_name' => 'app_cache',
+                        'schema' => 'caching',
+                        'id_col' => 'k',
+                        'data_col' => 'v',
+                        'lifetime_col' => 'ttl',
+                        'time_col' => 'ts',
+                        'namespace' => 'sess.',
+                        'default_lifetime' => 3600,
+                        'marshaller_service_id' => 'app.marshaller',
+                    ],
+                ],
+            ],
+        ]]);
+
+        $pool = $config['cache']['pools']['sessions'];
+        self::assertSame('default', $pool['connection']);
+        self::assertSame('app_cache', $pool['table_name']);
+        self::assertSame('caching', $pool['schema']);
+        self::assertSame('k', $pool['id_col']);
+        self::assertSame('v', $pool['data_col']);
+        self::assertSame('ttl', $pool['lifetime_col']);
+        self::assertSame('ts', $pool['time_col']);
+        self::assertSame('sess.', $pool['namespace']);
+        self::assertSame(3600, $pool['default_lifetime']);
+        self::assertSame('app.marshaller', $pool['marshaller_service_id']);
+    }
+
+    public function test_cache_pools_default_table_and_schema() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => [],
+                ],
+            ],
+        ]]);
+
+        $pool = $config['cache']['pools']['app'];
+        self::assertSame('cache_items', $pool['table_name']);
+        self::assertSame('public', $pool['schema']);
+        self::assertSame('item_id', $pool['id_col']);
+        self::assertSame('item_data', $pool['data_col']);
+        self::assertSame('item_lifetime', $pool['lifetime_col']);
+        self::assertSame('item_time', $pool['time_col']);
+        self::assertSame('', $pool['namespace']);
+        self::assertSame(0, $pool['default_lifetime']);
+        self::assertNull($pool['marshaller_service_id']);
+        self::assertFalse($pool['share_connection']);
+    }
+
+    public function test_cache_section_can_be_omitted() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]]);
+
+        self::assertSame([], $config['cache']['pools']);
+    }
+
     public function test_catalog_providers_at_top_level_with_inline_catalog() : void
     {
         $catalogData = [
@@ -250,6 +356,119 @@ final class ConfigurationTest extends TestCase
         self::assertArrayHasKey('analytics', $config['connections']);
         self::assertSame('postgresql://user:pass@localhost:5432/db1', $config['connections']['default']['dsn']);
         self::assertSame('postgresql://user:pass@localhost:5432/db2', $config['connections']['analytics']['dsn']);
+    }
+
+    public function test_session_default_disabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]]);
+
+        self::assertFalse($config['session']['enabled']);
+    }
+
+    public function test_session_defaults_when_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+            ],
+        ]]);
+
+        $session = $config['session'];
+        self::assertTrue($session['enabled']);
+        self::assertNull($session['connection']);
+        self::assertSame('sessions', $session['table_name']);
+        self::assertSame('public', $session['schema']);
+        self::assertSame('sess_id', $session['id_col']);
+        self::assertSame('sess_data', $session['data_col']);
+        self::assertSame('sess_lifetime', $session['lifetime_col']);
+        self::assertSame('sess_time', $session['time_col']);
+        self::assertSame('transactional', $session['lock_mode']);
+        self::assertNull($session['ttl']);
+        self::assertFalse($session['share_connection']);
+    }
+
+    public function test_session_lock_mode_rejects_invalid_value() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'lock_mode' => 'pessimistic',
+            ],
+        ]]);
+    }
+
+    public function test_session_overrides() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'connection' => 'default',
+                'table_name' => 'app_sessions',
+                'schema' => 'sess',
+                'id_col' => 'sid',
+                'data_col' => 'sdata',
+                'lifetime_col' => 'sttl',
+                'time_col' => 'sts',
+                'lock_mode' => 'advisory',
+                'ttl' => 7200,
+            ],
+        ]]);
+
+        $session = $config['session'];
+        self::assertSame('default', $session['connection']);
+        self::assertSame('app_sessions', $session['table_name']);
+        self::assertSame('sess', $session['schema']);
+        self::assertSame('sid', $session['id_col']);
+        self::assertSame('sdata', $session['data_col']);
+        self::assertSame('sttl', $session['lifetime_col']);
+        self::assertSame('sts', $session['time_col']);
+        self::assertSame('advisory', $session['lock_mode']);
+        self::assertSame(7200, $session['ttl']);
+    }
+
+    public function test_session_share_connection_can_be_enabled() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'share_connection' => true,
+            ],
+        ]]);
+
+        self::assertTrue($config['session']['share_connection']);
+    }
+
+    public function test_session_ttl_rejects_negative() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'session' => [
+                'enabled' => true,
+                'ttl' => -1,
+            ],
+        ]]);
     }
 
     public function test_single_connection_with_defaults() : void

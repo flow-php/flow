@@ -19,6 +19,19 @@ use Symfony\Component\HttpClient\Psr18Client;
 
 final class PSR18TraceableClientIntegrationTest extends TestCase
 {
+    private LocalHttpServer $server;
+
+    protected function setUp() : void
+    {
+        $this->server = new LocalHttpServer();
+        $this->server->start();
+    }
+
+    protected function tearDown() : void
+    {
+        $this->server->stop();
+    }
+
     public function test_real_http_request_creates_span() : void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
@@ -27,25 +40,25 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
         $httpClient = new Psr18Client();
         $traceableClient = psr18_traceable_client($httpClient, $telemetry);
 
-        $request = new Request('GET', 'http://flow-php.com');
+        $request = new Request('GET', $this->server->url());
         $response = $traceableClient->sendRequest($request);
 
-        self::assertGreaterThanOrEqual(200, $response->getStatusCode());
-        self::assertLessThan(400, $response->getStatusCode());
+        self::assertSame(200, $response->getStatusCode());
 
         $spans = $spanProcessor->endedSpans();
         self::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('GET flow-php.com', $span->name());
+        self::assertSame('GET 127.0.0.1', $span->name());
         self::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
         self::assertSame('GET', $attributes['http.request.method']);
-        self::assertSame('http://flow-php.com', $attributes['url.full']);
+        self::assertSame($this->server->url(), $attributes['url.full']);
         self::assertSame('http', $attributes['url.scheme']);
-        self::assertSame('flow-php.com', $attributes['server.address']);
-        self::assertArrayHasKey('http.response.status_code', $attributes);
+        self::assertSame('127.0.0.1', $attributes['server.address']);
+        self::assertSame($this->server->port(), $attributes['server.port']);
+        self::assertSame(200, $attributes['http.response.status_code']);
 
         self::assertNotNull($span->status());
         self::assertTrue($span->status()->isOk());

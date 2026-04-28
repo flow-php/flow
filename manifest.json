@@ -192,13 +192,28 @@
       "type": "bridge"
     },
     {
+      "name": "flow-php/symfony-filesystem-cache-bridge",
+      "path": "src/bridge/symfony/filesystem-cache",
+      "type": "bridge"
+    },
+    {
       "name": "flow-php/symfony-postgresql-bundle",
       "path": "src/bridge/symfony/postgresql-bundle",
       "type": "bridge"
     },
     {
+      "name": "flow-php/symfony-postgresql-cache-bridge",
+      "path": "src/bridge/symfony/postgresql-cache",
+      "type": "bridge"
+    },
+    {
       "name": "flow-php/symfony-postgresql-messenger-bridge",
       "path": "src/bridge/symfony/postgresql-messenger",
+      "type": "bridge"
+    },
+    {
+      "name": "flow-php/symfony-postgresql-session-bridge",
+      "path": "src/bridge/symfony/postgresql-session",
       "type": "bridge"
     },
     {

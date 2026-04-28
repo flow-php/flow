@@ -67,7 +67,7 @@ final class RegisterFstabLocatorPassTest extends TestCase
         /** @var array<string, Reference> $refs */
         $refs = $definition->getArgument(0);
         self::assertSame(['default', 'secondary'], \array_keys($refs));
-        self::assertSame('.flow_filesystem.fstab.default', (string) $refs['default']);
-        self::assertSame('.flow_filesystem.fstab.secondary', (string) $refs['secondary']);
+        self::assertSame('.flow.filesystem.fstab.default', (string) $refs['default']);
+        self::assertSame('.flow.filesystem.fstab.secondary', (string) $refs['secondary']);
     }
 }

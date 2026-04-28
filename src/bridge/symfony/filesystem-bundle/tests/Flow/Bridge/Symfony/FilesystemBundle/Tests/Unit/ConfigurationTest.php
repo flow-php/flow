@@ -26,6 +26,190 @@ final class ConfigurationTest extends TestCase
         $this->context->shutdown();
     }
 
+    public function test_cache_pool_default_lifetime_default_is_zero() : void
+    {
+        $config = $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['filesystem' => 'file', 'path' => '/cache'],
+                ],
+            ],
+        ]);
+
+        self::assertSame(0, $config['cache']['pools']['app']['default_lifetime']);
+    }
+
+    public function test_cache_pool_fstab_default_is_null() : void
+    {
+        $config = $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['filesystem' => 'file', 'path' => '/cache'],
+                ],
+            ],
+        ]);
+
+        self::assertNull($config['cache']['pools']['app']['fstab']);
+    }
+
+    public function test_cache_pool_marshaller_service_id_default_is_null() : void
+    {
+        $config = $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['filesystem' => 'file', 'path' => '/cache'],
+                ],
+            ],
+        ]);
+
+        self::assertNull($config['cache']['pools']['app']['marshaller_service_id']);
+    }
+
+    public function test_cache_pool_namespace_default_is_empty_string() : void
+    {
+        $config = $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['filesystem' => 'file', 'path' => '/cache'],
+                ],
+            ],
+        ]);
+
+        self::assertSame('', $config['cache']['pools']['app']['namespace']);
+    }
+
+    public function test_cache_pool_requires_filesystem() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['path' => '/cache'],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_cache_pool_requires_path() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['filesystem' => 'file'],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_cache_pool_unknown_filesystem_throws() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['filesystem' => 'no-such-mount', 'path' => '/cache'],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_cache_pool_unknown_fstab_throws() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => ['fstab' => 'no-such-fstab', 'filesystem' => 'file', 'path' => '/cache'],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_cache_pools_can_be_configured_with_minimum_fields() : void
+    {
+        $config = $this->context->processConfig([
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+            'cache' => [
+                'pools' => [
+                    'app' => [
+                        'filesystem' => 'file',
+                        'path' => '/cache',
+                    ],
+                ],
+            ],
+        ]);
+
+        self::assertSame('file', $config['cache']['pools']['app']['filesystem']);
+        self::assertSame('/cache', $config['cache']['pools']['app']['path']);
+    }
+
     public function test_default_fstab_implicitly_resolves_to_fstab_named_default() : void
     {
         $config = $this->context->processConfig([

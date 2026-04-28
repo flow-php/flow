@@ -161,17 +161,35 @@
         <testsuite name="bridge-symfony-filesystem-bundle-integration">
             <directory>src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-symfony-filesystem-cache-unit">
+            <directory>src/bridge/symfony/filesystem-cache/tests/Flow/Bridge/Symfony/FilesystemCache/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-filesystem-cache-integration">
+            <directory>src/bridge/symfony/filesystem-cache/tests/Flow/Bridge/Symfony/FilesystemCache/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-postgresql-bundle-unit">
             <directory>src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Unit</directory>
         </testsuite>
         <testsuite name="bridge-symfony-postgresql-bundle-integration">
             <directory>src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="bridge-symfony-postgresql-cache-unit">
+            <directory>src/bridge/symfony/postgresql-cache/tests/Flow/Bridge/Symfony/PostgreSQLCache/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-postgresql-cache-integration">
+            <directory>src/bridge/symfony/postgresql-cache/tests/Flow/Bridge/Symfony/PostgreSQLCache/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-symfony-postgresql-messenger-unit">
             <directory>src/bridge/symfony/postgresql-messenger/tests/Flow/Bridge/Symfony/PostgreSQLMessenger/Tests/Unit</directory>
         </testsuite>
         <testsuite name="bridge-symfony-postgresql-messenger-integration">
             <directory>src/bridge/symfony/postgresql-messenger/tests/Flow/Bridge/Symfony/PostgreSQLMessenger/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-postgresql-session-unit">
+            <directory>src/bridge/symfony/postgresql-session/tests/Flow/Bridge/Symfony/PostgreSQLSession/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-postgresql-session-integration">
+            <directory>src/bridge/symfony/postgresql-session/tests/Flow/Bridge/Symfony/PostgreSQLSession/Tests/Integration</directory>
         </testsuite>
         <testsuite name="bridge-symfony-telemetry-bundle-unit">
             <directory>src/bridge/symfony/telemetry-bundle/tests/Flow/Bridge/Symfony/TelemetryBundle/Tests/Unit</directory>
