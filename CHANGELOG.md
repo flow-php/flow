@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-04-26
+## [Unreleased] - 2026-04-28
 
 ### Added
+- [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/session bridge** - [@norberttech](https://github.com/norberttech)
+- [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/cache bridge** - [@norberttech](https://github.com/norberttech)
+- [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/filesystem symfony/cache bridge** - [@norberttech](https://github.com/norberttech)
+- [#2335](https://github.com/flow-php/flow/pull/2335) - **add cache / session bridges to postgresql bundle** - [@norberttech](https://github.com/norberttech)
+- [#2335](https://github.com/flow-php/flow/pull/2335) - **add cache bridge to filesystem bundle** - [@norberttech](https://github.com/norberttech)
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: support for env vars** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
