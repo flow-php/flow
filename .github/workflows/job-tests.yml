@@ -116,32 +116,12 @@ jobs:
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
-      - name: "Test - Libraries"
-        run: "composer test:libraries"
-        env:
-          FLOW_PARQUET_TESTS_DEBUG: "0"
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
-
       - name: "Test - ETL Core"
-        run: "composer test:core"
-
-      - name: "Test - CLI"
-        run: "composer test:cli"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-
-      - name: "Test - Adapters"
-        run: "composer test:adapters"
-        env:
+        timeout-minutes: 10
+        run: "composer -- --coverage-clover=./var/phpunit/coverage/clover/coverage.xml"
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
-
-      - name: "Test - Bridges"
-        run: "composer test:bridges"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"
           AZURITE_ACCOUNT_NAME: "flowphpaccount01"
@@ -153,6 +133,7 @@ jobs:
           OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
           OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
           OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
+          FLOW_PARQUET_TESTS_DEBUG: "0"
 
       - name: Upload to Codecov
         uses: ./.github/actions/codecov-report

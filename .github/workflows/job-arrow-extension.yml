@@ -91,7 +91,7 @@ jobs:
         run: composer install --no-interaction --no-progress
 
       - name: Run Parquet Integration Tests with Arrow
-        run: composer test:lib:parquet
+        run: composer test -- --testsuite=lib-parquet-integration
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php == '8.3' && matrix.os == 'ubuntu-latest' }}
