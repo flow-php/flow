@@ -184,7 +184,7 @@ final class DomainDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(star())->from(table(self::TABLE_NAME))->toSql()
         );
 
@@ -279,7 +279,7 @@ final class DomainDatabaseTest extends PostgreSqlTestCase
 
     private function domainExists(string $name) : bool
     {
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             "SELECT EXISTS(
                     SELECT 1 FROM pg_type t
                     JOIN pg_namespace n ON t.typnamespace = n.oid

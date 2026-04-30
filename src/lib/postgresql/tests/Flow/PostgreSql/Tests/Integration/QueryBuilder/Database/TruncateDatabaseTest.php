@@ -94,7 +94,7 @@ final class TruncateDatabaseTest extends PostgreSqlTestCase
 
     public function test_truncate_continue_identity() : void
     {
-        $lastRow = $this->pgsqlContext()->client()->fetchOne(
+        $lastRow = $this->pgsqlContext()->client()->fetchSingle(
             select(col('id'))->from(table(self::TABLE_ONE))->orderBy(desc(col('id')))->limit(1)->toSql()
         );
         $lastId = (int) $lastRow['id'];
@@ -111,7 +111,7 @@ final class TruncateDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(star())->from(table(self::TABLE_ONE))->toSql()
         );
 
@@ -149,7 +149,7 @@ final class TruncateDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(star())->from(table(self::TABLE_ONE))->toSql()
         );
 
@@ -208,7 +208,7 @@ final class TruncateDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(star())->from(table(self::TABLE_ONE))->toSql()
         );
 

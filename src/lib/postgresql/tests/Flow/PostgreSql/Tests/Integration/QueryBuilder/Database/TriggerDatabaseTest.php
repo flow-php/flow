@@ -279,7 +279,7 @@ final class TriggerDatabaseTest extends PostgreSqlTestCase
 
     protected function triggerExists(string $triggerName, string $tableName) : bool
     {
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             "SELECT EXISTS(
                     SELECT 1 FROM pg_trigger t
                     JOIN pg_class c ON t.tgrelid = c.oid

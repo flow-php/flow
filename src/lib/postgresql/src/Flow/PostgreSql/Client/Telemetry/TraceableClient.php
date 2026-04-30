@@ -244,19 +244,19 @@ final class TraceableClient implements Client
         );
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : array
+    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : array {
+            function () use ($sql, $parameters, $query) : ?array {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchOne($sql, $parameters);
             },
-            static fn (array $row) => 1,
+            static fn (?array $row) => $row !== null ? 1 : 0,
         );
     }
 
@@ -275,7 +275,7 @@ final class TraceableClient implements Client
 
                 return $this->client->fetchOneInto($mapper, $sql, $parameters);
             },
-            static fn (mixed $result) => 1,
+            static fn (mixed $result) => $result !== null ? 1 : 0,
         );
     }
 
@@ -356,6 +356,41 @@ final class TraceableClient implements Client
                 return $this->client->fetchScalarString($sql, $parameters);
             },
             static fn (string $value) => 1,
+        );
+    }
+
+    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    {
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
+
+        return $this->traceQuery(
+            $query,
+            $parameters,
+            function () use ($sql, $parameters, $query) : array {
+                $this->logQuery($query, $parameters);
+
+                return $this->client->fetchSingle($sql, $parameters);
+            },
+            static fn (array $row) => 1,
+        );
+    }
+
+    public function fetchSingleInto(
+        RowMapper $mapper,
+        Sql|string $sql,
+        array $parameters = [],
+    ) : mixed {
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
+
+        return $this->traceQuery(
+            $query,
+            $parameters,
+            function () use ($mapper, $sql, $parameters, $query) : mixed {
+                $this->logQuery($query, $parameters);
+
+                return $this->client->fetchSingleInto($mapper, $sql, $parameters);
+            },
+            static fn (mixed $result) => 1,
         );
     }
 

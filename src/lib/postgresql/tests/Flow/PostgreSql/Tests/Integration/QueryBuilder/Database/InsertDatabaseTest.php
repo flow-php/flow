@@ -67,7 +67,7 @@ final class InsertDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('name'))
                 ->from(table(self::TABLE_PRODUCTS))
                 ->where(eq(col('sku'), literal('SKU001')))
@@ -105,7 +105,7 @@ final class InsertDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('name'))
                 ->from(table(self::TABLE_PRODUCTS))
                 ->where(eq(col('sku'), literal('SKU006')))
@@ -137,7 +137,7 @@ final class InsertDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('name'), col('price'))
                 ->from(table(self::TABLE_PRODUCTS))
                 ->where(eq(col('sku'), literal('SKU007')))
@@ -155,7 +155,7 @@ final class InsertDatabaseTest extends PostgreSqlTestCase
             ->values(literal('SKU004'), literal('Product D'), literal(400))
             ->returning(col('id'), col('sku'));
 
-        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchSingle($query->toSql());
 
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('sku', $row);
@@ -170,7 +170,7 @@ final class InsertDatabaseTest extends PostgreSqlTestCase
             ->values(literal('SKU005'), literal('Product E'), literal(500))
             ->returningAll();
 
-        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchSingle($query->toSql());
 
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('sku', $row);
@@ -201,7 +201,7 @@ final class InsertDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('name'))
                 ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
                 ->where(eq(col('sku'), literal('SCHEMA-SKU')))

@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 use function Flow\PostgreSql\DSL\{begin, commit, listen, release_savepoint, rollback, savepoint, unlisten};
 use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context as ClientContext, Cursor, Notification, Query, RowMapper, TransactionContext, TypedValue};
-use Flow\PostgreSql\Client\Exception\{ConnectionException, PostgreSqlError, QueryException, ResultException, TransactionException, ValueConversionException};
+use Flow\PostgreSql\Client\Exception\{ConnectionException, NoResultException, PostgreSqlError, QueryException, ResultException, TooManyRowsException, TransactionException, ValueConversionException};
 use Flow\PostgreSql\Client\RowMapper\Context;
 use Flow\PostgreSql\Client\Types\{ResultCaster, ValueConverters, ValueType};
 use Flow\PostgreSql\Explain\ExplainParser;
@@ -202,7 +202,7 @@ final class PgSqlClient implements Client
         return $mapper->map($row, $this->buildContext($sql, $parameters));
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : array
+    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
     {
         $result = $this->query($sql, $parameters);
         $count = \pg_num_rows($result);
@@ -210,13 +210,13 @@ final class PgSqlClient implements Client
         if ($count === 0) {
             \pg_free_result($result);
 
-            throw ResultException::noRowsFound();
+            return null;
         }
 
         if ($count > 1) {
             \pg_free_result($result);
 
-            throw ResultException::tooManyRows($count);
+            throw new TooManyRowsException($count);
         }
 
         $row = \pg_fetch_assoc($result);
@@ -224,7 +224,7 @@ final class PgSqlClient implements Client
         if ($row === false) {
             \pg_free_result($result);
 
-            throw ResultException::noRowsFound();
+            return null;
         }
 
         $converted = $this->convertRow($result, $row);
@@ -238,7 +238,13 @@ final class PgSqlClient implements Client
         Sql|string $sql,
         array $parameters = [],
     ) : mixed {
-        return $mapper->map($this->fetchOne($sql, $parameters), $this->buildContext($sql, $parameters));
+        $row = $this->fetchOne($sql, $parameters);
+
+        if ($row === null) {
+            return null;
+        }
+
+        return $mapper->map($row, $this->buildContext($sql, $parameters));
     }
 
     public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed
@@ -310,6 +316,25 @@ final class PgSqlClient implements Client
         }
 
         return $value;
+    }
+
+    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    {
+        $row = $this->fetchOne($sql, $parameters);
+
+        if ($row === null) {
+            throw new NoResultException();
+        }
+
+        return $row;
+    }
+
+    public function fetchSingleInto(
+        RowMapper $mapper,
+        Sql|string $sql,
+        array $parameters = [],
+    ) : mixed {
+        return $mapper->map($this->fetchSingle($sql, $parameters), $this->buildContext($sql, $parameters));
     }
 
     public function getTransactionNestingLevel() : int

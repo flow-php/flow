@@ -78,7 +78,7 @@ final class SpyClient implements Client
         throw new \RuntimeException('Not implemented');
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : array
+    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
     {
         throw new \RuntimeException('Not implemented');
     }
@@ -109,6 +109,16 @@ final class SpyClient implements Client
     }
 
     public function fetchScalarString(Sql|string $sql, array $parameters = []) : string
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    public function fetchSingleInto(RowMapper $mapper, Sql|string $sql, array $parameters = []) : mixed
     {
         throw new \RuntimeException('Not implemented');
     }

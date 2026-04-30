@@ -190,7 +190,7 @@ final class TypeDatabaseTest extends PostgreSqlTestCase
             'INSERT INTO ' . self::TABLE_NAME . " (name, address) VALUES ('John', ROW('123 Main St', 'NYC'))"
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             'SELECT name, (address).street, (address).city FROM ' . self::TABLE_NAME
         );
 
@@ -234,7 +234,7 @@ final class TypeDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(star())->from(table(self::TABLE_NAME))->toSql()
         );
 
@@ -303,7 +303,7 @@ final class TypeDatabaseTest extends PostgreSqlTestCase
 
     protected function typeExists(string $name) : bool
     {
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             "SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = '{$name}') AS type_exists"
         );
 

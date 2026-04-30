@@ -151,7 +151,7 @@ final class UtilityDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             "SELECT obj_description('" . self::TABLE_NAME . "'::regclass, 'pg_class') AS comment"
         );
 
@@ -172,7 +172,7 @@ final class UtilityDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             "SELECT obj_description('" . self::TABLE_NAME . "'::regclass, 'pg_class') AS comment"
         );
 
