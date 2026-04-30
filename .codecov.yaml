@@ -1,14 +1,10 @@
 codecov:
   notify:
-    after_n_builds: 5
+    after_n_builds: 3
 
 comment:
   layout: "condensed_header, diff, components"
-  after_n_builds: 5
-
-flag_management:
-  default_rules:
-    carryforward: true
+  after_n_builds: 3
 
 component_management:
   individual_components:
@@ -76,6 +72,10 @@ component_management:
       name: bridge-monolog-http
       paths:
         - src/bridge/monolog/http/**
+    - component_id: bridge-monolog-telemetry
+      name: bridge-monolog-telemetry
+      paths:
+        - src/bridge/monolog/telemetry/**
     - component_id: bridge-openapi-specification
       name: bridge-openapi-specification
       paths:

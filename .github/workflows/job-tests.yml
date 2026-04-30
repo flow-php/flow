@@ -116,9 +116,9 @@ jobs:
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
-      - name: "Test - ETL Core"
+      - name: "Test"
         timeout-minutes: 10
-        run: "composer -- --coverage-clover=./var/phpunit/coverage/clover/coverage.xml"
+        run: "composer test -- --coverage-clover=./var/phpunit/coverage/clover/coverage.xml --log-junit ./var/phpunit/logs/junit.xml"
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
