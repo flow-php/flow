@@ -59,17 +59,31 @@ services:
             - "6379:6379"
         networks:
             - flow-php
-    localstack:
-        image: localstack/localstack:latest
-        container_name: flow-php-localstack
+    minio:
+        image: minio/minio:latest
+        container_name: flow-php-minio
+        command: server /data --console-address ":9001"
         ports:
-            - "4566:4566"
+            - "9000:9000"
+            - "9001:9001"
         environment:
-            - SERVICES=s3
-            - DEBUG=1
-            - DATA_DIR=/var/localstack/data
+            - MINIO_ROOT_USER=minioadmin
+            - MINIO_ROOT_PASSWORD=minioadmin
         volumes:
-            - "./var/localstack:/var/localstack"
+            - "./var/minio:/data"
+        networks:
+            - flow-php
+    minio-init:
+        image: minio/mc
+        container_name: flow-php-minio-init
+        depends_on:
+            - minio
+        entrypoint: >
+            /bin/sh -c "
+            until mc alias set flow http://minio:9000 minioadmin minioadmin; do sleep 1; done;
+            mc mb flow/flowphpbucket01 --ignore-existing;
+            exit 0;
+            "
         networks:
             - flow-php
     aspire:
