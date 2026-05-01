@@ -21,7 +21,7 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->plus(BigDecimal::of((string) $b));
 
-        if (!$result->hasNonZeroFractionalPart()) {
+        if (!self::hasNonZeroFractionalPart($result)) {
             return $result->toInt();
         }
 
@@ -39,9 +39,10 @@ final class Calculator
     {
         try {
             if ($scale === null && $rounding === null) {
-                $result = BigDecimal::of($a)->dividedBy(BigDecimal::of($b));
+                $aDecimal = BigDecimal::of((string) $a);
+                $result = $aDecimal->dividedBy(BigDecimal::of((string) $b), $aDecimal->getScale());
 
-                if (!$result->hasNonZeroFractionalPart()) {
+                if (!self::hasNonZeroFractionalPart($result)) {
                     return $result->toInt();
                 }
             }
@@ -63,7 +64,7 @@ final class Calculator
 
             $result = BigDecimal::of((string) $a)->dividedBy(BigDecimal::of((string) $b), $scale, $brickMode);
 
-            if (!$result->hasNonZeroFractionalPart()) {
+            if (!self::hasNonZeroFractionalPart($result)) {
                 return $result->toInt();
             }
 
@@ -92,7 +93,7 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->multipliedBy(BigDecimal::of((string) $b));
 
-        if (!$result->hasNonZeroFractionalPart()) {
+        if (!self::hasNonZeroFractionalPart($result)) {
             return $result->toInt();
         }
 
@@ -107,7 +108,7 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->power(BigInteger::of((string) $b)->toInt());
 
-        if (!$result->hasNonZeroFractionalPart()) {
+        if (!self::hasNonZeroFractionalPart($result)) {
             return $result->toInt();
         }
 
@@ -122,10 +123,19 @@ final class Calculator
     {
         $result = BigDecimal::of((string) $a)->minus(BigDecimal::of((string) $b));
 
-        if (!$result->hasNonZeroFractionalPart()) {
+        if (!self::hasNonZeroFractionalPart($result)) {
             return $result->toInt();
         }
 
         return $result->toFloat();
+    }
+
+    private static function hasNonZeroFractionalPart(BigDecimal $result) : bool
+    {
+        if (method_exists($result, 'hasNonZeroFractionalPart')) { // @phpstan-ignore function.alreadyNarrowedType
+            return $result->hasNonZeroFractionalPart();
+        }
+
+        return !$result->getFractionalPart()->isZero(); // @phpstan-ignore method.nonObject
     }
 }
