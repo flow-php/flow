@@ -77,7 +77,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute(commit()->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
                 ->where(eq(col('name'), literal('Account A')))
@@ -88,7 +88,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
 
     public function test_begin_and_rollback() : void
     {
-        $beforeRow = $this->pgsqlContext()->client()->fetchOne(
+        $beforeRow = $this->pgsqlContext()->client()->fetchSingle(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
                 ->where(eq(col('name'), literal('Account A')))
@@ -107,7 +107,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute(rollback()->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
                 ->where(eq(col('name'), literal('Account A')))
@@ -157,7 +157,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute(rollback()->toSavepoint('sp_rollback')->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
                 ->where(eq(col('name'), literal('Account A')))
@@ -189,7 +189,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
         $this->pgsqlContext()->client()->execute(release_savepoint('sp1')->toSql());
         $this->pgsqlContext()->client()->execute(commit()->toSql());
 
-        $rowA = $this->pgsqlContext()->client()->fetchOne(
+        $rowA = $this->pgsqlContext()->client()->fetchSingle(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
                 ->where(eq(col('name'), literal('Account A')))
@@ -197,7 +197,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
         );
         self::assertSame('800.00', $rowA['balance']);
 
-        $rowB = $this->pgsqlContext()->client()->fetchOne(
+        $rowB = $this->pgsqlContext()->client()->fetchSingle(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
                 ->where(eq(col('name'), literal('Account B')))

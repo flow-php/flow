@@ -50,7 +50,7 @@ final class SchemaDatabaseTest extends PostgreSqlTestCase
             create()->schema(self::SCHEMA_NAME)->toSql()
         );
 
-        $currentUser = $this->pgsqlContext()->client()->fetchOne('SELECT current_user AS username');
+        $currentUser = $this->pgsqlContext()->client()->fetchSingle('SELECT current_user AS username');
         self::assertIsString($currentUser['username']);
 
         $this->pgsqlContext()->client()->execute(
@@ -100,7 +100,7 @@ final class SchemaDatabaseTest extends PostgreSqlTestCase
 
     public function test_create_schema_with_authorization() : void
     {
-        $currentUser = $this->pgsqlContext()->client()->fetchOne('SELECT current_user AS username');
+        $currentUser = $this->pgsqlContext()->client()->fetchSingle('SELECT current_user AS username');
         self::assertIsString($currentUser['username']);
 
         $this->pgsqlContext()->client()->execute(
@@ -134,7 +134,7 @@ final class SchemaDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(star())->from(table(self::TABLE_NAME, self::SCHEMA_NAME))->toSql()
         );
 
@@ -203,7 +203,7 @@ final class SchemaDatabaseTest extends PostgreSqlTestCase
 
     protected function schemaExists(string $name) : bool
     {
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             "SELECT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname = '{$name}') AS schema_exists"
         );
 

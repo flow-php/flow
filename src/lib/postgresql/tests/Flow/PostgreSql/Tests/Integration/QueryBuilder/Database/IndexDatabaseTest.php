@@ -75,7 +75,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(eq(col('indexname'), literal(self::INDEX_COMPOSITE)))
@@ -92,7 +92,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(
@@ -113,7 +113,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
         $this->pgsqlContext()->client()->execute($query->toSql());
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
@@ -131,7 +131,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
@@ -149,7 +149,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
@@ -187,7 +187,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
         $dropQuery = drop()->index(self::INDEX_NAME);
         $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(eq(col('indexname'), literal(self::INDEX_NAME)))
@@ -201,7 +201,7 @@ final class IndexDatabaseTest extends PostgreSqlTestCase
         $dropQuery = drop()->index(self::INDEX_NAME)->ifExists();
         $this->pgsqlContext()->client()->execute($dropQuery->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(eq(col('indexname'), literal(self::INDEX_NAME)))

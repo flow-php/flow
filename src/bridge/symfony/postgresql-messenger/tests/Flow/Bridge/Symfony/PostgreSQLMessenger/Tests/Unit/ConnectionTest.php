@@ -176,7 +176,7 @@ final class ConnectionTest extends TestCase
     public function test_send_inserts_message_and_returns_id() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 100];
+        $client->fetchSingleReturn = ['id' => 100];
         $connection = new Connection($client);
 
         $id = $connection->send('hello', ['type' => 'App\\Foo']);
@@ -192,7 +192,7 @@ final class ConnectionTest extends TestCase
     public function test_send_returns_string_id_from_int_return() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 42];
+        $client->fetchSingleReturn = ['id' => 42];
         $connection = new Connection($client);
 
         self::assertSame('42', $connection->send('body', []));
@@ -201,7 +201,7 @@ final class ConnectionTest extends TestCase
     public function test_send_returns_string_id_from_string_return() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => '99999999999999999'];
+        $client->fetchSingleReturn = ['id' => '99999999999999999'];
         $connection = new Connection($client);
 
         self::assertSame('99999999999999999', $connection->send('body', []));
@@ -210,7 +210,7 @@ final class ConnectionTest extends TestCase
     public function test_send_throws_on_unexpected_row_shape() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => null];
+        $client->fetchSingleReturn = ['id' => null];
         $connection = new Connection($client);
 
         $this->expectException(TransportException::class);
@@ -221,7 +221,7 @@ final class ConnectionTest extends TestCase
     public function test_send_with_delay_offsets_available_at() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 1];
+        $client->fetchSingleReturn = ['id' => 1];
         $connection = new Connection($client);
 
         $connection->send('body', [], 5000);

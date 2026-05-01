@@ -96,7 +96,7 @@ final class DeleteDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_ARCHIVE))
                 ->toSql()
@@ -125,7 +125,7 @@ final class DeleteDatabaseTest extends PostgreSqlTestCase
             ->where(eq(col('level'), literal('ERROR')))
             ->returning(col('id'), col('level'), col('message'));
 
-        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchSingle($query->toSql());
 
         self::assertSame('ERROR', $row['level']);
         self::assertSame('Error occurred', $row['message']);
@@ -146,7 +146,7 @@ final class DeleteDatabaseTest extends PostgreSqlTestCase
             ->where(eq(col('level'), literal('TRACE')))
             ->returningAll();
 
-        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchSingle($query->toSql());
 
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('level', $row);
@@ -182,7 +182,7 @@ final class DeleteDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
                 ->toSql()
@@ -213,7 +213,7 @@ final class DeleteDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(2, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_LOGS))
                 ->where(eq(col('level'), literal('DEBUG')))

@@ -41,10 +41,10 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($alterQuery->toSql());
 
-        $this->pgsqlContext()->client()->fetchOne(
+        $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         self::assertSame(11, $row['val']);
@@ -55,10 +55,10 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
         $createQuery = create()->sequence(self::SEQUENCE_TEST)->startWith(1);
         $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
-        $this->pgsqlContext()->client()->fetchOne(
+        $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
-        $this->pgsqlContext()->client()->fetchOne(
+        $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
 
@@ -67,7 +67,7 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($alterQuery->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         self::assertSame(1, $row['val']);
@@ -96,10 +96,10 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $this->pgsqlContext()->client()->fetchOne(
+        $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         self::assertSame(15, $row['val']);
@@ -114,7 +114,7 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('min_value'), col('max_value'))
                 ->from(table('pg_sequences'))
                 ->where(eq(col('sequencename'), literal(self::SEQUENCE_TEST)))
@@ -131,7 +131,7 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         self::assertSame(100, $row['val']);
@@ -169,13 +169,13 @@ final class SequenceDatabaseTest extends PostgreSqlTestCase
         $createQuery = create()->sequence(self::SEQUENCE_COUNTER)->startWith(1);
         $this->pgsqlContext()->client()->execute($createQuery->toSql());
 
-        $val1 = $this->pgsqlContext()->client()->fetchOne(
+        $val1 = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
         );
-        $val2 = $this->pgsqlContext()->client()->fetchOne(
+        $val2 = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
         );
-        $val3 = $this->pgsqlContext()->client()->fetchOne(
+        $val3 = $this->pgsqlContext()->client()->fetchSingle(
             select(func('nextval', [literal(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
         );
 

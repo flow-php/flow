@@ -16,9 +16,9 @@ use Flow\Types\Type;
  * return value becomes the mapper's output.
  *
  * @template TType
- * @template TNext = never
+ * @template TNext = TType
  *
- * @implements RowMapper<TNext|TType>
+ * @implements RowMapper<TNext>
  */
 final readonly class TypeMapper implements RowMapper
 {
@@ -40,24 +40,12 @@ final readonly class TypeMapper implements RowMapper
             throw new MappingException('Failed to map database row to type: ' . $e->getMessage(), previous: $e);
         }
 
-        return $this->forward($result, $this->next, $context);
-    }
-
-    /**
-     * @template TForwardNext
-     *
-     * @param TType $value
-     * @param null|RowMapper<TForwardNext> $next
-     *
-     * @return ($next is null ? TType : TForwardNext)
-     */
-    private function forward(mixed $value, ?RowMapper $next, Context $context) : mixed
-    {
-        if ($next === null) {
-            return $value;
+        if ($this->next === null) {
+            /** @var TNext $result */
+            return $result;
         }
 
-        /** @var array<string, mixed> $value */
-        return $next->map($value, $context);
+        /** @var array<string, mixed> $result */
+        return $this->next->map($result, $context);
     }
 }

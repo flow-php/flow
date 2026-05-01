@@ -267,7 +267,7 @@ final class TableDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($truncateQuery->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count()->as('cnt'))->from(table(self::TABLE_TEST))->toSql()
         );
         self::assertSame(0, $row['cnt']);

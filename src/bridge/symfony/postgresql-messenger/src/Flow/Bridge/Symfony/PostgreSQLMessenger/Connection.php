@@ -176,7 +176,7 @@ final readonly class Connection
             ? $now->modify(\sprintf('%+d seconds', (int) ($delay / 1000)))
             : $now;
 
-        $row = $this->client->fetchOne(
+        $row = $this->client->fetchSingle(
             insert()
                 ->into(table($this->tableName, $this->schemaName))
                 ->columns('body', 'headers', 'queue_name', 'created_at', 'available_at')
