@@ -118,7 +118,7 @@ jobs:
 
       - name: "Test"
         timeout-minutes: 10
-        run: "composer test -- --debug"
+        run: "composer test -- --coverage-clover=./var/phpunit/coverage/clover/coverage.xml --log-junit ./var/phpunit/logs/junit.xml"
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql

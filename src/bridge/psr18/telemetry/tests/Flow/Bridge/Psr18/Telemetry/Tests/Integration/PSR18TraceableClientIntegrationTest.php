@@ -15,33 +15,21 @@ use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
 use Nyholm\Psr7\Request;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\Psr18Client;
+use Symfony\Component\HttpClient\{MockHttpClient, Psr18Client};
+use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class PSR18TraceableClientIntegrationTest extends TestCase
 {
-    private LocalHttpServer $server;
-
-    protected function setUp() : void
-    {
-        $this->server = new LocalHttpServer();
-        $this->server->start();
-    }
-
-    protected function tearDown() : void
-    {
-        $this->server->stop();
-    }
-
     public function test_real_http_request_creates_span() : void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $httpClient = new Psr18Client();
+        $httpClient = new Psr18Client(new MockHttpClient(new MockResponse('ok', ['http_code' => 200])));
         $traceableClient = psr18_traceable_client($httpClient, $telemetry);
 
-        $request = new Request('GET', $this->server->url());
-        $response = $traceableClient->sendRequest($request);
+        $url = 'http://127.0.0.1:8080/';
+        $response = $traceableClient->sendRequest(new Request('GET', $url));
 
         self::assertSame(200, $response->getStatusCode());
 
@@ -54,10 +42,10 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
 
         $attributes = $span->attributes();
         self::assertSame('GET', $attributes['http.request.method']);
-        self::assertSame($this->server->url(), $attributes['url.full']);
+        self::assertSame($url, $attributes['url.full']);
         self::assertSame('http', $attributes['url.scheme']);
         self::assertSame('127.0.0.1', $attributes['server.address']);
-        self::assertSame($this->server->port(), $attributes['server.port']);
+        self::assertSame(8080, $attributes['server.port']);
         self::assertSame(200, $attributes['http.response.status_code']);
 
         self::assertNotNull($span->status());
