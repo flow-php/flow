@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client;
 
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Client\Exception\{ConnectionException, QueryException, TransactionException};
+use Flow\PostgreSql\Client\Exception\{ConnectionException, NoResultException, QueryException, TooManyRowsException, TransactionException};
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -138,21 +138,22 @@ interface Client
     ) : mixed;
 
     /**
-     * Fetch exactly one row. Throws if result has 0 or more than 1 row.
-     * Use when you expect precisely one result (e.g., SELECT by primary key).
+     * Fetch at most one row. Returns null when the result is empty, throws when it has more than one row.
+     * Use when you expect zero or one result (e.g., optional lookup by unique column).
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
-     * @throws QueryException When row count is not exactly 1
+     * @throws QueryException
+     * @throws TooManyRowsException When the result contains more than one row
      *
-     * @return array<string, mixed>
+     * @return null|array<string, mixed>
      */
-    public function fetchOne(Sql|string $sql, array $parameters = []) : array;
+    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array;
 
     /**
-     * Fetch exactly one row and map using the provided mapper.
-     * Throws if result has 0 or more than 1 row.
+     * Fetch at most one row and map using the provided mapper.
+     * Returns null when the result is empty, throws when it has more than one row.
      *
      * @template T
      *
@@ -160,9 +161,10 @@ interface Client
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
      * @param array<int, mixed> $parameters Positional parameters
      *
-     * @throws QueryException When row count is not exactly 1
+     * @throws QueryException
+     * @throws TooManyRowsException When the result contains more than one row
      *
-     * @return T
+     * @return null|T
      */
     public function fetchOneInto(
         RowMapper $mapper,
@@ -221,6 +223,43 @@ interface Client
      * @throws QueryException
      */
     public function fetchScalarString(Sql|string $sql, array $parameters = []) : string;
+
+    /**
+     * Fetch exactly one row. Throws if result has 0 or more than 1 row.
+     * Use when you expect precisely one result (e.g., SELECT by primary key, INSERT ... RETURNING).
+     *
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param array<int, mixed> $parameters Positional parameters
+     *
+     * @throws QueryException
+     * @throws NoResultException When the result is empty
+     * @throws TooManyRowsException When the result contains more than one row
+     *
+     * @return array<string, mixed>
+     */
+    public function fetchSingle(Sql|string $sql, array $parameters = []) : array;
+
+    /**
+     * Fetch exactly one row and map using the provided mapper.
+     * Throws if result has 0 or more than 1 row.
+     *
+     * @template T
+     *
+     * @param RowMapper<T> $mapper Mapper to apply to the row
+     * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
+     * @param array<int, mixed> $parameters Positional parameters
+     *
+     * @throws QueryException
+     * @throws NoResultException When the result is empty
+     * @throws TooManyRowsException When the result contains more than one row
+     *
+     * @return T
+     */
+    public function fetchSingleInto(
+        RowMapper $mapper,
+        Sql|string $sql,
+        array $parameters = [],
+    ) : mixed;
 
     /**
      * Get the current transaction nesting level.

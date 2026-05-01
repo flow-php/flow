@@ -24,7 +24,7 @@ use function Flow\PostgreSql\DSL\{
     star,
     values_table
 };
-use Flow\PostgreSql\Client\Exception\{QueryException, ResultException};
+use Flow\PostgreSql\Client\Exception\{NoResultException, QueryException, TooManyRowsException};
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
@@ -137,32 +137,44 @@ final class PgSqlClientTest extends PostgreSqlTestCase
         self::assertSame('Jane Doe', $user->name);
     }
 
-    public function test_fetch_one_returns_exactly_one_row() : void
+    public function test_fetch_one_into_returns_null_when_no_rows() : void
+    {
+        $user = $this->pgsqlContext()->client()->fetchOneInto(
+            constructor_mapper(TestUser::class),
+            select(literal(1)->as('id'), param(1)->as('name'), param(2)->as('email'))
+                ->where(is_true(literal(false))),
+            ['Jane Doe', 'jane@example.com']
+        );
+
+        self::assertNull($user);
+    }
+
+    public function test_fetch_one_returns_null_when_no_rows() : void
+    {
+        $row = $this->pgsqlContext()->client()->fetchOne(
+            select(literal(1))->where(is_true(literal(false)))
+        );
+
+        self::assertNull($row);
+    }
+
+    public function test_fetch_one_returns_single_row() : void
     {
         $row = $this->pgsqlContext()->client()->fetchOne(
             select(literal(42)->as('value'))
         );
 
+        self::assertNotNull($row);
         self::assertSame(42, $row['value']);
     }
 
     public function test_fetch_one_throws_when_multiple_rows() : void
     {
-        $this->expectException(ResultException::class);
-        $this->expectExceptionMessage('Expected exactly one row');
+        $this->expectException(TooManyRowsException::class);
+        $this->expectExceptionMessage('Expected at most one row, but 3 were returned');
 
         $this->pgsqlContext()->client()->fetchOne(
             select(func('generate_series', [literal(1), literal(3)]))
-        );
-    }
-
-    public function test_fetch_one_throws_when_no_rows() : void
-    {
-        $this->expectException(ResultException::class);
-        $this->expectExceptionMessage('Expected exactly one row');
-
-        $this->pgsqlContext()->client()->fetchOne(
-            select(literal(1))->where(is_true(literal(false)))
         );
     }
 
@@ -254,6 +266,60 @@ final class PgSqlClientTest extends PostgreSqlTestCase
         self::assertSame('hello world', $value);
     }
 
+    public function test_fetch_single_into_maps_to_object() : void
+    {
+        $user = $this->pgsqlContext()->client()->fetchSingleInto(
+            constructor_mapper(TestUser::class),
+            select(literal(1)->as('id'), param(1)->as('name'), param(2)->as('email')),
+            ['Jane Doe', 'jane@example.com']
+        );
+
+        self::assertInstanceOf(TestUser::class, $user);
+        self::assertSame('Jane Doe', $user->name);
+    }
+
+    public function test_fetch_single_into_throws_when_no_rows() : void
+    {
+        $this->expectException(NoResultException::class);
+        $this->expectExceptionMessage('Expected at least one row, but none were returned');
+
+        $this->pgsqlContext()->client()->fetchSingleInto(
+            constructor_mapper(TestUser::class),
+            select(literal(1)->as('id'), param(1)->as('name'), param(2)->as('email'))
+                ->where(is_true(literal(false))),
+            ['Jane Doe', 'jane@example.com']
+        );
+    }
+
+    public function test_fetch_single_returns_exactly_one_row() : void
+    {
+        $row = $this->pgsqlContext()->client()->fetchSingle(
+            select(literal(42)->as('value'))
+        );
+
+        self::assertSame(42, $row['value']);
+    }
+
+    public function test_fetch_single_throws_when_multiple_rows() : void
+    {
+        $this->expectException(TooManyRowsException::class);
+        $this->expectExceptionMessage('Expected at most one row, but 3 were returned');
+
+        $this->pgsqlContext()->client()->fetchSingle(
+            select(func('generate_series', [literal(1), literal(3)]))
+        );
+    }
+
+    public function test_fetch_single_throws_when_no_rows() : void
+    {
+        $this->expectException(NoResultException::class);
+        $this->expectExceptionMessage('Expected at least one row, but none were returned');
+
+        $this->pgsqlContext()->client()->fetchSingle(
+            select(literal(1))->where(is_true(literal(false)))
+        );
+    }
+
     public function test_is_connected() : void
     {
         self::assertTrue($this->pgsqlContext()->client()->isConnected());
@@ -297,7 +363,7 @@ final class PgSqlClientTest extends PostgreSqlTestCase
     public function test_typed_value_forces_type() : void
     {
         $value = new TypedValue(42, ValueType::INT4);
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(cast(param(1), column_type_integer())->as('val')),
             [$value]
         );

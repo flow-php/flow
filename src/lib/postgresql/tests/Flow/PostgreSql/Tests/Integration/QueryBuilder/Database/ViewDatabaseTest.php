@@ -219,7 +219,7 @@ final class ViewDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $beforeRow = $this->pgsqlContext()->client()->fetchOne(
+        $beforeRow = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count()->as('cnt'))->from(table(self::MATVIEW_SIMPLE))->toSql()
         );
         self::assertSame(4, $beforeRow['cnt']);
@@ -227,7 +227,7 @@ final class ViewDatabaseTest extends PostgreSqlTestCase
         $refreshQuery = refresh_materialized_view(self::MATVIEW_SIMPLE);
         $this->pgsqlContext()->client()->execute($refreshQuery->toSql());
 
-        $afterRow = $this->pgsqlContext()->client()->fetchOne(
+        $afterRow = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count()->as('cnt'))->from(table(self::MATVIEW_SIMPLE))->toSql()
         );
         self::assertSame(5, $afterRow['cnt']);

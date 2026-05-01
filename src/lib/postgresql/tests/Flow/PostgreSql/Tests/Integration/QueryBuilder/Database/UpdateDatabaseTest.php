@@ -99,7 +99,7 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(4, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_EMPLOYEES))
                 ->where(eq(col('status'), literal('updated')))
@@ -118,7 +118,7 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->client()->execute($query->toSql());
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('salary'), col('status'))
                 ->from(table(self::TABLE_EMPLOYEES))
                 ->where(eq(col('name'), literal('Bob')))
@@ -155,7 +155,7 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
             ->where(eq(col('name'), literal('Charlie')))
             ->returning(col('id'), col('name'), col('salary'));
 
-        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchSingle($query->toSql());
 
         self::assertSame('Charlie', $row['name']);
         self::assertSame('80000.00', $row['salary']);
@@ -169,7 +169,7 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
             ->where(eq(col('name'), literal('Diana')))
             ->returningAll();
 
-        $row = $this->pgsqlContext()->client()->fetchOne($query->toSql());
+        $row = $this->pgsqlContext()->client()->fetchSingle($query->toSql());
 
         self::assertArrayHasKey('id', $row);
         self::assertArrayHasKey('name', $row);
@@ -209,7 +209,7 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('status'))
                 ->from(table(self::SCHEMA_TABLE, self::SCHEMA_NAME))
                 ->where(eq(col('name'), literal('Alice')))
@@ -227,7 +227,7 @@ final class UpdateDatabaseTest extends PostgreSqlTestCase
 
         self::assertSame(1, $this->pgsqlContext()->client()->execute($query->toSql()));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(col('salary'))
                 ->from(table(self::TABLE_EMPLOYEES))
                 ->where(eq(col('name'), literal('Alice')))

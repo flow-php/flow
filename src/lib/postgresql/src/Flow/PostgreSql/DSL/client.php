@@ -238,7 +238,7 @@ function postgresql_telemetry_config(
  *
  * // All operations now traced
  * $traceableClient->transaction(function (Client $client) {
- *     $user = $client->fetchOne('SELECT * FROM users WHERE id = $1', [123]);
+ *     $user = $client->fetchSingle('SELECT * FROM users WHERE id = $1', [123]);
  *     $client->execute('UPDATE users SET last_login = NOW() WHERE id = $1', [123]);
  * });
  */
@@ -292,7 +292,7 @@ function constructor_mapper(string $class) : ConstructorMapper
 
 /**
  * @template TType
- * @template TNext = never
+ * @template TNext = TType
  *
  * @param FlowType<TType> $type
  * @param null|RowMapper<TNext> $next

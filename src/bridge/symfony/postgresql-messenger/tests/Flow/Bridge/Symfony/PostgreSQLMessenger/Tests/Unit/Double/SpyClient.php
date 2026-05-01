@@ -25,16 +25,16 @@ class SpyClient implements Client
     public array $fetchAllReturn = [];
 
     /**
-     * @var array<string, mixed>
-     */
-    public array $fetchOneReturn = [];
-
-    /**
      * @var null|array<string, mixed>
      */
     public ?array $fetchReturn = null;
 
     public int $fetchScalarIntReturn = 0;
+
+    /**
+     * @var array<string, mixed>
+     */
+    public array $fetchSingleReturn = [];
 
     public int $transactionCallCount = 0;
 
@@ -101,11 +101,9 @@ class SpyClient implements Client
         throw new \RuntimeException('Not implemented');
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : array
+    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
     {
-        $this->executedQueries[] = ['sql' => $sql instanceof Sql ? $sql->toSql() : $sql, 'parameters' => $parameters];
-
-        return $this->fetchOneReturn;
+        throw new \RuntimeException('Not implemented');
     }
 
     public function fetchOneInto(RowMapper $mapper, Sql|string $sql, array $parameters = []) : mixed
@@ -136,6 +134,18 @@ class SpyClient implements Client
     }
 
     public function fetchScalarString(Sql|string $sql, array $parameters = []) : string
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    {
+        $this->executedQueries[] = ['sql' => $sql instanceof Sql ? $sql->toSql() : $sql, 'parameters' => $parameters];
+
+        return $this->fetchSingleReturn;
+    }
+
+    public function fetchSingleInto(RowMapper $mapper, Sql|string $sql, array $parameters = []) : mixed
     {
         throw new \RuntimeException('Not implemented');
     }

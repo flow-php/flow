@@ -71,7 +71,7 @@ final class StubClient implements Client
         throw new \RuntimeException('StubClient is inert');
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : array
+    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
     {
         throw new \RuntimeException('StubClient is inert');
     }
@@ -102,6 +102,16 @@ final class StubClient implements Client
     }
 
     public function fetchScalarString(Sql|string $sql, array $parameters = []) : string
+    {
+        throw new \RuntimeException('StubClient is inert');
+    }
+
+    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    {
+        throw new \RuntimeException('StubClient is inert');
+    }
+
+    public function fetchSingleInto(RowMapper $mapper, Sql|string $sql, array $parameters = []) : mixed
     {
         throw new \RuntimeException('StubClient is inert');
     }

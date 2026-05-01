@@ -105,7 +105,7 @@ final class FlowPostgreSqlTransportTest extends TestCase
     public function test_send_delegates_to_sender_and_returns_envelope_with_stamp() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 99];
+        $client->fetchSingleReturn = ['id' => 99];
         $transport = new FlowPostgreSqlTransport(new Connection($client), new FakeSerializer());
 
         $result = $transport->send(new Envelope((object) []));

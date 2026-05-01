@@ -111,7 +111,7 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
 
         self::assertTrue($this->functionExists(self::FUNCTION_NAME));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func(self::FUNCTION_NAME, [literal(10), literal(5)])->as('result'))->toSql()
         );
         self::assertSame(15, $row['result']);
@@ -131,12 +131,12 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func(self::FUNCTION_NAME, [literal(5)])->as('result'))->toSql()
         );
         self::assertSame(15, $row['result']);
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func(self::FUNCTION_NAME, [literal(5), literal(3)])->as('result'))->toSql()
         );
         self::assertSame(8, $row['result']);
@@ -183,7 +183,7 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func(self::FUNCTION_NAME)->as('result'))->toSql()
         );
         self::assertSame(1, $row['result']);
@@ -198,7 +198,7 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
                 ->toSql()
         );
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func(self::FUNCTION_NAME)->as('result'))->toSql()
         );
         self::assertSame(2, $row['result']);
@@ -217,7 +217,7 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
 
         self::assertTrue($this->functionExists(self::FUNCTION_NAME));
 
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(func(self::FUNCTION_NAME)->as('result'))->toSql()
         );
         self::assertSame(42, $row['result']);
@@ -274,7 +274,7 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
 
     protected function functionExists(string $name) : bool
     {
-        $row = $this->pgsqlContext()->client()->fetchOne(
+        $row = $this->pgsqlContext()->client()->fetchSingle(
             select(agg_count()->as('cnt'))
                 ->from(table('pg_proc'))
                 ->where(eq(col('proname'), literal($name)))

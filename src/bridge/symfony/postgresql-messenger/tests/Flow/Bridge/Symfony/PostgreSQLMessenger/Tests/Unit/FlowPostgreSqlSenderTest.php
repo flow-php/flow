@@ -17,7 +17,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
     public function test_send_adds_transport_message_id_stamp() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 777];
+        $client->fetchSingleReturn = ['id' => 777];
         $sender = new FlowPostgreSqlSender(new Connection($client), new FakeSerializer());
 
         $result = $sender->send(new Envelope((object) []));
@@ -30,7 +30,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
     public function test_send_encodes_envelope_and_passes_to_connection() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 1];
+        $client->fetchSingleReturn = ['id' => 1];
         $serializer = new FakeSerializer('my-body', ['stamp' => 'x']);
         $sender = new FlowPostgreSqlSender(new Connection($client), $serializer);
 
@@ -75,7 +75,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
     public function test_send_with_delay_stamp_delegates_delay_to_connection() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 1];
+        $client->fetchSingleReturn = ['id' => 1];
         $sender = new FlowPostgreSqlSender(new Connection($client), new FakeSerializer());
 
         $envelope = (new Envelope((object) []))->with(new DelayStamp(5000));
@@ -87,7 +87,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
     public function test_send_without_delay_stamp_passes_zero_delay() : void
     {
         $client = new SpyClient();
-        $client->fetchOneReturn = ['id' => 1];
+        $client->fetchSingleReturn = ['id' => 1];
         $sender = new FlowPostgreSqlSender(new Connection($client), new FakeSerializer());
 
         $sender->send(new Envelope((object) []));
@@ -99,7 +99,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
     public function test_send_wraps_connection_exceptions() : void
     {
         $client = new class() extends SpyClient {
-            public function fetchOne(Sql|string $sql, array $parameters = []) : array
+            public function fetchSingle(Sql|string $sql, array $parameters = []) : array
             {
                 throw new \RuntimeException('boom');
             }
