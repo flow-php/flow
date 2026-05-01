@@ -21,6 +21,7 @@
 - [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [e55b74](https://github.com/flow-php/flow/commit/e55b74645bada3dc57ad7594232d4cd3685dcf0e) - **codevoce coverage reporting** - [@norberttech](https://github.com/norberttech)
 - [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - Static factory mapper** - [@norberttech](https://github.com/norberttech)
 - [#2332](https://github.com/flow-php/flow/pull/2332) - **bug in recursive delete based on glob** - [@norberttech](https://github.com/norberttech)
 - [#2330](https://github.com/flow-php/flow/pull/2330) - **preserve XML namespace declarations when capturing subtrees** - [@norberttech](https://github.com/norberttech)
