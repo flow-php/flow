@@ -6,6 +6,17 @@ comment:
   layout: "condensed_header, diff, components"
   after_n_builds: 3
 
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: tests
+      carryforward: true
+    - name: extension-tests
+      carryforward: true
+    - name: arrow-extension
+      carryforward: true
+
 component_management:
   individual_components:
     - component_id: etl
