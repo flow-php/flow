@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-04-28
+## [Unreleased] - 2026-05-01
 
 ### Added
+- [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - fetchOne and fetchSingel and fetchSingleInto** - [@norberttech](https://github.com/norberttech)
 - [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/session bridge** - [@norberttech](https://github.com/norberttech)
 - [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/cache bridge** - [@norberttech](https://github.com/norberttech)
 - [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/filesystem symfony/cache bridge** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +10,7 @@
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: support for env vars** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - fetchOne and fetchOneInto are nullable now** - [@norberttech](https://github.com/norberttech)
 - [ad2387](https://github.com/flow-php/flow/commit/ad23875584cf606f2eb1d7f266a38292c4c44334) - **feature: automatically render flow-php manifest list on installation page** - [@norberttech](https://github.com/norberttech)
 - [43b399](https://github.com/flow-php/flow/commit/43b3991dfa45de0c18b5e12d7067216ec5f2a3ee) - **chore: update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2331](https://github.com/flow-php/flow/pull/2331) - **Avoid listing the remote storages when direct file path is used** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +20,7 @@
 - [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - Static factory mapper** - [@norberttech](https://github.com/norberttech)
 - [#2332](https://github.com/flow-php/flow/pull/2332) - **bug in recursive delete based on glob** - [@norberttech](https://github.com/norberttech)
 - [#2330](https://github.com/flow-php/flow/pull/2330) - **preserve XML namespace declarations when capturing subtrees** - [@norberttech](https://github.com/norberttech)
 
