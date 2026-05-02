@@ -62,6 +62,12 @@
         <testsuite name="lib-doctrine-dbal-bulk-integration">
             <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="lib-dremel-unit">
+            <directory>src/lib/dremel/tests/Flow/Dremel/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-dremel-integration">
+            <directory>src/lib/dremel/tests/Flow/Dremel/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="lib-filesystem-unit">
             <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
         </testsuite>
@@ -203,6 +209,9 @@
         <testsuite name="bridge-telemetry-otlp-integration">
             <directory>src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="adapter-avro-integration">
+            <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="adapter-chartjs-unit">
             <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
         </testsuite>
@@ -261,6 +270,12 @@
         </testsuite>
         <testsuite name="adapter-parquet-integration">
             <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-postgresql-unit">
+            <directory>src/adapter/etl-adapter-postgresql/tests/Flow/ETL/Adapter/PostgreSql/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-postgresql-integration">
+            <directory>src/adapter/etl-adapter-postgresql/tests/Flow/ETL/Adapter/PostgreSql/Tests/Integration</directory>
         </testsuite>
         <testsuite name="adapter-text-integration">
             <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>

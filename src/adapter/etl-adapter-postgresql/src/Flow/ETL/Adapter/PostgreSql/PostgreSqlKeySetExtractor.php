@@ -22,7 +22,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
     private ?Schema $schema = null;
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      */
     public function __construct(
         private readonly Client $client,

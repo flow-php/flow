@@ -35,7 +35,7 @@ final class TraceableCursor implements Cursor
     private ?Tracer $tracer = null;
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      */
     public function __construct(
         private readonly Cursor $cursor,

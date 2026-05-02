@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 final readonly class Query
 {
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      */
     public function __construct(
         private Sql|string $sql,
@@ -18,7 +18,7 @@ final readonly class Query
     }
 
     /**
-     * @return array<int, mixed>
+     * @return list<mixed>
      */
     public function parameters() : array
     {
