@@ -38,14 +38,8 @@ final class Calculator
     public function divide(int|float|string $a, int|float|string $b, ?int $scale = null, ?Rounding $rounding = null) : int|float
     {
         try {
-            if ($scale === null && $rounding === null) {
-                $aDecimal = BigDecimal::of((string) $a);
-                $result = $aDecimal->dividedBy(BigDecimal::of((string) $b), $aDecimal->getScale());
-
-                if (!self::hasNonZeroFractionalPart($result)) {
-                    return $result->toInt();
-                }
-            }
+            $aDecimal = BigDecimal::of((string) $a);
+            $effectiveScale = $scale ?? $aDecimal->getScale();
 
             $useNewNaming = \defined('Brick\Math\RoundingMode::Up');
 
@@ -62,7 +56,7 @@ final class Calculator
                 default => $useNewNaming ? RoundingMode::Unnecessary : RoundingMode::UNNECESSARY,
             };
 
-            $result = BigDecimal::of((string) $a)->dividedBy(BigDecimal::of((string) $b), $scale, $brickMode);
+            $result = $aDecimal->dividedBy(BigDecimal::of((string) $b), $effectiveScale, $brickMode);
 
             if (!self::hasNonZeroFractionalPart($result)) {
                 return $result->toInt();
@@ -132,10 +126,10 @@ final class Calculator
 
     private static function hasNonZeroFractionalPart(BigDecimal $result) : bool
     {
-        if (method_exists($result, 'hasNonZeroFractionalPart')) { // @phpstan-ignore function.alreadyNarrowedType
+        if (\method_exists($result, 'hasNonZeroFractionalPart')) {
             return $result->hasNonZeroFractionalPart();
         }
 
-        return !$result->getFractionalPart()->isZero(); // @phpstan-ignore method.nonObject
+        return !$result->getFractionalPart()->isZero();
     }
 }
