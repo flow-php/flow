@@ -127,14 +127,16 @@ final class GroupBy
                 $valuesHash = $this->hash($values);
 
                 if (!\array_key_exists($valuesHash, $this->groupedTable)) {
-                    $this->groupedTable[$valuesHash] = [
-                        'values' => $values,
-                        'aggregators' => [],
-                    ];
+                    $aggregators = [];
 
                     foreach ($this->aggregations as $aggregator) {
-                        $this->groupedTable[$valuesHash]['aggregators'][] = clone $aggregator;
+                        $aggregators[] = clone $aggregator;
                     }
+
+                    $this->groupedTable[$valuesHash] = [
+                        'values' => $values,
+                        'aggregators' => $aggregators,
+                    ];
                 }
 
                 foreach ($this->groupedTable[$valuesHash]['aggregators'] as $aggregator) {

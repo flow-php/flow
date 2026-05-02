@@ -164,6 +164,27 @@ parameters:
         -
             path: src/lib/parquet/src/Flow/Parquet/Dremel/DremelShredder.php
             identifier: assign.propertyType
+        # brick/math 0.12-0.14 vs 0.15+ compatibility shim — branches differ per installed version
+        -
+            path: src/core/etl/src/Flow/Calculator/Calculator.php
+            identifier: function.alreadyNarrowedType
+            reportUnmatched: false
+        -
+            path: src/core/etl/src/Flow/Calculator/Calculator.php
+            identifier: function.impossibleType
+            reportUnmatched: false
+        -
+            path: src/core/etl/src/Flow/Calculator/Calculator.php
+            identifier: method.nonObject
+            reportUnmatched: false
+        -
+            path: src/core/etl/src/Flow/Calculator/Calculator.php
+            identifier: classConstant.notFound
+            reportUnmatched: false
+        -
+            path: src/core/etl/src/Flow/Calculator/Calculator.php
+            identifier: argument.type
+            reportUnmatched: false
 
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon

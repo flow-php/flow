@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\FilesystemCache\Tests\Context\FilesystemCacheContext;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Unit\Double\{FailingMvFilesystem, SpyLogger, SpyMarshaller};
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
+use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
 
 final class FlowFilesystemCacheAdapterTest extends TestCase
 {
@@ -240,7 +241,8 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
 
     public function test_save_writes_file_with_three_line_format() : void
     {
-        $adapter = $this->context->adapter();
+        $marshaller = new DefaultMarshaller(useIgbinarySerialize: false);
+        $adapter = $this->context->adapter(marshaller: $marshaller);
         $item = $adapter->getItem('key1');
         $item->set('value1');
         $item->expiresAfter(600);

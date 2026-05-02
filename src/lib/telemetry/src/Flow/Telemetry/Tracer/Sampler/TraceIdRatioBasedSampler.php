@@ -40,7 +40,7 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
             ));
         }
 
-        $this->threshold = (int) ($ratio * PHP_INT_MAX);
+        $this->threshold = $ratio >= 1.0 ? PHP_INT_MAX : (int) ($ratio * PHP_INT_MAX);
     }
 
     public function __toString() : string
