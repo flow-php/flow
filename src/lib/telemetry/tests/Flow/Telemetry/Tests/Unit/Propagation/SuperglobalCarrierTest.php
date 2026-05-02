@@ -40,6 +40,12 @@ final class SuperglobalCarrierTest extends TestCase
         $_GET = [];
         $_POST = [];
         $_COOKIE = [];
+
+        foreach ($_SERVER as $key => $_) {
+            if (\is_string($key) && \str_starts_with($key, 'HTTP_')) {
+                unset($_SERVER[$key]);
+            }
+        }
     }
 
     protected function tearDown() : void

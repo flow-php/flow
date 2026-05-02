@@ -498,7 +498,7 @@ final class TraceableClient implements Client
     }
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
@@ -623,7 +623,7 @@ final class TraceableClient implements Client
     }
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      */
     private function logQuery(string $query, array $parameters) : void
     {
@@ -688,7 +688,7 @@ final class TraceableClient implements Client
     /**
      * @template T
      *
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      * @param callable(): T $operation
      * @param null|callable(T): int $rowCountExtractor
      *

@@ -530,7 +530,7 @@ final class PgSqlClient implements Client
     }
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      */
     private function buildContext(Sql|string $sql, array $parameters) : Context
     {
@@ -542,7 +542,7 @@ final class PgSqlClient implements Client
     }
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      *
      * @return array<int, null|string>
      */
@@ -643,7 +643,7 @@ final class PgSqlClient implements Client
     }
 
     /**
-     * @param array<int, mixed> $parameters
+     * @param list<mixed> $parameters
      */
     private function query(Sql|string $sql, array $parameters) : Result
     {

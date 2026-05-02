@@ -44,7 +44,7 @@ interface Client
      * Use cursor->map() to map rows to objects.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -55,7 +55,7 @@ interface Client
      * Returns the number of affected rows.
      *
      * @param Sql|string $sql SQL statement or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -66,7 +66,7 @@ interface Client
      * Useful for analyzing query performance.
      *
      * @param Sql|string $sql SQL query to explain
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      * @param null|ExplainConfig $config EXPLAIN configuration (defaults to forAnalysis())
      *
      * @throws QueryException
@@ -78,7 +78,7 @@ interface Client
      * Returns null if no rows found.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      *
@@ -90,7 +90,7 @@ interface Client
      * Fetch all rows from query result.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      *
@@ -105,7 +105,7 @@ interface Client
      *
      * @param RowMapper<T> $mapper Mapper to apply to each row
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      *
@@ -125,7 +125,7 @@ interface Client
      *
      * @param RowMapper<T> $mapper Mapper to apply to the row
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      *
@@ -142,7 +142,7 @@ interface Client
      * Use when you expect zero or one result (e.g., optional lookup by unique column).
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      * @throws TooManyRowsException When the result contains more than one row
@@ -159,7 +159,7 @@ interface Client
      *
      * @param RowMapper<T> $mapper Mapper to apply to the row
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      * @throws TooManyRowsException When the result contains more than one row
@@ -177,7 +177,7 @@ interface Client
      * Ideal for COUNT(*), MAX(), MIN(), etc.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -187,7 +187,7 @@ interface Client
      * Fetch a single boolean value from the first column of first row.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -197,7 +197,7 @@ interface Client
      * Fetch a single float value from the first column of first row.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -208,7 +208,7 @@ interface Client
      * Ideal for COUNT(*), MAX(), MIN(), etc.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -218,7 +218,7 @@ interface Client
      * Fetch a single string value from the first column of first row.
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      */
@@ -229,7 +229,7 @@ interface Client
      * Use when you expect precisely one result (e.g., SELECT by primary key, INSERT ... RETURNING).
      *
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      * @throws NoResultException When the result is empty
@@ -247,7 +247,7 @@ interface Client
      *
      * @param RowMapper<T> $mapper Mapper to apply to the row
      * @param Sql|string $sql SQL query or query builder with $1, $2, ... placeholders
-     * @param array<int, mixed> $parameters Positional parameters
+     * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
      *
      * @throws QueryException
      * @throws NoResultException When the result is empty

@@ -20,7 +20,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
  *
  * @param Client $client PostgreSQL client
  * @param Sql|string $query SQL query to execute (wrapped in DECLARE CURSOR)
- * @param array<int, mixed> $parameters Positional parameters for the query
+ * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_cursor(
@@ -39,7 +39,7 @@ function from_pgsql_cursor(
  *
  * @param Client $client PostgreSQL client
  * @param Sql|string $query SQL query to execute (must have ORDER BY clause)
- * @param array<int, mixed> $parameters Positional parameters for the query
+ * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_limit_offset(
@@ -59,7 +59,7 @@ function from_pgsql_limit_offset(
  * @param Client $client PostgreSQL client
  * @param Sql|string $query SQL query to execute (must have ORDER BY matching keyset columns)
  * @param KeySet $keySet Columns to use for keyset pagination
- * @param array<int, mixed> $parameters Positional parameters for the query
+ * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
 function from_pgsql_key_set(
