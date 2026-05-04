@@ -177,6 +177,11 @@
       "type": "bridge"
     },
     {
+      "name": "flow-php/psr3-telemetry-bridge",
+      "path": "src/bridge/psr3/telemetry",
+      "type": "bridge"
+    },
+    {
       "name": "flow-php/psr7-telemetry-bridge",
       "path": "src/bridge/psr7/telemetry",
       "type": "bridge"

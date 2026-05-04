@@ -135,6 +135,12 @@
         <testsuite name="bridge-postgresql-valinor-unit">
             <directory>src/bridge/postgresql/valinor/tests/Flow/PostgreSql/Bridge/Valinor/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="bridge-psr3-telemetry-unit">
+            <directory>src/bridge/psr3/telemetry/tests/Flow/Bridge/Psr3/Telemetry/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-psr3-telemetry-integration">
+            <directory>src/bridge/psr3/telemetry/tests/Flow/Bridge/Psr3/Telemetry/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-psr7-telemetry-unit">
             <directory>src/bridge/psr7/telemetry/tests/Flow/Bridge/Psr7/Telemetry/Tests/Unit</directory>
         </testsuite>

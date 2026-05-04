@@ -27,6 +27,7 @@ enum Module : string
     case POSTGRESQL_MIGRATIONS = 'PostgreSQL Migrations';
     case POSTGRESQL_VALINOR_BRIDGE = 'PostgreSQL Valinor Bridge';
     case PSR18_TELEMETRY_BRIDGE = 'PSR-18 Telemetry Bridge';
+    case PSR3_TELEMETRY_BRIDGE = 'PSR-3 Telemetry Bridge';
     case PSR7_TELEMETRY_BRIDGE = 'PSR-7 Telemetry Bridge';
     case S3_FILESYSTEM = 'S3 Filesystem';
     case SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE = 'Symfony HttpFoundation Telemetry Bridge';
@@ -75,6 +76,7 @@ enum Module : string
             self::PSR18_TELEMETRY_BRIDGE => 26,
             self::POSTGRESQL_MIGRATIONS => 27,
             self::POSTGRESQL_VALINOR_BRIDGE => 28,
+            self::PSR3_TELEMETRY_BRIDGE => 29,
             default => 99,
         };
     }
