@@ -58,7 +58,6 @@
         "grpc/grpc": "^1.74",
         "nikic/php-parser": "^5.3",
         "nyholm/psr7": "^1.8",
-        "open-telemetry/gen-otlp-protobuf": "^1.8",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
         "ramsey/uuid": "^4.5",
@@ -187,6 +186,12 @@
             ],
             "Flow\\ETL\\Adapter\\Doctrine\\": [
                 "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine"
+            ],
+            "Opentelemetry\\Proto\\": [
+                "src/bridge/telemetry/otlp/src/Opentelemetry/Proto"
+            ],
+            "GPBMetadata\\Opentelemetry\\": [
+                "src/bridge/telemetry/otlp/src/GPBMetadata/Opentelemetry"
             ]
         },
         "files": [
@@ -427,6 +432,9 @@
             "rm -rf src/lib/postgresql/src/Flow/PostgreSql/Protobuf",
             "protoc --php_out=src/lib/postgresql/src --proto_path=src/lib/postgresql/resources/proto pg_query.proto",
             "@cs:php:fix"
+        ],
+        "build:telemetry:otlp:protobuf": [
+            "src/bridge/telemetry/otlp/bin/generate-proto.sh"
         ],
         "pre-autoload-dump": [
             "Google\\Task\\Composer::cleanup"

@@ -68,8 +68,7 @@ Add the extension to your `phpunit.xml.dist`:
 
 ### gRPC transport (`transport=grpc`)
 
-Requires the `grpc` PHP extension and the `google/protobuf` + `open-telemetry/gen-otlp-protobuf` packages. Payload is
-always protobuf (per OTLP/gRPC spec).
+Requires the `grpc` PHP extension and the `google/protobuf` package. Payload is always protobuf (per OTLP/gRPC spec).
 
 | Parameter       | Environment variable              | Default | Description                      |
 |-----------------|-----------------------------------|---------|----------------------------------|

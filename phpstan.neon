@@ -108,6 +108,8 @@ parameters:
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
         - src/lib/parquet/src/Flow/Parquet/Dremel/ColumnData/DefinitionConverter.php
         - src/lib/postgresql/src/Flow/PostgreSql/Protobuf/*
+        - src/bridge/telemetry/otlp/src/Opentelemetry/*
+        - src/bridge/telemetry/otlp/src/GPBMetadata/*
         - src/bridge/symfony/filesystem-bundle/src/Flow/Bridge/Symfony/FilesystemBundle/Resources/config/*
         - src/bridge/symfony/postgresql-bundle/src/Flow/Bridge/Symfony/PostgreSqlBundle/Resources/config/*
         - src/bridge/symfony/postgresql-bundle/tests/Flow/Bridge/Symfony/PostgreSqlBundle/Tests/Integration/Command/*

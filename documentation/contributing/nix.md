@@ -140,6 +140,16 @@ nix-shell --arg with-arrow-ext false --arg with-rust true
 
 See [Rust - Arrow Extension Development](/documentation/contributing/rust.md) for details.
 
+### Protobuf / gRPC Code Generation (protoc)
+
+Adds `protoc` and `grpc_php_plugin` to the shell. Required when regenerating OTLP protobuf and gRPC PHP classes via `composer build:telemetry:otlp:protobuf`.
+
+```shell
+nix-shell --arg with-protoc true
+```
+
+The `ext-protobuf` and `ext-grpc` PHP extensions are part of the default shell (`with-protobuf` / `with-grpc`, both default `true`); pass `false` to opt out.
+
 ### Combining Multiple Options
 
 You can combine multiple arguments:

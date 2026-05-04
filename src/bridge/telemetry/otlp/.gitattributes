@@ -7,3 +7,6 @@
 
 /.gitattributes export-ignore
 /.gitignore export-ignore
+
+/.opentelemetry-proto export-ignore
+/bin export-ignore

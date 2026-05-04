@@ -11,7 +11,8 @@
     with-blackfire ? false,
     with-pg-query-ext ? false,
     with-arrow-ext ? false,
-    with-grpc ? false
+    with-grpc ? false,
+    with-protobuf ? true
 }:
 
 let
@@ -27,7 +28,6 @@ let
             (php-lz4.override { inherit php; })
             (php-snappy.override { inherit php; })
             (php-zstd.override { inherit php; })
-            protobuf
             xmlreader
             xmlwriter
             zlib
@@ -38,6 +38,7 @@ let
         ++ (if with-pg-query-ext then [(php-pg-query-ext.override { inherit php; })] else [])
         ++ (if with-arrow-ext then [(php-arrow-ext.override { inherit php; })] else [])
         ++ (if with-grpc then [grpc] else [])
+        ++ (if with-protobuf then [protobuf] else [])
     );
 in
 flowPHP.buildEnv {

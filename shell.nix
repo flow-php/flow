@@ -9,7 +9,9 @@
     with-rust ? false,
     with-terraform ? false,
     with-wasm ? false,
-    with-grpc ? false
+    with-grpc ? true,
+    with-protobuf ? true,
+    with-protoc ? false
 }:
 
 assert (!(with-rust && with-arrow-ext)) || builtins.throw "Cannot use --arg with-rust true and --arg with-arrow-ext true together. Use: --arg with-arrow-ext false --arg with-rust true";
@@ -64,7 +66,7 @@ let
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;
         inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext php-arrow-ext
-                with-pcov with-xdebug with-blackfire with-pg-query-ext with-arrow-ext with-grpc;
+                with-pcov with-xdebug with-blackfire with-pg-query-ext with-arrow-ext with-grpc with-protobuf;
     };
 in
 pkgs.mkShell {
@@ -117,6 +119,12 @@ pkgs.mkShell {
             pkgs.llvmPackages.libclang
             pkgs.pkg-config
             php.unwrapped.dev
+        ]
+        ++ pkgs.lib.optionals with-protoc [
+            # protoc + grpc_php_plugin for regenerating protobuf/gRPC PHP classes
+            pkgs.protobuf
+            pkgs.grpc
+            pkgs.git
         ]
     ;
 

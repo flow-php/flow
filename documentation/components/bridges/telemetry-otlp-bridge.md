@@ -28,15 +28,15 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ### Serializers
 
-| Serializer   | Required Packages                                     | Supported Transports |
-|--------------|-------------------------------------------------------|----------------------|
-| **JSON**     | -                                                     | Curl, HTTP           |
-| **Protobuf** | `google/protobuf`, `open-telemetry/gen-otlp-protobuf` | Curl, HTTP, gRPC     |
+| Serializer   | Required Packages  | Supported Transports |
+|--------------|--------------------|----------------------|
+| **JSON**     | -                  | Curl, HTTP           |
+| **Protobuf** | `google/protobuf`  | Curl, HTTP, gRPC     |
 
 To install Protobuf dependencies:
 
 ```
-composer require google/protobuf open-telemetry/gen-otlp-protobuf
+composer require google/protobuf
 ```
 
 ## Transports
@@ -148,10 +148,10 @@ $transport = otlp_grpc_transport(
 
 The bridge provides two serialization formats for OTLP data.
 
-| Serializer   | Format | Size    | Readability    | Dependencies                                          |
-|--------------|--------|---------|----------------|-------------------------------------------------------|
-| **JSON**     | Text   | Larger  | Human-readable | None                                                  |
-| **Protobuf** | Binary | Smaller | Not readable   | `google/protobuf`, `open-telemetry/gen-otlp-protobuf` |
+| Serializer   | Format | Size    | Readability    | Dependencies      |
+|--------------|--------|---------|----------------|-------------------|
+| **JSON**     | Text   | Larger  | Human-readable | None              |
+| **Protobuf** | Binary | Smaller | Not readable   | `google/protobuf` |
 
 ### JSON Serializer
 

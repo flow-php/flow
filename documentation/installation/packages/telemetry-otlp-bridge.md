@@ -27,5 +27,5 @@ composer require flow-php/telemetry-otlp-bridge:~--FLOW_PHP_VERSION--
 
 ```bash
 # For gRPC transport support (requires ext-grpc PHP extension)
-composer require google/protobuf open-telemetry/gen-otlp-protobuf
+composer require google/protobuf
 ```
