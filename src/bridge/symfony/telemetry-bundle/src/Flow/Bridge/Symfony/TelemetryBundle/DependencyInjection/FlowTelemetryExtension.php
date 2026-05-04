@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 
+use Flow\Bridge\Psr3\Telemetry\{LogRecordConverter, TelemetryLogger};
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
@@ -66,17 +67,23 @@ final class FlowTelemetryExtension extends Extension
     {
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $configuration = new Configuration();
-        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, main_logger?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
+
+        $container->setParameter('flow.telemetry.main_logger', $config['main_logger'] ?? null);
+
+        $tracers = ($config['tracers'] ?? []) + ['default' => []];
+        $meters = ($config['meters'] ?? []) + ['default' => []];
+        $loggers = ($config['loggers'] ?? []) + ['default' => []];
 
         $this->registerGlobalServices($config, $container);
         $this->registerPropagator($config['propagator'] ?? [], $container);
         $this->registerResource($config['resource'], $container);
         $this->registerTelemetry($config, $container);
         $this->registerInstrumentation($config['instrumentation'] ?? [], $container, $loader);
-        $this->registerTracers($config['tracers'] ?? [], $container);
-        $this->registerMeters($config['meters'] ?? [], $container);
-        $this->registerLoggers($config['loggers'] ?? [], $container);
+        $this->registerTracers($tracers, $container);
+        $this->registerMeters($meters, $container);
+        $this->registerLoggers($loggers, $container);
     }
 
     /**
@@ -907,6 +914,11 @@ final class FlowTelemetryExtension extends Extension
         } else {
             $container->setDefinition('flow.telemetry.context_storage', new Definition(MemoryContextStorage::class));
         }
+
+        $container->setDefinition(
+            'flow.telemetry.psr3.log_record_converter',
+            new Definition(LogRecordConverter::class)
+        );
     }
 
     /**
@@ -986,7 +998,14 @@ final class FlowTelemetryExtension extends Extension
             }
 
             $definition->setPublic(true);
-            $container->setDefinition('flow.telemetry.' . $name . '.logger', $definition);
+            $loggerServiceId = 'flow.telemetry.' . $name . '.logger';
+            $container->setDefinition($loggerServiceId, $definition);
+
+            $psr3Definition = new Definition(TelemetryLogger::class);
+            $psr3Definition->setArgument(0, new Reference($loggerServiceId));
+            $psr3Definition->setArgument(1, new Reference('flow.telemetry.psr3.log_record_converter'));
+            $psr3Definition->setPublic(true);
+            $container->setDefinition($loggerServiceId . '.psr3', $psr3Definition);
         }
     }
 
@@ -1195,10 +1214,9 @@ final class FlowTelemetryExtension extends Extension
         $cacheEnabled = $cacheConfig['enabled'] ?? true;
 
         if ($cacheEnabled) {
-            $cachePath = $cacheConfig['path'] ?? '%kernel.cache_dir%/flow_telemetry_resource.cache';
             $cachingDefinition = new Definition(CachingDetector::class);
             $cachingDefinition->setArgument(0, new Reference('flow.telemetry.resource.detector.static.chain'));
-            $cachingDefinition->setArgument(1, $cachePath);
+            $cachingDefinition->setArgument(1, $cacheConfig['path'] ?? null);
             $container->setDefinition('flow.telemetry.resource.detector.static', $cachingDefinition);
         } else {
             $container->setAlias('flow.telemetry.resource.detector.static', 'flow.telemetry.resource.detector.static.chain');

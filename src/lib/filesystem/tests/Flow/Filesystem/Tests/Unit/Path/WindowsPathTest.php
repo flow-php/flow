@@ -433,6 +433,14 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('C:/absolute/path/file.txt', $path->path());
     }
 
+    public function test_realpath_with_file_scheme_strips_protocol_prefix() : void
+    {
+        $path = WindowsPath::realpath('file:///C:/tmp/foo.txt');
+
+        self::assertSame('file', $path->protocol());
+        self::assertSame('C:/tmp/foo.txt', $path->path());
+    }
+
     public function test_realpath_with_non_file_scheme() : void
     {
         $path = WindowsPath::realpath('s3://bucket/key.txt');

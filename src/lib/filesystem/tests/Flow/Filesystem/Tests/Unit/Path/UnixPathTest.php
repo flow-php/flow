@@ -397,6 +397,23 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/path/to/file.txt', $path->path());
     }
 
+    public function test_realpath_with_file_scheme_normalizes_dot_segments() : void
+    {
+        $path = UnixPath::realpath('file:///a/b/../c/./d.txt');
+
+        self::assertSame('file', $path->protocol());
+        self::assertSame('/a/c/d.txt', $path->path());
+    }
+
+    public function test_realpath_with_file_scheme_strips_protocol_prefix() : void
+    {
+        $path = UnixPath::realpath('file:///private/tmp/foo.txt');
+
+        self::assertSame('file', $path->protocol());
+        self::assertSame('/private/tmp/foo.txt', $path->path());
+        self::assertSame('file://private/tmp/foo.txt', $path->uri());
+    }
+
     public function test_realpath_with_non_file_scheme() : void
     {
         $path = UnixPath::realpath('s3://bucket/key.txt');

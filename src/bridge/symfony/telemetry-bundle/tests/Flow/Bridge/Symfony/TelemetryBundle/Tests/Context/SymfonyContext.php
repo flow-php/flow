@@ -103,5 +103,11 @@ final class SymfonyContext
         if ($filesystem->exists($logDir)) {
             $filesystem->remove($logDir);
         }
+
+        $defaultResourceCache = \sys_get_temp_dir() . '/flow_telemetry_resource.cache';
+
+        if ($filesystem->exists($defaultResourceCache)) {
+            $filesystem->remove($defaultResourceCache);
+        }
     }
 }
