@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_grpc_transport, otlp_http_transport, otlp_json_serializer, otlp_protobuf_serializer};
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_grpc_transport, otlp_json_serializer, otlp_protobuf_serializer};
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
 use Flow\Telemetry\Transport\Transport;
 use Google\Protobuf\Internal\Message;
@@ -24,8 +24,6 @@ final readonly class TransportConfiguration
     public static function all() : array
     {
         return [
-            self::httpJson(),
-            self::httpProtobuf(),
             self::curlJson(),
             self::curlProtobuf(),
             self::grpcProtobuf(),
@@ -55,16 +53,6 @@ final readonly class TransportConfiguration
         return new self('grpc-protobuf', 'grpc', 'protobuf');
     }
 
-    public static function httpJson() : self
-    {
-        return new self('http-json', 'http', 'json');
-    }
-
-    public static function httpProtobuf() : self
-    {
-        return new self('http-protobuf', 'http', 'protobuf');
-    }
-
     public function createTransport(OtelContext $ctx) : Transport
     {
         $serializer = match ($this->serializer) {
@@ -74,13 +62,6 @@ final readonly class TransportConfiguration
         };
 
         return match ($this->transport) {
-            'http' => otlp_http_transport(
-                $ctx->httpClient(),
-                $ctx->requestFactory(),
-                $ctx->streamFactory(),
-                $ctx->httpEndpoint(),
-                $serializer,
-            ),
             'curl' => otlp_curl_transport(
                 $ctx->httpEndpoint(),
                 $serializer,

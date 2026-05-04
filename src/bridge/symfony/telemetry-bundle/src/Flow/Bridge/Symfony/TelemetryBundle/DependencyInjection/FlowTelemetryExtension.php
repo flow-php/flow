@@ -9,7 +9,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport};
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
@@ -600,34 +600,6 @@ final class FlowTelemetryExtension extends Extension
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, new Reference($serializerServiceId));
                 $definition->setArgument(2, new Reference($optionsServiceId));
-                $container->setDefinition($transportServiceId, $definition);
-
-                break;
-
-            case 'http':
-                $httpClientServiceId = $config['http_client_service_id'] ?? null;
-                $requestFactoryServiceId = $config['request_factory_service_id'] ?? null;
-                $streamFactoryServiceId = $config['stream_factory_service_id'] ?? null;
-
-                if ($httpClientServiceId === null) {
-                    throw new RuntimeException('http_client_service_id is required when transport type is "http"');
-                }
-
-                if ($requestFactoryServiceId === null) {
-                    throw new RuntimeException('request_factory_service_id is required when transport type is "http"');
-                }
-
-                if ($streamFactoryServiceId === null) {
-                    throw new RuntimeException('stream_factory_service_id is required when transport type is "http"');
-                }
-
-                $definition = new Definition(HttpTransport::class);
-                $definition->setArgument('$httpClient', new Reference($httpClientServiceId));
-                $definition->setArgument('$requestFactory', new Reference($requestFactoryServiceId));
-                $definition->setArgument('$streamFactory', new Reference($streamFactoryServiceId));
-                $definition->setArgument('$endpoint', $endpoint);
-                $definition->setArgument('$serializer', new Reference($serializerServiceId));
-                $definition->setArgument('$headers', $headers);
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;

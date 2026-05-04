@@ -720,36 +720,6 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
-    public function test_otlp_http_transport_with_psr_services() : void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
-            'resource' => [],
-            'tracer_provider' => [
-                'processor' => [
-                    'type' => 'batching',
-                    'exporter' => [
-                        'type' => 'otlp',
-                        'otlp' => [
-                            'transport' => [
-                                'type' => 'http',
-                                'endpoint' => 'http://localhost:4318',
-                                'http_client_service_id' => 'app.http_client',
-                                'request_factory_service_id' => 'app.request_factory',
-                                'stream_factory_service_id' => 'app.stream_factory',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ]]);
-
-        $transport = $config['tracer_provider']['processor']['exporter']['otlp']['transport'];
-        self::assertSame('http', $transport['type']);
-        self::assertSame('app.http_client', $transport['http_client_service_id']);
-        self::assertSame('app.request_factory', $transport['request_factory_service_id']);
-        self::assertSame('app.stream_factory', $transport['stream_factory_service_id']);
-    }
-
     public function test_otlp_serializer_defaults_to_json() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[

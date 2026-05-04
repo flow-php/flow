@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 763
+ * Total functions: 762
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -6622,7 +6622,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">CurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransportOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CurlTransport</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an async curl transport for OTLP endpoints.<br>Creates a CurlTransport that uses curl_multi for non-blocking I/O.<br>Unlike HttpTransport (PSR-18), this transport queues requests and executes<br>them asynchronously. Completed requests are processed on subsequent send()<br>calls or on shutdown().<br>Requires: ext-curl PHP extension<br>Example usage:<br>\`\`\`php<br>// JSON over HTTP (async) with default options<br>$transport = otlp_curl_transport(<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_json_serializer(),<br>);<br>// Protobuf over HTTP (async) with custom options<br>$transport = otlp_curl_transport(<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_protobuf_serializer(),<br>    options: otlp_curl_options()<br>        ->withTimeout(60)<br>        ->withHeader(\'Authorization\', \'Bearer token\')<br>        ->withCompression(),<br>);<br>\`\`\`<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param CurlTransportOptions $options Transport configuration options
+                    Create an async curl transport for OTLP endpoints.<br>Creates a CurlTransport that uses curl_multi for non-blocking I/O.<br>Requests are queued and executed asynchronously. Completed requests are<br>processed on subsequent send() calls or on shutdown().<br>Requires: ext-curl PHP extension<br>Example usage:<br>\`\`\`php<br>// JSON over HTTP (async) with default options<br>$transport = otlp_curl_transport(<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_json_serializer(),<br>);<br>// Protobuf over HTTP (async) with custom options<br>$transport = otlp_curl_transport(<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_protobuf_serializer(),<br>    options: otlp_curl_options()<br>        ->withTimeout(60)<br>        ->withHeader(\'Authorization\', \'Bearer token\')<br>        ->withCompression(),<br>);<br>\`\`\`<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param CurlTransportOptions $options Transport configuration options
                 </div>
                             `
             return div
@@ -6648,24 +6648,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_grpc_transport(" + "$" + "{" + "1:endpoint" + "}" + ", " + "$" + "{" + "2:serializer" + "}" + ", " + "$" + "{" + "3:headers" + "}" + ", " + "$" + "{" + "4:insecure" + "}" + ")"),
         boost: 10
     },                {
-        label: "otlp_http_transport",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_http_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RequestFactoryInterface</span> <span class=\"fn-param\">$requestFactory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StreamFactoryInterface</span> <span class=\"fn-param\">$streamFactory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$headers</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HttpTransport</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create an HTTP transport for OTLP endpoints.<br>Creates an HttpTransport configured to send telemetry data to an OTLP-compatible<br>endpoint using PSR-18 HTTP client. Supports both JSON and Protobuf formats.<br>Example usage:<br>\`\`\`php<br>// JSON over HTTP<br>$transport = otlp_http_transport(<br>    client: $client,<br>    requestFactory: $psr17Factory,<br>    streamFactory: $psr17Factory,<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_json_serializer(),<br>);<br>// Protobuf over HTTP<br>$transport = otlp_http_transport(<br>    client: $client,<br>    requestFactory: $psr17Factory,<br>    streamFactory: $psr17Factory,<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_protobuf_serializer(),<br>);<br>\`\`\`<br>@param ClientInterface $client PSR-18 HTTP client<br>@param RequestFactoryInterface $requestFactory PSR-17 request factory<br>@param StreamFactoryInterface $streamFactory PSR-17 stream factory<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param array<string, string> $headers Additional headers to include in requests
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_http_transport(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requestFactory" + "}" + ", " + "$" + "{" + "3:streamFactory" + "}" + ", " + "$" + "{" + "4:endpoint" + "}" + ", " + "$" + "{" + "5:serializer" + "}" + ", " + "$" + "{" + "6:headers" + "}" + ")"),
-        boost: 10
-    },                {
         label: "otlp_json_serializer",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6676,7 +6658,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_json_serializer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">JsonSerializer</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a JSON serializer for OTLP.<br>Returns a JsonSerializer that converts telemetry data to OTLP JSON wire format.<br>Use this with HttpTransport for JSON over HTTP.<br>Example usage:<br>\`\`\`php<br>$serializer = otlp_json_serializer();<br>$transport = otlp_http_transport($client, $reqFactory, $streamFactory, $endpoint, $serializer);<br>\`\`\`
+                    Create a JSON serializer for OTLP.<br>Returns a JsonSerializer that converts telemetry data to OTLP JSON wire format.<br>Use this with CurlTransport for JSON over HTTP.<br>Example usage:<br>\`\`\`php<br>$serializer = otlp_json_serializer();<br>$transport = otlp_curl_transport($endpoint, $serializer);<br>\`\`\`
                 </div>
                             `
             return div
@@ -6766,7 +6748,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_protobuf_serializer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ProtobufSerializer</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a Protobuf serializer for OTLP.<br>Returns a ProtobufSerializer that converts telemetry data to OTLP Protobuf binary format.<br>Use this with HttpTransport for Protobuf over HTTP, or with GrpcTransport.<br>Requires:<br>- google/protobuf package<br>- open-telemetry/gen-otlp-protobuf package<br>Example usage:<br>\`\`\`php<br>$serializer = otlp_protobuf_serializer();<br>$transport = otlp_http_transport($client, $reqFactory, $streamFactory, $endpoint, $serializer);<br>\`\`\`
+                    Create a Protobuf serializer for OTLP.<br>Returns a ProtobufSerializer that converts telemetry data to OTLP Protobuf binary format.<br>Use this with CurlTransport for Protobuf over HTTP, or with GrpcTransport.<br>Requires:<br>- google/protobuf package<br>- open-telemetry/gen-otlp-protobuf package<br>Example usage:<br>\`\`\`php<br>$serializer = otlp_protobuf_serializer();<br>$transport = otlp_curl_transport($endpoint, $serializer);<br>\`\`\`
                 </div>
                             `
             return div
@@ -10801,7 +10783,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">traceable_postgresql_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PostgreSqlTelemetryConfig</span> <span class=\"fn-param\">$telemetryConfig</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TraceableClient</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Wrap a PostgreSQL client with telemetry instrumentation.<br>Returns a decorator that adds spans, metrics, and logs to all<br>query and transaction operations following OpenTelemetry conventions.<br>@param Client\\Client $client The PostgreSQL client to instrument<br>@param PostgreSqlTelemetryConfig $telemetryConfig Telemetry configuration<br>@example<br>$client = pgsql_client(pgsql_connection(\'host=localhost dbname=mydb\'));<br>$traceableClient = traceable_postgresql_client(<br>    $client,<br>    postgresql_telemetry_config(<br>        telemetry(resource([\'service.name\' => \'my-app\'])),<br>        new SystemClock(),<br>        postgresql_telemetry_options(<br>            traceQueries: true,<br>            traceTransactions: true,<br>            collectMetrics: true,<br>            logQueries: true,<br>            maxQueryLength: 500,<br>        ),<br>    ),<br>);<br>// All operations now traced<br>$traceableClient->transaction(function (Client $client) {<br>    $user = $client->fetchOne(\'SELECT * FROM users WHERE id = $1\', [123]);<br>    $client->execute(\'UPDATE users SET last_login = NOW() WHERE id = $1\', [123]);<br>});
+                    Wrap a PostgreSQL client with telemetry instrumentation.<br>Returns a decorator that adds spans, metrics, and logs to all<br>query and transaction operations following OpenTelemetry conventions.<br>@param Client\\Client $client The PostgreSQL client to instrument<br>@param PostgreSqlTelemetryConfig $telemetryConfig Telemetry configuration<br>@example<br>$client = pgsql_client(pgsql_connection(\'host=localhost dbname=mydb\'));<br>$traceableClient = traceable_postgresql_client(<br>    $client,<br>    postgresql_telemetry_config(<br>        telemetry(resource([\'service.name\' => \'my-app\'])),<br>        new SystemClock(),<br>        postgresql_telemetry_options(<br>            traceQueries: true,<br>            traceTransactions: true,<br>            collectMetrics: true,<br>            logQueries: true,<br>            maxQueryLength: 500,<br>        ),<br>    ),<br>);<br>// All operations now traced<br>$traceableClient->transaction(function (Client $client) {<br>    $user = $client->fetchSingle(\'SELECT * FROM users WHERE id = $1\', [123]);<br>    $client->execute(\'UPDATE users SET last_login = NOW() WHERE id = $1\', [123]);<br>});
                 </div>
                             `
             return div
@@ -11359,7 +11341,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_mapper</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RowMapper</span> <span class=\"fn-param\">$next</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TypeMapper</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template TType<br>@template TNext = never<br>@param FlowType<TType> $type<br>@param null|RowMapper<TNext> $next<br>@return TypeMapper<TType, TNext>
+                    @template TType<br>@template TNext = TType<br>@param FlowType<TType> $type<br>@param null|RowMapper<TNext> $next<br>@return TypeMapper<TType, TNext>
                 </div>
                             `
             return div

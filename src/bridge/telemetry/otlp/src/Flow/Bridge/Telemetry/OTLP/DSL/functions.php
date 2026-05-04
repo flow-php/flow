@@ -6,7 +6,7 @@ namespace Flow\Bridge\Telemetry\OTLP\DSL;
 
 use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, HttpTransport};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\Context\{ContextStorage, MemoryContextStorage};
 use Flow\Telemetry\Logger\{LogProcessor, LoggerProvider};
@@ -17,19 +17,17 @@ use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
 use Flow\Telemetry\Tracer\{SpanProcessor, TracerProvider};
 use Flow\Telemetry\Transport\Transport;
 use Psr\Clock\ClockInterface;
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\{RequestFactoryInterface, StreamFactoryInterface};
 
 /**
  * Create a JSON serializer for OTLP.
  *
  * Returns a JsonSerializer that converts telemetry data to OTLP JSON wire format.
- * Use this with HttpTransport for JSON over HTTP.
+ * Use this with CurlTransport for JSON over HTTP.
  *
  * Example usage:
  * ```php
  * $serializer = otlp_json_serializer();
- * $transport = otlp_http_transport($client, $reqFactory, $streamFactory, $endpoint, $serializer);
+ * $transport = otlp_curl_transport($endpoint, $serializer);
  * ```
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
@@ -42,7 +40,7 @@ function otlp_json_serializer() : JsonSerializer
  * Create a Protobuf serializer for OTLP.
  *
  * Returns a ProtobufSerializer that converts telemetry data to OTLP Protobuf binary format.
- * Use this with HttpTransport for Protobuf over HTTP, or with GrpcTransport.
+ * Use this with CurlTransport for Protobuf over HTTP, or with GrpcTransport.
  *
  * Requires:
  * - google/protobuf package
@@ -51,59 +49,13 @@ function otlp_json_serializer() : JsonSerializer
  * Example usage:
  * ```php
  * $serializer = otlp_protobuf_serializer();
- * $transport = otlp_http_transport($client, $reqFactory, $streamFactory, $endpoint, $serializer);
+ * $transport = otlp_curl_transport($endpoint, $serializer);
  * ```
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
 function otlp_protobuf_serializer() : ProtobufSerializer
 {
     return new ProtobufSerializer();
-}
-
-/**
- * Create an HTTP transport for OTLP endpoints.
- *
- * Creates an HttpTransport configured to send telemetry data to an OTLP-compatible
- * endpoint using PSR-18 HTTP client. Supports both JSON and Protobuf formats.
- *
- * Example usage:
- * ```php
- * // JSON over HTTP
- * $transport = otlp_http_transport(
- *     client: $client,
- *     requestFactory: $psr17Factory,
- *     streamFactory: $psr17Factory,
- *     endpoint: 'http://localhost:4318',
- *     serializer: otlp_json_serializer(),
- * );
- *
- * // Protobuf over HTTP
- * $transport = otlp_http_transport(
- *     client: $client,
- *     requestFactory: $psr17Factory,
- *     streamFactory: $psr17Factory,
- *     endpoint: 'http://localhost:4318',
- *     serializer: otlp_protobuf_serializer(),
- * );
- * ```
- *
- * @param ClientInterface $client PSR-18 HTTP client
- * @param RequestFactoryInterface $requestFactory PSR-17 request factory
- * @param StreamFactoryInterface $streamFactory PSR-17 stream factory
- * @param string $endpoint OTLP endpoint URL (e.g., 'http://localhost:4318')
- * @param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)
- * @param array<string, string> $headers Additional headers to include in requests
- */
-#[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
-function otlp_http_transport(
-    ClientInterface $client,
-    RequestFactoryInterface $requestFactory,
-    StreamFactoryInterface $streamFactory,
-    string $endpoint,
-    Serializer $serializer,
-    array $headers = [],
-) : HttpTransport {
-    return new HttpTransport($client, $requestFactory, $streamFactory, $endpoint, $serializer, $headers);
 }
 
 /**
@@ -168,9 +120,8 @@ function otlp_curl_options() : CurlTransportOptions
  * Create an async curl transport for OTLP endpoints.
  *
  * Creates a CurlTransport that uses curl_multi for non-blocking I/O.
- * Unlike HttpTransport (PSR-18), this transport queues requests and executes
- * them asynchronously. Completed requests are processed on subsequent send()
- * calls or on shutdown().
+ * Requests are queued and executed asynchronously. Completed requests are
+ * processed on subsequent send() calls or on shutdown().
  *
  * Requires: ext-curl PHP extension
  *

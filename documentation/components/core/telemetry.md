@@ -163,23 +163,6 @@ $telemetry->registerShutdownFunction();
 
 ### Transport Options
 
-#### HTTP Transport (PSR-18)
-
-Use with any PSR-18 compatible HTTP client:
-
-```php
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_http_transport, otlp_json_serializer};
-
-$transport = otlp_http_transport(
-    client: $psr18Client,
-    requestFactory: $psr17Factory,
-    streamFactory: $psr17Factory,
-    endpoint: 'http://localhost:4318',
-    serializer: otlp_json_serializer(),
-    headers: ['Authorization' => 'Bearer token'],
-);
-```
-
 #### Curl Transport (Async)
 
 Recommended for better performance - uses curl_multi for non-blocking I/O:
@@ -340,7 +323,6 @@ pass_through_log_processor($exporter)
 | Function | Description |
 |----------|-------------|
 | `otlp_curl_transport()` | Async curl transport |
-| `otlp_http_transport()` | PSR-18 HTTP transport |
 | `otlp_grpc_transport()` | gRPC transport |
 | `otlp_json_serializer()` | JSON serialization |
 | `otlp_protobuf_serializer()` | Protobuf serialization |

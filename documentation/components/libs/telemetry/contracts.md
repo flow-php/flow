@@ -1,6 +1,8 @@
 # Contracts
 
-Flow Telemetry is designed as a **contract library** - it defines interfaces that allow you to extend and customize every part of the telemetry pipeline. This page documents all contracts (interfaces) and their available implementations.
+Flow Telemetry is designed as a **contract library** - it defines interfaces that allow you to extend and customize
+every part of the telemetry pipeline. This page documents all contracts (interfaces) and their available
+implementations.
 
 - [⬅️️ Back](/documentation/components/libs/telemetry.md)
 
@@ -12,14 +14,14 @@ Flow Telemetry is designed as a **contract library** - it defines interfaces tha
 
 **Interface:** `Flow\Telemetry\Transport\Transport`
 
-Sends serialized telemetry data to backends over the network. Has signal-specific methods: `sendSpans()`, `sendMetrics()`, `sendLogs()`.
+Sends serialized telemetry data to backends over the network. Has signal-specific methods: `sendSpans()`,
+`sendMetrics()`, `sendLogs()`.
 
-| Implementation   | Package          | Description                                    |
-|------------------|------------------|------------------------------------------------|
-| `VoidTransport`  | `flow-php/telemetry` | No-op transport that discards all data         |
-| `HttpTransport`  | `flow-php/telemetry-otlp-bridge` | PSR-18 HTTP client transport        |
-| `GrpcTransport`  | `flow-php/telemetry-otlp-bridge` | gRPC transport (requires ext-grpc)  |
-| `CurlTransport`  | `flow-php/telemetry-otlp-bridge` | Async curl transport (requires ext-curl) |
+| Implementation  | Package                          | Description                              |
+|-----------------|----------------------------------|------------------------------------------|
+| `VoidTransport` | `flow-php/telemetry`             | No-op transport that discards all data   |
+| `GrpcTransport` | `flow-php/telemetry-otlp-bridge` | gRPC transport (requires ext-grpc)       |
+| `CurlTransport` | `flow-php/telemetry-otlp-bridge` | Async curl transport (requires ext-curl) |
 
 ---
 
@@ -27,10 +29,11 @@ Sends serialized telemetry data to backends over the network. Has signal-specifi
 
 **Interface:** `Flow\Telemetry\Context\ContextStorage`
 
-Stores and retrieves telemetry context (active span, baggage) within a request lifecycle. Enables automatic context propagation to child spans.
+Stores and retrieves telemetry context (active span, baggage) within a request lifecycle. Enables automatic context
+propagation to child spans.
 
-| Implementation         | Package              | Description                              |
-|------------------------|----------------------|------------------------------------------|
+| Implementation         | Package              | Description                                |
+|------------------------|----------------------|--------------------------------------------|
 | `MemoryContextStorage` | `flow-php/telemetry` | In-memory storage for single-threaded apps |
 
 ---
@@ -54,15 +57,16 @@ Converts telemetry data structures (spans, metrics, logs) into wire formats for 
 
 **Interface:** `Flow\Telemetry\Tracer\SpanProcessor`
 
-Receives span lifecycle events (`onStart`, `onEnd`) and determines how spans are buffered and exported. The processor sits between the Tracer and SpanExporter.
+Receives span lifecycle events (`onStart`, `onEnd`) and determines how spans are buffered and exported. The processor
+sits between the Tracer and SpanExporter.
 
-| Implementation             | Package              | Description                                        |
-|----------------------------|----------------------|----------------------------------------------------|
-| `PassThroughSpanProcessor` | `flow-php/telemetry` | Exports each span immediately when it ends         |
-| `BatchingSpanProcessor`    | `flow-php/telemetry` | Buffers spans and exports in configurable batches  |
-| `CompositeSpanProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                   |
-| `MemorySpanProcessor`      | `flow-php/telemetry` | Stores spans in memory for testing                 |
-| `VoidSpanProcessor`        | `flow-php/telemetry` | No-op processor that discards all spans            |
+| Implementation             | Package              | Description                                       |
+|----------------------------|----------------------|---------------------------------------------------|
+| `PassThroughSpanProcessor` | `flow-php/telemetry` | Exports each span immediately when it ends        |
+| `BatchingSpanProcessor`    | `flow-php/telemetry` | Buffers spans and exports in configurable batches |
+| `CompositeSpanProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                  |
+| `MemorySpanProcessor`      | `flow-php/telemetry` | Stores spans in memory for testing                |
+| `VoidSpanProcessor`        | `flow-php/telemetry` | No-op processor that discards all spans           |
 
 ---
 
@@ -85,14 +89,15 @@ Exports completed spans to external observability backends. Receives batches of 
 
 **Interface:** `Flow\Telemetry\Tracer\Sampler\Sampler`
 
-Makes sampling decisions for traces. Determines whether a span should be recorded and exported based on configurable rules.
+Makes sampling decisions for traces. Determines whether a span should be recorded and exported based on configurable
+rules.
 
-| Implementation             | Package              | Description                                          |
-|----------------------------|----------------------|------------------------------------------------------|
-| `AlwaysOnSampler`          | `flow-php/telemetry` | Records all traces                                   |
-| `AlwaysOffSampler`         | `flow-php/telemetry` | Records no traces                                    |
-| `TraceIdRatioBasedSampler` | `flow-php/telemetry` | Records a configurable percentage of traces          |
-| `ParentBasedSampler`       | `flow-php/telemetry` | Inherits sampling decision from parent span context  |
+| Implementation             | Package              | Description                                         |
+|----------------------------|----------------------|-----------------------------------------------------|
+| `AlwaysOnSampler`          | `flow-php/telemetry` | Records all traces                                  |
+| `AlwaysOffSampler`         | `flow-php/telemetry` | Records no traces                                   |
+| `TraceIdRatioBasedSampler` | `flow-php/telemetry` | Records a configurable percentage of traces         |
+| `ParentBasedSampler`       | `flow-php/telemetry` | Inherits sampling decision from parent span context |
 
 ---
 
@@ -102,9 +107,9 @@ Makes sampling decisions for traces. Determines whether a span should be recorde
 
 Represents timestamped events that occurred during a span's lifetime (e.g., exceptions, state changes).
 
-| Implementation  | Package              | Description                        |
-|-----------------|----------------------|------------------------------------|
-| `GenericEvent`  | `flow-php/telemetry` | General-purpose event with attributes |
+| Implementation | Package              | Description                           |
+|----------------|----------------------|---------------------------------------|
+| `GenericEvent` | `flow-php/telemetry` | General-purpose event with attributes |
 
 ---
 
@@ -116,13 +121,13 @@ Represents timestamped events that occurred during a span's lifetime (e.g., exce
 
 Processes metric measurements from instruments. Determines how metrics are aggregated and when they are exported.
 
-| Implementation               | Package              | Description                                          |
-|------------------------------|----------------------|------------------------------------------------------|
-| `PassThroughMetricProcessor` | `flow-php/telemetry` | Exports each metric immediately when recorded        |
-| `BatchingMetricProcessor`    | `flow-php/telemetry` | Buffers metrics and exports in configurable batches  |
-| `CompositeMetricProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                     |
-| `MemoryMetricProcessor`      | `flow-php/telemetry` | Stores metrics in memory for testing                 |
-| `VoidMetricProcessor`        | `flow-php/telemetry` | No-op processor that discards all metrics            |
+| Implementation               | Package              | Description                                         |
+|------------------------------|----------------------|-----------------------------------------------------|
+| `PassThroughMetricProcessor` | `flow-php/telemetry` | Exports each metric immediately when recorded       |
+| `BatchingMetricProcessor`    | `flow-php/telemetry` | Buffers metrics and exports in configurable batches |
+| `CompositeMetricProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                    |
+| `MemoryMetricProcessor`      | `flow-php/telemetry` | Stores metrics in memory for testing                |
+| `VoidMetricProcessor`        | `flow-php/telemetry` | No-op processor that discards all metrics           |
 
 ---
 
@@ -147,12 +152,12 @@ Exports collected metrics to external observability backends. Receives batches o
 
 Base interface for metric instruments. Instruments are the API through which measurements are recorded.
 
-| Implementation  | Package              | Description                                         |
-|-----------------|----------------------|-----------------------------------------------------|
-| `Counter`       | `flow-php/telemetry` | Monotonically increasing value (e.g., requests)     |
-| `UpDownCounter` | `flow-php/telemetry` | Value that can increase or decrease (e.g., queue)   |
-| `Gauge`         | `flow-php/telemetry` | Point-in-time measurement (e.g., CPU usage)         |
-| `Histogram`     | `flow-php/telemetry` | Distribution of values (e.g., latency)              |
+| Implementation  | Package              | Description                                       |
+|-----------------|----------------------|---------------------------------------------------|
+| `Counter`       | `flow-php/telemetry` | Monotonically increasing value (e.g., requests)   |
+| `UpDownCounter` | `flow-php/telemetry` | Value that can increase or decrease (e.g., queue) |
+| `Gauge`         | `flow-php/telemetry` | Point-in-time measurement (e.g., CPU usage)       |
+| `Histogram`     | `flow-php/telemetry` | Distribution of values (e.g., latency)            |
 
 ---
 
@@ -164,13 +169,13 @@ Base interface for metric instruments. Instruments are the API through which mea
 
 Processes log records from loggers. Determines how logs are buffered and when they are exported.
 
-| Implementation            | Package              | Description                                        |
-|---------------------------|----------------------|----------------------------------------------------|
-| `PassThroughLogProcessor` | `flow-php/telemetry` | Exports each log immediately when recorded         |
-| `BatchingLogProcessor`    | `flow-php/telemetry` | Buffers logs and exports in configurable batches   |
-| `CompositeLogProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                   |
-| `MemoryLogProcessor`      | `flow-php/telemetry` | Stores logs in memory for testing                  |
-| `VoidLogProcessor`        | `flow-php/telemetry` | No-op processor that discards all logs             |
+| Implementation            | Package              | Description                                      |
+|---------------------------|----------------------|--------------------------------------------------|
+| `PassThroughLogProcessor` | `flow-php/telemetry` | Exports each log immediately when recorded       |
+| `BatchingLogProcessor`    | `flow-php/telemetry` | Buffers logs and exports in configurable batches |
+| `CompositeLogProcessor`   | `flow-php/telemetry` | Delegates to multiple processors                 |
+| `MemoryLogProcessor`      | `flow-php/telemetry` | Stores logs in memory for testing                |
+| `VoidLogProcessor`        | `flow-php/telemetry` | No-op processor that discards all logs           |
 
 ---
 
@@ -210,9 +215,9 @@ Extracts and injects trace context across process boundaries using text-based ca
 
 Propagates application-specific key-value pairs (baggage) across process boundaries alongside trace context.
 
-| Implementation | Package              | Description                      |
-|----------------|----------------------|----------------------------------|
-| `W3CBaggage`   | `flow-php/telemetry` | W3C Baggage standard             |
+| Implementation | Package              | Description          |
+|----------------|----------------------|----------------------|
+| `W3CBaggage`   | `flow-php/telemetry` | W3C Baggage standard |
 
 ---
 

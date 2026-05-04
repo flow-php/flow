@@ -18,14 +18,9 @@ seo_description: >
 composer require flow-php/telemetry-otlp-bridge:~--FLOW_PHP_VERSION--
 ```
 
-## Core Dependencies
-
-- [psr/http-client](https://packagist.org/packages/psr/http-client)
-- [psr/http-factory](https://packagist.org/packages/psr/http-factory)
-
 ## Suggested Dependencies
 
 ```bash
-# For gRPC transport support (requires ext-grpc PHP extension)
+# For Protobuf serializer (used by Curl+Protobuf or gRPC transports)
 composer require google/protobuf
 ```

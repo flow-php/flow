@@ -12,11 +12,9 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Transport\{Transport, TransportException};
 
 /**
- * Asynchronous HTTP transport for OTLP using curl_multi.
- *
- * Unlike HttpTransport (PSR-18), this transport uses curl_multi for non-blocking I/O.
- * Requests are queued and executed asynchronously, with results processed on subsequent
- * send() calls or on shutdown().
+ * Asynchronous HTTP transport for OTLP using curl_multi for non-blocking I/O.
+ * Requests are queued and executed asynchronously, with results processed on
+ * subsequent send() calls or on shutdown().
  *
  * Example usage:
  * ```php

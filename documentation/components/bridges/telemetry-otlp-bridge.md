@@ -18,35 +18,13 @@ capabilities.
 
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/telemetry-otlp-bridge.md).
 
-### Transports
-
-| Transport | Required Extension | Supported Serializers |
-|-----------|--------------------|-----------------------|
-| **Curl**  | `ext-curl`         | JSON, Protobuf        |
-| **HTTP**  | -                  | JSON, Protobuf        |
-| **gRPC**  | `ext-grpc`         | Protobuf              |
-
-### Serializers
-
-| Serializer   | Required Packages  | Supported Transports |
-|--------------|--------------------|----------------------|
-| **JSON**     | -                  | Curl, HTTP           |
-| **Protobuf** | `google/protobuf`  | Curl, HTTP, gRPC     |
-
-To install Protobuf dependencies:
-
-```
-composer require google/protobuf
-```
-
 ## Transports
 
-The bridge provides three transport options for sending telemetry data to OTLP endpoints.
+The bridge provides two transport options for sending telemetry data to OTLP endpoints.
 
 | Transport | Protocol     | Use Case                         | Requirements  |
 |-----------|--------------|----------------------------------|---------------|
 | **Curl**  | HTTP (async) | Production, low latency          | ext-curl      |
-| **HTTP**  | HTTP (sync)  | Standard PSR-18 integration      | PSR-18 client |
 | **gRPC**  | gRPC         | High-performance binary protocol | ext-grpc      |
 
 ### Curl Transport (Recommended)
@@ -77,41 +55,6 @@ $transport = otlp_curl_transport(
         ->withConnectTimeout(15)
         ->withHeader('Authorization', 'Bearer your-token')
         ->withCompression(),
-);
-```
-
-### HTTP Transport (PSR-18)
-
-The HTTP transport uses any PSR-18 compatible HTTP client for synchronous requests. This is useful when you want to
-integrate with an existing HTTP client in your application.
-
-```php
-<?php
-
-use function Flow\Bridge\Telemetry\OTLP\DSL\{
-    otlp_http_transport,
-    otlp_json_serializer,
-};
-
-// Using any PSR-18 client (e.g., Symfony HttpClient, Guzzle)
-$transport = otlp_http_transport(
-    client: $httpClient,
-    requestFactory: $psr17Factory,
-    streamFactory: $psr17Factory,
-    endpoint: 'http://localhost:4318',
-    serializer: otlp_json_serializer(),
-);
-
-// With authentication headers
-$transport = otlp_http_transport(
-    client: $httpClient,
-    requestFactory: $psr17Factory,
-    streamFactory: $psr17Factory,
-    endpoint: 'https://otlp.example.com:4318',
-    serializer: otlp_json_serializer(),
-    headers: [
-        'Authorization' => 'Bearer your-token',
-    ],
 );
 ```
 
