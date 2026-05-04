@@ -6,7 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrin
 
 use Doctrine\DBAL\Driver\API\ExceptionConverter;
 use Doctrine\DBAL\Driver\{Connection, Result, Statement};
-use Doctrine\DBAL\{Driver, ServerVersionProvider, VersionAwarePlatformDriver};
+use Doctrine\DBAL\{Driver, ServerVersionProvider};
 use Doctrine\DBAL\Platforms\{AbstractPlatform, DB2Platform, MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SQLitePlatform};
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingDriver;
 use Flow\Telemetry\Context\MemoryContextStorage;
@@ -25,7 +25,7 @@ final class TracingDriverTest extends TestCase
 {
     protected function setUp() : void
     {
-        if (\interface_exists(VersionAwarePlatformDriver::class)) {
+        if (\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 4.x');
         }
     }
