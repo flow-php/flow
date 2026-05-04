@@ -524,14 +524,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         foreach ($entries as $entry) {
             $key = $this->resourceKey($entry->resource);
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'resource' => $entry->resource,
-                    'entries' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'resource' => $entry->resource,
+                'entries' => [],
+            ];
             $grouped[$key]['entries'][] = $entry;
         }
 
@@ -552,14 +548,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         foreach ($entries as $entry) {
             $scope = $entry->scope;
             $key = $scope->name . '@' . $scope->version;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'scope' => $scope,
-                    'entries' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'scope' => $scope,
+                'entries' => [],
+            ];
             $grouped[$key]['entries'][] = $entry;
         }
 
@@ -579,14 +571,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         foreach ($metrics as $metric) {
             $key = $this->resourceKey($metric->resource);
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'resource' => $metric->resource,
-                    'metrics' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'resource' => $metric->resource,
+                'metrics' => [],
+            ];
             $grouped[$key]['metrics'][] = $metric;
         }
 
@@ -607,14 +595,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         foreach ($metrics as $metric) {
             $scope = $metric->scope;
             $key = $scope->name . '@' . $scope->version;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'scope' => $scope,
-                    'metrics' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'scope' => $scope,
+                'metrics' => [],
+            ];
             $grouped[$key]['metrics'][] = $metric;
         }
 
@@ -634,14 +618,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         foreach ($spans as $span) {
             $key = $this->resourceKey($span->resource());
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'resource' => $span->resource(),
-                    'spans' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'resource' => $span->resource(),
+                'spans' => [],
+            ];
             $grouped[$key]['spans'][] = $span;
         }
 
@@ -662,14 +642,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         foreach ($spans as $span) {
             $scope = $span->scope();
             $key = $scope->name . '@' . $scope->version;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'scope' => $scope,
-                    'spans' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'scope' => $scope,
+                'spans' => [],
+            ];
             $grouped[$key]['spans'][] = $span;
         }
 

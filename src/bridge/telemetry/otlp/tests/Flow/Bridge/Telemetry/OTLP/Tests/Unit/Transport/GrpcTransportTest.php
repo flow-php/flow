@@ -6,9 +6,9 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\{GrpcSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
+use Flow\Telemetry\Transport\TransportException;
 use Google\Protobuf\Internal\Message;
 use Grpc\BaseStub;
-use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 
@@ -65,6 +65,20 @@ final class GrpcTransportTest extends TestCase
     }
 
     #[RequiresPhpExtension('grpc')]
+    public function test_send_after_shutdown_throws() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $transport = new GrpcTransport('localhost:4317', new ProtobufSerializer());
+        $transport->shutdown();
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('Cannot send after shutdown');
+
+        $transport->sendSpans([]);
+    }
+
+    #[RequiresPhpExtension('grpc')]
     public function test_shutdown_can_be_called_multiple_times() : void
     {
         $this->skipIfGrpcDependenciesNotAvailable();
@@ -85,10 +99,6 @@ final class GrpcTransportTest extends TestCase
 
         if (!\class_exists(Message::class)) {
             self::markTestSkipped('The google/protobuf package is not installed');
-        }
-
-        if (!\class_exists(TraceServiceClient::class)) {
-            self::markTestSkipped('The open-telemetry/gen-otlp-protobuf package is not installed');
         }
     }
 }

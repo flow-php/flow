@@ -44,7 +44,6 @@ function otlp_json_serializer() : JsonSerializer
  *
  * Requires:
  * - google/protobuf package
- * - open-telemetry/gen-otlp-protobuf package
  *
  * Example usage:
  * ```php
@@ -67,7 +66,6 @@ function otlp_protobuf_serializer() : ProtobufSerializer
  * Requires:
  * - ext-grpc PHP extension
  * - google/protobuf package
- * - open-telemetry/gen-otlp-protobuf package
  *
  * Example usage:
  * ```php

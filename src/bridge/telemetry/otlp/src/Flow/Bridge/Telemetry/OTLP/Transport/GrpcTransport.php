@@ -9,16 +9,18 @@ use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Transport\{Transport, TransportException};
-use Grpc\ChannelCredentials;
+use Google\Protobuf\Internal\Message;
+use Grpc\{ChannelCredentials, UnaryCall};
 use Opentelemetry\Proto\Collector\Logs\V1\LogsServiceClient;
 use Opentelemetry\Proto\Collector\Metrics\V1\MetricsServiceClient;
 use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
 
 /**
- * gRPC transport for OTLP using the grpc PHP extension.
+ * Asynchronous gRPC transport for OTLP using the grpc PHP extension.
  *
- * Sends telemetry data as protobuf over gRPC to OTLP-compatible endpoints.
- * Requires the grpc PHP extension and google/protobuf + open-telemetry/gen-otlp-protobuf packages.
+ * Sends are non-blocking: each Export() returns a UnaryCall whose wait()
+ * is deferred until shutdown(). Requires the grpc PHP extension and
+ * google/protobuf package.
  *
  * Example usage:
  * ```php
@@ -28,13 +30,22 @@ use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
  * );
  *
  * $transport->sendSpans($spans);
+ * $transport->sendMetrics($metrics);
+ *
+ * // Block until all pending calls complete
+ * $transport->shutdown();
  * ```
  */
 final class GrpcTransport implements Transport
 {
+    private bool $isShutdown = false;
+
     private ?LogsServiceClient $logsClient = null;
 
     private ?MetricsServiceClient $metricsClient = null;
+
+    /** @var list<UnaryCall<covariant Message>> */
+    private array $pendingCalls = [];
 
     private ?TraceServiceClient $tracesClient = null;
 
@@ -63,12 +74,14 @@ final class GrpcTransport implements Transport
      */
     public function sendLogs(array $entries) : void
     {
-        $request = $this->serializer->createLogsRequest($entries);
-        $metadata = $this->buildMetadata();
+        if ($this->isShutdown) {
+            throw new TransportException('Cannot send after shutdown');
+        }
 
-        [$result, $status] = $this->getLogsClient()->Export($request, $metadata)->wait();
-
-        $this->checkStatus($status, 'logs');
+        $this->pendingCalls[] = $this->getLogsClient()->Export(
+            $this->serializer->createLogsRequest($entries),
+            $this->buildMetadata(),
+        );
     }
 
     /**
@@ -76,12 +89,14 @@ final class GrpcTransport implements Transport
      */
     public function sendMetrics(array $metrics) : void
     {
-        $request = $this->serializer->createMetricsRequest($metrics);
-        $metadata = $this->buildMetadata();
+        if ($this->isShutdown) {
+            throw new TransportException('Cannot send after shutdown');
+        }
 
-        [$result, $status] = $this->getMetricsClient()->Export($request, $metadata)->wait();
-
-        $this->checkStatus($status, 'metrics');
+        $this->pendingCalls[] = $this->getMetricsClient()->Export(
+            $this->serializer->createMetricsRequest($metrics),
+            $this->buildMetadata(),
+        );
     }
 
     /**
@@ -89,16 +104,30 @@ final class GrpcTransport implements Transport
      */
     public function sendSpans(array $spans) : void
     {
-        $request = $this->serializer->createSpansRequest($spans);
-        $metadata = $this->buildMetadata();
+        if ($this->isShutdown) {
+            throw new TransportException('Cannot send after shutdown');
+        }
 
-        [$result, $status] = $this->getTracesClient()->Export($request, $metadata)->wait();
-
-        $this->checkStatus($status, 'traces');
+        $this->pendingCalls[] = $this->getTracesClient()->Export(
+            $this->serializer->createSpansRequest($spans),
+            $this->buildMetadata(),
+        );
     }
 
     public function shutdown() : void
     {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        foreach ($this->pendingCalls as $call) {
+            $call->wait();
+        }
+
+        $this->pendingCalls = [];
+
         if ($this->tracesClient !== null) {
             $this->tracesClient->close();
             $this->tracesClient = null;
@@ -127,23 +156,6 @@ final class GrpcTransport implements Transport
         }
 
         return $metadata;
-    }
-
-    private function checkStatus(object $status, string $signalName) : void
-    {
-        $statusCode = $status->code ?? -1;
-        $statusDetails = $status->details ?? 'Unknown error';
-
-        if ($statusCode !== 0) {
-            throw new TransportException(
-                \sprintf(
-                    'gRPC export failed for %s: %s (code: %d)',
-                    $signalName,
-                    $statusDetails,
-                    $statusCode
-                )
-            );
-        }
     }
 
     private function createChannel() : mixed

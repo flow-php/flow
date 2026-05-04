@@ -6,7 +6,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
 use Google\Protobuf\Internal\Message;
 use Grpc\BaseStub;
-use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
 use PHPUnit\Framework\TestCase;
 
 final class Requirements
@@ -28,10 +27,6 @@ final class Requirements
     {
         if (!\class_exists(Message::class)) {
             TestCase::markTestSkipped('The google/protobuf package is not installed');
-        }
-
-        if (!\class_exists(TraceServiceClient::class)) {
-            TestCase::markTestSkipped('The open-telemetry/gen-otlp-protobuf package is not installed');
         }
     }
 }
