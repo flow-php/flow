@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-05-02
+## [Unreleased] - 2026-05-04
 
 ### Added
 - [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - fetchOne and fetchSingel and fetchSingleInto** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +21,7 @@
 - [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2345](https://github.com/flow-php/flow/pull/2345) - **postgresql bytea converter** - [@norberttech](https://github.com/norberttech)
 - [#2344](https://github.com/flow-php/flow/pull/2344) - **positional parameters docblock for postgresql client** - [@norberttech](https://github.com/norberttech)
 - [3e5140](https://github.com/flow-php/flow/commit/3e5140aa9e27ae16e000eb67e2239a2eedf9574d) - **dependencies, static analysis** - [@norberttech](https://github.com/norberttech)
 - [e55b74](https://github.com/flow-php/flow/commit/e55b74645bada3dc57ad7594232d4cd3685dcf0e) - **codevoce coverage reporting** - [@norberttech](https://github.com/norberttech)
