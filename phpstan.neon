@@ -28,6 +28,7 @@ parameters:
         - src/bridge/monolog/telemetry/src
         - src/bridge/openapi/specification/src
         - src/bridge/postgresql/valinor/src
+        - src/bridge/psr3/telemetry/src
         - src/bridge/psr7/telemetry/src
         - src/bridge/psr18/telemetry/src
         - src/bridge/symfony/http-foundation/src
@@ -77,6 +78,7 @@ parameters:
         - src/bridge/monolog/telemetry/tests
         - src/bridge/openapi/specification/tests
         - src/bridge/postgresql/valinor/tests
+        - src/bridge/psr3/telemetry/tests
         - src/bridge/psr7/telemetry/tests
         - src/bridge/psr18/telemetry/tests
         - src/bridge/symfony/http-foundation/tests

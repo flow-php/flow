@@ -121,7 +121,7 @@ final class TestKernel extends Kernel
             public function process(ContainerBuilder $container) : void
             {
                 foreach ($container->getDefinitions() as $id => $definition) {
-                    if (\str_starts_with($id, 'flow.telemetry') || \str_ends_with($id, '.flow_telemetry') || \str_starts_with($id, 'test.')) {
+                    if (\str_starts_with($id, 'flow.telemetry') || \str_ends_with($id, '.flow_telemetry') || \str_starts_with($id, 'test.') || \str_starts_with($id, 'cache.flow_telemetry')) {
                         $definition->setPublic(true);
                     }
                 }

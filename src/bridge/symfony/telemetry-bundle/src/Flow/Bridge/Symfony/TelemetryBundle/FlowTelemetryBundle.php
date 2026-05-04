@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle;
 
-use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{CacheTelemetryPass, DBALTelemetryPass, HttpClientTelemetryPass, OTLPAvailabilityPass, Psr18ClientTelemetryPass};
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{CacheTelemetryPass, DBALTelemetryPass, FrameworkLoggerPass, HttpClientTelemetryPass, OTLPAvailabilityPass, Psr18ClientTelemetryPass};
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
@@ -25,6 +26,7 @@ final class FlowTelemetryBundle extends Bundle
         parent::build($container);
 
         $container->addCompilerPass(new OTLPAvailabilityPass());
+        $container->addCompilerPass(new FrameworkLoggerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -64);
 
         if (\interface_exists(self::HTTP_CLIENT_INTERFACE)) {
             $container->addCompilerPass(new HttpClientTelemetryPass());

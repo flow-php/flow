@@ -99,6 +99,10 @@ component_management:
       name: bridge-psr18-telemetry
       paths:
         - src/bridge/psr18/telemetry/**
+    - component_id: bridge-psr3-telemetry
+      name: bridge-psr3-telemetry
+      paths:
+        - src/bridge/psr3/telemetry/**
     - component_id: bridge-psr7-telemetry
       name: bridge-psr7-telemetry
       paths:

@@ -44,8 +44,11 @@ final readonly class UnixPath
             return new self(\getcwd() ?: '', $options);
         }
 
-        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
-            return new self($path, $options);
+        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts)) {
+            if ($urlParts['scheme'] !== 'file') {
+                return new self($path, $options);
+            }
+            $path = $urlParts['path'] ?? '';
         }
 
         $realPath = $path;

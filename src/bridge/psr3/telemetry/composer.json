@@ -1,0 +1,39 @@
+{
+    "name": "flow-php/psr3-telemetry-bridge",
+    "type": "library",
+    "description": "Flow PHP - PSR-3 Telemetry Bridge",
+    "keywords": [
+        "flow-php",
+        "psr-3",
+        "telemetry",
+        "bridge"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/telemetry": "self.version",
+        "psr/log": "^2.0 || ^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Bridge/Psr3/Telemetry/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

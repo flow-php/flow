@@ -45,8 +45,11 @@ final readonly class WindowsPath
             return new self(\str_replace('\\', '/', \getcwd() ?: ''), $options);
         }
 
-        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
-            return new self($path, $options);
+        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts)) {
+            if ($urlParts['scheme'] !== 'file') {
+                return new self($path, $options);
+            }
+            $path = $urlParts['path'] ?? '';
         }
 
         $realPath = \str_replace('\\', '/', $path);

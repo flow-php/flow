@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration;
 
-use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailabilityPass;
+use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{FrameworkLoggerPass, OTLPAvailabilityPass};
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\FlowTelemetryExtension;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Logger\StubLogger;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\{Logger\Logger, Meter\Meter, Resource, Telemetry, Tracer\Tracer};
@@ -18,16 +20,77 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
 use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
+use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler};
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition};
+use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
 
 #[CoversClass(FlowTelemetryExtension::class)]
 #[CoversClass(OTLPAvailabilityPass::class)]
+#[CoversClass(FrameworkLoggerPass::class)]
 final class FlowTelemetryExtensionTest extends KernelTestCase
 {
+    public function test_auto_alias_when_logger_service_is_symfony_default() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $loggerDefinition = new Definition(SymfonyDefaultLogger::class);
+                    $loggerDefinition->setPublic(true);
+                    $container->setDefinition('logger', $loggerDefinition);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertSame(
+            $container->get('flow.telemetry.default.logger.psr3'),
+            $container->get('logger'),
+        );
+    }
+
+    public function test_caching_detector_writes_to_configured_path() : void
+    {
+        $cachePath = \sys_get_temp_dir() . '/flow_telemetry_resource_' . \uniqid() . '.cache';
+
+        try {
+            $this->bootKernel([
+                'config' => static function (TestKernel $kernel) use ($cachePath) : void {
+                    $kernel->addTestExtensionConfig('flow_telemetry', [
+                        'resource' => [
+                            'detectors' => [
+                                'static' => [
+                                    'cache' => ['path' => $cachePath],
+                                ],
+                            ],
+                            'custom' => ['service.name' => 'cached-service'],
+                        ],
+                    ]);
+                },
+            ]);
+
+            $container = $this->getContainer();
+            $detector = $container->get('flow.telemetry.resource.detector.static');
+            self::assertInstanceOf(CachingDetector::class, $detector);
+
+            $resource = $container->get('flow.telemetry.resource');
+            self::assertInstanceOf(Resource::class, $resource);
+            self::assertSame('cached-service', $resource->get('service.name'));
+            self::assertFileExists($cachePath);
+        } finally {
+            if (\is_file($cachePath)) {
+                \unlink($cachePath);
+            }
+        }
+    }
+
     public function test_composite_log_processor() : void
     {
         $this->bootKernel([
@@ -194,6 +257,49 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         );
     }
 
+    public function test_default_logger_meter_tracer_are_always_registered_when_user_defined_none() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertInstanceOf(Logger::class, $container->get('flow.telemetry.default.logger'));
+        self::assertInstanceOf(Meter::class, $container->get('flow.telemetry.default.meter'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.default.tracer'));
+        self::assertInstanceOf(TelemetryLogger::class, $container->get('flow.telemetry.default.logger.psr3'));
+    }
+
+    public function test_default_named_instances_are_registered_alongside_user_defined_ones() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'loggers' => ['app' => []],
+                    'meters' => ['app' => []],
+                    'tracers' => ['app' => []],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertInstanceOf(Logger::class, $container->get('flow.telemetry.app.logger'));
+        self::assertInstanceOf(Logger::class, $container->get('flow.telemetry.default.logger'));
+        self::assertInstanceOf(Meter::class, $container->get('flow.telemetry.app.meter'));
+        self::assertInstanceOf(Meter::class, $container->get('flow.telemetry.default.meter'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.app.tracer'));
+        self::assertInstanceOf(Tracer::class, $container->get('flow.telemetry.default.tracer'));
+        self::assertInstanceOf(TelemetryLogger::class, $container->get('flow.telemetry.app.logger.psr3'));
+        self::assertInstanceOf(TelemetryLogger::class, $container->get('flow.telemetry.default.logger.psr3'));
+    }
+
     public function test_flow_telemetry_is_aliased_to_telemetry_class() : void
     {
         $this->bootKernel([
@@ -208,6 +314,39 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         self::assertTrue($container->has(Telemetry::class));
         self::assertSame($container->get('flow.telemetry'), $container->get(Telemetry::class));
+    }
+
+    public function test_framework_logger_aliases_symfony_logger_service_to_psr3_wrapper() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'loggers' => ['app' => []],
+                    'framework_logger' => 'app',
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('logger'));
+        self::assertInstanceOf(TelemetryLogger::class, $container->get('logger'));
+    }
+
+    public function test_framework_logger_throws_when_referenced_logger_is_not_configured() : void
+    {
+        self::expectException(RuntimeException::class);
+        self::expectExceptionMessage('flow.telemetry.missing.logger.psr3');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'framework_logger' => 'missing',
+                ]);
+            },
+        ]);
     }
 
     public function test_full_configuration_scenario() : void
@@ -624,6 +763,51 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertInstanceOf(Tracer::class, $tracer);
     }
 
+    public function test_no_auto_alias_when_logger_is_already_an_alias_to_another_service() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $thirdPartyDefinition = new Definition(StubLogger::class);
+                    $thirdPartyDefinition->setPublic(true);
+                    $container->setDefinition('app.my_logger', $thirdPartyDefinition);
+                    $container->setAlias('logger', 'app.my_logger')->setPublic(true);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertSame(
+            $container->get('app.my_logger'),
+            $container->get('logger'),
+        );
+        self::assertInstanceOf(StubLogger::class, $container->get('logger'));
+    }
+
+    public function test_no_auto_alias_when_logger_service_class_is_not_symfony_default() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $loggerDefinition = new Definition(StubLogger::class);
+                    $loggerDefinition->setPublic(true);
+                    $container->setDefinition('logger', $loggerDefinition);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertInstanceOf(StubLogger::class, $container->get('logger'));
+    }
+
     public function test_otlp_availability_pass_sets_parameter_when_otlp_not_configured() : void
     {
         $this->bootKernel([
@@ -635,6 +819,20 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]);
 
         self::assertTrue($this->getContainer()->hasParameter('flow.telemetry.otlp_available'));
+    }
+
+    public function test_psr3_wrapper_service_is_a_telemetry_logger() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'loggers' => ['app' => []],
+                ]);
+            },
+        ]);
+
+        self::assertInstanceOf(TelemetryLogger::class, $this->getContainer()->get('flow.telemetry.app.logger.psr3'));
     }
 
     public function test_resource_caching_can_be_disabled() : void
@@ -1015,5 +1213,23 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]);
 
         self::assertInstanceOf(TraceIdRatioBasedSampler::class, $this->getContainer()->get('flow.telemetry.tracer_provider.sampler'));
+    }
+
+    public function test_user_defined_default_logger_config_overrides_auto_default() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'loggers' => [
+                        'default' => ['version' => '2.0.0'],
+                    ],
+                ]);
+            },
+        ]);
+
+        $telemetry = $this->getContainer()->get('flow.telemetry');
+        self::assertInstanceOf(Telemetry::class, $telemetry);
+        self::assertInstanceOf(Logger::class, $telemetry->logger('default', '2.0.0'));
     }
 }

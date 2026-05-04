@@ -895,7 +895,7 @@ final class ConfigurationTest extends TestCase
                     'static' => [
                         'cache' => [
                             'enabled' => false,
-                            'path' => '/custom/cache/path',
+                            'path' => '/var/cache/flow_telemetry_resource.cache',
                         ],
                     ],
                 ],
@@ -903,7 +903,7 @@ final class ConfigurationTest extends TestCase
         ]]);
 
         self::assertFalse($config['resource']['detectors']['static']['cache']['enabled']);
-        self::assertSame('/custom/cache/path', $config['resource']['detectors']['static']['cache']['path']);
+        self::assertSame('/var/cache/flow_telemetry_resource.cache', $config['resource']['detectors']['static']['cache']['path']);
     }
 
     public function test_resource_detectors_can_be_disabled() : void
