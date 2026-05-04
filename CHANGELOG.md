@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-05-04
 
 ### Added
+- [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/psr3-telemetry-bridge - bridge for psr3 logger** - [@norberttech](https://github.com/norberttech)
 - [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - fetchOne and fetchSingel and fetchSingleInto** - [@norberttech](https://github.com/norberttech)
 - [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/session bridge** - [@norberttech](https://github.com/norberttech)
 - [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/cache bridge** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +11,8 @@
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: support for env vars** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/symfony-telemetry-bundle - register default logger / meter / tracer** - [@norberttech](https://github.com/norberttech)
+- [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/symfony-telemetry-bundle - allow to register one of the bundle provided loggers as framework logger service through psr3 adapter** - [@norberttech](https://github.com/norberttech)
 - [#2343](https://github.com/flow-php/flow/pull/2343) - **Bump the highest supported version of "brick/math" to ^0.17** - [@zenas1210](https://github.com/zenas1210)
 - [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - fetchOne and fetchOneInto are nullable now** - [@norberttech](https://github.com/norberttech)
 - [ad2387](https://github.com/flow-php/flow/commit/ad23875584cf606f2eb1d7f266a38292c4c44334) - **feature: automatically render flow-php manifest list on installation page** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +24,7 @@
 - [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/filesystem - Path::realpath bug** - [@norberttech](https://github.com/norberttech)
 - [#2345](https://github.com/flow-php/flow/pull/2345) - **postgresql bytea converter** - [@norberttech](https://github.com/norberttech)
 - [#2344](https://github.com/flow-php/flow/pull/2344) - **positional parameters docblock for postgresql client** - [@norberttech](https://github.com/norberttech)
 - [3e5140](https://github.com/flow-php/flow/commit/3e5140aa9e27ae16e000eb67e2239a2eedf9574d) - **dependencies, static analysis** - [@norberttech](https://github.com/norberttech)
