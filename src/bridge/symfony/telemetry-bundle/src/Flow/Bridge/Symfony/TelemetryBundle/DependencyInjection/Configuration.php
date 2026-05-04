@@ -111,7 +111,7 @@ final class Configuration implements ConfigurationInterface
                     ->info('Custom PSR-20 clock service ID. If not provided, uses built-in SystemClock.')
                     ->defaultNull()
                 ->end()
-                ->scalarNode('main_logger')
+                ->scalarNode('framework_logger')
                     ->info('Name of the logger (matching a key under "loggers", or "default") whose PSR-3 wrapper will be aliased to Symfony\'s "logger" service. Leave null to auto-replace only when Symfony\'s default HttpKernel Logger is currently bound.')
                     ->defaultNull()
                 ->end()

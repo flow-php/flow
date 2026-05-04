@@ -8,27 +8,27 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-final class MainLoggerPass implements CompilerPassInterface
+final class FrameworkLoggerPass implements CompilerPassInterface
 {
     private const string SYMFONY_DEFAULT_LOGGER = 'Symfony\\Component\\HttpKernel\\Log\\Logger';
 
     public function process(ContainerBuilder $container) : void
     {
-        $mainLogger = $container->hasParameter('flow.telemetry.main_logger')
-            ? $container->getParameter('flow.telemetry.main_logger')
+        $frameworkLogger = $container->hasParameter('flow.telemetry.framework_logger')
+            ? $container->getParameter('flow.telemetry.framework_logger')
             : null;
 
-        if ($mainLogger !== null) {
-            if (!\is_string($mainLogger) || $mainLogger === '') {
-                throw new RuntimeException('flow_telemetry.main_logger must be a non-empty string referencing a configured logger name.');
+        if ($frameworkLogger !== null) {
+            if (!\is_string($frameworkLogger) || $frameworkLogger === '') {
+                throw new RuntimeException('flow_telemetry.framework_logger must be a non-empty string referencing a configured logger name.');
             }
 
-            $targetId = 'flow.telemetry.' . $mainLogger . '.logger.psr3';
+            $targetId = 'flow.telemetry.' . $frameworkLogger . '.logger.psr3';
 
             if (!$container->hasDefinition($targetId) && !$container->hasAlias($targetId)) {
                 throw new RuntimeException(\sprintf(
-                    'Configured main_logger "%s" does not have a registered PSR-3 wrapper service "%s". Make sure a logger with that name is configured under flow_telemetry.loggers, or use the always-available "default".',
-                    $mainLogger,
+                    'Configured framework_logger "%s" does not have a registered PSR-3 wrapper service "%s". Make sure a logger with that name is configured under flow_telemetry.loggers, or use the always-available "default".',
+                    $frameworkLogger,
                     $targetId,
                 ));
             }

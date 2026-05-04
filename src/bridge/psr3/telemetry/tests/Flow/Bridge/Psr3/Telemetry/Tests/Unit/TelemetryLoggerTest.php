@@ -12,7 +12,7 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidLogExporter;
 use Flow\Telemetry\Resource;
-use PHPUnit\Framework\Attributes\{DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 

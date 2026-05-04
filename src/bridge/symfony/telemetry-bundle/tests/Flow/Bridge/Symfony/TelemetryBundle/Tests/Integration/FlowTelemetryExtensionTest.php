@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration;
 
 use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
-use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{MainLoggerPass, OTLPAvailabilityPass};
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\{FrameworkLoggerPass, OTLPAvailabilityPass};
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\FlowTelemetryExtension;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Logger\StubLogger;
@@ -30,7 +30,7 @@ use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
 
 #[CoversClass(FlowTelemetryExtension::class)]
 #[CoversClass(OTLPAvailabilityPass::class)]
-#[CoversClass(MainLoggerPass::class)]
+#[CoversClass(FrameworkLoggerPass::class)]
 final class FlowTelemetryExtensionTest extends KernelTestCase
 {
     public function test_auto_alias_when_logger_service_is_symfony_default() : void
@@ -316,6 +316,39 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertSame($container->get('flow.telemetry'), $container->get(Telemetry::class));
     }
 
+    public function test_framework_logger_aliases_symfony_logger_service_to_psr3_wrapper() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'loggers' => ['app' => []],
+                    'framework_logger' => 'app',
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        self::assertTrue($container->has('logger'));
+        self::assertInstanceOf(TelemetryLogger::class, $container->get('logger'));
+    }
+
+    public function test_framework_logger_throws_when_referenced_logger_is_not_configured() : void
+    {
+        self::expectException(RuntimeException::class);
+        self::expectExceptionMessage('flow.telemetry.missing.logger.psr3');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'framework_logger' => 'missing',
+                ]);
+            },
+        ]);
+    }
+
     public function test_full_configuration_scenario() : void
     {
         $this->bootKernel([
@@ -476,39 +509,6 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]);
 
         self::assertInstanceOf(VoidLogProcessor::class, $this->getContainer()->get('flow.telemetry.logger_provider.processor'));
-    }
-
-    public function test_main_logger_aliases_symfony_logger_service_to_psr3_wrapper() : void
-    {
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'loggers' => ['app' => []],
-                    'main_logger' => 'app',
-                ]);
-            },
-        ]);
-
-        $container = $this->getContainer();
-
-        self::assertTrue($container->has('logger'));
-        self::assertInstanceOf(TelemetryLogger::class, $container->get('logger'));
-    }
-
-    public function test_main_logger_throws_when_referenced_logger_is_not_configured() : void
-    {
-        self::expectException(RuntimeException::class);
-        self::expectExceptionMessage('flow.telemetry.missing.logger.psr3');
-
-        $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestExtensionConfig('flow_telemetry', [
-                    'resource' => [],
-                    'main_logger' => 'missing',
-                ]);
-            },
-        ]);
     }
 
     public function test_metric_exporter_console_type() : void

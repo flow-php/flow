@@ -7,7 +7,7 @@ namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
 use Flow\Telemetry\Logger\Severity;
-use PHPUnit\Framework\Attributes\{DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 

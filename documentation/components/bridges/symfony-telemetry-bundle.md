@@ -674,15 +674,15 @@ In addition, the bundle always registers a `default` logger, meter, and tracer â
 
 **Options:**
 
-| Option        | Type             | Default | Description                                                                                                  |
-|---------------|------------------|---------|--------------------------------------------------------------------------------------------------------------|
-| `main_logger` | `string \| null` | `null`  | Name of a logger configured under `loggers` (or the always-available `default`) to alias as Symfony `logger` |
+| Option             | Type             | Default | Description                                                                                                  |
+|--------------------|------------------|---------|--------------------------------------------------------------------------------------------------------------|
+| `framework_logger` | `string \| null` | `null`  | Name of a logger configured under `loggers` (or the always-available `default`) to alias as Symfony `logger` |
 
 **Behavior:**
 
-- When `main_logger` is set, the bundle aliases the Symfony `logger` service to `flow.telemetry.<main_logger>.logger.psr3`. If no logger with that name exists, container compilation fails with a clear error.
-- When `main_logger` is `null` and Symfony's `logger` service is the default `Symfony\Component\HttpKernel\Log\Logger`, the bundle automatically aliases `logger` to `flow.telemetry.default.logger.psr3`.
-- When `main_logger` is `null` and `logger` is provided by another bundle (Monolog, custom alias, etc.), the bundle leaves `logger` alone.
+- When `framework_logger` is set, the bundle aliases the Symfony `logger` service to `flow.telemetry.<framework_logger>.logger.psr3`. If no logger with that name exists, container compilation fails with a clear error.
+- When `framework_logger` is `null` and Symfony's `logger` service is the default `Symfony\Component\HttpKernel\Log\Logger`, the bundle automatically aliases `logger` to `flow.telemetry.default.logger.psr3`.
+- When `framework_logger` is `null` and `logger` is provided by another bundle (Monolog, custom alias, etc.), the bundle leaves `logger` alone.
 
 ```yaml
 flow_telemetry:
@@ -690,7 +690,7 @@ flow_telemetry:
     app:
       version: '1.0.0'
 
-  main_logger: app   # Symfony "logger" service -> flow.telemetry.app.logger.psr3
+  framework_logger: app   # Symfony "logger" service -> flow.telemetry.app.logger.psr3
 ```
 
 ## Pattern Matching
@@ -887,7 +887,7 @@ flow_telemetry:
     checkout:
       version: '%env(APP_VERSION)%'
 
-  main_logger: app   # Symfony "logger" service -> flow.telemetry.app.logger.psr3
+  framework_logger: app   # Symfony "logger" service -> flow.telemetry.app.logger.psr3
 
   instrumentation:
     http_kernel:
