@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\{cast, column_type_bytea, literal, param, select};
+use function Flow\PostgreSql\DSL\{cast, column_type_bytea, literal, param, select, typed};
+use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -29,6 +30,17 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         yield 'simple hex' => ['48454c4c4f', 'HELLO'];
         yield 'empty hex' => ['', ''];
         yield 'mixed case' => ['deadbeef', "\xde\xad\xbe\xef"];
+    }
+
+    /**
+     * @return \Generator<string, array{string}>
+     */
+    public static function provide_typed_bytea_binary_values() : \Generator
+    {
+        yield 'leading null bytes' => ["\x00\x00\x00\x02\x11\x06value1"];
+        yield 'embedded null bytes' => ["hello\x00world"];
+        yield 'high bytes' => ["\x01\x02\x03\xff\xfe"];
+        yield 'serialize output' => [\serialize(['greeting' => 'world', 'count' => 7])];
     }
 
     public function test_binary_data_via_hex_literal() : void
@@ -75,5 +87,16 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_bytea())->as('val'))->toSql());
 
         self::assertNull($result);
+    }
+
+    #[DataProvider('provide_typed_bytea_binary_values')]
+    public function test_typed_bytea_round_trip_preserves_binary(string $input) : void
+    {
+        $result = $this->pgsqlContext()->client()->fetchScalar(
+            select(cast(param(1), column_type_bytea())->as('val'))->toSql(),
+            [typed($input, ValueType::BYTEA)],
+        );
+
+        self::assertSame($input, $result);
     }
 }

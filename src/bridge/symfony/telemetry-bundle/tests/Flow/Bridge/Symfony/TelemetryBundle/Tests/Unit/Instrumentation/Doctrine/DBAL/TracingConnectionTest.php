@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL;
 
 use Doctrine\DBAL\Driver\{Connection as ConnectionInterface, Result, Statement as DriverStatement};
-use Doctrine\DBAL\{ParameterType, VersionAwarePlatformDriver};
+use Doctrine\DBAL\ParameterType;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingConnection;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -23,7 +23,7 @@ final class TracingConnectionTest extends TestCase
 {
     protected function setUp() : void
     {
-        if (\interface_exists(VersionAwarePlatformDriver::class)) {
+        if (\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 4.x');
         }
     }

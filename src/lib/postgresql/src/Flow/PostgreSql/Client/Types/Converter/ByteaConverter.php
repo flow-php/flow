@@ -21,7 +21,7 @@ final class ByteaConverter implements ValueConverter
         }
 
         if (\is_string($value)) {
-            return $value;
+            return '\x' . \bin2hex($value);
         }
 
         throw ValueConversionException::cannotConvert($value, 'bytea');
