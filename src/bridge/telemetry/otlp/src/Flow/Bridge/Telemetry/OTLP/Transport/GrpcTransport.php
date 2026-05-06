@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\GrpcSerializer;
-use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Meter\Metric;
-use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Transport\{Transport, TransportException};
 use Google\Protobuf\Internal\Message;
 use Grpc\{ChannelCredentials, UnaryCall};
@@ -21,20 +19,6 @@ use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
  * Sends are non-blocking: each Export() returns a UnaryCall whose wait()
  * is deferred until shutdown(). Requires the grpc PHP extension and
  * google/protobuf package.
- *
- * Example usage:
- * ```php
- * $transport = new GrpcTransport(
- *     endpoint: 'localhost:4317',
- *     serializer: new ProtobufSerializer(),
- * );
- *
- * $transport->sendSpans($spans);
- * $transport->sendMetrics($metrics);
- *
- * // Block until all pending calls complete
- * $transport->shutdown();
- * ```
  */
 final class GrpcTransport implements Transport
 {
@@ -69,49 +53,26 @@ final class GrpcTransport implements Transport
         }
     }
 
-    /**
-     * @param array<LogEntry> $entries
-     */
-    public function sendLogs(array $entries) : void
+    public function send(Signals $signal) : void
     {
         if ($this->isShutdown) {
             throw new TransportException('Cannot send after shutdown');
         }
 
-        $this->pendingCalls[] = $this->getLogsClient()->Export(
-            $this->serializer->createLogsRequest($entries),
-            $this->buildMetadata(),
-        );
-    }
-
-    /**
-     * @param array<Metric> $metrics
-     */
-    public function sendMetrics(array $metrics) : void
-    {
-        if ($this->isShutdown) {
-            throw new TransportException('Cannot send after shutdown');
-        }
-
-        $this->pendingCalls[] = $this->getMetricsClient()->Export(
-            $this->serializer->createMetricsRequest($metrics),
-            $this->buildMetadata(),
-        );
-    }
-
-    /**
-     * @param array<Span> $spans
-     */
-    public function sendSpans(array $spans) : void
-    {
-        if ($this->isShutdown) {
-            throw new TransportException('Cannot send after shutdown');
-        }
-
-        $this->pendingCalls[] = $this->getTracesClient()->Export(
-            $this->serializer->createSpansRequest($spans),
-            $this->buildMetadata(),
-        );
+        $this->pendingCalls[] = match ($signal->type) {
+            SignalType::LOGS => $this->getLogsClient()->Export(
+                $this->serializer->createLogsRequest($signal->allLogs()),
+                $this->buildMetadata(),
+            ),
+            SignalType::METRICS => $this->getMetricsClient()->Export(
+                $this->serializer->createMetricsRequest($signal->allMetrics()),
+                $this->buildMetadata(),
+            ),
+            SignalType::TRACES => $this->getTracesClient()->Export(
+                $this->serializer->createSpansRequest($signal->allSpans()),
+                $this->buildMetadata(),
+            ),
+        };
     }
 
     public function shutdown() : void

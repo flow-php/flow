@@ -18,11 +18,11 @@ use Psr\Clock\ClockInterface;
  * Example usage:
  * ```php
  * // For testing with memory storage
- * $processor = new MemoryProcessor($exporter, $exporter, $exporter);
+ * $processor = new MemorySpanProcessor(new MemoryExporter());
  * $provider = new TracerProvider($processor, new SystemClock());
  *
  * // For OTLP export
- * $processor = batching_span_processor(otlp_span_exporter($transport));
+ * $processor = batching_span_processor(otlp_exporter($transport));
  * $provider = new TracerProvider($processor, new SystemClock());
  *
  * // For void/disabled tracing

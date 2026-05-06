@@ -10,7 +10,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -39,7 +39,7 @@ final class TelemetryLoggerTest extends TestCase
 
     protected function setUp() : void
     {
-        $this->processor = new MemoryLogProcessor(new VoidLogExporter());
+        $this->processor = new MemoryLogProcessor(new VoidExporter());
 
         $logger = (new LoggerProvider(
             $this->processor,
@@ -66,7 +66,7 @@ final class TelemetryLoggerTest extends TestCase
 
     public function test_custom_converter_is_used() : void
     {
-        $processor = new MemoryLogProcessor(new VoidLogExporter());
+        $processor = new MemoryLogProcessor(new VoidExporter());
         $logger = (new LoggerProvider(
             $processor,
             new SystemClock(),

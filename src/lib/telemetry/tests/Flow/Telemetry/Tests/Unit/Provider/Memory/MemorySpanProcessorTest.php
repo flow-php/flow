@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
 use Flow\Telemetry\Context\TraceId;
-use Flow\Telemetry\Provider\Memory\{MemorySpanExporter, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use PHPUnit\Framework\TestCase;
@@ -14,14 +14,14 @@ final class MemorySpanProcessorTest extends TestCase
 {
     public function test_ended_spans_for_trace_returns_empty_for_unknown_trace() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
 
         self::assertSame([], $processor->endedSpansForTrace('unknown-trace-id'));
     }
 
     public function test_ended_spans_returns_all_ended_spans() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
         $span1 = SpanMother::withName('span-1');
         $span2 = SpanMother::withName('span-2');
 
@@ -36,7 +36,7 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_exporter_returns_configured_exporter() : void
     {
-        $exporter = new MemorySpanExporter();
+        $exporter = new MemoryExporter();
         $processor = new MemorySpanProcessor($exporter);
 
         self::assertSame($exporter, $processor->exporter());
@@ -44,7 +44,7 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_flush_exports_ended_spans() : void
     {
-        $exporter = new MemorySpanExporter();
+        $exporter = new MemoryExporter();
         $processor = new MemorySpanProcessor($exporter);
         $span = SpanMother::withName('test-span');
 
@@ -58,19 +58,19 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_flush_returns_true_when_no_spans() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
 
         self::assertTrue($processor->flush());
     }
 
     public function test_implements_span_processor() : void
     {
-        self::assertInstanceOf(SpanProcessor::class, new MemorySpanProcessor(new MemorySpanExporter()));
+        self::assertInstanceOf(SpanProcessor::class, new MemorySpanProcessor(new MemoryExporter()));
     }
 
     public function test_on_end_stores_span_by_trace_id() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
         $traceId = TraceId::generate();
         $span = SpanMother::withTraceId($traceId);
 
@@ -83,7 +83,7 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_on_start_stores_span_by_trace_id() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
         $traceId = TraceId::generate();
         $span = SpanMother::withTraceId($traceId);
 
@@ -96,7 +96,7 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_reset_clears_all_spans() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
         $span = SpanMother::withName('test-span');
 
         $processor->onStart($span);
@@ -113,14 +113,14 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_started_spans_for_trace_returns_empty_for_unknown_trace() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
 
         self::assertSame([], $processor->startedSpansForTrace('unknown-trace-id'));
     }
 
     public function test_started_spans_returns_all_started_spans() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
         $span1 = SpanMother::withName('span-1');
         $span2 = SpanMother::withName('span-2');
 
@@ -135,7 +135,7 @@ final class MemorySpanProcessorTest extends TestCase
 
     public function test_trace_ids_returns_all_unique_trace_ids() : void
     {
-        $processor = new MemorySpanProcessor(new MemorySpanExporter());
+        $processor = new MemorySpanProcessor(new MemoryExporter());
         $traceId1 = TraceId::generate();
         $traceId2 = TraceId::generate();
         $span1 = SpanMother::withTraceId($traceId1);

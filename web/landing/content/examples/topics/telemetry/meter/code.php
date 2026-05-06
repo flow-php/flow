@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-use Flow\Telemetry\Provider\Clock\SystemClock;
 use function Flow\Telemetry\DSL\{
-    console_metric_exporter,
+    console_exporter,
     memory_metric_processor,
     meter_provider,
     resource_detector,
@@ -18,7 +17,7 @@ $telemetry = telemetry(
     resource_detector()->detect(),
     null,
     meter_provider(
-        memory_metric_processor(console_metric_exporter(colors: false)),
+        memory_metric_processor(console_exporter(colors: false)),
         clock(),
     ),
 )->registerShutdownFunction();

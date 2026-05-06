@@ -144,6 +144,7 @@ final class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->append($this->exportersNode())
                 ->arrayNode('tracer_provider')
                     ->info('TracerProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
@@ -384,128 +385,49 @@ final class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function exporterNode(string $signalType) : ArrayNodeDefinition
+    private function exportersNode() : ArrayNodeDefinition
     {
-        $builder = new TreeBuilder('exporter');
+        $builder = new TreeBuilder('exporters');
         /** @var ArrayNodeDefinition $node */
         $node = $builder->getRootNode();
 
-        $node
-            ->info(\ucfirst($signalType) . ' exporter configuration')
-            ->addDefaultsIfNotSet()
-            ->children()
-                ->enumNode('type')
-                    ->values(['memory', 'console', 'void', 'otlp', 'service'])
-                    ->defaultValue('void')
-                ->end()
-                ->scalarNode('service_id')
-                    ->info('Custom exporter service ID (only for type: service)')
-                    ->defaultNull()
-                ->end()
-                ->arrayNode('otlp')
-                    ->info('OTLP exporter configuration (only for type: otlp)')
-                    ->children()
-                        ->arrayNode('transport')
-                            ->info('OTLP transport configuration')
-                            ->addDefaultsIfNotSet()
-                            ->beforeNormalization()
-                                ->always(static function (mixed $v) : mixed {
-                                    if (\is_array($v) && ($v['type'] ?? null) === 'grpc' && \array_key_exists('timeout', $v)) {
-                                        throw new InvalidConfigurationException(
-                                            'The "timeout" parameter is not supported when transport.type is "grpc".',
-                                        );
-                                    }
+        $supportedTypes = ['otlp', 'service', 'console', 'memory', 'void'];
 
-                                    return $v;
-                                })
-                            ->end()
-                            ->children()
-                                ->enumNode('type')
-                                    ->values(['curl', 'grpc', 'service'])
-                                    ->defaultValue('curl')
-                                ->end()
-                                ->scalarNode('endpoint')
-                                    ->info('OTLP endpoint URL (required)')
-                                    ->isRequired()
-                                    ->cannotBeEmpty()
-                                ->end()
-                                ->integerNode('timeout')
-                                    ->info('Request timeout in seconds (not supported for grpc transport)')
-                                    ->defaultValue(30)
-                                    ->min(1)
-                                ->end()
-                                ->arrayNode('headers')
-                                    ->info('Additional HTTP headers')
-                                    ->normalizeKeys(false)
-                                    ->useAttributeAsKey('name')
-                                    ->prototype('scalar')->end()
-                                ->end()
-                                ->integerNode('connect_timeout')
-                                    ->info('Connection timeout in seconds (only for curl)')
-                                    ->defaultValue(10)
-                                    ->min(1)
-                                ->end()
-                                ->booleanNode('compression')
-                                    ->info('Enable automatic response decompression (only for curl)')
-                                    ->defaultFalse()
-                                ->end()
-                                ->booleanNode('follow_redirects')
-                                    ->info('Follow HTTP redirects (only for curl)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->integerNode('max_redirects')
-                                    ->info('Maximum number of redirects to follow (only for curl)')
-                                    ->defaultValue(3)
-                                    ->min(0)
-                                ->end()
-                                ->scalarNode('proxy')
-                                    ->info('Proxy server URL (only for curl, e.g., "http://proxy:8080")')
-                                    ->defaultNull()
-                                ->end()
-                                ->booleanNode('ssl_verify_peer')
-                                    ->info('Verify SSL peer certificate (only for curl)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->booleanNode('ssl_verify_host')
-                                    ->info('Verify SSL host name (only for curl)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->scalarNode('ssl_cert_path')
-                                    ->info('Path to SSL client certificate (only for curl)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('ssl_key_path')
-                                    ->info('Path to SSL client private key (only for curl)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('ca_info_path')
-                                    ->info('Path to CA certificate bundle (only for curl)')
-                                    ->defaultNull()
-                                ->end()
-                                ->booleanNode('insecure')
-                                    ->info('Allow insecure connections (only for grpc)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->scalarNode('service_id')
-                                    ->info('Custom transport service ID (only for type: service)')
-                                    ->defaultNull()
-                                ->end()
-                                ->arrayNode('serializer')
-                                    ->info('Serializer configuration')
-                                    ->addDefaultsIfNotSet()
-                                    ->children()
-                                        ->enumNode('type')
-                                            ->values(['json', 'protobuf', 'service'])
-                                            ->defaultValue('json')
-                                        ->end()
-                                        ->scalarNode('service_id')
-                                            ->info('Custom serializer service ID (only for type: service)')
-                                            ->defaultNull()
-                                        ->end()
-                                    ->end()
-                                ->end()
-                            ->end()
-                        ->end()
+        $node
+            ->info('Named exporter definitions referenced from per-signal processor blocks. The sub-block under each name selects the exporter implementation; "otlp" carries an embedded transport, "service" aliases an external service id.')
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+                ->validate()
+                    ->ifTrue(static function (array $v) use ($supportedTypes) : bool {
+                        $set = 0;
+
+                        foreach ($supportedTypes as $type) {
+                            if (\array_key_exists($type, $v) && $v[$type] !== null) {
+                                $set++;
+                            }
+                        }
+
+                        return $set !== 1;
+                    })
+                    ->thenInvalid('Exporter must declare exactly one of: otlp, service, console, memory, void.')
+                ->end()
+                ->children()
+                    ->append($this->otlpExporterNode())
+                    ->append($this->serviceExporterNode())
+                    ->arrayNode('console')
+                        ->info('Console exporter (no options)')
+                        ->treatNullLike([])
+                        ->canBeUnset()
+                    ->end()
+                    ->arrayNode('memory')
+                        ->info('Memory exporter (no options)')
+                        ->treatNullLike([])
+                        ->canBeUnset()
+                    ->end()
+                    ->arrayNode('void')
+                        ->info('Void/no-op exporter (no options)')
+                        ->treatNullLike([])
+                        ->canBeUnset()
                     ->end()
                 ->end()
             ->end();
@@ -533,11 +455,34 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue(512)
                     ->min(1)
                 ->end()
+                ->scalarNode('exporter')
+                    ->info('Name of a top-level exporter referenced by this processor')
+                    ->defaultNull()
+                ->end()
                 ->scalarNode('service_id')
                     ->info('Custom processor service ID (only for type: service)')
                     ->defaultNull()
                 ->end()
-                ->append($this->exporterNode($signalType))
+            ->end();
+
+        return $node;
+    }
+
+    private function otlpExporterNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('otlp');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('OTLP exporter — embeds its transport configuration inline')
+            ->canBeUnset()
+            ->validate()
+                ->ifTrue(static fn (array $v) : bool => !\is_array($v['transport'] ?? null) || \count($v['transport']) === 0)
+                ->thenInvalid('OTLP exporter requires a "transport" configuration block.')
+            ->end()
+            ->children()
+                ->append($this->transportNode())
             ->end();
 
         return $node;
@@ -570,6 +515,10 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue(512)
                     ->min(1)
                 ->end()
+                ->scalarNode('exporter')
+                    ->info('Name of a top-level exporter referenced by this processor')
+                    ->defaultNull()
+                ->end()
                 ->scalarNode('service_id')
                     ->info('Custom processor service ID (only for type: service)')
                     ->defaultNull()
@@ -591,6 +540,9 @@ final class Configuration implements ConfigurationInterface
                                 ->defaultValue(512)
                                 ->min(1)
                             ->end()
+                            ->scalarNode('exporter')
+                                ->defaultNull()
+                            ->end()
                             ->scalarNode('service_id')
                                 ->defaultNull()
                             ->end()
@@ -598,13 +550,140 @@ final class Configuration implements ConfigurationInterface
                                 ->values(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
                                 ->defaultValue('info')
                             ->end()
-                            ->append($this->exporterNode($signalType))
                             ->append($this->innerProcessorNode($signalType))
                         ->end()
                     ->end()
                 ->end()
-                ->append($this->exporterNode($signalType))
                 ->append($this->innerProcessorNode($signalType))
+            ->end();
+
+        return $node;
+    }
+
+    private function serviceExporterNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('service');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('Aliases an existing Symfony service implementing Flow\\Telemetry\\Exporter\\Exporter')
+            ->canBeUnset()
+            ->children()
+                ->scalarNode('id')
+                    ->info('Service id of the user-provided exporter (required)')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    private function transportNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('transport');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('Transport configuration (required when exporter type is "otlp")')
+            ->beforeNormalization()
+                ->always(static function (mixed $v) : mixed {
+                    if (\is_array($v) && ($v['type'] ?? null) === 'grpc' && \array_key_exists('timeout', $v)) {
+                        throw new InvalidConfigurationException(
+                            'The "timeout" parameter is not supported when transport.type is "grpc".',
+                        );
+                    }
+
+                    return $v;
+                })
+            ->end()
+            ->children()
+                ->enumNode('type')
+                    ->info("Transport type: 'curl', 'grpc', 'service'")
+                    ->values(['curl', 'grpc', 'service'])
+                    ->defaultValue('curl')
+                ->end()
+                ->scalarNode('endpoint')
+                    ->info('OTLP endpoint URL (required unless type: service)')
+                    ->defaultNull()
+                ->end()
+                ->integerNode('timeout')
+                    ->info('Request timeout in seconds (curl only)')
+                    ->defaultValue(30)
+                    ->min(1)
+                ->end()
+                ->arrayNode('headers')
+                    ->info('Additional HTTP headers')
+                    ->normalizeKeys(false)
+                    ->useAttributeAsKey('name')
+                    ->prototype('scalar')->end()
+                ->end()
+                ->integerNode('connect_timeout')
+                    ->info('Connection timeout in seconds (curl only)')
+                    ->defaultValue(10)
+                    ->min(1)
+                ->end()
+                ->booleanNode('compression')
+                    ->info('Enable automatic response decompression (curl only)')
+                    ->defaultFalse()
+                ->end()
+                ->booleanNode('follow_redirects')
+                    ->info('Follow HTTP redirects (curl only)')
+                    ->defaultTrue()
+                ->end()
+                ->integerNode('max_redirects')
+                    ->info('Maximum number of redirects to follow (curl only)')
+                    ->defaultValue(3)
+                    ->min(0)
+                ->end()
+                ->scalarNode('proxy')
+                    ->info('Proxy server URL (curl only)')
+                    ->defaultNull()
+                ->end()
+                ->booleanNode('ssl_verify_peer')
+                    ->info('Verify SSL peer certificate (curl only)')
+                    ->defaultTrue()
+                ->end()
+                ->booleanNode('ssl_verify_host')
+                    ->info('Verify SSL host name (curl only)')
+                    ->defaultTrue()
+                ->end()
+                ->scalarNode('ssl_cert_path')
+                    ->info('Path to SSL client certificate (curl only)')
+                    ->defaultNull()
+                ->end()
+                ->scalarNode('ssl_key_path')
+                    ->info('Path to SSL client private key (curl only)')
+                    ->defaultNull()
+                ->end()
+                ->scalarNode('ca_info_path')
+                    ->info('Path to CA certificate bundle (curl only)')
+                    ->defaultNull()
+                ->end()
+                ->booleanNode('insecure')
+                    ->info('Allow insecure connections (grpc only)')
+                    ->defaultTrue()
+                ->end()
+                ->scalarNode('service_id')
+                    ->info('Custom transport service ID (only for type: service)')
+                    ->defaultNull()
+                ->end()
+                ->arrayNode('serializer')
+                    ->info('Serializer configuration')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->enumNode('type')
+                            ->values(['json', 'protobuf', 'service'])
+                            ->defaultValue('json')
+                        ->end()
+                        ->scalarNode('service_id')
+                            ->info('Custom serializer service ID (only for type: service)')
+                            ->defaultNull()
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $node;

@@ -7,7 +7,7 @@ namespace Flow\Telemetry\Tests\Integration\Logger;
 use Flow\Telemetry\Context\{Context, MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\Logger\{LogRecord, LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
@@ -158,6 +158,6 @@ final class LoggingIntegrationTest extends TestCase
 
     private function createProcessor() : MemoryLogProcessor
     {
-        return new MemoryLogProcessor(new VoidLogExporter());
+        return new MemoryLogProcessor(new VoidExporter());
     }
 }

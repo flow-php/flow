@@ -10,7 +10,7 @@ use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
 use Nyholm\Psr7\{Request, Response};
@@ -21,7 +21,7 @@ final class PSR18TraceableClientTest extends TestCase
 {
     public function test_exception_is_recorded_and_rethrown() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $exception = new \RuntimeException('Connection failed');
@@ -58,7 +58,7 @@ final class PSR18TraceableClientTest extends TestCase
 
     public function test_request_with_4xx_status_creates_error_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockClient = $this->createMock(ClientInterface::class);
@@ -81,7 +81,7 @@ final class PSR18TraceableClientTest extends TestCase
 
     public function test_request_with_5xx_status_creates_error_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockClient = $this->createMock(ClientInterface::class);
@@ -104,7 +104,7 @@ final class PSR18TraceableClientTest extends TestCase
 
     public function test_span_has_correct_attributes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockClient = $this->createMock(ClientInterface::class);
@@ -130,7 +130,7 @@ final class PSR18TraceableClientTest extends TestCase
 
     public function test_span_kind_is_client() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockClient = $this->createMock(ClientInterface::class);
@@ -148,7 +148,7 @@ final class PSR18TraceableClientTest extends TestCase
 
     public function test_successful_request_creates_span_with_ok_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockClient = $this->createMock(ClientInterface::class);
@@ -181,8 +181,8 @@ final class PSR18TraceableClientTest extends TestCase
                 'service.version' => '1.0.0',
             ]),
             new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider(new MemoryMetricProcessor(new VoidMetricExporter()), $clock),
-            new LoggerProvider(new MemoryLogProcessor(new VoidLogExporter()), $clock, $contextStorage),
+            new MeterProvider(new MemoryMetricProcessor(new VoidExporter()), $clock),
+            new LoggerProvider(new MemoryLogProcessor(new VoidExporter()), $clock, $contextStorage),
         );
     }
 }

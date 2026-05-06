@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Meter\{Metric, MetricProcessor};
+use Flow\Telemetry\Signal\Signals;
 
 /**
  * Exports each metric immediately when processed.
@@ -12,20 +14,15 @@ use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
  * Unlike BatchingMetricProcessor, this processor exports metrics synchronously
  * one at a time. This is useful for debugging and development where
  * immediate visibility of metrics is more important than performance.
- *
- * Example usage:
- * ```php
- * $processor = new PassThroughMetricProcessor($metricExporter);
- * ```
  */
 final readonly class PassThroughMetricProcessor implements MetricProcessor
 {
     public function __construct(
-        private MetricExporter $exporter,
+        private Exporter $exporter,
     ) {
     }
 
-    public function exporter() : MetricExporter
+    public function exporter() : Exporter
     {
         return $this->exporter;
     }
@@ -37,6 +34,6 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
 
     public function process(Metric $metric) : void
     {
-        $this->exporter->export([$metric]);
+        $this->exporter->export(Signals::metrics([$metric]));
     }
 }

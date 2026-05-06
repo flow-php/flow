@@ -8,7 +8,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\{MeterProvider, MetricType};
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -28,9 +28,9 @@ final class TelemetryIntegrationTest extends TestCase
     public function test_context_flows_through_all_signals() : void
     {
         $resource = ResourceMother::default();
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock);
@@ -71,9 +71,9 @@ final class TelemetryIntegrationTest extends TestCase
     public function test_full_telemetry_workflow() : void
     {
         $resource = ResourceMother::default();
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock);
@@ -111,9 +111,9 @@ final class TelemetryIntegrationTest extends TestCase
     public function test_multiple_services_recording_telemetry() : void
     {
         $resource = ResourceMother::default();
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock);
@@ -178,9 +178,9 @@ final class TelemetryIntegrationTest extends TestCase
     {
         $resource = ResourceMother::default();
         $contextStorage = new MemoryContextStorage();
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock);
         $loggerProvider = new LoggerProvider($logProcessor, $this->clock, $contextStorage);

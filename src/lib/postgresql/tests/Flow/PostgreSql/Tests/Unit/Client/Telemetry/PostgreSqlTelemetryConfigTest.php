@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use function Flow\PostgreSql\DSL\{postgresql_telemetry_config, postgresql_telemetry_options};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_exporter};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use PHPUnit\Framework\TestCase;
 
@@ -54,9 +54,9 @@ final class PostgreSqlTelemetryConfigTest extends TestCase
 
         return telemetry(
             resource(),
-            tracer_provider(memory_span_processor(void_span_exporter()), $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            tracer_provider(memory_span_processor(void_exporter()), $clock, $contextStorage),
+            meter_provider(memory_metric_processor(void_exporter()), $clock),
+            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
     }
 }

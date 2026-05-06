@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
 
 /**
  * Forwards log records to multiple processors.
@@ -13,14 +14,6 @@ use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
  * - Send logs to multiple backends (e.g., both console and OTLP)
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
- *
- * Example usage:
- * ```php
- * $processor = new CompositeLogProcessor([
- *     new BatchingLogProcessor($otlpExporter),
- *     new MemoryLogProcessor(),
- * ]);
- * ```
  */
 final readonly class CompositeLogProcessor implements LogProcessor
 {
@@ -32,7 +25,7 @@ final readonly class CompositeLogProcessor implements LogProcessor
     ) {
     }
 
-    public function exporter() : LogExporter
+    public function exporter() : Exporter
     {
         if (\count($this->processors) === 0) {
             throw new \RuntimeException('CompositeLogProcessor has no processors');

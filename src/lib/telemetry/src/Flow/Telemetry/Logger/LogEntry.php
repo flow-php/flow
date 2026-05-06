@@ -16,7 +16,7 @@ use Flow\Telemetry\Tracer\SpanContext;
  * - SpanContext from the context storage (for trace correlation)
  * - Resolved timestamp
  *
- * This is the internal type passed to LogProcessor and LogExporter implementations.
+ * This is the internal type passed to LogProcessor and Exporter implementations.
  */
 final readonly class LogEntry
 {

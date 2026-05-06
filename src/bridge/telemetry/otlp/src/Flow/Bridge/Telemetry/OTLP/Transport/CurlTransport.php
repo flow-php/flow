@@ -5,34 +5,14 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
-use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Serializer\Serializer;
-use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Transport\{Transport, TransportException};
 
 /**
  * Asynchronous HTTP transport for OTLP using curl_multi for non-blocking I/O.
  * Requests are queued and executed asynchronously, with results processed on
  * subsequent send() calls or on shutdown().
- *
- * Example usage:
- * ```php
- * $transport = new CurlTransport(
- *     endpoint: 'http://localhost:4318',
- *     serializer: new JsonSerializer(),
- *     options: otlp_curl_options()
- *         ->withTimeout(60)
- *         ->withHeader('Authorization', 'Bearer token'),
- * );
- *
- * // Sends are non-blocking
- * $transport->sendSpans($spans);
- * $transport->sendMetrics($metrics);
- *
- * // Block until all pending sends complete
- * $transport->shutdown();
- * ```
  */
 final class CurlTransport implements Transport
 {
@@ -60,28 +40,15 @@ final class CurlTransport implements Transport
         $this->multiHandle = \curl_multi_init();
     }
 
-    /**
-     * @param array<LogEntry> $entries
-     */
-    public function sendLogs(array $entries) : void
+    public function send(Signals $signal) : void
     {
-        $this->send('/v1/logs', $this->serializer->serializeLogs($entries), 'logs');
-    }
+        [$path, $body, $signalName] = match ($signal->type) {
+            SignalType::LOGS => ['/v1/logs', $this->serializer->serializeLogs($signal->allLogs()), 'logs'],
+            SignalType::METRICS => ['/v1/metrics', $this->serializer->serializeMetrics($signal->allMetrics()), 'metrics'],
+            SignalType::TRACES => ['/v1/traces', $this->serializer->serializeSpans($signal->allSpans()), 'traces'],
+        };
 
-    /**
-     * @param array<Metric> $metrics
-     */
-    public function sendMetrics(array $metrics) : void
-    {
-        $this->send('/v1/metrics', $this->serializer->serializeMetrics($metrics), 'metrics');
-    }
-
-    /**
-     * @param array<Span> $spans
-     */
-    public function sendSpans(array $spans) : void
-    {
-        $this->send('/v1/traces', $this->serializer->serializeSpans($spans), 'traces');
+        $this->dispatch($path, $body, $signalName);
     }
 
     public function shutdown() : void
@@ -115,23 +82,7 @@ final class CurlTransport implements Transport
         return $headers;
     }
 
-    private function processCompleted() : void
-    {
-        $running = 0;
-        \curl_multi_exec($this->multiHandle, $running);
-
-        while ($info = \curl_multi_info_read($this->multiHandle)) {
-            /** @var \CurlHandle $ch */
-            $ch = $info['handle'];
-            $id = (int) $ch;
-
-            \curl_multi_remove_handle($this->multiHandle, $ch);
-            \curl_close($ch);
-            unset($this->pendingHandles[$id]);
-        }
-    }
-
-    private function send(string $path, string $body, string $signalName) : void
+    private function dispatch(string $path, string $body, string $signalName) : void
     {
         if ($this->isShutdown) {
             throw new TransportException('Cannot send after shutdown');
@@ -158,6 +109,22 @@ final class CurlTransport implements Transport
         $this->pendingHandles[(int) $ch] = $ch;
 
         $this->processCompleted();
+    }
+
+    private function processCompleted() : void
+    {
+        $running = 0;
+        \curl_multi_exec($this->multiHandle, $running);
+
+        while ($info = \curl_multi_info_read($this->multiHandle)) {
+            /** @var \CurlHandle $ch */
+            $ch = $info['handle'];
+            $id = (int) $ch;
+
+            \curl_multi_remove_handle($this->multiHandle, $ch);
+            \curl_close($ch);
+            unset($this->pendingHandles[$id]);
+        }
     }
 
     private function waitForCompletion() : void

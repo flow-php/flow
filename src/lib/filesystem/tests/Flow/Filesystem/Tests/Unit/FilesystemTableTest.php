@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
+use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\{Filesystem, FilesystemTable, Mount};
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
@@ -47,7 +47,7 @@ final class FilesystemTableTest extends TestCase
     public function test_mount_does_not_double_wrap_traceable_filesystem() : void
     {
         $fstab = new FilesystemTable();
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
         $fs = $this->filesystem('s3');
@@ -73,7 +73,7 @@ final class FilesystemTableTest extends TestCase
     public function test_mount_wraps_new_filesystem_when_telemetry_configured() : void
     {
         $fstab = new FilesystemTable();
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
         $fstab->withTelemetry($config);
@@ -107,7 +107,7 @@ final class FilesystemTableTest extends TestCase
 
     public function test_with_telemetry_skips_already_traceable_filesystems() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
         $traceableFs = new TraceableFilesystem($this->filesystem('sftp'), $config);
@@ -121,7 +121,7 @@ final class FilesystemTableTest extends TestCase
     public function test_with_telemetry_wraps_existing_filesystems_in_traceable() : void
     {
         $fstab = new FilesystemTable($this->filesystem('ftp'));
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
 
         $fstab->withTelemetry($config);

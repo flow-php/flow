@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Void;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * No-op span processor that discards all data.
  */
 final readonly class VoidSpanProcessor implements SpanProcessor
 {
-    public function exporter() : SpanExporter
+    public function exporter() : Exporter
     {
-        return new VoidSpanExporter();
+        return new VoidExporter();
     }
 
     public function flush() : bool

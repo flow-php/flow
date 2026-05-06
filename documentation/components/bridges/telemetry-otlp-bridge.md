@@ -143,9 +143,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_curl_options,
     otlp_json_serializer,
-    otlp_span_exporter,
-    otlp_metric_exporter,
-    otlp_log_exporter,
+    otlp_exporter,
 };
 
 $resource = resource([
@@ -164,11 +162,13 @@ $transport = otlp_curl_transport(
     options: $options,
 );
 
+$exporter = otlp_exporter($transport);
+
 $telemetry = telemetry(
     $resource,
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport))),
-    meter_provider(batching_metric_processor(otlp_metric_exporter($transport))),
-    logger_provider(batching_log_processor(otlp_log_exporter($transport))),
+    tracer_provider(batching_span_processor($exporter)),
+    meter_provider(batching_metric_processor($exporter)),
+    logger_provider(batching_log_processor($exporter)),
 );
 
 // Register shutdown handler for graceful termination
@@ -197,7 +197,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_curl_options,
     otlp_protobuf_serializer,
-    otlp_span_exporter,
+    otlp_exporter,
 };
 
 $transport = otlp_curl_transport(
@@ -209,7 +209,7 @@ $transport = otlp_curl_transport(
 
 $telemetry = telemetry(
     resource(['service.name' => 'my-app']),
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport))),
+    tracer_provider(batching_span_processor(otlp_exporter($transport))),
 );
 ```
 
@@ -228,7 +228,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_curl_options,
     otlp_protobuf_serializer,
-    otlp_span_exporter,
+    otlp_exporter,
 };
 
 $transport = otlp_curl_transport(
@@ -240,7 +240,7 @@ $transport = otlp_curl_transport(
 
 $telemetry = telemetry(
     resource(['service.name' => 'my-app']),
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport))),
+    tracer_provider(batching_span_processor(otlp_exporter($transport))),
 );
 ```
 

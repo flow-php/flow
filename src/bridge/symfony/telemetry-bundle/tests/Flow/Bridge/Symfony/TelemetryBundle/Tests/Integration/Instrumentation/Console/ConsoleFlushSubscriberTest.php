@@ -8,7 +8,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleFlushSubs
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Command\TestCommand;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
-use Flow\Telemetry\Provider\Memory\MemorySpanExporter;
+use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -40,11 +40,12 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'batching',
                             'batch_size' => 100,
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -69,8 +70,8 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
         self::assertSame(0, $exitCode);
 
         $container = $this->getContainer();
-        /** @var MemorySpanExporter $exporter */
-        $exporter = $container->get('flow.telemetry.tracer_provider.processor.exporter');
+        /** @var MemoryExporter $exporter */
+        $exporter = $container->get('flow.telemetry.exporter.memory');
         $spans = $exporter->spans();
 
         self::assertCount(1, $spans, 'Spans should be exported after console terminate when flush is called');
@@ -91,11 +92,12 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'batching',
                             'batch_size' => 100,
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -118,8 +120,8 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
         $application->run($input, $output);
 
         $container = $this->getContainer();
-        /** @var MemorySpanExporter $exporter */
-        $exporter = $container->get('flow.telemetry.tracer_provider.processor.exporter');
+        /** @var MemoryExporter $exporter */
+        $exporter = $container->get('flow.telemetry.exporter.memory');
         $spans = $exporter->spans();
 
         self::assertCount(0, $spans, 'No spans should be exported when instrumentation is disabled');

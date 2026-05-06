@@ -49,6 +49,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
@@ -77,6 +78,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'psr18_client' => false,
                     ],
@@ -105,6 +107,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
@@ -144,6 +147,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'http_kernel' => false,
                         'console' => false,
@@ -176,10 +180,11 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -226,10 +231,11 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -282,10 +288,11 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [

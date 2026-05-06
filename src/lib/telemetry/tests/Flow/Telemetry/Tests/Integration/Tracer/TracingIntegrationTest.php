@@ -7,7 +7,7 @@ namespace Flow\Telemetry\Tests\Integration\Tracer;
 use function Flow\Telemetry\DSL\context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\VoidSpanExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, TracerProvider};
@@ -213,6 +213,6 @@ final class TracingIntegrationTest extends TestCase
 
     private function createProcessor() : MemorySpanProcessor
     {
-        return new MemorySpanProcessor(new VoidSpanExporter());
+        return new MemorySpanProcessor(new VoidExporter());
     }
 }

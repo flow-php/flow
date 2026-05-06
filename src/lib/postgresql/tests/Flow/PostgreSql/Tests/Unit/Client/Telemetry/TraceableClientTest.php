@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use function Flow\PostgreSql\DSL\{pgsql_connection_params, postgresql_telemetry_config, postgresql_telemetry_options, traceable_postgresql_client};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_exporter};
 use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryAttributes, PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableCursor};
 use Flow\PostgreSql\Client\Types\ValueConverters;
@@ -18,7 +18,7 @@ final class TraceableClientTest extends TestCase
 {
     public function test_all_telemetry_disabled_does_not_wrap_cursor() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             traceQueries: false,
             traceTransactions: false,
@@ -38,7 +38,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_close_delegates_to_underlying_client() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -50,7 +50,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_converters_delegates_to_underlying_client() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $converters = ValueConverters::create();
@@ -64,7 +64,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_cursor_returns_traceable_cursor_when_tracing_enabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -81,7 +81,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_default_port_is_not_included_in_attributes() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -97,7 +97,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_execute_creates_span_with_correct_attributes() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -123,7 +123,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_execute_rethrows_exception_and_records_error() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $exception = new \RuntimeException('Query failed');
@@ -147,7 +147,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_fetch_all_creates_span_with_row_count() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -170,7 +170,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_fetch_creates_span_with_row_count() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -188,7 +188,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_fetch_null_result_records_zero_rows() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -206,7 +206,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_get_transaction_nesting_level_delegates() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -219,7 +219,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_is_auto_commit_delegates() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -232,7 +232,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_is_connected_delegates() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -245,7 +245,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_last_insert_id_delegates() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -258,7 +258,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_non_default_port_is_included_in_attributes() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $connectionParams = pgsql_connection_params('testdb', 'localhost', 5433, 'user');
@@ -275,7 +275,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameter_count_is_limited_by_default() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
         ));
@@ -302,7 +302,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameter_count_unlimited_when_null() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
             maxParameters: null,
@@ -326,7 +326,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameter_limits_ignored_when_include_parameters_false() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: false,
             maxParameters: 5,
@@ -347,7 +347,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameter_values_are_truncated_by_default() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
         ));
@@ -370,7 +370,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameter_values_unlimited_when_null() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
             maxParameterLength: null,
@@ -394,7 +394,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameters_are_included_when_enabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
         ));
@@ -413,7 +413,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_parameters_are_not_included_by_default() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -429,7 +429,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_query_text_is_not_truncated_when_max_length_null() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             maxQueryLength: null,
         ));
@@ -448,7 +448,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_query_text_is_truncated_when_max_length_set() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             maxQueryLength: 20,
         ));
@@ -466,7 +466,7 @@ final class TraceableClientTest extends TestCase
 
     public function test_set_auto_commit_delegates() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
@@ -484,8 +484,8 @@ final class TraceableClientTest extends TestCase
         $tel = telemetry(
             resource(),
             tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            meter_provider(memory_metric_processor(void_exporter()), $clock),
+            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
 
         return postgresql_telemetry_config($tel, $clock, $options ?? postgresql_telemetry_options());

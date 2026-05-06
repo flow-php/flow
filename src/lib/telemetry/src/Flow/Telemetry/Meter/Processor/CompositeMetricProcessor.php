@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Meter\{Metric, MetricProcessor};
 
 /**
  * Forwards metrics to multiple processors.
@@ -13,14 +14,6 @@ use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
  * - Send metrics to multiple backends (e.g., both Prometheus and OTLP)
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
- *
- * Example usage:
- * ```php
- * $processor = new CompositeMetricProcessor([
- *     new BatchingMetricProcessor($otlpExporter),
- *     new MemoryMetricProcessor(),
- * ]);
- * ```
  */
 final readonly class CompositeMetricProcessor implements MetricProcessor
 {
@@ -32,7 +25,7 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
     ) {
     }
 
-    public function exporter() : MetricExporter
+    public function exporter() : Exporter
     {
         if (\count($this->processors) === 0) {
             throw new \RuntimeException('CompositeMetricProcessor has no processors');

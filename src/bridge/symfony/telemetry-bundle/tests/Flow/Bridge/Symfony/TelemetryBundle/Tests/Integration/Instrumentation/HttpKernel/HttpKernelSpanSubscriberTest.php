@@ -41,10 +41,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -103,10 +104,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -151,10 +153,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -210,10 +213,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -269,10 +273,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -333,10 +338,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -395,10 +401,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -452,10 +459,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -511,10 +519,11 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [

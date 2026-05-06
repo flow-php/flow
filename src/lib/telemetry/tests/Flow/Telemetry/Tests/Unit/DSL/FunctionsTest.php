@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\DSL;
 
-use function Flow\Telemetry\DSL\{baggage, context, instrumentation_scope, log_record_limits, logger_provider, memory_log_exporter, memory_metric_exporter, memory_span_exporter, meter_provider, metric_limits, resource, span_context, span_event, span_id, span_limits, span_link, trace_id, tracer_provider, void_log_processor, void_metric_processor, void_span_processor};
+use function Flow\Telemetry\DSL\{baggage, context, instrumentation_scope, log_record_limits, logger_provider, memory_exporter, meter_provider, metric_limits, resource, span_context, span_event, span_id, span_limits, span_link, trace_id, tracer_provider, void_log_processor, void_metric_processor, void_span_processor};
 use Flow\Telemetry\Context\{Baggage, Context, MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Logger\{LogRecordLimits, LoggerProvider, Severity};
 use Flow\Telemetry\Meter\{MeterProvider, MetricLimits};
-use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidExporter, VoidLogProcessor, VoidMetricProcessor, VoidSpanProcessor};
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanLimits, SpanLink, TracerProvider};
 use PHPUnit\Framework\TestCase;
@@ -137,19 +137,9 @@ final class FunctionsTest extends TestCase
         self::assertSame(Severity::INFO, $processor->entries()[0]->record->severity);
     }
 
-    public function test_memory_log_exporter_creates_instance() : void
+    public function test_memory_exporter_creates_instance() : void
     {
-        self::assertInstanceOf(MemoryLogExporter::class, memory_log_exporter());
-    }
-
-    public function test_memory_metric_exporter_creates_instance() : void
-    {
-        self::assertInstanceOf(MemoryMetricExporter::class, memory_metric_exporter());
-    }
-
-    public function test_memory_span_exporter_creates_instance() : void
-    {
-        self::assertInstanceOf(MemorySpanExporter::class, memory_span_exporter());
+        self::assertInstanceOf(MemoryExporter::class, memory_exporter());
     }
 
     public function test_meter_provider_creates_provider() : void
@@ -393,16 +383,16 @@ final class FunctionsTest extends TestCase
 
     private function createLogProcessor() : MemoryLogProcessor
     {
-        return new MemoryLogProcessor(new VoidLogExporter());
+        return new MemoryLogProcessor(new VoidExporter());
     }
 
     private function createMetricProcessor() : MemoryMetricProcessor
     {
-        return new MemoryMetricProcessor(new VoidMetricExporter());
+        return new MemoryMetricProcessor(new VoidExporter());
     }
 
     private function createSpanProcessor() : MemorySpanProcessor
     {
-        return new MemorySpanProcessor(new VoidSpanExporter());
+        return new MemorySpanProcessor(new VoidExporter());
     }
 }

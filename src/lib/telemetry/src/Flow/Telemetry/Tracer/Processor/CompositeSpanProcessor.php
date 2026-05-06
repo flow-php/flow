@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Forwards spans to multiple processors.
@@ -13,14 +14,6 @@ use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
  * - Send spans to multiple backends (e.g., both console and OTLP)
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
- *
- * Example usage:
- * ```php
- * $processor = new CompositeSpanProcessor([
- *     new BatchingSpanProcessor($otlpExporter),
- *     new MemorySpanProcessor(),
- * ]);
- * ```
  */
 final readonly class CompositeSpanProcessor implements SpanProcessor
 {
@@ -32,7 +25,7 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
     ) {
     }
 
-    public function exporter() : SpanExporter
+    public function exporter() : Exporter
     {
         if (\count($this->processors) === 0) {
             throw new \RuntimeException('CompositeSpanProcessor has no processors');

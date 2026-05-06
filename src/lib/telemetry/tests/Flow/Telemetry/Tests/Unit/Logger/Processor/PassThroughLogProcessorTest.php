@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogRecord, Severity};
+use Flow\Telemetry\Logger\{LogEntry, LogRecord, Severity};
 use Flow\Telemetry\Logger\Processor\PassThroughLogProcessor;
+use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
@@ -21,10 +23,10 @@ final class PassThroughLogProcessorTest extends TestCase
 
     public function test_exports_each_log_individually() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::exactly(3))
             ->method('export')
-            ->with(self::callback(static fn (array $entries) => \count($entries) === 1))
+            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::LOGS && $signal->count() === 1))
             ->willReturn(true);
 
         $processor = new PassThroughLogProcessor($exporter);
@@ -36,10 +38,10 @@ final class PassThroughLogProcessorTest extends TestCase
 
     public function test_exports_log_immediately_on_process() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(static fn (array $entries) => \count($entries) === 1))
+            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::LOGS && $signal->count() === 1))
             ->willReturn(true);
 
         $processor = new PassThroughLogProcessor($exporter);
@@ -48,7 +50,7 @@ final class PassThroughLogProcessorTest extends TestCase
 
     public function test_flush_returns_true() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $processor = new PassThroughLogProcessor($exporter);
 
         $result = $processor->flush();

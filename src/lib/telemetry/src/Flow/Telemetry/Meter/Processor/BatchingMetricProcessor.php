@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Meter\{Metric, MetricProcessor};
+use Flow\Telemetry\Signal\Signals;
 
 /**
  * Batches metrics for efficient export.
@@ -13,14 +15,6 @@ use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
  * - The batch size limit is reached
  * - flush() is explicitly called
  * - the system is shutting down
- *
- * Example usage:
- * ```php
- * $processor = new BatchingMetricProcessor(
- *     exporter: $metricExporter,
- *     batchSize: 100,
- * );
- * ```
  */
 final class BatchingMetricProcessor implements MetricProcessor
 {
@@ -30,12 +24,12 @@ final class BatchingMetricProcessor implements MetricProcessor
     private array $buffer = [];
 
     public function __construct(
-        private readonly MetricExporter $exporter,
+        private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
     ) {
     }
 
-    public function exporter() : MetricExporter
+    public function exporter() : Exporter
     {
         return $this->exporter;
     }
@@ -49,7 +43,7 @@ final class BatchingMetricProcessor implements MetricProcessor
         $metrics = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export($metrics);
+        return $this->exporter->export(Signals::metrics($metrics));
     }
 
     public function process(Metric $metric) : void

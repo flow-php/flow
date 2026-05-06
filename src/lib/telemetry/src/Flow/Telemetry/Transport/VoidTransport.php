@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Transport;
 
+use Flow\Telemetry\Signal\Signals;
+
 /**
  * A no-op transport for exporters that don't need actual transport.
  *
@@ -12,15 +14,7 @@ namespace Flow\Telemetry\Transport;
  */
 final class VoidTransport implements Transport
 {
-    public function sendLogs(array $entries) : void
-    {
-    }
-
-    public function sendMetrics(array $metrics) : void
-    {
-    }
-
-    public function sendSpans(array $spans) : void
+    public function send(Signals $signal) : void
     {
     }
 

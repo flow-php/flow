@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_log_exporter, otlp_metric_exporter, otlp_span_exporter};
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_exporter;
 use function Flow\Telemetry\DSL\{batching_log_processor, batching_metric_processor, batching_span_processor, logger_provider, meter_provider, resource, telemetry, tracer_provider};
 use Flow\Bridge\Telemetry\OTLP\Tests\Integration\CollectorMetrics;
 use Flow\Telemetry\Context\MemoryContextStorage;
@@ -106,9 +106,9 @@ final class OtelContext
         $contextStorage = new MemoryContextStorage();
         $batchSize = 1;
 
-        $spanProcessor = batching_span_processor(otlp_span_exporter($config->createTransport($this)), $batchSize);
-        $metricProcessor = batching_metric_processor(otlp_metric_exporter($config->createTransport($this)), $batchSize);
-        $logProcessor = batching_log_processor(otlp_log_exporter($config->createTransport($this)), $batchSize);
+        $spanProcessor = batching_span_processor(otlp_exporter($config->createTransport($this)), $batchSize);
+        $metricProcessor = batching_metric_processor(otlp_exporter($config->createTransport($this)), $batchSize);
+        $logProcessor = batching_log_processor(otlp_exporter($config->createTransport($this)), $batchSize);
 
         $tracerProvider = tracer_provider($spanProcessor, $clock, $contextStorage);
         $meterProvider = meter_provider($metricProcessor, $clock);

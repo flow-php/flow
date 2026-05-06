@@ -286,7 +286,7 @@ use function Flow\Telemetry\DSL\{
 use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_json_serializer,
-    otlp_log_exporter,
+    otlp_exporter,
 };
 use function Flow\Bridge\Monolog\Telemetry\DSL\telemetry_handler;
 
@@ -305,7 +305,7 @@ $transport = otlp_curl_transport(
 $telemetry = telemetry(
     $resource,
     loggerProvider: logger_provider(
-        batching_log_processor(otlp_log_exporter($transport))
+        batching_log_processor(otlp_exporter($transport))
     ),
 );
 

@@ -9,6 +9,7 @@ use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions};
 use Flow\Telemetry\Context\{SpanId, TraceId};
 use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{Span, SpanContext, SpanKind};
 use Flow\Telemetry\Transport\TransportException;
@@ -120,7 +121,7 @@ final class CurlTransportTest extends TestCase
         $this->expectException(TransportException::class);
         $this->expectExceptionMessage('Cannot send after shutdown');
 
-        $transport->sendSpans($this->createSpans());
+        $transport->send(Signals::traces($this->createSpans()));
     }
 
     public function test_shutdown_is_idempotent() : void

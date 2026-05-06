@@ -8,7 +8,7 @@ use Flow\Telemetry\Context\{MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\Logger\{LogRecordLimits, LoggerProvider};
 use Flow\Telemetry\Meter\{MeterProvider, MetricLimits};
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanLimits, SpanLink, TracerProvider};
@@ -33,7 +33,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_logger_dropped_count_included_in_normalized_output() : void
     {
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new LogRecordLimits(attributeCountLimit: 1);
         $loggerProvider = new LoggerProvider($logProcessor, $this->clock, $contextStorage, $limits);
@@ -49,7 +49,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_logger_enforces_attribute_count_limit() : void
     {
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new LogRecordLimits(attributeCountLimit: 3);
         $loggerProvider = new LoggerProvider($logProcessor, $this->clock, $contextStorage, $limits);
@@ -77,7 +77,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_logger_enforces_attribute_value_length_limit() : void
     {
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new LogRecordLimits(attributeValueLengthLimit: 10);
         $loggerProvider = new LoggerProvider($logProcessor, $this->clock, $contextStorage, $limits);
@@ -98,7 +98,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_meter_counter_enforces_cardinality_limit() : void
     {
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 3);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock, limits: $limits);
 
@@ -124,7 +124,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_meter_histogram_enforces_cardinality_limit() : void
     {
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 2);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock, limits: $limits);
 
@@ -146,7 +146,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_meter_overflow_aggregates_excess_measurements() : void
     {
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 2);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock, limits: $limits);
 
@@ -168,7 +168,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_meter_overflow_attribute_set_has_correct_attribute() : void
     {
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 1);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock, limits: $limits);
 
@@ -190,7 +190,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_meter_reuses_existing_aggregations_within_limit() : void
     {
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 2);
         $meterProvider = new MeterProvider($metricProcessor, $this->clock, limits: $limits);
 
@@ -215,9 +215,9 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_telemetry_facade_respects_limits() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
 
         $spanLimits = new SpanLimits(attributeCountLimit: 2);
@@ -249,7 +249,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_dropped_counts_included_in_normalized_output() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(
             attributeCountLimit: 2,
@@ -277,7 +277,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_enforces_event_attribute_limits() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(
             attributePerEventCountLimit: 2,
@@ -307,7 +307,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_enforces_event_count_limit() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(eventCountLimit: 2);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);
@@ -332,7 +332,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_enforces_link_attribute_limits() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(
             attributePerLinkCountLimit: 2,
@@ -365,7 +365,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_enforces_link_count_limit() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(linkCountLimit: 2);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);
@@ -387,7 +387,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_enforces_span_attribute_count_limit() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(attributeCountLimit: 3);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);
@@ -417,7 +417,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
     public function test_tracer_enforces_span_attribute_value_length_limit() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
         $limits = new SpanLimits(attributeValueLengthLimit: 10);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);

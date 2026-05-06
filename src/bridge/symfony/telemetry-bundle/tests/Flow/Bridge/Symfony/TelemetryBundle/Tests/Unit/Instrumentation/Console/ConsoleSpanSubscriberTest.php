@@ -9,7 +9,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemorySpanExporter, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
@@ -25,7 +25,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 {
     public function test_exit_code_0_sets_ok_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -47,7 +47,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_exit_code_nonzero_sets_error_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -85,7 +85,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_matches_pattern_exact_match() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['cache:clear']);
@@ -100,7 +100,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_matches_pattern_regex_match() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['/^cache:.*/']);
@@ -115,7 +115,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_on_error_does_nothing_when_no_active_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['cache:clear']);
@@ -133,7 +133,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_on_error_records_exception() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -158,7 +158,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_on_terminate_does_nothing_when_no_active_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['cache:clear']);
@@ -175,7 +175,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_should_trace_excludes_exact_matches() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['assets:install']);
@@ -190,7 +190,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_should_trace_excludes_regex_matches() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['/^debug:/']);
@@ -205,7 +205,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_should_trace_includes_non_excluded() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['cache:clear', '/^debug:/']);
@@ -224,7 +224,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_span_includes_command_class_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -243,7 +243,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_span_includes_command_name_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -262,7 +262,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_span_includes_exit_code_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -281,7 +281,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_span_kind_is_internal() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);
@@ -300,7 +300,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
     public function test_span_name_set_to_command_name() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $subscriber = new ConsoleSpanSubscriber($telemetry);

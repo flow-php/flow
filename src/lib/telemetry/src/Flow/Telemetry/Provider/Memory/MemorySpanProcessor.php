@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Processor that stores spans in memory and exports via configured exporter.
@@ -22,7 +24,7 @@ final class MemorySpanProcessor implements SpanProcessor
     private array $startedSpansByTraceId = [];
 
     public function __construct(
-        private readonly SpanExporter $spanExporter,
+        private readonly Exporter $spanExporter,
     ) {
     }
 
@@ -46,7 +48,7 @@ final class MemorySpanProcessor implements SpanProcessor
         return $this->endedSpansByTraceId[$traceId] ?? [];
     }
 
-    public function exporter() : SpanExporter
+    public function exporter() : Exporter
     {
         return $this->spanExporter;
     }
@@ -59,14 +61,14 @@ final class MemorySpanProcessor implements SpanProcessor
             return true;
         }
 
-        return $this->spanExporter->export($spans);
+        return $this->spanExporter->export(Signals::traces($spans));
     }
 
     public function onEnd(Span $span) : void
     {
         $traceId = $span->context()->traceId->toHex();
 
-        if (!isset($this->endedSpansByTraceId[$traceId])) {
+        if (!array_key_exists($traceId, $this->endedSpansByTraceId)) {
             $this->endedSpansByTraceId[$traceId] = [];
         }
 
@@ -77,16 +79,13 @@ final class MemorySpanProcessor implements SpanProcessor
     {
         $traceId = $span->context()->traceId->toHex();
 
-        if (!isset($this->startedSpansByTraceId[$traceId])) {
+        if (!array_key_exists($traceId, $this->startedSpansByTraceId)) {
             $this->startedSpansByTraceId[$traceId] = [];
         }
 
         $this->startedSpansByTraceId[$traceId][] = $span;
     }
 
-    /**
-     * Reset all stored data.
-     */
     public function reset() : void
     {
         $this->startedSpansByTraceId = [];

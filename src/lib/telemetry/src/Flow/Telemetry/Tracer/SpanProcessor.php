@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
+use Flow\Telemetry\Exporter\Exporter;
+
 /**
  * Interface for processing spans when they start and end.
  *
@@ -15,7 +17,7 @@ interface SpanProcessor
     /**
      * Get the exporter used by this processor.
      */
-    public function exporter() : SpanExporter;
+    public function exporter() : Exporter;
 
     /**
      * Export all pending spans and return success status.

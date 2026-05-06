@@ -4,39 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Exporter;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Transport\Transport;
 
 /**
- * Exports metrics to OTLP endpoint.
- *
- * Example usage:
- * ```php
- * $exporter = new OTLPMetricExporter(
- *     transport: $httpTransport,
- * );
- *
- * $exporter->export($metrics);
- * ```
+ * Exports logs, metrics, and spans to an OTLP endpoint via the configured transport.
  */
-final readonly class OTLPMetricExporter implements MetricExporter
+final readonly class OTLPExporter implements Exporter
 {
     public function __construct(
         private Transport $transport,
     ) {
     }
 
-    /**
-     * @param array<Metric> $metrics
-     */
-    public function export(array $metrics) : bool
+    public function export(Signals $signal) : bool
     {
-        if (\count($metrics) === 0) {
+        if ($signal->count() === 0) {
             return true;
         }
 
         try {
-            $this->transport->sendMetrics($metrics);
+            $this->transport->send($signal);
 
             return true;
         } catch (\Throwable) {

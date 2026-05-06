@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use function Flow\Telemetry\DSL\{
-    console_span_exporter,
+    console_exporter,
     memory_context_storage,
     memory_span_processor,
     resource,
@@ -34,7 +33,7 @@ $combinedResource = $detected->merge($custom);
 $telemetry = telemetry(
     $combinedResource,
     tracer_provider(
-        memory_span_processor(console_span_exporter(colors: false)),
+        memory_span_processor(console_exporter(colors: false)),
         clock(),
         memory_context_storage(),
     ),

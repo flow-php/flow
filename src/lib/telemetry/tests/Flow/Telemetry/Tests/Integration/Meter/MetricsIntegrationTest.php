@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Tests\Integration\Meter;
 
 use Flow\Telemetry\Meter\{MeterProvider, MetricType};
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
-use Flow\Telemetry\Provider\Void\VoidMetricExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
@@ -230,6 +230,6 @@ final class MetricsIntegrationTest extends TestCase
 
     private function createProcessor() : MemoryMetricProcessor
     {
-        return new MemoryMetricProcessor(new VoidMetricExporter());
+        return new MemoryMetricProcessor(new VoidExporter());
     }
 }

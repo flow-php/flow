@@ -14,7 +14,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
@@ -23,9 +23,9 @@ final class TelemetryContextTest extends FlowTestCase
 {
     public function test_dataframe_batch_processed_tracks_rows_and_memory() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -72,9 +72,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_dataframe_completed_finalizes_span_with_statistics() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -128,9 +128,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_dataframe_failed_logs_error_and_sets_span_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -179,9 +179,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_dataframe_started_creates_span_and_logs_debug_message() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -218,9 +218,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_loading_completed_finalizes_span_with_ok_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -262,9 +262,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_loading_failed_logs_error_and_sets_span_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -309,9 +309,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_loading_started_creates_span_when_trace_loading_enabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -348,9 +348,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_loading_started_does_not_create_span_when_trace_loading_disabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -386,9 +386,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_metrics_collected_when_collect_metrics_enabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -431,9 +431,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_metrics_include_dataframe_name_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -482,9 +482,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_metrics_not_collected_when_collect_metrics_disabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -522,9 +522,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_transformation_completed_finalizes_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -566,9 +566,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_transformation_failed_logs_error_and_sets_span_status() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -613,9 +613,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_transformation_started_creates_span_when_trace_transformations_enabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -652,9 +652,9 @@ final class TelemetryContextTest extends FlowTestCase
 
     public function test_transformation_started_does_not_create_span_when_trace_transformations_disabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 

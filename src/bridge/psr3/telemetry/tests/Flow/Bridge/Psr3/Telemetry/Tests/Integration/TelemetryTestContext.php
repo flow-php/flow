@@ -8,7 +8,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{Logger, LoggerProvider};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 
 final readonly class TelemetryTestContext
@@ -24,7 +24,7 @@ final readonly class TelemetryTestContext
         string $scope = 'psr3-test-app',
         string $version = 'unknown',
     ) : self {
-        $processor = new MemoryLogProcessor(new VoidLogExporter());
+        $processor = new MemoryLogProcessor(new VoidExporter());
 
         $logger = (new LoggerProvider(
             $processor,

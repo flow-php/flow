@@ -7,7 +7,7 @@ namespace Flow\Telemetry\Tests\Mother;
 use Flow\Telemetry\Context\{Context, ContextStorage, MemoryContextStorage};
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\{VoidSpanExporter, VoidSpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidExporter, VoidSpanProcessor};
 use Flow\Telemetry\Tracer\{SpanProcessor, Tracer};
 use Psr\Clock\ClockInterface;
 
@@ -32,7 +32,7 @@ final class TracerMother
 
     public static function createMemoryProcessor() : MemorySpanProcessor
     {
-        return new MemorySpanProcessor(new VoidSpanExporter());
+        return new MemorySpanProcessor(new VoidExporter());
     }
 
     public static function withContext(Context $context) : Tracer

@@ -6,6 +6,7 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\{GrpcSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
+use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Transport\TransportException;
 use Google\Protobuf\Internal\Message;
 use Grpc\BaseStub;
@@ -75,7 +76,7 @@ final class GrpcTransportTest extends TestCase
         $this->expectException(TransportException::class);
         $this->expectExceptionMessage('Cannot send after shutdown');
 
-        $transport->sendSpans([]);
+        $transport->send(Signals::traces([]));
     }
 
     #[RequiresPhpExtension('grpc')]

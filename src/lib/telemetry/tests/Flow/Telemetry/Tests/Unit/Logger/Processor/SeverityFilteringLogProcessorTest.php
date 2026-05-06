@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor, LogRecord, Severity};
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor, LogRecord, Severity};
 use Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +22,7 @@ final class SeverityFilteringLogProcessorTest extends TestCase
 
     public function test_exporter_returns_wrapped_processor_exporter() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $wrappedProcessor = $this->createMock(LogProcessor::class);
         $wrappedProcessor->expects(self::once())
             ->method('exporter')

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor, Severity};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor, Severity};
+use Flow\Telemetry\Signal\Signals;
 
 /**
  * Processor that stores log entries in memory and exports via configured exporter.
@@ -17,7 +19,7 @@ final class MemoryLogProcessor implements LogProcessor
     private array $entries = [];
 
     public function __construct(
-        private readonly LogExporter $logExporter,
+        private readonly Exporter $logExporter,
     ) {
     }
 
@@ -65,7 +67,7 @@ final class MemoryLogProcessor implements LogProcessor
         ));
     }
 
-    public function exporter() : LogExporter
+    public function exporter() : Exporter
     {
         return $this->logExporter;
     }
@@ -76,7 +78,7 @@ final class MemoryLogProcessor implements LogProcessor
             return true;
         }
 
-        return $this->logExporter->export($this->entries);
+        return $this->logExporter->export(Signals::logs($this->entries));
     }
 
     public function process(LogEntry $entry) : void
@@ -84,9 +86,6 @@ final class MemoryLogProcessor implements LogProcessor
         $this->entries[] = $entry;
     }
 
-    /**
-     * Reset all stored data.
-     */
     public function reset() : void
     {
         $this->entries = [];

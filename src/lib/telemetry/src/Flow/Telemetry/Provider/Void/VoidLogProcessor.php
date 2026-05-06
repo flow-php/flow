@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Void;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
 
 /**
  * No-op log processor that discards all data.
  */
 final readonly class VoidLogProcessor implements LogProcessor
 {
-    public function exporter() : LogExporter
+    public function exporter() : Exporter
     {
-        return new VoidLogExporter();
+        return new VoidExporter();
     }
 
     public function flush() : bool

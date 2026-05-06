@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Batches spans for efficient export.
@@ -13,14 +15,6 @@ use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
  * - The batch size limit is reached
  * - flush() is explicitly called
  * - the system is shutting down
- *
- * Example usage:
- * ```php
- * $processor = new BatchingSpanProcessor(
- *     exporter: $spanExporter,
- *     batchSize: 100,
- * );
- * ```
  */
 final class BatchingSpanProcessor implements SpanProcessor
 {
@@ -30,12 +24,12 @@ final class BatchingSpanProcessor implements SpanProcessor
     private array $buffer = [];
 
     public function __construct(
-        private readonly SpanExporter $exporter,
+        private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
     ) {
     }
 
-    public function exporter() : SpanExporter
+    public function exporter() : Exporter
     {
         return $this->exporter;
     }
@@ -49,7 +43,7 @@ final class BatchingSpanProcessor implements SpanProcessor
         $spans = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export($spans);
+        return $this->exporter->export(Signals::traces($spans));
     }
 
     public function onEnd(Span $span) : void

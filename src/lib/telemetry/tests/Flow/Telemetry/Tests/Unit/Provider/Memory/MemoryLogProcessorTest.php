@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor, LogRecord, Severity};
-use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor};
 use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +13,7 @@ final class MemoryLogProcessorTest extends TestCase
 {
     public function test_count_logs_returns_correct_count() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
 
         self::assertSame(0, $processor->countLogs());
 
@@ -26,7 +26,7 @@ final class MemoryLogProcessorTest extends TestCase
 
     public function test_entries_containing_filters_correctly() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
         $entry1 = $this->createLogEntry('User logged in successfully', Severity::INFO);
         $entry2 = $this->createLogEntry('User logged out', Severity::INFO);
         $entry3 = $this->createLogEntry('Database connection failed', Severity::ERROR);
@@ -47,7 +47,7 @@ final class MemoryLogProcessorTest extends TestCase
 
     public function test_entries_returns_all_processed_entries() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
         $entry1 = $this->createLogEntry('Log 1', Severity::INFO);
         $entry2 = $this->createLogEntry('Log 2', Severity::WARN);
 
@@ -61,7 +61,7 @@ final class MemoryLogProcessorTest extends TestCase
 
     public function test_entries_with_severity_filters_correctly() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
         $infoEntry = $this->createLogEntry('Info message', Severity::INFO);
         $warnEntry = $this->createLogEntry('Warning message', Severity::WARN);
         $errorEntry = $this->createLogEntry('Error message', Severity::ERROR);
@@ -85,7 +85,7 @@ final class MemoryLogProcessorTest extends TestCase
 
     public function test_exporter_returns_configured_exporter() : void
     {
-        $exporter = new MemoryLogExporter();
+        $exporter = new MemoryExporter();
         $processor = new MemoryLogProcessor($exporter);
 
         self::assertSame($exporter, $processor->exporter());
@@ -93,7 +93,7 @@ final class MemoryLogProcessorTest extends TestCase
 
     public function test_flush_exports_entries() : void
     {
-        $exporter = new MemoryLogExporter();
+        $exporter = new MemoryExporter();
         $processor = new MemoryLogProcessor($exporter);
         $entry = $this->createLogEntry('Test message', Severity::INFO);
 
@@ -101,25 +101,25 @@ final class MemoryLogProcessorTest extends TestCase
         $result = $processor->flush();
 
         self::assertTrue($result);
-        self::assertCount(1, $exporter->entries());
-        self::assertSame($entry, $exporter->entries()[0]);
+        self::assertCount(1, $exporter->logs());
+        self::assertSame($entry, $exporter->logs()[0]);
     }
 
     public function test_flush_returns_true_when_no_entries() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
 
         self::assertTrue($processor->flush());
     }
 
     public function test_implements_log_processor() : void
     {
-        self::assertInstanceOf(LogProcessor::class, new MemoryLogProcessor(new MemoryLogExporter()));
+        self::assertInstanceOf(LogProcessor::class, new MemoryLogProcessor(new MemoryExporter()));
     }
 
     public function test_process_stores_entry() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
         $entry = $this->createLogEntry('Test message', Severity::INFO);
 
         $processor->process($entry);
@@ -130,7 +130,7 @@ final class MemoryLogProcessorTest extends TestCase
 
     public function test_reset_clears_all_entries() : void
     {
-        $processor = new MemoryLogProcessor(new MemoryLogExporter());
+        $processor = new MemoryLogProcessor(new MemoryExporter());
 
         $processor->process($this->createLogEntry('Log 1', Severity::INFO));
         $processor->process($this->createLogEntry('Log 2', Severity::WARN));

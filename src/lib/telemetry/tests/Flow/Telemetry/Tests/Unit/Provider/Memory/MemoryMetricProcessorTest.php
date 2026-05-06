@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor, MetricType};
-use Flow\Telemetry\Provider\Memory\{MemoryMetricExporter, MemoryMetricProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryMetricProcessor};
 use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class MemoryMetricProcessorTest extends TestCase
 {
     public function test_count_metrics_returns_correct_count() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
 
         self::assertSame(0, $processor->countMetrics());
 
@@ -27,7 +27,7 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_exporter_returns_configured_exporter() : void
     {
-        $exporter = new MemoryMetricExporter();
+        $exporter = new MemoryExporter();
         $processor = new MemoryMetricProcessor($exporter);
 
         self::assertSame($exporter, $processor->exporter());
@@ -35,7 +35,7 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_flush_exports_metrics() : void
     {
-        $exporter = new MemoryMetricExporter();
+        $exporter = new MemoryExporter();
         $processor = new MemoryMetricProcessor($exporter);
         $metric = $this->createMetric('test-metric', 42);
 
@@ -49,19 +49,19 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_flush_returns_true_when_no_metrics() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
 
         self::assertTrue($processor->flush());
     }
 
     public function test_implements_metric_processor() : void
     {
-        self::assertInstanceOf(MetricProcessor::class, new MemoryMetricProcessor(new MemoryMetricExporter()));
+        self::assertInstanceOf(MetricProcessor::class, new MemoryMetricProcessor(new MemoryExporter()));
     }
 
     public function test_metrics_of_type_filters_correctly() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
         $counter = $this->createMetric('requests', 100, MetricType::COUNTER);
         $gauge = $this->createMetric('memory', 1024, MetricType::GAUGE);
         $histogram = $this->createMetric('latency', 50.5, MetricType::HISTOGRAM);
@@ -85,7 +85,7 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_metrics_returns_all_processed_metrics() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
         $metric1 = $this->createMetric('metric-1', 10);
         $metric2 = $this->createMetric('metric-2', 20);
 
@@ -99,7 +99,7 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_metrics_with_name_filters_correctly() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
         $requests1 = $this->createMetric('http.requests', 100);
         $requests2 = $this->createMetric('http.requests', 150);
         $memory = $this->createMetric('memory.usage', 1024);
@@ -120,7 +120,7 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_process_stores_metric() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
         $metric = $this->createMetric('test-metric', 42);
 
         $processor->process($metric);
@@ -131,7 +131,7 @@ final class MemoryMetricProcessorTest extends TestCase
 
     public function test_reset_clears_all_metrics() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
 
         $processor->process($this->createMetric('metric-1', 10));
         $processor->process($this->createMetric('metric-2', 20));

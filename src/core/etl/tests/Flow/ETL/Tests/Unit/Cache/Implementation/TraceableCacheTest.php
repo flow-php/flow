@@ -15,7 +15,7 @@ use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -34,9 +34,9 @@ final class TraceableCacheTest extends FlowTestCase
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
 
-        $this->spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $this->metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $this->spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $this->metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
 
         $this->telemetry = new Telemetry(
             Resource::create(['service.name' => 'test-service']),

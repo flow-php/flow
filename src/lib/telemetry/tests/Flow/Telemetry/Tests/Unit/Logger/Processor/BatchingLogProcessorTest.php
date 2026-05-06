@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogRecord, Severity};
+use Flow\Telemetry\Logger\{LogEntry, LogRecord, Severity};
 use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
+use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
@@ -21,10 +23,10 @@ final class BatchingLogProcessorTest extends TestCase
 
     public function test_exports_on_batch_size_reached() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(static fn (array $entries) => \count($entries) === 2))
+            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::LOGS && $signal->count() === 2))
             ->willReturn(true);
 
         $processor = new BatchingLogProcessor($exporter, 2);
@@ -35,10 +37,10 @@ final class BatchingLogProcessorTest extends TestCase
 
     public function test_exports_remaining_on_flush() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(static fn (array $entries) => \count($entries) === 1))
+            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::LOGS && $signal->count() === 1))
             ->willReturn(true);
 
         $processor = new BatchingLogProcessor($exporter, 10);
@@ -51,7 +53,7 @@ final class BatchingLogProcessorTest extends TestCase
 
     public function test_flush_returns_true_when_buffer_empty() : void
     {
-        $exporter = $this->createMock(LogExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::never())
             ->method('export');
 
@@ -64,14 +66,14 @@ final class BatchingLogProcessorTest extends TestCase
 
     public function test_process_stores_all_log_record_fields() : void
     {
-        $exportedEntries = null;
-        $exporter = $this->createMock(LogExporter::class);
+        $capturedSignal = null;
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(static function (array $entries) use (&$exportedEntries) {
-                $exportedEntries = $entries;
+            ->with(self::callback(static function (mixed $signal) use (&$capturedSignal) {
+                $capturedSignal = $signal;
 
-                return true;
+                return $signal instanceof Signals && $signal->type === SignalType::LOGS;
             }))
             ->willReturn(true);
 
@@ -91,9 +93,10 @@ final class BatchingLogProcessorTest extends TestCase
         ));
         $processor->flush();
 
-        self::assertNotNull($exportedEntries);
-        self::assertCount(1, $exportedEntries);
-        $entry = $exportedEntries[0];
+        self::assertInstanceOf(Signals::class, $capturedSignal);
+        self::assertSame(SignalType::LOGS, $capturedSignal->type);
+        self::assertCount(1, $capturedSignal->allLogs());
+        $entry = $capturedSignal->allLogs()[0];
         self::assertSame($scope, $entry->scope);
         self::assertSame(Severity::ERROR, $entry->record->severity);
         self::assertSame('Error message', $entry->record->body);

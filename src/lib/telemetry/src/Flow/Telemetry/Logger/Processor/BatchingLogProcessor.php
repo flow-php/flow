@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
+use Flow\Telemetry\Signal\Signals;
 
 /**
  * Batches log records for efficient export.
@@ -13,14 +15,6 @@ use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
  * - The batch size limit is reached
  * - flush() is explicitly called
  * - the system is shutting down
- *
- * Example usage:
- * ```php
- * $processor = new BatchingLogProcessor(
- *     exporter: $logExporter,
- *     batchSize: 100,
- * );
- * ```
  */
 final class BatchingLogProcessor implements LogProcessor
 {
@@ -30,12 +24,12 @@ final class BatchingLogProcessor implements LogProcessor
     private array $buffer = [];
 
     public function __construct(
-        private readonly LogExporter $exporter,
+        private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
     ) {
     }
 
-    public function exporter() : LogExporter
+    public function exporter() : Exporter
     {
         return $this->exporter;
     }
@@ -49,7 +43,7 @@ final class BatchingLogProcessor implements LogProcessor
         $entries = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export($entries);
+        return $this->exporter->export(Signals::logs($entries));
     }
 
     public function process(LogEntry $entry) : void

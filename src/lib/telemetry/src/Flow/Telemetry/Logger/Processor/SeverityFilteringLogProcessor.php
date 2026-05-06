@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor, Severity};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor, Severity};
 
 /**
  * Filters log entries based on minimum severity level.
@@ -12,15 +13,6 @@ use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor, Severity};
  * This processor wraps another LogProcessor and only passes through
  * log entries that are at or above the configured minimum severity level.
  * Entries below the threshold are silently discarded.
- *
- * Example usage:
- * ```php
- * // Only export WARN and above
- * $processor = new SeverityFilteringLogProcessor(
- *     new BatchingLogProcessor($exporter, 100),
- *     Severity::WARN,
- * );
- * ```
  */
 final readonly class SeverityFilteringLogProcessor implements LogProcessor
 {
@@ -30,7 +22,7 @@ final readonly class SeverityFilteringLogProcessor implements LogProcessor
     ) {
     }
 
-    public function exporter() : LogExporter
+    public function exporter() : Exporter
     {
         return $this->processor->exporter();
     }

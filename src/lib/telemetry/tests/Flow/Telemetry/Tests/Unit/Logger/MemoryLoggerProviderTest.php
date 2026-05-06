@@ -8,7 +8,7 @@ use Flow\Telemetry\{Attributes, Resource};
 use Flow\Telemetry\Context\{MemoryContextStorage, SpanId, TraceId};
 use Flow\Telemetry\Logger\{LogRecordLimits, Logger, LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
@@ -216,6 +216,6 @@ final class MemoryLoggerProviderTest extends TestCase
 
     private function createProcessor() : MemoryLogProcessor
     {
-        return new MemoryLogProcessor(new VoidLogExporter());
+        return new MemoryLogProcessor(new VoidExporter());
     }
 }

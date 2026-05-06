@@ -130,6 +130,36 @@ flow_telemetry:
 | `baggage`      | W3C Baggage only                         |
 | `service`      | Custom propagator service                |
 
+### Exporters (named definitions)
+
+The bundle exposes a **top-level named map** of exporters. The implementation is selected by the **sub-block name**
+under each entry — there is no separate `type:` key. Each exporter must declare exactly one of the supported
+sub-blocks: `otlp`, `service`, `console`, `memory`, `void`. Per-signal processors reference exporters by name.
+
+```yaml
+flow_telemetry:
+  exporters:
+    otlp:                              # exporter name
+      otlp:                            # sub-block selects implementation
+        transport:
+          type: curl
+          endpoint: 'http://otel-collector:4318'
+          serializer: { type: protobuf }
+```
+
+| Sub-block | Options                                | Description                              |
+|-----------|----------------------------------------|------------------------------------------|
+| `otlp`    | `transport: { ... }`                   | Sends batches over OTLP curl/grpc/service |
+| `service` | `id: <service_id>`                     | Aliases an existing user-provided service |
+| `console` | none (use `~` / `null` / `{}`)          | Pretty-prints to console                  |
+| `memory`  | none                                   | Stores batches in memory (testing)        |
+| `void`    | none                                   | Discards everything (no-op)               |
+
+Service IDs registered by the bundle (predictable for `decorates:`):
+
+- `flow.telemetry.exporter.<name>` — e.g. `flow.telemetry.exporter.otlp`
+- `flow.telemetry.exporter.<name>.transport` — only when the exporter uses the `otlp` sub-block
+
 ### TracerProvider
 
 Configures the tracer provider for distributed tracing.
@@ -138,15 +168,13 @@ Configures the tracer provider for distributed tracing.
 flow_telemetry:
   tracer_provider:
     sampler:
-      type: always_on  # always_on|always_off|trace_id_ratio|parent_based|service
-      ratio: 1.0       # Sampling ratio (0.0-1.0, only for trace_id_ratio)
-      service_id: null # Custom sampler service (only for type: service)
+      type: always_on   # always_on|always_off|trace_id_ratio|parent_based|service
+      ratio: 1.0        # Sampling ratio (0.0-1.0, only for trace_id_ratio)
+      service_id: null  # Custom sampler service (only for type: service)
     processor:
-      type: void  # composite|memory|batching|passthrough|void|service
+      type: batching    # composite|memory|batching|passthrough|void|service
       batch_size: 512
-      service_id: null
-      exporter:
-        type: void  # memory|console|void|otlp|service
+      exporter: otlp    # name of a top-level exporter
 ```
 
 **Sampler types:**
@@ -161,31 +189,25 @@ flow_telemetry:
 
 ### MeterProvider
 
-Configures the meter provider for metrics collection.
-
 ```yaml
 flow_telemetry:
   meter_provider:
     temporality: cumulative  # cumulative|delta
     processor:
-      type: void  # composite|memory|batching|passthrough|void|service
+      type: batching
       batch_size: 512
-      exporter:
-        type: void
+      exporter: otlp
 ```
 
 ### LoggerProvider
-
-Configures the logger provider for log export.
 
 ```yaml
 flow_telemetry:
   logger_provider:
     processor:
-      type: void  # composite|memory|batching|passthrough|void|severity_filtering|service
+      type: batching   # composite|memory|batching|passthrough|void|severity_filtering|service
       batch_size: 512
-      exporter:
-        type: void
+      exporter: otlp
 ```
 
 **Severity filtering** (logs only):
@@ -195,19 +217,16 @@ flow_telemetry:
   logger_provider:
     processor:
       type: severity_filtering
-      minimum_severity: info  # trace|debug|info|warn|error|fatal
+      minimum_severity: warn  # trace|debug|info|warn|error|fatal
       inner_processor:
         type: batching
-        exporter:
-          type: otlp
-          otlp:
-            transport:
-              endpoint: 'http://otel-collector:4318/v1/logs'
+        exporter: otlp
+        batch_size: 200
 ```
 
 ### Processor Configuration
 
-Processor types available for tracer_provider, meter_provider, and logger_provider.
+Processor types available for `tracer_provider`, `meter_provider`, and `logger_provider`.
 
 #### void (default)
 
@@ -220,71 +239,55 @@ processor:
 
 #### passthrough
 
-Immediately exports each item.
+Immediately exports each item via the referenced exporter.
 
 ```yaml
 processor:
   type: passthrough
-  exporter:
-    type: console
+  exporter: console
 ```
 
 #### memory
 
-Stores in memory (for testing). No additional options.
+Stores in memory (for testing). Still requires a backing exporter for `flush()` to call.
 
 ```yaml
 processor:
   type: memory
+  exporter: memory
 ```
 
 #### batching
 
 Batches items before export.
 
-| Option       | Type    | Default | Description               |
-|--------------|---------|---------|---------------------------|
-| `batch_size` | integer | `512`   | Number of items per batch |
+| Option       | Type    | Default | Description                                  |
+|--------------|---------|---------|----------------------------------------------|
+| `batch_size` | integer | `512`   | Number of items per batch                    |
+| `exporter`   | string  | -       | Name of a top-level exporter (required)      |
 
 ```yaml
 processor:
   type: batching
   batch_size: 512
-  exporter:
-    type: otlp
-    otlp:
-      transport:
-        endpoint: 'http://otel-collector:4318/v1/traces'
+  exporter: otlp
 ```
 
 #### composite
 
-Combines multiple processors.
-
-| Option       | Type  | Description               |
-|--------------|-------|---------------------------|
-| `processors` | array | List of processor configs |
+Combines multiple processors. Each child references its own exporter by name.
 
 ```yaml
 processor:
   type: composite
   processors:
-    - type: batching
-      exporter:
-        type: otlp
-        otlp:
-          transport:
-            endpoint: 'http://otel-collector:4318/v1/traces'
-    - type: memory
+    - { type: batching, exporter: otlp, batch_size: 512 }
+    - { type: memory,   exporter: memory }
 ```
 
 #### service
 
 Custom processor service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
 
 ```yaml
 processor:
@@ -294,100 +297,88 @@ processor:
 
 #### severity_filtering (logger_provider only)
 
-Filters logs by minimum severity level.
-
-| Option            | Type   | Default | Description                            |
-|-------------------|--------|---------|----------------------------------------|
-| `minimum_severity`| string | `info`  | trace\|debug\|info\|warn\|error\|fatal |
-| `inner_processor` | object | -       | Nested processor configuration         |
+Filters logs by minimum severity level. The wrapped `inner_processor` is built with the same set of types as a top-level
+processor (except `composite`/`severity_filtering`).
 
 ```yaml
 processor:
   type: severity_filtering
-  minimum_severity: info
+  minimum_severity: warn
   inner_processor:
     type: batching
-    exporter:
-      type: otlp
-      otlp:
-        transport:
-          endpoint: 'http://otel-collector:4318/v1/logs'
+    exporter: otlp
+    batch_size: 200
 ```
 
-### Exporter Configuration
+### Exporter Definitions
 
-Exporter types available for processor configurations.
+Exporters are declared once at the top level under `exporters:` and referenced from processor blocks by name. Each
+exporter declares exactly one sub-block; the sub-block name selects the implementation.
 
-#### void (default)
+#### void
 
-Discards all data. No additional options.
+Discards all data.
 
 ```yaml
-exporter:
-  type: void
+exporters:
+  drop: { void: ~ }
 ```
 
 #### memory
 
-Stores in memory (for testing). No additional options.
+In-memory store for testing. Service exposes `allLogs()`, `allMetrics()`, `allSpans()` accessors via
+`Flow\Telemetry\Provider\Memory\MemoryExporter`.
 
 ```yaml
-exporter:
-  type: memory
+exporters:
+  capture: { memory: ~ }
 ```
 
 #### console
 
-Outputs to console. No additional options.
+Pretty-prints logs, metrics, and spans to the console. Useful for development.
 
 ```yaml
-exporter:
-  type: console
+exporters:
+  debug: { console: ~ }
 ```
 
 #### otlp
 
-Exports to OTLP-compatible backends (Jaeger, Tempo, etc.).
-
-| Option       | Type   | Description                        |
-|--------------|--------|------------------------------------|
-| `transport`  | object | Transport configuration (required) |
-| `serializer` | object | Serializer configuration           |
+Sends batches over an embedded transport. The single OTLP exporter handles all three signals.
 
 ```yaml
-exporter:
-  type: otlp
+exporters:
   otlp:
-    transport:
-      type: curl
-      endpoint: 'http://otel-collector:4318/v1/traces'
-    serializer:
-      type: json
+    otlp:
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        serializer: { type: protobuf }
 ```
 
 #### service
 
-Custom exporter service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
+Aliases an existing user-defined service implementing `Flow\Telemetry\Exporter\Exporter`. This is the escape hatch for
+APM-specific exporters (Datadog, New Relic, custom) that don't go through OTLP — define your exporter as a Symfony
+service in your own `services.yaml` and reference it by id.
 
 ```yaml
-exporter:
-  type: service
-  service_id: 'app.custom_exporter'
+exporters:
+  datadog:
+    service:
+      id: 'app.datadog_telemetry_exporter'
 ```
 
 ### OTLP Transport Configuration
 
-Transport types for OTLP exporters.
+Inside `exporters.<name>.otlp.transport`. Required for the `otlp` sub-block.
 
-#### curl (default, recommended)
+#### curl (default)
 
 | Option             | Type    | Default | Description                 |
 |--------------------|---------|---------|-----------------------------|
-| `endpoint`         | string  | -       | OTLP endpoint URL (required)|
+| `endpoint`         | string  | -       | OTLP base URL (required)    |
 | `timeout`          | integer | `30`    | Request timeout in seconds  |
 | `connect_timeout`  | integer | `10`    | Connection timeout          |
 | `compression`      | boolean | `false` | Enable compression          |
@@ -400,112 +391,147 @@ Transport types for OTLP exporters.
 | `ssl_key_path`     | string  | `null`  | SSL key path                |
 | `ca_info_path`     | string  | `null`  | CA info path                |
 | `headers`          | object  | `{}`    | Additional HTTP headers     |
+| `serializer`       | object  | `json`  | OTLP serializer config      |
 
 ```yaml
-otlp:
-  transport:
-    type: curl
-    endpoint: 'http://otel-collector:4318/v1/traces'
-    timeout: 30
-    connect_timeout: 10
-    compression: false
-    follow_redirects: true
-    max_redirects: 3
-    proxy: null
-    ssl_verify_peer: true
-    ssl_verify_host: true
-    ssl_cert_path: null
-    ssl_key_path: null
-    ca_info_path: null
-    headers:
-      Authorization: 'Bearer token'
-```
-
-#### http
-
-PSR-18 HTTP transport.
-
-| Option                       | Type    | Default | Description                  |
-|------------------------------|---------|---------|------------------------------|
-| `endpoint`                   | string  | -       | OTLP endpoint URL (required) |
-| `timeout`                    | integer | `30`    | Request timeout in seconds   |
-| `http_client_service_id`     | string  | `null`  | PSR-18 client service        |
-| `request_factory_service_id` | string  | `null`  | PSR-17 request factory       |
-| `stream_factory_service_id`  | string  | `null`  | PSR-17 stream factory        |
-
-```yaml
-otlp:
-  transport:
-    type: http
-    endpoint: 'http://otel-collector:4318/v1/traces'
-    timeout: 30
-    http_client_service_id: null
-    request_factory_service_id: null
-    stream_factory_service_id: null
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        timeout: 30
+        compression: true
+        headers:
+          Authorization: 'Bearer token'
+        serializer: { type: protobuf }
 ```
 
 #### grpc
 
-gRPC transport
+gRPC transport (`timeout` is rejected by validation).
 
-| Option     | Type    | Default | Description                  |
-|------------|---------|---------|------------------------------|
-| `endpoint` | string  | -       | OTLP endpoint URL (required) |
-| `insecure` | boolean | `false` | Allow insecure connections   |
+| Option     | Type    | Default | Description                |
+|------------|---------|---------|----------------------------|
+| `endpoint` | string  | -       | gRPC endpoint (required)   |
+| `insecure` | boolean | `true`  | Allow insecure connections |
+| `headers`  | object  | `{}`    | gRPC metadata              |
 
 ```yaml
-otlp:
-  transport:
-    type: grpc
-    endpoint: 'http://otel-collector:4317'
-    insecure: true
+exporters:
+  otlp_grpc:
+    otlp:
+      transport:
+        type: grpc
+        endpoint: 'http://otel-collector:4317'
+        insecure: false
+        serializer: { type: protobuf }
 ```
 
 #### service
 
-Custom transport service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
+Aliases an existing transport service ID inside the OTLP exporter.
 
 ```yaml
-otlp:
-  transport:
-    type: service
-    service_id: 'app.custom_transport'
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: service
+        service_id: 'app.custom_transport'
 ```
 
 ### OTLP Serializer Configuration
 
-Serializer types for OTLP exporters.
-
-#### json (default)
+Inside `exporters.<name>.otlp.transport.serializer`. Choices: `json` (default), `protobuf`, `service`.
 
 ```yaml
-serializer:
-  type: json
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        serializer:
+          type: service
+          service_id: 'app.custom_serializer'
 ```
 
-#### protobuf
+### Multiple OTLP backends
+
+Each signal can target its own collector by declaring multiple named exporters and referencing them per provider.
 
 ```yaml
-serializer:
-  type: protobuf
+flow_telemetry:
+  exporters:
+    otlp_traces:
+      otlp:
+        transport:
+          type: grpc
+          endpoint: 'http://traces:4317'
+          insecure: false
+          serializer: { type: protobuf }
+    otlp_metrics:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://metrics:4318'
+          serializer: { type: protobuf }
+    otlp_logs:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://logs:4318'
+          serializer: { type: json }
+
+  tracer_provider:
+    processor: { type: batching, exporter: otlp_traces,  batch_size: 1024 }
+  meter_provider:
+    processor: { type: batching, exporter: otlp_metrics, batch_size: 256  }
+  logger_provider:
+    processor: { type: batching, exporter: otlp_logs,    batch_size: 100  }
 ```
 
-#### service
+### Migrating from older config
 
-Custom serializer service.
+The schema replaced the `type: <name>` discriminator with a sub-block whose key matches the implementation. There is no
+BC shim.
 
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
+**Before (legacy schema)**
 
 ```yaml
-serializer:
-  type: service
-  service_id: 'app.custom_serializer'
+flow_telemetry:
+  exporters:
+    otlp:
+      type: otlp
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        serializer: { type: protobuf }
+    custom:
+      type: service
+      service_id: 'app.x'
+    debug: { type: console }
+```
+
+**After**
+
+```yaml
+flow_telemetry:
+  exporters:
+    otlp:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://otel-collector:4318'
+          serializer: { type: protobuf }
+    custom:
+      service:
+        id: 'app.x'
+    debug: { console: ~ }
+
+  tracer_provider:
+    processor: { type: batching, exporter: otlp }
 ```
 
 ### Instrumentation
@@ -834,6 +860,29 @@ flow_telemetry:
   propagator:
     type: w3c
 
+  exporters:
+    otlp_traces:
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)%'
+          timeout: 30
+          headers:
+            Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
+          serializer: { type: protobuf }
+    otlp_metrics:
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)%'
+          serializer: { type: protobuf }
+    otlp_logs:
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)%'
+          serializer: { type: protobuf }
+
   tracer_provider:
     sampler:
       type: trace_id_ratio
@@ -841,25 +890,13 @@ flow_telemetry:
     processor:
       type: batching
       batch_size: 512
-      exporter:
-        type: otlp
-        otlp:
-          transport:
-            type: curl
-            endpoint: '%env(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)%'
-            timeout: 30
-            headers:
-              Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
+      exporter: otlp_traces
 
   meter_provider:
     temporality: cumulative
     processor:
       type: batching
-      exporter:
-        type: otlp
-        otlp:
-          transport:
-            endpoint: '%env(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)%'
+      exporter: otlp_metrics
 
   logger_provider:
     processor:
@@ -867,11 +904,7 @@ flow_telemetry:
       minimum_severity: info
       inner_processor:
         type: batching
-        exporter:
-          type: otlp
-          otlp:
-            transport:
-              endpoint: '%env(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)%'
+        exporter: otlp_logs
 
   loggers:
     app:

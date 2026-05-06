@@ -4,18 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Void;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Transport\{Transport, VoidTransport};
 
 /**
- * No-op metric exporter that discards all data.
+ * No-op exporter that discards all data.
  */
-final readonly class VoidMetricExporter implements MetricExporter
+final readonly class VoidExporter implements Exporter
 {
-    /**
-     * @param array<Metric> $metrics
-     */
-    public function export(array $metrics) : bool
+    public function export(Signals $signal) : bool
     {
         return true;
     }

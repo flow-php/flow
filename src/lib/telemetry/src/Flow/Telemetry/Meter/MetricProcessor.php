@@ -4,34 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
+use Flow\Telemetry\Exporter\Exporter;
+
 /**
  * Interface for processing metric measurements.
  *
  * Implementations may collect metrics for batching, export them immediately,
  * or perform other processing like filtering or aggregation.
- *
- * Example implementation:
- * ```php
- * final class BatchingMetricProcessor implements MetricProcessor
- * {
- *     private array $buffer = [];
- *
- *     public function process(Metric $metric): void
- *     {
- *         $this->buffer[] = $metric;
- *         if (count($this->buffer) >= 100) {
- *             $this->flush();
- *         }
- *     }
- * }
- * ```
  */
 interface MetricProcessor
 {
     /**
      * Get the exporter used by this processor.
      */
-    public function exporter() : MetricExporter;
+    public function exporter() : Exporter;
 
     /**
      * Export all pending metrics.

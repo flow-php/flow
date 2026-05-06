@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Integration\Telemetry;
 
 use function Flow\Filesystem\DSL\{filesystem_telemetry_options, native_local_filesystem, path};
-use function Flow\Telemetry\DSL\{memory_metric_processor, memory_span_processor, void_metric_exporter, void_span_exporter};
+use function Flow\Telemetry\DSL\{memory_metric_processor, memory_span_processor, void_exporter};
 use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_complete_read_write_workflow_produces_lifecycle_spans() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/test_file.txt');
@@ -63,7 +63,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_filesystem_operations_do_not_create_spans() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/no_fs_trace.txt');
@@ -79,7 +79,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_from_resource_tracks_bytes_in_lifecycle_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $sourceFilePath = __DIR__ . '/../Fixtures/orders.csv';
@@ -109,7 +109,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_iterate_tracks_total_bytes_in_lifecycle_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/iterate_test.txt');
@@ -140,7 +140,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_list_operation_does_not_create_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testDir = __DIR__ . '/var';
@@ -159,8 +159,8 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_metrics_are_collected_for_stream_operations() : void
     {
-        $metricProcessor = memory_metric_processor(void_metric_exporter());
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $metricProcessor = memory_metric_processor(void_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         [$fs, $telemetry] = FilesystemTelemetryConfigMother::createTraceableFilesystemWithTelemetry($spanProcessor, null, $metricProcessor);
 
         $testFile = path(__DIR__ . '/var/metrics_test.txt');
@@ -188,7 +188,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_multiple_appends_create_single_span_with_cumulative_metrics() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/multiple_appends.txt');
@@ -212,7 +212,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_mv_operation_does_not_create_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testDir = __DIR__ . '/var';
@@ -232,7 +232,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_read_lines_tracks_bytes_in_lifecycle_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/lines_test.txt');
@@ -257,7 +257,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_rm_operation_does_not_create_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/to_remove.txt');
@@ -274,7 +274,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_status_operation_does_not_create_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor);
 
         $testFile = path(__DIR__ . '/var/status_test.txt');
@@ -292,7 +292,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
 
     public function test_stream_lifecycle_tracing_can_be_disabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem($spanProcessor, filesystem_telemetry_options(
             traceStreams: false,
         ));

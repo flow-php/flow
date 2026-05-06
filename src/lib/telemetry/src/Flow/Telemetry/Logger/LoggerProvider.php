@@ -17,11 +17,11 @@ use Psr\Clock\ClockInterface;
  * Example usage:
  * ```php
  * // For testing with memory storage
- * $processor = new MemoryProcessor($exporter, $exporter, $exporter);
+ * $processor = new MemoryLogProcessor(new MemoryExporter());
  * $provider = new LoggerProvider($processor, new SystemClock());
  *
  * // For OTLP export
- * $processor = batching_log_processor(otlp_log_exporter($transport));
+ * $processor = batching_log_processor(otlp_exporter($transport));
  * $provider = new LoggerProvider($processor, new SystemClock());
  *
  * // For void/disabled logging

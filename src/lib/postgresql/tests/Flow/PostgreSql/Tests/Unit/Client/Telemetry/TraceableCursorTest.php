@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use function Flow\PostgreSql\DSL\{pgsql_connection_params, postgresql_telemetry_config, postgresql_telemetry_options};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_exporter};
 use Flow\PostgreSql\Client\{ConnectionParameters, Cursor};
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryAttributes, PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableCursor};
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
@@ -17,7 +17,7 @@ final class TraceableCursorTest extends TestCase
 {
     public function test_count_delegates_to_underlying_cursor() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -30,7 +30,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_free_completes_span_with_row_count() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -56,7 +56,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_free_rethrows_exception_and_records_error() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $exception = new \RuntimeException('Free failed');
@@ -80,7 +80,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_iterate_completes_span_after_full_iteration() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -107,7 +107,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_iterate_records_error_on_exception() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -135,7 +135,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_map_completes_span_after_full_iteration() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -161,7 +161,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_next_increments_row_count() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -187,7 +187,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_parameter_count_is_limited_by_default() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
         ));
@@ -212,7 +212,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_parameter_count_unlimited_when_null() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
             maxParameters: null,
@@ -234,7 +234,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_parameter_values_are_truncated_by_default() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
         ));
@@ -255,7 +255,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_parameter_values_unlimited_when_null() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             includeParameters: true,
             maxParameterLength: null,
@@ -277,7 +277,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_span_includes_correct_attributes() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockCursor = $this->createMock(Cursor::class);
@@ -299,7 +299,7 @@ final class TraceableCursorTest extends TestCase
 
     public function test_tracing_disabled_does_not_create_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
             traceQueries: false,
             collectMetrics: false,
@@ -326,8 +326,8 @@ final class TraceableCursorTest extends TestCase
         $tel = telemetry(
             resource(),
             tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            meter_provider(memory_metric_processor(void_exporter()), $clock),
+            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
 
         return postgresql_telemetry_config($tel, $clock, $options ?? postgresql_telemetry_options());

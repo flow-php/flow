@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Exports each span immediately when it ends.
@@ -12,20 +14,15 @@ use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
  * Unlike BatchingSpanProcessor, this processor exports spans synchronously
  * one at a time. This is useful for debugging and development where
  * immediate visibility of spans is more important than performance.
- *
- * Example usage:
- * ```php
- * $processor = new PassThroughSpanProcessor($spanExporter);
- * ```
  */
 final readonly class PassThroughSpanProcessor implements SpanProcessor
 {
     public function __construct(
-        private SpanExporter $exporter,
+        private Exporter $exporter,
     ) {
     }
 
-    public function exporter() : SpanExporter
+    public function exporter() : Exporter
     {
         return $this->exporter;
     }
@@ -37,7 +34,7 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
 
     public function onEnd(Span $span) : void
     {
-        $this->exporter->export([$span]);
+        $this->exporter->export(Signals::traces([$span]));
     }
 
     public function onStart(Span $span) : void

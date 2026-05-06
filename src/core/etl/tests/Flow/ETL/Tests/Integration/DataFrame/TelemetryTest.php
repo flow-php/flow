@@ -10,7 +10,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
@@ -19,9 +19,9 @@ final class TelemetryTest extends FlowTestCase
 {
     public function test_dataframe_collects_metrics_when_enabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -53,9 +53,9 @@ final class TelemetryTest extends FlowTestCase
 
     public function test_dataframe_loading_traced_when_enabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -104,9 +104,9 @@ final class TelemetryTest extends FlowTestCase
 
     public function test_dataframe_run_creates_telemetry_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -139,9 +139,9 @@ final class TelemetryTest extends FlowTestCase
 
     public function test_dataframe_run_logs_start_and_completion() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -185,9 +185,9 @@ final class TelemetryTest extends FlowTestCase
 
     public function test_dataframe_span_contains_row_statistics() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 
@@ -226,9 +226,9 @@ final class TelemetryTest extends FlowTestCase
 
     public function test_dataframe_transformations_traced_when_enabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $clock = $this->createFrozenClock();
         $contextStorage = new MemoryContextStorage();
 

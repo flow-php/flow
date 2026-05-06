@@ -7,7 +7,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection;
 use Flow\Bridge\Psr3\Telemetry\{LogRecordConverter, TelemetryLogger};
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
-use Flow\Bridge\Telemetry\OTLP\Exporter\{OTLPLogExporter, OTLPMetricExporter, OTLPSpanExporter};
+use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport};
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
@@ -21,19 +21,9 @@ use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider};
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, CompositeMetricProcessor, PassThroughMetricProcessor};
 use Flow\Telemetry\Propagation\{CompositePropagator, W3CBaggage, W3CTraceContext};
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleMetricExporter, ConsoleSpanExporter};
-use Flow\Telemetry\Provider\Memory\{MemoryLogExporter,
-    MemoryLogProcessor,
-    MemoryMetricExporter,
-    MemoryMetricProcessor,
-    MemorySpanExporter,
-    MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter,
-    VoidLogProcessor,
-    VoidMetricExporter,
-    VoidMetricProcessor,
-    VoidSpanExporter,
-    VoidSpanProcessor};
+use Flow\Telemetry\Provider\Console\ConsoleExporter;
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidExporter, VoidLogProcessor, VoidMetricProcessor, VoidSpanProcessor};
 use Flow\Telemetry\Resource\Detector\{CachingDetector,
     ChainDetector,
     ComposerDetector,
@@ -67,7 +57,7 @@ final class FlowTelemetryExtension extends Extension
     {
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $configuration = new Configuration();
-        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('flow.telemetry.framework_logger', $config['framework_logger'] ?? null);
@@ -79,6 +69,7 @@ final class FlowTelemetryExtension extends Extension
         $this->registerGlobalServices($config, $container);
         $this->registerPropagator($config['propagator'] ?? [], $container);
         $this->registerResource($config['resource'], $container);
+        $this->registerNamedExporters($config['exporters'] ?? [], $container);
         $this->registerTelemetry($config, $container);
         $this->registerInstrumentation($config['instrumentation'] ?? [], $container, $loader);
         $this->registerTracers($tracers, $container);
@@ -87,125 +78,99 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<string, mixed> $transportConfig
      */
-    private function buildInnerLogProcessor(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
+    private function buildEmbeddedOtlpTransport(string $exporterName, array $transportConfig, ContainerBuilder $container) : string
     {
-        $processorServiceId = $serviceIdPrefix . '.processor';
-        $type = $config['type'] ?? 'void';
+        $transportServiceId = 'flow.telemetry.exporter.' . $exporterName . '.transport';
+        $type = $transportConfig['type'] ?? 'curl';
+
+        if ($type === 'service') {
+            $customServiceId = $transportConfig['service_id'] ?? null;
+
+            if ($customServiceId === null) {
+                throw new RuntimeException(\sprintf('service_id is required when exporter "%s" transport type is "service"', $exporterName));
+            }
+            $container->setAlias($transportServiceId, $customServiceId);
+
+            return $transportServiceId;
+        }
+
+        $endpoint = $transportConfig['endpoint'] ?? null;
+
+        if (!\is_string($endpoint) || $endpoint === '') {
+            throw new RuntimeException(\sprintf('exporter "%s" transport requires an endpoint', $exporterName));
+        }
+
+        $serializerServiceId = $this->buildOTLPSerializer($transportConfig['serializer'] ?? [], $transportServiceId, $container);
 
         switch ($type) {
-            case 'service':
-                $customServiceId = $config['service_id'] ?? null;
+            case 'curl':
+                $optionsServiceId = $transportServiceId . '.options';
+                $optionsDefinition = new Definition(CurlTransportOptions::class);
+                $optionsDefinition->addMethodCall('withTimeout', [$transportConfig['timeout'] ?? 30]);
+                $optionsDefinition->addMethodCall('withConnectTimeout', [$transportConfig['connect_timeout'] ?? 10]);
 
-                if ($customServiceId === null) {
-                    throw new RuntimeException('service_id is required when processor type is "service"');
+                $headers = $transportConfig['headers'] ?? [];
+
+                foreach ($headers as $headerName => $headerValue) {
+                    $optionsDefinition->addMethodCall('withHeader', [(string) $headerName, (string) $headerValue]);
                 }
-                $container->setAlias($processorServiceId, $customServiceId);
+
+                if ($transportConfig['compression'] ?? false) {
+                    $optionsDefinition->addMethodCall('withCompression', [true]);
+                }
+
+                $optionsDefinition->addMethodCall('withFollowRedirects', [
+                    $transportConfig['follow_redirects'] ?? true,
+                    $transportConfig['max_redirects'] ?? 3,
+                ]);
+
+                if (($transportConfig['proxy'] ?? null) !== null) {
+                    $optionsDefinition->addMethodCall('withProxy', [$transportConfig['proxy']]);
+                }
+
+                $optionsDefinition->addMethodCall('withSslVerification', [
+                    $transportConfig['ssl_verify_peer'] ?? true,
+                    $transportConfig['ssl_verify_host'] ?? true,
+                ]);
+
+                if (($transportConfig['ssl_cert_path'] ?? null) !== null) {
+                    $optionsDefinition->addMethodCall('withSslCertificate', [
+                        $transportConfig['ssl_cert_path'],
+                        $transportConfig['ssl_key_path'] ?? null,
+                    ]);
+                }
+
+                if (($transportConfig['ca_info_path'] ?? null) !== null) {
+                    $optionsDefinition->addMethodCall('withCaInfo', [$transportConfig['ca_info_path']]);
+                }
+
+                $container->setDefinition($optionsServiceId, $optionsDefinition);
+
+                $definition = new Definition(CurlTransport::class);
+                $definition->setArgument(0, $endpoint);
+                $definition->setArgument(1, new Reference($serializerServiceId));
+                $definition->setArgument(2, new Reference($optionsServiceId));
+                $container->setDefinition($transportServiceId, $definition);
 
                 break;
 
-            case 'void':
-                $container->setDefinition($processorServiceId, new Definition(VoidLogProcessor::class));
-
-                break;
-
-            case 'memory':
-                $exporterServiceId = $this->buildLogExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
-                $definition = new Definition(MemoryLogProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
-                $container->setDefinition($processorServiceId, $definition);
-
-                break;
-
-            case 'batching':
-                $exporterServiceId = $this->buildLogExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
-                $definition = new Definition(BatchingLogProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
-                $definition->setArgument(1, $config['batch_size'] ?? 512);
-                $container->setDefinition($processorServiceId, $definition);
-
-                break;
-
-            case 'passthrough':
-                $exporterServiceId = $this->buildLogExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
-                $definition = new Definition(PassThroughLogProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
-                $container->setDefinition($processorServiceId, $definition);
+            case 'grpc':
+                $definition = new Definition(GrpcTransport::class);
+                $definition->setArgument(0, $endpoint);
+                $definition->setArgument(1, new Reference($serializerServiceId));
+                $definition->setArgument(2, $transportConfig['headers'] ?? []);
+                $definition->setArgument(3, $transportConfig['insecure'] ?? true);
+                $container->setDefinition($transportServiceId, $definition);
 
                 break;
 
             default:
-                throw new RuntimeException(\sprintf('Unknown inner log processor type: %s', (string) $type));
+                throw new RuntimeException(\sprintf('Unknown transport type "%s" for exporter "%s"', (string) $type, $exporterName));
         }
 
-        return $processorServiceId;
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     */
-    private function buildLogExporter(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
-    {
-        $exporterServiceId = $serviceIdPrefix . '.exporter';
-        $type = $config['type'] ?? 'void';
-
-        switch ($type) {
-            case 'service':
-                $customServiceId = $config['service_id'] ?? null;
-
-                if ($customServiceId === null) {
-                    throw new RuntimeException('service_id is required when exporter type is "service"');
-                }
-                $container->setAlias($exporterServiceId, $customServiceId);
-
-                break;
-
-            case 'void':
-                $container->setDefinition($exporterServiceId, new Definition(VoidLogExporter::class));
-
-                break;
-
-            case 'memory':
-                $container->setDefinition($exporterServiceId, new Definition(MemoryLogExporter::class));
-
-                break;
-
-            case 'console':
-                $container->setDefinition($exporterServiceId, new Definition(ConsoleLogExporter::class));
-
-                break;
-
-            case 'otlp':
-                $container->setParameter('flow.telemetry.otlp_configured', true);
-                $transportServiceId = $this->buildOTLPTransport(
-                    $config['otlp']['transport'] ?? [],
-                    $exporterServiceId,
-                    $container
-                );
-                $definition = new Definition(OTLPLogExporter::class);
-                $definition->setArgument(0, new Reference($transportServiceId));
-                $container->setDefinition($exporterServiceId, $definition);
-
-                break;
-
-            default:
-                throw new RuntimeException(\sprintf('Unknown log exporter type: %s', (string) $type));
-        }
-
-        return $exporterServiceId;
+        return $transportServiceId;
     }
 
     /**
@@ -251,38 +216,26 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildLogExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('log', $config['exporter'] ?? null, $container);
                 $definition = new Definition(MemoryLogProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildLogExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('log', $config['exporter'] ?? null, $container);
                 $definition = new Definition(BatchingLogProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildLogExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('log', $config['exporter'] ?? null, $container);
                 $definition = new Definition(PassThroughLogProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -308,7 +261,7 @@ final class FlowTelemetryExtension extends Extension
 
             case 'severity_filtering':
                 $innerProcessorConfig = $config['inner_processor'] ?? [];
-                $innerProcessorServiceId = $this->buildInnerLogProcessor(
+                $innerProcessorServiceId = $this->buildLogProcessor(
                     $innerProcessorConfig,
                     $processorServiceId . '.inner',
                     $container
@@ -353,60 +306,6 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildMetricExporter(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
-    {
-        $exporterServiceId = $serviceIdPrefix . '.exporter';
-        $type = $config['type'] ?? 'void';
-
-        switch ($type) {
-            case 'service':
-                $customServiceId = $config['service_id'] ?? null;
-
-                if ($customServiceId === null) {
-                    throw new RuntimeException('service_id is required when exporter type is "service"');
-                }
-                $container->setAlias($exporterServiceId, $customServiceId);
-
-                break;
-
-            case 'void':
-                $container->setDefinition($exporterServiceId, new Definition(VoidMetricExporter::class));
-
-                break;
-
-            case 'memory':
-                $container->setDefinition($exporterServiceId, new Definition(MemoryMetricExporter::class));
-
-                break;
-
-            case 'console':
-                $container->setDefinition($exporterServiceId, new Definition(ConsoleMetricExporter::class));
-
-                break;
-
-            case 'otlp':
-                $container->setParameter('flow.telemetry.otlp_configured', true);
-                $transportServiceId = $this->buildOTLPTransport(
-                    $config['otlp']['transport'] ?? [],
-                    $exporterServiceId,
-                    $container
-                );
-                $definition = new Definition(OTLPMetricExporter::class);
-                $definition->setArgument(0, new Reference($transportServiceId));
-                $container->setDefinition($exporterServiceId, $definition);
-
-                break;
-
-            default:
-                throw new RuntimeException(\sprintf('Unknown metric exporter type: %s', (string) $type));
-        }
-
-        return $exporterServiceId;
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     */
     private function buildMetricProcessor(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
@@ -429,38 +328,26 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildMetricExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('metric', $config['exporter'] ?? null, $container);
                 $definition = new Definition(MemoryMetricProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildMetricExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('metric', $config['exporter'] ?? null, $container);
                 $definition = new Definition(BatchingMetricProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildMetricExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('metric', $config['exporter'] ?? null, $container);
                 $definition = new Definition(PassThroughMetricProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -532,99 +419,6 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildOTLPTransport(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
-    {
-        $transportServiceId = $serviceIdPrefix . '.transport';
-        $type = $config['type'];
-
-        if ($type === 'service') {
-            $customServiceId = $config['service_id'] ?? null;
-
-            if ($customServiceId === null) {
-                throw new RuntimeException('service_id is required when transport type is "service"');
-            }
-            $container->setAlias($transportServiceId, $customServiceId);
-
-            return $transportServiceId;
-        }
-
-        $endpoint = $config['endpoint'];
-        $timeout = $config['timeout'];
-        $headers = $config['headers'];
-
-        $serializerServiceId = $this->buildOTLPSerializer($config['serializer'], $transportServiceId, $container);
-
-        switch ($type) {
-            case 'curl':
-                $optionsServiceId = $transportServiceId . '.options';
-                $optionsDefinition = new Definition(CurlTransportOptions::class);
-                $optionsDefinition->addMethodCall('withTimeout', [$timeout]);
-                $optionsDefinition->addMethodCall('withConnectTimeout', [$config['connect_timeout']]);
-
-                foreach ($headers as $headerName => $headerValue) {
-                    $optionsDefinition->addMethodCall('withHeader', [(string) $headerName, (string) $headerValue]);
-                }
-
-                if ($config['compression']) {
-                    $optionsDefinition->addMethodCall('withCompression', [true]);
-                }
-
-                $optionsDefinition->addMethodCall('withFollowRedirects', [
-                    $config['follow_redirects'],
-                    $config['max_redirects'],
-                ]);
-
-                if ($config['proxy'] !== null) {
-                    $optionsDefinition->addMethodCall('withProxy', [$config['proxy']]);
-                }
-
-                $optionsDefinition->addMethodCall('withSslVerification', [
-                    $config['ssl_verify_peer'],
-                    $config['ssl_verify_host'],
-                ]);
-
-                if ($config['ssl_cert_path'] !== null) {
-                    $optionsDefinition->addMethodCall('withSslCertificate', [
-                        $config['ssl_cert_path'],
-                        $config['ssl_key_path'],
-                    ]);
-                }
-
-                if ($config['ca_info_path'] !== null) {
-                    $optionsDefinition->addMethodCall('withCaInfo', [$config['ca_info_path']]);
-                }
-
-                $container->setDefinition($optionsServiceId, $optionsDefinition);
-
-                $definition = new Definition(CurlTransport::class);
-                $definition->setArgument(0, $endpoint);
-                $definition->setArgument(1, new Reference($serializerServiceId));
-                $definition->setArgument(2, new Reference($optionsServiceId));
-                $container->setDefinition($transportServiceId, $definition);
-
-                break;
-
-            case 'grpc':
-                $insecure = $config['insecure'];
-                $definition = new Definition(GrpcTransport::class);
-                $definition->setArgument(0, $endpoint);
-                $definition->setArgument(1, new Reference($serializerServiceId));
-                $definition->setArgument(2, $headers);
-                $definition->setArgument(3, $insecure);
-                $container->setDefinition($transportServiceId, $definition);
-
-                break;
-
-            default:
-                throw new RuntimeException(\sprintf('Unknown OTLP transport type: %s', (string) $type));
-        }
-
-        return $transportServiceId;
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     */
     private function buildSampler(array $config, ContainerBuilder $container) : string
     {
         $samplerServiceId = 'flow.telemetry.tracer_provider.sampler';
@@ -679,60 +473,6 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $config
      */
-    private function buildSpanExporter(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
-    {
-        $exporterServiceId = $serviceIdPrefix . '.exporter';
-        $type = $config['type'] ?? 'void';
-
-        switch ($type) {
-            case 'service':
-                $customServiceId = $config['service_id'] ?? null;
-
-                if ($customServiceId === null) {
-                    throw new RuntimeException('service_id is required when exporter type is "service"');
-                }
-                $container->setAlias($exporterServiceId, $customServiceId);
-
-                break;
-
-            case 'void':
-                $container->setDefinition($exporterServiceId, new Definition(VoidSpanExporter::class));
-
-                break;
-
-            case 'memory':
-                $container->setDefinition($exporterServiceId, new Definition(MemorySpanExporter::class));
-
-                break;
-
-            case 'console':
-                $container->setDefinition($exporterServiceId, new Definition(ConsoleSpanExporter::class));
-
-                break;
-
-            case 'otlp':
-                $container->setParameter('flow.telemetry.otlp_configured', true);
-                $transportServiceId = $this->buildOTLPTransport(
-                    $config['otlp']['transport'] ?? [],
-                    $exporterServiceId,
-                    $container
-                );
-                $definition = new Definition(OTLPSpanExporter::class);
-                $definition->setArgument(0, new Reference($transportServiceId));
-                $container->setDefinition($exporterServiceId, $definition);
-
-                break;
-
-            default:
-                throw new RuntimeException(\sprintf('Unknown span exporter type: %s', (string) $type));
-        }
-
-        return $exporterServiceId;
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     */
     private function buildSpanProcessor(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
@@ -755,38 +495,26 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'memory':
-                $exporterServiceId = $this->buildSpanExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('span', $config['exporter'] ?? null, $container);
                 $definition = new Definition(MemorySpanProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
 
             case 'batching':
-                $exporterServiceId = $this->buildSpanExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('span', $config['exporter'] ?? null, $container);
                 $definition = new Definition(BatchingSpanProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
 
             case 'passthrough':
-                $exporterServiceId = $this->buildSpanExporter(
-                    $config['exporter'] ?? [],
-                    $processorServiceId,
-                    $container
-                );
+                $exporterRef = $this->resolveExporterReference('span', $config['exporter'] ?? null, $container);
                 $definition = new Definition(PassThroughSpanProcessor::class);
-                $definition->setArgument(0, new Reference($exporterServiceId));
+                $definition->setArgument(0, $exporterRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -1006,6 +734,62 @@ final class FlowTelemetryExtension extends Extension
 
             $definition->setPublic(true);
             $container->setDefinition('flow.telemetry.' . $name . '.meter', $definition);
+        }
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $config
+     */
+    private function registerNamedExporters(array $config, ContainerBuilder $container) : void
+    {
+        foreach ($config as $name => $exporterConfig) {
+            $serviceId = 'flow.telemetry.exporter.' . $name;
+
+            if (\array_key_exists('void', $exporterConfig)) {
+                $container->setDefinition($serviceId, new Definition(VoidExporter::class));
+
+                continue;
+            }
+
+            if (\array_key_exists('memory', $exporterConfig)) {
+                $container->setDefinition($serviceId, new Definition(MemoryExporter::class));
+
+                continue;
+            }
+
+            if (\array_key_exists('console', $exporterConfig)) {
+                $container->setDefinition($serviceId, new Definition(ConsoleExporter::class));
+
+                continue;
+            }
+
+            if (\array_key_exists('service', $exporterConfig)) {
+                $customServiceId = $exporterConfig['service']['id'] ?? null;
+
+                if (!\is_string($customServiceId) || $customServiceId === '') {
+                    throw new RuntimeException(\sprintf('exporter "%s" of type "service" requires "service.id"', $name));
+                }
+                $container->setAlias($serviceId, $customServiceId);
+
+                continue;
+            }
+
+            if (\array_key_exists('otlp', $exporterConfig)) {
+                $container->setParameter('flow.telemetry.otlp_configured', true);
+                $transportConfig = $exporterConfig['otlp']['transport'] ?? null;
+
+                if (!\is_array($transportConfig) || \count($transportConfig) === 0) {
+                    throw new RuntimeException(\sprintf('exporter "%s" of type "otlp" requires an inline "transport" configuration', $name));
+                }
+                $transportServiceId = $this->buildEmbeddedOtlpTransport($name, $transportConfig, $container);
+                $definition = new Definition(OTLPExporter::class);
+                $definition->setArgument(0, new Reference($transportServiceId));
+                $container->setDefinition($serviceId, $definition);
+
+                continue;
+            }
+
+            throw new RuntimeException(\sprintf('exporter "%s" must declare exactly one of: otlp, service, console, memory, void', $name));
         }
     }
 
@@ -1271,5 +1055,20 @@ final class FlowTelemetryExtension extends Extension
             $definition->setPublic(true);
             $container->setDefinition('flow.telemetry.' . $name . '.tracer', $definition);
         }
+    }
+
+    private function resolveExporterReference(string $signalLabel, mixed $exporterName, ContainerBuilder $container) : Reference
+    {
+        if (!\is_string($exporterName) || $exporterName === '') {
+            throw new RuntimeException(\sprintf('Missing "exporter" reference for %s processor; expected a name from top-level "exporters"', $signalLabel));
+        }
+
+        $serviceId = 'flow.telemetry.exporter.' . $exporterName;
+
+        if (!$container->hasDefinition($serviceId) && !$container->hasAlias($serviceId)) {
+            throw new RuntimeException(\sprintf('%s processor references unknown exporter "%s"', \ucfirst($signalLabel), $exporterName));
+        }
+
+        return new Reference($serviceId);
     }
 }
