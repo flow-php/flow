@@ -130,6 +130,43 @@ final class StatisticsCounterTest extends TestCase
         self::assertNull($statistics->max());
     }
 
+    public function test_add_nulls_increments_null_and_values_count() : void
+    {
+        $column = FlatColumn::string('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $statistics->add('hello');
+        $statistics->addNulls(3);
+
+        self::assertSame(3, $statistics->nullCount());
+        self::assertSame(4, $statistics->valuesCount());
+        self::assertSame(1, $statistics->notNullCount());
+        self::assertSame('hello', $statistics->min());
+        self::assertSame('hello', $statistics->max());
+    }
+
+    public function test_add_nulls_with_zero_is_noop() : void
+    {
+        $column = FlatColumn::string('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $statistics->addNulls(0);
+
+        self::assertSame(0, $statistics->nullCount());
+        self::assertSame(0, $statistics->valuesCount());
+    }
+
+    public function test_add_nulls_with_negative_throws() : void
+    {
+        $column = FlatColumn::string('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Null count cannot be negative.');
+
+        $statistics->addNulls(-1);
+    }
+
     public function test_add_object_value() : void
     {
         $column = FlatColumn::string('test_column');

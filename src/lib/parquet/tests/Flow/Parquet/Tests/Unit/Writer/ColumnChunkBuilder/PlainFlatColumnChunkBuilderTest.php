@@ -776,4 +776,38 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         self::assertCount(1, $containers);
         self::assertSame(5, $containers[0]->columnChunk->valuesCount());
     }
+
+    public function test_statistics_track_null_count_for_all_null_chunk() : void
+    {
+        $column = FlatColumn::string('all_null');
+        $options = new Options();
+        $compression = Compressions::UNCOMPRESSED;
+        $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
+
+        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [0, 0, 0], []));
+
+        $statistics = $builder->flush(0)[0]->columnChunk->statistics();
+
+        self::assertNotNull($statistics);
+        self::assertSame(3, $statistics->nullCount());
+        self::assertNull($statistics->min($column));
+        self::assertNull($statistics->max($column));
+    }
+
+    public function test_statistics_track_null_count_for_mixed_chunk() : void
+    {
+        $column = FlatColumn::string('mixed');
+        $options = new Options();
+        $compression = Compressions::UNCOMPRESSED;
+        $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
+
+        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 0, 1], ['x', 'z']));
+
+        $statistics = $builder->flush(0)[0]->columnChunk->statistics();
+
+        self::assertNotNull($statistics);
+        self::assertSame(1, $statistics->nullCount());
+        self::assertSame('x', $statistics->min($column));
+        self::assertSame('z', $statistics->max($column));
+    }
 }
