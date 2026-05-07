@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 762
+ * Total functions: 761
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -202,7 +202,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">always_off_exemplar_filter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AlwaysOffExemplarFilter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an AlwaysOffExemplarFilter.<br>Never records exemplars. Use this filter to disable exemplar collection<br>entirely for performance optimization.
+                    Create an AlwaysOffExemplarFilter.
                 </div>
                             `
             return div
@@ -220,7 +220,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">always_on_exemplar_filter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AlwaysOnExemplarFilter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an AlwaysOnExemplarFilter.<br>Records exemplars whenever a span context is present.<br>Use this filter for debugging or when complete trace context is important.
+                    Create an AlwaysOnExemplarFilter.
                 </div>
                             `
             return div
@@ -340,7 +340,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_carrier</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayCarrier</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an ArrayCarrier.<br>Carrier backed by an associative array with case-insensitive key lookup.<br>@param array<string, string> $data Initial carrier data
+                    Create an ArrayCarrier.<br>@param array<string, string> $data Initial carrier data
                 </div>
                             `
             return div
@@ -952,15 +952,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">batching_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$batchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">512</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchingLogProcessor</span>
+                    <span class=\"fn-name\">batching_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$batchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">512</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchingLogProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a BatchingLogProcessor.<br>Collects log records in memory and exports them in batches for efficiency.<br>Logs are exported when batch size is reached, flush() is called, or shutdown().<br>@param LogExporter $exporter The exporter to send logs to<br>@param int $batchSize Number of logs to collect before exporting (default 512)
+                    Create a BatchingLogProcessor.<br>@param Exporter $exporter The exporter to send logs to<br>@param int $batchSize Number of logs to collect before exporting (default 512)<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\batching_log_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\batching_log_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ", " + "$" + "{" + "3:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "batching_metric_processor",
@@ -970,15 +970,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">batching_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$batchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">512</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchingMetricProcessor</span>
+                    <span class=\"fn-name\">batching_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$batchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">512</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchingMetricProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a BatchingMetricProcessor.<br>Collects metrics in memory and exports them in batches for efficiency.<br>Metrics are exported when batch size is reached, flush() is called, or shutdown().<br>@param MetricExporter $exporter The exporter to send metrics to<br>@param int $batchSize Number of metrics to collect before exporting (default 512)
+                    Create a BatchingMetricProcessor.<br>@param Exporter $exporter The exporter to send metrics to<br>@param int $batchSize Number of metrics to collect before exporting (default 512)<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\batching_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\batching_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ", " + "$" + "{" + "3:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "batching_span_processor",
@@ -988,15 +988,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">batching_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$batchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">512</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchingSpanProcessor</span>
+                    <span class=\"fn-name\">batching_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$batchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">512</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchingSpanProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a BatchingSpanProcessor.<br>Collects spans in memory and exports them in batches for efficiency.<br>Spans are exported when batch size is reached, flush() is called, or shutdown().<br>@param SpanExporter $exporter The exporter to send spans to<br>@param int $batchSize Number of spans to collect before exporting (default 512)
+                    Create a BatchingSpanProcessor.<br>@param Exporter $exporter The exporter to send spans to<br>@param int $batchSize Number of spans to collect before exporting (default 512)<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\batching_span_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\batching_span_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ", " + "$" + "{" + "3:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "batch_size",
@@ -1165,7 +1165,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">caching_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ResourceDetector</span> <span class=\"fn-param\">$detector</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$cachePath</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CachingDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a CachingDetector.<br>Wraps another detector and caches its results to a file. On subsequent<br>calls, returns the cached resource instead of running detection again.<br>@param ResourceDetector $detector The detector to wrap<br>@param null|string $cachePath Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource.cache)
+                    Create a CachingDetector.<br>@param ResourceDetector $detector The detector to wrap<br>@param null|string $cachePath Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource.cache)
                 </div>
                             `
             return div
@@ -1339,7 +1339,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">chain_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ResourceDetector</span> <span class=\"fn-param\">$detectors</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ChainDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ChainDetector.<br>Combines multiple resource detectors into a chain. Detectors are executed<br>in order and their results are merged. Later detectors take precedence<br>over earlier ones when there are conflicting attribute keys.<br>@param ResourceDetector ...$detectors The detectors to chain
+                    Create a ChainDetector.<br>@param ResourceDetector ...$detectors The detectors to chain
                 </div>
                             `
             return div
@@ -2269,12 +2269,30 @@ const dslFunctions = [
                     <span class=\"fn-name\">composer_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ComposerDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ComposerDetector.<br>Detects service.name and service.version from Composer\'s InstalledVersions<br>using the root package information.
+                    Create a ComposerDetector.
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\composer_detector()"),
+        boost: 10
+    },                {
+        label: "composite_error_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">composite_error_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$handlers</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CompositeErrorHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Fan errors out to multiple handlers.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\composite_error_handler(" + "$" + "{" + "1:handlers" + "}" + ")"),
         boost: 10
     },                {
         label: "composite_propagator",
@@ -2287,7 +2305,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">composite_propagator</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Propagator</span> <span class=\"fn-param\">$propagators</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CompositePropagator</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a CompositePropagator.<br>Combines multiple propagators into one. On extract, all propagators are<br>invoked and their contexts are merged. On inject, all propagators are invoked.<br>@param Propagator ...$propagators The propagators to combine
+                    Create a CompositePropagator.<br>@param Propagator ...$propagators The propagators to combine
                 </div>
                             `
             return div
@@ -2433,22 +2451,22 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\conflict_constraint(" + "$" + "{" + "1:name" + "}" + ")"),
         boost: 10
     },                {
-        label: "console_log_exporter",
+        label: "console_exporter",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">console_log_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxBodyLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleLogOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleLogOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleLogExporter</span>
+                    <span class=\"fn-name\">console_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maxLogBodyLength</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">100</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleLogOptions</span> <span class=\"fn-param\">$logOptions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleLogOptions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleMetricOptions</span> <span class=\"fn-param\">$metricOptions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleMetricOptions::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleSpanOptions</span> <span class=\"fn-param\">$spanOptions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleSpanOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleExporter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ConsoleLogExporter.<br>Outputs log records to the console with severity-based coloring.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param null|int $maxBodyLength Maximum length for body+attributes column (null = no limit, default: 100)<br>@param ConsoleLogOptions $options Display options for the exporter
+                    Create a unified ConsoleExporter for logs, metrics, and spans.<br>Outputs telemetry to the console with ASCII table formatting and optional ANSI colors.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param null|int $maxLogBodyLength Maximum length for log body+attributes column (null = no limit)<br>@param ConsoleLogOptions $logOptions Display options for log records<br>@param ConsoleMetricOptions $metricOptions Display options for metrics<br>@param ConsoleSpanOptions $spanOptions Display options for spans
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\console_log_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:maxBodyLength" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\console_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:maxLogBodyLength" + "}" + ", " + "$" + "{" + "3:logOptions" + "}" + ", " + "$" + "{" + "4:metricOptions" + "}" + ", " + "$" + "{" + "5:spanOptions" + "}" + ")"),
         boost: 10
     },                {
         label: "console_log_options",
@@ -2487,24 +2505,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\console_log_options_minimal()"),
         boost: 10
     },                {
-        label: "console_metric_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">console_metric_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleMetricOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleMetricOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleMetricExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a ConsoleMetricExporter.<br>Outputs metrics to the console with ASCII table formatting.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param ConsoleMetricOptions $options Display options for the exporter
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\console_metric_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
-        boost: 10
-    },                {
         label: "console_metric_options",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -2539,24 +2539,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\console_metric_options_minimal()"),
-        boost: 10
-    },                {
-        label: "console_span_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">console_span_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">bool</span> <span class=\"fn-param\">$colors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ConsoleSpanOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Provider\\Console\\ConsoleSpanOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ConsoleSpanExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a ConsoleSpanExporter.<br>Outputs spans to the console with ASCII table formatting.<br>Useful for debugging and development.<br>@param bool $colors Whether to use ANSI colors (default: true)<br>@param ConsoleSpanOptions $options Display options for the exporter
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\console_span_exporter(" + "$" + "{" + "1:colors" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
         boost: 10
     },                {
         label: "console_span_options",
@@ -3526,7 +3508,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">environment_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnvironmentDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an EnvironmentDetector.<br>Detects resource attributes from OpenTelemetry standard environment variables:<br>- OTEL_SERVICE_NAME: Sets service.name attribute<br>- OTEL_RESOURCE_ATTRIBUTES: Sets additional attributes in key=value,key2=value2 format
+                    Create an EnvironmentDetector.
                 </div>
                             `
             return div
@@ -3565,6 +3547,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\equal(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "error_log_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">error_log_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ErrorLogMessageType</span> <span class=\"fn-param\">$messageType</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogMessageType::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$expandNewlines</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$messagePrefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;[flow-telemetry]&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ErrorLogHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create the default ErrorLogHandler. Writes via PHP\'s error_log().
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\error_log_handler(" + "$" + "{" + "1:messageType" + "}" + ", " + "$" + "{" + "2:expandNewlines" + "}" + ", " + "$" + "{" + "3:messagePrefix" + "}" + ")"),
         boost: 10
     },                {
         label: "es_hits_to_rows",
@@ -4777,7 +4777,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">host_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HostDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a HostDetector.<br>Detects host information including host.name, host.arch, and host.id<br>(from /etc/machine-id on Linux or IOPlatformUUID on macOS).
+                    Create a HostDetector.
                 </div>
                             `
             return div
@@ -5743,15 +5743,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">logger_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogRecordLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\LogRecordLimits::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LoggerProvider</span>
+                    <span class=\"fn-name\">logger_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogRecordLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\LogRecordLimits::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LoggerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a LoggerProvider.<br>Creates a provider that uses a LogProcessor for processing logs.<br>For void/disabled logging, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param LogProcessor $processor The processor for logs<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for span correlation<br>@param LogRecordLimits $limits Limits for log record attributes
+                    Create a LoggerProvider.<br>@param LogProcessor $processor The processor for logs<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for span correlation<br>@param LogRecordLimits $limits Limits for log record attributes<br>@param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\logger_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:limits" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\logger_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:limits" + "}" + ", " + "$" + "{" + "5:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "log_record_converter",
@@ -5782,7 +5782,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">log_record_limits</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeValueLengthLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LogRecordLimits</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create LogRecordLimits configuration.<br>LogRecordLimits controls the maximum amount of data a log record can collect,<br>preventing unbounded memory growth and ensuring reasonable log record sizes.<br>@param int $attributeCountLimit Maximum number of attributes per log record<br>@param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
+                    Create LogRecordLimits configuration.<br>@param int $attributeCountLimit Maximum number of attributes per log record<br>@param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
                 </div>
                             `
             return div
@@ -5848,7 +5848,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">manual_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ManualDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ManualDetector.<br>Returns manually specified resource attributes. Use this when you need<br>to set attributes explicitly rather than detecting them automatically.<br>@param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
+                    Create a ManualDetector.<br>@param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
                 </div>
                             `
             return div
@@ -5991,6 +5991,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\memory_context_storage(" + "$" + "{" + "1:context" + "}" + ")"),
         boost: 10
     },                {
+        label: "memory_exporter",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">memory_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryExporter</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a MemoryExporter.<br>Unified exporter that stores logs, metrics, and spans in memory for direct access.<br>Useful for testing and inspection without serialization.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_exporter()"),
+        boost: 10
+    },                {
         label: "memory_filesystem",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6009,24 +6027,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\memory_filesystem(" + "$" + "{" + "1:protocol" + "}" + ")"),
         boost: 10
     },                {
-        label: "memory_log_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_log_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryLogExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemoryLogExporter.<br>Log exporter that stores data in memory.<br>Provides direct getter access to exported log entries.<br>Useful for testing and inspection without serialization.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_log_exporter()"),
-        boost: 10
-    },                {
         label: "memory_log_processor",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6034,33 +6034,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryLogProcessor</span>
+                    <span class=\"fn-name\">memory_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryLogProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemoryLogProcessor.<br>Log processor that stores log records in memory and exports via configured exporter.<br>Useful for testing.<br>@param LogExporter $exporter The exporter to send logs to
+                    Create a MemoryLogProcessor.<br>@param Exporter $exporter The exporter to send logs to<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_log_processor(" + "$" + "{" + "1:exporter" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "memory_metric_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_metric_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryMetricExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemoryMetricExporter.<br>Metric exporter that stores data in memory.<br>Provides direct getter access to exported metrics.<br>Useful for testing and inspection without serialization.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_metric_exporter()"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_log_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "memory_metric_processor",
@@ -6070,33 +6052,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryMetricProcessor</span>
+                    <span class=\"fn-name\">memory_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryMetricProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemoryMetricProcessor.<br>Metric processor that stores metrics in memory and exports via configured exporter.<br>Useful for testing.<br>@param MetricExporter $exporter The exporter to send metrics to
+                    Create a MemoryMetricProcessor.<br>@param Exporter $exporter The exporter to send metrics to<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "memory_span_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_span_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemorySpanExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemorySpanExporter.<br>Span exporter that stores data in memory.<br>Provides direct getter access to exported spans.<br>Useful for testing and inspection without serialization.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_span_exporter()"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "memory_span_processor",
@@ -6106,15 +6070,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">memory_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemorySpanProcessor</span>
+                    <span class=\"fn-name\">memory_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemorySpanProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a MemorySpanProcessor.<br>Span processor that stores spans in memory and exports via configured exporter.<br>Useful for testing.<br>@param SpanExporter $exporter The exporter to send spans to
+                    Create a MemorySpanProcessor.<br>@param Exporter $exporter The exporter to send spans to<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_span_processor(" + "$" + "{" + "1:exporter" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\memory_span_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "merge",
@@ -6142,15 +6106,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">meter_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AggregationTemporality</span> <span class=\"fn-param\">$temporality</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\AggregationTemporality::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExemplarFilter</span> <span class=\"fn-param\">$exemplarFilter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\Exemplar\\TraceBasedExemplarFilter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MetricLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\MetricLimits::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MeterProvider</span>
+                    <span class=\"fn-name\">meter_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AggregationTemporality</span> <span class=\"fn-param\">$temporality</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\AggregationTemporality::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExemplarFilter</span> <span class=\"fn-param\">$exemplarFilter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\Exemplar\\TraceBasedExemplarFilter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MetricLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\MetricLimits::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MeterProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a MeterProvider.<br>Creates a provider that uses a MetricProcessor for processing metrics.<br>For void/disabled metrics, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param MetricProcessor $processor The processor for metrics<br>@param ClockInterface $clock The clock for timestamps<br>@param AggregationTemporality $temporality Aggregation temporality for metrics<br>@param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)<br>@param MetricLimits $limits Cardinality limits for metric instruments
+                    Create a MeterProvider.<br>@param MetricProcessor $processor The processor for metrics<br>@param ClockInterface $clock The clock for timestamps<br>@param AggregationTemporality $temporality Aggregation temporality for metrics<br>@param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)<br>@param MetricLimits $limits Cardinality limits for metric instruments<br>@param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\meter_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:temporality" + "}" + ", " + "$" + "{" + "4:exemplarFilter" + "}" + ", " + "$" + "{" + "5:limits" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\meter_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:temporality" + "}" + ", " + "$" + "{" + "4:exemplarFilter" + "}" + ", " + "$" + "{" + "5:limits" + "}" + ", " + "$" + "{" + "6:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "metric_limits",
@@ -6163,7 +6127,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">metric_limits</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$cardinalityLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2000</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MetricLimits</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create MetricLimits configuration.<br>MetricLimits controls the maximum cardinality (unique attribute combinations)<br>per metric instrument, preventing memory exhaustion from high-cardinality attributes.<br>When the cardinality limit is exceeded, new attribute combinations are aggregated<br>into an overflow data point with \`otel.metric.overflow: true\` attribute.<br>Note: Unlike spans and logs, metrics are EXEMPT from attribute count and value<br>length limits per the OpenTelemetry specification. Only cardinality is limited.<br>@param int $cardinalityLimit Maximum number of unique attribute combinations per instrument
+                    Create MetricLimits configuration.<br>@param int $cardinalityLimit Maximum number of unique attribute combinations per instrument
                 </div>
                             `
             return div
@@ -6441,6 +6405,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\null_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ")"),
         boost: 10
     },                {
+        label: "null_error_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">null_error_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NullErrorHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Discard every error. Use only in tests or for explicit silence.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\null_error_handler()"),
+        boost: 10
+    },                {
         label: "null_schema",
         type: "function",
         detail: "flow\u002Ddsl\u002Dschema",
@@ -6586,7 +6568,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">os_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OsDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an OsDetector.<br>Detects operating system information including os.type, os.name, os.version,<br>and os.description using PHP\'s php_uname() function.
+                    Create an OsDetector.
                 </div>
                             `
             return div
@@ -6604,7 +6586,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_curl_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CurlTransportOptions</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create curl transport options for OTLP.<br>Returns a CurlTransportOptions builder for configuring curl transport settings<br>using a fluent interface.<br>Example usage:<br>\`\`\`php<br>$options = otlp_curl_options()<br>    ->withTimeout(60)<br>    ->withConnectTimeout(15)<br>    ->withHeader(\'Authorization\', \'Bearer token\')<br>    ->withCompression()<br>    ->withSslVerification(verifyPeer: true);<br>$transport = otlp_curl_transport($endpoint, $serializer, $options);<br>\`\`\`
+                    Create curl transport options for OTLP.
                 </div>
                             `
             return div
@@ -6619,15 +6601,33 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">CurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransportOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CurlTransport</span>
+                    <span class=\"fn-name\">otlp_curl_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">CurlTransportOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Telemetry\\OTLP\\Transport\\CurlTransportOptions::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transport</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an async curl transport for OTLP endpoints.<br>Creates a CurlTransport that uses curl_multi for non-blocking I/O.<br>Requests are queued and executed asynchronously. Completed requests are<br>processed on subsequent send() calls or on shutdown().<br>Requires: ext-curl PHP extension<br>Example usage:<br>\`\`\`php<br>// JSON over HTTP (async) with default options<br>$transport = otlp_curl_transport(<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_json_serializer(),<br>);<br>// Protobuf over HTTP (async) with custom options<br>$transport = otlp_curl_transport(<br>    endpoint: \'http://localhost:4318\',<br>    serializer: otlp_protobuf_serializer(),<br>    options: otlp_curl_options()<br>        ->withTimeout(60)<br>        ->withHeader(\'Authorization\', \'Bearer token\')<br>        ->withCompression(),<br>);<br>\`\`\`<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param CurlTransportOptions $options Transport configuration options
+                    Create an async curl transport for OTLP endpoints.<br>Creates a CurlTransport that uses curl_multi for non-blocking I/O.<br>Requests are queued and executed asynchronously.<br>Requires: ext-curl PHP extension<br>@param string $endpoint OTLP endpoint URL (e.g., \'http://localhost:4318\')<br>@param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)<br>@param CurlTransportOptions $options Transport configuration options
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_curl_transport(" + "$" + "{" + "1:endpoint" + "}" + ", " + "$" + "{" + "2:serializer" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "otlp_exporter",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">otlp_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$transport</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OTLPExporter</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an OTLP exporter that dispatches logs, metrics, and spans through a single transport.<br>Example usage:<br>\`\`\`php<br>$exporter = otlp_exporter($transport);<br>$spanProcessor = batching_span_processor($exporter);<br>$metricProcessor = batching_metric_processor($exporter);<br>$logProcessor = batching_log_processor($exporter);<br>\`\`\`<br>@param Transport $transport The transport for sending telemetry data<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the transport
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_exporter(" + "$" + "{" + "1:transport" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "otlp_grpc_transport",
@@ -6637,10 +6637,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_grpc_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ProtobufSerializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$headers</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$insecure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GrpcTransport</span>
+                    <span class=\"fn-name\">otlp_grpc_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$endpoint</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ProtobufSerializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$headers</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$insecure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transport</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a gRPC transport for OTLP endpoints.<br>Creates a GrpcTransport configured to send telemetry data to an OTLP-compatible<br>endpoint using gRPC protocol with Protobuf serialization.<br>Requires:<br>- ext-grpc PHP extension<br>- google/protobuf package<br>- open-telemetry/gen-otlp-protobuf package<br>Example usage:<br>\`\`\`php<br>$transport = otlp_grpc_transport(<br>    endpoint: \'localhost:4317\',<br>    serializer: otlp_protobuf_serializer(),<br>);<br>\`\`\`<br>@param string $endpoint gRPC endpoint (e.g., \'localhost:4317\')<br>@param ProtobufSerializer $serializer Protobuf serializer for encoding telemetry data<br>@param array<string, string> $headers Additional headers (metadata) to include in requests<br>@param bool $insecure Whether to use insecure channel credentials (default true for local dev)
+                    Create a gRPC transport for OTLP endpoints.<br>Creates a GrpcTransport configured to send telemetry data to an OTLP-compatible<br>endpoint using gRPC protocol with Protobuf serialization.<br>Requires:<br>- ext-grpc PHP extension<br>- google/protobuf package<br>@param string $endpoint gRPC endpoint (e.g., \'localhost:4317\')<br>@param ProtobufSerializer $serializer Protobuf serializer for encoding telemetry data<br>@param array<string, string> $headers Additional headers (metadata) to include in requests<br>@param bool $insecure Whether to use insecure channel credentials (default true for local dev)
                 </div>
                             `
             return div
@@ -6676,30 +6676,12 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_logger_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Context\\MemoryContextStorage::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LoggerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a logger provider configured for OTLP export.<br>Example usage:<br>\`\`\`php<br>$processor = batching_log_processor(otlp_log_exporter($transport));<br>$provider = otlp_logger_provider($processor, $clock);<br>$logger = $provider->logger($resource, \'my-service\', \'1.0.0\');<br>\`\`\`<br>@param LogProcessor $processor The processor for handling log records<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage The context storage for propagating context
+                    Create a logger provider configured for OTLP export.<br>@param LogProcessor $processor The processor for handling log records<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage The context storage for propagating context
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_logger_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "otlp_log_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_log_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$transport</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OTLPLogExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create an OTLP log exporter.<br>Example usage:<br>\`\`\`php<br>$exporter = otlp_log_exporter($transport);<br>$processor = batching_log_processor($exporter);<br>\`\`\`<br>@param Transport $transport The transport for sending log data
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_log_exporter(" + "$" + "{" + "1:transport" + "}" + ")"),
         boost: 10
     },                {
         label: "otlp_meter_provider",
@@ -6712,30 +6694,12 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_meter_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AggregationTemporality</span> <span class=\"fn-param\">$temporality</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Meter\\AggregationTemporality::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MeterProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a meter provider configured for OTLP export.<br>Example usage:<br>\`\`\`php<br>$processor = batching_metric_processor(otlp_metric_exporter($transport));<br>$provider = otlp_meter_provider($processor, $clock);<br>$meter = $provider->meter($resource, \'my-service\', \'1.0.0\');<br>\`\`\`<br>@param MetricProcessor $processor The processor for handling metrics<br>@param ClockInterface $clock The clock for timestamps<br>@param AggregationTemporality $temporality The aggregation temporality for metrics
+                    Create a meter provider configured for OTLP export.<br>@param MetricProcessor $processor The processor for handling metrics<br>@param ClockInterface $clock The clock for timestamps<br>@param AggregationTemporality $temporality The aggregation temporality for metrics
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_meter_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:temporality" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "otlp_metric_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_metric_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$transport</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OTLPMetricExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create an OTLP metric exporter.<br>Example usage:<br>\`\`\`php<br>$exporter = otlp_metric_exporter($transport);<br>$processor = batching_metric_processor($exporter);<br>\`\`\`<br>@param Transport $transport The transport for sending metric data
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_metric_exporter(" + "$" + "{" + "1:transport" + "}" + ")"),
         boost: 10
     },                {
         label: "otlp_protobuf_serializer",
@@ -6748,7 +6712,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_protobuf_serializer</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ProtobufSerializer</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a Protobuf serializer for OTLP.<br>Returns a ProtobufSerializer that converts telemetry data to OTLP Protobuf binary format.<br>Use this with CurlTransport for Protobuf over HTTP, or with GrpcTransport.<br>Requires:<br>- google/protobuf package<br>- open-telemetry/gen-otlp-protobuf package<br>Example usage:<br>\`\`\`php<br>$serializer = otlp_protobuf_serializer();<br>$transport = otlp_curl_transport($endpoint, $serializer);<br>\`\`\`
+                    Create a Protobuf serializer for OTLP.<br>Returns a ProtobufSerializer that converts telemetry data to OTLP Protobuf binary format.<br>Use this with CurlTransport for Protobuf over HTTP, or with GrpcTransport.<br>Requires:<br>- google/protobuf package<br>Example usage:<br>\`\`\`php<br>$serializer = otlp_protobuf_serializer();<br>$transport = otlp_curl_transport($endpoint, $serializer);<br>\`\`\`
                 </div>
                             `
             return div
@@ -6756,22 +6720,22 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_protobuf_serializer()"),
         boost: 10
     },                {
-        label: "otlp_span_exporter",
+        label: "otlp_stream_transport",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">otlp_span_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transport</span> <span class=\"fn-param\">$transport</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OTLPSpanExporter</span>
+                    <span class=\"fn-name\">otlp_stream_transport</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$destination</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$filePermissions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">420</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$createDirectories</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transport</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create an OTLP span exporter.<br>Example usage:<br>\`\`\`php<br>$exporter = otlp_span_exporter($transport);<br>$processor = batching_span_processor($exporter);<br>\`\`\`<br>@param Transport $transport The transport for sending span data
+                    Create a stream transport for OTLP that writes JSONL to a single destination.<br>Accepts an absolute file path or a php:// stream wrapper such as<br>\'php://stdout\', \'php://stderr\', \'php://memory\', or \'php://temp\'. Each<br>export() call appends one JSON Line under LOCK_EX so concurrent writers<br>interleave at line boundaries. The $filePermissions and $createDirectories<br>parameters apply only when the destination is a file path.<br>Per the OTLP File Exporter spec only JSON encoding is supported.
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_span_exporter(" + "$" + "{" + "1:transport" + "}" + ")"),
+        apply: snippet("\\Flow\\Bridge\\Telemetry\\OTLP\\DSL\\otlp_stream_transport(" + "$" + "{" + "1:destination" + "}" + ", " + "$" + "{" + "2:filePermissions" + "}" + ", " + "$" + "{" + "3:createDirectories" + "}" + ")"),
         boost: 10
     },                {
         label: "otlp_tracer_provider",
@@ -6784,7 +6748,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">otlp_tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Context\\MemoryContextStorage::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a tracer provider configured for OTLP export.<br>Example usage:<br>\`\`\`php<br>$processor = batching_span_processor(otlp_span_exporter($transport));<br>$provider = otlp_tracer_provider($processor, $clock);<br>$tracer = $provider->tracer($resource, \'my-service\', \'1.0.0\');<br>\`\`\`<br>@param SpanProcessor $processor The processor for handling spans<br>@param ClockInterface $clock The clock for timestamps<br>@param Sampler $sampler The sampler for deciding whether to record spans<br>@param ContextStorage $contextStorage The context storage for propagating trace context
+                    Create a tracer provider configured for OTLP export.<br>@param SpanProcessor $processor The processor for handling spans<br>@param ClockInterface $clock The clock for timestamps<br>@param Sampler $sampler The sampler for deciding whether to record spans<br>@param ContextStorage $contextStorage The context storage for propagating trace context
                 </div>
                             `
             return div
@@ -6946,15 +6910,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pass_through_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PassThroughLogProcessor</span>
+                    <span class=\"fn-name\">pass_through_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PassThroughLogProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a PassThroughLogProcessor.<br>Exports each log record immediately when processed.<br>Useful for debugging where immediate visibility is more important than performance.<br>@param LogExporter $exporter The exporter to send logs to
+                    Create a PassThroughLogProcessor.<br>@param Exporter $exporter The exporter to send logs to<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\pass_through_log_processor(" + "$" + "{" + "1:exporter" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\pass_through_log_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "pass_through_metric_processor",
@@ -6964,15 +6928,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pass_through_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PassThroughMetricProcessor</span>
+                    <span class=\"fn-name\">pass_through_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PassThroughMetricProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a PassThroughMetricProcessor.<br>Exports each metric immediately when processed.<br>Useful for debugging where immediate visibility is more important than performance.<br>@param MetricExporter $exporter The exporter to send metrics to
+                    Create a PassThroughMetricProcessor.<br>@param Exporter $exporter The exporter to send metrics to<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\pass_through_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\pass_through_metric_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "pass_through_span_processor",
@@ -6982,15 +6946,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pass_through_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanExporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PassThroughSpanProcessor</span>
+                    <span class=\"fn-name\">pass_through_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Exporter</span> <span class=\"fn-param\">$exporter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PassThroughSpanProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a PassThroughSpanProcessor.<br>Exports each span immediately when it ends.<br>Useful for debugging where immediate visibility is more important than performance.<br>@param SpanExporter $exporter The exporter to send spans to
+                    Create a PassThroughSpanProcessor.<br>@param Exporter $exporter The exporter to send spans to<br>@param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\pass_through_span_processor(" + "$" + "{" + "1:exporter" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\pass_through_span_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "path",
@@ -7267,7 +7231,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">process_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ProcessDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ProcessDetector.<br>Detects process information including process.pid, process.executable.path,<br>process.runtime.name (PHP), process.runtime.version, process.command,<br>and process.owner (on POSIX systems).
+                    Create a ProcessDetector.
                 </div>
                             `
             return div
@@ -7285,7 +7249,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">propagation_context</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanContext</span> <span class=\"fn-param\">$spanContext</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Baggage</span> <span class=\"fn-param\">$baggage</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PropagationContext</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a PropagationContext.<br>Value object containing both trace context (SpanContext) and application<br>data (Baggage) that can be propagated across process boundaries.<br>@param null|SpanContext $spanContext Optional span context<br>@param null|Baggage $baggage Optional baggage
+                    Create a PropagationContext.<br>@param null|SpanContext $spanContext Optional span context<br>@param null|Baggage $baggage Optional baggage
                 </div>
                             `
             return div
@@ -7822,7 +7786,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">resource_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$detectors</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ChainDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a resource detector chain.<br>When no detectors are provided, uses the default detector chain:<br>1. OsDetector - Operating system information<br>2. HostDetector - Host information<br>3. ProcessDetector - Process information<br>4. ComposerDetector - Service information from Composer<br>5. EnvironmentDetector - Environment variable overrides (highest precedence)<br>When detectors are provided, uses only those detectors.<br>@param array<ResourceDetector> $detectors Optional custom detectors (empty = use defaults)
+                    Create a resource detector chain.<br>@param array<ResourceDetector> $detectors Optional custom detectors (empty = use defaults)
                 </div>
                             `
             return div
@@ -9124,7 +9088,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">severity_filtering_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Severity</span> <span class=\"fn-param\">$minimumSeverity</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\Severity::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SeverityFilteringLogProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SeverityFilteringLogProcessor.<br>Filters log entries based on minimum severity level. Only entries at or above<br>the configured threshold are passed to the wrapped processor.<br>@param LogProcessor $processor The processor to wrap<br>@param Severity $minimumSeverity Minimum severity level (default: INFO)
+                    Create a SeverityFilteringLogProcessor.<br>@param LogProcessor $processor The processor to wrap<br>@param Severity $minimumSeverity Minimum severity level (default: INFO)
                 </div>
                             `
             return div
@@ -9262,7 +9226,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">span_limits</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$eventCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$linkCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributePerEventCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributePerLinkCountLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">128</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$attributeValueLengthLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SpanLimits</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create SpanLimits configuration.<br>SpanLimits controls the maximum amount of data a span can collect,<br>preventing unbounded memory growth and ensuring reasonable span sizes.<br>@param int $attributeCountLimit Maximum number of attributes per span<br>@param int $eventCountLimit Maximum number of events per span<br>@param int $linkCountLimit Maximum number of links per span<br>@param int $attributePerEventCountLimit Maximum number of attributes per event<br>@param int $attributePerLinkCountLimit Maximum number of attributes per link<br>@param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
+                    Create SpanLimits configuration.<br>@param int $attributeCountLimit Maximum number of attributes per span<br>@param int $eventCountLimit Maximum number of events per span<br>@param int $linkCountLimit Maximum number of links per span<br>@param int $attributePerEventCountLimit Maximum number of attributes per event<br>@param int $attributePerLinkCountLimit Maximum number of attributes per link<br>@param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
                 </div>
                             `
             return div
@@ -9834,6 +9798,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\stdout_filesystem(" + "$" + "{" + "1:protocol" + "}" + ")"),
         boost: 10
     },                {
+        label: "stream_error_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">stream_error_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$destination</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$filePermissions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">420</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$createDirectories</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$messagePrefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;[flow-telemetry]&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a StreamHandler. Appends formatted Throwables (one per line) to a file<br>path or php:// stream wrapper.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\stream_error_handler(" + "$" + "{" + "1:destination" + "}" + ", " + "$" + "{" + "2:filePermissions" + "}" + ", " + "$" + "{" + "3:createDirectories" + "}" + ", " + "$" + "{" + "4:messagePrefix" + "}" + ")"),
+        boost: 10
+    },                {
         label: "string_agg",
         type: "function",
         detail: "flow\u002Ddsl\u002Daggregating\u002Dfunctions",
@@ -10030,7 +10012,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">superglobal_carrier</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SuperglobalCarrier</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SuperglobalCarrier.<br>Read-only carrier that extracts context from PHP superglobals<br>($_SERVER, $_GET, $_POST, $_COOKIE).
+                    Create a SuperglobalCarrier.
                 </div>
                             `
             return div
@@ -10066,6 +10048,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Bridge\\Symfony\\HttpFoundationTelemetry\\DSL\\symfony_response_carrier(" + "$" + "{" + "1:response" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "syslog_error_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">syslog_error_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$ident</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;flow-telemetry&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SyslogFacility</span> <span class=\"fn-param\">$facility</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\SyslogFacility::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$logOpts</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SyslogSeverity</span> <span class=\"fn-param\">$severity</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\SyslogSeverity::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SyslogHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a SyslogHandler. Writes via openlog/syslog/closelog.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\syslog_error_handler(" + "$" + "{" + "1:ident" + "}" + ", " + "$" + "{" + "2:facility" + "}" + ", " + "$" + "{" + "3:logOpts" + "}" + ", " + "$" + "{" + "4:severity" + "}" + ")"),
         boost: 10
     },                {
         label: "table",
@@ -10129,15 +10129,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">telemetry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Resource</span> <span class=\"fn-param\">$resource</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TracerProvider</span> <span class=\"fn-param\">$tracerProvider</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MeterProvider</span> <span class=\"fn-param\">$meterProvider</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LoggerProvider</span> <span class=\"fn-param\">$loggerProvider</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Telemetry</span>
+                    <span class=\"fn-name\">telemetry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Resource</span> <span class=\"fn-param\">$resource</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TracerProvider</span> <span class=\"fn-param\">$tracerProvider</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MeterProvider</span> <span class=\"fn-param\">$meterProvider</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LoggerProvider</span> <span class=\"fn-param\">$loggerProvider</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Telemetry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a new Telemetry instance with the given providers.<br>If providers are not specified, void providers (no-op) are used.<br>@param resource $resource The resource describing the entity producing telemetry<br>@param null|TracerProvider $tracerProvider The tracer provider (null for void/disabled)<br>@param null|MeterProvider $meterProvider The meter provider (null for void/disabled)<br>@param null|LoggerProvider $loggerProvider The logger provider (null for void/disabled)
+                    Create a new Telemetry instance with the given providers.<br>If providers are not specified, void providers (no-op) are used.<br>@param resource $resource The resource describing the entity producing telemetry<br>@param null|TracerProvider $tracerProvider The tracer provider (null for void/disabled)<br>@param null|MeterProvider $meterProvider The meter provider (null for void/disabled)<br>@param null|LoggerProvider $loggerProvider The logger provider (null for void/disabled)<br>@param ErrorHandler $errorHandler Handler propagated to default void providers when explicit ones are not supplied
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\telemetry(" + "$" + "{" + "1:resource" + "}" + ", " + "$" + "{" + "2:tracerProvider" + "}" + ", " + "$" + "{" + "3:meterProvider" + "}" + ", " + "$" + "{" + "4:loggerProvider" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\telemetry(" + "$" + "{" + "1:resource" + "}" + ", " + "$" + "{" + "2:tracerProvider" + "}" + ", " + "$" + "{" + "3:meterProvider" + "}" + ", " + "$" + "{" + "4:loggerProvider" + "}" + ", " + "$" + "{" + "5:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "telemetry_handler",
@@ -10147,7 +10147,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">telemetry_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Logger</span> <span class=\"fn-param\">$logger</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogRecordConverter</span> <span class=\"fn-param\">$converter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Monolog\\Telemetry\\LogRecordConverter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Level</span> <span class=\"fn-param\">$level</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Monolog\\Level::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$bubble</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryHandler</span>
+                    <span class=\"fn-name\">telemetry_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Logger</span> <span class=\"fn-param\">$logger</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogRecordConverter</span> <span class=\"fn-param\">$converter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Bridge\\Monolog\\Telemetry\\LogRecordConverter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Level</span> <span class=\"fn-param\">$level</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Monolog\\Level::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$bubble</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TelemetryHandler</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Create a TelemetryHandler for forwarding Monolog logs to Flow Telemetry.<br>@param Logger $logger The Flow Telemetry logger to forward logs to<br>@param LogRecordConverter $converter Converter to transform Monolog LogRecord to Telemetry LogRecord<br>@param Level $level The minimum logging level at which this handler will be triggered<br>@param bool $bubble Whether messages handled by this handler should bubble up to other handlers<br>Example usage:<br>\`\`\`php<br>use Monolog\\Logger as MonologLogger;<br>use function Flow\\Bridge\\Monolog\\Telemetry\\DSL\\telemetry_handler;<br>use function Flow\\Telemetry\\DSL\\telemetry;<br>$telemetry = telemetry();<br>$logger = $telemetry->logger(\'my-app\');<br>$monolog = new MonologLogger(\'channel\');<br>$monolog->pushHandler(telemetry_handler($logger));<br>$monolog->info(\'User logged in\', [\'user_id\' => 123]);<br>// → Forwarded to Flow Telemetry with INFO severity<br>\`\`\`<br>Example with custom converter:<br>\`\`\`php<br>$converter = log_record_converter(<br>    severityMapper: severity_mapper([<br>        Level::Debug->value => Severity::TRACE,<br>    ])<br>);<br>$monolog->pushHandler(telemetry_handler($logger, $converter));<br>\`\`\`
@@ -10155,7 +10155,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\telemetry_handler(" + "$" + "{" + "1:logger" + "}" + ", " + "$" + "{" + "2:converter" + "}" + ", " + "$" + "{" + "3:level" + "}" + ", " + "$" + "{" + "4:bubble" + "}" + ")"),
+        apply: snippet("\\Flow\\Bridge\\Monolog\\Telemetry\\DSL\\telemetry_handler(" + "$" + "{" + "1:logger" + "}" + ", " + "$" + "{" + "2:converter" + "}" + ", " + "$" + "{" + "3:level" + "}" + ", " + "$" + "{" + "4:bubble" + "}" + ", " + "$" + "{" + "5:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "telemetry_options",
@@ -10798,15 +10798,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SpanLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\SpanLimits::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
+                    <span class=\"fn-name\">tracer_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ClockInterface</span> <span class=\"fn-param\">$clock</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ContextStorage</span> <span class=\"fn-param\">$contextStorage</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$sampler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SpanLimits</span> <span class=\"fn-param\">$limits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\SpanLimits::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ErrorHandler</span> <span class=\"fn-param\">$errorHandler</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\ErrorLogHandler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TracerProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a TracerProvider.<br>Creates a provider that uses a SpanProcessor for processing spans.<br>For void/disabled tracing, pass void_processor().<br>For memory-based testing, pass memory_processor() with exporters.<br>@param SpanProcessor $processor The processor for spans<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for context propagation<br>@param Sampler $sampler Sampling strategy for spans<br>@param SpanLimits $limits Limits for span attributes, events, and links
+                    Create a TracerProvider.<br>@param SpanProcessor $processor The processor for spans<br>@param ClockInterface $clock The clock for timestamps<br>@param ContextStorage $contextStorage Storage for context propagation<br>@param Sampler $sampler Sampling strategy for spans<br>@param SpanLimits $limits Limits for span attributes, events, and links<br>@param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\tracer_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:sampler" + "}" + ", " + "$" + "{" + "5:limits" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\tracer_provider(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:clock" + "}" + ", " + "$" + "{" + "3:contextStorage" + "}" + ", " + "$" + "{" + "4:sampler" + "}" + ", " + "$" + "{" + "5:limits" + "}" + ", " + "$" + "{" + "6:errorHandler" + "}" + ")"),
         boost: 10
     },                {
         label: "trace_based_exemplar_filter",
@@ -10819,7 +10819,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">trace_based_exemplar_filter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TraceBasedExemplarFilter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a TraceBasedExemplarFilter.<br>Records exemplars only when the span is sampled (has SAMPLED trace flag).<br>This is the default filter, balancing exemplar collection with performance.
+                    Create a TraceBasedExemplarFilter.
                 </div>
                             `
             return div
@@ -11653,6 +11653,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\type_xml_element()"),
+        boost: 10
+    },                {
+        label: "udp_syslog_error_handler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">udp_syslog_error_handler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$host</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$port</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">514</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$ident</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;flow-telemetry&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SyslogFacility</span> <span class=\"fn-param\">$facility</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\SyslogFacility::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SyslogSeverity</span> <span class=\"fn-param\">$severity</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\ErrorHandler\\SyslogSeverity::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UdpSyslogHandler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a UdpSyslogHandler. Sends RFC 5424-style syslog frames over UDP.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\udp_syslog_error_handler(" + "$" + "{" + "1:host" + "}" + ", " + "$" + "{" + "2:port" + "}" + ", " + "$" + "{" + "3:ident" + "}" + ", " + "$" + "{" + "4:facility" + "}" + ", " + "$" + "{" + "5:severity" + "}" + ")"),
         boost: 10
     },                {
         label: "ulid",
@@ -12576,22 +12594,22 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\view_dependency_order()"),
         boost: 10
     },                {
-        label: "void_log_exporter",
+        label: "void_exporter",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">void_log_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidLogExporter</span>
+                    <span class=\"fn-name\">void_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidExporter</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a VoidLogExporter.<br>No-op log exporter that discards all data.<br>Use this when telemetry export is disabled to minimize overhead.
+                    Create a VoidExporter.<br>No-op unified exporter that discards logs, metrics, and spans.
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\void_log_exporter()"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\void_exporter()"),
         boost: 10
     },                {
         label: "void_log_processor",
@@ -12604,30 +12622,12 @@ const dslFunctions = [
                     <span class=\"fn-name\">void_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidLogProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a VoidLogProcessor.<br>No-op log processor that discards all data.<br>Use this when logging is disabled to minimize overhead.
+                    Create a VoidLogProcessor.<br>No-op log processor that discards all data.
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\void_log_processor()"),
-        boost: 10
-    },                {
-        label: "void_metric_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">void_metric_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidMetricExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a VoidMetricExporter.<br>No-op metric exporter that discards all data.<br>Use this when telemetry export is disabled to minimize overhead.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\void_metric_exporter()"),
         boost: 10
     },                {
         label: "void_metric_processor",
@@ -12640,30 +12640,12 @@ const dslFunctions = [
                     <span class=\"fn-name\">void_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidMetricProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a VoidMetricProcessor.<br>No-op metric processor that discards all data.<br>Use this when metrics collection is disabled to minimize overhead.
+                    Create a VoidMetricProcessor.<br>No-op metric processor that discards all data.
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\void_metric_processor()"),
-        boost: 10
-    },                {
-        label: "void_span_exporter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">void_span_exporter</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidSpanExporter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Create a VoidSpanExporter.<br>No-op span exporter that discards all data.<br>Use this when telemetry export is disabled to minimize overhead.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\void_span_exporter()"),
         boost: 10
     },                {
         label: "void_span_processor",
@@ -12676,7 +12658,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">void_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">VoidSpanProcessor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a VoidSpanProcessor.<br>No-op span processor that discards all data.<br>Use this when tracing is disabled to minimize overhead.
+                    Create a VoidSpanProcessor.<br>No-op span processor that discards all data.
                 </div>
                             `
             return div
@@ -12694,7 +12676,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">w3c_baggage</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">W3CBaggage</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a W3CBaggage propagator.<br>Implements W3C Baggage specification for propagating application-specific<br>key-value pairs using the baggage header.
+                    Create a W3CBaggage propagator.
                 </div>
                             `
             return div
@@ -12712,7 +12694,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">w3c_trace_context</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">W3CTraceContext</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a W3CTraceContext propagator.<br>Implements W3C Trace Context specification for propagating trace context<br>using traceparent and tracestate headers.
+                    Create a W3CTraceContext propagator.
                 </div>
                             `
             return div
