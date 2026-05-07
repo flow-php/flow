@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
-use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
-use Flow\Telemetry\Serializer\Serializer;
+use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Telemetry\Signal\{SignalType, Signals};
 
 /**
@@ -25,14 +24,9 @@ final class CurlTransport implements Transport
     /** @var array<int, \CurlHandle> */
     private array $pendingHandles = [];
 
-    /**
-     * @param string $endpoint Base OTLP HTTP endpoint URL (e.g., 'http://localhost:4318')
-     * @param Serializer $serializer Serializer for encoding telemetry data
-     * @param CurlTransportOptions $options Transport configuration options
-     */
     public function __construct(
         private readonly string $endpoint,
-        private readonly Serializer $serializer,
+        private readonly JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
         private readonly CurlTransportOptions $options = new CurlTransportOptions(),
     ) {
         if (!\extension_loaded('curl')) {
@@ -86,7 +80,10 @@ final class CurlTransport implements Transport
     private function buildHeaders() : array
     {
         $headers = [
-            'Content-Type: ' . ($this->serializer instanceof JsonSerializer ? 'application/json' : 'application/x-protobuf'),
+            'Content-Type: ' . match (true) {
+                $this->serializer instanceof JsonSerializer => 'application/json',
+                $this->serializer instanceof ProtobufSerializer => 'application/x-protobuf',
+            },
         ];
 
         foreach ($this->options->headers() as $name => $value) {

@@ -85,7 +85,6 @@ final class TelemetryFactory
     {
         return otlp_grpc_transport(
             endpoint: $config->endpoint,
-            serializer: otlp_protobuf_serializer(),
             headers: $config->headers,
             insecure: $config->insecure,
         );

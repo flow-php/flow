@@ -7,7 +7,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\{Exemplar, Metric, MetricType};
-use Flow\Telemetry\Serializer\Serializer;
 use Flow\Telemetry\Tracer\{Span, SpanEvent, SpanKind, SpanLink, SpanStatusCode};
 
 /**
@@ -17,7 +16,7 @@ use Flow\Telemetry\Tracer\{Span, SpanEvent, SpanKind, SpanLink, SpanStatusCode};
  *
  * @see https://opentelemetry.io/docs/specs/otlp/#otlphttp-request
  */
-final class JsonSerializer implements Serializer
+final class JsonSerializer
 {
     /**
      * @param array<LogEntry> $entries

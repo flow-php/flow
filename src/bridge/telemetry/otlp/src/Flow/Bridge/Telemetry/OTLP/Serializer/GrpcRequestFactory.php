@@ -12,12 +12,12 @@ use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
 use Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceRequest;
 
 /**
- * Interface for gRPC serializers that create OTLP protobuf request objects.
+ * Builds OTLP protobuf request messages for gRPC transmission.
  *
- * Unlike the Serializer interface which returns string payloads,
- * this interface returns protobuf request objects for direct gRPC transmission.
+ * Implementations return populated protobuf request objects that the gRPC
+ * transport hands directly to the generated service stubs.
  */
-interface GrpcSerializer
+interface GrpcRequestFactory
 {
     /**
      * Create an ExportLogsServiceRequest for gRPC transport.

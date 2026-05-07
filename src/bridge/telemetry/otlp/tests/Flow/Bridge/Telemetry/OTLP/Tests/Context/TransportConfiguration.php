@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_grpc_transport, otlp_json_serializer, otlp_protobuf_serializer};
-use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Google\Protobuf\Internal\Message;
 
@@ -55,35 +54,26 @@ final readonly class TransportConfiguration
 
     public function createTransport(OtelContext $ctx) : Transport
     {
-        $serializer = match ($this->serializer) {
-            'json' => otlp_json_serializer(),
-            'protobuf' => otlp_protobuf_serializer(),
-            default => throw new \InvalidArgumentException(\sprintf('Unknown serializer: %s', $this->serializer)),
-        };
-
         return match ($this->transport) {
             'curl' => otlp_curl_transport(
                 $ctx->httpEndpoint(),
-                $serializer,
+                match ($this->serializer) {
+                    'json' => otlp_json_serializer(),
+                    'protobuf' => otlp_protobuf_serializer(),
+                    default => throw new \InvalidArgumentException(\sprintf('Unknown serializer: %s', $this->serializer)),
+                },
             ),
-            'grpc' => otlp_grpc_transport(
-                $ctx->grpcEndpoint(),
-                $serializer instanceof ProtobufSerializer ? $serializer : otlp_protobuf_serializer(),
-            ),
+            'grpc' => otlp_grpc_transport($ctx->grpcEndpoint()),
             default => throw new \InvalidArgumentException(\sprintf('Unknown transport: %s', $this->transport)),
         };
     }
 
     public function isAvailable() : bool
     {
-        if ($this->transport === 'grpc' && !\extension_loaded('grpc')) {
-            return false;
+        if ($this->transport === 'grpc') {
+            return \extension_loaded('grpc') && \class_exists(Message::class);
         }
 
-        if ($this->serializer === 'protobuf' && !\class_exists(Message::class)) {
-            return false;
-        }
-
-        return true;
+        return $this->serializer !== 'protobuf' || \class_exists(Message::class);
     }
 }

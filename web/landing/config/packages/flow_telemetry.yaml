@@ -9,8 +9,7 @@ flow_telemetry:
                     type: curl
                     endpoint: 'http://127.0.0.1:4318'
                     timeout: 30
-                    serializer:
-                        type: json
+                    encoding: json
     tracer_provider:
         sampler:
             type: always_on

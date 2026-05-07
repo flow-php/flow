@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 use const Grpc\{STATUS_ABORTED, STATUS_ALREADY_EXISTS, STATUS_CANCELLED, STATUS_DATA_LOSS, STATUS_DEADLINE_EXCEEDED, STATUS_FAILED_PRECONDITION, STATUS_INTERNAL, STATUS_INVALID_ARGUMENT, STATUS_NOT_FOUND, STATUS_OK, STATUS_OUT_OF_RANGE, STATUS_PERMISSION_DENIED, STATUS_RESOURCE_EXHAUSTED, STATUS_UNAUTHENTICATED, STATUS_UNAVAILABLE, STATUS_UNIMPLEMENTED, STATUS_UNKNOWN};
-use Flow\Bridge\Telemetry\OTLP\Serializer\GrpcSerializer;
+use Flow\Bridge\Telemetry\OTLP\Serializer\{GrpcRequestFactory, ProtobufSerializer};
 use Flow\Telemetry\Signal\{SignalType, Signals};
 use Google\Protobuf\Internal\Message;
 use Grpc\{ChannelCredentials, UnaryCall};
@@ -31,17 +31,17 @@ final class GrpcTransport implements Transport
     /** @var list<UnaryCall<covariant Message>> */
     private array $pendingCalls = [];
 
+    private readonly GrpcRequestFactory $requestFactory;
+
     private ?TraceServiceClient $tracesClient = null;
 
     /**
      * @param string $endpoint gRPC endpoint (e.g., 'localhost:4317')
-     * @param GrpcSerializer $serializer gRPC serializer for creating request messages
      * @param array<string, string> $headers Additional headers (metadata) to include in requests
      * @param bool $insecure Whether to use insecure channel credentials (default true for local dev)
      */
     public function __construct(
         private readonly string $endpoint,
-        private readonly GrpcSerializer $serializer,
         private readonly array $headers = [],
         private readonly bool $insecure = true,
     ) {
@@ -51,6 +51,8 @@ final class GrpcTransport implements Transport
                 . 'Install it via: pecl install grpc'
             );
         }
+
+        $this->requestFactory = new ProtobufSerializer();
     }
 
     public function send(Signals $signal) : void
@@ -61,15 +63,15 @@ final class GrpcTransport implements Transport
 
         $this->pendingCalls[] = match ($signal->type) {
             SignalType::LOGS => $this->getLogsClient()->Export(
-                $this->serializer->createLogsRequest($signal->allLogs()),
+                $this->requestFactory->createLogsRequest($signal->allLogs()),
                 $this->buildMetadata(),
             ),
             SignalType::METRICS => $this->getMetricsClient()->Export(
-                $this->serializer->createMetricsRequest($signal->allMetrics()),
+                $this->requestFactory->createMetricsRequest($signal->allMetrics()),
                 $this->buildMetadata(),
             ),
             SignalType::TRACES => $this->getTracesClient()->Export(
-                $this->serializer->createSpansRequest($signal->allSpans()),
+                $this->requestFactory->createSpansRequest($signal->allSpans()),
                 $this->buildMetadata(),
             ),
         };

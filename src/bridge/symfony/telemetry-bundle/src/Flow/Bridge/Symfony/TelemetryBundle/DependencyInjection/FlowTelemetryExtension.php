@@ -114,8 +114,6 @@ final class FlowTelemetryExtension extends Extension
             return $transportServiceId;
         }
 
-        $serializerServiceId = $this->buildOTLPSerializer($transportConfig['serializer'] ?? [], $transportServiceId, $container);
-
         switch ($type) {
             case 'curl':
                 $optionsServiceId = $transportServiceId . '.options';
@@ -160,9 +158,14 @@ final class FlowTelemetryExtension extends Extension
 
                 $container->setDefinition($optionsServiceId, $optionsDefinition);
 
+                $serializerClass = match ($transportConfig['encoding'] ?? 'json') {
+                    'protobuf' => ProtobufSerializer::class,
+                    default => JsonSerializer::class,
+                };
+
                 $definition = new Definition(CurlTransport::class);
                 $definition->setArgument(0, $endpoint);
-                $definition->setArgument(1, new Reference($serializerServiceId));
+                $definition->setArgument(1, new Definition($serializerClass));
                 $definition->setArgument(2, new Reference($optionsServiceId));
                 $container->setDefinition($transportServiceId, $definition);
 
@@ -171,9 +174,8 @@ final class FlowTelemetryExtension extends Extension
             case 'grpc':
                 $definition = new Definition(GrpcTransport::class);
                 $definition->setArgument(0, $endpoint);
-                $definition->setArgument(1, new Reference($serializerServiceId));
-                $definition->setArgument(2, $transportConfig['headers'] ?? []);
-                $definition->setArgument(3, $transportConfig['insecure'] ?? true);
+                $definition->setArgument(1, $transportConfig['headers'] ?? []);
+                $definition->setArgument(2, $transportConfig['insecure'] ?? true);
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;
@@ -496,44 +498,6 @@ final class FlowTelemetryExtension extends Extension
         }
 
         return $processorServiceId;
-    }
-
-    /**
-     * @param array{type?: string, service_id?: string} $config
-     */
-    private function buildOTLPSerializer(array $config, string $serviceIdPrefix, ContainerBuilder $container) : string
-    {
-        $serializerServiceId = $serviceIdPrefix . '.serializer';
-        $type = $config['type'] ?? 'json';
-
-        switch ($type) {
-            case 'service':
-                $customServiceId = $config['service_id'] ?? null;
-
-                if ($customServiceId === null) {
-                    throw new RuntimeException('service_id is required when serializer type is "service"');
-                }
-                $container->setAlias($serializerServiceId, $customServiceId);
-
-                break;
-
-            case 'json':
-                $definition = new Definition(JsonSerializer::class);
-                $container->setDefinition($serializerServiceId, $definition);
-
-                break;
-
-            case 'protobuf':
-                $definition = new Definition(ProtobufSerializer::class);
-                $container->setDefinition($serializerServiceId, $definition);
-
-                break;
-
-            default:
-                throw new RuntimeException(\sprintf('Unknown OTLP serializer type: %s', (string) $type));
-        }
-
-        return $serializerServiceId;
     }
 
     /**

@@ -171,6 +171,27 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_grpc_transport_rejects_encoding_field() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('"encoding" parameter is not supported when transport.type is "grpc"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_grpc' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'grpc',
+                            'endpoint' => 'localhost:4317',
+                            'encoding' => 'json',
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
     public function test_grpc_transport_with_timeout_throws() : void
     {
         $this->expectException(InvalidConfigurationException::class);
@@ -202,7 +223,7 @@ final class ConfigurationTest extends TestCase
                         'transport' => [
                             'type' => 'curl',
                             'endpoint' => 'http://localhost:4318',
-                            'serializer' => ['type' => 'protobuf'],
+                            'encoding' => 'protobuf',
                         ],
                     ],
                 ],
@@ -214,7 +235,7 @@ final class ConfigurationTest extends TestCase
 
         self::assertSame('curl', $config['exporters']['otlp']['otlp']['transport']['type']);
         self::assertSame('http://localhost:4318', $config['exporters']['otlp']['otlp']['transport']['endpoint']);
-        self::assertSame('protobuf', $config['exporters']['otlp']['otlp']['transport']['serializer']['type']);
+        self::assertSame('protobuf', $config['exporters']['otlp']['otlp']['transport']['encoding']);
         self::assertSame('otlp', $config['tracer_provider']['processor']['exporter']);
     }
 
@@ -387,6 +408,27 @@ final class ConfigurationTest extends TestCase
         self::assertTrue($transport['create_directories']);
     }
 
+    public function test_stream_transport_rejects_encoding_field() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('"encoding" parameter is not supported when transport.type is "stream"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_stream' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'stream',
+                            'endpoint' => '/var/log/otel/logs.jsonl',
+                            'encoding' => 'protobuf',
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
     #[TestWith(['timeout', 30])]
     #[TestWith(['connect_timeout', 5])]
     #[TestWith(['compression', true])]
@@ -407,27 +449,6 @@ final class ConfigurationTest extends TestCase
                             'type' => 'stream',
                             'endpoint' => '/var/log/otel/logs.jsonl',
                             $key => $value,
-                        ],
-                    ],
-                ],
-            ],
-        ]]);
-    }
-
-    public function test_stream_transport_rejects_serializer_block() : void
-    {
-        $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('"serializer" parameter is not supported when transport.type is "stream"');
-
-        (new Processor())->processConfiguration(new Configuration(), [[
-            'resource' => [],
-            'exporters' => [
-                'otlp_stream' => [
-                    'otlp' => [
-                        'transport' => [
-                            'type' => 'stream',
-                            'endpoint' => '/var/log/otel/logs.jsonl',
-                            'serializer' => ['type' => 'protobuf'],
                         ],
                     ],
                 ],

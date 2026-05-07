@@ -218,7 +218,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                                 'transport' => [
                                     'type' => 'curl',
                                     'endpoint' => 'http://localhost:4318',
-                                    'serializer' => ['type' => 'protobuf'],
+                                    'encoding' => 'protobuf',
                                 ],
                             ],
                         ],
@@ -370,7 +370,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                                 'transport' => [
                                     'type' => 'curl',
                                     'endpoint' => 'http://localhost:4318',
-                                    'serializer' => ['type' => 'protobuf'],
+                                    'encoding' => 'protobuf',
                                 ],
                             ],
                         ],
@@ -720,7 +720,6 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                                     'type' => 'grpc',
                                     'endpoint' => 'http://traces:4317',
                                     'insecure' => true,
-                                    'serializer' => ['type' => 'protobuf'],
                                 ],
                             ],
                         ],

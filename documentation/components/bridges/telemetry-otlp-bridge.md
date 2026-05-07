@@ -62,25 +62,19 @@ $transport = otlp_curl_transport(
 ### gRPC Transport
 
 The gRPC transport uses the native gRPC protocol for high-performance binary communication. It requires the `ext-grpc`
-PHP extension.
+PHP extension. OTLP/gRPC mandates Protobuf, so the transport instantiates the protobuf request factory internally —
+no serializer parameter.
 
 ```php
 <?php
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\{
-    otlp_grpc_transport,
-    otlp_protobuf_serializer,
-};
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
 
-$transport = otlp_grpc_transport(
-    endpoint: 'localhost:4317',
-    serializer: otlp_protobuf_serializer(),
-);
+$transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 
 // With authentication
 $transport = otlp_grpc_transport(
     endpoint: 'otlp.example.com:4317',
-    serializer: otlp_protobuf_serializer(),
     headers: [
         'Authorization' => 'Bearer your-token',
     ],
@@ -125,38 +119,31 @@ One transport instance writes to one destination. To split logs, metrics, and tr
 build three transports and wire them to three exporters. To keep all signals in one file (the OpenTelemetry
 Collector handles mixed JSONL just fine), reuse the same destination across exporters.
 
-## Serializers
+## Wire Encoding
 
-The bridge provides two serialization formats for OTLP data.
+The OTLP spec defines fixed encodings per transport. The bridge enforces them.
 
-| Serializer   | Format | Size    | Readability    | Dependencies      |
-|--------------|--------|---------|----------------|-------------------|
-| **JSON**     | Text   | Larger  | Human-readable | None              |
-| **Protobuf** | Binary | Smaller | Not readable   | `google/protobuf` |
+| Transport | JSON | Protobuf | Notes                                                                |
+|-----------|:----:|:--------:|----------------------------------------------------------------------|
+| Curl      | ✅   | ✅       | OTLP/HTTP supports both; pick a serializer when constructing the transport |
+| gRPC      | ❌   | ✅       | OTLP/gRPC mandates Protobuf; the transport builds it internally      |
+| Stream    | ✅   | ❌       | OTLP File Exporter spec only supports JSON                           |
 
-### JSON Serializer
-
-The default serializer that produces human-readable JSON. Best for development and debugging.
-
-```php
-<?php
-
-use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
-
-$serializer = otlp_json_serializer();
-```
-
-### Protobuf Serializer
-
-Binary serialization for smaller payloads and better performance. Recommended for production.
+For curl, pass `otlp_json_serializer()` (default) or `otlp_protobuf_serializer()`:
 
 ```php
 <?php
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_protobuf_serializer;
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_json_serializer, otlp_protobuf_serializer};
 
-$serializer = otlp_protobuf_serializer();
+// JSON over HTTP — default; great for development and debugging
+$transport = otlp_curl_transport('http://localhost:4318');
+
+// Protobuf over HTTP — smaller payloads; recommended for production
+$transport = otlp_curl_transport('http://localhost:4318', otlp_protobuf_serializer());
 ```
+
+The Protobuf serializer requires the `google/protobuf` package.
 
 ## Complete Setup
 

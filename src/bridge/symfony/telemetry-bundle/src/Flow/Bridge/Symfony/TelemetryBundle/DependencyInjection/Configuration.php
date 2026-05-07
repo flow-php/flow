@@ -739,12 +739,20 @@ final class Configuration implements ConfigurationInterface
                                 ));
                             }
                         }
+                    }
 
-                        if (\array_key_exists('serializer', $v)) {
-                            throw new InvalidConfigurationException(
-                                'The "serializer" parameter is not supported when transport.type is "stream"; only JSON encoding is allowed by the OTLP File Exporter spec.',
-                            );
-                        }
+                    $encodingRejection = match (\is_array($v) ? ($v['type'] ?? null) : null) {
+                        'stream' => 'only JSON encoding is allowed by the OTLP File Exporter spec',
+                        'grpc' => 'OTLP/gRPC mandates Protobuf encoding',
+                        default => null,
+                    };
+
+                    if ($encodingRejection !== null && \is_array($v) && \array_key_exists('encoding', $v)) {
+                        throw new InvalidConfigurationException(\sprintf(
+                            'The "encoding" parameter is not supported when transport.type is "%s"; %s.',
+                            $v['type'],
+                            $encodingRejection,
+                        ));
                     }
 
                     return $v;
@@ -843,19 +851,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('Custom transport service ID (only for type: service)')
                     ->defaultNull()
                 ->end()
-                ->arrayNode('serializer')
-                    ->info('Serializer configuration')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->enumNode('type')
-                            ->values(['json', 'protobuf', 'service'])
-                            ->defaultValue('json')
-                        ->end()
-                        ->scalarNode('service_id')
-                            ->info('Custom serializer service ID (only for type: service)')
-                            ->defaultNull()
-                        ->end()
-                    ->end()
+                ->enumNode('encoding')
+                    ->info('OTLP wire encoding (curl only); JSON or Protobuf as defined by the OTLP/HTTP spec')
+                    ->values(['json', 'protobuf'])
+                    ->defaultValue('json')
                 ->end()
             ->end();
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
-use Flow\Bridge\Telemetry\OTLP\Serializer\{GrpcSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{GrpcTransport, TransportException};
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\SpanMother;
@@ -24,7 +23,7 @@ final class GrpcTransportTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('grpc PHP extension is required');
 
-        new GrpcTransport('localhost:4317', $this->createMock(GrpcSerializer::class));
+        new GrpcTransport('localhost:4317');
     }
 
     #[RequiresPhpExtension('grpc')]
@@ -34,7 +33,6 @@ final class GrpcTransportTest extends TestCase
 
         $transport = new GrpcTransport(
             endpoint: 'localhost:4317',
-            serializer: new ProtobufSerializer(),
             headers: ['Authorization' => 'Bearer token'],
         );
 
@@ -46,7 +44,7 @@ final class GrpcTransportTest extends TestCase
     {
         $this->skipIfGrpcDependenciesNotAvailable();
 
-        $transport = new GrpcTransport('localhost:4317', new ProtobufSerializer());
+        $transport = new GrpcTransport('localhost:4317');
 
         self::assertInstanceOf(GrpcTransport::class, $transport);
     }
@@ -58,7 +56,6 @@ final class GrpcTransportTest extends TestCase
 
         $transport = new GrpcTransport(
             endpoint: 'localhost:4317',
-            serializer: new ProtobufSerializer(),
             insecure: false,
         );
 
@@ -70,7 +67,7 @@ final class GrpcTransportTest extends TestCase
     {
         $this->skipIfGrpcDependenciesNotAvailable();
 
-        $transport = new GrpcTransport('localhost:4317', new ProtobufSerializer());
+        $transport = new GrpcTransport('localhost:4317');
         $transport->shutdown();
 
         $this->expectException(TransportException::class);
@@ -84,10 +81,7 @@ final class GrpcTransportTest extends TestCase
     {
         $this->skipIfGrpcDependenciesNotAvailable();
 
-        $transport = new GrpcTransport(
-            endpoint: '127.0.0.1:1',
-            serializer: new ProtobufSerializer(),
-        );
+        $transport = new GrpcTransport(endpoint: '127.0.0.1:1');
 
         $transport->send(Signals::traces([SpanMother::withName('span-a')]));
         $transport->send(Signals::traces([SpanMother::withName('span-b')]));
@@ -103,7 +97,7 @@ final class GrpcTransportTest extends TestCase
     {
         $this->skipIfGrpcDependenciesNotAvailable();
 
-        $transport = new GrpcTransport('localhost:4317', new ProtobufSerializer());
+        $transport = new GrpcTransport('localhost:4317');
 
         $transport->shutdown();
         $transport->shutdown();

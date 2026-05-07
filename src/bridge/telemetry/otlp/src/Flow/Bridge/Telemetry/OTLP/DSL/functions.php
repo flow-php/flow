@@ -13,7 +13,6 @@ use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Logger\{LogProcessor, LoggerProvider};
 use Flow\Telemetry\Meter\{AggregationTemporality, MetricProcessor};
 use Flow\Telemetry\Meter\MeterProvider;
-use Flow\Telemetry\Serializer\Serializer;
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
 use Flow\Telemetry\Tracer\{SpanProcessor, TracerProvider};
 use Psr\Clock\ClockInterface;
@@ -61,25 +60,24 @@ function otlp_protobuf_serializer() : ProtobufSerializer
  * Create a gRPC transport for OTLP endpoints.
  *
  * Creates a GrpcTransport configured to send telemetry data to an OTLP-compatible
- * endpoint using gRPC protocol with Protobuf serialization.
+ * endpoint using gRPC protocol with Protobuf serialization. OTLP/gRPC mandates
+ * Protobuf, so the serializer is built internally and not configurable.
  *
  * Requires:
  * - ext-grpc PHP extension
  * - google/protobuf package
  *
  * @param string $endpoint gRPC endpoint (e.g., 'localhost:4317')
- * @param ProtobufSerializer $serializer Protobuf serializer for encoding telemetry data
  * @param array<string, string> $headers Additional headers (metadata) to include in requests
  * @param bool $insecure Whether to use insecure channel credentials (default true for local dev)
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
 function otlp_grpc_transport(
     string $endpoint,
-    ProtobufSerializer $serializer,
     array $headers = [],
     bool $insecure = true,
 ) : Transport {
-    return new GrpcTransport($endpoint, $serializer, $headers, $insecure);
+    return new GrpcTransport($endpoint, $headers, $insecure);
 }
 
 /**
@@ -95,18 +93,19 @@ function otlp_curl_options() : CurlTransportOptions
  * Create an async curl transport for OTLP endpoints.
  *
  * Creates a CurlTransport that uses curl_multi for non-blocking I/O.
- * Requests are queued and executed asynchronously.
+ * Requests are queued and executed asynchronously. OTLP/HTTP allows JSON
+ * or Protobuf encoding; defaults to JSON.
  *
  * Requires: ext-curl PHP extension
  *
  * @param string $endpoint OTLP endpoint URL (e.g., 'http://localhost:4318')
- * @param Serializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)
+ * @param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)
  * @param CurlTransportOptions $options Transport configuration options
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
 function otlp_curl_transport(
     string $endpoint,
-    Serializer $serializer,
+    JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
     CurlTransportOptions $options = new CurlTransportOptions(),
 ) : Transport {
     return new CurlTransport($endpoint, $serializer, $options);

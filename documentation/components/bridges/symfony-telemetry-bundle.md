@@ -300,7 +300,7 @@ flow_telemetry:
         transport:
           type: curl
           endpoint: 'http://otel-collector:4318'
-          serializer: { type: protobuf }
+          encoding: protobuf
 ```
 
 | Sub-block | Options                                | Description                              |
@@ -517,7 +517,7 @@ exporters:
       transport:
         type: curl
         endpoint: 'http://otel-collector:4318'
-        serializer: { type: protobuf }
+        encoding: protobuf
 ```
 
 #### service
@@ -554,7 +554,7 @@ Inside `exporters.<name>.otlp.transport`. Required for the `otlp` sub-block.
 | `ssl_key_path`     | string  | `null`  | SSL key path                |
 | `ca_info_path`     | string  | `null`  | CA info path                |
 | `headers`          | object  | `{}`    | Additional HTTP headers     |
-| `serializer`       | object  | `json`  | OTLP serializer config      |
+| `encoding`         | enum    | `json`  | OTLP/HTTP wire encoding: `json` or `protobuf` |
 
 ```yaml
 exporters:
@@ -567,12 +567,12 @@ exporters:
         compression: true
         headers:
           Authorization: 'Bearer token'
-        serializer: { type: protobuf }
+        encoding: protobuf
 ```
 
 #### grpc
 
-gRPC transport (`timeout` is rejected by validation).
+gRPC transport (`timeout` and `encoding` are rejected by validation — OTLP/gRPC mandates Protobuf, built internally).
 
 | Option     | Type    | Default | Description                |
 |------------|---------|---------|----------------------------|
@@ -588,15 +588,14 @@ exporters:
         type: grpc
         endpoint: 'http://otel-collector:4317'
         insecure: false
-        serializer: { type: protobuf }
 ```
 
 #### stream
 
 OTLP File Exporter ([spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/)). Writes one JSON Line
 per batch to the configured destination — either an absolute file path or a `php://` stream wrapper — with
-`LOCK_EX` around each `fwrite`. Only JSON encoding is supported per the spec; the `serializer` block and
-HTTP-specific options (`timeout`, `ssl_*`, `headers`, etc.) are rejected at config time.
+`LOCK_EX` around each `fwrite`. Only JSON encoding is supported per the spec; `encoding` and HTTP-specific options
+(`timeout`, `ssl_*`, `headers`, etc.) are rejected at config time.
 
 | Option                | Type    | Default  | Description                                                                  |
 |-----------------------|---------|----------|------------------------------------------------------------------------------|
@@ -637,22 +636,6 @@ exporters:
         service_id: 'app.custom_transport'
 ```
 
-### OTLP Serializer Configuration
-
-Inside `exporters.<name>.otlp.transport.serializer`. Choices: `json` (default), `protobuf`, `service`.
-
-```yaml
-exporters:
-  otlp:
-    otlp:
-      transport:
-        type: curl
-        endpoint: 'http://otel-collector:4318'
-        serializer:
-          type: service
-          service_id: 'app.custom_serializer'
-```
-
 ### Multiple OTLP backends
 
 Each signal can target its own collector by declaring multiple named exporters and referencing them per provider.
@@ -666,19 +649,18 @@ flow_telemetry:
           type: grpc
           endpoint: 'http://traces:4317'
           insecure: false
-          serializer: { type: protobuf }
     otlp_metrics:
       otlp:
         transport:
           type: curl
           endpoint: 'http://metrics:4318'
-          serializer: { type: protobuf }
+          encoding: protobuf
     otlp_logs:
       otlp:
         transport:
           type: curl
           endpoint: 'http://logs:4318'
-          serializer: { type: json }
+          encoding: json
 
   tracer_provider:
     processor: { type: batching, exporter: otlp_traces,  batch_size: 1024 }
@@ -703,7 +685,7 @@ flow_telemetry:
       transport:
         type: curl
         endpoint: 'http://otel-collector:4318'
-        serializer: { type: protobuf }
+        encoding: protobuf
     custom:
       type: service
       service_id: 'app.x'
@@ -720,7 +702,7 @@ flow_telemetry:
         transport:
           type: curl
           endpoint: 'http://otel-collector:4318'
-          serializer: { type: protobuf }
+          encoding: protobuf
     custom:
       service:
         id: 'app.x'
@@ -1065,19 +1047,19 @@ flow_telemetry:
           timeout: 30
           headers:
             Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
-          serializer: { type: protobuf }
+          encoding: protobuf
     otlp_metrics:
       otlp:
         transport:
           type: curl
           endpoint: '%env(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)%'
-          serializer: { type: protobuf }
+          encoding: protobuf
     otlp_logs:
       otlp:
         transport:
           type: curl
           endpoint: '%env(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)%'
-          serializer: { type: protobuf }
+          encoding: protobuf
 
   tracer_provider:
     sampler:

@@ -13,6 +13,11 @@ use PHPUnit\Framework\TestCase;
 
 final class FunctionsTest extends TestCase
 {
+    public function test_otlp_curl_transport_defaults_to_json_serializer() : void
+    {
+        self::assertInstanceOf(CurlTransport::class, otlp_curl_transport('http://localhost:4318'));
+    }
+
     public function test_otlp_curl_transport_returns_curl_transport() : void
     {
         $transport = otlp_curl_transport('http://localhost:4318', otlp_json_serializer());
@@ -31,7 +36,7 @@ final class FunctionsTest extends TestCase
     {
         Requirements::requireGrpc();
 
-        $transport = otlp_grpc_transport('localhost:4317', otlp_protobuf_serializer());
+        $transport = otlp_grpc_transport('localhost:4317');
 
         self::assertInstanceOf(GrpcTransport::class, $transport);
     }
@@ -42,7 +47,6 @@ final class FunctionsTest extends TestCase
 
         $transport = otlp_grpc_transport(
             endpoint: 'localhost:4317',
-            serializer: otlp_protobuf_serializer(),
             headers: ['Authorization' => 'Bearer token'],
         );
 
@@ -55,7 +59,6 @@ final class FunctionsTest extends TestCase
 
         $transport = otlp_grpc_transport(
             endpoint: 'localhost:4317',
-            serializer: otlp_protobuf_serializer(),
             insecure: false,
         );
 

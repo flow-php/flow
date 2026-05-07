@@ -76,19 +76,6 @@ propagation to child spans.
 
 ---
 
-### Serializer
-
-**Interface:** `Flow\Telemetry\Serializer\Serializer`
-
-Converts telemetry data structures (spans, metrics, logs) into wire formats for transmission over transports.
-
-| Implementation       | Package                          | Description                              |
-|----------------------|----------------------------------|------------------------------------------|
-| `JsonSerializer`     | `flow-php/telemetry-otlp-bridge` | OTLP JSON format                         |
-| `ProtobufSerializer` | `flow-php/telemetry-otlp-bridge` | OTLP Protobuf format (requires ext-grpc) |
-
----
-
 ## Tracer Contracts
 
 ### SpanProcessor

@@ -7,7 +7,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Logger\{LogEntry, Severity};
 use Flow\Telemetry\Meter\{Exemplar, Metric, MetricType};
-use Flow\Telemetry\Serializer\Serializer;
 use Flow\Telemetry\Tracer\{Span, SpanEvent, SpanKind, SpanLink, SpanStatusCode};
 use Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest;
 use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
@@ -26,7 +25,7 @@ use Opentelemetry\Proto\Trace\V1\Status\StatusCode;
  *
  * @see https://opentelemetry.io/docs/specs/otlp/
  */
-final class ProtobufSerializer implements GrpcSerializer, Serializer
+final class ProtobufSerializer implements GrpcRequestFactory
 {
     public function __construct()
     {
