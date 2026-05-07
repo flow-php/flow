@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
 use Flow\Telemetry\Signal\Signals;
@@ -26,6 +27,7 @@ final class BatchingLogProcessor implements LogProcessor
     public function __construct(
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -43,7 +45,13 @@ final class BatchingLogProcessor implements LogProcessor
         $entries = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export(Signals::logs($entries));
+        try {
+            return $this->exporter->export(Signals::logs($entries));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function process(LogEntry $entry) : void

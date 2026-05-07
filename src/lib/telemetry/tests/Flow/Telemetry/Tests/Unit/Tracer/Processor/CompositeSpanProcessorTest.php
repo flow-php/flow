@@ -6,13 +6,28 @@ namespace Flow\Telemetry\Tests\Unit\Tracer\Processor;
 
 use Flow\Telemetry\Context\{SpanId, TraceId};
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, ResourceMother};
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
 use Flow\Telemetry\Tracer\{Span, SpanContext, SpanKind, SpanProcessor};
 use PHPUnit\Framework\TestCase;
 
 final class CompositeSpanProcessorTest extends TestCase
 {
+    public function test_flush_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(SpanProcessor::class);
+        $throwing->method('flush')->willThrowException(new \RuntimeException('flush blew up'));
+
+        $sibling = $this->createMock(SpanProcessor::class);
+        $sibling->expects(self::once())->method('flush')->willReturn(true);
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeSpanProcessor([$throwing, $sibling], $spy);
+
+        self::assertFalse($composite->flush());
+        self::assertSame(1, $spy->count());
+    }
+
     public function test_flush_returns_false_when_any_fails() : void
     {
         $processor1 = $this->createMock(SpanProcessor::class);
@@ -61,6 +76,36 @@ final class CompositeSpanProcessorTest extends TestCase
 
         $composite = new CompositeSpanProcessor([$processor1, $processor2]);
         $composite->onStart($this->createSpan());
+    }
+
+    public function test_on_end_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(SpanProcessor::class);
+        $throwing->method('onEnd')->willThrowException(new \RuntimeException('end blew up'));
+
+        $sibling = $this->createMock(SpanProcessor::class);
+        $sibling->expects(self::once())->method('onEnd');
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeSpanProcessor([$throwing, $sibling], $spy);
+        $composite->onEnd($this->createSpan());
+
+        self::assertSame(1, $spy->count());
+    }
+
+    public function test_on_start_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(SpanProcessor::class);
+        $throwing->method('onStart')->willThrowException(new \RuntimeException('start blew up'));
+
+        $sibling = $this->createMock(SpanProcessor::class);
+        $sibling->expects(self::once())->method('onStart');
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeSpanProcessor([$throwing, $sibling], $spy);
+        $composite->onStart($this->createSpan());
+
+        self::assertSame(1, $spy->count());
     }
 
     public function test_works_with_empty_processors_array() : void

@@ -7,11 +7,26 @@ namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor, LogRecord, Severity};
 use Flow\Telemetry\Logger\Processor\CompositeLogProcessor;
-use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, LogEntryMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class CompositeLogProcessorTest extends TestCase
 {
+    public function test_flush_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(LogProcessor::class);
+        $throwing->method('flush')->willThrowException(new \RuntimeException('flush blew up'));
+
+        $sibling = $this->createMock(LogProcessor::class);
+        $sibling->expects(self::once())->method('flush')->willReturn(true);
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeLogProcessor([$throwing, $sibling], $spy);
+
+        self::assertFalse($composite->flush());
+        self::assertSame(1, $spy->count());
+    }
+
     public function test_flush_returns_false_when_any_fails() : void
     {
         $processor1 = $this->createMock(LogProcessor::class);
@@ -48,6 +63,22 @@ final class CompositeLogProcessorTest extends TestCase
 
         $composite = new CompositeLogProcessor([$processor1, $processor2]);
         $composite->process($this->createEntry());
+    }
+
+    public function test_process_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(LogProcessor::class);
+        $throwing->method('process')->willThrowException(new \RuntimeException('child blew up'));
+
+        $sibling = $this->createMock(LogProcessor::class);
+        $sibling->expects(self::once())->method('process');
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeLogProcessor([$throwing, $sibling], $spy);
+        $composite->process(LogEntryMother::create('msg', Severity::INFO));
+
+        self::assertSame(1, $spy->count());
+        self::assertSame('child blew up', $spy->last()?->getMessage());
     }
 
     public function test_works_with_empty_processors_array() : void

@@ -9,6 +9,7 @@ use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\Context\{ContextStorage, MemoryContextStorage};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Logger\{LogProcessor, LoggerProvider};
 use Flow\Telemetry\Meter\{AggregationTemporality, MetricProcessor};
 use Flow\Telemetry\Meter\MeterProvider;
@@ -144,11 +145,14 @@ function otlp_stream_transport(
  * ```
  *
  * @param Transport $transport The transport for sending telemetry data
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the transport
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
-function otlp_exporter(Transport $transport) : OTLPExporter
-{
-    return new OTLPExporter($transport);
+function otlp_exporter(
+    Transport $transport,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : OTLPExporter {
+    return new OTLPExporter($transport, $errorHandler);
 }
 
 /**

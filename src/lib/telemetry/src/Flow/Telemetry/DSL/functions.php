@@ -7,6 +7,7 @@ namespace Flow\Telemetry\DSL;
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\{Attributes, Resource, Telemetry};
 use Flow\Telemetry\Context\{Baggage, Context, ContextStorage, MemoryContextStorage, SpanId, TraceId};
+use Flow\Telemetry\ErrorHandler\{CompositeErrorHandler, ErrorHandler, ErrorLogHandler, ErrorLogMessageType, NullErrorHandler, StreamHandler, SyslogFacility, SyslogHandler, SyslogSeverity, UdpSyslogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\{LogProcessor, LogRecordLimits, LoggerProvider, Severity};
@@ -278,33 +279,42 @@ function memory_exporter() : MemoryExporter
  * Create a MemorySpanProcessor.
  *
  * @param Exporter $exporter The exporter to send spans to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_span_processor(Exporter $exporter) : MemorySpanProcessor
-{
-    return new MemorySpanProcessor($exporter);
+function memory_span_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : MemorySpanProcessor {
+    return new MemorySpanProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a MemoryMetricProcessor.
  *
  * @param Exporter $exporter The exporter to send metrics to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_metric_processor(Exporter $exporter) : MemoryMetricProcessor
-{
-    return new MemoryMetricProcessor($exporter);
+function memory_metric_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : MemoryMetricProcessor {
+    return new MemoryMetricProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a MemoryLogProcessor.
  *
  * @param Exporter $exporter The exporter to send logs to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_log_processor(Exporter $exporter) : MemoryLogProcessor
-{
-    return new MemoryLogProcessor($exporter);
+function memory_log_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : MemoryLogProcessor {
+    return new MemoryLogProcessor($exporter, $errorHandler);
 }
 
 /**
@@ -315,6 +325,7 @@ function memory_log_processor(Exporter $exporter) : MemoryLogProcessor
  * @param ContextStorage $contextStorage Storage for context propagation
  * @param Sampler $sampler Sampling strategy for spans
  * @param SpanLimits $limits Limits for span attributes, events, and links
+ * @param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function tracer_provider(
@@ -323,6 +334,7 @@ function tracer_provider(
     ContextStorage $contextStorage,
     Sampler $sampler = new AlwaysOnSampler(),
     SpanLimits $limits = new SpanLimits(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : TracerProvider {
     return new TracerProvider(
         $processor,
@@ -330,6 +342,7 @@ function tracer_provider(
         $contextStorage,
         $sampler,
         $limits,
+        $errorHandler,
     );
 }
 
@@ -340,6 +353,7 @@ function tracer_provider(
  * @param ClockInterface $clock The clock for timestamps
  * @param ContextStorage $contextStorage Storage for span correlation
  * @param LogRecordLimits $limits Limits for log record attributes
+ * @param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function logger_provider(
@@ -347,12 +361,14 @@ function logger_provider(
     ClockInterface $clock,
     ContextStorage $contextStorage,
     LogRecordLimits $limits = new LogRecordLimits(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : LoggerProvider {
     return new LoggerProvider(
         $processor,
         $clock,
         $contextStorage,
         $limits,
+        $errorHandler,
     );
 }
 
@@ -364,6 +380,7 @@ function logger_provider(
  * @param AggregationTemporality $temporality Aggregation temporality for metrics
  * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)
  * @param MetricLimits $limits Cardinality limits for metric instruments
+ * @param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function meter_provider(
@@ -372,6 +389,7 @@ function meter_provider(
     AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
     ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
     MetricLimits $limits = new MetricLimits(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : MeterProvider {
     return new MeterProvider(
         $processor,
@@ -379,6 +397,7 @@ function meter_provider(
         $temporality,
         $exemplarFilter,
         $limits,
+        $errorHandler,
     );
 }
 
@@ -391,6 +410,7 @@ function meter_provider(
  * @param null|TracerProvider $tracerProvider The tracer provider (null for void/disabled)
  * @param null|MeterProvider $meterProvider The meter provider (null for void/disabled)
  * @param null|LoggerProvider $loggerProvider The logger provider (null for void/disabled)
+ * @param ErrorHandler $errorHandler Handler propagated to default void providers when explicit ones are not supplied
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function telemetry(
@@ -398,15 +418,16 @@ function telemetry(
     ?TracerProvider $tracerProvider = null,
     ?MeterProvider $meterProvider = null,
     ?LoggerProvider $loggerProvider = null,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : Telemetry {
     $clock = new SystemClock();
     $contextStorage = new MemoryContextStorage();
 
     return new Telemetry(
         $resource,
-        $tracerProvider ?? new TracerProvider(new VoidSpanProcessor(), $clock, $contextStorage),
-        $meterProvider ?? new MeterProvider(new VoidMetricProcessor(), $clock),
-        $loggerProvider ?? new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
+        $tracerProvider ?? new TracerProvider(new VoidSpanProcessor(), $clock, $contextStorage, errorHandler: $errorHandler),
+        $meterProvider ?? new MeterProvider(new VoidMetricProcessor(), $clock, errorHandler: $errorHandler),
+        $loggerProvider ?? new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage, errorHandler: $errorHandler),
     );
 }
 
@@ -432,22 +453,29 @@ function instrumentation_scope(
  *
  * @param Exporter $exporter The exporter to send spans to
  * @param int $batchSize Number of spans to collect before exporting (default 512)
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function batching_span_processor(Exporter $exporter, int $batchSize = 512) : BatchingSpanProcessor
-{
-    return new BatchingSpanProcessor($exporter, $batchSize);
+function batching_span_processor(
+    Exporter $exporter,
+    int $batchSize = 512,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : BatchingSpanProcessor {
+    return new BatchingSpanProcessor($exporter, $batchSize, $errorHandler);
 }
 
 /**
  * Create a PassThroughSpanProcessor.
  *
  * @param Exporter $exporter The exporter to send spans to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function pass_through_span_processor(Exporter $exporter) : PassThroughSpanProcessor
-{
-    return new PassThroughSpanProcessor($exporter);
+function pass_through_span_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : PassThroughSpanProcessor {
+    return new PassThroughSpanProcessor($exporter, $errorHandler);
 }
 
 /**
@@ -455,22 +483,29 @@ function pass_through_span_processor(Exporter $exporter) : PassThroughSpanProces
  *
  * @param Exporter $exporter The exporter to send metrics to
  * @param int $batchSize Number of metrics to collect before exporting (default 512)
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function batching_metric_processor(Exporter $exporter, int $batchSize = 512) : BatchingMetricProcessor
-{
-    return new BatchingMetricProcessor($exporter, $batchSize);
+function batching_metric_processor(
+    Exporter $exporter,
+    int $batchSize = 512,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : BatchingMetricProcessor {
+    return new BatchingMetricProcessor($exporter, $batchSize, $errorHandler);
 }
 
 /**
  * Create a PassThroughMetricProcessor.
  *
  * @param Exporter $exporter The exporter to send metrics to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function pass_through_metric_processor(Exporter $exporter) : PassThroughMetricProcessor
-{
-    return new PassThroughMetricProcessor($exporter);
+function pass_through_metric_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : PassThroughMetricProcessor {
+    return new PassThroughMetricProcessor($exporter, $errorHandler);
 }
 
 /**
@@ -478,22 +513,29 @@ function pass_through_metric_processor(Exporter $exporter) : PassThroughMetricPr
  *
  * @param Exporter $exporter The exporter to send logs to
  * @param int $batchSize Number of logs to collect before exporting (default 512)
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function batching_log_processor(Exporter $exporter, int $batchSize = 512) : BatchingLogProcessor
-{
-    return new BatchingLogProcessor($exporter, $batchSize);
+function batching_log_processor(
+    Exporter $exporter,
+    int $batchSize = 512,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : BatchingLogProcessor {
+    return new BatchingLogProcessor($exporter, $batchSize, $errorHandler);
 }
 
 /**
  * Create a PassThroughLogProcessor.
  *
  * @param Exporter $exporter The exporter to send logs to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function pass_through_log_processor(Exporter $exporter) : PassThroughLogProcessor
-{
-    return new PassThroughLogProcessor($exporter);
+function pass_through_log_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : PassThroughLogProcessor {
+    return new PassThroughLogProcessor($exporter, $errorHandler);
 }
 
 /**
@@ -772,4 +814,75 @@ function resource_detector(array $detectors = []) : ChainDetector
     }
 
     return new ChainDetector(...$detectors);
+}
+
+/**
+ * Create the default ErrorLogHandler. Writes via PHP's error_log().
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function error_log_handler(
+    ErrorLogMessageType $messageType = ErrorLogMessageType::OperatingSystem,
+    bool $expandNewlines = false,
+    string $messagePrefix = '[flow-telemetry]',
+) : ErrorLogHandler {
+    return new ErrorLogHandler($messageType, $expandNewlines, $messagePrefix);
+}
+
+/**
+ * Create a StreamHandler. Appends formatted Throwables (one per line) to a file
+ * path or php:// stream wrapper.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function stream_error_handler(
+    string $destination,
+    int $filePermissions = 0644,
+    bool $createDirectories = true,
+    string $messagePrefix = '[flow-telemetry]',
+) : StreamHandler {
+    return new StreamHandler($destination, $filePermissions, $createDirectories, $messagePrefix);
+}
+
+/**
+ * Create a SyslogHandler. Writes via openlog/syslog/closelog.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function syslog_error_handler(
+    string $ident = 'flow-telemetry',
+    SyslogFacility $facility = SyslogFacility::User,
+    int $logOpts = \LOG_PID,
+    SyslogSeverity $severity = SyslogSeverity::Error,
+) : SyslogHandler {
+    return new SyslogHandler($ident, $facility, $logOpts, $severity);
+}
+
+/**
+ * Create a UdpSyslogHandler. Sends RFC 5424-style syslog frames over UDP.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function udp_syslog_error_handler(
+    string $host,
+    int $port = 514,
+    string $ident = 'flow-telemetry',
+    SyslogFacility $facility = SyslogFacility::User,
+    SyslogSeverity $severity = SyslogSeverity::Error,
+) : UdpSyslogHandler {
+    return new UdpSyslogHandler($host, $port, $ident, $facility, $severity);
+}
+
+/**
+ * Fan errors out to multiple handlers.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function composite_error_handler(ErrorHandler ...$handlers) : CompositeErrorHandler
+{
+    return new CompositeErrorHandler(...$handlers);
+}
+
+/**
+ * Discard every error. Use only in tests or for explicit silence.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function null_error_handler() : NullErrorHandler
+{
+    return new NullErrorHandler();
 }

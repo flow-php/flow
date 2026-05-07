@@ -6,6 +6,7 @@ namespace Flow\Bridge\Monolog\Telemetry\DSL;
 
 use Flow\Bridge\Monolog\Telemetry\{LogRecordConverter, SeverityMapper, TelemetryHandler, ValueNormalizer};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Logger\{Logger, Severity};
 use Monolog\Level;
 
@@ -146,6 +147,7 @@ function telemetry_handler(
     LogRecordConverter $converter = new LogRecordConverter(),
     Level $level = Level::Debug,
     bool $bubble = true,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : TelemetryHandler {
-    return new TelemetryHandler($logger, $converter, $level, $bubble);
+    return new TelemetryHandler($logger, $converter, $level, $bubble, $errorHandler);
 }

@@ -8,7 +8,7 @@ use Flow\Telemetry\Context\{SpanId, TraceId};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, ResourceMother};
 use Flow\Telemetry\Tracer\Processor\PassThroughSpanProcessor;
 use Flow\Telemetry\Tracer\{Span, SpanContext, SpanKind};
 use PHPUnit\Framework\TestCase;
@@ -49,6 +49,19 @@ final class PassThroughSpanProcessorTest extends TestCase
         $result = $processor->flush();
 
         self::assertTrue($result);
+    }
+
+    public function test_on_end_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new PassThroughSpanProcessor($exporter, $spy);
+        $processor->onEnd($this->createSpan());
+
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
     public function test_on_start_does_nothing() : void

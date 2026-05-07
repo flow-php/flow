@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor};
 use Flow\Telemetry\Signal\Signals;
@@ -26,6 +27,7 @@ final class BatchingMetricProcessor implements MetricProcessor
     public function __construct(
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -43,7 +45,13 @@ final class BatchingMetricProcessor implements MetricProcessor
         $metrics = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export(Signals::metrics($metrics));
+        try {
+            return $this->exporter->export(Signals::metrics($metrics));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function process(Metric $metric) : void

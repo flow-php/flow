@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
 
@@ -22,6 +23,7 @@ final readonly class CompositeLogProcessor implements LogProcessor
      */
     public function __construct(
         private array $processors,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -39,7 +41,12 @@ final readonly class CompositeLogProcessor implements LogProcessor
         $success = true;
 
         foreach ($this->processors as $processor) {
-            if (!$processor->flush()) {
+            try {
+                if (!$processor->flush()) {
+                    $success = false;
+                }
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
                 $success = false;
             }
         }
@@ -50,7 +57,11 @@ final readonly class CompositeLogProcessor implements LogProcessor
     public function process(LogEntry $entry) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->process($entry);
+            try {
+                $processor->process($entry);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 

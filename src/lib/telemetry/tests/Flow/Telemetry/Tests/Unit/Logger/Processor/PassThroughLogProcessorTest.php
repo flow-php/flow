@@ -9,7 +9,7 @@ use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Logger\{LogEntry, LogRecord, Severity};
 use Flow\Telemetry\Logger\Processor\PassThroughLogProcessor;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, LogEntryMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class PassThroughLogProcessorTest extends TestCase
@@ -56,6 +56,19 @@ final class PassThroughLogProcessorTest extends TestCase
         $result = $processor->flush();
 
         self::assertTrue($result);
+    }
+
+    public function test_process_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new PassThroughLogProcessor($exporter, $spy);
+        $processor->process(LogEntryMother::create('msg', Severity::INFO));
+
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
     /**

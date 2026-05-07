@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Logger;
 
 use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Psr\Clock\ClockInterface;
 
 /**
@@ -38,6 +39,7 @@ final readonly class LoggerProvider
         private ClockInterface $clock,
         private ContextStorage $contextStorage,
         private LogRecordLimits $limits = new LogRecordLimits(),
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -62,6 +64,7 @@ final readonly class LoggerProvider
             $this->clock,
             $this->contextStorage,
             $this->limits,
+            $this->errorHandler,
         );
     }
 }

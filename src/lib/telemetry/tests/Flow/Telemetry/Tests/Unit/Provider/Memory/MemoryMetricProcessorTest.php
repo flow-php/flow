@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor, MetricType};
 use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryMetricProcessor};
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother};
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class MemoryMetricProcessorTest extends TestCase
@@ -52,6 +53,20 @@ final class MemoryMetricProcessorTest extends TestCase
         $processor = new MemoryMetricProcessor(new MemoryExporter());
 
         self::assertTrue($processor->flush());
+    }
+
+    public function test_flush_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new MemoryMetricProcessor($exporter, $spy);
+        $processor->process($this->createMetric('metric-1', 10));
+
+        self::assertFalse($processor->flush());
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
     public function test_implements_metric_processor() : void

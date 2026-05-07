@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter;
 
 use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, TraceBasedExemplarFilter};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Psr\Clock\ClockInterface;
@@ -41,6 +42,7 @@ final readonly class MeterProvider
         private AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         private ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
         private MetricLimits $limits = new MetricLimits(),
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -66,6 +68,7 @@ final readonly class MeterProvider
             $this->temporality,
             $this->exemplarFilter,
             $this->limits,
+            $this->errorHandler,
         );
     }
 }

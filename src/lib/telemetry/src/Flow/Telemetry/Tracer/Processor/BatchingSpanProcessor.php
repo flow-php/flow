@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tracer\{Span, SpanProcessor};
@@ -26,6 +27,7 @@ final class BatchingSpanProcessor implements SpanProcessor
     public function __construct(
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -43,7 +45,13 @@ final class BatchingSpanProcessor implements SpanProcessor
         $spans = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export(Signals::traces($spans));
+        try {
+            return $this->exporter->export(Signals::traces($spans));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function onEnd(Span $span) : void

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
 use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
-use Flow\Telemetry\Tests\Mother\SpanMother;
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, SpanMother};
 use Flow\Telemetry\Tracer\SpanProcessor;
 use PHPUnit\Framework\TestCase;
 
@@ -61,6 +62,20 @@ final class MemorySpanProcessorTest extends TestCase
         $processor = new MemorySpanProcessor(new MemoryExporter());
 
         self::assertTrue($processor->flush());
+    }
+
+    public function test_flush_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new MemorySpanProcessor($exporter, $spy);
+        $processor->onEnd(SpanMother::withName('span'));
+
+        self::assertFalse($processor->flush());
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
     public function test_implements_span_processor() : void

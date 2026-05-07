@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tracer;
 
 use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
 use Psr\Clock\ClockInterface;
 
@@ -41,6 +42,7 @@ final readonly class TracerProvider
         private ContextStorage $contextStorage,
         private Sampler $sampler = new AlwaysOnSampler(),
         private SpanLimits $limits = new SpanLimits(),
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -66,6 +68,7 @@ final readonly class TracerProvider
             $this->contextStorage,
             $this->sampler,
             $this->limits,
+            $this->errorHandler,
         );
     }
 }

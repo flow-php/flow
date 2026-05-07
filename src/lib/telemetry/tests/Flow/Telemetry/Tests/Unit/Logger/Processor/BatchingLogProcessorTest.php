@@ -9,7 +9,7 @@ use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Logger\{LogEntry, LogRecord, Severity};
 use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, LogEntryMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class BatchingLogProcessorTest extends TestCase
@@ -51,6 +51,22 @@ final class BatchingLogProcessorTest extends TestCase
         self::assertTrue($result);
     }
 
+    public function test_flush_clears_buffer_after_exporter_throws() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->expects(self::once())
+            ->method('export')
+            ->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new BatchingLogProcessor($exporter, 10, $spy);
+        $processor->process(LogEntryMother::create('msg', Severity::INFO));
+        $processor->flush();
+        $processor->flush();
+
+        self::assertSame(1, $spy->count());
+    }
+
     public function test_flush_returns_true_when_buffer_empty() : void
     {
         $exporter = $this->createMock(Exporter::class);
@@ -62,6 +78,24 @@ final class BatchingLogProcessorTest extends TestCase
         $result = $processor->flush();
 
         self::assertTrue($result);
+    }
+
+    public function test_flush_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new BatchingLogProcessor($exporter, 10, $spy);
+        $processor->process(LogEntryMother::create('msg', Severity::INFO));
+
+        $result = $processor->flush();
+
+        self::assertFalse($result);
+        self::assertSame(1, $spy->count());
+        $last = $spy->last();
+        self::assertInstanceOf(\RuntimeException::class, $last);
+        self::assertSame('exporter exploded', $last->getMessage());
     }
 
     public function test_process_stores_all_log_record_fields() : void

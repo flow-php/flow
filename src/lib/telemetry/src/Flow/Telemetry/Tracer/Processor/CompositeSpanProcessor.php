@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
@@ -22,6 +23,7 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
      */
     public function __construct(
         private array $processors,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -39,7 +41,12 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
         $success = true;
 
         foreach ($this->processors as $processor) {
-            if (!$processor->flush()) {
+            try {
+                if (!$processor->flush()) {
+                    $success = false;
+                }
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
                 $success = false;
             }
         }
@@ -50,14 +57,22 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
     public function onEnd(Span $span) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->onEnd($span);
+            try {
+                $processor->onEnd($span);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 
     public function onStart(Span $span) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->onStart($span);
+            try {
+                $processor->onStart($span);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 

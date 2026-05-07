@@ -9,7 +9,7 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricType};
 use Flow\Telemetry\Meter\Processor\PassThroughMetricProcessor;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother};
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class PassThroughMetricProcessorTest extends TestCase
@@ -48,6 +48,19 @@ final class PassThroughMetricProcessorTest extends TestCase
         $result = $processor->flush();
 
         self::assertTrue($result);
+    }
+
+    public function test_process_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new PassThroughMetricProcessor($exporter, $spy);
+        $processor->process($this->createMetric());
+
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
     private function createMetric() : Metric

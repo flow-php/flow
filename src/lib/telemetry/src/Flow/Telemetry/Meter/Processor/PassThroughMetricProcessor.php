@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor};
 use Flow\Telemetry\Signal\Signals;
@@ -19,6 +20,7 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
 {
     public function __construct(
         private Exporter $exporter,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -34,6 +36,10 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
 
     public function process(Metric $metric) : void
     {
-        $this->exporter->export(Signals::metrics([$metric]));
+        try {
+            $this->exporter->export(Signals::metrics([$metric]));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

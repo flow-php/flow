@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor, LogRecord, Severity};
 use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor};
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother};
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, LogEntryMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class MemoryLogProcessorTest extends TestCase
@@ -110,6 +111,20 @@ final class MemoryLogProcessorTest extends TestCase
         $processor = new MemoryLogProcessor(new MemoryExporter());
 
         self::assertTrue($processor->flush());
+    }
+
+    public function test_flush_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new MemoryLogProcessor($exporter, $spy);
+        $processor->process(LogEntryMother::create('msg', Severity::INFO));
+
+        self::assertFalse($processor->flush());
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
     public function test_implements_log_processor() : void

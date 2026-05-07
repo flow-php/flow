@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor, Severity};
 use Flow\Telemetry\Signal\Signals;
@@ -20,6 +21,7 @@ final class MemoryLogProcessor implements LogProcessor
 
     public function __construct(
         private readonly Exporter $logExporter,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -78,7 +80,13 @@ final class MemoryLogProcessor implements LogProcessor
             return true;
         }
 
-        return $this->logExporter->export(Signals::logs($this->entries));
+        try {
+            return $this->logExporter->export(Signals::logs($this->entries));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function process(LogEntry $entry) : void

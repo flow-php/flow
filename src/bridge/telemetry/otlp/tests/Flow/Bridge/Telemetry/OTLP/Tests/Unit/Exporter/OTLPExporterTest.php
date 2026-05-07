@@ -6,15 +6,26 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Exporter;
 
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\ErrorHandler\NullErrorHandler;
 use Flow\Telemetry\Logger\{LogEntry, LogRecord, Severity};
 use Flow\Telemetry\Meter\{Metric, MetricType};
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother, SpanMother};
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, ResourceMother, SpanMother};
 use Flow\Telemetry\Transport\{Transport, TransportException};
 use PHPUnit\Framework\TestCase;
 
 final class OTLPExporterTest extends TestCase
 {
+    public function test_export_does_not_call_error_handler_on_empty_signal() : void
+    {
+        $transport = new RecordingTransport();
+        $spy = new ErrorHandlerSpy();
+        $exporter = new OTLPExporter($transport, $spy);
+
+        self::assertTrue($exporter->export(Signals::logs([])));
+        self::assertSame(0, $spy->count());
+    }
+
     public function test_export_empty_logs_returns_true_without_calling_transport() : void
     {
         $transport = new RecordingTransport();
@@ -78,9 +89,22 @@ final class OTLPExporterTest extends TestCase
     public function test_export_returns_false_when_transport_throws() : void
     {
         $transport = new ThrowingTransport();
-        $exporter = new OTLPExporter($transport);
+        $exporter = new OTLPExporter($transport, new NullErrorHandler());
 
         self::assertFalse($exporter->export(Signals::traces([SpanMother::withName('span')])));
+    }
+
+    public function test_export_routes_transport_throwable_to_error_handler() : void
+    {
+        $transport = new ThrowingTransport();
+        $spy = new ErrorHandlerSpy();
+        $exporter = new OTLPExporter($transport, $spy);
+
+        self::assertFalse($exporter->export(Signals::traces([SpanMother::withName('span')])));
+        self::assertSame(1, $spy->count());
+        $last = $spy->last();
+        self::assertInstanceOf(TransportException::class, $last);
+        self::assertSame('boom', $last->getMessage());
     }
 
     public function test_export_traces_calls_transport() : void

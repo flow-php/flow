@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor, MetricType};
 use Flow\Telemetry\Signal\Signals;
@@ -20,6 +21,7 @@ final class MemoryMetricProcessor implements MetricProcessor
 
     public function __construct(
         private readonly Exporter $metricExporter,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -39,7 +41,13 @@ final class MemoryMetricProcessor implements MetricProcessor
             return true;
         }
 
-        return $this->metricExporter->export(Signals::metrics($this->metrics));
+        try {
+            return $this->metricExporter->export(Signals::metrics($this->metrics));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     /**

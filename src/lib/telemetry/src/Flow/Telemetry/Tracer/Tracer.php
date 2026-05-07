@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tracer;
 
 use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
 use Flow\Telemetry\Context\{Context, ContextStorage, SpanId, TraceFlags, TraceId};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
@@ -53,6 +54,7 @@ final class Tracer
         private readonly ContextStorage $contextStorage,
         private readonly ?Sampler $sampler = null,
         private readonly SpanLimits $limits = new SpanLimits(),
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
         /** @var \SplStack<SpanContext> $stack */
         $stack = new \SplStack();
@@ -94,7 +96,11 @@ final class Tracer
         $span->contextScope()?->detach();
 
         if ($span->isRecording()) {
-            $this->processor->onEnd($span);
+            try {
+                $this->processor->onEnd($span);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 
@@ -111,7 +117,13 @@ final class Tracer
      */
     public function flush() : bool
     {
-        return $this->processor->flush();
+        try {
+            return $this->processor->flush();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     /**
@@ -239,7 +251,11 @@ final class Tracer
         $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context()->spanId)));
 
         if ($span->isRecording()) {
-            $this->processor->onStart($span);
+            try {
+                $this->processor->onStart($span);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
 
         return $span;

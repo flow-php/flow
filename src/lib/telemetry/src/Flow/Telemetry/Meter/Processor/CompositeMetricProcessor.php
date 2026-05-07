@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor};
 
@@ -22,6 +23,7 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
      */
     public function __construct(
         private array $processors,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -39,7 +41,12 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
         $success = true;
 
         foreach ($this->processors as $processor) {
-            if (!$processor->flush()) {
+            try {
+                if (!$processor->flush()) {
+                    $success = false;
+                }
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
                 $success = false;
             }
         }
@@ -50,7 +57,11 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
     public function process(Metric $metric) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->process($metric);
+            try {
+                $processor->process($metric);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 

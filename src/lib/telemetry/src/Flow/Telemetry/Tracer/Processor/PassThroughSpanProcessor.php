@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tracer\{Span, SpanProcessor};
@@ -19,6 +20,7 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
 {
     public function __construct(
         private Exporter $exporter,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -34,7 +36,11 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
 
     public function onEnd(Span $span) : void
     {
-        $this->exporter->export(Signals::traces([$span]));
+        try {
+            $this->exporter->export(Signals::traces([$span]));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 
     public function onStart(Span $span) : void
