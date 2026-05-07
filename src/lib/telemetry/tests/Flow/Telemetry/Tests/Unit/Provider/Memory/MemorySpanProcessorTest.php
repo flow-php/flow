@@ -35,14 +35,6 @@ final class MemorySpanProcessorTest extends TestCase
         self::assertContains($span2, $endedSpans);
     }
 
-    public function test_exporter_returns_configured_exporter() : void
-    {
-        $exporter = new MemoryExporter();
-        $processor = new MemorySpanProcessor($exporter);
-
-        self::assertSame($exporter, $processor->exporter());
-    }
-
     public function test_flush_exports_ended_spans() : void
     {
         $exporter = new MemoryExporter();

@@ -9,7 +9,6 @@ use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Tracer\Span;
-use Flow\Telemetry\Transport\{Transport, VoidTransport};
 
 /**
  * Exporter that stores telemetry batches in memory for direct access.
@@ -68,19 +67,15 @@ final class MemoryExporter implements Exporter
         $this->spans = [];
     }
 
+    public function shutdown() : void
+    {
+    }
+
     /**
      * @return array<Span>
      */
     public function spans() : array
     {
         return $this->spans;
-    }
-
-    /**
-     * @return array<Transport>
-     */
-    public function transports() : array
-    {
-        return [new VoidTransport()];
     }
 }

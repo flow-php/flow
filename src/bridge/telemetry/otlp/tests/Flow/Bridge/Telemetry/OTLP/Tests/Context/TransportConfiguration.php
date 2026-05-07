@@ -6,7 +6,7 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_grpc_transport, otlp_json_serializer, otlp_protobuf_serializer};
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
-use Flow\Telemetry\Transport\Transport;
+use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Google\Protobuf\Internal\Message;
 
 final readonly class TransportConfiguration

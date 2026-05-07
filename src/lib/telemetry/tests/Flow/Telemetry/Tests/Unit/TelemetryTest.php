@@ -31,7 +31,6 @@ final class TelemetryTest extends TestCase
 
         $failingSpanProcessor = $this->createMock(SpanProcessor::class);
         $failingSpanProcessor->method('flush')->willReturn(false);
-        $failingSpanProcessor->method('exporter')->willReturn(new VoidExporter());
 
         $telemetry = new Telemetry(
             $this->resource,

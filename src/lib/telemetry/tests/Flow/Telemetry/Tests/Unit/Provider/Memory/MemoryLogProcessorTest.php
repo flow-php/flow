@@ -84,14 +84,6 @@ final class MemoryLogProcessorTest extends TestCase
         self::assertSame($errorEntry, $errorLogs[0]);
     }
 
-    public function test_exporter_returns_configured_exporter() : void
-    {
-        $exporter = new MemoryExporter();
-        $processor = new MemoryLogProcessor($exporter);
-
-        self::assertSame($exporter, $processor->exporter());
-    }
-
     public function test_flush_exports_entries() : void
     {
         $exporter = new MemoryExporter();

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Exporter;
 
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
+use Flow\Bridge\Telemetry\OTLP\Transport\{Transport, TransportException};
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\ErrorHandler\NullErrorHandler;
 use Flow\Telemetry\Logger\{LogEntry, LogRecord, Severity};
 use Flow\Telemetry\Meter\{Metric, MetricType};
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, ResourceMother, SpanMother};
-use Flow\Telemetry\Transport\{Transport, TransportException};
 use PHPUnit\Framework\TestCase;
 
 final class OTLPExporterTest extends TestCase
@@ -116,12 +116,28 @@ final class OTLPExporterTest extends TestCase
         self::assertSame(1, $transport->callCount());
     }
 
-    public function test_transports_returns_configured_transport() : void
+    public function test_shutdown_delegates_to_transport() : void
     {
         $transport = new RecordingTransport();
         $exporter = new OTLPExporter($transport);
 
-        self::assertSame([$transport], $exporter->transports());
+        $exporter->shutdown();
+
+        self::assertTrue($transport->isShutdown());
+    }
+
+    public function test_shutdown_routes_transport_throwable_to_error_handler() : void
+    {
+        $transport = new ShutdownThrowingTransport();
+        $spy = new ErrorHandlerSpy();
+        $exporter = new OTLPExporter($transport, $spy);
+
+        $exporter->shutdown();
+
+        self::assertSame(1, $spy->count());
+        $last = $spy->last();
+        self::assertInstanceOf(TransportException::class, $last);
+        self::assertSame('shutdown boom', $last->getMessage());
     }
 }
 
@@ -129,9 +145,16 @@ final class RecordingTransport implements Transport
 {
     private int $callCount = 0;
 
+    private bool $isShutdown = false;
+
     public function callCount() : int
     {
         return $this->callCount;
+    }
+
+    public function isShutdown() : bool
+    {
+        return $this->isShutdown;
     }
 
     public function send(Signals $signal) : void
@@ -141,6 +164,7 @@ final class RecordingTransport implements Transport
 
     public function shutdown() : void
     {
+        $this->isShutdown = true;
     }
 }
 
@@ -153,5 +177,17 @@ final class ThrowingTransport implements Transport
 
     public function shutdown() : void
     {
+    }
+}
+
+final class ShutdownThrowingTransport implements Transport
+{
+    public function send(Signals $signal) : void
+    {
+    }
+
+    public function shutdown() : void
+    {
+        throw new TransportException('shutdown boom');
     }
 }

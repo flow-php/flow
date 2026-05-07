@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Void;
 
-use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor};
 
 /**
@@ -12,17 +11,16 @@ use Flow\Telemetry\Meter\{Metric, MetricProcessor};
  */
 final readonly class VoidMetricProcessor implements MetricProcessor
 {
-    public function exporter() : Exporter
-    {
-        return new VoidExporter();
-    }
-
     public function flush() : bool
     {
         return true;
     }
 
     public function process(Metric $metric) : void
+    {
+    }
+
+    public function shutdown() : void
     {
     }
 }

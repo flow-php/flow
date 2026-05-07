@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor, Severity};
 
 /**
@@ -22,11 +21,6 @@ final readonly class SeverityFilteringLogProcessor implements LogProcessor
     ) {
     }
 
-    public function exporter() : Exporter
-    {
-        return $this->processor->exporter();
-    }
-
     public function flush() : bool
     {
         return $this->processor->flush();
@@ -37,5 +31,10 @@ final readonly class SeverityFilteringLogProcessor implements LogProcessor
         if ($entry->record->severity->isAtLeast($this->minimumSeverity)) {
             $this->processor->process($entry);
         }
+    }
+
+    public function shutdown() : void
+    {
+        $this->processor->shutdown();
     }
 }

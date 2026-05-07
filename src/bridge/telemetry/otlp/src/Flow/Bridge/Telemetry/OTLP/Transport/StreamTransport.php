@@ -6,7 +6,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Transport\{Transport, TransportException};
 
 /**
  * OTLP File Exporter transport — writes JSONL to either a file path or a php://
@@ -114,11 +113,20 @@ final class StreamTransport implements Transport
             @\flock($stream, \LOCK_UN);
         }
 
-        if ($written === false) {
+        if (!\is_int($written)) {
             throw new TransportException(\sprintf(
                 'Failed to write OTLP payload to "%s": %s',
                 $this->destination,
                 $this->errorMessage ?? 'unknown error',
+            ));
+        }
+
+        if ($written < \strlen($payload)) {
+            throw new TransportException(\sprintf(
+                'Partial write to OTLP stream "%s": wrote %d of %d bytes',
+                $this->destination,
+                $written,
+                \strlen($payload),
             ));
         }
     }

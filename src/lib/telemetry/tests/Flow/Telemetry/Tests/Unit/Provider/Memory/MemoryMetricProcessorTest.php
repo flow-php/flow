@@ -26,14 +26,6 @@ final class MemoryMetricProcessorTest extends TestCase
         self::assertSame(2, $processor->countMetrics());
     }
 
-    public function test_exporter_returns_configured_exporter() : void
-    {
-        $exporter = new MemoryExporter();
-        $processor = new MemoryMetricProcessor($exporter);
-
-        self::assertSame($exporter, $processor->exporter());
-    }
-
     public function test_flush_exports_metrics() : void
     {
         $exporter = new MemoryExporter();

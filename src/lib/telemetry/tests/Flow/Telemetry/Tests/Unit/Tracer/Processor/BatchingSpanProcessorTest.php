@@ -15,15 +15,6 @@ use PHPUnit\Framework\TestCase;
 
 final class BatchingSpanProcessorTest extends TestCase
 {
-    public function test_exporter_returns_exporter() : void
-    {
-        $exporter = $this->createMock(Exporter::class);
-
-        $processor = new BatchingSpanProcessor($exporter, 10);
-
-        self::assertSame($exporter, $processor->exporter());
-    }
-
     public function test_exports_on_batch_size_reached() : void
     {
         $exporter = $this->createMock(Exporter::class);

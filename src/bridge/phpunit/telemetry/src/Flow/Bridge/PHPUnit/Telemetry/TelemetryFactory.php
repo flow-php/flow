@@ -7,9 +7,9 @@ namespace Flow\Bridge\PHPUnit\Telemetry;
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_options, otlp_curl_transport, otlp_exporter, otlp_grpc_transport, otlp_json_serializer, otlp_protobuf_serializer};
 use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, meter_provider, pass_through_log_processor, pass_through_metric_processor, pass_through_span_processor, resource, resource_detector, telemetry, tracer_provider, void_exporter};
 
+use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
-use Flow\Telemetry\Transport\Transport;
 
 final class TelemetryFactory
 {

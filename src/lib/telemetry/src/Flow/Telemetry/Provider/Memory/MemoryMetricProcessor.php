@@ -14,6 +14,8 @@ use Flow\Telemetry\Signal\Signals;
  */
 final class MemoryMetricProcessor implements MetricProcessor
 {
+    private bool $isShutdown = false;
+
     /**
      * @var array<Metric>
      */
@@ -28,11 +30,6 @@ final class MemoryMetricProcessor implements MetricProcessor
     public function countMetrics() : int
     {
         return \count($this->metrics);
-    }
-
-    public function exporter() : Exporter
-    {
-        return $this->metricExporter;
     }
 
     public function flush() : bool
@@ -88,5 +85,22 @@ final class MemoryMetricProcessor implements MetricProcessor
     public function reset() : void
     {
         $this->metrics = [];
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->metricExporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

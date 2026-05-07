@@ -24,16 +24,13 @@ final class BatchingSpanProcessor implements SpanProcessor
      */
     private array $buffer = [];
 
+    private bool $isShutdown = false;
+
     public function __construct(
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
-    }
-
-    public function exporter() : Exporter
-    {
-        return $this->exporter;
     }
 
     public function flush() : bool
@@ -65,5 +62,22 @@ final class BatchingSpanProcessor implements SpanProcessor
 
     public function onStart(Span $span) : void
     {
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->exporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
-use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\{StreamTransport, TransportException};
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Tests\Mother\{LogEntryMother, MetricMother, SpanMother};
-use Flow\Telemetry\Transport\TransportException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -69,6 +68,22 @@ final class StreamTransportTest extends TestCase
         self::assertSame('', (string) \stream_get_contents($transport->stream()));
     }
 
+    public function test_failed_write_throws() : void
+    {
+        \stream_wrapper_register('flow-failwrite', FailingWriteStreamWrapper::class);
+
+        try {
+            $transport = new StreamTransport('flow-failwrite://buf');
+
+            $this->expectException(TransportException::class);
+            $this->expectExceptionMessage('Failed to write OTLP payload to "flow-failwrite://buf"');
+
+            $transport->send(Signals::logs([LogEntryMother::deterministic('hello', Severity::INFO)]));
+        } finally {
+            \stream_wrapper_unregister('flow-failwrite');
+        }
+    }
+
     #[TestWith([-1])]
     #[TestWith([01000])]
     public function test_out_of_range_file_permissions_throw(int $perm) : void
@@ -77,6 +92,22 @@ final class StreamTransportTest extends TestCase
         $this->expectExceptionMessage('between 0 and 0777');
 
         new StreamTransport('php://memory', filePermissions: $perm);
+    }
+
+    public function test_partial_write_throws() : void
+    {
+        \stream_wrapper_register('flow-partial', PartialWriteStreamWrapper::class);
+
+        try {
+            $transport = new StreamTransport('flow-partial://buf');
+
+            $this->expectException(TransportException::class);
+            $this->expectExceptionMessageMatches('/Partial write to OTLP stream "flow-partial:\\/\\/buf": wrote \\d+ of \\d+ bytes/');
+
+            $transport->send(Signals::logs([LogEntryMother::deterministic('hello', Severity::INFO)]));
+        } finally {
+            \stream_wrapper_unregister('flow-partial');
+        }
     }
 
     public function test_send_after_shutdown_throws() : void
@@ -124,5 +155,111 @@ final class StreamTransportTest extends TestCase
         /** @var array<string, mixed> $decoded */
         $decoded = \json_decode(\rtrim($contents, "\n"), true, flags: \JSON_THROW_ON_ERROR);
         self::assertArrayHasKey($expectedKey, $decoded);
+    }
+}
+
+final class PartialWriteStreamWrapper
+{
+    /** @var resource */
+    public $context;
+
+    public function stream_close() : void
+    {
+    }
+
+    public function stream_eof() : bool
+    {
+        return true;
+    }
+
+    public function stream_flush() : bool
+    {
+        return true;
+    }
+
+    public function stream_lock(int $operation) : bool
+    {
+        return true;
+    }
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath) : bool
+    {
+        return true;
+    }
+
+    public function stream_set_option(int $option, int $arg1, ?int $arg2) : bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<int|string, int>
+     */
+    public function stream_stat() : array
+    {
+        return [];
+    }
+
+    public function stream_write(string $data) : int
+    {
+        return (int) \floor(\strlen($data) / 2);
+    }
+
+    public function url_stat(string $path, int $flags) : false
+    {
+        return false;
+    }
+}
+
+final class FailingWriteStreamWrapper
+{
+    /** @var resource */
+    public $context;
+
+    public function stream_close() : void
+    {
+    }
+
+    public function stream_eof() : bool
+    {
+        return true;
+    }
+
+    public function stream_flush() : bool
+    {
+        return true;
+    }
+
+    public function stream_lock(int $operation) : bool
+    {
+        return true;
+    }
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath) : bool
+    {
+        return true;
+    }
+
+    public function stream_set_option(int $option, int $arg1, ?int $arg2) : bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<int|string, int>
+     */
+    public function stream_stat() : array
+    {
+        return [];
+    }
+
+    public function stream_write(string $data) : false
+    {
+        return false;
+    }
+
+    public function url_stat(string $path, int $flags) : false
+    {
+        return false;
     }
 }

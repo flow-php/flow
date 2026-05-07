@@ -24,11 +24,6 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
     ) {
     }
 
-    public function exporter() : Exporter
-    {
-        return $this->exporter;
-    }
-
     public function flush() : bool
     {
         return true;
@@ -38,6 +33,15 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
     {
         try {
             $this->exporter->export(Signals::metrics([$metric]));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
+    }
+
+    public function shutdown() : void
+    {
+        try {
+            $this->exporter->shutdown();
         } catch (\Throwable $e) {
             $this->errorHandler->handle($e);
         }

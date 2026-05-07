@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
+use const Grpc\{STATUS_ABORTED, STATUS_ALREADY_EXISTS, STATUS_CANCELLED, STATUS_DATA_LOSS, STATUS_DEADLINE_EXCEEDED, STATUS_FAILED_PRECONDITION, STATUS_INTERNAL, STATUS_INVALID_ARGUMENT, STATUS_NOT_FOUND, STATUS_OK, STATUS_OUT_OF_RANGE, STATUS_PERMISSION_DENIED, STATUS_RESOURCE_EXHAUSTED, STATUS_UNAUTHENTICATED, STATUS_UNAVAILABLE, STATUS_UNIMPLEMENTED, STATUS_UNKNOWN};
 use Flow\Bridge\Telemetry\OTLP\Serializer\GrpcSerializer;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Transport\{Transport, TransportException};
 use Google\Protobuf\Internal\Message;
 use Grpc\{ChannelCredentials, UnaryCall};
 use Opentelemetry\Proto\Collector\Logs\V1\LogsServiceClient;
@@ -83,8 +83,26 @@ final class GrpcTransport implements Transport
 
         $this->isShutdown = true;
 
+        /** @var list<\Throwable> $failures */
+        $failures = [];
+
         foreach ($this->pendingCalls as $call) {
-            $call->wait();
+            try {
+                [, $status] = $call->wait();
+            } catch (\Throwable $e) {
+                $failures[] = $e;
+
+                continue;
+            }
+
+            if ($status->code !== STATUS_OK) {
+                $failures[] = new TransportException(\sprintf(
+                    'gRPC status %d (%s): %s',
+                    $status->code,
+                    self::grpcStatusName($status->code),
+                    $status->details ?? '',
+                ));
+            }
         }
 
         $this->pendingCalls = [];
@@ -103,6 +121,18 @@ final class GrpcTransport implements Transport
             $this->logsClient->close();
             $this->logsClient = null;
         }
+
+        if (\count($failures) === 0) {
+            return;
+        }
+
+        $first = $failures[0];
+        $count = \count($failures);
+        $message = $count === 1
+            ? \sprintf('OTLP gRPC shutdown: 1 export failed: %s', $first->getMessage())
+            : \sprintf('OTLP gRPC shutdown: %d exports failed; first error: %s', $count, $first->getMessage());
+
+        throw new TransportException($message, 0, $first);
     }
 
     /**
@@ -162,5 +192,29 @@ final class GrpcTransport implements Transport
         }
 
         return $this->tracesClient;
+    }
+
+    private static function grpcStatusName(int $code) : string
+    {
+        return match ($code) {
+            STATUS_OK => 'OK',
+            STATUS_CANCELLED => 'CANCELLED',
+            STATUS_UNKNOWN => 'UNKNOWN',
+            STATUS_INVALID_ARGUMENT => 'INVALID_ARGUMENT',
+            STATUS_DEADLINE_EXCEEDED => 'DEADLINE_EXCEEDED',
+            STATUS_NOT_FOUND => 'NOT_FOUND',
+            STATUS_ALREADY_EXISTS => 'ALREADY_EXISTS',
+            STATUS_PERMISSION_DENIED => 'PERMISSION_DENIED',
+            STATUS_UNAUTHENTICATED => 'UNAUTHENTICATED',
+            STATUS_RESOURCE_EXHAUSTED => 'RESOURCE_EXHAUSTED',
+            STATUS_FAILED_PRECONDITION => 'FAILED_PRECONDITION',
+            STATUS_ABORTED => 'ABORTED',
+            STATUS_OUT_OF_RANGE => 'OUT_OF_RANGE',
+            STATUS_UNIMPLEMENTED => 'UNIMPLEMENTED',
+            STATUS_INTERNAL => 'INTERNAL',
+            STATUS_UNAVAILABLE => 'UNAVAILABLE',
+            STATUS_DATA_LOSS => 'DATA_LOSS',
+            default => 'UNKNOWN',
+        };
     }
 }

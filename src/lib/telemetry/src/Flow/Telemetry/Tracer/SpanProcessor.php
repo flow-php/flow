@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-use Flow\Telemetry\Exporter\Exporter;
-
 /**
  * Interface for processing spans when they start and end.
  *
@@ -14,11 +12,6 @@ use Flow\Telemetry\Exporter\Exporter;
  */
 interface SpanProcessor
 {
-    /**
-     * Get the exporter used by this processor.
-     */
-    public function exporter() : Exporter;
-
     /**
      * Export all pending spans and return success status.
      *
@@ -42,4 +35,12 @@ interface SpanProcessor
      * should avoid blocking operations in this method.
      */
     public function onStart(Span $span) : void;
+
+    /**
+     * Shutdown the processor.
+     *
+     * Implementations SHOULD flush() pending data before delegating shutdown
+     * to the underlying exporter. MUST be idempotent and MUST NOT throw.
+     */
+    public function shutdown() : void;
 }

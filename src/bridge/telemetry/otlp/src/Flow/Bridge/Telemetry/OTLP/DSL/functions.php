@@ -6,7 +6,7 @@ namespace Flow\Bridge\Telemetry\OTLP\DSL;
 
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport, Transport};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\Context\{ContextStorage, MemoryContextStorage};
 use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
@@ -16,7 +16,6 @@ use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Serializer\Serializer;
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
 use Flow\Telemetry\Tracer\{SpanProcessor, TracerProvider};
-use Flow\Telemetry\Transport\Transport;
 use Psr\Clock\ClockInterface;
 
 /**

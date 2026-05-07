@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_exporter, otlp_stream_transport};
-use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\{StreamTransport, TransportException};
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Tests\Mother\{LogEntryMother, MetricMother, SpanMother};
-use Flow\Telemetry\Transport\TransportException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 

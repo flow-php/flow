@@ -6,13 +6,12 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_options, otlp_curl_transport, otlp_json_serializer};
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, TransportException};
 use Flow\Telemetry\Context\{SpanId, TraceId};
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{Span, SpanContext, SpanKind};
-use Flow\Telemetry\Transport\TransportException;
 use PHPUnit\Framework\TestCase;
 
 final class CurlTransportTest extends TestCase
@@ -122,6 +121,29 @@ final class CurlTransportTest extends TestCase
         $this->expectExceptionMessage('Cannot send after shutdown');
 
         $transport->send(Signals::traces($this->createSpans()));
+    }
+
+    public function test_shutdown_aggregates_curl_connection_failures() : void
+    {
+        if (!\extension_loaded('curl')) {
+            self::markTestSkipped('ext-curl is required');
+        }
+
+        $transport = otlp_curl_transport(
+            'http://127.0.0.1:1',
+            otlp_json_serializer(),
+            otlp_curl_options()
+                ->withConnectTimeout(1)
+                ->withTimeout(1),
+        );
+
+        $transport->send(Signals::traces($this->createSpans()));
+        $transport->send(Signals::traces($this->createSpans()));
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessageMatches('/OTLP curl shutdown: 2 exports failed; first error: curl error \\d+/');
+
+        $transport->shutdown();
     }
 
     public function test_shutdown_is_idempotent() : void

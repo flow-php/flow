@@ -20,7 +20,6 @@ use Flow\Telemetry\Provider\Void\{VoidExporter, VoidLogProcessor, VoidMetricProc
 use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor};
-use Flow\Telemetry\Transport\VoidTransport;
 use PHPUnit\Framework\Attributes\{CoversClass, TestWith};
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
@@ -296,7 +295,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                     ],
                 ]);
                 $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $definition = new Definition(VoidTransport::class);
+                    $definition = new Definition(StreamTransport::class);
+                    $definition->setArgument('$destination', 'php://memory');
                     $definition->setPublic(true);
                     $container->setDefinition('app.my_transport', $definition);
                 });
@@ -304,7 +304,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]);
 
         $container = $this->getContainer();
-        self::assertInstanceOf(VoidTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
+        self::assertInstanceOf(StreamTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
     }
 
     public function test_default_error_handler_is_registered_when_config_omits_error_handlers() : void

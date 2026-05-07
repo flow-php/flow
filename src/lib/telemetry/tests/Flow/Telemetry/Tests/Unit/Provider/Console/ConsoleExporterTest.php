@@ -12,7 +12,6 @@ use Flow\Telemetry\Provider\Console\ConsoleExporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, LogEntryMother, ResourceMother, SpanMother};
 use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
-use Flow\Telemetry\Transport\VoidTransport;
 use PHPUnit\Framework\TestCase;
 
 final class ConsoleExporterTest extends TestCase
@@ -122,14 +121,14 @@ final class ConsoleExporterTest extends TestCase
         self::assertInstanceOf(Exporter::class, new ConsoleExporter(colors: false, outputStream: $stream));
     }
 
-    public function test_transports_returns_void_transport() : void
+    public function test_shutdown_is_noop() : void
     {
         $stream = \fopen('php://memory', 'rwb');
         self::assertIsResource($stream);
 
-        $transports = (new ConsoleExporter(colors: false, outputStream: $stream))->transports();
+        $exporter = new ConsoleExporter(colors: false, outputStream: $stream);
+        $exporter->shutdown();
 
-        self::assertCount(1, $transports);
-        self::assertInstanceOf(VoidTransport::class, $transports[0]);
+        $this->addToAssertionCount(1);
     }
 }

@@ -11,7 +11,6 @@ use Flow\Telemetry\Meter\{Metric, MetricType};
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, LogEntryMother, ResourceMother, SpanMother};
-use Flow\Telemetry\Transport\VoidTransport;
 use PHPUnit\Framework\TestCase;
 
 final class MemoryExporterTest extends TestCase
@@ -120,11 +119,12 @@ final class MemoryExporterTest extends TestCase
         self::assertSame([], $exporter->spans());
     }
 
-    public function test_transports_returns_void_transport() : void
+    public function test_shutdown_is_noop() : void
     {
-        $transports = (new MemoryExporter())->transports();
+        $exporter = new MemoryExporter();
 
-        self::assertCount(1, $transports);
-        self::assertInstanceOf(VoidTransport::class, $transports[0]);
+        $exporter->shutdown();
+
+        $this->addToAssertionCount(1);
     }
 }

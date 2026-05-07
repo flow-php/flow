@@ -19,6 +19,8 @@ final class MemoryLogProcessor implements LogProcessor
      */
     private array $entries = [];
 
+    private bool $isShutdown = false;
+
     public function __construct(
         private readonly Exporter $logExporter,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
@@ -69,11 +71,6 @@ final class MemoryLogProcessor implements LogProcessor
         ));
     }
 
-    public function exporter() : Exporter
-    {
-        return $this->logExporter;
-    }
-
     public function flush() : bool
     {
         if (\count($this->entries) === 0) {
@@ -97,5 +94,22 @@ final class MemoryLogProcessor implements LogProcessor
     public function reset() : void
     {
         $this->entries = [];
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->logExporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

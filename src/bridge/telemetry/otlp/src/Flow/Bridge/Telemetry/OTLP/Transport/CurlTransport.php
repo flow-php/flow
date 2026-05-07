@@ -7,7 +7,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Telemetry\Serializer\Serializer;
 use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Transport\{Transport, TransportException};
 
 /**
  * Asynchronous HTTP transport for OTLP using curl_multi for non-blocking I/O.
@@ -16,6 +15,9 @@ use Flow\Telemetry\Transport\{Transport, TransportException};
  */
 final class CurlTransport implements Transport
 {
+    /** @var list<string> */
+    private array $failures = [];
+
     private bool $isShutdown = false;
 
     private readonly \CurlMultiHandle $multiHandle;
@@ -64,6 +66,18 @@ final class CurlTransport implements Transport
         $this->processCompleted();
 
         \curl_multi_close($this->multiHandle);
+
+        if (\count($this->failures) === 0) {
+            return;
+        }
+
+        $first = $this->failures[0];
+        $count = \count($this->failures);
+        $message = $count === 1
+            ? \sprintf('OTLP curl shutdown: 1 export failed: %s', $first)
+            : \sprintf('OTLP curl shutdown: %d exports failed; first error: %s', $count, $first);
+
+        throw new TransportException($message);
     }
 
     /**
@@ -120,6 +134,22 @@ final class CurlTransport implements Transport
             /** @var \CurlHandle $ch */
             $ch = $info['handle'];
             $id = (int) $ch;
+
+            $errno = $info['result'];
+            $httpCode = (int) \curl_getinfo($ch, \CURLINFO_HTTP_CODE);
+            $effectiveUrl = (string) \curl_getinfo($ch, \CURLINFO_EFFECTIVE_URL);
+            $urlForMessage = $effectiveUrl !== '' ? $effectiveUrl : 'unknown url';
+
+            if ($errno !== \CURLE_OK) {
+                $this->failures[] = \sprintf(
+                    'curl error %d (%s) for %s',
+                    $errno,
+                    \curl_strerror($errno) ?? 'unknown',
+                    $urlForMessage,
+                );
+            } elseif ($httpCode < 200 || $httpCode >= 300) {
+                $this->failures[] = \sprintf('HTTP %d from %s', $httpCode, $urlForMessage);
+            }
 
             \curl_multi_remove_handle($this->multiHandle, $ch);
             \curl_close($ch);

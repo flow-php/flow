@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-use Flow\Telemetry\Exporter\Exporter;
-
 /**
  * Interface for processing metric measurements.
  *
@@ -14,11 +12,6 @@ use Flow\Telemetry\Exporter\Exporter;
  */
 interface MetricProcessor
 {
-    /**
-     * Get the exporter used by this processor.
-     */
-    public function exporter() : Exporter;
-
     /**
      * Export all pending metrics.
      *
@@ -36,4 +29,12 @@ interface MetricProcessor
      * on filtering rules.
      */
     public function process(Metric $metric) : void;
+
+    /**
+     * Shutdown the processor.
+     *
+     * Implementations SHOULD flush() pending data before delegating shutdown
+     * to the underlying exporter. MUST be idempotent and MUST NOT throw.
+     */
+    public function shutdown() : void;
 }

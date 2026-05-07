@@ -19,6 +19,8 @@ final class MemorySpanProcessor implements SpanProcessor
      */
     private array $endedSpansByTraceId = [];
 
+    private bool $isShutdown = false;
+
     /**
      * @var array<string, array<Span>>
      */
@@ -48,11 +50,6 @@ final class MemorySpanProcessor implements SpanProcessor
     public function endedSpansForTrace(string $traceId) : array
     {
         return $this->endedSpansByTraceId[$traceId] ?? [];
-    }
-
-    public function exporter() : Exporter
-    {
-        return $this->spanExporter;
     }
 
     public function flush() : bool
@@ -98,6 +95,23 @@ final class MemorySpanProcessor implements SpanProcessor
     {
         $this->startedSpansByTraceId = [];
         $this->endedSpansByTraceId = [];
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->spanExporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 
     /**

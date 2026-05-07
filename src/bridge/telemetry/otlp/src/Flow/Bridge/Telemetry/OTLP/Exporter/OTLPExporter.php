@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Exporter;
 
+use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Transport\Transport;
 
 /**
  * Exports logs, metrics, and spans to an OTLP endpoint via the configured transport.
@@ -37,11 +37,12 @@ final readonly class OTLPExporter implements Exporter
         }
     }
 
-    /**
-     * @return array<Transport>
-     */
-    public function transports() : array
+    public function shutdown() : void
     {
-        return [$this->transport];
+        try {
+            $this->transport->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

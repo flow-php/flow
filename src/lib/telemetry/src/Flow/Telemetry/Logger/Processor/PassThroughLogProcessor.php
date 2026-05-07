@@ -24,11 +24,6 @@ final readonly class PassThroughLogProcessor implements LogProcessor
     ) {
     }
 
-    public function exporter() : Exporter
-    {
-        return $this->exporter;
-    }
-
     public function flush() : bool
     {
         return true;
@@ -38,6 +33,15 @@ final readonly class PassThroughLogProcessor implements LogProcessor
     {
         try {
             $this->exporter->export(Signals::logs([$entry]));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
+    }
+
+    public function shutdown() : void
+    {
+        try {
+            $this->exporter->shutdown();
         } catch (\Throwable $e) {
             $this->errorHandler->handle($e);
         }

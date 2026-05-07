@@ -24,11 +24,6 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
     ) {
     }
 
-    public function exporter() : Exporter
-    {
-        return $this->exporter;
-    }
-
     public function flush() : bool
     {
         return true;
@@ -45,5 +40,14 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
 
     public function onStart(Span $span) : void
     {
+    }
+
+    public function shutdown() : void
+    {
+        try {
+            $this->exporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

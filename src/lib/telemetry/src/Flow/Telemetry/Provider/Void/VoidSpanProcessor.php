@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Void;
 
-use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
@@ -12,11 +11,6 @@ use Flow\Telemetry\Tracer\{Span, SpanProcessor};
  */
 final readonly class VoidSpanProcessor implements SpanProcessor
 {
-    public function exporter() : Exporter
-    {
-        return new VoidExporter();
-    }
-
     public function flush() : bool
     {
         return true;
@@ -27,6 +21,10 @@ final readonly class VoidSpanProcessor implements SpanProcessor
     }
 
     public function onStart(Span $span) : void
+    {
+    }
+
+    public function shutdown() : void
     {
     }
 }

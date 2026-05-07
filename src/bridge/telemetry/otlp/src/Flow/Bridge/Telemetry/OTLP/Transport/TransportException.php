@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\Telemetry\Transport;
+namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 /**
- * Exception thrown when a transport operation fails.
+ * Exception thrown when an OTLP transport operation fails.
  *
  * This includes network errors, serialization failures, or backend rejections.
  */

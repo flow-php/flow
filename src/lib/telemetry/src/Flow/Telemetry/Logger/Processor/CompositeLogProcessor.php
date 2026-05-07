@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Logger\Processor;
 
 use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
 
 /**
@@ -25,15 +24,6 @@ final readonly class CompositeLogProcessor implements LogProcessor
         private array $processors,
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
-    }
-
-    public function exporter() : Exporter
-    {
-        if (\count($this->processors) === 0) {
-            throw new \RuntimeException('CompositeLogProcessor has no processors');
-        }
-
-        return $this->processors[0]->exporter();
     }
 
     public function flush() : bool
@@ -73,5 +63,16 @@ final readonly class CompositeLogProcessor implements LogProcessor
     public function processors() : array
     {
         return $this->processors;
+    }
+
+    public function shutdown() : void
+    {
+        foreach ($this->processors as $processor) {
+            try {
+                $processor->shutdown();
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
+        }
     }
 }

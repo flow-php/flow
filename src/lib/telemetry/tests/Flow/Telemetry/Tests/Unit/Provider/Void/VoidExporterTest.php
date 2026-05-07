@@ -11,7 +11,6 @@ use Flow\Telemetry\Meter\{Metric, MetricType};
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, LogEntryMother, ResourceMother, SpanMother};
-use Flow\Telemetry\Transport\VoidTransport;
 use PHPUnit\Framework\TestCase;
 
 final class VoidExporterTest extends TestCase
@@ -73,11 +72,12 @@ final class VoidExporterTest extends TestCase
         self::assertInstanceOf(Exporter::class, new VoidExporter());
     }
 
-    public function test_transports_returns_void_transport() : void
+    public function test_shutdown_is_noop() : void
     {
-        $transports = (new VoidExporter())->transports();
+        $exporter = new VoidExporter();
 
-        self::assertCount(1, $transports);
-        self::assertInstanceOf(VoidTransport::class, $transports[0]);
+        $exporter->shutdown();
+
+        $this->addToAssertionCount(1);
     }
 }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\{GrpcSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\{GrpcTransport, TransportException};
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Transport\TransportException;
+use Flow\Telemetry\Tests\Mother\SpanMother;
 use Google\Protobuf\Internal\Message;
 use Grpc\BaseStub;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -77,6 +77,25 @@ final class GrpcTransportTest extends TestCase
         $this->expectExceptionMessage('Cannot send after shutdown');
 
         $transport->send(Signals::traces([]));
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_shutdown_aggregates_grpc_failures() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $transport = new GrpcTransport(
+            endpoint: '127.0.0.1:1',
+            serializer: new ProtobufSerializer(),
+        );
+
+        $transport->send(Signals::traces([SpanMother::withName('span-a')]));
+        $transport->send(Signals::traces([SpanMother::withName('span-b')]));
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessageMatches('/OTLP gRPC shutdown: 2 exports failed; first error: gRPC status \\d+/');
+
+        $transport->shutdown();
     }
 
     #[RequiresPhpExtension('grpc')]

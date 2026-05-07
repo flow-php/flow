@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Exporter;
 
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Transport\Transport;
 
 /**
  * Interface for exporting telemetry signals to external systems.
@@ -27,9 +26,10 @@ interface Exporter
     public function export(Signals $signal) : bool;
 
     /**
-     * Get the transports used by this exporter.
+     * Shutdown the exporter and any owned transports.
      *
-     * @return array<Transport> Always returns at least one transport
+     * Implementations MUST be idempotent and MUST NOT throw - runtime errors
+     * are routed through the configured error handler instead.
      */
-    public function transports() : array;
+    public function shutdown() : void;
 }

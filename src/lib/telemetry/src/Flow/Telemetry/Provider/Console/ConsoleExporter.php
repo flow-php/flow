@@ -10,7 +10,6 @@ use Flow\Telemetry\Meter\{Metric, MetricType};
 use Flow\Telemetry\Resource as TelemetryResource;
 use Flow\Telemetry\Signal\{SignalType, Signals};
 use Flow\Telemetry\Tracer\{Span, SpanStatusCode};
-use Flow\Telemetry\Transport\{Transport, VoidTransport};
 
 /**
  * Unified console exporter for logs, metrics, and spans.
@@ -60,12 +59,8 @@ final readonly class ConsoleExporter implements Exporter
         };
     }
 
-    /**
-     * @return array<Transport>
-     */
-    public function transports() : array
+    public function shutdown() : void
     {
-        return [new VoidTransport()];
     }
 
     private function appendMetricExemplarInfo(string &$line, Metric $metric) : void

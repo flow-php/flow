@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-use Flow\Telemetry\Exporter\Exporter;
-
 /**
  * Interface for processing log records.
  *
@@ -14,11 +12,6 @@ use Flow\Telemetry\Exporter\Exporter;
  */
 interface LogProcessor
 {
-    /**
-     * Get the exporter used by this processor.
-     */
-    public function exporter() : Exporter;
-
     /**
      * Export all pending log records.
      *
@@ -38,4 +31,12 @@ interface LogProcessor
      * @param LogEntry $entry The complete log entry to process
      */
     public function process(LogEntry $entry) : void;
+
+    /**
+     * Shutdown the processor.
+     *
+     * Implementations SHOULD flush() pending data before delegating shutdown
+     * to the underlying exporter. MUST be idempotent and MUST NOT throw.
+     */
+    public function shutdown() : void;
 }
