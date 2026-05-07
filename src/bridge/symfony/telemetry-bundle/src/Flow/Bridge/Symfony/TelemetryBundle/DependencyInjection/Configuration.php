@@ -596,18 +596,73 @@ final class Configuration implements ConfigurationInterface
                         );
                     }
 
+                    if (\is_array($v) && ($v['type'] ?? null) === 'stream') {
+                        $forbidden = [
+                            'timeout',
+                            'connect_timeout',
+                            'compression',
+                            'follow_redirects',
+                            'max_redirects',
+                            'proxy',
+                            'ssl_verify_peer',
+                            'ssl_verify_host',
+                            'ssl_cert_path',
+                            'ssl_key_path',
+                            'ca_info_path',
+                            'headers',
+                            'insecure',
+                        ];
+
+                        foreach ($forbidden as $key) {
+                            if (\array_key_exists($key, $v)) {
+                                throw new InvalidConfigurationException(\sprintf(
+                                    'The "%s" parameter is not supported when transport.type is "stream".',
+                                    $key,
+                                ));
+                            }
+                        }
+
+                        if (\array_key_exists('serializer', $v)) {
+                            throw new InvalidConfigurationException(
+                                'The "serializer" parameter is not supported when transport.type is "stream"; only JSON encoding is allowed by the OTLP File Exporter spec.',
+                            );
+                        }
+                    }
+
                     return $v;
                 })
             ->end()
+            ->validate()
+                ->ifTrue(static function (array $v) : bool {
+                    if (($v['type'] ?? null) !== 'stream') {
+                        return false;
+                    }
+
+                    $endpoint = $v['endpoint'] ?? null;
+
+                    return !\is_string($endpoint) || $endpoint === '';
+                })
+                ->thenInvalid('The "endpoint" parameter is required and must be a non-empty string when transport.type is "stream" (used as the destination file path or php:// stream wrapper URI).')
+            ->end()
             ->children()
                 ->enumNode('type')
-                    ->info("Transport type: 'curl', 'grpc', 'service'")
-                    ->values(['curl', 'grpc', 'service'])
+                    ->info("Transport type: 'curl', 'grpc', 'stream', 'service'")
+                    ->values(['curl', 'grpc', 'stream', 'service'])
                     ->defaultValue('curl')
                 ->end()
                 ->scalarNode('endpoint')
-                    ->info('OTLP endpoint URL (required unless type: service)')
+                    ->info('OTLP endpoint URL for curl/grpc, or destination file path / php:// stream wrapper URI for stream (required unless type: service)')
                     ->defaultNull()
+                ->end()
+                ->integerNode('file_permissions')
+                    ->info('Permissions applied when creating new files (stream only; ignored for php:// destinations)')
+                    ->defaultValue(0644)
+                    ->min(0)
+                    ->max(0777)
+                ->end()
+                ->booleanNode('create_directories')
+                    ->info('Create parent directories of the destination path if they do not exist (stream only; ignored for php:// destinations)')
+                    ->defaultTrue()
                 ->end()
                 ->integerNode('timeout')
                     ->info('Request timeout in seconds (curl only)')

@@ -107,7 +107,7 @@ services:
             - "8888:8888"
         volumes:
             - "./docker/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro"
-            - "./var/otel:/var/otel"
+            - "./.scratchpad/migraitons/var/otel:/var/otel"
         depends_on:
             - aspire
             - postgres

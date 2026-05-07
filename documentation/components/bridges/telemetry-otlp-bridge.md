@@ -20,12 +20,13 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Transports
 
-The bridge provides two transport options for sending telemetry data to OTLP endpoints.
+The bridge provides three transport options for sending telemetry data to OTLP endpoints.
 
-| Transport | Protocol     | Use Case                         | Requirements  |
-|-----------|--------------|----------------------------------|---------------|
-| **Curl**  | HTTP (async) | Production, low latency          | ext-curl      |
-| **gRPC**  | gRPC         | High-performance binary protocol | ext-grpc      |
+| Transport  | Protocol      | Use Case                                                                 | Requirements  |
+|------------|---------------|--------------------------------------------------------------------------|---------------|
+| **Curl**   | HTTP (async)  | Production, low latency                                                  | ext-curl      |
+| **gRPC**   | gRPC          | High-performance binary protocol                                         | ext-grpc      |
+| **Stream** | JSONL         | Sidecar collectors, log shippers, FaaS / Kubernetes stdout/err scraping  | None          |
 
 ### Curl Transport (Recommended)
 
@@ -86,6 +87,43 @@ $transport = otlp_grpc_transport(
     insecure: false, // Use TLS
 );
 ```
+
+### Stream Transport
+
+The Stream transport implements the [OTLP File Exporter spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/).
+It writes JSONL to either an absolute file path or a `php://` stream wrapper. The handle is opened once in
+the constructor and reused across `send()` calls; each call appends one JSON Line under `LOCK_EX` so concurrent
+writers interleave at line boundaries.
+
+Only JSON encoding is supported per the spec — the transport hard-codes the JSON serializer; there is no
+serializer parameter.
+
+```php
+<?php
+
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_stream_transport;
+
+// Append to a file (creates parent directories by default, chmod 0644 on first create)
+$transport = otlp_stream_transport('/var/log/otel/logs.jsonl');
+
+// Stream wrapper destinations for FaaS / Kubernetes log scraping
+$transport = otlp_stream_transport('php://stdout');
+$transport = otlp_stream_transport('php://stderr');
+
+// Tweak file mode and disable directory creation
+$transport = otlp_stream_transport(
+    destination: '/var/log/otel/logs.jsonl',
+    filePermissions: 0o640,
+    createDirectories: false,
+);
+```
+
+`filePermissions` and `createDirectories` apply only when the destination is a file path; they are ignored for
+`php://` URIs. For production deployments.
+
+One transport instance writes to one destination. To split logs, metrics, and traces across multiple files,
+build three transports and wire them to three exporters. To keep all signals in one file (the OpenTelemetry
+Collector handles mixed JSONL just fine), reuse the same destination across exporters.
 
 ## Serializers
 

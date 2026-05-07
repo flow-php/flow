@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Configuration;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
@@ -262,6 +263,120 @@ final class ConfigurationTest extends TestCase
         self::assertSame('severity_filtering', $config['logger_provider']['processor']['type']);
         self::assertSame('warn', $config['logger_provider']['processor']['minimum_severity']);
         self::assertSame('otlp', $config['logger_provider']['processor']['inner_processor']['exporter']);
+    }
+
+    public function test_stream_transport_accepts_file_options() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_stream' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'stream',
+                            'endpoint' => '/var/log/otel/logs.jsonl',
+                            'file_permissions' => 0o640,
+                            'create_directories' => false,
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        $transport = $config['exporters']['otlp_stream']['otlp']['transport'];
+        self::assertSame(0o640, $transport['file_permissions']);
+        self::assertFalse($transport['create_directories']);
+    }
+
+    #[TestWith(['/var/log/otel/logs.jsonl'])]
+    #[TestWith(['php://stdout'])]
+    #[TestWith(['php://stderr'])]
+    public function test_stream_transport_accepts_file_path_and_php_uri(string $endpoint) : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_stream' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'stream',
+                            'endpoint' => $endpoint,
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        $transport = $config['exporters']['otlp_stream']['otlp']['transport'];
+        self::assertSame('stream', $transport['type']);
+        self::assertSame($endpoint, $transport['endpoint']);
+        self::assertSame(0644, $transport['file_permissions']);
+        self::assertTrue($transport['create_directories']);
+    }
+
+    #[TestWith(['timeout', 30])]
+    #[TestWith(['connect_timeout', 5])]
+    #[TestWith(['compression', true])]
+    #[TestWith(['ssl_cert_path', '/etc/cert.pem'])]
+    #[TestWith(['headers', ['Authorization' => 'Bearer x']])]
+    #[TestWith(['insecure', true])]
+    public function test_stream_transport_rejects_http_specific_options(string $key, mixed $value) : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(\sprintf('The "%s" parameter is not supported when transport.type is "stream".', $key));
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_stream' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'stream',
+                            'endpoint' => '/var/log/otel/logs.jsonl',
+                            $key => $value,
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_stream_transport_rejects_serializer_block() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('"serializer" parameter is not supported when transport.type is "stream"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_stream' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'stream',
+                            'endpoint' => '/var/log/otel/logs.jsonl',
+                            'serializer' => ['type' => 'protobuf'],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_stream_transport_requires_non_empty_endpoint() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('endpoint');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp_stream' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'stream'],
+                    ],
+                ],
+            ],
+        ]]);
     }
 
     public function test_transport_service_type_inside_otlp() : void

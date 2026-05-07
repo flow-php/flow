@@ -428,6 +428,39 @@ exporters:
         serializer: { type: protobuf }
 ```
 
+#### stream
+
+OTLP File Exporter ([spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/)). Writes one JSON Line
+per batch to the configured destination — either an absolute file path or a `php://` stream wrapper — with
+`LOCK_EX` around each `fwrite`. Only JSON encoding is supported per the spec; the `serializer` block and
+HTTP-specific options (`timeout`, `ssl_*`, `headers`, etc.) are rejected at config time.
+
+| Option                | Type    | Default  | Description                                                                  |
+|-----------------------|---------|----------|------------------------------------------------------------------------------|
+| `endpoint`            | string  | -        | File path or `php://` stream wrapper URI (required)                          |
+| `file_permissions`    | integer | `0644`   | File mode applied when creating new files; ignored for `php://` destinations |
+| `create_directories`  | boolean | `true`   | Create the destination's parent directories if missing; ignored for `php://` destinations |
+
+```yaml
+exporters:
+  otlp_logs_file:
+    otlp:
+      transport:
+        type: stream
+        endpoint: '%kernel.project_dir%/var/otel/logs.jsonl'
+        file_permissions: 0640
+        create_directories: true
+
+  otlp_logs_stdout:
+    otlp:
+      transport:
+        type: stream
+        endpoint: 'php://stdout'
+```
+
+To write all three signal types to one file, point three exporters at the same destination — the OpenTelemetry
+Collector's `otlpjsonfile` receiver handles mixed `resourceLogs` / `resourceMetrics` / `resourceSpans` lines.
+
 #### service
 
 Aliases an existing transport service ID inside the OTLP exporter.

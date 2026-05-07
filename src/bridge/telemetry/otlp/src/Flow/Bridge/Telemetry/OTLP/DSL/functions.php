@@ -6,7 +6,7 @@ namespace Flow\Bridge\Telemetry\OTLP\DSL;
 
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\Context\{ContextStorage, MemoryContextStorage};
 use Flow\Telemetry\Logger\{LogProcessor, LoggerProvider};
@@ -110,6 +110,26 @@ function otlp_curl_transport(
     CurlTransportOptions $options = new CurlTransportOptions(),
 ) : Transport {
     return new CurlTransport($endpoint, $serializer, $options);
+}
+
+/**
+ * Create a stream transport for OTLP that writes JSONL to a single destination.
+ *
+ * Accepts an absolute file path or a php:// stream wrapper such as
+ * 'php://stdout', 'php://stderr', 'php://memory', or 'php://temp'. Each
+ * export() call appends one JSON Line under LOCK_EX so concurrent writers
+ * interleave at line boundaries. The $filePermissions and $createDirectories
+ * parameters apply only when the destination is a file path.
+ *
+ * Per the OTLP File Exporter spec only JSON encoding is supported.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
+function otlp_stream_transport(
+    string $destination,
+    int $filePermissions = 0644,
+    bool $createDirectories = true,
+) : Transport {
+    return new StreamTransport($destination, $filePermissions, $createDirectories);
 }
 
 /**

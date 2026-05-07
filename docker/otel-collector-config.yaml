@@ -6,6 +6,13 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+  # OTLP JSON file receiver — picks up JSONL written by flow-php StreamTransport.
+  # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/otlpjsonfilereceiver
+  otlpjsonfile:
+    include:
+      - /var/otel/*.jsonl
+    start_at: end
+
   # PostgreSQL metrics receiver
   # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/postgresqlreceiver
   postgresql:
@@ -137,4 +144,7 @@ service:
       exporters: [debug, otlp_grpc/aspire]
     logs:
       receivers: [otlp]
+      exporters: [debug, otlp_grpc/aspire]
+    logs/file:
+      receivers: [otlpjsonfile]
       exporters: [debug, otlp_grpc/aspire]

@@ -9,7 +9,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\FlowTelemetryExtensi
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, GrpcTransport};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, GrpcTransport, StreamTransport};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, SeverityFilteringLogProcessor};
 use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
 use Flow\Telemetry\Provider\Clock\SystemClock;
@@ -20,7 +20,7 @@ use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor};
 use Flow\Telemetry\Transport\VoidTransport;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\{CoversClass, TestWith};
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition};
 use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
 
@@ -362,6 +362,68 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
         self::assertInstanceOf(SeverityFilteringLogProcessor::class, $container->get('flow.telemetry.logger_provider.processor'));
+    }
+
+    public function test_stream_transport_is_built_inline_for_file_path() : void
+    {
+        $path = \sys_get_temp_dir() . '/flow-otlp-bundle-' . \bin2hex(\random_bytes(4)) . '.jsonl';
+
+        try {
+            $this->bootKernel([
+                'config' => static function (TestKernel $kernel) use ($path) : void {
+                    $kernel->addTestExtensionConfig('flow_telemetry', [
+                        'resource' => [],
+                        'exporters' => [
+                            'otlp_stream' => [
+                                'otlp' => [
+                                    'transport' => [
+                                        'type' => 'stream',
+                                        'endpoint' => $path,
+                                        'file_permissions' => 0o640,
+                                        'create_directories' => true,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                },
+            ]);
+
+            $container = $this->getContainer();
+            self::assertInstanceOf(StreamTransport::class, $container->get('flow.telemetry.exporter.otlp_stream.transport'));
+            self::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp_stream'));
+        } finally {
+            if (\is_file($path)) {
+                \unlink($path);
+            }
+        }
+    }
+
+    #[TestWith(['php://stdout'])]
+    #[TestWith(['php://stderr'])]
+    public function test_stream_transport_is_built_inline_for_php_uri(string $endpoint) : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) use ($endpoint) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'otlp_stream' => [
+                            'otlp' => [
+                                'transport' => [
+                                    'type' => 'stream',
+                                    'endpoint' => $endpoint,
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(StreamTransport::class, $container->get('flow.telemetry.exporter.otlp_stream.transport'));
+        self::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp_stream'));
     }
 
     public function test_two_separate_otlp_backends() : void

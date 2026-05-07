@@ -9,7 +9,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport};
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport};
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
@@ -100,6 +100,16 @@ final class FlowTelemetryExtension extends Extension
 
         if (!\is_string($endpoint) || $endpoint === '') {
             throw new RuntimeException(\sprintf('exporter "%s" transport requires an endpoint', $exporterName));
+        }
+
+        if ($type === 'stream') {
+            $definition = new Definition(StreamTransport::class);
+            $definition->setArgument(0, $endpoint);
+            $definition->setArgument(1, $transportConfig['file_permissions'] ?? 0644);
+            $definition->setArgument(2, $transportConfig['create_directories'] ?? true);
+            $container->setDefinition($transportServiceId, $definition);
+
+            return $transportServiceId;
         }
 
         $serializerServiceId = $this->buildOTLPSerializer($transportConfig['serializer'] ?? [], $transportServiceId, $container);
