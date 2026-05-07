@@ -12,6 +12,7 @@ use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport};
 use Flow\Telemetry\{Attributes, Logger\Logger, Meter\Meter, Tracer\Tracer};
 use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\ErrorHandler\{CompositeErrorHandler, ErrorLogHandler, ErrorLogMessageType, NullErrorHandler, StreamHandler, SyslogFacility, SyslogHandler, SyslogSeverity, UdpSyslogHandler};
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor,
     CompositeLogProcessor,
@@ -67,6 +68,7 @@ final class FlowTelemetryExtension extends Extension
         $loggers = ($config['loggers'] ?? []) + ['default' => []];
 
         $this->registerGlobalServices($config, $container);
+        $this->registerErrorHandlers($config['error_handlers'] ?? [], $container);
         $this->registerPropagator($config['propagator'] ?? [], $container);
         $this->registerResource($config['resource'], $container);
         $this->registerNamedExporters($config['exporters'] ?? [], $container);
@@ -184,6 +186,100 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
+     * @param array<string, mixed> $handlerConfig
+     */
+    private function buildErrorHandlerDefinition(string $name, array $handlerConfig, ContainerBuilder $container) : void
+    {
+        $serviceId = 'flow.telemetry.error_handler.' . $name;
+        $type = $handlerConfig['type'] ?? 'error_log';
+
+        switch ($type) {
+            case 'error_log':
+                $definition = new Definition(ErrorLogHandler::class);
+                $definition->setArgument(0, $this->mapErrorLogMessageType($handlerConfig['message_type'] ?? 'operating_system'));
+                $definition->setArgument(1, $handlerConfig['expand_newlines'] ?? false);
+                $definition->setArgument(2, $handlerConfig['message_prefix'] ?? '[flow-telemetry]');
+                $container->setDefinition($serviceId, $definition);
+
+                break;
+
+            case 'stream':
+                $destination = $handlerConfig['destination'] ?? null;
+
+                if (!\is_string($destination) || $destination === '') {
+                    throw new RuntimeException(\sprintf('error_handler "%s" of type "stream" requires a non-empty "destination"', $name));
+                }
+                $definition = new Definition(StreamHandler::class);
+                $definition->setArgument(0, $destination);
+                $definition->setArgument(1, $handlerConfig['file_permissions'] ?? 0644);
+                $definition->setArgument(2, $handlerConfig['create_directories'] ?? true);
+                $definition->setArgument(3, $handlerConfig['message_prefix'] ?? '[flow-telemetry]');
+                $container->setDefinition($serviceId, $definition);
+
+                break;
+
+            case 'syslog':
+                $definition = new Definition(SyslogHandler::class);
+                $definition->setArgument(0, $handlerConfig['ident'] ?? 'flow-telemetry');
+                $definition->setArgument(1, $this->mapSyslogFacility($handlerConfig['facility'] ?? 'user'));
+                $definition->setArgument(2, $handlerConfig['log_opts'] ?? \LOG_PID);
+                $definition->setArgument(3, $this->mapSyslogSeverity($handlerConfig['severity'] ?? 'error'));
+                $container->setDefinition($serviceId, $definition);
+
+                break;
+
+            case 'udp_syslog':
+                $host = $handlerConfig['host'] ?? null;
+
+                if (!\is_string($host) || $host === '') {
+                    throw new RuntimeException(\sprintf('error_handler "%s" of type "udp_syslog" requires a non-empty "host"', $name));
+                }
+                $definition = new Definition(UdpSyslogHandler::class);
+                $definition->setArgument(0, $host);
+                $definition->setArgument(1, $handlerConfig['port'] ?? 514);
+                $definition->setArgument(2, $handlerConfig['ident'] ?? 'flow-telemetry');
+                $definition->setArgument(3, $this->mapSyslogFacility($handlerConfig['facility'] ?? 'user'));
+                $definition->setArgument(4, $this->mapSyslogSeverity($handlerConfig['severity'] ?? 'error'));
+                $container->setDefinition($serviceId, $definition);
+
+                break;
+
+            case 'composite':
+                $children = $handlerConfig['handlers'] ?? [];
+
+                if (!\is_array($children) || \count($children) === 0) {
+                    throw new RuntimeException(\sprintf('error_handler "%s" of type "composite" requires a non-empty "handlers" list', $name));
+                }
+                $childRefs = [];
+
+                foreach ($children as $childName) {
+                    $childRefs[] = $this->resolveErrorHandlerReference($childName, $container);
+                }
+                $container->setDefinition($serviceId, new Definition(CompositeErrorHandler::class, $childRefs));
+
+                break;
+
+            case 'noop':
+                $container->setDefinition($serviceId, new Definition(NullErrorHandler::class));
+
+                break;
+
+            case 'service':
+                $customServiceId = $handlerConfig['service_id'] ?? null;
+
+                if (!\is_string($customServiceId) || $customServiceId === '') {
+                    throw new RuntimeException(\sprintf('error_handler "%s" of type "service" requires a non-empty "service_id"', $name));
+                }
+                $container->setAlias($serviceId, $customServiceId);
+
+                break;
+
+            default:
+                throw new RuntimeException(\sprintf('Unknown error_handler type "%s" for handler "%s"', (string) $type, $name));
+        }
+    }
+
+    /**
      * @param array<string, mixed> $config
      */
     private function buildLoggerProvider(array $config, ContainerBuilder $container) : string
@@ -191,11 +287,13 @@ final class FlowTelemetryExtension extends Extension
         $providerServiceId = 'flow.telemetry.logger_provider';
 
         $processorServiceId = $this->buildLogProcessor($config['processor'] ?? [], $providerServiceId, $container);
+        $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         $definition = new Definition(LoggerProvider::class);
         $definition->setArgument(0, new Reference($processorServiceId));
         $definition->setArgument(1, new Reference('flow.telemetry.clock'));
         $definition->setArgument(2, new Reference('flow.telemetry.context_storage'));
+        $definition->setArgument('$errorHandler', $errorHandlerRef);
         $container->setDefinition($providerServiceId, $definition);
 
         return $providerServiceId;
@@ -208,6 +306,7 @@ final class FlowTelemetryExtension extends Extension
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
         $type = $config['type'] ?? 'void';
+        $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         switch ($type) {
             case 'service':
@@ -229,6 +328,7 @@ final class FlowTelemetryExtension extends Extension
                 $exporterRef = $this->resolveExporterReference('log', $config['exporter'] ?? null, $container);
                 $definition = new Definition(MemoryLogProcessor::class);
                 $definition->setArgument(0, $exporterRef);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -238,6 +338,7 @@ final class FlowTelemetryExtension extends Extension
                 $definition = new Definition(BatchingLogProcessor::class);
                 $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
+                $definition->setArgument(2, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -246,6 +347,7 @@ final class FlowTelemetryExtension extends Extension
                 $exporterRef = $this->resolveExporterReference('log', $config['exporter'] ?? null, $container);
                 $definition = new Definition(PassThroughLogProcessor::class);
                 $definition->setArgument(0, $exporterRef);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -265,6 +367,7 @@ final class FlowTelemetryExtension extends Extension
                 }
                 $definition = new Definition(CompositeLogProcessor::class);
                 $definition->setArgument(0, $processorRefs);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -299,6 +402,7 @@ final class FlowTelemetryExtension extends Extension
         $providerServiceId = 'flow.telemetry.meter_provider';
 
         $processorServiceId = $this->buildMetricProcessor($config['processor'] ?? [], $providerServiceId, $container);
+        $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         $temporality = ($config['temporality'] ?? 'cumulative') === 'delta'
             ? AggregationTemporality::DELTA
@@ -308,6 +412,7 @@ final class FlowTelemetryExtension extends Extension
         $definition->setArgument(0, new Reference($processorServiceId));
         $definition->setArgument(1, new Reference('flow.telemetry.clock'));
         $definition->setArgument(2, $temporality);
+        $definition->setArgument('$errorHandler', $errorHandlerRef);
         $container->setDefinition($providerServiceId, $definition);
 
         return $providerServiceId;
@@ -320,6 +425,7 @@ final class FlowTelemetryExtension extends Extension
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
         $type = $config['type'] ?? 'void';
+        $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         switch ($type) {
             case 'service':
@@ -341,6 +447,7 @@ final class FlowTelemetryExtension extends Extension
                 $exporterRef = $this->resolveExporterReference('metric', $config['exporter'] ?? null, $container);
                 $definition = new Definition(MemoryMetricProcessor::class);
                 $definition->setArgument(0, $exporterRef);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -350,6 +457,7 @@ final class FlowTelemetryExtension extends Extension
                 $definition = new Definition(BatchingMetricProcessor::class);
                 $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
+                $definition->setArgument(2, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -358,6 +466,7 @@ final class FlowTelemetryExtension extends Extension
                 $exporterRef = $this->resolveExporterReference('metric', $config['exporter'] ?? null, $container);
                 $definition = new Definition(PassThroughMetricProcessor::class);
                 $definition->setArgument(0, $exporterRef);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -377,6 +486,7 @@ final class FlowTelemetryExtension extends Extension
                 }
                 $definition = new Definition(CompositeMetricProcessor::class);
                 $definition->setArgument(0, $processorRefs);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -487,6 +597,7 @@ final class FlowTelemetryExtension extends Extension
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
         $type = $config['type'] ?? 'void';
+        $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         switch ($type) {
             case 'service':
@@ -508,6 +619,7 @@ final class FlowTelemetryExtension extends Extension
                 $exporterRef = $this->resolveExporterReference('span', $config['exporter'] ?? null, $container);
                 $definition = new Definition(MemorySpanProcessor::class);
                 $definition->setArgument(0, $exporterRef);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -517,6 +629,7 @@ final class FlowTelemetryExtension extends Extension
                 $definition = new Definition(BatchingSpanProcessor::class);
                 $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
+                $definition->setArgument(2, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -525,6 +638,7 @@ final class FlowTelemetryExtension extends Extension
                 $exporterRef = $this->resolveExporterReference('span', $config['exporter'] ?? null, $container);
                 $definition = new Definition(PassThroughSpanProcessor::class);
                 $definition->setArgument(0, $exporterRef);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -544,6 +658,7 @@ final class FlowTelemetryExtension extends Extension
                 }
                 $definition = new Definition(CompositeSpanProcessor::class);
                 $definition->setArgument(0, $processorRefs);
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -564,15 +679,28 @@ final class FlowTelemetryExtension extends Extension
 
         $processorServiceId = $this->buildSpanProcessor($config['processor'] ?? [], $providerServiceId, $container);
         $samplerServiceId = $this->buildSampler($config['sampler'] ?? [], $container);
+        $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         $definition = new Definition(TracerProvider::class);
         $definition->setArgument(0, new Reference($processorServiceId));
         $definition->setArgument(1, new Reference('flow.telemetry.clock'));
         $definition->setArgument(2, new Reference('flow.telemetry.context_storage'));
         $definition->setArgument(3, new Reference($samplerServiceId));
+        $definition->setArgument('$errorHandler', $errorHandlerRef);
         $container->setDefinition($providerServiceId, $definition);
 
         return $providerServiceId;
+    }
+
+    private function mapErrorLogMessageType(string $value) : ErrorLogMessageType
+    {
+        return match ($value) {
+            'operating_system' => ErrorLogMessageType::OperatingSystem,
+            'email' => ErrorLogMessageType::Email,
+            'file' => ErrorLogMessageType::File,
+            'sapi' => ErrorLogMessageType::Sapi,
+            default => throw new RuntimeException(\sprintf('Unknown error_log message_type: %s', $value)),
+        };
     }
 
     private function mapSeverity(string $severity) : Severity
@@ -588,12 +716,80 @@ final class FlowTelemetryExtension extends Extension
         };
     }
 
+    private function mapSyslogFacility(string $value) : SyslogFacility
+    {
+        return match ($value) {
+            'auth' => SyslogFacility::Auth,
+            'cron' => SyslogFacility::Cron,
+            'daemon' => SyslogFacility::Daemon,
+            'kernel' => SyslogFacility::Kernel,
+            'local0' => SyslogFacility::Local0,
+            'local1' => SyslogFacility::Local1,
+            'local2' => SyslogFacility::Local2,
+            'local3' => SyslogFacility::Local3,
+            'local4' => SyslogFacility::Local4,
+            'local5' => SyslogFacility::Local5,
+            'local6' => SyslogFacility::Local6,
+            'local7' => SyslogFacility::Local7,
+            'lpr' => SyslogFacility::Lpr,
+            'mail' => SyslogFacility::Mail,
+            'news' => SyslogFacility::News,
+            'syslog' => SyslogFacility::Syslog,
+            'user' => SyslogFacility::User,
+            'uucp' => SyslogFacility::Uucp,
+            default => throw new RuntimeException(\sprintf('Unknown syslog facility: %s', $value)),
+        };
+    }
+
+    private function mapSyslogSeverity(string $value) : SyslogSeverity
+    {
+        return match ($value) {
+            'alert' => SyslogSeverity::Alert,
+            'critical' => SyslogSeverity::Critical,
+            'debug' => SyslogSeverity::Debug,
+            'emergency' => SyslogSeverity::Emergency,
+            'error' => SyslogSeverity::Error,
+            'info' => SyslogSeverity::Info,
+            'notice' => SyslogSeverity::Notice,
+            'warning' => SyslogSeverity::Warning,
+            default => throw new RuntimeException(\sprintf('Unknown syslog severity: %s', $value)),
+        };
+    }
+
     /**
      * @param array<string, mixed> $config
      */
     private function readConfigEnabled(string $path, ContainerBuilder $container, array $config) : bool
     {
         return $this->configsEnabled[$path] ??= parent::isConfigEnabled($container, $config);
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $config
+     */
+    private function registerErrorHandlers(array $config, ContainerBuilder $container) : void
+    {
+        if (!\array_key_exists('default', $config)) {
+            $config = ['default' => ['type' => 'error_log']] + $config;
+        }
+
+        $compositeNames = [];
+
+        foreach ($config as $name => $handlerConfig) {
+            $type = $handlerConfig['type'] ?? 'error_log';
+
+            if ($type === 'composite') {
+                $compositeNames[] = $name;
+
+                continue;
+            }
+
+            $this->buildErrorHandlerDefinition((string) $name, $handlerConfig, $container);
+        }
+
+        foreach ($compositeNames as $name) {
+            $this->buildErrorHandlerDefinition((string) $name, $config[$name], $container);
+        }
     }
 
     /**
@@ -792,8 +988,10 @@ final class FlowTelemetryExtension extends Extension
                     throw new RuntimeException(\sprintf('exporter "%s" of type "otlp" requires an inline "transport" configuration', $name));
                 }
                 $transportServiceId = $this->buildEmbeddedOtlpTransport($name, $transportConfig, $container);
+                $errorHandlerRef = $this->resolveErrorHandlerReference($exporterConfig['otlp']['error_handler'] ?? 'default', $container);
                 $definition = new Definition(OTLPExporter::class);
                 $definition->setArgument(0, new Reference($transportServiceId));
+                $definition->setArgument(1, $errorHandlerRef);
                 $container->setDefinition($serviceId, $definition);
 
                 continue;
@@ -1065,6 +1263,21 @@ final class FlowTelemetryExtension extends Extension
             $definition->setPublic(true);
             $container->setDefinition('flow.telemetry.' . $name . '.tracer', $definition);
         }
+    }
+
+    private function resolveErrorHandlerReference(mixed $name, ContainerBuilder $container) : Reference
+    {
+        if (!\is_string($name) || $name === '') {
+            $name = 'default';
+        }
+
+        $serviceId = 'flow.telemetry.error_handler.' . $name;
+
+        if (!$container->hasDefinition($serviceId) && !$container->hasAlias($serviceId)) {
+            throw new RuntimeException(\sprintf('Unknown error_handler "%s"; declare it under flow_telemetry.error_handlers', $name));
+        }
+
+        return new Reference($serviceId);
     }
 
     private function resolveExporterReference(string $signalLabel, mixed $exporterName, ContainerBuilder $container) : Reference

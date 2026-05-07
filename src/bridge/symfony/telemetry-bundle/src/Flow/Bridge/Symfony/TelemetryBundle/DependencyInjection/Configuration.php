@@ -144,11 +144,16 @@ final class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->append($this->errorHandlersNode())
                 ->append($this->exportersNode())
                 ->arrayNode('tracer_provider')
                     ->info('TracerProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->scalarNode('error_handler')
+                            ->info('Name of an error_handler entry forwarded to the TracerProvider')
+                            ->defaultValue('default')
+                        ->end()
                         ->arrayNode('sampler')
                             ->info('Trace sampler configuration')
                             ->addDefaultsIfNotSet()
@@ -176,6 +181,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('MeterProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->scalarNode('error_handler')
+                            ->info('Name of an error_handler entry forwarded to the MeterProvider')
+                            ->defaultValue('default')
+                        ->end()
                         ->enumNode('temporality')
                             ->info('Aggregation temporality')
                             ->values(['cumulative', 'delta'])
@@ -188,6 +197,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('LoggerProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->scalarNode('error_handler')
+                            ->info('Name of an error_handler entry forwarded to the LoggerProvider')
+                            ->defaultValue('default')
+                        ->end()
                         ->append($this->processorNode('log'))
                     ->end()
                 ->end()
@@ -385,6 +398,95 @@ final class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
+    private function errorHandlersNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('error_handlers');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $supportedTypes = ['error_log', 'stream', 'syslog', 'udp_syslog', 'composite', 'noop', 'service'];
+        $facilities = ['auth', 'cron', 'daemon', 'kernel', 'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7', 'lpr', 'mail', 'news', 'syslog', 'user', 'uucp'];
+        $severities = ['alert', 'critical', 'debug', 'emergency', 'error', 'info', 'notice', 'warning'];
+        $messageTypes = ['operating_system', 'email', 'file', 'sapi'];
+
+        $node
+            ->info('Named error handler definitions referenced by providers, processors, and OTLP exporters via "error_handler:" fields. If "default" is omitted it is auto-created with type: error_log.')
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+                ->children()
+                    ->enumNode('type')
+                        ->values($supportedTypes)
+                        ->defaultValue('error_log')
+                    ->end()
+                    ->enumNode('message_type')
+                        ->info('error_log message type (only for type: error_log)')
+                        ->values($messageTypes)
+                        ->defaultValue('operating_system')
+                    ->end()
+                    ->booleanNode('expand_newlines')
+                        ->info('Emit one error_log() call per line (only for type: error_log)')
+                        ->defaultFalse()
+                    ->end()
+                    ->scalarNode('message_prefix')
+                        ->info('Prefix prepended to each formatted Throwable (error_log + stream)')
+                        ->defaultValue('[flow-telemetry]')
+                    ->end()
+                    ->scalarNode('destination')
+                        ->info('File path or php:// stream URI (required for type: stream)')
+                        ->defaultNull()
+                    ->end()
+                    ->integerNode('file_permissions')
+                        ->info('Permissions applied when creating new files (only for type: stream)')
+                        ->defaultValue(0644)
+                        ->min(0)
+                        ->max(0777)
+                    ->end()
+                    ->booleanNode('create_directories')
+                        ->info('Create parent directories of the destination if they do not exist (only for type: stream)')
+                        ->defaultTrue()
+                    ->end()
+                    ->scalarNode('ident')
+                        ->info('Syslog identity tag (syslog + udp_syslog)')
+                        ->defaultValue('flow-telemetry')
+                    ->end()
+                    ->enumNode('facility')
+                        ->info('Syslog facility (syslog + udp_syslog)')
+                        ->values($facilities)
+                        ->defaultValue('user')
+                    ->end()
+                    ->integerNode('log_opts')
+                        ->info('Bitmask of LOG_* options passed to openlog() (only for type: syslog)')
+                        ->defaultValue(\LOG_PID)
+                    ->end()
+                    ->enumNode('severity')
+                        ->info('Syslog severity (syslog + udp_syslog)')
+                        ->values($severities)
+                        ->defaultValue('error')
+                    ->end()
+                    ->scalarNode('host')
+                        ->info('Remote syslog host (required for type: udp_syslog)')
+                        ->defaultNull()
+                    ->end()
+                    ->integerNode('port')
+                        ->info('Remote syslog port (only for type: udp_syslog)')
+                        ->defaultValue(514)
+                        ->min(1)
+                        ->max(65535)
+                    ->end()
+                    ->arrayNode('handlers')
+                        ->info('Named error_handler entries fanned-out to (only for type: composite)')
+                        ->scalarPrototype()->end()
+                    ->end()
+                    ->scalarNode('service_id')
+                        ->info('Custom error handler service ID (only for type: service)')
+                        ->defaultNull()
+                    ->end()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
     private function exportersNode() : ArrayNodeDefinition
     {
         $builder = new TreeBuilder('exporters');
@@ -463,6 +565,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('Custom processor service ID (only for type: service)')
                     ->defaultNull()
                 ->end()
+                ->scalarNode('error_handler')
+                    ->info('Name of an error_handler entry forwarded to the inner processor')
+                    ->defaultValue('default')
+                ->end()
             ->end();
 
         return $node;
@@ -482,6 +588,10 @@ final class Configuration implements ConfigurationInterface
                 ->thenInvalid('OTLP exporter requires a "transport" configuration block.')
             ->end()
             ->children()
+                ->scalarNode('error_handler')
+                    ->info('Name of an error_handler entry forwarded to the OTLP exporter')
+                    ->defaultValue('default')
+                ->end()
                 ->append($this->transportNode())
             ->end();
 
@@ -528,6 +638,10 @@ final class Configuration implements ConfigurationInterface
                     ->values(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
                     ->defaultValue('info')
                 ->end()
+                ->scalarNode('error_handler')
+                    ->info('Name of an error_handler entry forwarded to this processor')
+                    ->defaultValue('default')
+                ->end()
                 ->arrayNode('processors')
                     ->info('Array of processor configurations (only for type: composite)')
                     ->arrayPrototype()
@@ -549,6 +663,10 @@ final class Configuration implements ConfigurationInterface
                             ->enumNode('minimum_severity')
                                 ->values(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
                                 ->defaultValue('info')
+                            ->end()
+                            ->scalarNode('error_handler')
+                                ->info('Name of an error_handler entry forwarded to this child processor')
+                                ->defaultValue('default')
                             ->end()
                             ->append($this->innerProcessorNode($signalType))
                         ->end()

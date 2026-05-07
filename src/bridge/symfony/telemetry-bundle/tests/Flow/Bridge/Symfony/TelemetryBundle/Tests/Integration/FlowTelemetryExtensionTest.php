@@ -10,6 +10,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, GrpcTransport, StreamTransport};
+use Flow\Telemetry\ErrorHandler\{CompositeErrorHandler, ErrorLogHandler, NullErrorHandler, StreamHandler, SyslogHandler, UdpSyslogHandler};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, SeverityFilteringLogProcessor};
 use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
 use Flow\Telemetry\Provider\Clock\SystemClock;
@@ -21,7 +22,7 @@ use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, CompositeSpanProcessor};
 use Flow\Telemetry\Transport\VoidTransport;
 use PHPUnit\Framework\Attributes\{CoversClass, TestWith};
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition};
+use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
 
 #[CoversClass(FlowTelemetryExtension::class)]
@@ -105,6 +106,49 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
         self::assertTrue($container->has('flow.telemetry.clock'));
+    }
+
+    public function test_composite_error_handler_is_registered_with_referenced_children() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'default' => ['type' => 'error_log'],
+                        'silent' => ['type' => 'noop'],
+                        'fanout' => [
+                            'type' => 'composite',
+                            'handlers' => ['default', 'silent'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        $composite = $container->get('flow.telemetry.error_handler.fanout');
+        self::assertInstanceOf(CompositeErrorHandler::class, $composite);
+        self::assertCount(2, $composite->handlers());
+        self::assertInstanceOf(ErrorLogHandler::class, $composite->handlers()[0]);
+        self::assertInstanceOf(NullErrorHandler::class, $composite->handlers()[1]);
+    }
+
+    public function test_composite_referencing_unknown_child_throws() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unknown error_handler "ghost"');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'fanout' => ['type' => 'composite', 'handlers' => ['ghost']],
+                    ],
+                ]);
+            },
+        ]);
     }
 
     public function test_composite_span_processor_with_named_exporters() : void
@@ -263,6 +307,20 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertInstanceOf(VoidTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
     }
 
+    public function test_default_error_handler_is_registered_when_config_omits_error_handlers() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(ErrorLogHandler::class, $container->get('flow.telemetry.error_handler.default'));
+    }
+
     public function test_default_telemetry_is_void() : void
     {
         $this->bootKernel([
@@ -276,6 +334,28 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertInstanceOf(VoidSpanProcessor::class, $container->get('flow.telemetry.tracer_provider.processor'));
         self::assertInstanceOf(VoidMetricProcessor::class, $container->get('flow.telemetry.meter_provider.processor'));
         self::assertInstanceOf(VoidLogProcessor::class, $container->get('flow.telemetry.logger_provider.processor'));
+    }
+
+    public function test_error_log_handler_is_registered_with_configured_args() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'default' => [
+                            'type' => 'error_log',
+                            'message_type' => 'sapi',
+                            'expand_newlines' => true,
+                            'message_prefix' => '[custom]',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(ErrorLogHandler::class, $container->get('flow.telemetry.error_handler.default'));
     }
 
     public function test_minimal_otlp_setup_registers_three_providers_with_one_exporter() : void
@@ -315,6 +395,49 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp'));
     }
 
+    public function test_noop_error_handler_is_registered() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'default' => ['type' => 'error_log'],
+                        'silent' => ['type' => 'noop'],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(NullErrorHandler::class, $container->get('flow.telemetry.error_handler.silent'));
+    }
+
+    public function test_otlp_exporter_uses_named_error_handler() : void
+    {
+        $container = new ContainerBuilder();
+        (new FlowTelemetryExtension())->load([[
+            'resource' => [],
+            'error_handlers' => [
+                'default' => ['type' => 'error_log'],
+                'silent' => ['type' => 'noop'],
+            ],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'error_handler' => 'silent',
+                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]], $container);
+
+        $definition = $container->getDefinition('flow.telemetry.exporter.otlp');
+        $errorHandlerArg = $definition->getArgument(1);
+        self::assertInstanceOf(Reference::class, $errorHandlerArg);
+        self::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+    }
+
     public function test_processor_referencing_unknown_exporter_throws() : void
     {
         $this->expectException(RuntimeException::class);
@@ -326,6 +449,94 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                     'resource' => [],
                     'tracer_provider' => [
                         'processor' => ['type' => 'batching', 'exporter' => 'missing'],
+                    ],
+                ]);
+            },
+        ]);
+    }
+
+    public function test_processor_uses_named_error_handler() : void
+    {
+        $container = new ContainerBuilder();
+        (new FlowTelemetryExtension())->load([[
+            'resource' => [],
+            'error_handlers' => [
+                'default' => ['type' => 'error_log'],
+                'silent' => ['type' => 'noop'],
+            ],
+            'exporters' => [
+                'memory' => ['memory' => null],
+            ],
+            'logger_provider' => [
+                'processor' => [
+                    'type' => 'batching',
+                    'exporter' => 'memory',
+                    'error_handler' => 'silent',
+                ],
+            ],
+        ]], $container);
+
+        $definition = $container->getDefinition('flow.telemetry.logger_provider.processor');
+        $errorHandlerArg = $definition->getArgument(2);
+        self::assertInstanceOf(Reference::class, $errorHandlerArg);
+        self::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+    }
+
+    public function test_provider_uses_named_error_handler() : void
+    {
+        $container = new ContainerBuilder();
+        (new FlowTelemetryExtension())->load([[
+            'resource' => [],
+            'error_handlers' => [
+                'default' => ['type' => 'error_log'],
+                'silent' => ['type' => 'noop'],
+            ],
+            'logger_provider' => ['error_handler' => 'silent'],
+        ]], $container);
+
+        $definition = $container->getDefinition('flow.telemetry.logger_provider');
+        $errorHandlerArg = $definition->getArgument('$errorHandler');
+        self::assertInstanceOf(Reference::class, $errorHandlerArg);
+        self::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+    }
+
+    public function test_service_error_handler_creates_alias_to_user_service_id() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'default' => ['type' => 'error_log'],
+                        'custom' => ['type' => 'service', 'service_id' => 'app.my_handler'],
+                    ],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
+                    $definition = new Definition(NullErrorHandler::class);
+                    $definition->setPublic(true);
+                    $container->setDefinition('app.my_handler', $definition);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertSame(
+            $container->get('app.my_handler'),
+            $container->get('flow.telemetry.error_handler.custom'),
+        );
+    }
+
+    public function test_service_error_handler_missing_service_id_throws() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('error_handler "custom" of type "service" requires a non-empty "service_id"');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'custom' => ['type' => 'service'],
                     ],
                 ]);
             },
@@ -362,6 +573,53 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
         self::assertInstanceOf(SeverityFilteringLogProcessor::class, $container->get('flow.telemetry.logger_provider.processor'));
+    }
+
+    public function test_stream_handler_is_registered_with_destination() : void
+    {
+        $destination = \sys_get_temp_dir() . '/flow-telemetry-test-' . \uniqid() . '.log';
+
+        try {
+            $this->bootKernel([
+                'config' => static function (TestKernel $kernel) use ($destination) : void {
+                    $kernel->addTestExtensionConfig('flow_telemetry', [
+                        'resource' => [],
+                        'error_handlers' => [
+                            'default' => ['type' => 'error_log'],
+                            'to_file' => [
+                                'type' => 'stream',
+                                'destination' => $destination,
+                                'create_directories' => false,
+                            ],
+                        ],
+                    ]);
+                },
+            ]);
+
+            $container = $this->getContainer();
+            self::assertInstanceOf(StreamHandler::class, $container->get('flow.telemetry.error_handler.to_file'));
+        } finally {
+            if (\is_file($destination)) {
+                \unlink($destination);
+            }
+        }
+    }
+
+    public function test_stream_handler_missing_destination_throws() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('error_handler "to_file" of type "stream" requires a non-empty "destination"');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'to_file' => ['type' => 'stream'],
+                    ],
+                ]);
+            },
+        ]);
     }
 
     public function test_stream_transport_is_built_inline_for_file_path() : void
@@ -426,6 +684,29 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp_stream'));
     }
 
+    public function test_syslog_handler_is_registered_with_facility_and_severity() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'default' => ['type' => 'error_log'],
+                        'sys' => [
+                            'type' => 'syslog',
+                            'ident' => 'flow-test',
+                            'facility' => 'local3',
+                            'severity' => 'warning',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(SyslogHandler::class, $container->get('flow.telemetry.error_handler.sys'));
+    }
+
     public function test_two_separate_otlp_backends() : void
     {
         $this->bootKernel([
@@ -467,5 +748,51 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             self::assertInstanceOf(GrpcTransport::class, $container->get('flow.telemetry.exporter.otlp_traces.transport'));
         }
         self::assertInstanceOf(CurlTransport::class, $container->get('flow.telemetry.exporter.otlp_metrics.transport'));
+    }
+
+    public function test_udp_syslog_handler_is_registered_with_host_and_port() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'error_handlers' => [
+                        'default' => ['type' => 'error_log'],
+                        'remote' => [
+                            'type' => 'udp_syslog',
+                            'host' => '192.0.2.1',
+                            'port' => 1514,
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(UdpSyslogHandler::class, $container->get('flow.telemetry.error_handler.remote'));
+    }
+
+    public function test_unknown_error_handler_reference_throws() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unknown error_handler "missing"');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'memory' => ['memory' => null],
+                    ],
+                    'logger_provider' => [
+                        'processor' => [
+                            'type' => 'batching',
+                            'exporter' => 'memory',
+                            'error_handler' => 'missing',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
     }
 }

@@ -107,6 +107,41 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['exporters']);
     }
 
+    public function test_error_handlers_can_define_multiple_named_entries() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'error_handlers' => [
+                'default' => ['type' => 'error_log', 'message_type' => 'sapi'],
+                'to_file' => ['type' => 'stream', 'destination' => '/var/log/flow.log'],
+                'to_syslog' => ['type' => 'syslog', 'facility' => 'local0', 'severity' => 'warning'],
+                'fanout' => ['type' => 'composite', 'handlers' => ['default', 'to_file']],
+                'silent' => ['type' => 'noop'],
+                'custom' => ['type' => 'service', 'service_id' => 'app.my_handler'],
+            ],
+        ]]);
+
+        self::assertSame('error_log', $config['error_handlers']['default']['type']);
+        self::assertSame('sapi', $config['error_handlers']['default']['message_type']);
+        self::assertSame('stream', $config['error_handlers']['to_file']['type']);
+        self::assertSame('/var/log/flow.log', $config['error_handlers']['to_file']['destination']);
+        self::assertSame('local0', $config['error_handlers']['to_syslog']['facility']);
+        self::assertSame('warning', $config['error_handlers']['to_syslog']['severity']);
+        self::assertSame(['default', 'to_file'], $config['error_handlers']['fanout']['handlers']);
+        self::assertSame('noop', $config['error_handlers']['silent']['type']);
+        self::assertSame('app.my_handler', $config['error_handlers']['custom']['service_id']);
+    }
+
+    public function test_error_handlers_section_is_empty_by_default() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+        ]]);
+
+        self::assertArrayHasKey('error_handlers', $config);
+        self::assertSame([], $config['error_handlers']);
+    }
+
     public function test_exporter_with_multiple_blocks_throws() : void
     {
         $this->expectException(InvalidConfigurationException::class);
@@ -183,6 +218,22 @@ final class ConfigurationTest extends TestCase
         self::assertSame('otlp', $config['tracer_provider']['processor']['exporter']);
     }
 
+    public function test_otlp_exporter_error_handler_defaults_to_default() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('default', $config['exporters']['otlp']['otlp']['error_handler']);
+    }
+
     public function test_otlp_exporter_without_transport_block_throws() : void
     {
         $this->expectException(InvalidConfigurationException::class);
@@ -198,6 +249,17 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_processor_error_handler_defaults_to_default() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+        ]]);
+
+        self::assertSame('default', $config['tracer_provider']['processor']['error_handler']);
+        self::assertSame('default', $config['meter_provider']['processor']['error_handler']);
+        self::assertSame('default', $config['logger_provider']['processor']['error_handler']);
+    }
+
     public function test_propagator_defaults_to_w3c() : void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
@@ -205,6 +267,17 @@ final class ConfigurationTest extends TestCase
         ]]);
 
         self::assertSame('w3c', $config['propagator']['type']);
+    }
+
+    public function test_provider_error_handler_defaults_to_default() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+        ]]);
+
+        self::assertSame('default', $config['tracer_provider']['error_handler']);
+        self::assertSame('default', $config['meter_provider']['error_handler']);
+        self::assertSame('default', $config['logger_provider']['error_handler']);
     }
 
     public function test_service_exporter_requires_id() : void

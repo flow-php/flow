@@ -30,6 +30,10 @@ This bundle integrates Flow PHP's Telemetry library with Symfony applications. I
 
 ## Configuration Reference
 
+> Any `error_handler:` field that appears under a provider, processor, or `otlp` exporter references a name from the
+> top-level `error_handlers:` map (see [Error Handlers](#error-handlers)). When omitted it defaults to `default`, which
+> is auto-created as `{ type: error_log }` if the user does not declare one.
+
 ### Resource Configuration
 
 The `resource` node configures OpenTelemetry Resource attributes that identify your service.
@@ -130,6 +134,158 @@ flow_telemetry:
 | `baggage`      | W3C Baggage only                         |
 | `service`      | Custom propagator service                |
 
+### Error Handlers
+
+Per the OpenTelemetry spec, the SDK MUST NOT throw to user code at runtime. Errors raised by exporters/processors are
+caught and forwarded to a configured error handler. The bundle exposes a **named map** under `error_handlers:` that is
+referenced from provider, processor, and OTLP exporter blocks via `error_handler:` fields.
+
+```yaml
+flow_telemetry:
+  error_handlers:
+    default:
+      type: error_log         # default if omitted
+
+    to_file:
+      type: stream
+      destination: '%kernel.logs_dir%/flow-telemetry-errors.log'
+
+    to_syslog:
+      type: syslog
+      facility: local0
+      severity: warning
+
+    fanout:
+      type: composite
+      handlers: [default, to_file, to_syslog]
+
+    silent:
+      type: noop
+
+    custom:
+      type: service
+      service_id: app.my_error_handler
+```
+
+If `error_handlers:` is omitted (or `default` is missing inside it), the bundle injects
+`error_handlers.default = { type: error_log }` automatically so every `error_handler:` reference always resolves.
+
+Service IDs registered by the bundle (predictable for `decorates:`):
+
+- `flow.telemetry.error_handler.<name>` — e.g. `flow.telemetry.error_handler.default`
+
+#### error_log (default)
+
+Writes formatted Throwables via PHP's `error_log()` — stderr in CLI by default, or the `error_log` ini setting otherwise.
+Matches the OTEL spec recommendation to log to standard error output.
+
+| Option            | Type    | Default           | Description                                                       |
+|-------------------|---------|-------------------|-------------------------------------------------------------------|
+| `message_type`    | enum    | `operating_system` | `operating_system` (0), `email` (1), `file` (3), `sapi` (4)       |
+| `expand_newlines` | boolean | `false`           | Emit one `error_log()` call per line of the formatted message     |
+| `message_prefix`  | string  | `[flow-telemetry]` | Prefix prepended to every message                                 |
+
+#### stream
+
+Appends formatted Throwables (one per line) to a file path or `php://` stream wrapper. The handle is opened lazily on
+the first call and reused.
+
+| Option               | Type    | Default            | Description                                                  |
+|----------------------|---------|--------------------|--------------------------------------------------------------|
+| `destination`        | string  | -                  | File path or `php://stdout`/`php://stderr`/etc. (required)   |
+| `file_permissions`   | integer | `0644`             | Permissions for newly created files (ignored for `php://`)   |
+| `create_directories` | boolean | `true`             | Create parent directories of the destination if missing      |
+| `message_prefix`     | string  | `[flow-telemetry]` | Prefix prepended to every line                               |
+
+#### syslog
+
+Writes via `openlog/syslog/closelog`.
+
+| Option     | Type    | Default          | Description                                            |
+|------------|---------|------------------|--------------------------------------------------------|
+| `ident`    | string  | `flow-telemetry` | Syslog identity tag                                    |
+| `facility` | enum    | `user`           | RFC 5424 facility (see table below)                    |
+| `log_opts` | integer | `LOG_PID`        | Bitmask of `LOG_*` flags passed to `openlog()`         |
+| `severity` | enum    | `error`          | RFC 5424 severity (see table below)                    |
+
+#### udp_syslog
+
+Sends RFC 5424 syslog frames over UDP.
+
+| Option     | Type    | Default          | Description                                  |
+|------------|---------|------------------|----------------------------------------------|
+| `host`     | string  | -                | Remote syslog host (required)                |
+| `port`     | integer | `514`            | Remote syslog port                           |
+| `ident`    | string  | `flow-telemetry` | Syslog identity tag                          |
+| `facility` | enum    | `user`           | RFC 5424 facility                            |
+| `severity` | enum    | `error`          | RFC 5424 severity                            |
+
+#### composite
+
+Fans an error out to multiple named handlers. Each child invocation is wrapped so a misbehaving handler cannot prevent
+siblings from running.
+
+| Option     | Type            | Default | Description                                                |
+|------------|-----------------|---------|------------------------------------------------------------|
+| `handlers` | list of strings | -       | Names of other entries in `error_handlers:` (required)     |
+
+```yaml
+fanout:
+  type: composite
+  handlers: [default, to_file]
+```
+
+#### noop
+
+Discards every Throwable. Intended for tests or explicit silence.
+
+```yaml
+silent: { type: noop }
+```
+
+#### service
+
+Aliases an existing service that implements `Flow\Telemetry\ErrorHandler\ErrorHandler`.
+
+| Option       | Type   | Default | Description                                              |
+|--------------|--------|---------|----------------------------------------------------------|
+| `service_id` | string | -       | Service id of the user-provided handler (required)       |
+
+```yaml
+custom:
+  type: service
+  service_id: app.my_error_handler
+```
+
+#### Facility values
+
+| Value     | Constant      |
+|-----------|---------------|
+| `kernel`  | `LOG_KERN`    |
+| `user`    | `LOG_USER`    |
+| `mail`    | `LOG_MAIL`    |
+| `daemon`  | `LOG_DAEMON`  |
+| `auth`    | `LOG_AUTH`    |
+| `syslog`  | `LOG_SYSLOG`  |
+| `lpr`     | `LOG_LPR`     |
+| `news`    | `LOG_NEWS`    |
+| `uucp`    | `LOG_UUCP`    |
+| `cron`    | `LOG_CRON`    |
+| `local0`..`local7` | `LOG_LOCAL0`..`LOG_LOCAL7` |
+
+#### Severity values
+
+| Value       | Constant      |
+|-------------|---------------|
+| `emergency` | `LOG_EMERG`   |
+| `alert`     | `LOG_ALERT`   |
+| `critical`  | `LOG_CRIT`    |
+| `error`     | `LOG_ERR`     |
+| `warning`   | `LOG_WARNING` |
+| `notice`    | `LOG_NOTICE`  |
+| `info`      | `LOG_INFO`    |
+| `debug`     | `LOG_DEBUG`   |
+
 ### Exporters (named definitions)
 
 The bundle exposes a **top-level named map** of exporters. The implementation is selected by the **sub-block name**
@@ -167,6 +323,7 @@ Configures the tracer provider for distributed tracing.
 ```yaml
 flow_telemetry:
   tracer_provider:
+    error_handler: default  # name from error_handlers; defaults to "default"
     sampler:
       type: always_on   # always_on|always_off|trace_id_ratio|parent_based|service
       ratio: 1.0        # Sampling ratio (0.0-1.0, only for trace_id_ratio)
@@ -175,6 +332,7 @@ flow_telemetry:
       type: batching    # composite|memory|batching|passthrough|void|service
       batch_size: 512
       exporter: otlp    # name of a top-level exporter
+      error_handler: default
 ```
 
 **Sampler types:**
@@ -192,11 +350,13 @@ flow_telemetry:
 ```yaml
 flow_telemetry:
   meter_provider:
+    error_handler: default
     temporality: cumulative  # cumulative|delta
     processor:
       type: batching
       batch_size: 512
       exporter: otlp
+      error_handler: default
 ```
 
 ### LoggerProvider
@@ -204,10 +364,12 @@ flow_telemetry:
 ```yaml
 flow_telemetry:
   logger_provider:
+    error_handler: default
     processor:
       type: batching   # composite|memory|batching|passthrough|void|severity_filtering|service
       batch_size: 512
       exporter: otlp
+      error_handler: default
 ```
 
 **Severity filtering** (logs only):
@@ -351,6 +513,7 @@ Sends batches over an embedded transport. The single OTLP exporter handles all t
 exporters:
   otlp:
     otlp:
+      error_handler: default   # name from error_handlers; defaults to "default"
       transport:
         type: curl
         endpoint: 'http://otel-collector:4318'

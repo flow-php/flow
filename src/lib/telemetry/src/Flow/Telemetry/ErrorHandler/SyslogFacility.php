@@ -9,22 +9,22 @@ namespace Flow\Telemetry\ErrorHandler;
  */
 enum SyslogFacility : int
 {
-    case Auth = \LOG_AUTH;
-    case Cron = \LOG_CRON;
-    case Daemon = \LOG_DAEMON;
-    case Kernel = \LOG_KERN;
-    case Local0 = \LOG_LOCAL0;
-    case Local1 = \LOG_LOCAL1;
-    case Local2 = \LOG_LOCAL2;
-    case Local3 = \LOG_LOCAL3;
-    case Local4 = \LOG_LOCAL4;
-    case Local5 = \LOG_LOCAL5;
-    case Local6 = \LOG_LOCAL6;
-    case Local7 = \LOG_LOCAL7;
-    case Lpr = \LOG_LPR;
-    case Mail = \LOG_MAIL;
-    case News = \LOG_NEWS;
-    case Syslog = \LOG_SYSLOG;
-    case User = \LOG_USER;
-    case Uucp = \LOG_UUCP;
+    case Auth = 32;
+    case Cron = 72;
+    case Daemon = 24;
+    case Kernel = 0;
+    case Local0 = 128;
+    case Local1 = 136;
+    case Local2 = 144;
+    case Local3 = 152;
+    case Local4 = 160;
+    case Local5 = 168;
+    case Local6 = 176;
+    case Local7 = 184;
+    case Lpr = 48;
+    case Mail = 16;
+    case News = 56;
+    case Syslog = 40;
+    case User = 8;
+    case Uucp = 64;
 }
