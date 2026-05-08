@@ -145,17 +145,6 @@ final class StatisticsCounterTest extends TestCase
         self::assertSame('hello', $statistics->max());
     }
 
-    public function test_add_nulls_with_zero_is_noop() : void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->addNulls(0);
-
-        self::assertSame(0, $statistics->nullCount());
-        self::assertSame(0, $statistics->valuesCount());
-    }
-
     public function test_add_nulls_with_negative_throws() : void
     {
         $column = FlatColumn::string('test_column');
@@ -165,6 +154,17 @@ final class StatisticsCounterTest extends TestCase
         $this->expectExceptionMessage('Null count cannot be negative.');
 
         $statistics->addNulls(-1);
+    }
+
+    public function test_add_nulls_with_zero_is_noop() : void
+    {
+        $column = FlatColumn::string('test_column');
+        $statistics = new StatisticsCounter($column);
+
+        $statistics->addNulls(0);
+
+        self::assertSame(0, $statistics->nullCount());
+        self::assertSame(0, $statistics->valuesCount());
     }
 
     public function test_add_object_value() : void
