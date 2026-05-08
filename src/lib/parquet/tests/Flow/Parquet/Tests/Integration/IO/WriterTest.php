@@ -141,6 +141,38 @@ class WriterTest extends ParquetIntegrationTestCase
         \unlink($path);
     }
 
+    #[DataProvider('engine_provider')]
+    public function test_writing_column_statistics_with_null_values(ParquetEngine $engine) : void
+    {
+        $schema = Schema::with(
+            FlatColumn::string('all_null'),
+            FlatColumn::string('all_string'),
+            FlatColumn::string('mixed'),
+        );
+
+        $rows = [
+            ['all_null' => null, 'all_string' => 'a', 'mixed' => 'x'],
+            ['all_null' => null, 'all_string' => 'b', 'mixed' => null],
+            ['all_null' => null, 'all_string' => 'c', 'mixed' => 'z'],
+        ];
+
+        $path = __DIR__ . '/var/test-writer-parquet-null-stats-' . generate_random_string() . '.parquet';
+
+        (new Writer(engine: $engine))->write($path, $schema, $rows);
+
+        $chunks = [];
+
+        foreach ((new Reader(engine: $engine))->read($path)->metadata()->columnChunks() as $chunk) {
+            $chunks[$chunk->flatPath()] = $chunk;
+        }
+
+        static::assertSame(3, $chunks['all_null']->statistics()->nullCount());
+        static::assertSame(0, $chunks['all_string']->statistics()->nullCount());
+        static::assertSame(1, $chunks['mixed']->statistics()->nullCount());
+
+        \unlink($path);
+    }
+
     public function test_writing_data_page_v2_statistics() : void
     {
         $options = Options::default()->set(Option::WRITER_VERSION, 2);

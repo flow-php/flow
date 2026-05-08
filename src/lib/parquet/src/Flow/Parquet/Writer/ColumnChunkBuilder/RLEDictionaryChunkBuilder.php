@@ -70,14 +70,22 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         $maxDefinitionLevel = $this->column->maxDefinitionsLevel();
 
+        $nullsInBatch = 0;
+
         foreach ($defLevels as $definitionLevel) {
             if ($definitionLevel < $maxDefinitionLevel) {
                 $this->nullCount++;
+                $nullsInBatch++;
             }
         }
 
         array_push($this->pageValues, ...$columnValues->values());
         $this->pageStatistics->addBatch($columnValues->values());
+
+        if ($nullsInBatch > 0) {
+            $this->pageStatistics->addNulls($nullsInBatch);
+        }
+
         $this->rowsCount += $columnValues->rowsCount();
     }
 

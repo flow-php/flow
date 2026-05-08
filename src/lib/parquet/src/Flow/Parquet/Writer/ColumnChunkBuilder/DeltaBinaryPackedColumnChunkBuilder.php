@@ -73,9 +73,12 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
         $maxDefinitionLevel = $this->column->maxDefinitionsLevel();
 
+        $nullsInBatch = 0;
+
         foreach ($defLevels as $definitionLevel) {
             if ($definitionLevel < $maxDefinitionLevel) {
                 $this->nullCount++;
+                $nullsInBatch++;
             } else {
                 $this->nonNullValuesCount++;
             }
@@ -83,6 +86,11 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
         $this->valueStorage->addValues($this->column, $columnValues->values());
         $this->pageStatistics->addBatch($columnValues->values());
+
+        if ($nullsInBatch > 0) {
+            $this->pageStatistics->addNulls($nullsInBatch);
+        }
+
         $this->rowsCount += $columnValues->rowsCount();
     }
 

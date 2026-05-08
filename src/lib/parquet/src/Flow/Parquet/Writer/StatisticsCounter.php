@@ -105,6 +105,16 @@ final class StatisticsCounter
         }
     }
 
+    public function addNulls(int $count) : void
+    {
+        if ($count < 0) {
+            throw new InvalidArgumentException('Null count cannot be negative.');
+        }
+
+        $this->nullCount += $count;
+        $this->valuesCount += $count;
+    }
+
     public function max() : mixed
     {
         return $this->max;
