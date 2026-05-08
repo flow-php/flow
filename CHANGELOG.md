@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-05-08
 
 ### Added
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - OTLP Protobuf Models to otlp telemetry bridge** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - Added StreamTransport compatible with OTLP FileExporter** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - ErrorHandler with few predefined implementations** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - a failover mode for network otlp transports that is still async** - [@norberttech](https://github.com/norberttech)
 - [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/psr3-telemetry-bridge - bridge for psr3 logger** - [@norberttech](https://github.com/norberttech)
 - [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - fetchOne and fetchSingel and fetchSingleInto** - [@norberttech](https://github.com/norberttech)
 - [#2335](https://github.com/flow-php/flow/pull/2335) - **flow-php/postgrsql symfony/session bridge** - [@norberttech](https://github.com/norberttech)
@@ -11,6 +15,9 @@
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: support for env vars** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - merged exporters into one contract** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - allow to define different exporters for different types of signals** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - expose and lower default values for timeouts** - [@norberttech](https://github.com/norberttech)
 - [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/symfony-telemetry-bundle - register default logger / meter / tracer** - [@norberttech](https://github.com/norberttech)
 - [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/symfony-telemetry-bundle - allow to register one of the bundle provided loggers as framework logger service through psr3 adapter** - [@norberttech](https://github.com/norberttech)
 - [#2343](https://github.com/flow-php/flow/pull/2343) - **Bump the highest supported version of "brick/math" to ^0.17** - [@zenas1210](https://github.com/zenas1210)
@@ -24,6 +31,8 @@
 - [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - GRCP truly async** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemery - PHPUnit Bridge was by default using passthrough processors which were choking otel collector on larger test suites** - [@norberttech](https://github.com/norberttech)
 - [#2353](https://github.com/flow-php/flow/pull/2353) - **Correction of handling of null counts metadata in parquet files for PhpParquetEngine** - [@gCass](https://github.com/gCass)
 - [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/filesystem - Path::realpath bug** - [@norberttech](https://github.com/norberttech)
 - [#2345](https://github.com/flow-php/flow/pull/2345) - **postgresql bytea converter** - [@norberttech](https://github.com/norberttech)
@@ -33,6 +42,10 @@
 - [#2341](https://github.com/flow-php/flow/pull/2341) - **PostgreSql - Static factory mapper** - [@norberttech](https://github.com/norberttech)
 - [#2332](https://github.com/flow-php/flow/pull/2332) - **bug in recursive delete based on glob** - [@norberttech](https://github.com/norberttech)
 - [#2330](https://github.com/flow-php/flow/pull/2330) - **preserve XML namespace declarations when capturing subtrees** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - HttpTransport from otlp telemetry bridge** - [@norberttech](https://github.com/norberttech)
+- [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - open-telemetry/gen-otlp-protobuf dependency from otlp telemetry bridge** - [@norberttech](https://github.com/norberttech)
 
 ## [0.36.0] - 2026-04-21
 
