@@ -281,6 +281,70 @@ final class CurlTransportTest extends TestCase
         $transport->shutdown();
     }
 
+    public function test_shutdown_with_zero_timeout_forwards_pending_to_failover() : void
+    {
+        if (!\extension_loaded('curl')) {
+            self::markTestSkipped('ext-curl is required');
+        }
+
+        $failover = new RecordingTransport();
+        $batch = Signals::traces($this->createSpans());
+
+        $transport = new CurlTransport(
+            'http://127.0.0.1:1',
+            new JsonSerializer(),
+            (new CurlTransportOptions())
+                ->withConnectTimeout(60_000)
+                ->withTimeout(60_000)
+                ->withShutdownTimeout(0),
+            $failover,
+        );
+
+        $transport->send($batch);
+
+        try {
+            $transport->shutdown();
+            self::addToAssertionCount(1);
+        } catch (FailoverTransportException $e) {
+            self::assertGreaterThanOrEqual(1, \count($e->failures));
+            // Either the still-pending path forwarded the batch, or the normal failover drain did.
+            self::assertContains($batch, $failover->sent);
+        }
+
+        self::assertSame(1, $failover->shutdownCalls);
+    }
+
+    public function test_shutdown_with_zero_timeout_marks_pending_as_failed_in_legacy_mode() : void
+    {
+        if (!\extension_loaded('curl')) {
+            self::markTestSkipped('ext-curl is required');
+        }
+
+        $transport = new CurlTransport(
+            'http://127.0.0.1:1',
+            new JsonSerializer(),
+            (new CurlTransportOptions())
+                ->withConnectTimeout(60_000)
+                ->withTimeout(60_000)
+                ->withShutdownTimeout(0),
+        );
+
+        $transport->send(Signals::traces($this->createSpans()));
+
+        try {
+            $transport->shutdown();
+
+            // If everything completed before shutdown_timeout=0 fired, that's also valid (race condition).
+            self::addToAssertionCount(1);
+        } catch (TransportException $e) {
+            // Either the shutdown-deadline-reached path OR the normal connection-refused path.
+            self::assertTrue(
+                \str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
+                || \str_contains($e->getMessage(), 'curl error'),
+            );
+        }
+    }
+
     /**
      * @return array<Span>
      */

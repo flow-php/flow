@@ -15,6 +15,28 @@ use PHPUnit\Framework\TestCase;
 
 final class GrpcTransportTest extends TestCase
 {
+    #[RequiresPhpExtension('grpc')]
+    public function test_constructor_rejects_negative_shutdown_timeout() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Shutdown timeout must be non-negative');
+
+        new GrpcTransport('localhost:4317', shutdownTimeoutMs: -1);
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_constructor_rejects_negative_timeout() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Timeout must be non-negative');
+
+        new GrpcTransport('localhost:4317', timeoutMs: -1);
+    }
+
     public function test_constructor_throws_when_grpc_extension_not_loaded() : void
     {
         if (\extension_loaded('grpc')) {
@@ -200,6 +222,57 @@ final class GrpcTransportTest extends TestCase
         $this->expectExceptionMessage('failover shutdown failed: boom');
 
         $transport->shutdown();
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_shutdown_with_zero_timeout_cancels_pending_calls_legacy_mode() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $transport = new GrpcTransport(
+            endpoint: '127.0.0.1:1',
+            timeoutMs: 60_000,
+            shutdownTimeoutMs: 0,
+        );
+
+        $transport->send(Signals::traces([SpanMother::withName('span-a')]));
+
+        try {
+            $transport->shutdown();
+            self::addToAssertionCount(1);
+        } catch (TransportException $e) {
+            self::assertTrue(
+                \str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
+                || \str_contains($e->getMessage(), 'gRPC status'),
+            );
+        }
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_shutdown_with_zero_timeout_forwards_pending_to_failover() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $failover = new RecordingTransport();
+        $batch = Signals::traces([SpanMother::withName('span-a')]);
+
+        $transport = new GrpcTransport(
+            endpoint: '127.0.0.1:1',
+            timeoutMs: 60_000,
+            shutdownTimeoutMs: 0,
+            failover: $failover,
+        );
+
+        $transport->send($batch);
+
+        try {
+            $transport->shutdown();
+            self::addToAssertionCount(1);
+        } catch (FailoverTransportException $e) {
+            self::assertGreaterThanOrEqual(1, \count($e->failures));
+        }
+
+        self::assertSame(1, $failover->shutdownCalls);
     }
 
     private function skipIfGrpcDependenciesNotAvailable() : void

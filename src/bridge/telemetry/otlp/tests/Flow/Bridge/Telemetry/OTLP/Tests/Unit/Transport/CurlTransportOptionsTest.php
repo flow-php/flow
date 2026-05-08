@@ -28,6 +28,13 @@ final class CurlTransportOptionsTest extends TestCase
         self::assertFalse($options->compression());
     }
 
+    public function test_default_shutdown_timeout() : void
+    {
+        $options = new CurlTransportOptions();
+
+        self::assertSame(CurlTransportOptions::DEFAULT_SHUTDOWN_TIMEOUT_MS, $options->shutdownTimeoutMs());
+    }
+
     public function test_dsl_function_creates_options() : void
     {
         $options = otlp_curl_options();
@@ -204,6 +211,21 @@ final class CurlTransportOptionsTest extends TestCase
         $options = (new CurlTransportOptions())->withProxy('http://proxy:8080');
 
         self::assertSame('http://proxy:8080', $options->proxy());
+    }
+
+    public function test_with_shutdown_timeout() : void
+    {
+        $options = (new CurlTransportOptions())->withShutdownTimeout(7500);
+
+        self::assertSame(7500, $options->shutdownTimeoutMs());
+    }
+
+    public function test_with_shutdown_timeout_rejects_negative_value() : void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Shutdown timeout must be non-negative');
+
+        (new CurlTransportOptions())->withShutdownTimeout(-1);
     }
 
     public function test_with_ssl_certificate() : void
