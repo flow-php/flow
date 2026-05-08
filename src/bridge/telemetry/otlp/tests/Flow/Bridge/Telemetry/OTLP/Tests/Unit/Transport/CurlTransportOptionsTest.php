@@ -14,8 +14,8 @@ final class CurlTransportOptionsTest extends TestCase
     {
         $options = new CurlTransportOptions();
 
-        self::assertSame(30, $options->timeout());
-        self::assertSame(10, $options->connectTimeout());
+        self::assertSame(CurlTransportOptions::DEFAULT_TIMEOUT_MS, $options->timeoutMs());
+        self::assertSame(CurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS, $options->connectTimeoutMs());
         self::assertSame([], $options->headers());
         self::assertTrue($options->followRedirects());
         self::assertSame(3, $options->maxRedirects());
@@ -33,22 +33,22 @@ final class CurlTransportOptionsTest extends TestCase
         $options = otlp_curl_options();
 
         self::assertInstanceOf(CurlTransportOptions::class, $options);
-        self::assertSame(30, $options->timeout());
+        self::assertSame(CurlTransportOptions::DEFAULT_TIMEOUT_MS, $options->timeoutMs());
     }
 
     public function test_fluent_chaining() : void
     {
         $options = otlp_curl_options()
-            ->withTimeout(60)
-            ->withConnectTimeout(15)
+            ->withTimeout(2000)
+            ->withConnectTimeout(500)
             ->withHeader('Authorization', 'Bearer token')
             ->withFollowRedirects(true, 5)
             ->withSslVerification(true)
             ->withProxy('http://proxy:8080')
             ->withCompression();
 
-        self::assertSame(60, $options->timeout());
-        self::assertSame(15, $options->connectTimeout());
+        self::assertSame(2000, $options->timeoutMs());
+        self::assertSame(500, $options->connectTimeoutMs());
         self::assertSame(['Authorization' => 'Bearer token'], $options->headers());
         self::assertTrue($options->followRedirects());
         self::assertSame(5, $options->maxRedirects());
@@ -71,8 +71,8 @@ final class CurlTransportOptionsTest extends TestCase
         self::assertTrue($curlOptions[\CURLOPT_POST]);
         self::assertSame('{"data": "test"}', $curlOptions[\CURLOPT_POSTFIELDS]);
         self::assertTrue($curlOptions[\CURLOPT_RETURNTRANSFER]);
-        self::assertSame(30, $curlOptions[\CURLOPT_TIMEOUT]);
-        self::assertSame(10, $curlOptions[\CURLOPT_CONNECTTIMEOUT]);
+        self::assertSame(CurlTransportOptions::DEFAULT_TIMEOUT_MS, $curlOptions[\CURLOPT_TIMEOUT_MS]);
+        self::assertSame(CurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS, $curlOptions[\CURLOPT_CONNECTTIMEOUT_MS]);
         self::assertSame(['Content-Type: application/json'], $curlOptions[\CURLOPT_HTTPHEADER]);
         self::assertTrue($curlOptions[\CURLOPT_FOLLOWLOCATION]);
         self::assertSame(3, $curlOptions[\CURLOPT_MAXREDIRS]);
@@ -83,8 +83,8 @@ final class CurlTransportOptionsTest extends TestCase
     public function test_to_curl_options_with_all_settings() : void
     {
         $options = (new CurlTransportOptions())
-            ->withTimeout(60)
-            ->withConnectTimeout(15)
+            ->withTimeout(2000)
+            ->withConnectTimeout(500)
             ->withSslVerification(false, false)
             ->withSslCertificate('/path/to/cert.pem', '/path/to/key.pem')
             ->withCaInfo('/path/to/ca.crt')
@@ -93,8 +93,8 @@ final class CurlTransportOptionsTest extends TestCase
 
         $curlOptions = $options->toCurlOptions('http://example.com', 'body', ['Header: value']);
 
-        self::assertSame(60, $curlOptions[\CURLOPT_TIMEOUT]);
-        self::assertSame(15, $curlOptions[\CURLOPT_CONNECTTIMEOUT]);
+        self::assertSame(2000, $curlOptions[\CURLOPT_TIMEOUT_MS]);
+        self::assertSame(500, $curlOptions[\CURLOPT_CONNECTTIMEOUT_MS]);
         self::assertFalse($curlOptions[\CURLOPT_SSL_VERIFYPEER]);
         self::assertSame(0, $curlOptions[\CURLOPT_SSL_VERIFYHOST]);
         self::assertSame('/path/to/cert.pem', $curlOptions[\CURLOPT_SSLCERT]);
@@ -129,9 +129,9 @@ final class CurlTransportOptionsTest extends TestCase
 
     public function test_with_connect_timeout() : void
     {
-        $options = (new CurlTransportOptions())->withConnectTimeout(15);
+        $options = (new CurlTransportOptions())->withConnectTimeout(750);
 
-        self::assertSame(15, $options->connectTimeout());
+        self::assertSame(750, $options->connectTimeoutMs());
     }
 
     public function test_with_connect_timeout_rejects_negative_value() : void
@@ -240,9 +240,9 @@ final class CurlTransportOptionsTest extends TestCase
 
     public function test_with_timeout() : void
     {
-        $options = (new CurlTransportOptions())->withTimeout(60);
+        $options = (new CurlTransportOptions())->withTimeout(2500);
 
-        self::assertSame(60, $options->timeout());
+        self::assertSame(2500, $options->timeoutMs());
     }
 
     public function test_with_timeout_rejects_negative_value() : void

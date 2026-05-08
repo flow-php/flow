@@ -312,6 +312,8 @@
         </include>
         <exclude>
             <directory>src/lib/parquet/src/Flow/Parquet/Thrift</directory>
+            <directory>src/bridge/telemetry/otlp/src/GPBMetadata</directory>
+            <directory>src/bridge/telemetry/otlp/src/Opentelemetry</directory>
             <directory>src/lib/postgresql/src/Flow/PostgreSql/Protobuf</directory>
             <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
             <file>src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php</file>

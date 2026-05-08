@@ -12,8 +12,8 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
  * Example usage:
  * ```php
  * $options = otlp_curl_options()
- *     ->withTimeout(60)
- *     ->withConnectTimeout(15)
+ *     ->withTimeout(2000)
+ *     ->withConnectTimeout(500)
  *     ->withHeader('Authorization', 'Bearer token')
  *     ->withCompression()
  *     ->withSslVerification(verifyPeer: true);
@@ -23,11 +23,17 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
  */
 final class CurlTransportOptions
 {
+    public const int DEFAULT_CONNECT_TIMEOUT_MS = 250;
+
+    public const int DEFAULT_SHUTDOWN_TIMEOUT_MS = 5000;
+
+    public const int DEFAULT_TIMEOUT_MS = 250;
+
     private ?string $caInfoPath = null;
 
     private bool $compression = false;
 
-    private int $connectTimeout = 10;
+    private int $connectTimeoutMs = self::DEFAULT_CONNECT_TIMEOUT_MS;
 
     private bool $followRedirects = true;
 
@@ -38,6 +44,8 @@ final class CurlTransportOptions
 
     private ?string $proxy = null;
 
+    private int $shutdownTimeoutMs = self::DEFAULT_SHUTDOWN_TIMEOUT_MS;
+
     private ?string $sslCertPath = null;
 
     private ?string $sslKeyPath = null;
@@ -46,7 +54,7 @@ final class CurlTransportOptions
 
     private bool $sslVerifyPeer = true;
 
-    private int $timeout = 30;
+    private int $timeoutMs = self::DEFAULT_TIMEOUT_MS;
 
     public function caInfoPath() : ?string
     {
@@ -58,9 +66,9 @@ final class CurlTransportOptions
         return $this->compression;
     }
 
-    public function connectTimeout() : int
+    public function connectTimeoutMs() : int
     {
-        return $this->connectTimeout;
+        return $this->connectTimeoutMs;
     }
 
     public function followRedirects() : bool
@@ -86,6 +94,11 @@ final class CurlTransportOptions
         return $this->proxy;
     }
 
+    public function shutdownTimeoutMs() : int
+    {
+        return $this->shutdownTimeoutMs;
+    }
+
     public function sslCertPath() : ?string
     {
         return $this->sslCertPath;
@@ -106,9 +119,9 @@ final class CurlTransportOptions
         return $this->sslVerifyPeer;
     }
 
-    public function timeout() : int
+    public function timeoutMs() : int
     {
-        return $this->timeout;
+        return $this->timeoutMs;
     }
 
     /**
@@ -127,8 +140,8 @@ final class CurlTransportOptions
             \CURLOPT_POST => true,
             \CURLOPT_POSTFIELDS => $body,
             \CURLOPT_RETURNTRANSFER => true,
-            \CURLOPT_TIMEOUT => $this->timeout,
-            \CURLOPT_CONNECTTIMEOUT => $this->connectTimeout,
+            \CURLOPT_TIMEOUT_MS => $this->timeoutMs,
+            \CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs,
             \CURLOPT_HTTPHEADER => $headers,
             \CURLOPT_FOLLOWLOCATION => $this->followRedirects,
             \CURLOPT_MAXREDIRS => $this->maxRedirects,
@@ -187,17 +200,17 @@ final class CurlTransportOptions
     }
 
     /**
-     * Set the connection timeout.
+     * Set the connection timeout in milliseconds.
      *
-     * @param int $seconds Maximum time in seconds to wait for connection
+     * @param int $milliseconds Maximum time in milliseconds to wait for the TCP/TLS connection
      */
-    public function withConnectTimeout(int $seconds) : self
+    public function withConnectTimeout(int $milliseconds) : self
     {
-        if ($seconds < 0) {
+        if ($milliseconds < 0) {
             throw new \InvalidArgumentException('Connect timeout must be non-negative');
         }
 
-        $this->connectTimeout = $seconds;
+        $this->connectTimeoutMs = $milliseconds;
 
         return $this;
     }
@@ -260,6 +273,26 @@ final class CurlTransportOptions
     }
 
     /**
+     * Set the wall-clock budget for draining pending requests at shutdown.
+     *
+     * Requests still pending after this deadline are abandoned and reported as failed
+     * (forwarded to a configured failover transport, otherwise aggregated into the
+     * shutdown TransportException). Steady-state flush() is unaffected by this knob.
+     *
+     * @param int $milliseconds Maximum drain wall-clock at shutdown
+     */
+    public function withShutdownTimeout(int $milliseconds) : self
+    {
+        if ($milliseconds < 0) {
+            throw new \InvalidArgumentException('Shutdown timeout must be non-negative');
+        }
+
+        $this->shutdownTimeoutMs = $milliseconds;
+
+        return $this;
+    }
+
+    /**
      * Set SSL client certificate.
      *
      * @param string $certPath Path to client certificate file (PEM format)
@@ -288,17 +321,17 @@ final class CurlTransportOptions
     }
 
     /**
-     * Set the request timeout.
+     * Set the request timeout in milliseconds.
      *
-     * @param int $seconds Maximum time in seconds for the entire request
+     * @param int $milliseconds Maximum time in milliseconds for the entire request (connect + send + receive)
      */
-    public function withTimeout(int $seconds) : self
+    public function withTimeout(int $milliseconds) : self
     {
-        if ($seconds < 0) {
+        if ($milliseconds < 0) {
             throw new \InvalidArgumentException('Timeout must be non-negative');
         }
 
-        $this->timeout = $seconds;
+        $this->timeoutMs = $milliseconds;
 
         return $this;
     }

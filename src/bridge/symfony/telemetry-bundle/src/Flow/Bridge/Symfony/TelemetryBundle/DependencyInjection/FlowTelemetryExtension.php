@@ -82,7 +82,7 @@ final class FlowTelemetryExtension extends Extension
     /**
      * @param array<string, mixed> $transportConfig
      */
-    private function buildEmbeddedOtlpTransport(string $exporterName, array $transportConfig, ContainerBuilder $container) : string
+    private function buildEmbeddedOtlpTransport(string $exporterName, array $transportConfig, ContainerBuilder $container, bool $allowFailover = true) : string
     {
         $transportServiceId = 'flow.telemetry.exporter.' . $exporterName . '.transport';
         $type = $transportConfig['type'] ?? 'curl';
@@ -118,8 +118,9 @@ final class FlowTelemetryExtension extends Extension
             case 'curl':
                 $optionsServiceId = $transportServiceId . '.options';
                 $optionsDefinition = new Definition(CurlTransportOptions::class);
-                $optionsDefinition->addMethodCall('withTimeout', [$transportConfig['timeout'] ?? 30]);
-                $optionsDefinition->addMethodCall('withConnectTimeout', [$transportConfig['connect_timeout'] ?? 10]);
+                $optionsDefinition->addMethodCall('withTimeout', [$transportConfig['timeout_ms'] ?? CurlTransportOptions::DEFAULT_TIMEOUT_MS]);
+                $optionsDefinition->addMethodCall('withConnectTimeout', [$transportConfig['connect_timeout_ms'] ?? CurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS]);
+                $optionsDefinition->addMethodCall('withShutdownTimeout', [$transportConfig['shutdown_timeout_ms'] ?? CurlTransportOptions::DEFAULT_SHUTDOWN_TIMEOUT_MS]);
 
                 $headers = $transportConfig['headers'] ?? [];
 
@@ -167,6 +168,13 @@ final class FlowTelemetryExtension extends Extension
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, new Definition($serializerClass));
                 $definition->setArgument(2, new Reference($optionsServiceId));
+
+                $failoverReference = $this->buildFailoverTransport($exporterName, $transportConfig, $container, $allowFailover);
+
+                if ($failoverReference !== null) {
+                    $definition->setArgument(3, $failoverReference);
+                }
+
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;
@@ -176,6 +184,15 @@ final class FlowTelemetryExtension extends Extension
                 $definition->setArgument(0, $endpoint);
                 $definition->setArgument(1, $transportConfig['headers'] ?? []);
                 $definition->setArgument(2, $transportConfig['insecure'] ?? true);
+                $definition->setArgument(3, $transportConfig['timeout_ms'] ?? GrpcTransport::DEFAULT_TIMEOUT_MS);
+                $definition->setArgument(4, $transportConfig['shutdown_timeout_ms'] ?? GrpcTransport::DEFAULT_SHUTDOWN_TIMEOUT_MS);
+
+                $failoverReference = $this->buildFailoverTransport($exporterName, $transportConfig, $container, $allowFailover);
+
+                if ($failoverReference !== null) {
+                    $definition->setArgument(5, $failoverReference);
+                }
+
                 $container->setDefinition($transportServiceId, $definition);
 
                 break;
@@ -279,6 +296,26 @@ final class FlowTelemetryExtension extends Extension
             default:
                 throw new RuntimeException(\sprintf('Unknown error_handler type "%s" for handler "%s"', (string) $type, $name));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $transportConfig
+     */
+    private function buildFailoverTransport(string $exporterName, array $transportConfig, ContainerBuilder $container, bool $allowFailover) : ?Reference
+    {
+        if (!$allowFailover) {
+            return null;
+        }
+
+        $failoverConfig = $transportConfig['failover'] ?? null;
+
+        if (!\is_array($failoverConfig) || $failoverConfig === []) {
+            return null;
+        }
+
+        $failoverServiceId = $this->buildEmbeddedOtlpTransport($exporterName . '.failover', $failoverConfig, $container, allowFailover: false);
+
+        return new Reference($failoverServiceId);
     }
 
     /**

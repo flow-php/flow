@@ -171,6 +171,47 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
+    public function test_grpc_transport_accepts_timeout_ms() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'grpc',
+                            'endpoint' => 'localhost:4317',
+                            'timeout_ms' => 2000,
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame(2000, $config['exporters']['otlp']['otlp']['transport']['timeout_ms']);
+    }
+
+    public function test_grpc_transport_rejects_connect_timeout_ms() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The "connect_timeout_ms" parameter is not supported when transport.type is "grpc"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'grpc',
+                            'endpoint' => 'localhost:4317',
+                            'connect_timeout_ms' => 250,
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
     public function test_grpc_transport_rejects_encoding_field() : void
     {
         $this->expectException(InvalidConfigurationException::class);
@@ -185,27 +226,6 @@ final class ConfigurationTest extends TestCase
                             'type' => 'grpc',
                             'endpoint' => 'localhost:4317',
                             'encoding' => 'json',
-                        ],
-                    ],
-                ],
-            ],
-        ]]);
-    }
-
-    public function test_grpc_transport_with_timeout_throws() : void
-    {
-        $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('The "timeout" parameter is not supported when transport.type is "grpc"');
-
-        (new Processor())->processConfiguration(new Configuration(), [[
-            'resource' => [],
-            'exporters' => [
-                'otlp' => [
-                    'otlp' => [
-                        'transport' => [
-                            'type' => 'grpc',
-                            'endpoint' => 'localhost:4317',
-                            'timeout' => 30,
                         ],
                     ],
                 ],
@@ -429,8 +449,8 @@ final class ConfigurationTest extends TestCase
         ]]);
     }
 
-    #[TestWith(['timeout', 30])]
-    #[TestWith(['connect_timeout', 5])]
+    #[TestWith(['timeout_ms', 2000])]
+    #[TestWith(['connect_timeout_ms', 500])]
     #[TestWith(['compression', true])]
     #[TestWith(['ssl_cert_path', '/etc/cert.pem'])]
     #[TestWith(['headers', ['Authorization' => 'Bearer x']])]
@@ -467,6 +487,82 @@ final class ConfigurationTest extends TestCase
                 'otlp_stream' => [
                     'otlp' => [
                         'transport' => ['type' => 'stream'],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_transport_failover_block_is_accepted_under_curl_primary() : void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'curl',
+                            'endpoint' => 'http://localhost:4318',
+                            'failover' => [
+                                'type' => 'stream',
+                                'endpoint' => 'php://memory',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+
+        self::assertSame('stream', $config['exporters']['otlp']['otlp']['transport']['failover']['type']);
+        self::assertSame('php://memory', $config['exporters']['otlp']['otlp']['transport']['failover']['endpoint']);
+    }
+
+    public function test_transport_failover_rejected_for_stream_primary() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('"failover" block is only supported for transport.type "curl" or "grpc"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'stream',
+                            'endpoint' => 'php://memory',
+                            'failover' => [
+                                'type' => 'stream',
+                                'endpoint' => 'php://memory',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]]);
+    }
+
+    public function test_transport_failover_rejects_nested_failover() : void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('Unrecognized option "failover" under "flow_telemetry.exporters.otlp.otlp.transport.failover"');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'curl',
+                            'endpoint' => 'http://localhost:4318',
+                            'failover' => [
+                                'type' => 'stream',
+                                'endpoint' => 'php://memory',
+                                'failover' => [
+                                    'type' => 'stream',
+                                    'endpoint' => 'php://memory',
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],

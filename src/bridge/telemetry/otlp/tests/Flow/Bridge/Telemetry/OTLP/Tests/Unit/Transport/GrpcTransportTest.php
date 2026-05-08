@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
-use Flow\Bridge\Telemetry\OTLP\Transport\{GrpcTransport, TransportException};
+use Flow\Bridge\Telemetry\OTLP\Tests\Double\RecordingTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\{FailoverTransportException, GrpcTransport, TransportException};
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use Google\Protobuf\Internal\Message;
@@ -63,6 +64,66 @@ final class GrpcTransportTest extends TestCase
     }
 
     #[RequiresPhpExtension('grpc')]
+    public function test_failover_receives_prior_batch_on_subsequent_send_and_throws_composite() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $failover = new RecordingTransport();
+        $transport = new GrpcTransport(endpoint: '127.0.0.1:1', failover: $failover);
+
+        $batchA = Signals::traces([SpanMother::withName('span-a')]);
+        $batchB = Signals::traces([SpanMother::withName('span-b')]);
+
+        $transport->send($batchA);
+
+        try {
+            $transport->send($batchB);
+            self::fail('Expected FailoverTransportException for batch A');
+        } catch (FailoverTransportException $e) {
+            self::assertCount(1, $e->failures);
+            self::assertNull($e->failures[0]['failover']);
+        }
+
+        try {
+            $transport->shutdown();
+            self::fail('Expected FailoverTransportException for batch B');
+        } catch (FailoverTransportException $e) {
+            self::assertCount(1, $e->failures);
+            self::assertNull($e->failures[0]['failover']);
+        }
+
+        self::assertCount(2, $failover->sent);
+        self::assertContains($batchA, $failover->sent);
+        self::assertContains($batchB, $failover->sent);
+        self::assertSame(1, $failover->shutdownCalls);
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_failover_records_double_failure_when_failover_send_also_throws() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $failover = new RecordingTransport();
+        $failover->sendException = new TransportException('failover down');
+
+        $transport = new GrpcTransport(endpoint: '127.0.0.1:1', failover: $failover);
+
+        $transport->send(Signals::traces([SpanMother::withName('span-a')]));
+
+        try {
+            $transport->shutdown();
+            self::fail('Expected FailoverTransportException');
+        } catch (FailoverTransportException $e) {
+            self::assertCount(1, $e->failures);
+            self::assertInstanceOf(\Throwable::class, $e->failures[0]['primary']);
+            self::assertInstanceOf(TransportException::class, $e->failures[0]['failover']);
+            self::assertStringContainsString('failover down', $e->failures[0]['failover']->getMessage());
+        }
+
+        self::assertCount(1, $failover->sent);
+    }
+
+    #[RequiresPhpExtension('grpc')]
     public function test_send_after_shutdown_throws() : void
     {
         $this->skipIfGrpcDependenciesNotAvailable();
@@ -103,6 +164,42 @@ final class GrpcTransportTest extends TestCase
         $transport->shutdown();
 
         self::addToAssertionCount(1);
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_shutdown_cascades_to_failover_shutdown() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $failover = new RecordingTransport();
+        $transport = new GrpcTransport(endpoint: '127.0.0.1:1', failover: $failover);
+
+        $transport->send(Signals::traces([SpanMother::withName('span-a')]));
+
+        try {
+            $transport->shutdown();
+            self::fail('Expected FailoverTransportException');
+        } catch (FailoverTransportException $e) {
+            self::assertCount(1, $e->failures);
+        }
+
+        self::assertSame(1, $failover->shutdownCalls);
+    }
+
+    #[RequiresPhpExtension('grpc')]
+    public function test_shutdown_surfaces_failover_shutdown_exception_when_no_deferred_failures() : void
+    {
+        $this->skipIfGrpcDependenciesNotAvailable();
+
+        $failover = new RecordingTransport();
+        $failover->shutdownException = new \RuntimeException('boom');
+
+        $transport = new GrpcTransport(endpoint: 'localhost:4317', failover: $failover);
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('failover shutdown failed: boom');
+
+        $transport->shutdown();
     }
 
     private function skipIfGrpcDependenciesNotAvailable() : void

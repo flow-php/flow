@@ -438,6 +438,68 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         self::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
     }
 
+    public function test_otlp_transport_failover_inline_curl_with_stream_failover() : void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'otlp' => [
+                            'otlp' => [
+                                'transport' => [
+                                    'type' => 'curl',
+                                    'endpoint' => 'http://localhost:4318',
+                                    'failover' => [
+                                        'type' => 'stream',
+                                        'endpoint' => 'php://memory',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(CurlTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
+        self::assertInstanceOf(StreamTransport::class, $container->get('flow.telemetry.exporter.otlp.failover.transport'));
+    }
+
+    public function test_otlp_transport_failover_inline_grpc_with_curl_failover() : void
+    {
+        if (!\extension_loaded('grpc')) {
+            self::markTestSkipped('ext-grpc is required');
+        }
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel) : void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'otlp' => [
+                            'otlp' => [
+                                'transport' => [
+                                    'type' => 'grpc',
+                                    'endpoint' => 'localhost:4317',
+                                    'failover' => [
+                                        'type' => 'curl',
+                                        'endpoint' => 'http://localhost:4318',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        self::assertInstanceOf(GrpcTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
+        self::assertInstanceOf(CurlTransport::class, $container->get('flow.telemetry.exporter.otlp.failover.transport'));
+    }
+
     public function test_processor_referencing_unknown_exporter_throws() : void
     {
         $this->expectException(RuntimeException::class);

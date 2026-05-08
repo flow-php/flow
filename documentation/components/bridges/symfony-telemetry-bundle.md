@@ -537,24 +537,77 @@ exporters:
 
 Inside `exporters.<name>.otlp.transport`. Required for the `otlp` sub-block.
 
+#### Timeouts
+
+Both curl and gRPC default to **aggressive, local-collector-friendly per-request timeouts** with a separate, looser
+budget for graceful drain at shutdown:
+
+| Setting               | Default | Applies to | Bounds                                                      |
+|-----------------------|--------:|------------|-------------------------------------------------------------|
+| `timeout_ms`          |   250   | curl, grpc | Per-request deadline (curl: total request; grpc: per-call)  |
+| `connect_timeout_ms`  |   250   | curl only  | TCP/TLS connect; gRPC has no separate bound                 |
+| `shutdown_timeout_ms` |  5000   | curl, grpc | Wall-clock budget for draining pending requests at shutdown |
+
+The defaults assume the recommended deployment: an OpenTelemetry Collector running close to the application (loopback,
+UDS, or sidecar). `shutdown_timeout_ms` is independent of `timeout_ms` — keep the per-request value tight to surface
+collector slowness during steady-state, while still giving graceful exit a longer window to drain. For a remote
+collector across regions, raise both values. See the
+[OTLP bridge Timeouts section](/documentation/components/bridges/telemetry-otlp-bridge.md#timeouts) for the rationale.
+
+#### Failover Transport
+
+Both `curl` and `grpc` transports accept an optional nested `failover:` block. When primary delivery fails, the prior
+batch is forwarded to the failover transport and a `FailoverTransportException` is raised so the operator is informed
+even when failover absorbs the data. Common pattern: **gRPC primary → stream (JSONL on disk) failover** so a downed
+collector still leaves recoverable data the operator can replay later.
+
+```yaml
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: grpc
+        endpoint: 'otel-collector:4317'
+        timeout_ms: 250
+        failover:
+          type: stream
+          endpoint: '%kernel.logs_dir%/otel-failed.jsonl'
+```
+
+**Constraints**
+
+- The `failover:` block accepts the same fields as the parent transport, except it cannot itself declare a nested
+  `failover:` (single-level depth).
+- Allowed only on `curl` and `grpc` primaries. `failover` under a `stream` or `service` primary is rejected at
+  config-validation time.
+- The bundle registers `flow.telemetry.exporter.<name>.failover.transport` for the failover service id.
+
+For the underlying behavior — when a forwarded batch is treated as absorbed vs. lost, the shape of
+`FailoverTransportException`, and the cascade-shutdown contract — see the
+[OTLP bridge Failover Transport section](/documentation/components/bridges/telemetry-otlp-bridge.md#failover-transport).
+
 #### curl (default)
 
-| Option             | Type    | Default | Description                 |
-|--------------------|---------|---------|-----------------------------|
-| `endpoint`         | string  | -       | OTLP base URL (required)    |
-| `timeout`          | integer | `30`    | Request timeout in seconds  |
-| `connect_timeout`  | integer | `10`    | Connection timeout          |
-| `compression`      | boolean | `false` | Enable compression          |
-| `follow_redirects` | boolean | `true`  | Follow HTTP redirects       |
-| `max_redirects`    | integer | `3`     | Maximum redirects to follow |
-| `proxy`            | string  | `null`  | Proxy URL                   |
-| `ssl_verify_peer`  | boolean | `true`  | Verify SSL peer             |
-| `ssl_verify_host`  | boolean | `true`  | Verify SSL host             |
-| `ssl_cert_path`    | string  | `null`  | SSL certificate path        |
-| `ssl_key_path`     | string  | `null`  | SSL key path                |
-| `ca_info_path`     | string  | `null`  | CA info path                |
-| `headers`          | object  | `{}`    | Additional HTTP headers     |
-| `encoding`         | enum    | `json`  | OTLP/HTTP wire encoding: `json` or `protobuf` |
+| Option                | Type    | Default | Description                                                                |
+|-----------------------|---------|---------|----------------------------------------------------------------------------|
+| `endpoint`            | string  | -       | OTLP base URL (required)                                                   |
+| `timeout_ms`          | integer | `250`   | Total per-request deadline in **milliseconds**                             |
+| `connect_timeout_ms`  | integer | `250`   | TCP/TLS connect deadline in **milliseconds**                               |
+| `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending requests at shutdown |
+| `compression`         | boolean | `false` | Enable compression                                                         |
+| `follow_redirects`    | boolean | `true`  | Follow HTTP redirects                                                      |
+| `max_redirects`       | integer | `3`     | Maximum redirects to follow                                                |
+| `proxy`               | string  | `null`  | Proxy URL                                                                  |
+| `ssl_verify_peer`     | boolean | `true`  | Verify SSL peer                                                            |
+| `ssl_verify_host`     | boolean | `true`  | Verify SSL host                                                            |
+| `ssl_cert_path`       | string  | `null`  | SSL certificate path                                                       |
+| `ssl_key_path`        | string  | `null`  | SSL key path                                                               |
+| `ca_info_path`        | string  | `null`  | CA info path                                                               |
+| `headers`             | object  | `{}`    | Additional HTTP headers                                                    |
+| `encoding`            | enum    | `json`  | OTLP/HTTP wire encoding: `json` or `protobuf`                              |
+| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                         |
+
+See [Timeouts](#timeouts) for guidance on the millisecond defaults.
 
 ```yaml
 exporters:
@@ -563,7 +616,8 @@ exporters:
       transport:
         type: curl
         endpoint: 'http://otel-collector:4318'
-        timeout: 30
+        timeout_ms: 250
+        connect_timeout_ms: 250
         compression: true
         headers:
           Authorization: 'Bearer token'
@@ -572,13 +626,18 @@ exporters:
 
 #### grpc
 
-gRPC transport (`timeout` and `encoding` are rejected by validation — OTLP/gRPC mandates Protobuf, built internally).
+gRPC transport. `encoding` is rejected by validation (OTLP/gRPC mandates Protobuf, built internally), and
+`connect_timeout_ms` is rejected because gRPC has no separate connect bound — `timeout_ms` is the per-call deadline
+covering DNS, connect, send and receive together.
 
-| Option     | Type    | Default | Description                |
-|------------|---------|---------|----------------------------|
-| `endpoint` | string  | -       | gRPC endpoint (required)   |
-| `insecure` | boolean | `true`  | Allow insecure connections |
-| `headers`  | object  | `{}`    | gRPC metadata              |
+| Option                | Type    | Default | Description                                                                |
+|-----------------------|---------|---------|----------------------------------------------------------------------------|
+| `endpoint`            | string  | -       | gRPC endpoint (required)                                                   |
+| `timeout_ms`          | integer | `250`   | Per-call deadline in **milliseconds**                                      |
+| `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending calls at shutdown |
+| `insecure`            | boolean | `true`  | Allow insecure connections                                                 |
+| `headers`             | object  | `{}`    | gRPC metadata                                                              |
+| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                         |
 
 ```yaml
 exporters:
@@ -586,7 +645,8 @@ exporters:
     otlp:
       transport:
         type: grpc
-        endpoint: 'http://otel-collector:4317'
+        endpoint: 'otel-collector:4317'
+        timeout_ms: 250
         insecure: false
 ```
 
@@ -1044,10 +1104,14 @@ flow_telemetry:
         transport:
           type: curl
           endpoint: '%env(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)%'
-          timeout: 30
+          timeout_ms: 250
+          connect_timeout_ms: 250
           headers:
             Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
           encoding: protobuf
+          failover:
+            type: stream
+            endpoint: '%kernel.logs_dir%/otel-traces-failed.jsonl'
     otlp_metrics:
       otlp:
         transport:

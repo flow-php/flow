@@ -19,6 +19,7 @@
         "flow-php/telemetry": "self.version"
     },
     "require-dev": {
+        "ext-curl" : "*",
         "google/protobuf": "^4.0 || ^5.0",
         "grpc/grpc": "^1.74",
         "nyholm/psr7": "^1.8",

@@ -70,14 +70,20 @@ function otlp_protobuf_serializer() : ProtobufSerializer
  * @param string $endpoint gRPC endpoint (e.g., 'localhost:4317')
  * @param array<string, string> $headers Additional headers (metadata) to include in requests
  * @param bool $insecure Whether to use insecure channel credentials (default true for local dev)
+ * @param int $timeoutMs Per-call deadline in milliseconds (covers connect + send + receive)
+ * @param int $shutdownTimeoutMs Wall-clock budget for draining pending calls at shutdown
+ * @param ?Transport $failover Optional failover transport receiving prior batches when primary fails
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
 function otlp_grpc_transport(
     string $endpoint,
     array $headers = [],
     bool $insecure = true,
+    int $timeoutMs = GrpcTransport::DEFAULT_TIMEOUT_MS,
+    int $shutdownTimeoutMs = GrpcTransport::DEFAULT_SHUTDOWN_TIMEOUT_MS,
+    ?Transport $failover = null,
 ) : Transport {
-    return new GrpcTransport($endpoint, $headers, $insecure);
+    return new GrpcTransport($endpoint, $headers, $insecure, $timeoutMs, $shutdownTimeoutMs, $failover);
 }
 
 /**
@@ -101,14 +107,16 @@ function otlp_curl_options() : CurlTransportOptions
  * @param string $endpoint OTLP endpoint URL (e.g., 'http://localhost:4318')
  * @param JsonSerializer|ProtobufSerializer $serializer Serializer for encoding telemetry data (JSON or Protobuf)
  * @param CurlTransportOptions $options Transport configuration options
+ * @param ?Transport $failover Optional failover transport receiving prior batches when primary fails
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
 function otlp_curl_transport(
     string $endpoint,
     JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
     CurlTransportOptions $options = new CurlTransportOptions(),
+    ?Transport $failover = null,
 ) : Transport {
-    return new CurlTransport($endpoint, $serializer, $options);
+    return new CurlTransport($endpoint, $serializer, $options, $failover);
 }
 
 /**

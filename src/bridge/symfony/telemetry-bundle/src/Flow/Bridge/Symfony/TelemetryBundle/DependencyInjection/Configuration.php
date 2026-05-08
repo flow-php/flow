@@ -398,6 +398,191 @@ final class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
+    private function applyTransportSchema(ArrayNodeDefinition $node, bool $allowFailover) : void
+    {
+        $node
+            ->beforeNormalization()
+                ->always(static function (mixed $v) use ($allowFailover) : mixed {
+                    if (!\is_array($v)) {
+                        return $v;
+                    }
+
+                    if (($v['type'] ?? null) === 'grpc' && \array_key_exists('connect_timeout_ms', $v)) {
+                        throw new InvalidConfigurationException(
+                            'The "connect_timeout_ms" parameter is not supported when transport.type is "grpc"; gRPC uses the per-call deadline (timeout_ms) for connection establishment too.',
+                        );
+                    }
+
+                    if (($v['type'] ?? null) === 'stream') {
+                        $forbidden = [
+                            'timeout_ms',
+                            'connect_timeout_ms',
+                            'shutdown_timeout_ms',
+                            'compression',
+                            'follow_redirects',
+                            'max_redirects',
+                            'proxy',
+                            'ssl_verify_peer',
+                            'ssl_verify_host',
+                            'ssl_cert_path',
+                            'ssl_key_path',
+                            'ca_info_path',
+                            'headers',
+                            'insecure',
+                        ];
+
+                        foreach ($forbidden as $key) {
+                            if (\array_key_exists($key, $v)) {
+                                throw new InvalidConfigurationException(\sprintf(
+                                    'The "%s" parameter is not supported when transport.type is "stream".',
+                                    $key,
+                                ));
+                            }
+                        }
+                    }
+
+                    $encodingRejection = match ($v['type'] ?? null) {
+                        'stream' => 'only JSON encoding is allowed by the OTLP File Exporter spec',
+                        'grpc' => 'OTLP/gRPC mandates Protobuf encoding',
+                        default => null,
+                    };
+
+                    if ($encodingRejection !== null && \array_key_exists('encoding', $v)) {
+                        throw new InvalidConfigurationException(\sprintf(
+                            'The "encoding" parameter is not supported when transport.type is "%s"; %s.',
+                            $v['type'],
+                            $encodingRejection,
+                        ));
+                    }
+
+                    if ($allowFailover && \array_key_exists('failover', $v) && \is_array($v['failover']) && $v['failover'] !== []) {
+                        $primaryType = $v['type'] ?? 'curl';
+
+                        if (!\in_array($primaryType, ['curl', 'grpc'], true)) {
+                            throw new InvalidConfigurationException(\sprintf(
+                                'The "failover" block is only supported for transport.type "curl" or "grpc"; got "%s".',
+                                $primaryType,
+                            ));
+                        }
+                    }
+
+                    return $v;
+                })
+            ->end()
+            ->validate()
+                ->ifTrue(static function (array $v) : bool {
+                    if (($v['type'] ?? null) !== 'stream') {
+                        return false;
+                    }
+
+                    $endpoint = $v['endpoint'] ?? null;
+
+                    return !\is_string($endpoint) || $endpoint === '';
+                })
+                ->thenInvalid('The "endpoint" parameter is required and must be a non-empty string when transport.type is "stream" (used as the destination file path or php:// stream wrapper URI).')
+            ->end();
+
+        $children = $node->children();
+
+        $children
+            ->enumNode('type')
+                ->info("Transport type: 'curl', 'grpc', 'stream', 'service'")
+                ->values(['curl', 'grpc', 'stream', 'service'])
+                ->defaultValue('curl')
+            ->end()
+            ->scalarNode('endpoint')
+                ->info('OTLP endpoint URL for curl/grpc, or destination file path / php:// stream wrapper URI for stream (required unless type: service)')
+                ->defaultNull()
+            ->end()
+            ->integerNode('file_permissions')
+                ->info('Permissions applied when creating new files (stream only; ignored for php:// destinations)')
+                ->defaultValue(0644)
+                ->min(0)
+                ->max(0777)
+            ->end()
+            ->booleanNode('create_directories')
+                ->info('Create parent directories of the destination path if they do not exist (stream only; ignored for php:// destinations)')
+                ->defaultTrue()
+            ->end()
+            ->integerNode('timeout_ms')
+                ->info('Per-request deadline in milliseconds (curl: total request; grpc: call deadline). Default 250ms.')
+                ->defaultValue(250)
+                ->min(1)
+            ->end()
+            ->arrayNode('headers')
+                ->info('Additional HTTP headers')
+                ->normalizeKeys(false)
+                ->useAttributeAsKey('name')
+                ->prototype('scalar')->end()
+            ->end()
+            ->integerNode('connect_timeout_ms')
+                ->info('Connection-establishment deadline in milliseconds (curl only). Default 250ms.')
+                ->defaultValue(250)
+                ->min(1)
+            ->end()
+            ->integerNode('shutdown_timeout_ms')
+                ->info('Wall-clock budget in milliseconds for draining pending requests at shutdown (curl/grpc). Default 5000ms.')
+                ->defaultValue(5000)
+                ->min(1)
+            ->end()
+            ->booleanNode('compression')
+                ->info('Enable automatic response decompression (curl only)')
+                ->defaultFalse()
+            ->end()
+            ->booleanNode('follow_redirects')
+                ->info('Follow HTTP redirects (curl only)')
+                ->defaultTrue()
+            ->end()
+            ->integerNode('max_redirects')
+                ->info('Maximum number of redirects to follow (curl only)')
+                ->defaultValue(3)
+                ->min(0)
+            ->end()
+            ->scalarNode('proxy')
+                ->info('Proxy server URL (curl only)')
+                ->defaultNull()
+            ->end()
+            ->booleanNode('ssl_verify_peer')
+                ->info('Verify SSL peer certificate (curl only)')
+                ->defaultTrue()
+            ->end()
+            ->booleanNode('ssl_verify_host')
+                ->info('Verify SSL host name (curl only)')
+                ->defaultTrue()
+            ->end()
+            ->scalarNode('ssl_cert_path')
+                ->info('Path to SSL client certificate (curl only)')
+                ->defaultNull()
+            ->end()
+            ->scalarNode('ssl_key_path')
+                ->info('Path to SSL client private key (curl only)')
+                ->defaultNull()
+            ->end()
+            ->scalarNode('ca_info_path')
+                ->info('Path to CA certificate bundle (curl only)')
+                ->defaultNull()
+            ->end()
+            ->booleanNode('insecure')
+                ->info('Allow insecure connections (grpc only)')
+                ->defaultTrue()
+            ->end()
+            ->scalarNode('service_id')
+                ->info('Custom transport service ID (only for type: service)')
+                ->defaultNull()
+            ->end()
+            ->enumNode('encoding')
+                ->info('OTLP wire encoding (curl only); JSON or Protobuf as defined by the OTLP/HTTP spec')
+                ->values(['json', 'protobuf'])
+                ->defaultValue('json')
+            ->end();
+
+        if ($allowFailover) {
+            $children->append($this->transportNode('failover', allowFailover: false));
+        }
+
+        $children->end();
+    }
+
     private function errorHandlersNode() : ArrayNodeDefinition
     {
         $builder = new TreeBuilder('error_handlers');
@@ -698,165 +883,16 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function transportNode() : ArrayNodeDefinition
+    private function transportNode(string $name = 'transport', bool $allowFailover = true) : ArrayNodeDefinition
     {
-        $builder = new TreeBuilder('transport');
+        $builder = new TreeBuilder($name);
         /** @var ArrayNodeDefinition $node */
         $node = $builder->getRootNode();
 
-        $node
-            ->info('Transport configuration (required when exporter type is "otlp")')
-            ->beforeNormalization()
-                ->always(static function (mixed $v) : mixed {
-                    if (\is_array($v) && ($v['type'] ?? null) === 'grpc' && \array_key_exists('timeout', $v)) {
-                        throw new InvalidConfigurationException(
-                            'The "timeout" parameter is not supported when transport.type is "grpc".',
-                        );
-                    }
-
-                    if (\is_array($v) && ($v['type'] ?? null) === 'stream') {
-                        $forbidden = [
-                            'timeout',
-                            'connect_timeout',
-                            'compression',
-                            'follow_redirects',
-                            'max_redirects',
-                            'proxy',
-                            'ssl_verify_peer',
-                            'ssl_verify_host',
-                            'ssl_cert_path',
-                            'ssl_key_path',
-                            'ca_info_path',
-                            'headers',
-                            'insecure',
-                        ];
-
-                        foreach ($forbidden as $key) {
-                            if (\array_key_exists($key, $v)) {
-                                throw new InvalidConfigurationException(\sprintf(
-                                    'The "%s" parameter is not supported when transport.type is "stream".',
-                                    $key,
-                                ));
-                            }
-                        }
-                    }
-
-                    $encodingRejection = match (\is_array($v) ? ($v['type'] ?? null) : null) {
-                        'stream' => 'only JSON encoding is allowed by the OTLP File Exporter spec',
-                        'grpc' => 'OTLP/gRPC mandates Protobuf encoding',
-                        default => null,
-                    };
-
-                    if ($encodingRejection !== null && \is_array($v) && \array_key_exists('encoding', $v)) {
-                        throw new InvalidConfigurationException(\sprintf(
-                            'The "encoding" parameter is not supported when transport.type is "%s"; %s.',
-                            $v['type'],
-                            $encodingRejection,
-                        ));
-                    }
-
-                    return $v;
-                })
-            ->end()
-            ->validate()
-                ->ifTrue(static function (array $v) : bool {
-                    if (($v['type'] ?? null) !== 'stream') {
-                        return false;
-                    }
-
-                    $endpoint = $v['endpoint'] ?? null;
-
-                    return !\is_string($endpoint) || $endpoint === '';
-                })
-                ->thenInvalid('The "endpoint" parameter is required and must be a non-empty string when transport.type is "stream" (used as the destination file path or php:// stream wrapper URI).')
-            ->end()
-            ->children()
-                ->enumNode('type')
-                    ->info("Transport type: 'curl', 'grpc', 'stream', 'service'")
-                    ->values(['curl', 'grpc', 'stream', 'service'])
-                    ->defaultValue('curl')
-                ->end()
-                ->scalarNode('endpoint')
-                    ->info('OTLP endpoint URL for curl/grpc, or destination file path / php:// stream wrapper URI for stream (required unless type: service)')
-                    ->defaultNull()
-                ->end()
-                ->integerNode('file_permissions')
-                    ->info('Permissions applied when creating new files (stream only; ignored for php:// destinations)')
-                    ->defaultValue(0644)
-                    ->min(0)
-                    ->max(0777)
-                ->end()
-                ->booleanNode('create_directories')
-                    ->info('Create parent directories of the destination path if they do not exist (stream only; ignored for php:// destinations)')
-                    ->defaultTrue()
-                ->end()
-                ->integerNode('timeout')
-                    ->info('Request timeout in seconds (curl only)')
-                    ->defaultValue(30)
-                    ->min(1)
-                ->end()
-                ->arrayNode('headers')
-                    ->info('Additional HTTP headers')
-                    ->normalizeKeys(false)
-                    ->useAttributeAsKey('name')
-                    ->prototype('scalar')->end()
-                ->end()
-                ->integerNode('connect_timeout')
-                    ->info('Connection timeout in seconds (curl only)')
-                    ->defaultValue(10)
-                    ->min(1)
-                ->end()
-                ->booleanNode('compression')
-                    ->info('Enable automatic response decompression (curl only)')
-                    ->defaultFalse()
-                ->end()
-                ->booleanNode('follow_redirects')
-                    ->info('Follow HTTP redirects (curl only)')
-                    ->defaultTrue()
-                ->end()
-                ->integerNode('max_redirects')
-                    ->info('Maximum number of redirects to follow (curl only)')
-                    ->defaultValue(3)
-                    ->min(0)
-                ->end()
-                ->scalarNode('proxy')
-                    ->info('Proxy server URL (curl only)')
-                    ->defaultNull()
-                ->end()
-                ->booleanNode('ssl_verify_peer')
-                    ->info('Verify SSL peer certificate (curl only)')
-                    ->defaultTrue()
-                ->end()
-                ->booleanNode('ssl_verify_host')
-                    ->info('Verify SSL host name (curl only)')
-                    ->defaultTrue()
-                ->end()
-                ->scalarNode('ssl_cert_path')
-                    ->info('Path to SSL client certificate (curl only)')
-                    ->defaultNull()
-                ->end()
-                ->scalarNode('ssl_key_path')
-                    ->info('Path to SSL client private key (curl only)')
-                    ->defaultNull()
-                ->end()
-                ->scalarNode('ca_info_path')
-                    ->info('Path to CA certificate bundle (curl only)')
-                    ->defaultNull()
-                ->end()
-                ->booleanNode('insecure')
-                    ->info('Allow insecure connections (grpc only)')
-                    ->defaultTrue()
-                ->end()
-                ->scalarNode('service_id')
-                    ->info('Custom transport service ID (only for type: service)')
-                    ->defaultNull()
-                ->end()
-                ->enumNode('encoding')
-                    ->info('OTLP wire encoding (curl only); JSON or Protobuf as defined by the OTLP/HTTP spec')
-                    ->values(['json', 'protobuf'])
-                    ->defaultValue('json')
-                ->end()
-            ->end();
+        $node->info($allowFailover
+            ? 'Transport configuration (required when exporter type is "otlp")'
+            : 'Optional failover transport receiving prior batches when the primary transport fails (curl/grpc primaries only).');
+        $this->applyTransportSchema($node, allowFailover: $allowFailover);
 
         return $node;
     }
