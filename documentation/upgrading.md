@@ -7,6 +7,196 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.36.x to 0.37.x
+
+### 1) `flow-php/telemetry` - Per-signal exporter contracts merged into `Exporter`
+
+| Before                                                                             | After                                                            |
+|------------------------------------------------------------------------------------|------------------------------------------------------------------|
+| `Flow\Telemetry\Tracer\SpanExporter` (interface)                                   | `Flow\Telemetry\Exporter\Exporter`                               |
+| `Flow\Telemetry\Meter\MetricExporter` (interface)                                  | `Flow\Telemetry\Exporter\Exporter`                               |
+| `Flow\Telemetry\Logger\LogExporter` (interface)                                    | `Flow\Telemetry\Exporter\Exporter`                               |
+| `VoidSpanExporter`, `VoidMetricExporter`, `VoidLogExporter`                        | `Flow\Telemetry\Provider\Void\VoidExporter`                      |
+| `MemorySpanExporter`, `MemoryMetricExporter`, `MemoryLogExporter`                  | `Flow\Telemetry\Provider\Memory\MemoryExporter`                  |
+| `ConsoleSpanExporter`, `ConsoleMetricExporter`, `ConsoleLogExporter`               | `Flow\Telemetry\Provider\Console\ConsoleExporter`                |
+| `void_span_exporter()` / `void_metric_exporter()` / `void_log_exporter()`          | `void_exporter()`                                                |
+| `memory_span_exporter()` / `memory_metric_exporter()` / `memory_log_exporter()`    | `memory_exporter()`                                              |
+| `console_span_exporter()` / `console_metric_exporter()` / `console_log_exporter()` | `console_exporter()`                                             |
+| `MemoryLogExporter::entries()`                                                     | `MemoryExporter::logs()`                                         |
+| `MemorySpanExporter::spans()`                                                      | `MemoryExporter::spans()`                                        |
+| `MemoryMetricExporter::metrics()`                                                  | `MemoryExporter::metrics()`                                      |
+| `Exporter::transports()`                                                           | removed                                                          |
+| `(Span\|Metric\|Log)Exporter::export(array $items) : bool`                         | `Exporter::export(Flow\Telemetry\Signal\Signals $signal) : bool` |
+| —                                                                                  | `Exporter::shutdown() : void` (added)                            |
+
+### 2) `flow-php/telemetry` - `Transport` contract relocated to OTLP bridge
+
+| Before                                                    | After                                                     |
+|-----------------------------------------------------------|-----------------------------------------------------------|
+| `Flow\Telemetry\Transport\Transport`                      | `Flow\Bridge\Telemetry\OTLP\Transport\Transport`          |
+| `Flow\Telemetry\Transport\TransportException`             | `Flow\Bridge\Telemetry\OTLP\Transport\TransportException` |
+| `Flow\Telemetry\Transport\VoidTransport`                  | removed                                                   |
+| `Transport::sendSpans()` / `sendMetrics()` / `sendLogs()` | `Transport::send(Flow\Telemetry\Signal\Signals $signal)`  |
+| `Flow\Bridge\Telemetry\OTLP\Exception\Exception`          | removed                                                   |
+| `Flow\Bridge\Telemetry\OTLP\Exception\TransportException` | `Flow\Bridge\Telemetry\OTLP\Transport\TransportException` |
+
+### 3) `flow-php/telemetry` - Processor interfaces
+
+Applies to `SpanProcessor`, `MetricProcessor`, `LogProcessor`.
+
+| Before                             | After                       |
+|------------------------------------|-----------------------------|
+| `exporter() : SpanExporter` (etc.) | removed                     |
+| —                                  | `shutdown() : void` (added) |
+
+### 4) `flow-php/telemetry` - `Serializer` contract removed
+
+| Before                                                               | After                                                                                                       |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `Flow\Telemetry\Serializer\Serializer`                               | removed                                                                                                     |
+| `Flow\Bridge\Telemetry\OTLP\Serializer\GrpcSerializer` (interface)   | renamed to `Flow\Bridge\Telemetry\OTLP\Serializer\GrpcRequestFactory` (class)                               |
+| `CurlTransport(string $endpoint, Serializer $serializer, …)`         | `CurlTransport(string $endpoint, JsonSerializer\|ProtobufSerializer $serializer = new JsonSerializer(), …)` |
+| `GrpcTransport(string $endpoint, ProtobufSerializer $serializer, …)` | `GrpcTransport(string $endpoint, …)` — serializer parameter removed                                         |
+
+### 5) `flow-php/telemetry` - `ErrorHandler` contract added
+
+New namespace `Flow\Telemetry\ErrorHandler` with: `ErrorHandler` (interface), `ErrorLogHandler`, `NullErrorHandler`,
+`StreamHandler`, `SyslogHandler`, `UdpSyslogHandler`, `CompositeErrorHandler`.
+
+| Before                                                              | After                                                                                                         |
+|---------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `otlp_exporter($transport)`                                         | `otlp_exporter($transport, ErrorHandler $errorHandler = new ErrorLogHandler())`                               |
+| `telemetry_handler($logger, $converter, $level, $bubble)` (Monolog) | `telemetry_handler($logger, $converter, $level, $bubble, ErrorHandler $errorHandler = new ErrorLogHandler())` |
+
+### 6) `flow-php/telemetry-otlp-bridge` - `HttpTransport` removed
+
+| Before                                               | After                                 |
+|------------------------------------------------------|---------------------------------------|
+| `Flow\Bridge\Telemetry\OTLP\Transport\HttpTransport` | removed                               |
+| `otlp_http_transport()`                              | removed (use `otlp_curl_transport()`) |
+| `psr/http-client` (runtime require)                  | removed (dev only)                    |
+| `psr/http-factory` (runtime require)                 | removed (dev only)                    |
+
+### 7) `flow-php/telemetry-otlp-bridge` - Per-signal OTLP exporters merged
+
+| Before                                                      | After                                              |
+|-------------------------------------------------------------|----------------------------------------------------|
+| `OTLPSpanExporter`, `OTLPMetricExporter`, `OTLPLogExporter` | `Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter` |
+| `otlp_span_exporter($transport)`                            | `otlp_exporter($transport)`                        |
+| `otlp_metric_exporter($transport)`                          | `otlp_exporter($transport)`                        |
+| `otlp_log_exporter($transport)`                             | `otlp_exporter($transport)`                        |
+
+### 8) `flow-php/telemetry-otlp-bridge` - Curl/gRPC timeouts switched to milliseconds
+
+| Before                                                                                                              | After                                                                                                                                                                                                   |
+|---------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CurlTransportOptions::withTimeout(int $seconds)`, default `30`                                                     | `CurlTransportOptions::withTimeout(int $milliseconds)`, default `250`                                                                                                                                   |
+| `CurlTransportOptions::withConnectTimeout(int $seconds)`, default `10`                                              | `CurlTransportOptions::withConnectTimeout(int $milliseconds)`, default `250`                                                                                                                            |
+| `CurlTransportOptions::timeout()`                                                                                   | `CurlTransportOptions::timeoutMs()`                                                                                                                                                                     |
+| `CurlTransportOptions::connectTimeout()`                                                                            | `CurlTransportOptions::connectTimeoutMs()`                                                                                                                                                              |
+| —                                                                                                                   | `CurlTransportOptions::withShutdownTimeout(int $milliseconds)` / `shutdownTimeoutMs()`, default `5000` (added)                                                                                          |
+| `otlp_curl_transport(string $endpoint, Serializer $serializer, CurlTransportOptions $options)`                      | `otlp_curl_transport(string $endpoint, JsonSerializer\|ProtobufSerializer $serializer = new JsonSerializer(), CurlTransportOptions $options = new CurlTransportOptions(), ?Transport $failover = null)` |
+| `otlp_grpc_transport(string $endpoint, ProtobufSerializer $serializer, array $headers = [], bool $insecure = true)` | `otlp_grpc_transport(string $endpoint, array $headers = [], bool $insecure = true, int $timeoutMs = 250, int $shutdownTimeoutMs = 5000, ?Transport $failover = null)`                                   |
+
+### 9) `flow-php/telemetry-otlp-bridge` - `StreamTransport` added
+
+New transport, no removal counterpart.
+
+| Before | After                                                                                                     |
+|--------|-----------------------------------------------------------------------------------------------------------|
+| —      | `Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport`                                                    |
+| —      | `otlp_stream_transport(string $destination, int $filePermissions = 0644, bool $createDirectories = true)` |
+
+### 10) `flow-php/telemetry-otlp-bridge` - `open-telemetry/gen-otlp-protobuf` dependency dropped
+
+| Before                                            | After                                                                                                |
+|---------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `open-telemetry/gen-otlp-protobuf` (required dep) | removed; protobuf classes shipped inside the bridge under the same `Opentelemetry\Proto\…` namespace |
+
+### 11) `flow-php/symfony-telemetry-bundle` - Configuration schema rewrite
+
+No BC shim. Configurations from 0.36 must be rewritten.
+
+| Before                                                                                          | After                                                                                  |
+|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `exporters.<name>.type: otlp\|service\|console\|memory\|void`                                   | sub-block keyed by implementation: `otlp:`, `service:`, `console:`, `memory:`, `void:` |
+| `exporters.<name>.service_id: <id>` (under `type: service`)                                     | `exporters.<name>.service: { id: <id> }`                                               |
+| Inline `processor.exporter: { type: otlp, transport: {...} }`                                   | `processor.exporter: <name>` referencing top-level `exporters:` map                    |
+| `transport.type: http`                                                                          | removed                                                                                |
+| `transport.timeout` (seconds, default `30`)                                                     | `transport.timeout_ms` (default `250`)                                                 |
+| `transport.connect_timeout` (seconds, default `10`)                                             | `transport.connect_timeout_ms` (default `250`)                                         |
+| `transport.http_client_service_id` / `request_factory_service_id` / `stream_factory_service_id` | removed                                                                                |
+| —                                                                                               | `transport.type: stream` (added)                                                       |
+| —                                                                                               | `transport.shutdown_timeout_ms` default `5000` (added)                                 |
+| —                                                                                               | `transport.failover: { type: …, … }` on curl/grpc primaries (added)                    |
+| —                                                                                               | top-level `error_handlers:` map (added)                                                |
+| —                                                                                               | `error_handler: <name>` references on providers, processors, otlp exporter (added)     |
+| —                                                                                               | top-level `framework_logger: <name>` (added)                                           |
+
+Before:
+
+```yaml
+flow_telemetry:
+  exporters:
+    otlp:
+      type: otlp
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        timeout: 30
+        connect_timeout: 10
+    custom: { type: service, service_id: 'app.x' }
+    debug: { type: console }
+
+  tracer_provider:
+    processor:
+      type: batching
+      exporter: { type: otlp, transport: { type: curl, endpoint: 'http://otel-collector:4318' } }
+```
+
+After:
+
+```yaml
+flow_telemetry:
+  error_handlers:
+    default: { type: error_log }
+
+  exporters:
+    otlp:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://otel-collector:4318'
+          timeout_ms: 250
+          connect_timeout_ms: 250
+    custom: { service: { id: 'app.x' } }
+    debug: { console: ~ }
+
+  tracer_provider:
+    processor:
+      type: batching
+      exporter: otlp
+```
+
+### 12) `flow-php/phpunit-telemetry-bridge` - Configuration parameters
+
+| Before (parameter / default)                     | After (parameter / default)                                                      |
+|--------------------------------------------------|----------------------------------------------------------------------------------|
+| `curl_timeout` / `30` (seconds)                  | `curl_timeout_ms` / `250` (ms)                                                   |
+| `curl_connect_timeout` / `10` (s)                | `curl_connect_timeout_ms` / `250` (ms)                                           |
+| `transport: curl\|grpc`                          | `transport: curl\|grpc\|stream`                                                  |
+| —                                                | `grpc_timeout_ms` / `250` (added)                                                |
+| —                                                | `shutdown_timeout_ms` / `5000` (added)                                           |
+| —                                                | `batch_size` / `512` (added)                                                     |
+| —                                                | `error_handler` / `error_log` and `error_handler_*` family (added)               |
+| —                                                | `stream_file_permissions` / `0644`, `stream_create_directories` / `true` (added) |
+| Default span/metric/log processors: pass-through | Default span/metric/log processors: batching (`batch_size: 512`)                 |
+
+`otel_collector_url` / `FLOW_PHPUNIT_OTEL_COLLECTOR_URL` remain deprecated aliases for `endpoint` with
+`transport=curl`.
+
+---
+
 ## Upgrading from 0.35.x to 0.36.x
 
 ### 1) `flow-php/postgresql` - `RawCondition` and `RawExpression` removed
@@ -285,7 +475,9 @@ binary units, Modified as ISO-8601 — both read from the backend listing respon
 `**/*.parquet`, …). Previously it returned metadata for the first match — confusing semantics. Use
 `flow:filesystem:ls` for pattern inspection.
 
-### 12) `flow-php/filesystem-async-aws-bridge`, `flow-php/filesystem-azure-bridge` - DSL protocol is the last argument with a default
+### 12) `flow-php/filesystem-async-aws-bridge`,
+
+`flow-php/filesystem-azure-bridge` - DSL protocol is the last argument with a default
 
 The DSL factories expose the mount protocol as an optional last argument, defaulted to the
 conventional scheme. Common cases work without passing it:
