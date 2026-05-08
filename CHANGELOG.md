@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-05-04
+## [Unreleased] - 2026-05-08
 
 ### Added
 - [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/psr3-telemetry-bridge - bridge for psr3 logger** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +24,7 @@
 - [c1890f](https://github.com/flow-php/flow/commit/c1890f3eea3949d91dc7ccd32eec8a2aeaf78304) - **feature: added stars map to readme** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2353](https://github.com/flow-php/flow/pull/2353) - **Correction of handling of null counts metadata in parquet files for PhpParquetEngine** - [@gCass](https://github.com/gCass)
 - [#2346](https://github.com/flow-php/flow/pull/2346) - **flow-php/filesystem - Path::realpath bug** - [@norberttech](https://github.com/norberttech)
 - [#2345](https://github.com/flow-php/flow/pull/2345) - **postgresql bytea converter** - [@norberttech](https://github.com/norberttech)
 - [#2344](https://github.com/flow-php/flow/pull/2344) - **positional parameters docblock for postgresql client** - [@norberttech](https://github.com/norberttech)
@@ -3310,6 +3311,7 @@
 - @drupol
 - @f-lapinski
 - @flavioheleno
+- @gCass
 - @ghost
 - @inmanturbo
 - @jaapio
