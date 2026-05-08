@@ -29,8 +29,7 @@ The default `curl` transport works with the core dependencies only. To use the `
 - PHP extension [ext-grpc](https://github.com/grpc/grpc/tree/master/src/php)
 - [grpc/grpc](https://packagist.org/packages/grpc/grpc)
 - [google/protobuf](https://packagist.org/packages/google/protobuf)
-- [open-telemetry/gen-otlp-protobuf](https://packagist.org/packages/open-telemetry/gen-otlp-protobuf)
 
 ```bash
-composer require --dev grpc/grpc google/protobuf open-telemetry/gen-otlp-protobuf
+composer require --dev grpc/grpc google/protobuf
 ```

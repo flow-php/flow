@@ -7,20 +7,22 @@ namespace Flow\Telemetry\DSL;
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Telemetry\{Attributes, Resource, Telemetry};
 use Flow\Telemetry\Context\{Baggage, Context, ContextStorage, MemoryContextStorage, SpanId, TraceId};
+use Flow\Telemetry\ErrorHandler\{CompositeErrorHandler, ErrorHandler, ErrorLogHandler, ErrorLogMessageType, NullErrorHandler, StreamHandler, SyslogFacility, SyslogHandler, SyslogSeverity, UdpSyslogHandler};
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Logger\{LogExporter, LogProcessor, LogRecordLimits, LoggerProvider, Severity};
+use Flow\Telemetry\Logger\{LogProcessor, LogRecordLimits, LoggerProvider, Severity};
 use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
-use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider, MetricExporter, MetricLimits, MetricProcessor};
+use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider, MetricLimits, MetricProcessor};
 use Flow\Telemetry\Meter\Exemplar\{AlwaysOffExemplarFilter, AlwaysOnExemplarFilter, ExemplarFilter, TraceBasedExemplarFilter};
 use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, PassThroughMetricProcessor};
 use Flow\Telemetry\Propagation\{ArrayCarrier, CompositePropagator, PropagationContext, Propagator, SuperglobalCarrier, W3CBaggage, W3CTraceContext};
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Console\{ConsoleLogExporter, ConsoleLogOptions, ConsoleMetricExporter, ConsoleMetricOptions, ConsoleSpanExporter, ConsoleSpanOptions};
-use Flow\Telemetry\Provider\Memory\{MemoryLogExporter, MemoryLogProcessor, MemoryMetricExporter, MemoryMetricProcessor, MemorySpanExporter, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidLogProcessor, VoidMetricExporter, VoidMetricProcessor, VoidSpanExporter, VoidSpanProcessor};
+use Flow\Telemetry\Provider\Console\{ConsoleExporter, ConsoleLogOptions, ConsoleMetricOptions, ConsoleSpanOptions};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidExporter, VoidLogProcessor, VoidMetricProcessor, VoidSpanProcessor};
 use Flow\Telemetry\Resource\Detector\{CachingDetector, ChainDetector, ComposerDetector, EnvironmentDetector, HostDetector, ManualDetector, OsDetector, ProcessDetector};
 use Flow\Telemetry\Resource\ResourceDetector;
-use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanExporter, SpanLimits, SpanLink, SpanProcessor, TracerProvider};
+use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanLimits, SpanLink, SpanProcessor, TracerProvider};
 use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, PassThroughSpanProcessor};
 use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
 use Psr\Clock\ClockInterface;
@@ -160,9 +162,6 @@ function span_link(SpanContext $context, array|Attributes $attributes = []) : Sp
 /**
  * Create SpanLimits configuration.
  *
- * SpanLimits controls the maximum amount of data a span can collect,
- * preventing unbounded memory growth and ensuring reasonable span sizes.
- *
  * @param int $attributeCountLimit Maximum number of attributes per span
  * @param int $eventCountLimit Maximum number of events per span
  * @param int $linkCountLimit Maximum number of links per span
@@ -192,9 +191,6 @@ function span_limits(
 /**
  * Create LogRecordLimits configuration.
  *
- * LogRecordLimits controls the maximum amount of data a log record can collect,
- * preventing unbounded memory growth and ensuring reasonable log record sizes.
- *
  * @param int $attributeCountLimit Maximum number of attributes per log record
  * @param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
  */
@@ -212,15 +208,6 @@ function log_record_limits(
 /**
  * Create MetricLimits configuration.
  *
- * MetricLimits controls the maximum cardinality (unique attribute combinations)
- * per metric instrument, preventing memory exhaustion from high-cardinality attributes.
- *
- * When the cardinality limit is exceeded, new attribute combinations are aggregated
- * into an overflow data point with `otel.metric.overflow: true` attribute.
- *
- * Note: Unlike spans and logs, metrics are EXEMPT from attribute count and value
- * length limits per the OpenTelemetry specification. Only cardinality is limited.
- *
  * @param int $cardinalityLimit Maximum number of unique attribute combinations per instrument
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
@@ -236,7 +223,6 @@ function metric_limits(
  * Create a VoidSpanProcessor.
  *
  * No-op span processor that discards all data.
- * Use this when tracing is disabled to minimize overhead.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function void_span_processor() : VoidSpanProcessor
@@ -248,7 +234,6 @@ function void_span_processor() : VoidSpanProcessor
  * Create a VoidMetricProcessor.
  *
  * No-op metric processor that discards all data.
- * Use this when metrics collection is disabled to minimize overhead.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function void_metric_processor() : VoidMetricProcessor
@@ -260,7 +245,6 @@ function void_metric_processor() : VoidMetricProcessor
  * Create a VoidLogProcessor.
  *
  * No-op log processor that discards all data.
- * Use this when logging is disabled to minimize overhead.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function void_log_processor() : VoidLogProcessor
@@ -269,134 +253,79 @@ function void_log_processor() : VoidLogProcessor
 }
 
 /**
- * Create a VoidSpanExporter.
+ * Create a VoidExporter.
  *
- * No-op span exporter that discards all data.
- * Use this when telemetry export is disabled to minimize overhead.
+ * No-op unified exporter that discards logs, metrics, and spans.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_span_exporter() : VoidSpanExporter
+function void_exporter() : VoidExporter
 {
-    return new VoidSpanExporter();
+    return new VoidExporter();
 }
 
 /**
- * Create a VoidMetricExporter.
+ * Create a MemoryExporter.
  *
- * No-op metric exporter that discards all data.
- * Use this when telemetry export is disabled to minimize overhead.
- */
-#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_metric_exporter() : VoidMetricExporter
-{
-    return new VoidMetricExporter();
-}
-
-/**
- * Create a VoidLogExporter.
- *
- * No-op log exporter that discards all data.
- * Use this when telemetry export is disabled to minimize overhead.
- */
-#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_log_exporter() : VoidLogExporter
-{
-    return new VoidLogExporter();
-}
-
-/**
- * Create a MemorySpanExporter.
- *
- * Span exporter that stores data in memory.
- * Provides direct getter access to exported spans.
+ * Unified exporter that stores logs, metrics, and spans in memory for direct access.
  * Useful for testing and inspection without serialization.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_span_exporter() : MemorySpanExporter
+function memory_exporter() : MemoryExporter
 {
-    return new MemorySpanExporter();
-}
-
-/**
- * Create a MemoryMetricExporter.
- *
- * Metric exporter that stores data in memory.
- * Provides direct getter access to exported metrics.
- * Useful for testing and inspection without serialization.
- */
-#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_metric_exporter() : MemoryMetricExporter
-{
-    return new MemoryMetricExporter();
-}
-
-/**
- * Create a MemoryLogExporter.
- *
- * Log exporter that stores data in memory.
- * Provides direct getter access to exported log entries.
- * Useful for testing and inspection without serialization.
- */
-#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_log_exporter() : MemoryLogExporter
-{
-    return new MemoryLogExporter();
+    return new MemoryExporter();
 }
 
 /**
  * Create a MemorySpanProcessor.
  *
- * Span processor that stores spans in memory and exports via configured exporter.
- * Useful for testing.
- *
- * @param SpanExporter $exporter The exporter to send spans to
+ * @param Exporter $exporter The exporter to send spans to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_span_processor(SpanExporter $exporter) : MemorySpanProcessor
-{
-    return new MemorySpanProcessor($exporter);
+function memory_span_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : MemorySpanProcessor {
+    return new MemorySpanProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a MemoryMetricProcessor.
  *
- * Metric processor that stores metrics in memory and exports via configured exporter.
- * Useful for testing.
- *
- * @param MetricExporter $exporter The exporter to send metrics to
+ * @param Exporter $exporter The exporter to send metrics to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_metric_processor(MetricExporter $exporter) : MemoryMetricProcessor
-{
-    return new MemoryMetricProcessor($exporter);
+function memory_metric_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : MemoryMetricProcessor {
+    return new MemoryMetricProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a MemoryLogProcessor.
  *
- * Log processor that stores log records in memory and exports via configured exporter.
- * Useful for testing.
- *
- * @param LogExporter $exporter The exporter to send logs to
+ * @param Exporter $exporter The exporter to send logs to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_log_processor(LogExporter $exporter) : MemoryLogProcessor
-{
-    return new MemoryLogProcessor($exporter);
+function memory_log_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : MemoryLogProcessor {
+    return new MemoryLogProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a TracerProvider.
- *
- * Creates a provider that uses a SpanProcessor for processing spans.
- * For void/disabled tracing, pass void_processor().
- * For memory-based testing, pass memory_processor() with exporters.
  *
  * @param SpanProcessor $processor The processor for spans
  * @param ClockInterface $clock The clock for timestamps
  * @param ContextStorage $contextStorage Storage for context propagation
  * @param Sampler $sampler Sampling strategy for spans
  * @param SpanLimits $limits Limits for span attributes, events, and links
+ * @param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function tracer_provider(
@@ -405,6 +334,7 @@ function tracer_provider(
     ContextStorage $contextStorage,
     Sampler $sampler = new AlwaysOnSampler(),
     SpanLimits $limits = new SpanLimits(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : TracerProvider {
     return new TracerProvider(
         $processor,
@@ -412,20 +342,18 @@ function tracer_provider(
         $contextStorage,
         $sampler,
         $limits,
+        $errorHandler,
     );
 }
 
 /**
  * Create a LoggerProvider.
  *
- * Creates a provider that uses a LogProcessor for processing logs.
- * For void/disabled logging, pass void_processor().
- * For memory-based testing, pass memory_processor() with exporters.
- *
  * @param LogProcessor $processor The processor for logs
  * @param ClockInterface $clock The clock for timestamps
  * @param ContextStorage $contextStorage Storage for span correlation
  * @param LogRecordLimits $limits Limits for log record attributes
+ * @param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function logger_provider(
@@ -433,27 +361,26 @@ function logger_provider(
     ClockInterface $clock,
     ContextStorage $contextStorage,
     LogRecordLimits $limits = new LogRecordLimits(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : LoggerProvider {
     return new LoggerProvider(
         $processor,
         $clock,
         $contextStorage,
         $limits,
+        $errorHandler,
     );
 }
 
 /**
  * Create a MeterProvider.
  *
- * Creates a provider that uses a MetricProcessor for processing metrics.
- * For void/disabled metrics, pass void_processor().
- * For memory-based testing, pass memory_processor() with exporters.
- *
  * @param MetricProcessor $processor The processor for metrics
  * @param ClockInterface $clock The clock for timestamps
  * @param AggregationTemporality $temporality Aggregation temporality for metrics
  * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling (default: TraceBasedExemplarFilter)
  * @param MetricLimits $limits Cardinality limits for metric instruments
+ * @param ErrorHandler $errorHandler Handler for runtime Throwables raised by the processor
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function meter_provider(
@@ -462,6 +389,7 @@ function meter_provider(
     AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
     ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
     MetricLimits $limits = new MetricLimits(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : MeterProvider {
     return new MeterProvider(
         $processor,
@@ -469,6 +397,7 @@ function meter_provider(
         $temporality,
         $exemplarFilter,
         $limits,
+        $errorHandler,
     );
 }
 
@@ -481,6 +410,7 @@ function meter_provider(
  * @param null|TracerProvider $tracerProvider The tracer provider (null for void/disabled)
  * @param null|MeterProvider $meterProvider The meter provider (null for void/disabled)
  * @param null|LoggerProvider $loggerProvider The logger provider (null for void/disabled)
+ * @param ErrorHandler $errorHandler Handler propagated to default void providers when explicit ones are not supplied
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function telemetry(
@@ -488,15 +418,16 @@ function telemetry(
     ?TracerProvider $tracerProvider = null,
     ?MeterProvider $meterProvider = null,
     ?LoggerProvider $loggerProvider = null,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : Telemetry {
     $clock = new SystemClock();
     $contextStorage = new MemoryContextStorage();
 
     return new Telemetry(
         $resource,
-        $tracerProvider ?? new TracerProvider(new VoidSpanProcessor(), $clock, $contextStorage),
-        $meterProvider ?? new MeterProvider(new VoidMetricProcessor(), $clock),
-        $loggerProvider ?? new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
+        $tracerProvider ?? new TracerProvider(new VoidSpanProcessor(), $clock, $contextStorage, errorHandler: $errorHandler),
+        $meterProvider ?? new MeterProvider(new VoidMetricProcessor(), $clock, errorHandler: $errorHandler),
+        $loggerProvider ?? new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage, errorHandler: $errorHandler),
     );
 }
 
@@ -520,95 +451,95 @@ function instrumentation_scope(
 /**
  * Create a BatchingSpanProcessor.
  *
- * Collects spans in memory and exports them in batches for efficiency.
- * Spans are exported when batch size is reached, flush() is called, or shutdown().
- *
- * @param SpanExporter $exporter The exporter to send spans to
+ * @param Exporter $exporter The exporter to send spans to
  * @param int $batchSize Number of spans to collect before exporting (default 512)
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function batching_span_processor(SpanExporter $exporter, int $batchSize = 512) : BatchingSpanProcessor
-{
-    return new BatchingSpanProcessor($exporter, $batchSize);
+function batching_span_processor(
+    Exporter $exporter,
+    int $batchSize = 512,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : BatchingSpanProcessor {
+    return new BatchingSpanProcessor($exporter, $batchSize, $errorHandler);
 }
 
 /**
  * Create a PassThroughSpanProcessor.
  *
- * Exports each span immediately when it ends.
- * Useful for debugging where immediate visibility is more important than performance.
- *
- * @param SpanExporter $exporter The exporter to send spans to
+ * @param Exporter $exporter The exporter to send spans to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function pass_through_span_processor(SpanExporter $exporter) : PassThroughSpanProcessor
-{
-    return new PassThroughSpanProcessor($exporter);
+function pass_through_span_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : PassThroughSpanProcessor {
+    return new PassThroughSpanProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a BatchingMetricProcessor.
  *
- * Collects metrics in memory and exports them in batches for efficiency.
- * Metrics are exported when batch size is reached, flush() is called, or shutdown().
- *
- * @param MetricExporter $exporter The exporter to send metrics to
+ * @param Exporter $exporter The exporter to send metrics to
  * @param int $batchSize Number of metrics to collect before exporting (default 512)
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function batching_metric_processor(MetricExporter $exporter, int $batchSize = 512) : BatchingMetricProcessor
-{
-    return new BatchingMetricProcessor($exporter, $batchSize);
+function batching_metric_processor(
+    Exporter $exporter,
+    int $batchSize = 512,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : BatchingMetricProcessor {
+    return new BatchingMetricProcessor($exporter, $batchSize, $errorHandler);
 }
 
 /**
  * Create a PassThroughMetricProcessor.
  *
- * Exports each metric immediately when processed.
- * Useful for debugging where immediate visibility is more important than performance.
- *
- * @param MetricExporter $exporter The exporter to send metrics to
+ * @param Exporter $exporter The exporter to send metrics to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function pass_through_metric_processor(MetricExporter $exporter) : PassThroughMetricProcessor
-{
-    return new PassThroughMetricProcessor($exporter);
+function pass_through_metric_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : PassThroughMetricProcessor {
+    return new PassThroughMetricProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a BatchingLogProcessor.
  *
- * Collects log records in memory and exports them in batches for efficiency.
- * Logs are exported when batch size is reached, flush() is called, or shutdown().
- *
- * @param LogExporter $exporter The exporter to send logs to
+ * @param Exporter $exporter The exporter to send logs to
  * @param int $batchSize Number of logs to collect before exporting (default 512)
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function batching_log_processor(LogExporter $exporter, int $batchSize = 512) : BatchingLogProcessor
-{
-    return new BatchingLogProcessor($exporter, $batchSize);
+function batching_log_processor(
+    Exporter $exporter,
+    int $batchSize = 512,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : BatchingLogProcessor {
+    return new BatchingLogProcessor($exporter, $batchSize, $errorHandler);
 }
 
 /**
  * Create a PassThroughLogProcessor.
  *
- * Exports each log record immediately when processed.
- * Useful for debugging where immediate visibility is more important than performance.
- *
- * @param LogExporter $exporter The exporter to send logs to
+ * @param Exporter $exporter The exporter to send logs to
+ * @param ErrorHandler $errorHandler Handler for Throwables raised by the exporter
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function pass_through_log_processor(LogExporter $exporter) : PassThroughLogProcessor
-{
-    return new PassThroughLogProcessor($exporter);
+function pass_through_log_processor(
+    Exporter $exporter,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
+) : PassThroughLogProcessor {
+    return new PassThroughLogProcessor($exporter, $errorHandler);
 }
 
 /**
  * Create a SeverityFilteringLogProcessor.
- *
- * Filters log entries based on minimum severity level. Only entries at or above
- * the configured threshold are passed to the wrapped processor.
  *
  * @param LogProcessor $processor The processor to wrap
  * @param Severity $minimumSeverity Minimum severity level (default: INFO)
@@ -622,49 +553,25 @@ function severity_filtering_log_processor(
 }
 
 /**
- * Create a ConsoleSpanExporter.
+ * Create a unified ConsoleExporter for logs, metrics, and spans.
  *
- * Outputs spans to the console with ASCII table formatting.
- * Useful for debugging and development.
- *
- * @param bool $colors Whether to use ANSI colors (default: true)
- * @param ConsoleSpanOptions $options Display options for the exporter
- */
-#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_span_exporter(bool $colors = true, ConsoleSpanOptions $options = new ConsoleSpanOptions()) : ConsoleSpanExporter
-{
-    return new ConsoleSpanExporter($colors, null, $options);
-}
-
-/**
- * Create a ConsoleMetricExporter.
- *
- * Outputs metrics to the console with ASCII table formatting.
- * Useful for debugging and development.
+ * Outputs telemetry to the console with ASCII table formatting and optional ANSI colors.
  *
  * @param bool $colors Whether to use ANSI colors (default: true)
- * @param ConsoleMetricOptions $options Display options for the exporter
+ * @param null|int $maxLogBodyLength Maximum length for log body+attributes column (null = no limit)
+ * @param ConsoleLogOptions $logOptions Display options for log records
+ * @param ConsoleMetricOptions $metricOptions Display options for metrics
+ * @param ConsoleSpanOptions $spanOptions Display options for spans
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_metric_exporter(bool $colors = true, ConsoleMetricOptions $options = new ConsoleMetricOptions()) : ConsoleMetricExporter
-{
-    return new ConsoleMetricExporter($colors, null, $options);
-}
-
-/**
- * Create a ConsoleLogExporter.
- *
- * Outputs log records to the console with severity-based coloring.
- * Useful for debugging and development.
- *
- * @param bool $colors Whether to use ANSI colors (default: true)
- * @param null|int $maxBodyLength Maximum length for body+attributes column (null = no limit, default: 100)
- * @param ConsoleLogOptions $options Display options for the exporter
- */
-#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_log_exporter(bool $colors = true, ?int $maxBodyLength = 100, ConsoleLogOptions $options = new ConsoleLogOptions()) : ConsoleLogExporter
-{
-    return new ConsoleLogExporter($colors, $maxBodyLength, null, $options);
+function console_exporter(
+    bool $colors = true,
+    ?int $maxLogBodyLength = 100,
+    ConsoleLogOptions $logOptions = new ConsoleLogOptions(),
+    ConsoleMetricOptions $metricOptions = new ConsoleMetricOptions(),
+    ConsoleSpanOptions $spanOptions = new ConsoleSpanOptions(),
+) : ConsoleExporter {
+    return new ConsoleExporter($colors, $maxLogBodyLength, null, $logOptions, $metricOptions, $spanOptions);
 }
 
 /**
@@ -723,9 +630,6 @@ function console_metric_options_minimal() : ConsoleMetricOptions
 
 /**
  * Create an AlwaysOnExemplarFilter.
- *
- * Records exemplars whenever a span context is present.
- * Use this filter for debugging or when complete trace context is important.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function always_on_exemplar_filter() : AlwaysOnExemplarFilter
@@ -735,9 +639,6 @@ function always_on_exemplar_filter() : AlwaysOnExemplarFilter
 
 /**
  * Create an AlwaysOffExemplarFilter.
- *
- * Never records exemplars. Use this filter to disable exemplar collection
- * entirely for performance optimization.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function always_off_exemplar_filter() : AlwaysOffExemplarFilter
@@ -747,9 +648,6 @@ function always_off_exemplar_filter() : AlwaysOffExemplarFilter
 
 /**
  * Create a TraceBasedExemplarFilter.
- *
- * Records exemplars only when the span is sampled (has SAMPLED trace flag).
- * This is the default filter, balancing exemplar collection with performance.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function trace_based_exemplar_filter() : TraceBasedExemplarFilter
@@ -759,9 +657,6 @@ function trace_based_exemplar_filter() : TraceBasedExemplarFilter
 
 /**
  * Create a PropagationContext.
- *
- * Value object containing both trace context (SpanContext) and application
- * data (Baggage) that can be propagated across process boundaries.
  *
  * @param null|SpanContext $spanContext Optional span context
  * @param null|Baggage $baggage Optional baggage
@@ -775,8 +670,6 @@ function propagation_context(?SpanContext $spanContext = null, ?Baggage $baggage
 /**
  * Create an ArrayCarrier.
  *
- * Carrier backed by an associative array with case-insensitive key lookup.
- *
  * @param array<string, string> $data Initial carrier data
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
@@ -787,9 +680,6 @@ function array_carrier(array $data = []) : ArrayCarrier
 
 /**
  * Create a SuperglobalCarrier.
- *
- * Read-only carrier that extracts context from PHP superglobals
- * ($_SERVER, $_GET, $_POST, $_COOKIE).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function superglobal_carrier() : SuperglobalCarrier
@@ -799,9 +689,6 @@ function superglobal_carrier() : SuperglobalCarrier
 
 /**
  * Create a W3CTraceContext propagator.
- *
- * Implements W3C Trace Context specification for propagating trace context
- * using traceparent and tracestate headers.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function w3c_trace_context() : W3CTraceContext
@@ -811,9 +698,6 @@ function w3c_trace_context() : W3CTraceContext
 
 /**
  * Create a W3CBaggage propagator.
- *
- * Implements W3C Baggage specification for propagating application-specific
- * key-value pairs using the baggage header.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function w3c_baggage() : W3CBaggage
@@ -823,9 +707,6 @@ function w3c_baggage() : W3CBaggage
 
 /**
  * Create a CompositePropagator.
- *
- * Combines multiple propagators into one. On extract, all propagators are
- * invoked and their contexts are merged. On inject, all propagators are invoked.
  *
  * @param Propagator ...$propagators The propagators to combine
  */
@@ -838,10 +719,6 @@ function composite_propagator(Propagator ...$propagators) : CompositePropagator
 /**
  * Create a ChainDetector.
  *
- * Combines multiple resource detectors into a chain. Detectors are executed
- * in order and their results are merged. Later detectors take precedence
- * over earlier ones when there are conflicting attribute keys.
- *
  * @param ResourceDetector ...$detectors The detectors to chain
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
@@ -852,9 +729,6 @@ function chain_detector(ResourceDetector ...$detectors) : ChainDetector
 
 /**
  * Create an OsDetector.
- *
- * Detects operating system information including os.type, os.name, os.version,
- * and os.description using PHP's php_uname() function.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function os_detector() : OsDetector
@@ -864,9 +738,6 @@ function os_detector() : OsDetector
 
 /**
  * Create a HostDetector.
- *
- * Detects host information including host.name, host.arch, and host.id
- * (from /etc/machine-id on Linux or IOPlatformUUID on macOS).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function host_detector() : HostDetector
@@ -876,10 +747,6 @@ function host_detector() : HostDetector
 
 /**
  * Create a ProcessDetector.
- *
- * Detects process information including process.pid, process.executable.path,
- * process.runtime.name (PHP), process.runtime.version, process.command,
- * and process.owner (on POSIX systems).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function process_detector() : ProcessDetector
@@ -889,10 +756,6 @@ function process_detector() : ProcessDetector
 
 /**
  * Create an EnvironmentDetector.
- *
- * Detects resource attributes from OpenTelemetry standard environment variables:
- * - OTEL_SERVICE_NAME: Sets service.name attribute
- * - OTEL_RESOURCE_ATTRIBUTES: Sets additional attributes in key=value,key2=value2 format
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function environment_detector() : EnvironmentDetector
@@ -902,9 +765,6 @@ function environment_detector() : EnvironmentDetector
 
 /**
  * Create a ComposerDetector.
- *
- * Detects service.name and service.version from Composer's InstalledVersions
- * using the root package information.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function composer_detector() : ComposerDetector
@@ -914,9 +774,6 @@ function composer_detector() : ComposerDetector
 
 /**
  * Create a ManualDetector.
- *
- * Returns manually specified resource attributes. Use this when you need
- * to set attributes explicitly rather than detecting them automatically.
  *
  * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
  */
@@ -929,9 +786,6 @@ function manual_detector(array $attributes) : ManualDetector
 /**
  * Create a CachingDetector.
  *
- * Wraps another detector and caches its results to a file. On subsequent
- * calls, returns the cached resource instead of running detection again.
- *
  * @param ResourceDetector $detector The detector to wrap
  * @param null|string $cachePath Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource.cache)
  */
@@ -943,15 +797,6 @@ function caching_detector(ResourceDetector $detector, ?string $cachePath = null)
 
 /**
  * Create a resource detector chain.
- *
- * When no detectors are provided, uses the default detector chain:
- * 1. OsDetector - Operating system information
- * 2. HostDetector - Host information
- * 3. ProcessDetector - Process information
- * 4. ComposerDetector - Service information from Composer
- * 5. EnvironmentDetector - Environment variable overrides (highest precedence)
- *
- * When detectors are provided, uses only those detectors.
  *
  * @param array<ResourceDetector> $detectors Optional custom detectors (empty = use defaults)
  */
@@ -969,4 +814,75 @@ function resource_detector(array $detectors = []) : ChainDetector
     }
 
     return new ChainDetector(...$detectors);
+}
+
+/**
+ * Create the default ErrorLogHandler. Writes via PHP's error_log().
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function error_log_handler(
+    ErrorLogMessageType $messageType = ErrorLogMessageType::OperatingSystem,
+    bool $expandNewlines = false,
+    string $messagePrefix = '[flow-telemetry]',
+) : ErrorLogHandler {
+    return new ErrorLogHandler($messageType, $expandNewlines, $messagePrefix);
+}
+
+/**
+ * Create a StreamHandler. Appends formatted Throwables (one per line) to a file
+ * path or php:// stream wrapper.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function stream_error_handler(
+    string $destination,
+    int $filePermissions = 0644,
+    bool $createDirectories = true,
+    string $messagePrefix = '[flow-telemetry]',
+) : StreamHandler {
+    return new StreamHandler($destination, $filePermissions, $createDirectories, $messagePrefix);
+}
+
+/**
+ * Create a SyslogHandler. Writes via openlog/syslog/closelog.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function syslog_error_handler(
+    string $ident = 'flow-telemetry',
+    SyslogFacility $facility = SyslogFacility::User,
+    int $logOpts = \LOG_PID,
+    SyslogSeverity $severity = SyslogSeverity::Error,
+) : SyslogHandler {
+    return new SyslogHandler($ident, $facility, $logOpts, $severity);
+}
+
+/**
+ * Create a UdpSyslogHandler. Sends RFC 5424-style syslog frames over UDP.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function udp_syslog_error_handler(
+    string $host,
+    int $port = 514,
+    string $ident = 'flow-telemetry',
+    SyslogFacility $facility = SyslogFacility::User,
+    SyslogSeverity $severity = SyslogSeverity::Error,
+) : UdpSyslogHandler {
+    return new UdpSyslogHandler($host, $port, $ident, $facility, $severity);
+}
+
+/**
+ * Fan errors out to multiple handlers.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function composite_error_handler(ErrorHandler ...$handlers) : CompositeErrorHandler
+{
+    return new CompositeErrorHandler(...$handlers);
+}
+
+/**
+ * Discard every error. Use only in tests or for explicit silence.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function null_error_handler() : NullErrorHandler
+{
+    return new NullErrorHandler();
 }

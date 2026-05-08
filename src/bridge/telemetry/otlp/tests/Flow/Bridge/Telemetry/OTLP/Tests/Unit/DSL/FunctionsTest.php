@@ -4,34 +4,49 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\DSL;
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_grpc_transport, otlp_http_transport, otlp_json_serializer, otlp_protobuf_serializer};
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_exporter, otlp_grpc_transport, otlp_json_serializer, otlp_protobuf_serializer, otlp_stream_transport};
+use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{GrpcTransport, HttpTransport};
-use Google\Protobuf\Internal\Message;
-use Grpc\BaseStub;
-use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
+use Flow\Bridge\Telemetry\OTLP\Tests\Context\Requirements;
+use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, GrpcTransport, StreamTransport};
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\{RequestFactoryInterface, StreamFactoryInterface};
 
 final class FunctionsTest extends TestCase
 {
+    public function test_otlp_curl_transport_defaults_to_json_serializer() : void
+    {
+        self::assertInstanceOf(CurlTransport::class, otlp_curl_transport('http://localhost:4318'));
+    }
+
+    public function test_otlp_curl_transport_returns_curl_transport() : void
+    {
+        $transport = otlp_curl_transport('http://localhost:4318', otlp_json_serializer());
+
+        self::assertInstanceOf(CurlTransport::class, $transport);
+    }
+
+    public function test_otlp_exporter_returns_otlp_exporter() : void
+    {
+        $transport = otlp_curl_transport('http://localhost:4318', otlp_json_serializer());
+
+        self::assertInstanceOf(OTLPExporter::class, otlp_exporter($transport));
+    }
+
     public function test_otlp_grpc_transport_returns_grpc_transport() : void
     {
-        $this->skipIfGrpcNotAvailable();
+        Requirements::requireGrpc();
 
-        $transport = otlp_grpc_transport('localhost:4317', otlp_protobuf_serializer());
+        $transport = otlp_grpc_transport('localhost:4317');
 
         self::assertInstanceOf(GrpcTransport::class, $transport);
     }
 
     public function test_otlp_grpc_transport_with_headers() : void
     {
-        $this->skipIfGrpcNotAvailable();
+        Requirements::requireGrpc();
 
         $transport = otlp_grpc_transport(
             endpoint: 'localhost:4317',
-            serializer: otlp_protobuf_serializer(),
             headers: ['Authorization' => 'Bearer token'],
         );
 
@@ -40,71 +55,44 @@ final class FunctionsTest extends TestCase
 
     public function test_otlp_grpc_transport_with_secure_option() : void
     {
-        $this->skipIfGrpcNotAvailable();
+        Requirements::requireGrpc();
 
         $transport = otlp_grpc_transport(
             endpoint: 'localhost:4317',
-            serializer: otlp_protobuf_serializer(),
             insecure: false,
         );
 
         self::assertInstanceOf(GrpcTransport::class, $transport);
     }
 
-    public function test_otlp_http_transport_returns_http_transport() : void
-    {
-        $client = $this->createMock(ClientInterface::class);
-        $requestFactory = $this->createMock(RequestFactoryInterface::class);
-        $streamFactory = $this->createMock(StreamFactoryInterface::class);
-
-        $transport = otlp_http_transport($client, $requestFactory, $streamFactory, 'http://localhost:4318', otlp_json_serializer());
-
-        self::assertInstanceOf(HttpTransport::class, $transport);
-    }
-
     public function test_otlp_json_serializer_returns_json_serializer() : void
     {
-        $serializer = otlp_json_serializer();
-
-        self::assertInstanceOf(JsonSerializer::class, $serializer);
+        self::assertInstanceOf(JsonSerializer::class, otlp_json_serializer());
     }
 
     public function test_otlp_protobuf_serializer_returns_protobuf_serializer() : void
     {
-        $this->skipIfProtobufNotAvailable();
+        Requirements::requireProtobuf();
 
-        $serializer = otlp_protobuf_serializer();
-
-        self::assertInstanceOf(ProtobufSerializer::class, $serializer);
+        self::assertInstanceOf(ProtobufSerializer::class, otlp_protobuf_serializer());
     }
 
-    private function skipIfGrpcNotAvailable() : void
+    public function test_otlp_stream_transport_returns_stream_transport_for_file_path() : void
     {
-        if (!\extension_loaded('grpc')) {
-            self::markTestSkipped('The grpc extension is not available');
-        }
+        $path = \sys_get_temp_dir() . '/flow-otlp-dsl-test-' . \bin2hex(\random_bytes(4)) . '.jsonl';
 
-        if (!\class_exists(BaseStub::class)) {
-            self::markTestSkipped('The grpc/grpc package is not installed');
-        }
-
-        if (!\class_exists(Message::class)) {
-            self::markTestSkipped('The google/protobuf package is not installed');
-        }
-
-        if (!\class_exists(TraceServiceClient::class)) {
-            self::markTestSkipped('The open-telemetry/gen-otlp-protobuf package is not installed');
+        try {
+            self::assertInstanceOf(StreamTransport::class, otlp_stream_transport($path));
+        } finally {
+            if (\is_file($path)) {
+                \unlink($path);
+            }
         }
     }
 
-    private function skipIfProtobufNotAvailable() : void
+    public function test_otlp_stream_transport_returns_stream_transport_for_php_uri() : void
     {
-        if (!\class_exists(Message::class)) {
-            self::markTestSkipped('The google/protobuf package is not installed');
-        }
-
-        if (!\class_exists(TraceServiceClient::class)) {
-            self::markTestSkipped('The open-telemetry/gen-otlp-protobuf package is not installed');
-        }
+        self::assertInstanceOf(StreamTransport::class, otlp_stream_transport('php://stdout'));
+        self::assertInstanceOf(StreamTransport::class, otlp_stream_transport('php://stderr'));
     }
 }

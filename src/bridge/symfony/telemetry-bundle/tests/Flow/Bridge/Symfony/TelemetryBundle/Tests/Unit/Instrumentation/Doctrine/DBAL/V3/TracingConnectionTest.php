@@ -11,7 +11,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemorySpanExporter, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -30,7 +30,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_prepare_uses_truncation() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -46,7 +46,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_query_uses_truncation() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -62,7 +62,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_sql_not_logged_when_log_sql_disabled() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -78,7 +78,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_truncate_sql_exact_boundary_case() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -94,7 +94,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_truncate_sql_handles_multibyte_characters() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -113,7 +113,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_truncate_sql_returns_full_sql_when_max_length_negative() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -129,7 +129,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_truncate_sql_returns_full_sql_when_max_length_zero() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -145,7 +145,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_truncate_sql_returns_sql_when_shorter_than_limit() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();
@@ -161,7 +161,7 @@ final class TracingConnectionTest extends TestCase
 
     public function test_truncate_sql_truncates_and_appends_ellipsis() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $connection = $this->createMockConnection();

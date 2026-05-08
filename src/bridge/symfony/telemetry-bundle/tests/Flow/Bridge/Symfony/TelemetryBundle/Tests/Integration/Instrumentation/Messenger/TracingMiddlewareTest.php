@@ -39,10 +39,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'propagator' => ['type' => 'w3c'],
@@ -107,10 +108,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'propagator' => ['type' => 'w3c'],
@@ -173,10 +175,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -219,10 +222,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'propagator' => ['type' => 'w3c'],
@@ -275,6 +279,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'messenger' => [
                             'enabled' => false,
@@ -295,6 +300,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'messenger' => [
                             'enabled' => true,
@@ -316,10 +322,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'propagator' => ['type' => 'w3c'],
@@ -376,6 +383,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'propagator' => ['type' => 'baggage'],
                 ]);
             },
@@ -394,6 +402,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'propagator' => ['type' => 'tracecontext'],
                 ]);
             },
@@ -412,6 +421,7 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'propagator' => ['type' => 'w3c'],
                 ]);
             },
@@ -430,10 +440,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -499,10 +510,11 @@ final class TracingMiddlewareTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [

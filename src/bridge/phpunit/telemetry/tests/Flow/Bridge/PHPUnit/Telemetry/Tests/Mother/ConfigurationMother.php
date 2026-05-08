@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Mother;
 
-use Flow\Bridge\PHPUnit\Telemetry\{Configuration, CurlTransportConfig, SerializerType};
+use Flow\Bridge\PHPUnit\Telemetry\{Configuration, CurlTransportConfig, ErrorLogHandlerConfig, SerializerType};
+use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
 
 final class ConfigurationMother
 {
@@ -17,6 +18,17 @@ final class ConfigurationMother
             emitMetrics: true,
             emitTestSpans: true,
             emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
+        );
+    }
+
+    public static function defaultErrorHandler() : ErrorLogHandlerConfig
+    {
+        return new ErrorLogHandlerConfig(
+            messageType: ErrorLogMessageType::OperatingSystem,
+            expandNewlines: false,
+            messagePrefix: Configuration::DEFAULT_MESSAGE_PREFIX,
         );
     }
 
@@ -25,8 +37,9 @@ final class ConfigurationMother
         return new CurlTransportConfig(
             endpoint: $endpoint,
             headers: [],
-            timeout: 30,
-            connectTimeout: 10,
+            timeoutMs: Configuration::DEFAULT_TIMEOUT_MS,
+            connectTimeoutMs: Configuration::DEFAULT_CONNECT_TIMEOUT_MS,
+            shutdownTimeoutMs: Configuration::DEFAULT_SHUTDOWN_TIMEOUT_MS,
             compression: false,
             followRedirects: true,
             maxRedirects: 3,
@@ -49,6 +62,8 @@ final class ConfigurationMother
             emitMetrics: true,
             emitTestSpans: true,
             emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
         );
     }
 
@@ -61,6 +76,8 @@ final class ConfigurationMother
             emitMetrics: true,
             emitTestSpans: true,
             emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
         );
     }
 
@@ -73,6 +90,8 @@ final class ConfigurationMother
             emitMetrics: false,
             emitTestSpans: true,
             emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
         );
     }
 
@@ -85,6 +104,8 @@ final class ConfigurationMother
             emitMetrics: true,
             emitTestSpans: true,
             emitTestCaseSpans: false,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
         );
     }
 
@@ -97,6 +118,8 @@ final class ConfigurationMother
             emitMetrics: true,
             emitTestSpans: false,
             emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
         );
     }
 
@@ -109,6 +132,8 @@ final class ConfigurationMother
             emitMetrics: true,
             emitTestSpans: true,
             emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
         );
     }
 }

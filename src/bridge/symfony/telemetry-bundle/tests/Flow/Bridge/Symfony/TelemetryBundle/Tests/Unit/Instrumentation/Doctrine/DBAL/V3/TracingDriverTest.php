@@ -14,7 +14,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemorySpanExporter, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\TracerProvider;
@@ -33,7 +33,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_defaults_to_other_sql() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = $this->createMock(AbstractPlatform::class);
@@ -50,7 +50,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_db2() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new DB2Platform();
@@ -67,7 +67,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_mariadb_as_mysql() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new MariaDBPlatform();
@@ -84,7 +84,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_mssql() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new SQLServerPlatform();
@@ -101,7 +101,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_mysql() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new MySQL80Platform();
@@ -118,7 +118,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_oracle() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new OraclePlatform();
@@ -135,7 +135,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_postgresql() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
@@ -152,7 +152,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_get_semantic_db_system_detects_sqlite() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new SqlitePlatform();
@@ -169,7 +169,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_span_defaults_db_namespace_to_default() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
@@ -186,7 +186,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_span_includes_connection_name() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new PostgreSQLPlatform();
@@ -203,7 +203,7 @@ final class TracingDriverTest extends TestCase
 
     public function test_span_includes_db_namespace_from_params() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $platform = new PostgreSQLPlatform();

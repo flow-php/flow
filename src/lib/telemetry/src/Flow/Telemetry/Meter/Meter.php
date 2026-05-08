@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, TraceBasedExemplarFilter};
 use Flow\Telemetry\Meter\Instrument\{Counter, Gauge, Histogram, Instrument, Throughput, UpDownCounter};
@@ -55,6 +56,7 @@ final class Meter
         private readonly AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
         private readonly MetricLimits $limits = new MetricLimits(),
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -89,7 +91,11 @@ final class Meter
     public function complete(Instrument $instrument) : void
     {
         foreach ($instrument->collect() as $metric) {
-            $this->processor->process($metric);
+            try {
+                $this->processor->process($metric);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
 
         $key = $instrument->name() . ':' . $instrument::class;
@@ -286,10 +292,20 @@ final class Meter
     public function flush() : bool
     {
         foreach ($this->collect() as $metric) {
-            $this->processor->process($metric);
+            try {
+                $this->processor->process($metric);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
 
-        return $this->processor->flush();
+        try {
+            return $this->processor->flush();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     /**

@@ -15,7 +15,7 @@ use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\TracerProvider;
 
@@ -98,9 +98,9 @@ final class CacheTest extends FlowIntegrationTestCase
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
 
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
-        $metricProcessor = new MemoryMetricProcessor(new VoidMetricExporter());
-        $logProcessor = new MemoryLogProcessor(new VoidLogExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+        $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
 
         $telemetry = new Telemetry(
             Resource::create(['service.name' => 'test-service']),

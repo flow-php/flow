@@ -33,6 +33,8 @@ $finder = Finder::create()
     ])
     ->exclude([
         'Flow/Parquet/ThriftModel',
+        'Opentelemetry',
+        'GPBMetadata',
         'Flow/CLI/Tests/Integration',
         'Flow/ETL/Tests/Unit/Loader',
         'Flow/ETL/Tests/Unit/Exception',

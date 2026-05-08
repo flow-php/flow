@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-use Flow\Telemetry\Provider\Clock\SystemClock;
 use function Flow\Telemetry\DSL\{
-    console_log_exporter,
+    console_exporter,
     logger_provider,
     memory_context_storage,
     memory_log_processor,
@@ -20,7 +19,7 @@ $telemetry = telemetry(
     null,
     null,
     logger_provider(
-        memory_log_processor(console_log_exporter(colors: false, maxBodyLength: 200)),
+        memory_log_processor(console_exporter(colors: false, maxLogBodyLength: 200)),
         clock(),
         memory_context_storage(),
     ),

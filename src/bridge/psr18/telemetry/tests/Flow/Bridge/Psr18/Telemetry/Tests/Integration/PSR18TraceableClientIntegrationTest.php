@@ -10,7 +10,7 @@ use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
 use Nyholm\Psr7\Request;
@@ -22,7 +22,7 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
 {
     public function test_real_http_request_creates_span() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new VoidSpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $httpClient = new Psr18Client(new MockHttpClient(new MockResponse('ok', ['http_code' => 200])));
@@ -63,8 +63,8 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
                 'service.version' => '1.0.0',
             ]),
             new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider(new MemoryMetricProcessor(new VoidMetricExporter()), $clock),
-            new LoggerProvider(new MemoryLogProcessor(new VoidLogExporter()), $clock, $contextStorage),
+            new MeterProvider(new MemoryMetricProcessor(new VoidExporter()), $clock),
+            new LoggerProvider(new MemoryLogProcessor(new VoidExporter()), $clock, $contextStorage),
         );
     }
 }

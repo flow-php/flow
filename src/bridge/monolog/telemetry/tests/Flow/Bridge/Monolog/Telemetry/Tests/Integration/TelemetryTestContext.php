@@ -8,7 +8,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{Logger, LoggerProvider};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidSpanProcessor};
+use Flow\Telemetry\Provider\Void\{VoidExporter, VoidSpanProcessor};
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\{Tracer, TracerProvider};
 
@@ -34,7 +34,7 @@ final readonly class TelemetryTestContext
         $contextStorage = new MemoryContextStorage();
         $clock = new SystemClock();
         $resource ??= Resource::create(['service.name' => 'test-service']);
-        $processor = new MemoryLogProcessor(new VoidLogExporter());
+        $processor = new MemoryLogProcessor(new VoidExporter());
 
         $loggerProvider = new LoggerProvider(
             $processor,
@@ -65,7 +65,7 @@ final readonly class TelemetryTestContext
         $contextStorage = new MemoryContextStorage();
         $clock = new SystemClock();
         $resource ??= Resource::create(['service.name' => 'test-service']);
-        $processor = new MemoryLogProcessor(new VoidLogExporter());
+        $processor = new MemoryLogProcessor(new VoidExporter());
 
         $loggerProvider = new LoggerProvider(
             $processor,

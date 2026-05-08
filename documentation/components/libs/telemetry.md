@@ -97,9 +97,9 @@ use function Flow\Telemetry\DSL\{
     pass_through_span_processor,
     pass_through_metric_processor,
     pass_through_log_processor,
-    console_span_exporter,
-    console_metric_exporter,
-    console_log_exporter,
+    console_exporter,
+    console_exporter,
+    console_exporter,
 };
 
 $resource = resource([
@@ -109,9 +109,9 @@ $resource = resource([
 
 $telemetry = telemetry(
     $resource,
-    tracer_provider(pass_through_span_processor(console_span_exporter())),
-    meter_provider(pass_through_metric_processor(console_metric_exporter())),
-    logger_provider(pass_through_log_processor(console_log_exporter())),
+    tracer_provider(pass_through_span_processor(console_exporter())),
+    meter_provider(pass_through_metric_processor(console_exporter())),
+    logger_provider(pass_through_log_processor(console_exporter())),
 );
 
 // All telemetry will be printed to console
@@ -483,10 +483,10 @@ This reduces network overhead and improves performance in production environment
 <?php
 
 use function Flow\Telemetry\DSL\batching_span_processor;
-use function Flow\Telemetry\DSL\console_span_exporter;
+use function Flow\Telemetry\DSL\console_exporter;
 
 $processor = batching_span_processor(
-    console_span_exporter(),
+    console_exporter(),
     batchSize: 512
 );
 
@@ -525,10 +525,10 @@ Store signals in memory for direct access. Useful for testing and debugging.
 ```php
 <?php
 
-use function Flow\Telemetry\DSL\memory_span_exporter;
+use function Flow\Telemetry\DSL\memory_exporter;
 use function Flow\Telemetry\DSL\pass_through_span_processor;
 
-$exporter = memory_span_exporter();
+$exporter = memory_exporter();
 $processor = pass_through_span_processor($exporter);
 
 // ... create and complete spans ...
@@ -545,10 +545,10 @@ Output human-readable telemetry to the console with optional ANSI colors. Useful
 ```php
 <?php
 
-use function Flow\Telemetry\DSL\console_span_exporter;
+use function Flow\Telemetry\DSL\console_exporter;
 use function Flow\Telemetry\DSL\pass_through_span_processor;
 
-$exporter = console_span_exporter(colors: true);
+$exporter = console_exporter(colors: true);
 $processor = pass_through_span_processor($exporter);
 ```
 

@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Logger;
 
 use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Psr\Clock\ClockInterface;
 
 /**
@@ -17,11 +18,11 @@ use Psr\Clock\ClockInterface;
  * Example usage:
  * ```php
  * // For testing with memory storage
- * $processor = new MemoryProcessor($exporter, $exporter, $exporter);
+ * $processor = new MemoryLogProcessor(new MemoryExporter());
  * $provider = new LoggerProvider($processor, new SystemClock());
  *
  * // For OTLP export
- * $processor = batching_log_processor(otlp_log_exporter($transport));
+ * $processor = batching_log_processor(otlp_exporter($transport));
  * $provider = new LoggerProvider($processor, new SystemClock());
  *
  * // For void/disabled logging
@@ -38,6 +39,7 @@ final readonly class LoggerProvider
         private ClockInterface $clock,
         private ContextStorage $contextStorage,
         private LogRecordLimits $limits = new LogRecordLimits(),
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -62,6 +64,7 @@ final readonly class LoggerProvider
             $this->clock,
             $this->contextStorage,
             $this->limits,
+            $this->errorHandler,
         );
     }
 }

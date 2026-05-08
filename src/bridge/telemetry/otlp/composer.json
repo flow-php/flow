@@ -16,27 +16,28 @@
     "license": "MIT",
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "flow-php/telemetry": "self.version",
-        "psr/http-client": "^1.0",
-        "psr/http-factory": "^1.0"
+        "flow-php/telemetry": "self.version"
     },
     "require-dev": {
-        "grpc/grpc": "^1.74",
-        "open-telemetry/gen-otlp-protobuf": "^1.8",
+        "ext-curl" : "*",
         "google/protobuf": "^4.0 || ^5.0",
+        "grpc/grpc": "^1.74",
         "nyholm/psr7": "^1.8",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
         "symfony/http-client": "^6.4 || ^7.4 || ^8.0"
     },
     "suggest": {
         "ext-grpc": "Required for gRPC transport",
-        "google/protobuf": "Required for gRPC transport with binary protobuf encoding",
-        "open-telemetry/gen-otlp-protobuf": "Generated PHP classes for OTLP protobuf messages (required for gRPC transport)"
+        "google/protobuf": "Required for gRPC transport with binary protobuf encoding"
     },
     "autoload": {
         "psr-4": {
             "Flow\\": [
                 "src/Flow"
-            ]
+            ],
+            "Opentelemetry\\Proto\\": "src/Opentelemetry/Proto/",
+            "GPBMetadata\\Opentelemetry\\": "src/GPBMetadata/Opentelemetry/"
         },
         "files": [
             "src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php"

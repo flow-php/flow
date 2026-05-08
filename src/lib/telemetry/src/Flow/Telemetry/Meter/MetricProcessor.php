@@ -9,30 +9,9 @@ namespace Flow\Telemetry\Meter;
  *
  * Implementations may collect metrics for batching, export them immediately,
  * or perform other processing like filtering or aggregation.
- *
- * Example implementation:
- * ```php
- * final class BatchingMetricProcessor implements MetricProcessor
- * {
- *     private array $buffer = [];
- *
- *     public function process(Metric $metric): void
- *     {
- *         $this->buffer[] = $metric;
- *         if (count($this->buffer) >= 100) {
- *             $this->flush();
- *         }
- *     }
- * }
- * ```
  */
 interface MetricProcessor
 {
-    /**
-     * Get the exporter used by this processor.
-     */
-    public function exporter() : MetricExporter;
-
     /**
      * Export all pending metrics.
      *
@@ -50,4 +29,12 @@ interface MetricProcessor
      * on filtering rules.
      */
     public function process(Metric $metric) : void;
+
+    /**
+     * Shutdown the processor.
+     *
+     * Implementations SHOULD flush() pending data before delegating shutdown
+     * to the underlying exporter. MUST be idempotent and MUST NOT throw.
+     */
+    public function shutdown() : void;
 }

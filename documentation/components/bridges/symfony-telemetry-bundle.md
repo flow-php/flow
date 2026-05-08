@@ -30,6 +30,10 @@ This bundle integrates Flow PHP's Telemetry library with Symfony applications. I
 
 ## Configuration Reference
 
+> Any `error_handler:` field that appears under a provider, processor, or `otlp` exporter references a name from the
+> top-level `error_handlers:` map (see [Error Handlers](#error-handlers)). When omitted it defaults to `default`, which
+> is auto-created as `{ type: error_log }` if the user does not declare one.
+
 ### Resource Configuration
 
 The `resource` node configures OpenTelemetry Resource attributes that identify your service.
@@ -130,6 +134,188 @@ flow_telemetry:
 | `baggage`      | W3C Baggage only                         |
 | `service`      | Custom propagator service                |
 
+### Error Handlers
+
+Per the OpenTelemetry spec, the SDK MUST NOT throw to user code at runtime. Errors raised by exporters/processors are
+caught and forwarded to a configured error handler. The bundle exposes a **named map** under `error_handlers:` that is
+referenced from provider, processor, and OTLP exporter blocks via `error_handler:` fields.
+
+```yaml
+flow_telemetry:
+  error_handlers:
+    default:
+      type: error_log         # default if omitted
+
+    to_file:
+      type: stream
+      destination: '%kernel.logs_dir%/flow-telemetry-errors.log'
+
+    to_syslog:
+      type: syslog
+      facility: local0
+      severity: warning
+
+    fanout:
+      type: composite
+      handlers: [default, to_file, to_syslog]
+
+    silent:
+      type: noop
+
+    custom:
+      type: service
+      service_id: app.my_error_handler
+```
+
+If `error_handlers:` is omitted (or `default` is missing inside it), the bundle injects
+`error_handlers.default = { type: error_log }` automatically so every `error_handler:` reference always resolves.
+
+Service IDs registered by the bundle (predictable for `decorates:`):
+
+- `flow.telemetry.error_handler.<name>` — e.g. `flow.telemetry.error_handler.default`
+
+#### error_log (default)
+
+Writes formatted Throwables via PHP's `error_log()` — stderr in CLI by default, or the `error_log` ini setting otherwise.
+Matches the OTEL spec recommendation to log to standard error output.
+
+| Option            | Type    | Default           | Description                                                       |
+|-------------------|---------|-------------------|-------------------------------------------------------------------|
+| `message_type`    | enum    | `operating_system` | `operating_system` (0), `email` (1), `file` (3), `sapi` (4)       |
+| `expand_newlines` | boolean | `false`           | Emit one `error_log()` call per line of the formatted message     |
+| `message_prefix`  | string  | `[flow-telemetry]` | Prefix prepended to every message                                 |
+
+#### stream
+
+Appends formatted Throwables (one per line) to a file path or `php://` stream wrapper. The handle is opened lazily on
+the first call and reused.
+
+| Option               | Type    | Default            | Description                                                  |
+|----------------------|---------|--------------------|--------------------------------------------------------------|
+| `destination`        | string  | -                  | File path or `php://stdout`/`php://stderr`/etc. (required)   |
+| `file_permissions`   | integer | `0644`             | Permissions for newly created files (ignored for `php://`)   |
+| `create_directories` | boolean | `true`             | Create parent directories of the destination if missing      |
+| `message_prefix`     | string  | `[flow-telemetry]` | Prefix prepended to every line                               |
+
+#### syslog
+
+Writes via `openlog/syslog/closelog`.
+
+| Option     | Type    | Default          | Description                                            |
+|------------|---------|------------------|--------------------------------------------------------|
+| `ident`    | string  | `flow-telemetry` | Syslog identity tag                                    |
+| `facility` | enum    | `user`           | RFC 5424 facility (see table below)                    |
+| `log_opts` | integer | `LOG_PID`        | Bitmask of `LOG_*` flags passed to `openlog()`         |
+| `severity` | enum    | `error`          | RFC 5424 severity (see table below)                    |
+
+#### udp_syslog
+
+Sends RFC 5424 syslog frames over UDP.
+
+| Option     | Type    | Default          | Description                                  |
+|------------|---------|------------------|----------------------------------------------|
+| `host`     | string  | -                | Remote syslog host (required)                |
+| `port`     | integer | `514`            | Remote syslog port                           |
+| `ident`    | string  | `flow-telemetry` | Syslog identity tag                          |
+| `facility` | enum    | `user`           | RFC 5424 facility                            |
+| `severity` | enum    | `error`          | RFC 5424 severity                            |
+
+#### composite
+
+Fans an error out to multiple named handlers. Each child invocation is wrapped so a misbehaving handler cannot prevent
+siblings from running.
+
+| Option     | Type            | Default | Description                                                |
+|------------|-----------------|---------|------------------------------------------------------------|
+| `handlers` | list of strings | -       | Names of other entries in `error_handlers:` (required)     |
+
+```yaml
+fanout:
+  type: composite
+  handlers: [default, to_file]
+```
+
+#### noop
+
+Discards every Throwable. Intended for tests or explicit silence.
+
+```yaml
+silent: { type: noop }
+```
+
+#### service
+
+Aliases an existing service that implements `Flow\Telemetry\ErrorHandler\ErrorHandler`.
+
+| Option       | Type   | Default | Description                                              |
+|--------------|--------|---------|----------------------------------------------------------|
+| `service_id` | string | -       | Service id of the user-provided handler (required)       |
+
+```yaml
+custom:
+  type: service
+  service_id: app.my_error_handler
+```
+
+#### Facility values
+
+| Value     | Constant      |
+|-----------|---------------|
+| `kernel`  | `LOG_KERN`    |
+| `user`    | `LOG_USER`    |
+| `mail`    | `LOG_MAIL`    |
+| `daemon`  | `LOG_DAEMON`  |
+| `auth`    | `LOG_AUTH`    |
+| `syslog`  | `LOG_SYSLOG`  |
+| `lpr`     | `LOG_LPR`     |
+| `news`    | `LOG_NEWS`    |
+| `uucp`    | `LOG_UUCP`    |
+| `cron`    | `LOG_CRON`    |
+| `local0`..`local7` | `LOG_LOCAL0`..`LOG_LOCAL7` |
+
+#### Severity values
+
+| Value       | Constant      |
+|-------------|---------------|
+| `emergency` | `LOG_EMERG`   |
+| `alert`     | `LOG_ALERT`   |
+| `critical`  | `LOG_CRIT`    |
+| `error`     | `LOG_ERR`     |
+| `warning`   | `LOG_WARNING` |
+| `notice`    | `LOG_NOTICE`  |
+| `info`      | `LOG_INFO`    |
+| `debug`     | `LOG_DEBUG`   |
+
+### Exporters (named definitions)
+
+The bundle exposes a **top-level named map** of exporters. The implementation is selected by the **sub-block name**
+under each entry — there is no separate `type:` key. Each exporter must declare exactly one of the supported
+sub-blocks: `otlp`, `service`, `console`, `memory`, `void`. Per-signal processors reference exporters by name.
+
+```yaml
+flow_telemetry:
+  exporters:
+    otlp:                              # exporter name
+      otlp:                            # sub-block selects implementation
+        transport:
+          type: curl
+          endpoint: 'http://otel-collector:4318'
+          encoding: protobuf
+```
+
+| Sub-block | Options                                | Description                              |
+|-----------|----------------------------------------|------------------------------------------|
+| `otlp`    | `transport: { ... }`                   | Sends batches over OTLP curl/grpc/service |
+| `service` | `id: <service_id>`                     | Aliases an existing user-provided service |
+| `console` | none (use `~` / `null` / `{}`)          | Pretty-prints to console                  |
+| `memory`  | none                                   | Stores batches in memory (testing)        |
+| `void`    | none                                   | Discards everything (no-op)               |
+
+Service IDs registered by the bundle (predictable for `decorates:`):
+
+- `flow.telemetry.exporter.<name>` — e.g. `flow.telemetry.exporter.otlp`
+- `flow.telemetry.exporter.<name>.transport` — only when the exporter uses the `otlp` sub-block
+
 ### TracerProvider
 
 Configures the tracer provider for distributed tracing.
@@ -137,16 +323,16 @@ Configures the tracer provider for distributed tracing.
 ```yaml
 flow_telemetry:
   tracer_provider:
+    error_handler: default  # name from error_handlers; defaults to "default"
     sampler:
-      type: always_on  # always_on|always_off|trace_id_ratio|parent_based|service
-      ratio: 1.0       # Sampling ratio (0.0-1.0, only for trace_id_ratio)
-      service_id: null # Custom sampler service (only for type: service)
+      type: always_on   # always_on|always_off|trace_id_ratio|parent_based|service
+      ratio: 1.0        # Sampling ratio (0.0-1.0, only for trace_id_ratio)
+      service_id: null  # Custom sampler service (only for type: service)
     processor:
-      type: void  # composite|memory|batching|passthrough|void|service
+      type: batching    # composite|memory|batching|passthrough|void|service
       batch_size: 512
-      service_id: null
-      exporter:
-        type: void  # memory|console|void|otlp|service
+      exporter: otlp    # name of a top-level exporter
+      error_handler: default
 ```
 
 **Sampler types:**
@@ -161,31 +347,29 @@ flow_telemetry:
 
 ### MeterProvider
 
-Configures the meter provider for metrics collection.
-
 ```yaml
 flow_telemetry:
   meter_provider:
+    error_handler: default
     temporality: cumulative  # cumulative|delta
     processor:
-      type: void  # composite|memory|batching|passthrough|void|service
+      type: batching
       batch_size: 512
-      exporter:
-        type: void
+      exporter: otlp
+      error_handler: default
 ```
 
 ### LoggerProvider
 
-Configures the logger provider for log export.
-
 ```yaml
 flow_telemetry:
   logger_provider:
+    error_handler: default
     processor:
-      type: void  # composite|memory|batching|passthrough|void|severity_filtering|service
+      type: batching   # composite|memory|batching|passthrough|void|severity_filtering|service
       batch_size: 512
-      exporter:
-        type: void
+      exporter: otlp
+      error_handler: default
 ```
 
 **Severity filtering** (logs only):
@@ -195,19 +379,16 @@ flow_telemetry:
   logger_provider:
     processor:
       type: severity_filtering
-      minimum_severity: info  # trace|debug|info|warn|error|fatal
+      minimum_severity: warn  # trace|debug|info|warn|error|fatal
       inner_processor:
         type: batching
-        exporter:
-          type: otlp
-          otlp:
-            transport:
-              endpoint: 'http://otel-collector:4318/v1/logs'
+        exporter: otlp
+        batch_size: 200
 ```
 
 ### Processor Configuration
 
-Processor types available for tracer_provider, meter_provider, and logger_provider.
+Processor types available for `tracer_provider`, `meter_provider`, and `logger_provider`.
 
 #### void (default)
 
@@ -220,71 +401,55 @@ processor:
 
 #### passthrough
 
-Immediately exports each item.
+Immediately exports each item via the referenced exporter.
 
 ```yaml
 processor:
   type: passthrough
-  exporter:
-    type: console
+  exporter: console
 ```
 
 #### memory
 
-Stores in memory (for testing). No additional options.
+Stores in memory (for testing). Still requires a backing exporter for `flush()` to call.
 
 ```yaml
 processor:
   type: memory
+  exporter: memory
 ```
 
 #### batching
 
 Batches items before export.
 
-| Option       | Type    | Default | Description               |
-|--------------|---------|---------|---------------------------|
-| `batch_size` | integer | `512`   | Number of items per batch |
+| Option       | Type    | Default | Description                                  |
+|--------------|---------|---------|----------------------------------------------|
+| `batch_size` | integer | `512`   | Number of items per batch                    |
+| `exporter`   | string  | -       | Name of a top-level exporter (required)      |
 
 ```yaml
 processor:
   type: batching
   batch_size: 512
-  exporter:
-    type: otlp
-    otlp:
-      transport:
-        endpoint: 'http://otel-collector:4318/v1/traces'
+  exporter: otlp
 ```
 
 #### composite
 
-Combines multiple processors.
-
-| Option       | Type  | Description               |
-|--------------|-------|---------------------------|
-| `processors` | array | List of processor configs |
+Combines multiple processors. Each child references its own exporter by name.
 
 ```yaml
 processor:
   type: composite
   processors:
-    - type: batching
-      exporter:
-        type: otlp
-        otlp:
-          transport:
-            endpoint: 'http://otel-collector:4318/v1/traces'
-    - type: memory
+    - { type: batching, exporter: otlp, batch_size: 512 }
+    - { type: memory,   exporter: memory }
 ```
 
 #### service
 
 Custom processor service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
 
 ```yaml
 processor:
@@ -294,218 +459,317 @@ processor:
 
 #### severity_filtering (logger_provider only)
 
-Filters logs by minimum severity level.
-
-| Option            | Type   | Default | Description                            |
-|-------------------|--------|---------|----------------------------------------|
-| `minimum_severity`| string | `info`  | trace\|debug\|info\|warn\|error\|fatal |
-| `inner_processor` | object | -       | Nested processor configuration         |
+Filters logs by minimum severity level. The wrapped `inner_processor` is built with the same set of types as a top-level
+processor (except `composite`/`severity_filtering`).
 
 ```yaml
 processor:
   type: severity_filtering
-  minimum_severity: info
+  minimum_severity: warn
   inner_processor:
     type: batching
-    exporter:
-      type: otlp
-      otlp:
-        transport:
-          endpoint: 'http://otel-collector:4318/v1/logs'
+    exporter: otlp
+    batch_size: 200
 ```
 
-### Exporter Configuration
+### Exporter Definitions
 
-Exporter types available for processor configurations.
+Exporters are declared once at the top level under `exporters:` and referenced from processor blocks by name. Each
+exporter declares exactly one sub-block; the sub-block name selects the implementation.
 
-#### void (default)
+#### void
 
-Discards all data. No additional options.
+Discards all data.
 
 ```yaml
-exporter:
-  type: void
+exporters:
+  drop: { void: ~ }
 ```
 
 #### memory
 
-Stores in memory (for testing). No additional options.
+In-memory store for testing. Service exposes `allLogs()`, `allMetrics()`, `allSpans()` accessors via
+`Flow\Telemetry\Provider\Memory\MemoryExporter`.
 
 ```yaml
-exporter:
-  type: memory
+exporters:
+  capture: { memory: ~ }
 ```
 
 #### console
 
-Outputs to console. No additional options.
+Pretty-prints logs, metrics, and spans to the console. Useful for development.
 
 ```yaml
-exporter:
-  type: console
+exporters:
+  debug: { console: ~ }
 ```
 
 #### otlp
 
-Exports to OTLP-compatible backends (Jaeger, Tempo, etc.).
-
-| Option       | Type   | Description                        |
-|--------------|--------|------------------------------------|
-| `transport`  | object | Transport configuration (required) |
-| `serializer` | object | Serializer configuration           |
+Sends batches over an embedded transport. The single OTLP exporter handles all three signals.
 
 ```yaml
-exporter:
-  type: otlp
+exporters:
   otlp:
-    transport:
-      type: curl
-      endpoint: 'http://otel-collector:4318/v1/traces'
-    serializer:
-      type: json
+    otlp:
+      error_handler: default   # name from error_handlers; defaults to "default"
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        encoding: protobuf
 ```
 
 #### service
 
-Custom exporter service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
+Aliases an existing user-defined service implementing `Flow\Telemetry\Exporter\Exporter`. This is the escape hatch for
+APM-specific exporters (Datadog, New Relic, custom) that don't go through OTLP — define your exporter as a Symfony
+service in your own `services.yaml` and reference it by id.
 
 ```yaml
-exporter:
-  type: service
-  service_id: 'app.custom_exporter'
+exporters:
+  datadog:
+    service:
+      id: 'app.datadog_telemetry_exporter'
 ```
 
 ### OTLP Transport Configuration
 
-Transport types for OTLP exporters.
+Inside `exporters.<name>.otlp.transport`. Required for the `otlp` sub-block.
 
-#### curl (default, recommended)
+#### Timeouts
 
-| Option             | Type    | Default | Description                 |
-|--------------------|---------|---------|-----------------------------|
-| `endpoint`         | string  | -       | OTLP endpoint URL (required)|
-| `timeout`          | integer | `30`    | Request timeout in seconds  |
-| `connect_timeout`  | integer | `10`    | Connection timeout          |
-| `compression`      | boolean | `false` | Enable compression          |
-| `follow_redirects` | boolean | `true`  | Follow HTTP redirects       |
-| `max_redirects`    | integer | `3`     | Maximum redirects to follow |
-| `proxy`            | string  | `null`  | Proxy URL                   |
-| `ssl_verify_peer`  | boolean | `true`  | Verify SSL peer             |
-| `ssl_verify_host`  | boolean | `true`  | Verify SSL host             |
-| `ssl_cert_path`    | string  | `null`  | SSL certificate path        |
-| `ssl_key_path`     | string  | `null`  | SSL key path                |
-| `ca_info_path`     | string  | `null`  | CA info path                |
-| `headers`          | object  | `{}`    | Additional HTTP headers     |
+Both curl and gRPC default to **aggressive, local-collector-friendly per-request timeouts** with a separate, looser
+budget for graceful drain at shutdown:
+
+| Setting               | Default | Applies to | Bounds                                                      |
+|-----------------------|--------:|------------|-------------------------------------------------------------|
+| `timeout_ms`          |   250   | curl, grpc | Per-request deadline (curl: total request; grpc: per-call)  |
+| `connect_timeout_ms`  |   250   | curl only  | TCP/TLS connect; gRPC has no separate bound                 |
+| `shutdown_timeout_ms` |  5000   | curl, grpc | Wall-clock budget for draining pending requests at shutdown |
+
+The defaults assume the recommended deployment: an OpenTelemetry Collector running close to the application (loopback,
+UDS, or sidecar). `shutdown_timeout_ms` is independent of `timeout_ms` — keep the per-request value tight to surface
+collector slowness during steady-state, while still giving graceful exit a longer window to drain. For a remote
+collector across regions, raise both values. See the
+[OTLP bridge Timeouts section](/documentation/components/bridges/telemetry-otlp-bridge.md#timeouts) for the rationale.
+
+#### Failover Transport
+
+Both `curl` and `grpc` transports accept an optional nested `failover:` block. When primary delivery fails, the prior
+batch is forwarded to the failover transport and a `FailoverTransportException` is raised so the operator is informed
+even when failover absorbs the data. Common pattern: **gRPC primary → stream (JSONL on disk) failover** so a downed
+collector still leaves recoverable data the operator can replay later.
 
 ```yaml
-otlp:
-  transport:
-    type: curl
-    endpoint: 'http://otel-collector:4318/v1/traces'
-    timeout: 30
-    connect_timeout: 10
-    compression: false
-    follow_redirects: true
-    max_redirects: 3
-    proxy: null
-    ssl_verify_peer: true
-    ssl_verify_host: true
-    ssl_cert_path: null
-    ssl_key_path: null
-    ca_info_path: null
-    headers:
-      Authorization: 'Bearer token'
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: grpc
+        endpoint: 'otel-collector:4317'
+        timeout_ms: 250
+        failover:
+          type: stream
+          endpoint: '%kernel.logs_dir%/otel-failed.jsonl'
 ```
 
-#### http
+**Constraints**
 
-PSR-18 HTTP transport.
+- The `failover:` block accepts the same fields as the parent transport, except it cannot itself declare a nested
+  `failover:` (single-level depth).
+- Allowed only on `curl` and `grpc` primaries. `failover` under a `stream` or `service` primary is rejected at
+  config-validation time.
+- The bundle registers `flow.telemetry.exporter.<name>.failover.transport` for the failover service id.
 
-| Option                       | Type    | Default | Description                  |
-|------------------------------|---------|---------|------------------------------|
-| `endpoint`                   | string  | -       | OTLP endpoint URL (required) |
-| `timeout`                    | integer | `30`    | Request timeout in seconds   |
-| `http_client_service_id`     | string  | `null`  | PSR-18 client service        |
-| `request_factory_service_id` | string  | `null`  | PSR-17 request factory       |
-| `stream_factory_service_id`  | string  | `null`  | PSR-17 stream factory        |
+For the underlying behavior — when a forwarded batch is treated as absorbed vs. lost, the shape of
+`FailoverTransportException`, and the cascade-shutdown contract — see the
+[OTLP bridge Failover Transport section](/documentation/components/bridges/telemetry-otlp-bridge.md#failover-transport).
+
+#### curl (default)
+
+| Option                | Type    | Default | Description                                                                |
+|-----------------------|---------|---------|----------------------------------------------------------------------------|
+| `endpoint`            | string  | -       | OTLP base URL (required)                                                   |
+| `timeout_ms`          | integer | `250`   | Total per-request deadline in **milliseconds**                             |
+| `connect_timeout_ms`  | integer | `250`   | TCP/TLS connect deadline in **milliseconds**                               |
+| `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending requests at shutdown |
+| `compression`         | boolean | `false` | Enable compression                                                         |
+| `follow_redirects`    | boolean | `true`  | Follow HTTP redirects                                                      |
+| `max_redirects`       | integer | `3`     | Maximum redirects to follow                                                |
+| `proxy`               | string  | `null`  | Proxy URL                                                                  |
+| `ssl_verify_peer`     | boolean | `true`  | Verify SSL peer                                                            |
+| `ssl_verify_host`     | boolean | `true`  | Verify SSL host                                                            |
+| `ssl_cert_path`       | string  | `null`  | SSL certificate path                                                       |
+| `ssl_key_path`        | string  | `null`  | SSL key path                                                               |
+| `ca_info_path`        | string  | `null`  | CA info path                                                               |
+| `headers`             | object  | `{}`    | Additional HTTP headers                                                    |
+| `encoding`            | enum    | `json`  | OTLP/HTTP wire encoding: `json` or `protobuf`                              |
+| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                         |
+
+See [Timeouts](#timeouts) for guidance on the millisecond defaults.
 
 ```yaml
-otlp:
-  transport:
-    type: http
-    endpoint: 'http://otel-collector:4318/v1/traces'
-    timeout: 30
-    http_client_service_id: null
-    request_factory_service_id: null
-    stream_factory_service_id: null
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        timeout_ms: 250
+        connect_timeout_ms: 250
+        compression: true
+        headers:
+          Authorization: 'Bearer token'
+        encoding: protobuf
 ```
 
 #### grpc
 
-gRPC transport
+gRPC transport. `encoding` is rejected by validation (OTLP/gRPC mandates Protobuf, built internally), and
+`connect_timeout_ms` is rejected because gRPC has no separate connect bound — `timeout_ms` is the per-call deadline
+covering DNS, connect, send and receive together.
 
-| Option     | Type    | Default | Description                  |
-|------------|---------|---------|------------------------------|
-| `endpoint` | string  | -       | OTLP endpoint URL (required) |
-| `insecure` | boolean | `false` | Allow insecure connections   |
+| Option                | Type    | Default | Description                                                                |
+|-----------------------|---------|---------|----------------------------------------------------------------------------|
+| `endpoint`            | string  | -       | gRPC endpoint (required)                                                   |
+| `timeout_ms`          | integer | `250`   | Per-call deadline in **milliseconds**                                      |
+| `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending calls at shutdown |
+| `insecure`            | boolean | `true`  | Allow insecure connections                                                 |
+| `headers`             | object  | `{}`    | gRPC metadata                                                              |
+| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                         |
 
 ```yaml
-otlp:
-  transport:
-    type: grpc
-    endpoint: 'http://otel-collector:4317'
-    insecure: true
+exporters:
+  otlp_grpc:
+    otlp:
+      transport:
+        type: grpc
+        endpoint: 'otel-collector:4317'
+        timeout_ms: 250
+        insecure: false
 ```
+
+#### stream
+
+OTLP File Exporter ([spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/)). Writes one JSON Line
+per batch to the configured destination — either an absolute file path or a `php://` stream wrapper — with
+`LOCK_EX` around each `fwrite`. Only JSON encoding is supported per the spec; `encoding` and HTTP-specific options
+(`timeout`, `ssl_*`, `headers`, etc.) are rejected at config time.
+
+| Option                | Type    | Default  | Description                                                                  |
+|-----------------------|---------|----------|------------------------------------------------------------------------------|
+| `endpoint`            | string  | -        | File path or `php://` stream wrapper URI (required)                          |
+| `file_permissions`    | integer | `0644`   | File mode applied when creating new files; ignored for `php://` destinations |
+| `create_directories`  | boolean | `true`   | Create the destination's parent directories if missing; ignored for `php://` destinations |
+
+```yaml
+exporters:
+  otlp_logs_file:
+    otlp:
+      transport:
+        type: stream
+        endpoint: '%kernel.project_dir%/var/otel/logs.jsonl'
+        file_permissions: 0640
+        create_directories: true
+
+  otlp_logs_stdout:
+    otlp:
+      transport:
+        type: stream
+        endpoint: 'php://stdout'
+```
+
+To write all three signal types to one file, point three exporters at the same destination — the OpenTelemetry
+Collector's `otlpjsonfile` receiver handles mixed `resourceLogs` / `resourceMetrics` / `resourceSpans` lines.
 
 #### service
 
-Custom transport service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
+Aliases an existing transport service ID inside the OTLP exporter.
 
 ```yaml
-otlp:
-  transport:
-    type: service
-    service_id: 'app.custom_transport'
+exporters:
+  otlp:
+    otlp:
+      transport:
+        type: service
+        service_id: 'app.custom_transport'
 ```
 
-### OTLP Serializer Configuration
+### Multiple OTLP backends
 
-Serializer types for OTLP exporters.
-
-#### json (default)
+Each signal can target its own collector by declaring multiple named exporters and referencing them per provider.
 
 ```yaml
-serializer:
-  type: json
+flow_telemetry:
+  exporters:
+    otlp_traces:
+      otlp:
+        transport:
+          type: grpc
+          endpoint: 'http://traces:4317'
+          insecure: false
+    otlp_metrics:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://metrics:4318'
+          encoding: protobuf
+    otlp_logs:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://logs:4318'
+          encoding: json
+
+  tracer_provider:
+    processor: { type: batching, exporter: otlp_traces,  batch_size: 1024 }
+  meter_provider:
+    processor: { type: batching, exporter: otlp_metrics, batch_size: 256  }
+  logger_provider:
+    processor: { type: batching, exporter: otlp_logs,    batch_size: 100  }
 ```
 
-#### protobuf
+### Migrating from older config
+
+The schema replaced the `type: <name>` discriminator with a sub-block whose key matches the implementation. There is no
+BC shim.
+
+**Before (legacy schema)**
 
 ```yaml
-serializer:
-  type: protobuf
+flow_telemetry:
+  exporters:
+    otlp:
+      type: otlp
+      transport:
+        type: curl
+        endpoint: 'http://otel-collector:4318'
+        encoding: protobuf
+    custom:
+      type: service
+      service_id: 'app.x'
+    debug: { type: console }
 ```
 
-#### service
-
-Custom serializer service.
-
-| Option       | Type   | Description                   |
-|--------------|--------|-------------------------------|
-| `service_id` | string | Symfony service ID (required) |
+**After**
 
 ```yaml
-serializer:
-  type: service
-  service_id: 'app.custom_serializer'
+flow_telemetry:
+  exporters:
+    otlp:
+      otlp:
+        transport:
+          type: curl
+          endpoint: 'http://otel-collector:4318'
+          encoding: protobuf
+    custom:
+      service:
+        id: 'app.x'
+    debug: { console: ~ }
+
+  tracer_provider:
+    processor: { type: batching, exporter: otlp }
 ```
 
 ### Instrumentation
@@ -834,6 +1098,33 @@ flow_telemetry:
   propagator:
     type: w3c
 
+  exporters:
+    otlp_traces:
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)%'
+          timeout_ms: 250
+          connect_timeout_ms: 250
+          headers:
+            Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
+          encoding: protobuf
+          failover:
+            type: stream
+            endpoint: '%kernel.logs_dir%/otel-traces-failed.jsonl'
+    otlp_metrics:
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)%'
+          encoding: protobuf
+    otlp_logs:
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)%'
+          encoding: protobuf
+
   tracer_provider:
     sampler:
       type: trace_id_ratio
@@ -841,25 +1132,13 @@ flow_telemetry:
     processor:
       type: batching
       batch_size: 512
-      exporter:
-        type: otlp
-        otlp:
-          transport:
-            type: curl
-            endpoint: '%env(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT)%'
-            timeout: 30
-            headers:
-              Authorization: 'Bearer %env(OTEL_AUTH_TOKEN)%'
+      exporter: otlp_traces
 
   meter_provider:
     temporality: cumulative
     processor:
       type: batching
-      exporter:
-        type: otlp
-        otlp:
-          transport:
-            endpoint: '%env(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT)%'
+      exporter: otlp_metrics
 
   logger_provider:
     processor:
@@ -867,11 +1146,7 @@ flow_telemetry:
       minimum_severity: info
       inner_processor:
         type: batching
-        exporter:
-          type: otlp
-          otlp:
-            transport:
-              endpoint: '%env(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)%'
+        exporter: otlp_logs
 
   loggers:
     app:

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
-use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
+use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
 use Flow\Filesystem\{DestinationStream, Path};
 use Flow\Filesystem\Telemetry\{FilesystemTelemetryAttributes, TraceableDestinationStream};
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
@@ -15,7 +15,7 @@ final class TraceableDestinationStreamTest extends TestCase
 {
     public function test_append_tracks_bytes_written() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $data = 'Hello, World!';
@@ -43,7 +43,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_close_completes_lifecycle_span_with_final_attributes() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $data = 'Hello, World!';
@@ -68,7 +68,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_close_records_exception_and_rethrows() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $exception = new \RuntimeException('Close failed');
@@ -97,7 +97,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_close_without_operations_still_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
@@ -115,7 +115,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_from_resource_tracks_bytes_written() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
         $resource = \fopen('php://memory', 'rb');
@@ -145,7 +145,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_is_open_delegates_without_affecting_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
@@ -161,7 +161,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_multiple_appends_create_single_span_with_cumulative_bytes() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
@@ -183,7 +183,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_path_delegates_without_affecting_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
@@ -198,7 +198,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_span_created_in_constructor() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
 
@@ -221,7 +221,7 @@ final class TraceableDestinationStreamTest extends TestCase
 
     public function test_tracing_disabled_does_not_create_spans() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
             traceStreams: false,
             collectMetrics: false,

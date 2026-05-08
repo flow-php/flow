@@ -144,10 +144,16 @@ final class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->append($this->errorHandlersNode())
+                ->append($this->exportersNode())
                 ->arrayNode('tracer_provider')
                     ->info('TracerProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->scalarNode('error_handler')
+                            ->info('Name of an error_handler entry forwarded to the TracerProvider')
+                            ->defaultValue('default')
+                        ->end()
                         ->arrayNode('sampler')
                             ->info('Trace sampler configuration')
                             ->addDefaultsIfNotSet()
@@ -175,6 +181,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('MeterProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->scalarNode('error_handler')
+                            ->info('Name of an error_handler entry forwarded to the MeterProvider')
+                            ->defaultValue('default')
+                        ->end()
                         ->enumNode('temporality')
                             ->info('Aggregation temporality')
                             ->values(['cumulative', 'delta'])
@@ -187,6 +197,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('LoggerProvider configuration. Defaults to void if omitted.')
                     ->addDefaultsIfNotSet()
                     ->children()
+                        ->scalarNode('error_handler')
+                            ->info('Name of an error_handler entry forwarded to the LoggerProvider')
+                            ->defaultValue('default')
+                        ->end()
                         ->append($this->processorNode('log'))
                     ->end()
                 ->end()
@@ -384,140 +398,323 @@ final class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function exporterNode(string $signalType) : ArrayNodeDefinition
+    private function applyTransportSchema(ArrayNodeDefinition $node, bool $allowFailover) : void
     {
-        $builder = new TreeBuilder('exporter');
+        $node
+            ->beforeNormalization()
+                ->always(static function (mixed $v) use ($allowFailover) : mixed {
+                    if (!\is_array($v)) {
+                        return $v;
+                    }
+
+                    if (($v['type'] ?? null) === 'grpc' && \array_key_exists('connect_timeout_ms', $v)) {
+                        throw new InvalidConfigurationException(
+                            'The "connect_timeout_ms" parameter is not supported when transport.type is "grpc"; gRPC uses the per-call deadline (timeout_ms) for connection establishment too.',
+                        );
+                    }
+
+                    if (($v['type'] ?? null) === 'stream') {
+                        $forbidden = [
+                            'timeout_ms',
+                            'connect_timeout_ms',
+                            'shutdown_timeout_ms',
+                            'compression',
+                            'follow_redirects',
+                            'max_redirects',
+                            'proxy',
+                            'ssl_verify_peer',
+                            'ssl_verify_host',
+                            'ssl_cert_path',
+                            'ssl_key_path',
+                            'ca_info_path',
+                            'headers',
+                            'insecure',
+                        ];
+
+                        foreach ($forbidden as $key) {
+                            if (\array_key_exists($key, $v)) {
+                                throw new InvalidConfigurationException(\sprintf(
+                                    'The "%s" parameter is not supported when transport.type is "stream".',
+                                    $key,
+                                ));
+                            }
+                        }
+                    }
+
+                    $encodingRejection = match ($v['type'] ?? null) {
+                        'stream' => 'only JSON encoding is allowed by the OTLP File Exporter spec',
+                        'grpc' => 'OTLP/gRPC mandates Protobuf encoding',
+                        default => null,
+                    };
+
+                    if ($encodingRejection !== null && \array_key_exists('encoding', $v)) {
+                        throw new InvalidConfigurationException(\sprintf(
+                            'The "encoding" parameter is not supported when transport.type is "%s"; %s.',
+                            $v['type'],
+                            $encodingRejection,
+                        ));
+                    }
+
+                    if ($allowFailover && \array_key_exists('failover', $v) && \is_array($v['failover']) && $v['failover'] !== []) {
+                        $primaryType = $v['type'] ?? 'curl';
+
+                        if (!\in_array($primaryType, ['curl', 'grpc'], true)) {
+                            throw new InvalidConfigurationException(\sprintf(
+                                'The "failover" block is only supported for transport.type "curl" or "grpc"; got "%s".',
+                                $primaryType,
+                            ));
+                        }
+                    }
+
+                    return $v;
+                })
+            ->end()
+            ->validate()
+                ->ifTrue(static function (array $v) : bool {
+                    if (($v['type'] ?? null) !== 'stream') {
+                        return false;
+                    }
+
+                    $endpoint = $v['endpoint'] ?? null;
+
+                    return !\is_string($endpoint) || $endpoint === '';
+                })
+                ->thenInvalid('The "endpoint" parameter is required and must be a non-empty string when transport.type is "stream" (used as the destination file path or php:// stream wrapper URI).')
+            ->end();
+
+        $children = $node->children();
+
+        $children
+            ->enumNode('type')
+                ->info("Transport type: 'curl', 'grpc', 'stream', 'service'")
+                ->values(['curl', 'grpc', 'stream', 'service'])
+                ->defaultValue('curl')
+            ->end()
+            ->scalarNode('endpoint')
+                ->info('OTLP endpoint URL for curl/grpc, or destination file path / php:// stream wrapper URI for stream (required unless type: service)')
+                ->defaultNull()
+            ->end()
+            ->integerNode('file_permissions')
+                ->info('Permissions applied when creating new files (stream only; ignored for php:// destinations)')
+                ->defaultValue(0644)
+                ->min(0)
+                ->max(0777)
+            ->end()
+            ->booleanNode('create_directories')
+                ->info('Create parent directories of the destination path if they do not exist (stream only; ignored for php:// destinations)')
+                ->defaultTrue()
+            ->end()
+            ->integerNode('timeout_ms')
+                ->info('Per-request deadline in milliseconds (curl: total request; grpc: call deadline). Default 250ms.')
+                ->defaultValue(250)
+                ->min(1)
+            ->end()
+            ->arrayNode('headers')
+                ->info('Additional HTTP headers')
+                ->normalizeKeys(false)
+                ->useAttributeAsKey('name')
+                ->prototype('scalar')->end()
+            ->end()
+            ->integerNode('connect_timeout_ms')
+                ->info('Connection-establishment deadline in milliseconds (curl only). Default 250ms.')
+                ->defaultValue(250)
+                ->min(1)
+            ->end()
+            ->integerNode('shutdown_timeout_ms')
+                ->info('Wall-clock budget in milliseconds for draining pending requests at shutdown (curl/grpc). Default 5000ms.')
+                ->defaultValue(5000)
+                ->min(1)
+            ->end()
+            ->booleanNode('compression')
+                ->info('Enable automatic response decompression (curl only)')
+                ->defaultFalse()
+            ->end()
+            ->booleanNode('follow_redirects')
+                ->info('Follow HTTP redirects (curl only)')
+                ->defaultTrue()
+            ->end()
+            ->integerNode('max_redirects')
+                ->info('Maximum number of redirects to follow (curl only)')
+                ->defaultValue(3)
+                ->min(0)
+            ->end()
+            ->scalarNode('proxy')
+                ->info('Proxy server URL (curl only)')
+                ->defaultNull()
+            ->end()
+            ->booleanNode('ssl_verify_peer')
+                ->info('Verify SSL peer certificate (curl only)')
+                ->defaultTrue()
+            ->end()
+            ->booleanNode('ssl_verify_host')
+                ->info('Verify SSL host name (curl only)')
+                ->defaultTrue()
+            ->end()
+            ->scalarNode('ssl_cert_path')
+                ->info('Path to SSL client certificate (curl only)')
+                ->defaultNull()
+            ->end()
+            ->scalarNode('ssl_key_path')
+                ->info('Path to SSL client private key (curl only)')
+                ->defaultNull()
+            ->end()
+            ->scalarNode('ca_info_path')
+                ->info('Path to CA certificate bundle (curl only)')
+                ->defaultNull()
+            ->end()
+            ->booleanNode('insecure')
+                ->info('Allow insecure connections (grpc only)')
+                ->defaultTrue()
+            ->end()
+            ->scalarNode('service_id')
+                ->info('Custom transport service ID (only for type: service)')
+                ->defaultNull()
+            ->end()
+            ->enumNode('encoding')
+                ->info('OTLP wire encoding (curl only); JSON or Protobuf as defined by the OTLP/HTTP spec')
+                ->values(['json', 'protobuf'])
+                ->defaultValue('json')
+            ->end();
+
+        if ($allowFailover) {
+            $children->append($this->transportNode('failover', allowFailover: false));
+        }
+
+        $children->end();
+    }
+
+    private function errorHandlersNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('error_handlers');
         /** @var ArrayNodeDefinition $node */
         $node = $builder->getRootNode();
 
-        $node
-            ->info(\ucfirst($signalType) . ' exporter configuration')
-            ->addDefaultsIfNotSet()
-            ->children()
-                ->enumNode('type')
-                    ->values(['memory', 'console', 'void', 'otlp', 'service'])
-                    ->defaultValue('void')
-                ->end()
-                ->scalarNode('service_id')
-                    ->info('Custom exporter service ID (only for type: service)')
-                    ->defaultNull()
-                ->end()
-                ->arrayNode('otlp')
-                    ->info('OTLP exporter configuration (only for type: otlp)')
-                    ->children()
-                        ->arrayNode('transport')
-                            ->info('OTLP transport configuration')
-                            ->addDefaultsIfNotSet()
-                            ->beforeNormalization()
-                                ->always(static function (mixed $v) : mixed {
-                                    if (\is_array($v) && ($v['type'] ?? null) === 'grpc' && \array_key_exists('timeout', $v)) {
-                                        throw new InvalidConfigurationException(
-                                            'The "timeout" parameter is not supported when transport.type is "grpc".',
-                                        );
-                                    }
+        $supportedTypes = ['error_log', 'stream', 'syslog', 'udp_syslog', 'composite', 'noop', 'service'];
+        $facilities = ['auth', 'cron', 'daemon', 'kernel', 'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7', 'lpr', 'mail', 'news', 'syslog', 'user', 'uucp'];
+        $severities = ['alert', 'critical', 'debug', 'emergency', 'error', 'info', 'notice', 'warning'];
+        $messageTypes = ['operating_system', 'email', 'file', 'sapi'];
 
-                                    return $v;
-                                })
-                            ->end()
-                            ->children()
-                                ->enumNode('type')
-                                    ->values(['curl', 'http', 'grpc', 'service'])
-                                    ->defaultValue('curl')
-                                ->end()
-                                ->scalarNode('endpoint')
-                                    ->info('OTLP endpoint URL (required)')
-                                    ->isRequired()
-                                    ->cannotBeEmpty()
-                                ->end()
-                                ->integerNode('timeout')
-                                    ->info('Request timeout in seconds (not supported for grpc transport)')
-                                    ->defaultValue(30)
-                                    ->min(1)
-                                ->end()
-                                ->arrayNode('headers')
-                                    ->info('Additional HTTP headers')
-                                    ->normalizeKeys(false)
-                                    ->useAttributeAsKey('name')
-                                    ->prototype('scalar')->end()
-                                ->end()
-                                ->integerNode('connect_timeout')
-                                    ->info('Connection timeout in seconds (only for curl)')
-                                    ->defaultValue(10)
-                                    ->min(1)
-                                ->end()
-                                ->booleanNode('compression')
-                                    ->info('Enable automatic response decompression (only for curl)')
-                                    ->defaultFalse()
-                                ->end()
-                                ->booleanNode('follow_redirects')
-                                    ->info('Follow HTTP redirects (only for curl)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->integerNode('max_redirects')
-                                    ->info('Maximum number of redirects to follow (only for curl)')
-                                    ->defaultValue(3)
-                                    ->min(0)
-                                ->end()
-                                ->scalarNode('proxy')
-                                    ->info('Proxy server URL (only for curl, e.g., "http://proxy:8080")')
-                                    ->defaultNull()
-                                ->end()
-                                ->booleanNode('ssl_verify_peer')
-                                    ->info('Verify SSL peer certificate (only for curl)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->booleanNode('ssl_verify_host')
-                                    ->info('Verify SSL host name (only for curl)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->scalarNode('ssl_cert_path')
-                                    ->info('Path to SSL client certificate (only for curl)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('ssl_key_path')
-                                    ->info('Path to SSL client private key (only for curl)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('ca_info_path')
-                                    ->info('Path to CA certificate bundle (only for curl)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('http_client_service_id')
-                                    ->info('PSR-18 HTTP client service ID (only for http transport)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('request_factory_service_id')
-                                    ->info('PSR-17 request factory service ID (only for http transport)')
-                                    ->defaultNull()
-                                ->end()
-                                ->scalarNode('stream_factory_service_id')
-                                    ->info('PSR-17 stream factory service ID (only for http transport)')
-                                    ->defaultNull()
-                                ->end()
-                                ->booleanNode('insecure')
-                                    ->info('Allow insecure connections (only for grpc)')
-                                    ->defaultTrue()
-                                ->end()
-                                ->scalarNode('service_id')
-                                    ->info('Custom transport service ID (only for type: service)')
-                                    ->defaultNull()
-                                ->end()
-                                ->arrayNode('serializer')
-                                    ->info('Serializer configuration')
-                                    ->addDefaultsIfNotSet()
-                                    ->children()
-                                        ->enumNode('type')
-                                            ->values(['json', 'protobuf', 'service'])
-                                            ->defaultValue('json')
-                                        ->end()
-                                        ->scalarNode('service_id')
-                                            ->info('Custom serializer service ID (only for type: service)')
-                                            ->defaultNull()
-                                        ->end()
-                                    ->end()
-                                ->end()
-                            ->end()
-                        ->end()
+        $node
+            ->info('Named error handler definitions referenced by providers, processors, and OTLP exporters via "error_handler:" fields. If "default" is omitted it is auto-created with type: error_log.')
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+                ->children()
+                    ->enumNode('type')
+                        ->values($supportedTypes)
+                        ->defaultValue('error_log')
+                    ->end()
+                    ->enumNode('message_type')
+                        ->info('error_log message type (only for type: error_log)')
+                        ->values($messageTypes)
+                        ->defaultValue('operating_system')
+                    ->end()
+                    ->booleanNode('expand_newlines')
+                        ->info('Emit one error_log() call per line (only for type: error_log)')
+                        ->defaultFalse()
+                    ->end()
+                    ->scalarNode('message_prefix')
+                        ->info('Prefix prepended to each formatted Throwable (error_log + stream)')
+                        ->defaultValue('[flow-telemetry]')
+                    ->end()
+                    ->scalarNode('destination')
+                        ->info('File path or php:// stream URI (required for type: stream)')
+                        ->defaultNull()
+                    ->end()
+                    ->integerNode('file_permissions')
+                        ->info('Permissions applied when creating new files (only for type: stream)')
+                        ->defaultValue(0644)
+                        ->min(0)
+                        ->max(0777)
+                    ->end()
+                    ->booleanNode('create_directories')
+                        ->info('Create parent directories of the destination if they do not exist (only for type: stream)')
+                        ->defaultTrue()
+                    ->end()
+                    ->scalarNode('ident')
+                        ->info('Syslog identity tag (syslog + udp_syslog)')
+                        ->defaultValue('flow-telemetry')
+                    ->end()
+                    ->enumNode('facility')
+                        ->info('Syslog facility (syslog + udp_syslog)')
+                        ->values($facilities)
+                        ->defaultValue('user')
+                    ->end()
+                    ->integerNode('log_opts')
+                        ->info('Bitmask of LOG_* options passed to openlog() (only for type: syslog)')
+                        ->defaultValue(\LOG_PID)
+                    ->end()
+                    ->enumNode('severity')
+                        ->info('Syslog severity (syslog + udp_syslog)')
+                        ->values($severities)
+                        ->defaultValue('error')
+                    ->end()
+                    ->scalarNode('host')
+                        ->info('Remote syslog host (required for type: udp_syslog)')
+                        ->defaultNull()
+                    ->end()
+                    ->integerNode('port')
+                        ->info('Remote syslog port (only for type: udp_syslog)')
+                        ->defaultValue(514)
+                        ->min(1)
+                        ->max(65535)
+                    ->end()
+                    ->arrayNode('handlers')
+                        ->info('Named error_handler entries fanned-out to (only for type: composite)')
+                        ->scalarPrototype()->end()
+                    ->end()
+                    ->scalarNode('service_id')
+                        ->info('Custom error handler service ID (only for type: service)')
+                        ->defaultNull()
+                    ->end()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    private function exportersNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('exporters');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $supportedTypes = ['otlp', 'service', 'console', 'memory', 'void'];
+
+        $node
+            ->info('Named exporter definitions referenced from per-signal processor blocks. The sub-block under each name selects the exporter implementation; "otlp" carries an embedded transport, "service" aliases an external service id.')
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+                ->validate()
+                    ->ifTrue(static function (array $v) use ($supportedTypes) : bool {
+                        $set = 0;
+
+                        foreach ($supportedTypes as $type) {
+                            if (\array_key_exists($type, $v) && $v[$type] !== null) {
+                                $set++;
+                            }
+                        }
+
+                        return $set !== 1;
+                    })
+                    ->thenInvalid('Exporter must declare exactly one of: otlp, service, console, memory, void.')
+                ->end()
+                ->children()
+                    ->append($this->otlpExporterNode())
+                    ->append($this->serviceExporterNode())
+                    ->arrayNode('console')
+                        ->info('Console exporter (no options)')
+                        ->treatNullLike([])
+                        ->canBeUnset()
+                    ->end()
+                    ->arrayNode('memory')
+                        ->info('Memory exporter (no options)')
+                        ->treatNullLike([])
+                        ->canBeUnset()
+                    ->end()
+                    ->arrayNode('void')
+                        ->info('Void/no-op exporter (no options)')
+                        ->treatNullLike([])
+                        ->canBeUnset()
                     ->end()
                 ->end()
             ->end();
@@ -545,11 +742,42 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue(512)
                     ->min(1)
                 ->end()
+                ->scalarNode('exporter')
+                    ->info('Name of a top-level exporter referenced by this processor')
+                    ->defaultNull()
+                ->end()
                 ->scalarNode('service_id')
                     ->info('Custom processor service ID (only for type: service)')
                     ->defaultNull()
                 ->end()
-                ->append($this->exporterNode($signalType))
+                ->scalarNode('error_handler')
+                    ->info('Name of an error_handler entry forwarded to the inner processor')
+                    ->defaultValue('default')
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    private function otlpExporterNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('otlp');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('OTLP exporter — embeds its transport configuration inline')
+            ->canBeUnset()
+            ->validate()
+                ->ifTrue(static fn (array $v) : bool => !\is_array($v['transport'] ?? null) || \count($v['transport']) === 0)
+                ->thenInvalid('OTLP exporter requires a "transport" configuration block.')
+            ->end()
+            ->children()
+                ->scalarNode('error_handler')
+                    ->info('Name of an error_handler entry forwarded to the OTLP exporter')
+                    ->defaultValue('default')
+                ->end()
+                ->append($this->transportNode())
             ->end();
 
         return $node;
@@ -582,6 +810,10 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue(512)
                     ->min(1)
                 ->end()
+                ->scalarNode('exporter')
+                    ->info('Name of a top-level exporter referenced by this processor')
+                    ->defaultNull()
+                ->end()
                 ->scalarNode('service_id')
                     ->info('Custom processor service ID (only for type: service)')
                     ->defaultNull()
@@ -590,6 +822,10 @@ final class Configuration implements ConfigurationInterface
                     ->info('Minimum severity level for severity_filtering processor (only for log processors)')
                     ->values(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
                     ->defaultValue('info')
+                ->end()
+                ->scalarNode('error_handler')
+                    ->info('Name of an error_handler entry forwarded to this processor')
+                    ->defaultValue('default')
                 ->end()
                 ->arrayNode('processors')
                     ->info('Array of processor configurations (only for type: composite)')
@@ -603,6 +839,9 @@ final class Configuration implements ConfigurationInterface
                                 ->defaultValue(512)
                                 ->min(1)
                             ->end()
+                            ->scalarNode('exporter')
+                                ->defaultNull()
+                            ->end()
                             ->scalarNode('service_id')
                                 ->defaultNull()
                             ->end()
@@ -610,14 +849,50 @@ final class Configuration implements ConfigurationInterface
                                 ->values(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
                                 ->defaultValue('info')
                             ->end()
-                            ->append($this->exporterNode($signalType))
+                            ->scalarNode('error_handler')
+                                ->info('Name of an error_handler entry forwarded to this child processor')
+                                ->defaultValue('default')
+                            ->end()
                             ->append($this->innerProcessorNode($signalType))
                         ->end()
                     ->end()
                 ->end()
-                ->append($this->exporterNode($signalType))
                 ->append($this->innerProcessorNode($signalType))
             ->end();
+
+        return $node;
+    }
+
+    private function serviceExporterNode() : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder('service');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('Aliases an existing Symfony service implementing Flow\\Telemetry\\Exporter\\Exporter')
+            ->canBeUnset()
+            ->children()
+                ->scalarNode('id')
+                    ->info('Service id of the user-provided exporter (required)')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    private function transportNode(string $name = 'transport', bool $allowFailover = true) : ArrayNodeDefinition
+    {
+        $builder = new TreeBuilder($name);
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node->info($allowFailover
+            ? 'Transport configuration (required when exporter type is "otlp")'
+            : 'Optional failover transport receiving prior batches when the primary transport fails (curl/grpc primaries only).');
+        $this->applyTransportSchema($node, allowFailover: $allowFailover);
 
         return $node;
     }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Processor;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Meter\{Metric, MetricProcessor};
 
 /**
  * Forwards metrics to multiple processors.
@@ -13,14 +14,6 @@ use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor};
  * - Send metrics to multiple backends (e.g., both Prometheus and OTLP)
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
- *
- * Example usage:
- * ```php
- * $processor = new CompositeMetricProcessor([
- *     new BatchingMetricProcessor($otlpExporter),
- *     new MemoryMetricProcessor(),
- * ]);
- * ```
  */
 final readonly class CompositeMetricProcessor implements MetricProcessor
 {
@@ -29,16 +22,8 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
      */
     public function __construct(
         private array $processors,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
-    }
-
-    public function exporter() : MetricExporter
-    {
-        if (\count($this->processors) === 0) {
-            throw new \RuntimeException('CompositeMetricProcessor has no processors');
-        }
-
-        return $this->processors[0]->exporter();
     }
 
     public function flush() : bool
@@ -46,7 +31,12 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
         $success = true;
 
         foreach ($this->processors as $processor) {
-            if (!$processor->flush()) {
+            try {
+                if (!$processor->flush()) {
+                    $success = false;
+                }
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
                 $success = false;
             }
         }
@@ -57,7 +47,11 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
     public function process(Metric $metric) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->process($metric);
+            try {
+                $processor->process($metric);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 
@@ -69,5 +63,16 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
     public function processors() : array
     {
         return $this->processors;
+    }
+
+    public function shutdown() : void
+    {
+        foreach ($this->processors as $processor) {
+            try {
+                $processor->shutdown();
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
+        }
     }
 }

@@ -31,10 +31,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -83,10 +84,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -142,10 +144,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -204,10 +207,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -255,10 +259,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -319,6 +324,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'twig' => false,
                     ],
@@ -337,6 +343,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'instrumentation' => [
                         'twig' => true,
                     ],
@@ -356,10 +363,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -418,10 +426,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [
@@ -478,10 +487,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             'config' => static function (TestKernel $kernel) : void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
                     'tracer_provider' => [
                         'processor' => [
                             'type' => 'memory',
-                            'exporter' => ['type' => 'memory'],
+                            'exporter' => 'memory',
                         ],
                     ],
                     'instrumentation' => [

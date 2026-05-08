@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Processor that stores spans in memory and exports via configured exporter.
@@ -16,13 +19,16 @@ final class MemorySpanProcessor implements SpanProcessor
      */
     private array $endedSpansByTraceId = [];
 
+    private bool $isShutdown = false;
+
     /**
      * @var array<string, array<Span>>
      */
     private array $startedSpansByTraceId = [];
 
     public function __construct(
-        private readonly SpanExporter $spanExporter,
+        private readonly Exporter $spanExporter,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -46,11 +52,6 @@ final class MemorySpanProcessor implements SpanProcessor
         return $this->endedSpansByTraceId[$traceId] ?? [];
     }
 
-    public function exporter() : SpanExporter
-    {
-        return $this->spanExporter;
-    }
-
     public function flush() : bool
     {
         $spans = $this->endedSpans();
@@ -59,14 +60,20 @@ final class MemorySpanProcessor implements SpanProcessor
             return true;
         }
 
-        return $this->spanExporter->export($spans);
+        try {
+            return $this->spanExporter->export(Signals::traces($spans));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function onEnd(Span $span) : void
     {
         $traceId = $span->context()->traceId->toHex();
 
-        if (!isset($this->endedSpansByTraceId[$traceId])) {
+        if (!array_key_exists($traceId, $this->endedSpansByTraceId)) {
             $this->endedSpansByTraceId[$traceId] = [];
         }
 
@@ -77,20 +84,34 @@ final class MemorySpanProcessor implements SpanProcessor
     {
         $traceId = $span->context()->traceId->toHex();
 
-        if (!isset($this->startedSpansByTraceId[$traceId])) {
+        if (!array_key_exists($traceId, $this->startedSpansByTraceId)) {
             $this->startedSpansByTraceId[$traceId] = [];
         }
 
         $this->startedSpansByTraceId[$traceId][] = $span;
     }
 
-    /**
-     * Reset all stored data.
-     */
     public function reset() : void
     {
         $this->startedSpansByTraceId = [];
         $this->endedSpansByTraceId = [];
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->spanExporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 
     /**

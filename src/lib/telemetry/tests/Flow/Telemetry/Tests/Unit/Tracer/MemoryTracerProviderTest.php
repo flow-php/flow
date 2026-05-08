@@ -6,7 +6,7 @@ namespace Flow\Telemetry\Tests\Unit\Tracer;
 
 use Flow\Telemetry\Context\{Context, MemoryContextStorage, TraceId};
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\VoidSpanExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
 use Flow\Telemetry\Tracer\{Tracer, TracerProvider};
@@ -81,6 +81,6 @@ final class MemoryTracerProviderTest extends TestCase
 
     private function createProcessor() : MemorySpanProcessor
     {
-        return new MemorySpanProcessor(new VoidSpanExporter());
+        return new MemorySpanProcessor(new VoidExporter());
     }
 }

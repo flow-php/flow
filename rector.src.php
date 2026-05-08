@@ -26,6 +26,8 @@ return RectorConfig::configure()
         ArrowFunctionDelegatingCallToFirstClassCallableRector::class,
         StringClassNameToClassConstantRector::class,
         __DIR__ . '/src/lib/parquet/src/Flow/Parquet/ThriftModel/*',
+        __DIR__ . '/src/bridge/telemetry/otlp/src/Opentelemetry/*',
+        __DIR__ . '/src/bridge/telemetry/otlp/src/GPBMetadata/*',
         // rector 2.4.2 hangs parsing this file; revisit after upstream fix
         __DIR__ . '/src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIIValue.php',
         // Symfony DI requires array format for setFactory(), first-class callable syntax is not supported

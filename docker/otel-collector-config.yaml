@@ -6,6 +6,13 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+  # OTLP JSON file receiver — picks up JSONL written by flow-php StreamTransport.
+  # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/otlpjsonfilereceiver
+  otlpjsonfile:
+    include:
+      - /var/otel/*.jsonl
+    start_at: end
+
   # PostgreSQL metrics receiver
   # Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/postgresqlreceiver
   postgresql:
@@ -45,6 +52,16 @@ exporters:
     endpoint: aspire:18889
     tls:
       insecure: true
+    sending_queue:
+      enabled: true
+      storage: file_storage/queue
+      num_consumers: 4
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 0
 
 processors:
   # Add service.name to PostgreSQL metrics
@@ -80,9 +97,15 @@ processors:
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
+  file_storage/queue:
+    directory: /var/lib/otelcol/queue
+    timeout: 10s
+    compaction:
+      directory: /var/lib/otelcol/queue
+      on_start: true
 
 service:
-  extensions: [health_check]
+  extensions: [health_check, file_storage/queue]
   telemetry:
     traces:
       sampler:
@@ -137,4 +160,7 @@ service:
       exporters: [debug, otlp_grpc/aspire]
     logs:
       receivers: [otlp]
+      exporters: [debug, otlp_grpc/aspire]
+    logs/file:
+      receivers: [otlpjsonfile]
       exporters: [debug, otlp_grpc/aspire]

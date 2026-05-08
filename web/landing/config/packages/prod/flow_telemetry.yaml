@@ -1,21 +1,22 @@
 flow_telemetry:
-  logger_provider:
-    processor:
-      type: severity_filtering
-      minimum_severity: warn
-      inner_processor:
-        type: batching
-        exporter:
-          type: otlp
-          otlp:
-            transport:
-              type: curl
-              endpoint: "http://localhost:4318"
-              timeout: 30
-              serializer:
-                type: json
+    exporters:
+        otlp_http_logs:
+            otlp:
+                transport:
+                    type: curl
+                    endpoint: 'http://localhost:4318'
+                    timeout_ms: 1000
+                    connect_timeout_ms: 250
+                    encoding: json
+    logger_provider:
+        processor:
+            type: severity_filtering
+            minimum_severity: warn
+            inner_processor:
+                type: batching
+                exporter: otlp_http_logs
 
-  instrumentation:
-    twig:
-      trace_blocks: false
-      trace_macros: false
+    instrumentation:
+        twig:
+            trace_blocks: false
+            trace_macros: false

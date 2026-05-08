@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Batches spans for efficient export.
@@ -13,14 +16,6 @@ use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
  * - The batch size limit is reached
  * - flush() is explicitly called
  * - the system is shutting down
- *
- * Example usage:
- * ```php
- * $processor = new BatchingSpanProcessor(
- *     exporter: $spanExporter,
- *     batchSize: 100,
- * );
- * ```
  */
 final class BatchingSpanProcessor implements SpanProcessor
 {
@@ -29,15 +24,13 @@ final class BatchingSpanProcessor implements SpanProcessor
      */
     private array $buffer = [];
 
-    public function __construct(
-        private readonly SpanExporter $exporter,
-        private readonly int $batchSize = 512,
-    ) {
-    }
+    private bool $isShutdown = false;
 
-    public function exporter() : SpanExporter
-    {
-        return $this->exporter;
+    public function __construct(
+        private readonly Exporter $exporter,
+        private readonly int $batchSize = 512,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+    ) {
     }
 
     public function flush() : bool
@@ -49,7 +42,13 @@ final class BatchingSpanProcessor implements SpanProcessor
         $spans = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export($spans);
+        try {
+            return $this->exporter->export(Signals::traces($spans));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function onEnd(Span $span) : void
@@ -63,5 +62,22 @@ final class BatchingSpanProcessor implements SpanProcessor
 
     public function onStart(Span $span) : void
     {
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->exporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

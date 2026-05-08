@@ -7,11 +7,26 @@ namespace Flow\Telemetry\Tests\Unit\Meter\Processor;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Meter\{Metric, MetricProcessor, MetricType};
 use Flow\Telemetry\Meter\Processor\CompositeMetricProcessor;
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother};
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, ResourceMother};
 use PHPUnit\Framework\TestCase;
 
 final class CompositeMetricProcessorTest extends TestCase
 {
+    public function test_flush_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(MetricProcessor::class);
+        $throwing->method('flush')->willThrowException(new \RuntimeException('flush blew up'));
+
+        $sibling = $this->createMock(MetricProcessor::class);
+        $sibling->expects(self::once())->method('flush')->willReturn(true);
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeMetricProcessor([$throwing, $sibling], $spy);
+
+        self::assertFalse($composite->flush());
+        self::assertSame(1, $spy->count());
+    }
+
     public function test_flush_returns_false_when_any_fails() : void
     {
         $processor1 = $this->createMock(MetricProcessor::class);
@@ -48,6 +63,21 @@ final class CompositeMetricProcessorTest extends TestCase
 
         $composite = new CompositeMetricProcessor([$processor1, $processor2]);
         $composite->process($this->createMetric());
+    }
+
+    public function test_process_continues_after_child_throws_and_routes_to_error_handler() : void
+    {
+        $throwing = $this->createMock(MetricProcessor::class);
+        $throwing->method('process')->willThrowException(new \RuntimeException('child blew up'));
+
+        $sibling = $this->createMock(MetricProcessor::class);
+        $sibling->expects(self::once())->method('process');
+
+        $spy = new ErrorHandlerSpy();
+        $composite = new CompositeMetricProcessor([$throwing, $sibling], $spy);
+        $composite->process($this->createMetric());
+
+        self::assertSame(1, $spy->count());
     }
 
     public function test_works_with_empty_processors_array() : void

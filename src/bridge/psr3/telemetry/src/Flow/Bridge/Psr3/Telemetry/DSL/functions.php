@@ -6,6 +6,7 @@ namespace Flow\Bridge\Psr3\Telemetry\DSL;
 
 use Flow\Bridge\Psr3\Telemetry\{LogRecordConverter, SeverityMapper, TelemetryLogger, ValueNormalizer};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\Logger\{Logger, Severity};
 
 /**
@@ -26,8 +27,9 @@ use Flow\Telemetry\Logger\{Logger, Severity};
 function psr3_telemetry_logger(
     Logger $logger,
     LogRecordConverter $converter = new LogRecordConverter(),
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ) : TelemetryLogger {
-    return new TelemetryLogger($logger, $converter);
+    return new TelemetryLogger($logger, $converter, $errorHandler);
 }
 
 /**

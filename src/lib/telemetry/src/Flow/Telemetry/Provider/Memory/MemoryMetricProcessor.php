@@ -4,34 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricProcessor, MetricType};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Meter\{Metric, MetricProcessor, MetricType};
+use Flow\Telemetry\Signal\Signals;
 
 /**
  * Processor that stores metrics in memory and exports via configured exporter.
  */
 final class MemoryMetricProcessor implements MetricProcessor
 {
+    private bool $isShutdown = false;
+
     /**
      * @var array<Metric>
      */
     private array $metrics = [];
 
     public function __construct(
-        private readonly MetricExporter $metricExporter,
+        private readonly Exporter $metricExporter,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
-    /**
-     * Get the total number of recorded metrics.
-     */
     public function countMetrics() : int
     {
         return \count($this->metrics);
-    }
-
-    public function exporter() : MetricExporter
-    {
-        return $this->metricExporter;
     }
 
     public function flush() : bool
@@ -40,12 +38,16 @@ final class MemoryMetricProcessor implements MetricProcessor
             return true;
         }
 
-        return $this->metricExporter->export($this->metrics);
+        try {
+            return $this->metricExporter->export(Signals::metrics($this->metrics));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     /**
-     * Get all recorded metrics.
-     *
      * @return array<Metric>
      */
     public function metrics() : array
@@ -54,8 +56,6 @@ final class MemoryMetricProcessor implements MetricProcessor
     }
 
     /**
-     * Get all metrics of a specific type.
-     *
      * @return array<Metric>
      */
     public function metricsOfType(MetricType $type) : array
@@ -67,8 +67,6 @@ final class MemoryMetricProcessor implements MetricProcessor
     }
 
     /**
-     * Get all metrics with a specific name.
-     *
      * @return array<Metric>
      */
     public function metricsWithName(string $name) : array
@@ -84,11 +82,25 @@ final class MemoryMetricProcessor implements MetricProcessor
         $this->metrics[] = $metric;
     }
 
-    /**
-     * Reset all stored data.
-     */
     public function reset() : void
     {
         $this->metrics = [];
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->metricExporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 }

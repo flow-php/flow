@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer\Processor;
 
-use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Tracer\{Span, SpanProcessor};
 
 /**
  * Forwards spans to multiple processors.
@@ -13,14 +14,6 @@ use Flow\Telemetry\Tracer\{Span, SpanExporter, SpanProcessor};
  * - Send spans to multiple backends (e.g., both console and OTLP)
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
- *
- * Example usage:
- * ```php
- * $processor = new CompositeSpanProcessor([
- *     new BatchingSpanProcessor($otlpExporter),
- *     new MemorySpanProcessor(),
- * ]);
- * ```
  */
 final readonly class CompositeSpanProcessor implements SpanProcessor
 {
@@ -29,16 +22,8 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
      */
     public function __construct(
         private array $processors,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
-    }
-
-    public function exporter() : SpanExporter
-    {
-        if (\count($this->processors) === 0) {
-            throw new \RuntimeException('CompositeSpanProcessor has no processors');
-        }
-
-        return $this->processors[0]->exporter();
     }
 
     public function flush() : bool
@@ -46,7 +31,12 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
         $success = true;
 
         foreach ($this->processors as $processor) {
-            if (!$processor->flush()) {
+            try {
+                if (!$processor->flush()) {
+                    $success = false;
+                }
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
                 $success = false;
             }
         }
@@ -57,14 +47,22 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
     public function onEnd(Span $span) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->onEnd($span);
+            try {
+                $processor->onEnd($span);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 
     public function onStart(Span $span) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->onStart($span);
+            try {
+                $processor->onStart($span);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 
@@ -76,5 +74,16 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
     public function processors() : array
     {
         return $this->processors;
+    }
+
+    public function shutdown() : void
+    {
+        foreach ($this->processors as $processor) {
+            try {
+                $processor->shutdown();
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
+        }
     }
 }

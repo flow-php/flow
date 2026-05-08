@@ -9,7 +9,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\{LoggerProvider, Severity};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogExporter;
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Monolog\{Level, Logger as MonologLogger};
 use PHPUnit\Framework\Attributes\{CoversClass, DataProvider};
@@ -39,7 +39,7 @@ final class TelemetryHandlerTest extends TestCase
 
     protected function setUp() : void
     {
-        $this->processor = new MemoryLogProcessor(new VoidLogExporter());
+        $this->processor = new MemoryLogProcessor(new VoidExporter());
 
         $loggerProvider = new LoggerProvider(
             $this->processor,
@@ -57,7 +57,7 @@ final class TelemetryHandlerTest extends TestCase
 
     public function test_handler_accepts_custom_converter() : void
     {
-        $processor = new MemoryLogProcessor(new VoidLogExporter());
+        $processor = new MemoryLogProcessor(new VoidExporter());
 
         $loggerProvider = new LoggerProvider(
             $processor,
@@ -245,7 +245,7 @@ final class TelemetryHandlerTest extends TestCase
 
     public function test_handler_respects_minimum_level() : void
     {
-        $processor = new MemoryLogProcessor(new VoidLogExporter());
+        $processor = new MemoryLogProcessor(new VoidExporter());
 
         $loggerProvider = new LoggerProvider(
             $processor,

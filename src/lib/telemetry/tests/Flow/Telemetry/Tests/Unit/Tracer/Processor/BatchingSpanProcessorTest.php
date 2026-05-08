@@ -5,29 +5,22 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer\Processor;
 
 use Flow\Telemetry\Context\{SpanId, TraceId};
+use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Signal\{SignalType, Signals};
+use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, ResourceMother};
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
-use Flow\Telemetry\Tracer\{Span, SpanContext, SpanExporter, SpanKind};
+use Flow\Telemetry\Tracer\{Span, SpanContext, SpanKind};
 use PHPUnit\Framework\TestCase;
 
 final class BatchingSpanProcessorTest extends TestCase
 {
-    public function test_exporter_returns_exporter() : void
-    {
-        $exporter = $this->createMock(SpanExporter::class);
-
-        $processor = new BatchingSpanProcessor($exporter, 10);
-
-        self::assertSame($exporter, $processor->exporter());
-    }
-
     public function test_exports_on_batch_size_reached() : void
     {
-        $exporter = $this->createMock(SpanExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(static fn (array $spans) => \count($spans) === 2))
+            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::TRACES && $signal->count() === 2))
             ->willReturn(true);
 
         $processor = new BatchingSpanProcessor($exporter, 2);
@@ -38,10 +31,10 @@ final class BatchingSpanProcessorTest extends TestCase
 
     public function test_exports_remaining_on_flush() : void
     {
-        $exporter = $this->createMock(SpanExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::once())
             ->method('export')
-            ->with(self::callback(static fn (array $spans) => \count($spans) === 1))
+            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::TRACES && $signal->count() === 1))
             ->willReturn(true);
 
         $processor = new BatchingSpanProcessor($exporter, 10);
@@ -54,7 +47,7 @@ final class BatchingSpanProcessorTest extends TestCase
 
     public function test_flush_returns_true_when_buffer_empty() : void
     {
-        $exporter = $this->createMock(SpanExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::never())
             ->method('export');
 
@@ -65,9 +58,23 @@ final class BatchingSpanProcessorTest extends TestCase
         self::assertTrue($result);
     }
 
+    public function test_flush_routes_exporter_throwable_to_error_handler() : void
+    {
+        $exporter = $this->createMock(Exporter::class);
+        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $spy = new ErrorHandlerSpy();
+
+        $processor = new BatchingSpanProcessor($exporter, 10, $spy);
+        $processor->onEnd($this->createSpan());
+
+        self::assertFalse($processor->flush());
+        self::assertSame(1, $spy->count());
+        self::assertSame('exporter exploded', $spy->last()?->getMessage());
+    }
+
     public function test_on_start_does_nothing() : void
     {
-        $exporter = $this->createMock(SpanExporter::class);
+        $exporter = $this->createMock(Exporter::class);
         $exporter->expects(self::never())
             ->method('export');
 

@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Logger;
 
 use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes};
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
@@ -39,6 +40,7 @@ final class Logger
         private readonly ClockInterface $clock,
         private readonly ContextStorage $contextStorage,
         private readonly LogRecordLimits $limits = new LogRecordLimits(),
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
     }
 
@@ -113,7 +115,11 @@ final class Logger
             $droppedAttributeCount,
         );
 
-        $this->processor->process($entry);
+        try {
+            $this->processor->process($entry);
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+        }
     }
 
     /**
@@ -183,7 +189,13 @@ final class Logger
      */
     public function flush() : bool
     {
-        return $this->processor->flush();
+        try {
+            return $this->processor->flush();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     /**

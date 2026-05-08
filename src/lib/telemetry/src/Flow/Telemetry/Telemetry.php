@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry;
 
-use Flow\Telemetry\Logger\{Logger, LoggerProvider};
-use Flow\Telemetry\Meter\{Meter, MeterProvider};
-use Flow\Telemetry\Tracer\{Tracer, TracerProvider};
-use Flow\Telemetry\Transport\Transport;
+use Flow\Telemetry\Logger\{LogProcessor, Logger, LoggerProvider};
+use Flow\Telemetry\Meter\{Meter, MeterProvider, MetricProcessor};
+use Flow\Telemetry\Tracer\{SpanProcessor, Tracer, TracerProvider};
 
 /**
  * Main entry point to all telemetry operations.
@@ -141,29 +140,23 @@ final class Telemetry
     {
         $flushed = $this->flush();
 
-        /** @var \SplObjectStorage<Transport, true> $transports */
-        $transports = new \SplObjectStorage();
+        /** @var \SplObjectStorage<LogProcessor|MetricProcessor|SpanProcessor, true> $processors */
+        $processors = new \SplObjectStorage();
 
         foreach ($this->tracers as $tracer) {
-            foreach ($tracer->processor()->exporter()->transports() as $transport) {
-                $transports->attach($transport);
-            }
+            $processors->attach($tracer->processor());
         }
 
         foreach ($this->meters as $meter) {
-            foreach ($meter->processor()->exporter()->transports() as $transport) {
-                $transports->attach($transport);
-            }
+            $processors->attach($meter->processor());
         }
 
         foreach ($this->loggers as $logger) {
-            foreach ($logger->processor()->exporter()->transports() as $transport) {
-                $transports->attach($transport);
-            }
+            $processors->attach($logger->processor());
         }
 
-        foreach ($transports as $transport) {
-            $transport->shutdown();
+        foreach ($processors as $processor) {
+            $processor->shutdown();
         }
 
         return $flushed;

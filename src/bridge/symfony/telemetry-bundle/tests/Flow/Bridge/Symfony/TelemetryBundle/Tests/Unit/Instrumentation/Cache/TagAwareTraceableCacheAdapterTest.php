@@ -9,7 +9,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemorySpanExporter, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
@@ -24,7 +24,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 {
     public function test_clear_creates_span_with_correct_attributes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -96,7 +96,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_clear_with_prefix_includes_prefix_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -164,7 +164,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_delete_throws_when_adapter_does_not_implement_tag_aware_cache_interface() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -229,7 +229,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_get_throws_when_adapter_does_not_implement_tag_aware_cache_interface() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -294,7 +294,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_invalidate_tags_creates_span_with_tag_count() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -364,7 +364,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_operation_records_exception_on_failure() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -441,7 +441,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_operation_sets_error_status_on_failure() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -514,7 +514,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_prune_delegates_to_adapter_when_pruneable() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements PruneableInterface, TagAwareAdapterInterface {
@@ -589,7 +589,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_prune_returns_false_when_adapter_is_not_pruneable() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {
@@ -654,7 +654,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_reset_delegates_to_adapter_when_resettable() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements ResettableInterface, TagAwareAdapterInterface {
@@ -726,7 +726,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
     public function test_reset_does_nothing_when_adapter_is_not_resettable() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $adapter = new class implements TagAwareAdapterInterface {

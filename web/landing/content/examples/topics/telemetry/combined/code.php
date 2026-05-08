@@ -2,13 +2,10 @@
 
 declare(strict_types=1);
 
-use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use function Flow\Telemetry\DSL\{
-    console_log_exporter,
-    console_metric_exporter,
-    console_span_exporter,
+    console_exporter,
     logger_provider,
     memory_context_storage,
     memory_log_processor,
@@ -25,20 +22,21 @@ require __DIR__ . '/vendor/autoload.php';
 
 $clock = clock();
 $contextStorage = memory_context_storage();
+$exporter = console_exporter(colors: false, maxLogBodyLength: 200);
 
 $telemetry = telemetry(
     resource_detector()->detect(),
     tracer_provider(
-        memory_span_processor(console_span_exporter(colors: false)),
+        memory_span_processor($exporter),
         $clock,
         $contextStorage,
     ),
     meter_provider(
-        memory_metric_processor(console_metric_exporter(colors: false)),
+        memory_metric_processor($exporter),
         $clock,
     ),
     logger_provider(
-        memory_log_processor(console_log_exporter(colors: false, maxBodyLength: 200)),
+        memory_log_processor($exporter),
         $clock,
         $contextStorage,
     ),

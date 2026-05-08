@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
 
 /**
  * Forwards log records to multiple processors.
@@ -13,14 +14,6 @@ use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
  * - Send logs to multiple backends (e.g., both console and OTLP)
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
- *
- * Example usage:
- * ```php
- * $processor = new CompositeLogProcessor([
- *     new BatchingLogProcessor($otlpExporter),
- *     new MemoryLogProcessor(),
- * ]);
- * ```
  */
 final readonly class CompositeLogProcessor implements LogProcessor
 {
@@ -29,16 +22,8 @@ final readonly class CompositeLogProcessor implements LogProcessor
      */
     public function __construct(
         private array $processors,
+        private ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
-    }
-
-    public function exporter() : LogExporter
-    {
-        if (\count($this->processors) === 0) {
-            throw new \RuntimeException('CompositeLogProcessor has no processors');
-        }
-
-        return $this->processors[0]->exporter();
     }
 
     public function flush() : bool
@@ -46,7 +31,12 @@ final readonly class CompositeLogProcessor implements LogProcessor
         $success = true;
 
         foreach ($this->processors as $processor) {
-            if (!$processor->flush()) {
+            try {
+                if (!$processor->flush()) {
+                    $success = false;
+                }
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
                 $success = false;
             }
         }
@@ -57,7 +47,11 @@ final readonly class CompositeLogProcessor implements LogProcessor
     public function process(LogEntry $entry) : void
     {
         foreach ($this->processors as $processor) {
-            $processor->process($entry);
+            try {
+                $processor->process($entry);
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
         }
     }
 
@@ -69,5 +63,16 @@ final readonly class CompositeLogProcessor implements LogProcessor
     public function processors() : array
     {
         return $this->processors;
+    }
+
+    public function shutdown() : void
+    {
+        foreach ($this->processors as $processor) {
+            try {
+                $processor->shutdown();
+            } catch (\Throwable $e) {
+                $this->errorHandler->handle($e);
+            }
+        }
     }
 }

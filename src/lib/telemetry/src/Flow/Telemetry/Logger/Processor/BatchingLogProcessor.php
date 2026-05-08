@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
+use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
+use Flow\Telemetry\Signal\Signals;
 
 /**
  * Batches log records for efficient export.
@@ -13,14 +16,6 @@ use Flow\Telemetry\Logger\{LogEntry, LogExporter, LogProcessor};
  * - The batch size limit is reached
  * - flush() is explicitly called
  * - the system is shutting down
- *
- * Example usage:
- * ```php
- * $processor = new BatchingLogProcessor(
- *     exporter: $logExporter,
- *     batchSize: 100,
- * );
- * ```
  */
 final class BatchingLogProcessor implements LogProcessor
 {
@@ -29,15 +24,13 @@ final class BatchingLogProcessor implements LogProcessor
      */
     private array $buffer = [];
 
-    public function __construct(
-        private readonly LogExporter $exporter,
-        private readonly int $batchSize = 512,
-    ) {
-    }
+    private bool $isShutdown = false;
 
-    public function exporter() : LogExporter
-    {
-        return $this->exporter;
+    public function __construct(
+        private readonly Exporter $exporter,
+        private readonly int $batchSize = 512,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+    ) {
     }
 
     public function flush() : bool
@@ -49,7 +42,13 @@ final class BatchingLogProcessor implements LogProcessor
         $entries = $this->buffer;
         $this->buffer = [];
 
-        return $this->exporter->export($entries);
+        try {
+            return $this->exporter->export(Signals::logs($entries));
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
+
+            return false;
+        }
     }
 
     public function process(LogEntry $entry) : void
@@ -58,6 +57,23 @@ final class BatchingLogProcessor implements LogProcessor
 
         if (\count($this->buffer) >= $this->batchSize) {
             $this->flush();
+        }
+    }
+
+    public function shutdown() : void
+    {
+        if ($this->isShutdown) {
+            return;
+        }
+
+        $this->isShutdown = true;
+
+        $this->flush();
+
+        try {
+            $this->exporter->shutdown();
+        } catch (\Throwable $e) {
+            $this->errorHandler->handle($e);
         }
     }
 }

@@ -12,8 +12,9 @@ final readonly class CurlTransportConfig
     public function __construct(
         public string $endpoint,
         public array $headers,
-        public int $timeout,
-        public int $connectTimeout,
+        public int $timeoutMs,
+        public int $connectTimeoutMs,
+        public int $shutdownTimeoutMs,
         public bool $compression,
         public bool $followRedirects,
         public int $maxRedirects,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use function Flow\PostgreSql\DSL\{pgsql_connection_params, postgresql_telemetry_config, postgresql_telemetry_options, traceable_postgresql_client};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_exporter};
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryAttributes, PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions};
 use Flow\PostgreSql\Explain\Plan\{Cost, Plan, PlanNode, PlanNodeType};
@@ -21,9 +21,9 @@ final class TraceableClientTelemetryTest extends TestCase
 {
     public function test_all_telemetry_signals_work_together() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
-        $metricProcessor = memory_metric_processor(void_metric_exporter());
-        $logProcessor = memory_log_processor(void_log_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
+        $metricProcessor = memory_metric_processor(void_exporter());
+        $logProcessor = memory_log_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, $metricProcessor, $logProcessor, postgresql_telemetry_options(
             traceQueries: true,
             traceTransactions: true,
@@ -63,7 +63,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_begin_transaction_creates_span_when_tracing_enabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceTransactions: true,
         ));
@@ -92,7 +92,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_commit_completes_transaction_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceTransactions: true,
         ));
@@ -121,7 +121,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_duration_metric_is_recorded_when_metrics_enabled() : void
     {
-        $metricProcessor = memory_metric_processor(void_metric_exporter());
+        $metricProcessor = memory_metric_processor(void_exporter());
         $config = $this->createConfig(metricProcessor: $metricProcessor, options: postgresql_telemetry_options(
             traceQueries: false,
             collectMetrics: true,
@@ -143,7 +143,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_explain_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -169,7 +169,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_all_into_creates_span_with_correct_row_count() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -188,7 +188,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_into_creates_span_with_correct_row_count() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -208,7 +208,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_one_into_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -228,7 +228,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_scalar_bool_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -245,7 +245,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_scalar_float_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -262,7 +262,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_scalar_int_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -279,7 +279,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_fetch_scalar_string_creates_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
         ));
@@ -296,8 +296,8 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_metrics_are_not_recorded_when_disabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
-        $metricProcessor = memory_metric_processor(void_metric_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
+        $metricProcessor = memory_metric_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, $metricProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
             collectMetrics: false,
@@ -316,7 +316,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_nested_transaction_creates_savepoint_span() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceTransactions: true,
         ));
@@ -348,7 +348,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_queries_are_logged_when_logging_enabled() : void
     {
-        $logProcessor = memory_log_processor(void_log_exporter());
+        $logProcessor = memory_log_processor(void_exporter());
         $config = $this->createConfig(logProcessor: $logProcessor, options: postgresql_telemetry_options(
             logQueries: true,
         ));
@@ -368,7 +368,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_queries_are_not_logged_when_disabled() : void
     {
-        $logProcessor = memory_log_processor(void_log_exporter());
+        $logProcessor = memory_log_processor(void_exporter());
         $config = $this->createConfig(logProcessor: $logProcessor, options: postgresql_telemetry_options(
             logQueries: false,
         ));
@@ -384,7 +384,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_rollback_completes_all_nested_transaction_spans() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceTransactions: true,
         ));
@@ -412,8 +412,8 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_row_count_metric_is_recorded_for_fetch_operations() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
-        $metricProcessor = memory_metric_processor(void_metric_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
+        $metricProcessor = memory_metric_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, $metricProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
             collectMetrics: true,
@@ -439,7 +439,7 @@ final class TraceableClientTelemetryTest extends TestCase
 
     public function test_transaction_callback_creates_parent_span_with_query_spans() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(
             traceQueries: true,
             traceTransactions: true,
@@ -491,9 +491,9 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $tel = telemetry(
             resource(),
-            tracer_provider($spanProcessor ?? memory_span_processor(void_span_exporter()), $clock, $contextStorage),
-            meter_provider($metricProcessor ?? memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider($logProcessor ?? memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            tracer_provider($spanProcessor ?? memory_span_processor(void_exporter()), $clock, $contextStorage),
+            meter_provider($metricProcessor ?? memory_metric_processor(void_exporter()), $clock),
+            logger_provider($logProcessor ?? memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
 
         return postgresql_telemetry_config($tel, $clock, $options ?? postgresql_telemetry_options());

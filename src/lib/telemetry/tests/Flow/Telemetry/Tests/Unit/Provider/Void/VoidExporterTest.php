@@ -5,28 +5,44 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Provider\Void;
 
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\Logger\LogExporter;
-use Flow\Telemetry\Meter\{Metric, MetricExporter, MetricType};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, ResourceMother, SpanMother};
-use Flow\Telemetry\Tracer\SpanExporter;
+use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Logger\Severity;
+use Flow\Telemetry\Meter\{Metric, MetricType};
+use Flow\Telemetry\Provider\Void\VoidExporter;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, LogEntryMother, ResourceMother, SpanMother};
 use PHPUnit\Framework\TestCase;
 
 final class VoidExporterTest extends TestCase
 {
-    public function test_export_logs_returns_true() : void
+    public function test_export_empty_logs_returns_true() : void
     {
-        self::assertTrue((new VoidLogExporter())->export([]));
+        self::assertTrue((new VoidExporter())->export(Signals::logs([])));
     }
 
-    public function test_export_logs_with_empty_returns_true() : void
+    public function test_export_empty_metrics_returns_true() : void
     {
-        self::assertTrue((new VoidLogExporter())->export([]));
+        self::assertTrue((new VoidExporter())->export(Signals::metrics([])));
     }
 
-    public function test_export_metrics_returns_true() : void
+    public function test_export_empty_traces_returns_true() : void
     {
-        $metrics = [
+        self::assertTrue((new VoidExporter())->export(Signals::traces([])));
+    }
+
+    public function test_export_logs_batch_returns_true() : void
+    {
+        $batch = Signals::logs([
+            LogEntryMother::create('Log 1', Severity::INFO),
+            LogEntryMother::create('Log 2', Severity::WARN),
+        ]);
+
+        self::assertTrue((new VoidExporter())->export($batch));
+    }
+
+    public function test_export_metrics_batch_returns_true() : void
+    {
+        $batch = Signals::metrics([
             new Metric(
                 name: 'test.metric',
                 type: MetricType::COUNTER,
@@ -36,41 +52,32 @@ final class VoidExporterTest extends TestCase
                 resource: ResourceMother::default(),
                 scope: InstrumentationScopeMother::default(),
             ),
-        ];
+        ]);
 
-        self::assertTrue((new VoidMetricExporter())->export($metrics));
+        self::assertTrue((new VoidExporter())->export($batch));
     }
 
-    public function test_export_metrics_with_empty_returns_true() : void
+    public function test_export_traces_batch_returns_true() : void
     {
-        self::assertTrue((new VoidMetricExporter())->export([]));
-    }
-
-    public function test_export_spans_returns_true() : void
-    {
-        self::assertTrue((new VoidSpanExporter())->export([
+        $batch = Signals::traces([
             SpanMother::withName('span-1'),
             SpanMother::withName('span-2'),
-        ]));
+        ]);
+
+        self::assertTrue((new VoidExporter())->export($batch));
     }
 
-    public function test_export_spans_with_empty_returns_true() : void
+    public function test_implements_exporter() : void
     {
-        self::assertTrue((new VoidSpanExporter())->export([]));
+        self::assertInstanceOf(Exporter::class, new VoidExporter());
     }
 
-    public function test_void_log_exporter_implements_log_exporter() : void
+    public function test_shutdown_is_noop() : void
     {
-        self::assertInstanceOf(LogExporter::class, new VoidLogExporter());
-    }
+        $exporter = new VoidExporter();
 
-    public function test_void_metric_exporter_implements_metric_exporter() : void
-    {
-        self::assertInstanceOf(MetricExporter::class, new VoidMetricExporter());
-    }
+        $exporter->shutdown();
 
-    public function test_void_span_exporter_implements_span_exporter() : void
-    {
-        self::assertInstanceOf(SpanExporter::class, new VoidSpanExporter());
+        $this->addToAssertionCount(1);
     }
 }

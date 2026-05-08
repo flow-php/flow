@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Unit\Subscriber;
 
-use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
+use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
 
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
 use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestPreparationStartedSubscriber;
@@ -15,7 +15,7 @@ final class TestPreparationStartedSubscriberTest extends TestCase
 {
     public function test_creates_span_when_emit_test_spans_is_enabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
         $spanStack = new SpanStack();
         $config = ConfigurationMother::default();
@@ -29,7 +29,7 @@ final class TestPreparationStartedSubscriberTest extends TestCase
 
     public function test_does_not_create_span_when_emit_test_spans_is_disabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
         $spanStack = new SpanStack();
         $config = ConfigurationMother::withDisabledTestSpans();

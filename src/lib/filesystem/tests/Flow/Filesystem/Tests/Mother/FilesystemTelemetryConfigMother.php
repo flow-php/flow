@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Mother;
 
 use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options, native_local_filesystem};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_log_exporter, void_metric_exporter, void_span_exporter};
+use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_exporter};
 use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
@@ -24,8 +24,8 @@ final class FilesystemTelemetryConfigMother
         $tel = telemetry(
             resource(),
             tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            meter_provider(memory_metric_processor(void_exporter()), $clock),
+            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
 
         return filesystem_telemetry_config($tel, $clock, $options ?? filesystem_telemetry_options());
@@ -37,9 +37,9 @@ final class FilesystemTelemetryConfigMother
 
         return telemetry(
             resource(),
-            tracer_provider(memory_span_processor(void_span_exporter()), $clock, $contextStorage),
-            meter_provider(memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider(memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            tracer_provider(memory_span_processor(void_exporter()), $clock, $contextStorage),
+            meter_provider(memory_metric_processor(void_exporter()), $clock),
+            logger_provider(memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
     }
 
@@ -83,8 +83,8 @@ final class FilesystemTelemetryConfigMother
         $tel = telemetry(
             resource(),
             tracer_provider($spanProcessor, $clock, $contextStorage),
-            meter_provider($metricProcessor ?? memory_metric_processor(void_metric_exporter()), $clock),
-            logger_provider($logProcessor ?? memory_log_processor(void_log_exporter()), $clock, $contextStorage),
+            meter_provider($metricProcessor ?? memory_metric_processor(void_exporter()), $clock),
+            logger_provider($logProcessor ?? memory_log_processor(void_exporter()), $clock, $contextStorage),
         );
 
         return [filesystem_telemetry_config($tel, $clock, $options ?? filesystem_telemetry_options()), $tel];

@@ -9,7 +9,7 @@ use Flow\Telemetry\Logger\{Logger, LoggerProvider};
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogExporter, VoidMetricExporter, VoidSpanExporter};
+use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\{SpanProcessor, TracerProvider};
@@ -31,7 +31,6 @@ final class TelemetryTest extends TestCase
 
         $failingSpanProcessor = $this->createMock(SpanProcessor::class);
         $failingSpanProcessor->method('flush')->willReturn(false);
-        $failingSpanProcessor->method('exporter')->willReturn(new VoidSpanExporter());
 
         $telemetry = new Telemetry(
             $this->resource,
@@ -160,16 +159,16 @@ final class TelemetryTest extends TestCase
 
     private function createLogProcessor() : MemoryLogProcessor
     {
-        return new MemoryLogProcessor(new VoidLogExporter());
+        return new MemoryLogProcessor(new VoidExporter());
     }
 
     private function createMetricProcessor() : MemoryMetricProcessor
     {
-        return new MemoryMetricProcessor(new VoidMetricExporter());
+        return new MemoryMetricProcessor(new VoidExporter());
     }
 
     private function createSpanProcessor() : MemorySpanProcessor
     {
-        return new MemorySpanProcessor(new VoidSpanExporter());
+        return new MemorySpanProcessor(new VoidExporter());
     }
 }

@@ -7,7 +7,6 @@ namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 use Flow\Telemetry\{InstrumentationScope, Resource};
 use Flow\Telemetry\Logger\{LogEntry, Severity};
 use Flow\Telemetry\Meter\{Exemplar, Metric, MetricType};
-use Flow\Telemetry\Serializer\Serializer;
 use Flow\Telemetry\Tracer\{Span, SpanEvent, SpanKind, SpanLink, SpanStatusCode};
 use Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest;
 use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
@@ -22,14 +21,11 @@ use Opentelemetry\Proto\Trace\V1\Span\{Event, Link, SpanKind as ProtoSpanKind};
 use Opentelemetry\Proto\Trace\V1\Status\StatusCode;
 
 /**
- * Protobuf serializer for OTLP wire format.
- *
- * Converts Flow Telemetry objects to OTLP Protobuf binary format.
- * Requires the grpc extension and open-telemetry/gen-otlp-protobuf package.
+ * Serializes Flow Telemetry objects to OTLP Protobuf wire format.
  *
  * @see https://opentelemetry.io/docs/specs/otlp/
  */
-final class ProtobufSerializer implements GrpcSerializer, Serializer
+final class ProtobufSerializer implements GrpcRequestFactory
 {
     public function __construct()
     {
@@ -37,13 +33,6 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
             throw new \RuntimeException(
                 'The google/protobuf package is required for ProtobufSerializer. '
                 . 'Install it via: composer require google/protobuf'
-            );
-        }
-
-        if (!\class_exists('Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceRequest')) {
-            throw new \RuntimeException(
-                'The open-telemetry/gen-otlp-protobuf package is required for ProtobufSerializer. '
-                . 'Install it via: composer require open-telemetry/gen-otlp-protobuf'
             );
         }
     }
@@ -74,15 +63,15 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
                     $logRecords[] = $this->createLogRecord($entry);
                 }
 
-                $scopeLogs->setLogRecords($logRecords); // @phpstan-ignore argument.type
+                $scopeLogs->setLogRecords($logRecords);
                 $scopeLogsList[] = $scopeLogs;
             }
 
-            $resourceLogs->setScopeLogs($scopeLogsList); // @phpstan-ignore argument.type
+            $resourceLogs->setScopeLogs($scopeLogsList);
             $resourceLogsList[] = $resourceLogs;
         }
 
-        $request->setResourceLogs($resourceLogsList); // @phpstan-ignore argument.type
+        $request->setResourceLogs($resourceLogsList);
 
         return $request;
     }
@@ -113,15 +102,15 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
                     $protoMetrics[] = $this->createProtoMetric($metric);
                 }
 
-                $scopeMetrics->setMetrics($protoMetrics); // @phpstan-ignore argument.type
+                $scopeMetrics->setMetrics($protoMetrics);
                 $scopeMetricsList[] = $scopeMetrics;
             }
 
-            $resourceMetrics->setScopeMetrics($scopeMetricsList); // @phpstan-ignore argument.type
+            $resourceMetrics->setScopeMetrics($scopeMetricsList);
             $resourceMetricsList[] = $resourceMetrics;
         }
 
-        $request->setResourceMetrics($resourceMetricsList); // @phpstan-ignore argument.type
+        $request->setResourceMetrics($resourceMetricsList);
 
         return $request;
     }
@@ -152,15 +141,15 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
                     $protoSpans[] = $this->createProtoSpan($span);
                 }
 
-                $scopeSpans->setSpans($protoSpans); // @phpstan-ignore argument.type
+                $scopeSpans->setSpans($protoSpans);
                 $scopeSpansList[] = $scopeSpans;
             }
 
-            $resourceSpans->setScopeSpans($scopeSpansList); // @phpstan-ignore argument.type
+            $resourceSpans->setScopeSpans($scopeSpansList);
             $resourceSpansList[] = $resourceSpans;
         }
 
-        $request->setResourceSpans($resourceSpansList); // @phpstan-ignore argument.type
+        $request->setResourceSpans($resourceSpansList);
 
         return $request;
     }
@@ -212,7 +201,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
                 $values[] = $this->createAnyValue($v);
             }
 
-            $arrayValue->setValues($values); // @phpstan-ignore argument.type
+            $arrayValue->setValues($values);
             $anyValue->setArrayValue($arrayValue);
         }
 
@@ -253,11 +242,11 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
             \ARRAY_FILTER_USE_KEY,
         );
 
-        $dataPoint->setAttributes($this->createKeyValues($userAttributes)); // @phpstan-ignore argument.type
+        $dataPoint->setAttributes($this->createKeyValues($userAttributes));
         $dataPoint->setCount($count);
         $dataPoint->setSum(\is_int($sum) ? (float) $sum : $sum);
-        $dataPoint->setBucketCounts($bucketCounts); // @phpstan-ignore argument.type
-        $dataPoint->setExplicitBounds(\array_map(static fn (int|float $b) : float => (float) $b, $explicitBounds)); // @phpstan-ignore argument.type
+        $dataPoint->setBucketCounts($bucketCounts);
+        $dataPoint->setExplicitBounds(\array_map(static fn (int|float $b) : float => (float) $b, $explicitBounds));
 
         if ($min !== null) {
             $dataPoint->setMin(\is_int($min) ? (float) $min : $min);
@@ -274,7 +263,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
                 $exemplars[] = $this->createProtoExemplar($exemplar);
             }
 
-            $dataPoint->setExemplars($exemplars); // @phpstan-ignore argument.type
+            $dataPoint->setExemplars($exemplars);
         }
 
         return $dataPoint;
@@ -314,7 +303,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $body->setStringValue($entry->record->body);
         $logRecord->setBody($body);
 
-        $logRecord->setAttributes($this->createKeyValues($entry->record->attributes->normalize())); // @phpstan-ignore argument.type
+        $logRecord->setAttributes($this->createKeyValues($entry->record->attributes->normalize()));
 
         if ($entry->spanContext !== null && $entry->spanContext->isValid()) {
             $logRecord->setTraceId(\hex2bin($entry->spanContext->traceId->toHex()) ?: '');
@@ -335,7 +324,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         $dataPoint->setStartTimeUnixNano($timestamp);
         $dataPoint->setTimeUnixNano($timestamp);
-        $dataPoint->setAttributes($this->createKeyValues($metric->attributes->normalize())); // @phpstan-ignore argument.type
+        $dataPoint->setAttributes($this->createKeyValues($metric->attributes->normalize()));
 
         if (\is_int($metric->value)) {
             $dataPoint->setAsInt($metric->value);
@@ -350,7 +339,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
                 $exemplars[] = $this->createProtoExemplar($exemplar);
             }
 
-            $dataPoint->setExemplars($exemplars); // @phpstan-ignore argument.type
+            $dataPoint->setExemplars($exemplars);
         }
 
         return $dataPoint;
@@ -369,7 +358,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
             $protoExemplar->setSpanId(\hex2bin($exemplar->spanId->toHex()) ?: '');
         }
 
-        $protoExemplar->setFilteredAttributes($this->createKeyValues($exemplar->filteredAttributes)); // @phpstan-ignore argument.type
+        $protoExemplar->setFilteredAttributes($this->createKeyValues($exemplar->filteredAttributes));
 
         if (\is_int($exemplar->value)) {
             $protoExemplar->setAsInt($exemplar->value);
@@ -404,7 +393,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
     private function createProtoResource(Resource $resource) : ProtoResource
     {
         $protoResource = new ProtoResource();
-        $protoResource->setAttributes($this->createKeyValues($resource->all())); // @phpstan-ignore argument.type
+        $protoResource->setAttributes($this->createKeyValues($resource->all()));
 
         return $protoResource;
     }
@@ -419,7 +408,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         }
 
         if ($scope->attributes->count() > 0) {
-            $protoScope->setAttributes($this->createKeyValues($scope->attributes->normalize())); // @phpstan-ignore argument.type
+            $protoScope->setAttributes($this->createKeyValues($scope->attributes->normalize()));
         }
 
         return $protoScope;
@@ -435,16 +424,14 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $protoSpan->setName($span->name());
         $protoSpan->setKind($this->mapSpanKind($span->kind()));
         $protoSpan->setStartTimeUnixNano($this->toNanoseconds($span->startTime()));
-        $protoSpan->setAttributes($this->createKeyValues($span->attributes())); // @phpstan-ignore argument.type
-
+        $protoSpan->setAttributes($this->createKeyValues($span->attributes()));
         $events = [];
 
         foreach ($span->events() as $event) {
             $events[] = $this->createSpanEvent($event);
         }
 
-        $protoSpan->setEvents($events); // @phpstan-ignore argument.type
-
+        $protoSpan->setEvents($events);
         $links = [];
 
         foreach ($span->links() as $link) {
@@ -455,8 +442,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
             }
         }
 
-        $protoSpan->setLinks($links); // @phpstan-ignore argument.type
-
+        $protoSpan->setLinks($links);
         $protoSpan->setStatus($this->createSpanStatus($span));
 
         if ($context->parentSpanId !== null) {
@@ -481,7 +467,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $protoEvent = new Event();
         $protoEvent->setName($event->name());
         $protoEvent->setTimeUnixNano($this->toNanoseconds($event->timestamp()));
-        $protoEvent->setAttributes($this->createKeyValues($event->attributes())); // @phpstan-ignore argument.type
+        $protoEvent->setAttributes($this->createKeyValues($event->attributes()));
 
         return $protoEvent;
     }
@@ -495,7 +481,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $protoLink = new Link();
         $protoLink->setTraceId(\hex2bin($link->context->traceId->toHex()) ?: '');
         $protoLink->setSpanId(\hex2bin($link->context->spanId->toHex()) ?: '');
-        $protoLink->setAttributes($this->createKeyValues($link->attributes->normalize())); // @phpstan-ignore argument.type
+        $protoLink->setAttributes($this->createKeyValues($link->attributes->normalize()));
 
         return $protoLink;
     }
@@ -537,14 +523,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         foreach ($entries as $entry) {
             $key = $this->resourceKey($entry->resource);
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'resource' => $entry->resource,
-                    'entries' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'resource' => $entry->resource,
+                'entries' => [],
+            ];
             $grouped[$key]['entries'][] = $entry;
         }
 
@@ -565,14 +547,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         foreach ($entries as $entry) {
             $scope = $entry->scope;
             $key = $scope->name . '@' . $scope->version;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'scope' => $scope,
-                    'entries' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'scope' => $scope,
+                'entries' => [],
+            ];
             $grouped[$key]['entries'][] = $entry;
         }
 
@@ -592,14 +570,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         foreach ($metrics as $metric) {
             $key = $this->resourceKey($metric->resource);
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'resource' => $metric->resource,
-                    'metrics' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'resource' => $metric->resource,
+                'metrics' => [],
+            ];
             $grouped[$key]['metrics'][] = $metric;
         }
 
@@ -620,14 +594,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         foreach ($metrics as $metric) {
             $scope = $metric->scope;
             $key = $scope->name . '@' . $scope->version;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'scope' => $scope,
-                    'metrics' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'scope' => $scope,
+                'metrics' => [],
+            ];
             $grouped[$key]['metrics'][] = $metric;
         }
 
@@ -647,14 +617,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
 
         foreach ($spans as $span) {
             $key = $this->resourceKey($span->resource());
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'resource' => $span->resource(),
-                    'spans' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'resource' => $span->resource(),
+                'spans' => [],
+            ];
             $grouped[$key]['spans'][] = $span;
         }
 
@@ -675,14 +641,10 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         foreach ($spans as $span) {
             $scope = $span->scope();
             $key = $scope->name . '@' . $scope->version;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'scope' => $scope,
-                    'spans' => [],
-                ];
-            }
-
+            $grouped[$key] ??= [
+                'scope' => $scope,
+                'spans' => [],
+            ];
             $grouped[$key]['spans'][] = $span;
         }
 
@@ -736,8 +698,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $sum->setAggregationTemporality($this->mapTemporality($metric));
 
         $dataPoint = $this->createNumberDataPoint($metric);
-        $sum->setDataPoints([$dataPoint]); // @phpstan-ignore argument.type
-
+        $sum->setDataPoints([$dataPoint]);
         $protoMetric->setSum($sum);
 
         return $protoMetric;
@@ -748,8 +709,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $gauge = new Gauge();
 
         $dataPoint = $this->createNumberDataPoint($metric);
-        $gauge->setDataPoints([$dataPoint]); // @phpstan-ignore argument.type
-
+        $gauge->setDataPoints([$dataPoint]);
         $protoMetric->setGauge($gauge);
 
         return $protoMetric;
@@ -761,8 +721,7 @@ final class ProtobufSerializer implements GrpcSerializer, Serializer
         $histogram->setAggregationTemporality($this->mapTemporality($metric));
 
         $dataPoint = $this->createHistogramDataPoint($metric);
-        $histogram->setDataPoints([$dataPoint]); // @phpstan-ignore argument.type
-
+        $histogram->setDataPoints([$dataPoint]);
         $protoMetric->setHistogram($histogram);
 
         return $protoMetric;

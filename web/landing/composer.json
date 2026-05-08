@@ -64,6 +64,11 @@
             "type": "path",
             "url": "../../src/adapter/etl-adapter-json",
             "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../src/bridge/psr3/telemetry",
+            "options": { "symlink": true }
         }
     ],
     "require": {

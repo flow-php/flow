@@ -26,7 +26,7 @@ use Flow\Clock\SystemClock;
 use function Flow\ETL\DSL\{config_builder, df, from_array, telemetry_options, to_output};
 use function Flow\Telemetry\DSL\{
     batching_log_processor, batching_metric_processor, batching_span_processor,
-    console_log_exporter, console_metric_exporter, console_span_exporter,
+    console_exporter, console_exporter, console_exporter,
     logger_provider, memory_context_storage, meter_provider, resource, telemetry, tracer_provider
 };
 
@@ -35,9 +35,9 @@ $contextStorage = memory_context_storage();
 
 $telemetry = telemetry(
     resource(['service.name' => 'my-etl-pipeline']),
-    tracer_provider(batching_span_processor(console_span_exporter()), $clock, $contextStorage),
-    meter_provider(batching_metric_processor(console_metric_exporter()), $clock),
-    logger_provider(batching_log_processor(console_log_exporter()), $clock, $contextStorage),
+    tracer_provider(batching_span_processor(console_exporter()), $clock, $contextStorage),
+    meter_provider(batching_metric_processor(console_exporter()), $clock),
+    logger_provider(batching_log_processor(console_exporter()), $clock, $contextStorage),
 );
 $telemetry->registerShutdownFunction();
 
@@ -113,17 +113,17 @@ Console exporters output telemetry data directly to stdout with ASCII table form
 
 ```php
 use function Flow\Telemetry\DSL\{
-    console_span_exporter, console_metric_exporter, console_log_exporter
+    console_exporter, console_exporter, console_exporter
 };
 
 // Spans are displayed as tables with trace IDs, durations, and attributes
-$spanExporter = console_span_exporter(colors: true);
+$spanExporter = console_exporter(colors: true);
 
 // Metrics show counters and throughput values
-$metricExporter = console_metric_exporter(colors: true);
+$metricExporter = console_exporter(colors: true);
 
 // Logs are formatted with severity-based coloring
-$logExporter = console_log_exporter(colors: true, maxBodyLength: 100);
+$logExporter = console_exporter(colors: true, maxBodyLength: 100);
 ```
 
 ### OTLP Export (Production)
@@ -139,7 +139,7 @@ use function Flow\Telemetry\DSL\{
 };
 use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport, otlp_json_serializer,
-    otlp_log_exporter, otlp_metric_exporter, otlp_span_exporter
+    otlp_exporter, otlp_exporter, otlp_exporter
 };
 
 $clock = new SystemClock(new DateTimeZone('UTC'));
@@ -154,31 +154,14 @@ $telemetry = telemetry(
         'service.version' => '1.0.0',
         'service.namespace' => 'my-company',
     ]),
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport)), $clock, $contextStorage),
-    meter_provider(batching_metric_processor(otlp_metric_exporter($transport)), $clock),
-    logger_provider(batching_log_processor(otlp_log_exporter($transport)), $clock, $contextStorage),
+    tracer_provider(batching_span_processor(otlp_exporter($transport)), $clock, $contextStorage),
+    meter_provider(batching_metric_processor(otlp_exporter($transport)), $clock),
+    logger_provider(batching_log_processor(otlp_exporter($transport)), $clock, $contextStorage),
 );
 $telemetry->registerShutdownFunction();
 ```
 
 ### Transport Options
-
-#### HTTP Transport (PSR-18)
-
-Use with any PSR-18 compatible HTTP client:
-
-```php
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_http_transport, otlp_json_serializer};
-
-$transport = otlp_http_transport(
-    client: $psr18Client,
-    requestFactory: $psr17Factory,
-    streamFactory: $psr17Factory,
-    endpoint: 'http://localhost:4318',
-    serializer: otlp_json_serializer(),
-    headers: ['Authorization' => 'Bearer token'],
-);
-```
 
 #### Curl Transport (Async)
 
@@ -200,15 +183,13 @@ $transport = otlp_curl_transport(
 
 #### gRPC Transport
 
-For gRPC endpoints (requires ext-grpc):
+For gRPC endpoints (requires ext-grpc). OTLP/gRPC mandates Protobuf, so the transport builds the request factory
+internally — no serializer parameter.
 
 ```php
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_grpc_transport, otlp_protobuf_serializer};
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
 
-$transport = otlp_grpc_transport(
-    endpoint: 'localhost:4317',
-    serializer: otlp_protobuf_serializer(),
-);
+$transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 ```
 
 ## Collected Data
@@ -323,24 +304,23 @@ pass_through_log_processor($exporter)
 
 | Function | Description |
 |----------|-------------|
-| `console_span_exporter()` | Export spans to console |
-| `console_metric_exporter()` | Export metrics to console |
-| `console_log_exporter()` | Export logs to console |
+| `console_exporter()` | Export spans to console |
+| `console_exporter()` | Export metrics to console |
+| `console_exporter()` | Export logs to console |
 
 ### Exporters (OTLP)
 
 | Function | Description |
 |----------|-------------|
-| `otlp_span_exporter()` | Export spans via OTLP |
-| `otlp_metric_exporter()` | Export metrics via OTLP |
-| `otlp_log_exporter()` | Export logs via OTLP |
+| `otlp_exporter()` | Export spans via OTLP |
+| `otlp_exporter()` | Export metrics via OTLP |
+| `otlp_exporter()` | Export logs via OTLP |
 
 ### Transport (OTLP)
 
 | Function | Description |
 |----------|-------------|
 | `otlp_curl_transport()` | Async curl transport |
-| `otlp_http_transport()` | PSR-18 HTTP transport |
 | `otlp_grpc_transport()` | gRPC transport |
 | `otlp_json_serializer()` | JSON serialization |
 | `otlp_protobuf_serializer()` | Protobuf serialization |
@@ -349,9 +329,9 @@ pass_through_log_processor($exporter)
 
 | Function | Description |
 |----------|-------------|
-| `memory_span_exporter()` | Store spans in memory |
-| `memory_metric_exporter()` | Store metrics in memory |
-| `memory_log_exporter()` | Store logs in memory |
+| `memory_exporter()` | Store spans in memory |
+| `memory_exporter()` | Store metrics in memory |
+| `memory_exporter()` | Store logs in memory |
 | `void_span_processor()` | No-op span processor |
 | `void_metric_processor()` | No-op metric processor |
 | `void_log_processor()` | No-op log processor |

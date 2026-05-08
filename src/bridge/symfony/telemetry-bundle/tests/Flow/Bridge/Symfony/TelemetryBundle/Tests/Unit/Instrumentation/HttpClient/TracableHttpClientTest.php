@@ -9,7 +9,7 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemorySpanExporter, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
 use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
 use Flow\Telemetry\{Resource, Telemetry};
 use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
@@ -22,7 +22,7 @@ final class TracableHttpClientTest extends TestCase
 {
     public function test_request_defaults_host_to_unknown_when_missing() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -37,7 +37,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_defaults_scheme_to_http_when_missing() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -52,7 +52,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_extracts_host_from_url() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -67,7 +67,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_extracts_scheme_from_url() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = new class implements HttpClientInterface {
@@ -131,7 +131,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_includes_client_name_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -146,7 +146,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_includes_http_status_code_attribute() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -161,7 +161,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_includes_method_and_url_attributes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -177,7 +177,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_records_exception_on_failure() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = new class implements HttpClientInterface {
@@ -226,7 +226,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_sets_error_status_for_4xx_codes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(404);
@@ -245,7 +245,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_sets_error_status_for_5xx_codes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(500);
@@ -264,7 +264,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_sets_ok_status_for_2xx_codes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(201);
@@ -282,7 +282,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_sets_ok_status_for_3xx_codes() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(302);
@@ -300,7 +300,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_request_span_name_includes_method_and_host() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -315,7 +315,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_span_kind_is_client() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);
@@ -330,7 +330,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_stream_delegates_to_inner_client() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockResponse = $this->createMock(ResponseInterface::class);
@@ -399,7 +399,7 @@ final class TracableHttpClientTest extends TestCase
 
     public function test_with_options_creates_new_instance() : void
     {
-        $spanProcessor = new MemorySpanProcessor(new MemorySpanExporter());
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = $this->createMockHttpClient(200);

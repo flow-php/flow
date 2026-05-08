@@ -9,30 +9,9 @@ namespace Flow\Telemetry\Logger;
  *
  * Implementations may collect logs for batching, export them immediately,
  * filter by severity, or perform other processing like enrichment.
- *
- * Example implementation:
- * ```php
- * final class BatchingLogProcessor implements LogProcessor
- * {
- *     private array $buffer = [];
- *
- *     public function process(LogEntry $entry): void {
- *         $this->buffer[] = $entry;
- *         if (count($this->buffer) >= 100) {
- *             $this->flush();
- *         }
- *     }
- *     // ...
- * }
- * ```
  */
 interface LogProcessor
 {
-    /**
-     * Get the exporter used by this processor.
-     */
-    public function exporter() : LogExporter;
-
     /**
      * Export all pending log records.
      *
@@ -52,4 +31,12 @@ interface LogProcessor
      * @param LogEntry $entry The complete log entry to process
      */
     public function process(LogEntry $entry) : void;
+
+    /**
+     * Shutdown the processor.
+     *
+     * Implementations SHOULD flush() pending data before delegating shutdown
+     * to the underlying exporter. MUST be idempotent and MUST NOT throw.
+     */
+    public function shutdown() : void;
 }

@@ -7,7 +7,7 @@ namespace Flow\Telemetry\Tests\Unit\Meter;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Meter\Instrument\{Counter, Gauge, Histogram, UpDownCounter};
 use Flow\Telemetry\Meter\{Meter, MetricType};
-use Flow\Telemetry\Provider\Memory\{MemoryMetricExporter, MemoryMetricProcessor};
+use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryMetricProcessor};
 use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
 use Flow\Telemetry\Tests\Mother\{ClockMother, ResourceMother};
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -71,7 +71,7 @@ final class MeterTest extends TestCase
 
     public function test_complete_collects_metrics_and_passes_to_processor() : void
     {
-        $processor = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processor = new MemoryMetricProcessor(new MemoryExporter());
         $meter = new Meter(ResourceMother::default(), new InstrumentationScope('test-meter', '1.0.0'), $processor, ClockMother::frozen());
 
         $counter = $meter->createCounter('requests.total', 'requests', 'Total requests');
@@ -108,8 +108,8 @@ final class MeterTest extends TestCase
 
     public function test_complete_with_instrument_not_created_by_this_meter() : void
     {
-        $processorA = new MemoryMetricProcessor(new MemoryMetricExporter());
-        $processorB = new MemoryMetricProcessor(new MemoryMetricExporter());
+        $processorA = new MemoryMetricProcessor(new MemoryExporter());
+        $processorB = new MemoryMetricProcessor(new MemoryExporter());
 
         $meterA = new Meter(ResourceMother::default(), new InstrumentationScope('meter-a', '1.0.0'), $processorA, ClockMother::frozen());
         $meterB = new Meter(ResourceMother::default(), new InstrumentationScope('meter-b', '1.0.0'), $processorB, ClockMother::frozen());

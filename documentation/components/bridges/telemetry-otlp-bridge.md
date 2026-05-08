@@ -18,36 +18,15 @@ capabilities.
 
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/telemetry-otlp-bridge.md).
 
-### Transports
-
-| Transport | Required Extension | Supported Serializers |
-|-----------|--------------------|-----------------------|
-| **Curl**  | `ext-curl`         | JSON, Protobuf        |
-| **HTTP**  | -                  | JSON, Protobuf        |
-| **gRPC**  | `ext-grpc`         | Protobuf              |
-
-### Serializers
-
-| Serializer   | Required Packages                                     | Supported Transports |
-|--------------|-------------------------------------------------------|----------------------|
-| **JSON**     | -                                                     | Curl, HTTP           |
-| **Protobuf** | `google/protobuf`, `open-telemetry/gen-otlp-protobuf` | Curl, HTTP, gRPC     |
-
-To install Protobuf dependencies:
-
-```
-composer require google/protobuf open-telemetry/gen-otlp-protobuf
-```
-
 ## Transports
 
 The bridge provides three transport options for sending telemetry data to OTLP endpoints.
 
-| Transport | Protocol     | Use Case                         | Requirements  |
-|-----------|--------------|----------------------------------|---------------|
-| **Curl**  | HTTP (async) | Production, low latency          | ext-curl      |
-| **HTTP**  | HTTP (sync)  | Standard PSR-18 integration      | PSR-18 client |
-| **gRPC**  | gRPC         | High-performance binary protocol | ext-grpc      |
+| Transport  | Protocol      | Use Case                                                                 | Requirements  |
+|------------|---------------|--------------------------------------------------------------------------|---------------|
+| **Curl**   | HTTP (async)  | Production, low latency                                                  | ext-curl      |
+| **gRPC**   | gRPC          | High-performance binary protocol                                         | ext-grpc      |
+| **Stream** | JSONL         | Sidecar collectors, log shippers, FaaS / Kubernetes stdout/err scraping  | None          |
 
 ### Curl Transport (Recommended)
 
@@ -68,114 +47,235 @@ $transport = otlp_curl_transport(
     serializer: otlp_json_serializer(),
 );
 
-// With custom options
+// With custom options (timeouts in milliseconds — see "Timeouts" below)
 $transport = otlp_curl_transport(
     endpoint: 'https://otlp.example.com:4318',
     serializer: otlp_json_serializer(),
     options: otlp_curl_options()
-        ->withTimeout(60)
-        ->withConnectTimeout(15)
+        ->withTimeout(2000)
+        ->withConnectTimeout(500)
         ->withHeader('Authorization', 'Bearer your-token')
         ->withCompression(),
-);
-```
-
-### HTTP Transport (PSR-18)
-
-The HTTP transport uses any PSR-18 compatible HTTP client for synchronous requests. This is useful when you want to
-integrate with an existing HTTP client in your application.
-
-```php
-<?php
-
-use function Flow\Bridge\Telemetry\OTLP\DSL\{
-    otlp_http_transport,
-    otlp_json_serializer,
-};
-
-// Using any PSR-18 client (e.g., Symfony HttpClient, Guzzle)
-$transport = otlp_http_transport(
-    client: $httpClient,
-    requestFactory: $psr17Factory,
-    streamFactory: $psr17Factory,
-    endpoint: 'http://localhost:4318',
-    serializer: otlp_json_serializer(),
-);
-
-// With authentication headers
-$transport = otlp_http_transport(
-    client: $httpClient,
-    requestFactory: $psr17Factory,
-    streamFactory: $psr17Factory,
-    endpoint: 'https://otlp.example.com:4318',
-    serializer: otlp_json_serializer(),
-    headers: [
-        'Authorization' => 'Bearer your-token',
-    ],
 );
 ```
 
 ### gRPC Transport
 
 The gRPC transport uses the native gRPC protocol for high-performance binary communication. It requires the `ext-grpc`
-PHP extension.
+PHP extension. OTLP/gRPC mandates Protobuf, so the transport instantiates the protobuf request factory internally —
+no serializer parameter.
 
 ```php
 <?php
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\{
-    otlp_grpc_transport,
-    otlp_protobuf_serializer,
-};
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
 
-$transport = otlp_grpc_transport(
-    endpoint: 'localhost:4317',
-    serializer: otlp_protobuf_serializer(),
-);
+$transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 
-// With authentication
+// With authentication and a tighter call deadline (in milliseconds)
 $transport = otlp_grpc_transport(
     endpoint: 'otlp.example.com:4317',
-    serializer: otlp_protobuf_serializer(),
     headers: [
         'Authorization' => 'Bearer your-token',
     ],
     insecure: false, // Use TLS
+    timeoutMs: 2000, // call deadline: connect + send + receive
 );
 ```
 
-## Serializers
+> **Note**: gRPC has no separate connect timeout — `timeoutMs` is the per-call deadline that bounds DNS, connect, send, and receive together. See [Timeouts](#timeouts).
 
-The bridge provides two serialization formats for OTLP data.
+### Stream Transport
 
-| Serializer   | Format | Size    | Readability    | Dependencies                                          |
-|--------------|--------|---------|----------------|-------------------------------------------------------|
-| **JSON**     | Text   | Larger  | Human-readable | None                                                  |
-| **Protobuf** | Binary | Smaller | Not readable   | `google/protobuf`, `open-telemetry/gen-otlp-protobuf` |
+The Stream transport implements the [OTLP File Exporter spec](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/).
+It writes JSONL to either an absolute file path or a `php://` stream wrapper. The handle is opened once in
+the constructor and reused across `send()` calls; each call appends one JSON Line under `LOCK_EX` so concurrent
+writers interleave at line boundaries.
 
-### JSON Serializer
-
-The default serializer that produces human-readable JSON. Best for development and debugging.
-
-```php
-<?php
-
-use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
-
-$serializer = otlp_json_serializer();
-```
-
-### Protobuf Serializer
-
-Binary serialization for smaller payloads and better performance. Recommended for production.
+Only JSON encoding is supported per the spec — the transport hard-codes the JSON serializer; there is no
+serializer parameter.
 
 ```php
 <?php
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_protobuf_serializer;
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_stream_transport;
 
-$serializer = otlp_protobuf_serializer();
+// Append to a file (creates parent directories by default, chmod 0644 on first create)
+$transport = otlp_stream_transport('/var/log/otel/logs.jsonl');
+
+// Stream wrapper destinations for FaaS / Kubernetes log scraping
+$transport = otlp_stream_transport('php://stdout');
+$transport = otlp_stream_transport('php://stderr');
+
+// Tweak file mode and disable directory creation
+$transport = otlp_stream_transport(
+    destination: '/var/log/otel/logs.jsonl',
+    filePermissions: 0o640,
+    createDirectories: false,
+);
 ```
+
+`filePermissions` and `createDirectories` apply only when the destination is a file path; they are ignored for
+`php://` URIs. For production deployments.
+
+One transport instance writes to one destination. To split logs, metrics, and traces across multiple files,
+build three transports and wire them to three exporters. To keep all signals in one file (the OpenTelemetry
+Collector handles mixed JSONL just fine), reuse the same destination across exporters.
+
+## Wire Encoding
+
+The OTLP spec defines fixed encodings per transport. The bridge enforces them.
+
+| Transport | JSON | Protobuf | Notes                                                                |
+|-----------|:----:|:--------:|----------------------------------------------------------------------|
+| Curl      | ✅   | ✅       | OTLP/HTTP supports both; pick a serializer when constructing the transport |
+| gRPC      | ❌   | ✅       | OTLP/gRPC mandates Protobuf; the transport builds it internally      |
+| Stream    | ✅   | ❌       | OTLP File Exporter spec only supports JSON                           |
+
+For curl, pass `otlp_json_serializer()` (default) or `otlp_protobuf_serializer()`:
+
+```php
+<?php
+
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_json_serializer, otlp_protobuf_serializer};
+
+// JSON over HTTP — default; great for development and debugging
+$transport = otlp_curl_transport('http://localhost:4318');
+
+// Protobuf over HTTP — smaller payloads; recommended for production
+$transport = otlp_curl_transport('http://localhost:4318', otlp_protobuf_serializer());
+```
+
+The Protobuf serializer requires the `google/protobuf` package.
+
+## Timeouts
+
+Both the curl and gRPC transports default to **aggressive, local-collector-friendly timeouts**: the production
+recommendation is to run an OpenTelemetry Collector close to the application (loopback, UDS, or sidecar), so the
+roundtrip is sub-millisecond and a stuck collector should not freeze your PHP process at shutdown.
+
+| Transport | Setting                  | Default | Unit         | Bounds                                                       |
+|-----------|--------------------------|--------:|--------------|--------------------------------------------------------------|
+| Curl      | `withTimeout()`          |   250   | milliseconds | Per-request: connect + send + receive                        |
+| Curl      | `withConnectTimeout()`   |   250   | milliseconds | TCP/TLS connection establishment only                        |
+| Curl      | `withShutdownTimeout()`  |  5000   | milliseconds | Wall-clock budget for draining pending requests at shutdown  |
+| gRPC      | `timeoutMs`              |   250   | milliseconds | Per-call deadline (no separate connect bound)                |
+| gRPC      | `shutdownTimeoutMs`      |  5000   | milliseconds | Wall-clock budget for draining pending calls at shutdown     |
+
+`timeout_ms` is the per-request deadline. `shutdown_timeout_ms` is a separate wall-clock budget enforced only when
+draining pending requests during `shutdown()` — it lets you keep `timeout_ms` tight without freezing graceful exit
+under load. Pending requests still in flight after the shutdown deadline are abandoned and reported as failed (via
+the failover transport if configured, otherwise via the shutdown `TransportException`).
+
+**Tune the defaults up only when you have a remote collector.** For a collector across regions or a managed SaaS
+endpoint, 5000–10000 ms for both timeouts is reasonable.
+
+```php
+<?php
+
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_options, otlp_curl_transport, otlp_grpc_transport};
+
+// Local collector — defaults are usually fine
+$curl = otlp_curl_transport('http://localhost:4318');
+$grpc = otlp_grpc_transport('localhost:4317');
+
+// Remote collector — raise both to suit your network
+$remoteCurl = otlp_curl_transport(
+    endpoint: 'https://otlp.example.com:4318',
+    options: otlp_curl_options()
+        ->withTimeout(5000)
+        ->withConnectTimeout(1000),
+);
+
+$remoteGrpc = otlp_grpc_transport(
+    endpoint: 'otlp.example.com:4317',
+    insecure: false,
+    timeoutMs: 5000,
+);
+```
+
+> **Why milliseconds**: telemetry exports to a local collector complete in microseconds; the second-granularity API in
+> earlier versions could not express tight, realistic deadlines. A negative value to `withTimeout()` /
+> `withConnectTimeout()` raises `\InvalidArgumentException`.
+
+## Failover Transport
+
+Both `CurlTransport` and `GrpcTransport` accept an optional `Transport $failover` argument. When set, batches that
+failed on the primary are forwarded to the failover transport so telemetry is preserved even when the primary backend
+is unreachable. A typical pairing is **gRPC primary → Stream (JSONL on disk) failover** so a downed collector still
+leaves recoverable data the operator can replay later.
+
+### How it works
+
+The transport defers error handling to the *next* `send()` or `shutdown()`. When the next call drains the prior
+in-flight request:
+
+1. **Primary OK** — the batch is dropped from the pending list. Nothing else happens.
+2. **Primary failed, failover accepted** — the prior batch is forwarded to `failover->send()`; data preserved. The
+   transport still raises a `FailoverTransportException` so the operator is informed primary is degraded.
+3. **Primary failed, failover also failed** — the prior batch is lost. The exception carries both throwables in the
+   `failures` list.
+
+In every case the **current** request is dispatched to the primary *before* the exception is raised, so the new batch
+is never lost due to a prior failure.
+
+On `shutdown()`, the primary drains pending requests, applies the same forwarding logic, then calls
+`failover->shutdown()` (cascade). The failover lifecycle is owned by the primary — you do not need to shut it down
+separately.
+
+### Behavior matrix
+
+| Primary  | Failover send | Outcome                                                 | Exception                             |
+|----------|---------------|---------------------------------------------------------|---------------------------------------|
+| OK       | —             | Data delivered                                          | none                                  |
+| Failed   | OK            | Data preserved via failover                             | `FailoverTransportException` (1 entry, `failover: null`) |
+| Failed   | Failed        | Data lost; both errors surfaced                         | `FailoverTransportException` (1 entry, both errors)      |
+
+`FailoverTransportException` extends `TransportException`, so existing `catch (TransportException $e)` blocks in
+exporters keep working. The structured `$exception->failures` list is available when you want per-batch detail:
+
+```php
+foreach ($exception->failures as $failure) {
+    $failure['primary'];   // \Throwable — the primary error
+    $failure['failover'];  // \Throwable|null — null means failover absorbed the batch
+}
+```
+
+### Examples
+
+```php
+<?php
+
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_grpc_transport, otlp_protobuf_serializer, otlp_stream_transport};
+
+// gRPC primary → JSONL on disk failover (recommended for production)
+$transport = otlp_grpc_transport(
+    endpoint: 'localhost:4317',
+    failover: otlp_stream_transport('/var/log/otel/failed.jsonl'),
+);
+
+// Curl primary → Stream (php://stderr) failover for FaaS / Kubernetes log scraping
+$transport = otlp_curl_transport(
+    endpoint: 'http://localhost:4318',
+    serializer: otlp_protobuf_serializer(),
+    failover: otlp_stream_transport('php://stderr'),
+);
+```
+
+### Edge case: blocking on shutdown
+
+The drain logic uses each backend's native non-blocking primitive where it exists. **gRPC's `UnaryCall::wait()` is
+blocking by design** — when the second flush arrives before the prior call resolved, it waits for resolution before
+forwarding to failover. This is mitigated by the per-call `timeoutMs` deadline; configure it tight enough that a stuck
+collector cannot hang shutdown indefinitely. See [Timeouts](#timeouts).
+
+### Caveats
+
+- The failover is **single-level**: a failover transport cannot itself declare another failover. Compose multiple
+  primaries instead if you need cascading destinations.
+- Forwarding to the failover happens on the *next* flush, not at the moment of failure. A single batch lost between
+  the first send and process exit is surfaced from `shutdown()`.
+- The failover transport receives the original `Signals` instance — it sees the same content the primary did.
 
 ## Complete Setup
 
@@ -200,9 +300,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_curl_options,
     otlp_json_serializer,
-    otlp_span_exporter,
-    otlp_metric_exporter,
-    otlp_log_exporter,
+    otlp_exporter,
 };
 
 $resource = resource([
@@ -212,7 +310,7 @@ $resource = resource([
 ]);
 
 $options = otlp_curl_options()
-    ->withTimeout(30)
+    ->withTimeout(2000)
     ->withCompression();
 
 $transport = otlp_curl_transport(
@@ -221,11 +319,13 @@ $transport = otlp_curl_transport(
     options: $options,
 );
 
+$exporter = otlp_exporter($transport);
+
 $telemetry = telemetry(
     $resource,
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport))),
-    meter_provider(batching_metric_processor(otlp_metric_exporter($transport))),
-    logger_provider(batching_log_processor(otlp_log_exporter($transport))),
+    tracer_provider(batching_span_processor($exporter)),
+    meter_provider(batching_metric_processor($exporter)),
+    logger_provider(batching_log_processor($exporter)),
 );
 
 // Register shutdown handler for graceful termination
@@ -254,7 +354,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_curl_options,
     otlp_protobuf_serializer,
-    otlp_span_exporter,
+    otlp_exporter,
 };
 
 $transport = otlp_curl_transport(
@@ -266,7 +366,7 @@ $transport = otlp_curl_transport(
 
 $telemetry = telemetry(
     resource(['service.name' => 'my-app']),
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport))),
+    tracer_provider(batching_span_processor(otlp_exporter($transport))),
 );
 ```
 
@@ -285,7 +385,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\{
     otlp_curl_transport,
     otlp_curl_options,
     otlp_protobuf_serializer,
-    otlp_span_exporter,
+    otlp_exporter,
 };
 
 $transport = otlp_curl_transport(
@@ -297,7 +397,7 @@ $transport = otlp_curl_transport(
 
 $telemetry = telemetry(
     resource(['service.name' => 'my-app']),
-    tracer_provider(batching_span_processor(otlp_span_exporter($transport))),
+    tracer_provider(batching_span_processor(otlp_exporter($transport))),
 );
 ```
 
@@ -394,18 +494,21 @@ With this setup, your PHP application only needs to know about `http://otel-coll
 
 The `CurlTransportOptions` class provides a fluent interface for configuring the curl transport.
 
-| Method                                                    | Description             | Default    |
-|-----------------------------------------------------------|-------------------------|------------|
-| `withTimeout(int $seconds)`                               | Request timeout         | 30         |
-| `withConnectTimeout(int $seconds)`                        | Connection timeout      | 10         |
-| `withHeader(string $name, string $value)`                 | Add a single header     | -          |
-| `withHeaders(array $headers)`                             | Set all headers         | []         |
-| `withCompression(bool $enabled)`                          | Enable gzip compression | false      |
-| `withSslVerification(bool $verifyPeer, bool $verifyHost)` | SSL verification        | true, true |
-| `withSslCertificate(string $certPath, ?string $keyPath)`  | Client certificate      | -          |
-| `withCaInfo(string $caInfoPath)`                          | CA certificate bundle   | -          |
-| `withProxy(string $proxy)`                                | Proxy server            | -          |
-| `withFollowRedirects(bool $follow, int $maxRedirects)`    | Redirect behavior       | true, 3    |
+| Method                                                    | Description                            | Default    |
+|-----------------------------------------------------------|----------------------------------------|------------|
+| `withTimeout(int $milliseconds)`                          | Per-request total timeout (ms)         | 1000       |
+| `withConnectTimeout(int $milliseconds)`                   | TCP/TLS connect timeout (ms)           | 250        |
+| `withShutdownTimeout(int $milliseconds)`                  | Wall-clock drain budget at shutdown    | 5000       |
+| `withHeader(string $name, string $value)`                 | Add a single header                    | -          |
+| `withHeaders(array $headers)`                             | Set all headers                        | []         |
+| `withCompression(bool $enabled)`                          | Enable gzip compression                | false      |
+| `withSslVerification(bool $verifyPeer, bool $verifyHost)` | SSL verification                       | true, true |
+| `withSslCertificate(string $certPath, ?string $keyPath)`  | Client certificate                     | -          |
+| `withCaInfo(string $caInfoPath)`                          | CA certificate bundle                  | -          |
+| `withProxy(string $proxy)`                                | Proxy server                           | -          |
+| `withFollowRedirects(bool $follow, int $maxRedirects)`    | Redirect behavior                      | true, 3    |
+
+See [Timeouts](#timeouts) for guidance on the default values.
 
 **Example:**
 
@@ -415,8 +518,8 @@ The `CurlTransportOptions` class provides a fluent interface for configuring the
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_options;
 
 $options = otlp_curl_options()
-    ->withTimeout(60)
-    ->withConnectTimeout(15)
+    ->withTimeout(2000)
+    ->withConnectTimeout(500)
     ->withHeader('Authorization', 'Bearer token')
     ->withHeader('X-Custom-Header', 'value')
     ->withCompression()

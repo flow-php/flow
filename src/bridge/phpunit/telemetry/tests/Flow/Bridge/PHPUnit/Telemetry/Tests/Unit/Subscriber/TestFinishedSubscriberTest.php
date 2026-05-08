@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Unit\Subscriber;
 
-use function Flow\Telemetry\DSL\{memory_span_processor, void_span_exporter};
+use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
 
 use Flow\Bridge\PHPUnit\Telemetry\{SpanStack, TestStatusRegistry};
 use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestFinishedSubscriber;
@@ -16,7 +16,7 @@ final class TestFinishedSubscriberTest extends TestCase
 {
     public function test_clears_status_registry_when_emit_test_spans_is_disabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
         $spanStack = new SpanStack();
         $config = ConfigurationMother::withDisabledTestSpans();
@@ -33,7 +33,7 @@ final class TestFinishedSubscriberTest extends TestCase
 
     public function test_does_not_pop_span_when_emit_test_spans_is_disabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
         $spanStack = new SpanStack();
         $config = ConfigurationMother::withDisabledTestSpans();
@@ -54,7 +54,7 @@ final class TestFinishedSubscriberTest extends TestCase
 
     public function test_pops_span_when_emit_test_spans_is_enabled() : void
     {
-        $spanProcessor = memory_span_processor(void_span_exporter());
+        $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
         $spanStack = new SpanStack();
         $config = ConfigurationMother::default();
