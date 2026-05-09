@@ -118,16 +118,13 @@ abstract class EndToEndTestCase extends PantherTestCase
         return Kernel::class;
     }
 
-    /**
-     * Navigate to URL with retry logic to handle transient WebDriver session issues.
-     * Returns a fresh client that successfully navigated to the URL.
-     */
     protected static function navigateWithRetry(string $url, int $maxRetries = 3) : Client
     {
-        $client = static::createE2EClient();
         $lastException = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            $client = static::createE2EClient();
+
             try {
                 $client->request('GET', $url);
 
@@ -135,8 +132,13 @@ abstract class EndToEndTestCase extends PantherTestCase
             } catch (WebDriverException $e) {
                 $lastException = $e;
 
+                try {
+                    $client->quit();
+                } catch (\Throwable) {
+                }
+
                 if ($attempt < $maxRetries) {
-                    $client->restart();
+                    \usleep(500_000);
                 }
             }
         }

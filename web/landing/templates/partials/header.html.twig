@@ -54,7 +54,7 @@
             <img src="{{ asset('images/icons/menu.svg') }}" alt="" width="24" height="24">
         </button>
 
-        <nav popover id="mobile-nav" aria-label="Mobile" class="unset lg:hidden m-0 inset-0 max-h-none max-w-none w-full h-full bg-black text-white">
+        <nav popover id="mobile-nav" aria-label="Mobile" class="lg:hidden fixed inset-0 m-0 w-screen h-[100dvh] max-h-none max-w-none overflow-y-auto overscroll-contain bg-black text-white">
             <div class="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-white/10">
                 <span class="font-semibold tracking-wide">Menu</span>
                 <button popovertarget="mobile-nav" popovertargetaction="hide"
@@ -113,7 +113,7 @@
 </header>
 
 <div popover id="search-modal"
-     class="unset m-0 inset-0 max-h-none max-w-none w-full h-full bg-black/80 backdrop-blur-md"
+     class="fixed inset-0 m-0 w-screen h-[100dvh] max-h-none max-w-none overflow-y-auto overscroll-contain bg-black/80 backdrop-blur-md"
      {{ stimulus_controller('site_search') }}
      data-site-search-bundle-path-value="/pagefind/">
     <div class="mx-auto mt-20 max-w-4xl px-4">

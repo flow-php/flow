@@ -10,8 +10,7 @@ final class PlaygroundSnippetTest extends EndToEndTestCase
     {
         self::markTestSkipped('This test is flaky and fails randomly on GitHub Actions, need to debug it more');
 
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
+        $client = self::navigateWithRetry('/playground');
 
         $this->waitForWasmReady($client);
 
@@ -26,9 +25,9 @@ PHP;
 
         $this->setPlaygroundCode($client, $testCode);
 
-        $client->executeScript('document.getElementById("action-share").click();');
+        $client->executeScript('window.prompt = () => null; document.getElementById("action-share").click();');
 
-        $client->waitForElementToContain('[data-playground-output-target="container"]', 'Share link', 15);
+        $client->waitForElementToContain('[data-playground-output-target="container"]', 'copied to clipboard', 15);
 
         $currentUrl = $client->getCurrentURL();
 

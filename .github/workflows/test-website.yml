@@ -49,6 +49,12 @@ jobs:
         with:
           node-version: "22"
 
+      - name: "Setup Chrome"
+        uses: "browser-actions/setup-chrome@v1"
+        with:
+          chrome-version: "146"
+          install-chromedriver: true
+
       - name: "Create Wrangler dev.vars"
         run: |
           cat > .dev.vars << EOF

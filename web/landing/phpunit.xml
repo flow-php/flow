@@ -13,6 +13,7 @@
   <php>
     <env name="APP_ENV" value="test"/>
     <server name="PANTHER_WEB_SERVER_ROUTER" value="../tests/router.php"/>
+    <server name="PANTHER_CHROME_ARGUMENTS" value="--no-first-run --no-default-browser-check --disable-search-engine-choice-screen --disable-features=Translate,InterestFeedContentSuggestions"/>
   </php>
   <testsuites>
     <testsuite name="unit">
