@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
+use Flow\Website\Service\Manifest\Manifest;
 use League\CommonMark\Event\DocumentParsedEvent;
 use League\CommonMark\Extension\CommonMark\Node\Inline\{Image, Link, Strong};
 use League\CommonMark\Extension\Table\{Table, TableCell, TableRow, TableSection};
 use League\CommonMark\Node\Block\Paragraph;
 use League\CommonMark\Node\Inline\Text;
 
-final class FlowManifestRenderer
+final readonly class FlowManifestRenderer
 {
     private const string PLACEHOLDER = '[FLOW_MANIFEST]';
 
@@ -28,12 +29,7 @@ final class FlowManifestRenderer
         'extension' => ['label' => 'Extensions', 'order' => 5],
     ];
 
-    /**
-     * @var null|list<array{name: string, slug: string, type: string}>
-     */
-    private ?array $packagesCache = null;
-
-    public function __construct(private readonly string $manifestPath)
+    public function __construct(private Manifest $manifest)
     {
     }
 
@@ -191,38 +187,28 @@ final class FlowManifestRenderer
      */
     private function packages() : array
     {
-        if ($this->packagesCache !== null) {
-            return $this->packagesCache;
-        }
-
-        if (!\is_file($this->manifestPath)) {
-            throw new \RuntimeException(\sprintf('Flow manifest not found at "%s".', $this->manifestPath));
-        }
-
-        $raw = \file_get_contents($this->manifestPath);
-
-        if ($raw === false) {
-            throw new \RuntimeException(\sprintf('Failed to read Flow manifest at "%s".', $this->manifestPath));
-        }
-
-        /** @var array{packages?: list<array{name: string, path: string, type: string}>} $decoded */
-        $decoded = \json_decode($raw, true, flags: \JSON_THROW_ON_ERROR);
-
         $packages = [];
 
-        foreach ($decoded['packages'] ?? [] as $entry) {
-            if (!\array_key_exists($entry['type'], self::TYPE_GROUPS)) {
+        foreach ($this->manifest->all() as $entry) {
+            $type = is_string($entry['type'] ?? null) ? $entry['type'] : null;
+            $name = is_string($entry['name'] ?? null) ? $entry['name'] : null;
+
+            if ($type === null || $name === null) {
+                continue;
+            }
+
+            if (!\array_key_exists($type, self::TYPE_GROUPS)) {
                 continue;
             }
 
             $packages[] = [
-                'name' => $entry['name'],
-                'slug' => self::slug($entry['name']),
-                'type' => $entry['type'],
+                'name' => $name,
+                'slug' => self::slug($name),
+                'type' => $type,
             ];
         }
 
-        return $this->packagesCache = $packages;
+        return $packages;
     }
 
     private static function slug(string $composerName) : string

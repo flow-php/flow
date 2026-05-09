@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
-use Flow\Website\Model\Documentation\Module;
+use Flow\Website\Model\Documentation\{Module, Page};
 use Flow\Website\Service\Documentation\{DSLDefinitions, Pages};
 use Flow\Website\Service\Examples;
+use Flow\Website\Service\Manifest\PackageMeta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,6 +18,7 @@ final class DocumentationController extends AbstractController
         private readonly Pages $pages,
         private readonly DSLDefinitions $dslDefinitions,
         private readonly Examples $examples,
+        private readonly PackageMeta $packageMeta,
     ) {
     }
 
@@ -78,6 +80,7 @@ final class DocumentationController extends AbstractController
             'definition' => $definition,
             'examples' => $examples,
             'types' => $this->dslDefinitions->types(),
+            'searchFacets' => $this->dslFacets($module),
         ]);
     }
 
@@ -91,6 +94,7 @@ final class DocumentationController extends AbstractController
             'modules' => $modules,
             'definitions' => $this->dslDefinitions->fromModule(Module::fromName($module)),
             'types' => $this->dslDefinitions->types(),
+            'searchFacets' => $this->dslFacets($module),
         ]);
     }
 
@@ -111,14 +115,18 @@ final class DocumentationController extends AbstractController
             'description' => $this->examples->description($currentTopic, $currentExample),
             'documentation' => $this->examples->documentation($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
+            'searchFacets' => ['type' => 'Example'],
         ]);
     }
 
     #[Route('/documentation', name: 'documentation', options: ['sitemap' => true])]
     public function index() : Response
     {
+        $page = $this->pages->get('introduction.md');
+
         return $this->render('documentation/page.html.twig', [
-            'page' => $this->pages->get('introduction.md'),
+            'page' => $page,
+            'searchFacets' => $this->pageFacets($page),
         ]);
     }
 
@@ -144,8 +152,47 @@ final class DocumentationController extends AbstractController
     #[Route('/documentation/{path}', name: 'documentation_page', requirements: ['path' => '.*'], priority: -100)]
     public function page(string $path) : Response
     {
+        $page = $this->pages->get($path);
+
         return $this->render('documentation/page.html.twig', [
-            'page' => $this->pages->get($path),
+            'page' => $page,
+            'searchFacets' => $this->pageFacets($page),
         ]);
+    }
+
+    /**
+     * @return array{type?: string, component?: string}
+     */
+    private function dslFacets(string $module) : array
+    {
+        $facets = ['type' => 'DSL'];
+
+        $component = $this->packageMeta->forDslModule($module);
+
+        if ($component !== null) {
+            $facets['component'] = $component;
+        }
+
+        return $facets;
+    }
+
+    /**
+     * @return array{type?: string, component?: string}
+     */
+    private function pageFacets(Page $page) : array
+    {
+        $packageName = $page->package();
+
+        if ($packageName === null) {
+            return [];
+        }
+
+        $meta = $this->packageMeta->forPackage($packageName);
+
+        if ($meta === null) {
+            return [];
+        }
+
+        return $meta;
     }
 }

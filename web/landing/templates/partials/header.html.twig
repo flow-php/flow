@@ -5,6 +5,14 @@
             <img src="{{ asset('images/logo.svg') }}" alt="" width="146" height="40" class="h-9 w-auto">
         </a>
 
+        <button type="button" popovertarget="search-modal" popovertargetaction="show"
+                class="hidden lg:inline-flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-2 text-sm text-white/60 hover:text-white/85 transition-colors min-w-[18rem]"
+                aria-label="Search documentation">
+            <img src="{{ asset('images/icons/search.svg') }}" alt="" width="16" height="16" class="opacity-70">
+            <span class="flex-1 text-left">Search docs…</span>
+            <kbd class="hidden xl:inline-flex h-5 items-center rounded border border-white/15 bg-black/40 px-1.5 text-[10px] font-mono text-white/55">/</kbd>
+        </button>
+
         <nav aria-label="Primary" class="hidden lg:flex items-center gap-1 text-sm">
             {% set primary = [
                 {label: 'Docs',       href: path('documentation'),                                                                                       route: 'documentation'},
@@ -40,11 +48,18 @@
             </a>
         </div>
 
-        <button popovertarget="mobile-nav" popovertargetaction="show"
-                aria-label="Open menu"
-                class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
-            <img src="{{ asset('images/icons/menu.svg') }}" alt="" width="24" height="24">
-        </button>
+        <div class="lg:hidden inline-flex items-center gap-1">
+            <button type="button" popovertarget="search-modal" popovertargetaction="show"
+                    aria-label="Search"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
+                <img src="{{ asset('images/icons/search.svg') }}" alt="" width="20" height="20">
+            </button>
+            <button popovertarget="mobile-nav" popovertargetaction="show"
+                    aria-label="Open menu"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
+                <img src="{{ asset('images/icons/menu.svg') }}" alt="" width="24" height="24">
+            </button>
+        </div>
 
         <nav popover id="mobile-nav" aria-label="Mobile" class="unset lg:hidden m-0 inset-0 max-h-none max-w-none w-full h-full bg-black text-white">
             <div class="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-white/10">
@@ -97,3 +112,22 @@
         </nav>
     </div>
 </header>
+
+<div popover id="search-modal"
+     class="unset m-0 inset-0 max-h-none max-w-none w-full h-full bg-black/80 backdrop-blur-md"
+     {{ stimulus_controller('site_search') }}
+     data-site-search-bundle-path-value="/pagefind/">
+    <div class="mx-auto mt-20 max-w-4xl px-4">
+        <div class="rounded-2xl border border-white/10 bg-[#1b1925] shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
+                <span class="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Search</span>
+                <button popovertarget="search-modal" popovertargetaction="hide"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-white/[0.06]"
+                        aria-label="Close search">
+                    <img src="{{ asset('images/icons/close.svg') }}" alt="" width="18" height="18">
+                </button>
+            </div>
+            <div id="site-search" data-site-search-target="mount" class="p-3"></div>
+        </div>
+    </div>
+</div>

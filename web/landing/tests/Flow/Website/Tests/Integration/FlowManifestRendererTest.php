@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Integration;
 
+use Flow\Website\Service\Manifest\Manifest;
 use Flow\Website\Service\Markdown\FlowManifestRenderer;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Event\DocumentParsedEvent;
@@ -105,7 +106,7 @@ final class FlowManifestRendererTest extends TestCase
         $converter = new CommonMarkConverter();
         $converter->getEnvironment()
             ->addExtension(new TableExtension())
-            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer('/nonexistent/manifest.json'));
+            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer(new Manifest('/nonexistent/manifest.json')));
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Flow manifest not found');
@@ -130,7 +131,7 @@ final class FlowManifestRendererTest extends TestCase
             $converter = new CommonMarkConverter();
             $converter->getEnvironment()
                 ->addExtension(new TableExtension())
-                ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($manifestPath));
+                ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer(new Manifest($manifestPath)));
 
             return (string) $converter->convert($markdown);
         } finally {

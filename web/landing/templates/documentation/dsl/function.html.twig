@@ -46,8 +46,12 @@
             </nav>
         </aside>
 
-        <article class="order-1 lg:order-2 min-w-0">
+        <article class="order-1 lg:order-2 min-w-0" data-pagefind-body>
             {% include 'partials/docs_mobile_nav.html.twig' with {currentPath: currentPath} %}
+
+            <span data-pagefind-meta="title:{{ definition.name }}" class="hidden" aria-hidden="true"></span>
+            {% if searchFacets.type|default(null) %}<span data-pagefind-filter="type:{{ searchFacets.type }}" class="hidden" aria-hidden="true"></span>{% endif %}
+            {% if searchFacets.component|default(null) %}<span data-pagefind-filter="component:{{ searchFacets.component }}" class="hidden" aria-hidden="true"></span>{% endif %}
 
             <span class="eyebrow">
                 <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
@@ -57,7 +61,7 @@
                 <span class="font-mono">{{ definition.name }}</span>
             </h1>
 
-            <div class="flex gap-2 mb-6">
+            <div class="flex gap-2 mb-6" data-pagefind-ignore>
                 <a class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium text-white/85 transition-colors no-underline"
                    href="{{ definition.githubUrl }}" target="_blank" rel="noopener" data-dsl-source-link>
                     View on GitHub

@@ -145,6 +145,14 @@ jobs:
       - name: "Generate Api References"
         run: "composer build:docs:api"
 
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "Build Pagefind index"
+        run: "npx --yes pagefind@1.5.2 --site web/landing/build --output-subdir pagefind"
+
       - name: Pushes build to website repository
         uses: cpina/github-action-push-to-another-repository@main
         env:

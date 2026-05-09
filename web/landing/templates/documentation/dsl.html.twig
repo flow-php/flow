@@ -62,8 +62,12 @@
             </nav>
         </aside>
 
-        <article class="order-1 lg:order-2 min-w-0">
+        <article class="order-1 lg:order-2 min-w-0" data-pagefind-body>
             {% include 'partials/docs_mobile_nav.html.twig' with {currentPath: currentPath} %}
+
+            <span data-pagefind-meta="title:DSL · {{ module_name|humanize }}" class="hidden" aria-hidden="true"></span>
+            {% if searchFacets.type|default(null) %}<span data-pagefind-filter="type:{{ searchFacets.type }}" class="hidden" aria-hidden="true"></span>{% endif %}
+            {% if searchFacets.component|default(null) %}<span data-pagefind-filter="component:{{ searchFacets.component }}" class="hidden" aria-hidden="true"></span>{% endif %}
 
             <h1 class="font-bold text-3xl tracking-tight mb-3">DSL References</h1>
             <p class="muted mb-8 max-w-3xl">

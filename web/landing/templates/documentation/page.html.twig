@@ -22,12 +22,15 @@
             {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationLeft', {currentPath: currentPath})) }}
         </aside>
 
-        <article id="documentation-page" class="order-1 lg:order-2 min-w-0">
+        <article id="documentation-page" class="order-1 lg:order-2 min-w-0" data-pagefind-body>
             {% include 'partials/docs_mobile_nav.html.twig' with {currentPath: currentPath} %}
+
+            {% if searchFacets.type|default(null) %}<span data-pagefind-filter="type:{{ searchFacets.type }}" class="hidden" aria-hidden="true"></span>{% endif %}
+            {% if searchFacets.component|default(null) %}<span data-pagefind-filter="component:{{ searchFacets.component }}" class="hidden" aria-hidden="true"></span>{% endif %}
 
             {{ page.content|markdown_to_html }}
 
-            <p class="!mt-12 !mb-8 text-sm text-white/55">
+            <p class="!mt-12 !mb-8 text-sm text-white/55" data-pagefind-ignore>
                 Found a typo or an outdated section?
                 <a class="inline-flex items-center gap-1 text-white/80 hover:text-white !no-underline"
                    href="{{ page.editOnGitHubUrl }}" target="_blank" rel="noopener">
@@ -36,7 +39,7 @@
                 </a>
             </p>
 
-            <hr class="!my-8"/>
+            <hr class="!my-8" data-pagefind-ignore/>
 
             <script src="https://giscus.app/client.js"
                     data-repo="flow-php/flow-php.com"

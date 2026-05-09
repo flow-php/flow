@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
+use Flow\Website\Service\Manifest\Manifest;
 use League\CommonMark\Event\DocumentParsedEvent;
 use League\CommonMark\Extension\CommonMark\Node\Block\HtmlBlock;
 use League\CommonMark\Node\Block\Paragraph;
 use League\CommonMark\Node\Inline\Text;
 
-final class FlowPackageNavRenderer
+final readonly class FlowPackageNavRenderer
 {
     private const string PLACEHOLDER = '[PACKAGE_NAV]';
 
@@ -35,10 +36,7 @@ final class FlowPackageNavRenderer
         'extension' => 'extensions',
     ];
 
-    /** @var null|array<string, array<string, mixed>> indexed by composer name */
-    private ?array $packagesCache = null;
-
-    public function __construct(private readonly string $manifestPath)
+    public function __construct(private Manifest $manifest)
     {
     }
 
@@ -77,7 +75,7 @@ final class FlowPackageNavRenderer
                 continue;
             }
 
-            $package = $packageName !== null ? $this->findPackage($packageName) : null;
+            $package = $packageName !== null ? $this->manifest->byName($packageName) : null;
 
             if ($package === null) {
                 $owner->detach();
@@ -150,16 +148,6 @@ final class FlowPackageNavRenderer
         return '<nav aria-label="Package links" class="package-nav">' . implode('', $items) . '</nav>';
     }
 
-    /**
-     * @return null|array<string, mixed>
-     */
-    private function findPackage(string $name) : ?array
-    {
-        $packages = $this->loadPackages();
-
-        return $packages[$name] ?? null;
-    }
-
     private function item(string $href, string $label, bool $external = false) : string
     {
         $hrefAttr = htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -168,40 +156,6 @@ final class FlowPackageNavRenderer
         $arrow = $external ? ' <span aria-hidden="true">↗</span>' : '';
 
         return '<a href="' . $hrefAttr . '"' . $extra . '>' . $labelHtml . $arrow . '</a>';
-    }
-
-    /**
-     * @return array<string, array<string, mixed>>
-     */
-    private function loadPackages() : array
-    {
-        if ($this->packagesCache !== null) {
-            return $this->packagesCache;
-        }
-
-        if (!is_file($this->manifestPath)) {
-            throw new \RuntimeException(sprintf('Flow manifest not found at "%s".', $this->manifestPath));
-        }
-
-        $raw = file_get_contents($this->manifestPath);
-
-        if ($raw === false) {
-            throw new \RuntimeException(sprintf('Failed to read Flow manifest at "%s".', $this->manifestPath));
-        }
-
-        /** @var array{packages?: list<array<string, mixed>>} $decoded */
-        $decoded = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
-
-        $byName = [];
-
-        foreach ($decoded['packages'] ?? [] as $entry) {
-            if (!isset($entry['name']) || !is_string($entry['name'])) {
-                continue;
-            }
-            $byName[$entry['name']] = $entry;
-        }
-
-        return $this->packagesCache = $byName;
     }
 
     private function slug(string $composerName) : string

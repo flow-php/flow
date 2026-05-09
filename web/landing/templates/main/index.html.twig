@@ -45,7 +45,7 @@
 // ⚠ not memory-safe: $rows accumulates every record
 $rows = [];
 
-$file = fopen('orders.csv', 'r');
+$file = fopen(__DIR__ . '/orders.csv', 'r');
 if ($file === false) {
     throw new \RuntimeException('Cannot open orders.csv');
 }
@@ -82,7 +82,7 @@ fclose($file);
 $json = json_encode($rows, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
 
 // ⚠ not memory-safe: writes the whole payload in one call
-file_put_contents('orders.json', $json);{% endverbatim %}{% endset %}
+file_put_contents(__DIR__ . '/orders.json', $json);{% endverbatim %}{% endset %}
 
         {% set flowPhpCode %}{% verbatim %}<?php
 
@@ -91,14 +91,12 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\JSON\to_json;
 
 data_frame()
-    ->read(from_csv('orders.csv'))
+    ->read(from_csv(__DIR__ . '/orders.csv'))
+    ->autoCast()
     ->filter(ref('id')->isNotNull())
     ->filter(ref('amount')->isNotNull())
     ->filter(ref('email')->isNotNull())
-    ->withEntry('id', ref('id')->cast('integer'))
-    ->withEntry('amount', ref('amount')->cast('float'))
-    ->withEntry('created_at', ref('created_at')->cast('datetime'))
-    ->write(to_json('orders.json'))
+    ->write(to_json(__DIR__ . '/orders.json'))
     ->run();{% endverbatim %}{% endset %}
 
         <div class="mt-10 grid lg:grid-cols-2 gap-5">
