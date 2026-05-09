@@ -330,6 +330,16 @@
             }
         },
         {
+            "name": "flow-php/etl-adapter-seal",
+            "path": "src/adapter/etl-adapter-seal",
+            "type": "adapter",
+            "links": {
+                "documentation": "/documentation/components/adapters/seal",
+                "api": "/documentation/api/adapter/seal",
+                "files": "/documentation/api/adapter/seal/indices/files.html"
+            }
+        },
+        {
             "name": "flow-php/monolog-telemetry-bridge",
             "path": "src/bridge/monolog/telemetry",
             "type": "bridge",

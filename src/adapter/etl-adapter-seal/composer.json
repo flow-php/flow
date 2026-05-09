@@ -1,0 +1,41 @@
+{
+    "name": "flow-php/etl-adapter-seal",
+    "type": "library",
+    "description": "Flow PHP Adapter for Seal - php Search Engine Abstraction Layer https://php-cmsig.github.io/",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "seal",
+        "search",
+        "adapter"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "cmsig/seal": "^0.12",
+        "flow-php/etl": "self.version"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Seal/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

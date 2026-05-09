@@ -201,6 +201,10 @@ component_management:
       name: adapter-postgresql
       paths:
         - src/adapter/etl-adapter-postgresql/**
+    - component_id: adapter-seal
+      name: adapter-seal
+      paths:
+        - src/adapter/etl-adapter-seal/**
     - component_id: bridge-phpunit-postgresql
       name: bridge-phpunit-postgresql
       paths:
