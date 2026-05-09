@@ -32,7 +32,6 @@ return static function (ContainerConfigurator $container) : void {
         $services
             ->set('.flow.filesystem.factory.aws_s3', AsyncAwsS3FilesystemFactory::class)
             ->private()
-            ->args([service('service_container')])
             ->tag('flow.filesystem.factory', ['type' => 'aws_s3']);
     }
 
@@ -40,7 +39,6 @@ return static function (ContainerConfigurator $container) : void {
         $services
             ->set('.flow.filesystem.factory.azure_blob', AzureBlobFilesystemFactory::class)
             ->private()
-            ->args([service('service_container')])
             ->tag('flow.filesystem.factory', ['type' => 'azure_blob']);
     }
 

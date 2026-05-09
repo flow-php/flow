@@ -18,38 +18,38 @@ return static function (ContainerConfigurator $container) : void {
     $services = $container->services();
 
     $services->set('flow.postgresql.command.current', CurrentCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.latest', LatestCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.status', StatusCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.list', ListCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.migrate', MigrateCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.execute', ExecuteCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.diff', DiffCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.generate', GenerateCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.up_to_date', UpToDateCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.migrations.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.migrations.default_connection')])
         ->tag('console.command');
 };

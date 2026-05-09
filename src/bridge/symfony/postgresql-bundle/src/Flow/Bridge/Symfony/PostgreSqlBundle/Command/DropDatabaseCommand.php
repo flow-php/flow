@@ -9,12 +9,12 @@ use function Flow\PostgreSql\DSL\{agg_count, and_, col, drop, eq, func, ne, para
 use function Flow\Types\DSL\{type_instance_of, type_string};
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputInterface, InputOption};
-use Symfony\Component\Console\Output\OutputInterface;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(name: 'flow:database:drop', description: 'Drop the configured database')]
 final class DropDatabaseCommand extends Command

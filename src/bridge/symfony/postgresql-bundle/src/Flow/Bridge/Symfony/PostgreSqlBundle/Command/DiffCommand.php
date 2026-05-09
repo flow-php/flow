@@ -9,13 +9,13 @@ use function Flow\Types\DSL\{type_instance_of, type_string};
 use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: 'flow:migrations:diff', description: 'Generate a migration by comparing the current database to the catalog')]
 final class DiffCommand extends Command

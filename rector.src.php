@@ -34,7 +34,7 @@ return RectorConfig::configure()
         ArrayToFirstClassCallableRector::class => [
             __DIR__ . '/src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php',
             __DIR__ . '/src/bridge/symfony/filesystem-bundle/src/Flow/Bridge/Symfony/FilesystemBundle/DependencyInjection/Compiler/BuildFstabsPass.php',
-            __DIR__ . '/src/bridge/symfony/postgresql-bundle/src/Flow/Bridge/Symfony/PostgreSqlBundle/DependencyInjection/FlowPostgreSqlExtension.php',
+            __DIR__ . '/src/bridge/symfony/postgresql-bundle/src/Flow/Bridge/Symfony/PostgreSqlBundle/FlowPostgreSqlBundle.php',
         ],
     ])
     ->withCache(__DIR__ . '/var/rector/src')

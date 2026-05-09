@@ -11,14 +11,14 @@ return static function (ContainerConfigurator $container) : void {
     $services = $container->services();
 
     $services->set('flow.postgresql.command.database_create', CreateDatabaseCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.database_drop', DropDatabaseCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.default_connection')])
         ->tag('console.command');
 
     $services->set('flow.postgresql.command.sql_run', RunSqlCommand::class)
-        ->args([service('service_container'), param('flow.postgresql.default_connection')])
+        ->args([service('flow.postgresql.command_locator'), param('flow.postgresql.default_connection')])
         ->tag('console.command');
 };

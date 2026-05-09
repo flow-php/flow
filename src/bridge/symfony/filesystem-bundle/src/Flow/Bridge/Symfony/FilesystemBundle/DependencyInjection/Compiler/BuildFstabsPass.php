@@ -42,6 +42,8 @@ final class BuildFstabsPass implements CompilerPassInterface
         $availableTypes = $this->collectAvailableTypes($container);
 
         foreach ($fstabs as $fstabName => $fstabConfig) {
+            $resolvedFilesystems = [];
+
             foreach ($fstabConfig['filesystems'] as $mountName => $entry) {
                 if (!\array_key_exists($entry['type'], $availableTypes)) {
                     throw new LogicException(\sprintf(
@@ -52,6 +54,8 @@ final class BuildFstabsPass implements CompilerPassInterface
                         \implode(', ', \array_keys($availableTypes)),
                     ));
                 }
+
+                $resolvedFilesystems[$mountName] = $this->resolveServiceReferences($entry);
             }
 
             $telemetryReference = $this->buildTelemetryConfigReference($container, $fstabName, $fstabConfig['telemetry'] ?? []);
@@ -61,7 +65,7 @@ final class BuildFstabsPass implements CompilerPassInterface
             $definition->setArguments([
                 new Reference(RegisterFilesystemFactoriesPass::REGISTRY_SERVICE_ID),
                 $fstabName,
-                $fstabConfig['filesystems'],
+                $resolvedFilesystems,
                 $telemetryReference,
             ]);
             $definition->setPublic(false);
@@ -142,5 +146,85 @@ final class BuildFstabsPass implements CompilerPassInterface
         }
 
         return $types;
+    }
+
+    /**
+     * @param array<string, mixed>&array{type: string} $entry
+     *
+     * @return array<string, mixed>&array{type: string}
+     */
+    private function resolveAwsS3References(array $entry) : array
+    {
+        if (\array_key_exists('client_service_id', $entry) && \is_string($entry['client_service_id']) && $entry['client_service_id'] !== '') {
+            $entry['client'] = new Reference($entry['client_service_id']);
+            unset($entry['client_service_id']);
+        }
+
+        if (\array_key_exists('client', $entry) && \is_array($entry['client'])) {
+            $client = $entry['client'];
+
+            if (\array_key_exists('http_client_service_id', $client) && \is_string($client['http_client_service_id']) && $client['http_client_service_id'] !== '') {
+                $client['http_client'] = new Reference($client['http_client_service_id']);
+                unset($client['http_client_service_id']);
+            }
+
+            if (\array_key_exists('logger_service_id', $client) && \is_string($client['logger_service_id']) && $client['logger_service_id'] !== '') {
+                $client['logger'] = new Reference($client['logger_service_id']);
+                unset($client['logger_service_id']);
+            }
+
+            $entry['client'] = $client;
+        }
+
+        return $entry;
+    }
+
+    /**
+     * @param array<string, mixed>&array{type: string} $entry
+     *
+     * @return array<string, mixed>&array{type: string}
+     */
+    private function resolveAzureBlobReferences(array $entry) : array
+    {
+        if (\array_key_exists('client_service_id', $entry) && \is_string($entry['client_service_id']) && $entry['client_service_id'] !== '') {
+            $entry['client'] = new Reference($entry['client_service_id']);
+            unset($entry['client_service_id']);
+        }
+
+        if (\array_key_exists('client', $entry) && \is_array($entry['client'])) {
+            $client = $entry['client'];
+
+            $serviceKeyMap = [
+                'http_client_service' => 'http_client',
+                'request_factory_service' => 'request_factory',
+                'stream_factory_service' => 'stream_factory',
+                'logger_service_id' => 'logger',
+            ];
+
+            foreach ($serviceKeyMap as $configKey => $resolvedKey) {
+                if (\array_key_exists($configKey, $client) && \is_string($client[$configKey]) && $client[$configKey] !== '') {
+                    $client[$resolvedKey] = new Reference($client[$configKey]);
+                    unset($client[$configKey]);
+                }
+            }
+
+            $entry['client'] = $client;
+        }
+
+        return $entry;
+    }
+
+    /**
+     * @param array<string, mixed>&array{type: string} $entry
+     *
+     * @return array<string, mixed>&array{type: string}
+     */
+    private function resolveServiceReferences(array $entry) : array
+    {
+        return match ($entry['type']) {
+            'aws_s3' => $this->resolveAwsS3References($entry),
+            'azure_blob' => $this->resolveAzureBlobReferences($entry),
+            default => $entry,
+        };
     }
 }

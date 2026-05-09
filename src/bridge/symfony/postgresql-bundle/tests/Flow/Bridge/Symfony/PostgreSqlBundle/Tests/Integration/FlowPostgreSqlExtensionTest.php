@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\{CreateDatabaseCommand, DropDatabaseCommand, GenerateCommand, RunSqlCommand, SessionPurgeCommand, UpToDateCommand};
-use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\FlowPostgreSqlExtension;
+use Flow\Bridge\Symfony\PostgreSqlBundle\FlowPostgreSqlBundle;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\{AttributeTestCatalogProvider, TestKernel, VoidTelemetryFactory};
 use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
@@ -25,7 +25,7 @@ use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
 
-#[CoversClass(FlowPostgreSqlExtension::class)]
+#[CoversClass(FlowPostgreSqlBundle::class)]
 final class FlowPostgreSqlExtensionTest extends KernelTestCase
 {
     public function test_attribute_based_catalog_provider_auto_discovery() : void

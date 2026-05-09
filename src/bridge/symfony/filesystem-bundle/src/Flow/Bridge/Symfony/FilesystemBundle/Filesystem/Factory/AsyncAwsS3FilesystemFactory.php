@@ -10,17 +10,14 @@ use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Filesystem;
-use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 {
-    public function __construct(private ContainerInterface $container)
-    {
-    }
-
     public function create(string $protocol, array $config) : Filesystem
     {
-        $allowed = ['bucket', 'client_service_id', 'client', 'options'];
+        $allowed = ['bucket', 'client', 'options'];
         $unknown = \array_diff(\array_keys($config), $allowed);
 
         if ($unknown !== []) {
@@ -36,27 +33,25 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         }
 
         $bucket = $config['bucket'];
-        $clientServiceId = $config['client_service_id'] ?? null;
-        $clientConfig = $config['client'] ?? null;
 
-        if (($clientServiceId === null) === ($clientConfig === null)) {
+        if (!\array_key_exists('client', $config) || $config['client'] === null) {
             throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" requires exactly one of `client_service_id` or `client`.');
         }
 
-        if (\is_string($clientServiceId) && $clientServiceId !== '') {
-            $client = $this->container->get($clientServiceId);
+        $client = $config['client'];
 
-            if (!$client instanceof S3Client) {
-                throw new InvalidArgumentException(\sprintf('Service "%s" is not an instance of %s.', $clientServiceId, S3Client::class));
-            }
+        if ($client instanceof S3Client) {
+            $resolvedClient = $client;
+        } elseif (\is_array($client)) {
+            /** @var array<string, mixed> $client */
+            $resolvedClient = $this->buildClient($client);
         } else {
-            /** @var array<string, mixed> $clientConfig */
-            $client = $this->buildClient($clientConfig ?? []);
+            throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "aws_s3" `client` must be an array or %s instance, got %s.', S3Client::class, \get_debug_type($client)));
         }
 
         $options = $this->buildOptions($config['options'] ?? null);
 
-        return aws_s3_filesystem($bucket, $client, $options, $protocol);
+        return aws_s3_filesystem($bucket, $resolvedClient, $options, $protocol);
     }
 
     public function type() : string
@@ -69,7 +64,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
      */
     private function buildClient(array $clientConfig) : S3Client
     {
-        $allowed = ['region', 'access_key_id', 'access_key_secret', 'session_token', 'endpoint', 'path_style_endpoint', 'shared_credentials_file', 'shared_config_file', 'profile', 'debug', 'http_client_service_id', 'logger_service_id'];
+        $allowed = ['region', 'access_key_id', 'access_key_secret', 'session_token', 'endpoint', 'path_style_endpoint', 'shared_credentials_file', 'shared_config_file', 'profile', 'debug', 'http_client', 'logger'];
         $unknown = \array_diff(\array_keys($clientConfig), $allowed);
 
         if ($unknown !== []) {
@@ -83,22 +78,20 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         $httpClient = null;
         $logger = null;
 
-        if (\array_key_exists('http_client_service_id', $clientConfig)) {
-            $id = $clientConfig['http_client_service_id'];
-
-            if (\is_string($id) && $id !== '') {
-                $httpClient = $this->container->get($id);
+        if (\array_key_exists('http_client', $clientConfig) && $clientConfig['http_client'] !== null) {
+            if (!$clientConfig['http_client'] instanceof HttpClientInterface) {
+                throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "aws_s3" `client.http_client_service_id` must reference a service implementing %s.', HttpClientInterface::class));
             }
-            unset($clientConfig['http_client_service_id']);
+            $httpClient = $clientConfig['http_client'];
+            unset($clientConfig['http_client']);
         }
 
-        if (\array_key_exists('logger_service_id', $clientConfig)) {
-            $id = $clientConfig['logger_service_id'];
-
-            if (\is_string($id) && $id !== '') {
-                $logger = $this->container->get($id);
+        if (\array_key_exists('logger', $clientConfig) && $clientConfig['logger'] !== null) {
+            if (!$clientConfig['logger'] instanceof LoggerInterface) {
+                throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "aws_s3" `client.logger_service_id` must reference a service implementing %s.', LoggerInterface::class));
             }
-            unset($clientConfig['logger_service_id']);
+            $logger = $clientConfig['logger'];
+            unset($clientConfig['logger']);
         }
 
         $keyMap = [

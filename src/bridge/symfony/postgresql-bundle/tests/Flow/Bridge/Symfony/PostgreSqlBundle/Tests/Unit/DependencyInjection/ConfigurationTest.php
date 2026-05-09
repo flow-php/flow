@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\DependencyInjection;
 
-use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Configuration;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\ConfigurationContext;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
 {
+    private ConfigurationContext $context;
+
+    protected function setUp() : void
+    {
+        $this->context = new ConfigurationContext();
+    }
+
     public function test_cache_pool_connection_can_be_null() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -22,14 +28,14 @@ final class ConfigurationTest extends TestCase
                     'app' => [],
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertNull($config['cache']['pools']['app']['connection']);
     }
 
     public function test_cache_pool_share_connection_can_be_enabled() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -38,14 +44,14 @@ final class ConfigurationTest extends TestCase
                     'app' => ['share_connection' => true],
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertTrue($config['cache']['pools']['app']['share_connection']);
     }
 
     public function test_cache_pools_custom_columns_and_namespace() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -65,7 +71,7 @@ final class ConfigurationTest extends TestCase
                     ],
                 ],
             ],
-        ]]);
+        ]);
 
         $pool = $config['cache']['pools']['sessions'];
         self::assertSame('default', $pool['connection']);
@@ -82,7 +88,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_cache_pools_default_table_and_schema() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -91,7 +97,7 @@ final class ConfigurationTest extends TestCase
                     'app' => [],
                 ],
             ],
-        ]]);
+        ]);
 
         $pool = $config['cache']['pools']['app'];
         self::assertSame('cache_items', $pool['table_name']);
@@ -108,11 +114,11 @@ final class ConfigurationTest extends TestCase
 
     public function test_cache_section_can_be_omitted() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
-        ]]);
+        ]);
 
         self::assertSame([], $config['cache']['pools']);
     }
@@ -135,7 +141,7 @@ final class ConfigurationTest extends TestCase
             ],
         ];
 
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -147,7 +153,7 @@ final class ConfigurationTest extends TestCase
             'catalog_providers' => [
                 ['catalog' => $catalogData],
             ],
-        ]]);
+        ]);
 
         self::assertCount(1, $config['catalog_providers']);
         self::assertSame($catalogData, $config['catalog_providers'][0]['catalog']);
@@ -155,7 +161,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_catalog_providers_at_top_level_with_service_reference() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -171,7 +177,7 @@ final class ConfigurationTest extends TestCase
             'catalog_providers' => [
                 ['catalog_provider_id' => 'app.catalog_provider'],
             ],
-        ]]);
+        ]);
 
         self::assertSame('app.catalog_provider', $config['catalog_providers'][0]['catalog_provider_id']);
         self::assertSame('/custom/migrations', $config['migrations']['directory']);
@@ -182,7 +188,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_catalog_providers_multiple_entries() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -192,7 +198,7 @@ final class ConfigurationTest extends TestCase
                 ['catalog' => ['schemas' => []]],
                 ['catalog_provider_id' => 'app.second_provider'],
             ],
-        ]]);
+        ]);
 
         self::assertCount(2, $config['catalog_providers']);
         self::assertSame('app.second_provider', $config['catalog_providers'][1]['catalog_provider_id']);
@@ -202,14 +208,14 @@ final class ConfigurationTest extends TestCase
     {
         $this->expectException(InvalidConfigurationException::class);
 
-        (new Processor())->processConfiguration(new Configuration(), [[
+        $this->context->processConfig([
             'connections' => [],
-        ]]);
+        ]);
     }
 
     public function test_context_accepts_arbitrary_variables() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -222,7 +228,7 @@ final class ConfigurationTest extends TestCase
                     ],
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertSame([
             'tenant_id' => 42,
@@ -235,13 +241,13 @@ final class ConfigurationTest extends TestCase
 
     public function test_context_defaults_to_empty() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertSame([], $config['connections']['default']['context']);
     }
@@ -250,16 +256,16 @@ final class ConfigurationTest extends TestCase
     {
         $this->expectException(InvalidConfigurationException::class);
 
-        (new Processor())->processConfiguration(new Configuration(), [[
+        $this->context->processConfig([
             'connections' => [
                 'default' => [],
             ],
-        ]]);
+        ]);
     }
 
     public function test_messenger_custom_table_and_schema() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -268,7 +274,7 @@ final class ConfigurationTest extends TestCase
                 'table_name' => 'custom_queue',
                 'schema' => 'app',
             ],
-        ]]);
+        ]);
 
         self::assertTrue($config['messenger']['enabled']);
         self::assertSame('custom_queue', $config['messenger']['table_name']);
@@ -277,14 +283,14 @@ final class ConfigurationTest extends TestCase
 
     public function test_messenger_defaults() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
             'messenger' => [
                 'enabled' => true,
             ],
-        ]]);
+        ]);
 
         self::assertTrue($config['messenger']['enabled']);
         self::assertSame('messenger_messages', $config['messenger']['table_name']);
@@ -293,18 +299,18 @@ final class ConfigurationTest extends TestCase
 
     public function test_messenger_disabled_by_default() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
-        ]]);
+        ]);
 
         self::assertFalse($config['messenger']['enabled']);
     }
 
     public function test_migrations_default_values() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -313,7 +319,7 @@ final class ConfigurationTest extends TestCase
             'migrations' => [
                 'enabled' => true,
             ],
-        ]]);
+        ]);
 
         self::assertSame('%kernel.project_dir%/migrations', $config['migrations']['directory']);
         self::assertSame('App\\Migrations', $config['migrations']['namespace']);
@@ -325,7 +331,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_migrations_enabled_without_catalog_providers_is_valid_at_config_level() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -334,14 +340,14 @@ final class ConfigurationTest extends TestCase
             'migrations' => [
                 'enabled' => true,
             ],
-        ]]);
+        ]);
 
         self::assertTrue($config['migrations']['enabled']);
     }
 
     public function test_multiple_connections() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db1',
@@ -350,7 +356,7 @@ final class ConfigurationTest extends TestCase
                     'dsn' => 'postgresql://user:pass@localhost:5432/db2',
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertArrayHasKey('default', $config['connections']);
         self::assertArrayHasKey('analytics', $config['connections']);
@@ -360,25 +366,25 @@ final class ConfigurationTest extends TestCase
 
     public function test_session_default_disabled() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
-        ]]);
+        ]);
 
         self::assertFalse($config['session']['enabled']);
     }
 
     public function test_session_defaults_when_enabled() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
             'session' => [
                 'enabled' => true,
             ],
-        ]]);
+        ]);
 
         $session = $config['session'];
         self::assertTrue($session['enabled']);
@@ -398,7 +404,7 @@ final class ConfigurationTest extends TestCase
     {
         $this->expectException(InvalidConfigurationException::class);
 
-        (new Processor())->processConfiguration(new Configuration(), [[
+        $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -406,12 +412,12 @@ final class ConfigurationTest extends TestCase
                 'enabled' => true,
                 'lock_mode' => 'pessimistic',
             ],
-        ]]);
+        ]);
     }
 
     public function test_session_overrides() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -427,7 +433,7 @@ final class ConfigurationTest extends TestCase
                 'lock_mode' => 'advisory',
                 'ttl' => 7200,
             ],
-        ]]);
+        ]);
 
         $session = $config['session'];
         self::assertSame('default', $session['connection']);
@@ -443,7 +449,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_session_share_connection_can_be_enabled() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -451,7 +457,7 @@ final class ConfigurationTest extends TestCase
                 'enabled' => true,
                 'share_connection' => true,
             ],
-        ]]);
+        ]);
 
         self::assertTrue($config['session']['share_connection']);
     }
@@ -460,7 +466,7 @@ final class ConfigurationTest extends TestCase
     {
         $this->expectException(InvalidConfigurationException::class);
 
-        (new Processor())->processConfiguration(new Configuration(), [[
+        $this->context->processConfig([
             'connections' => [
                 'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
             ],
@@ -468,18 +474,18 @@ final class ConfigurationTest extends TestCase
                 'enabled' => true,
                 'ttl' => -1,
             ],
-        ]]);
+        ]);
     }
 
     public function test_single_connection_with_defaults() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertSame('postgresql://user:pass@localhost:5432/db', $config['connections']['default']['dsn']);
         self::assertFalse($config['migrations']['enabled']);
@@ -487,13 +493,13 @@ final class ConfigurationTest extends TestCase
 
     public function test_telemetry_not_present_by_default() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
                 ],
             ],
-        ]]);
+        ]);
 
         self::assertArrayNotHasKey('telemetry', $config['connections']['default']);
     }
@@ -502,19 +508,19 @@ final class ConfigurationTest extends TestCase
     {
         $this->expectException(InvalidConfigurationException::class);
 
-        (new Processor())->processConfiguration(new Configuration(), [[
+        $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
                     'telemetry' => [],
                 ],
             ],
-        ]]);
+        ]);
     }
 
     public function test_telemetry_with_custom_options() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -532,7 +538,7 @@ final class ConfigurationTest extends TestCase
                     ],
                 ],
             ],
-        ]]);
+        ]);
 
         $telemetry = $config['connections']['default']['telemetry'];
         self::assertSame('my.telemetry', $telemetry['service_id']);
@@ -549,7 +555,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_telemetry_with_defaults() : void
     {
-        $config = (new Processor())->processConfiguration(new Configuration(), [[
+        $config = $this->context->processConfig([
             'connections' => [
                 'default' => [
                     'dsn' => 'postgresql://user:pass@localhost:5432/db',
@@ -558,7 +564,7 @@ final class ConfigurationTest extends TestCase
                     ],
                 ],
             ],
-        ]]);
+        ]);
 
         $telemetry = $config['connections']['default']['telemetry'];
         self::assertSame('flow.telemetry', $telemetry['service_id']);
