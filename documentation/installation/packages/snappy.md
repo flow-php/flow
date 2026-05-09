@@ -6,7 +6,8 @@ seo_description: >
 
 # Snappy
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/snappy.md]
+
 - [📜 Documentation](/documentation/components/libs/snappy.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/snappy)
 

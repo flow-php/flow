@@ -6,7 +6,8 @@ seo_description: >
 
 # PSR-7 Telemetry Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/psr7-telemetry-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/psr7-telemetry-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/psr7-telemetry-bridge)
 

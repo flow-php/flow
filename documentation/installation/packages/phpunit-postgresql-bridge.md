@@ -6,7 +6,8 @@ seo_description: >
 
 # PHPUnit PostgreSQL Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/phpunit-postgresql-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/phpunit-postgresql-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/phpunit-postgresql-bridge)
 

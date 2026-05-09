@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-google-sheet
+---
+
 # ETL Adapter: Google Sheet
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-google-sheet)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-google-sheet.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-google-sheet)
-- [📚API Reference](/documentation/api/adapter/google-sheet)
-- [📁Files](/documentation/api/adapter/google-sheet/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

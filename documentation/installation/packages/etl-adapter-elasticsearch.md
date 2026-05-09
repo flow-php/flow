@@ -6,7 +6,8 @@ seo_description: >
 
 # Elasticsearch Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/elasticsearch.md]
+
 - [📜 Documentation](/documentation/components/adapters/elasticsearch.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-elasticsearch)
 

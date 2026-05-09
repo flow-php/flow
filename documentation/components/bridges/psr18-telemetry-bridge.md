@@ -1,11 +1,12 @@
+---
+package: flow-php/psr18-telemetry-bridge
+---
+
 # PSR-18 Telemetry Bridge
 
 Flow PSR-18 Telemetry Bridge provides a traceable HTTP client wrapper for PSR-18 compliant HTTP clients, enabling automatic span creation and telemetry context propagation for outgoing HTTP requests.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/psr18-telemetry-bridge)
-- [➡️ Installation](/documentation/installation/packages/psr18-telemetry-bridge.md)
-- [🐙GitHub](https://github.com/flow-php/psr18-telemetry-bridge)
+[PACKAGE_NAV]
 
 [TOC]
 

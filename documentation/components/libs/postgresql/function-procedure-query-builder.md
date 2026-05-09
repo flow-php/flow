@@ -1,6 +1,6 @@
 # Function and Procedure Query Builder
 
-- [Back](/documentation/components/libs/postgresql.md)
+[DOC_LINK:/documentation/components/libs/postgresql.md]
 
 [TOC]
 

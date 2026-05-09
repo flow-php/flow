@@ -1,11 +1,10 @@
+---
+package: flow-php/azure-sdk
+---
+
 # Azure SDK
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/azure-sdk)
-- [➡️ Installation](/documentation/installation/packages/azure-sdk.md)
-- [🐙GitHub](https://github.com/flow-php/azure-sdk)
-- [📚API Reference](/documentation/api/lib/azure-sdk)
-- [📁Files](/documentation/api/lib/azure-sdk/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

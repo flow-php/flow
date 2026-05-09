@@ -1,3 +1,7 @@
+---
+package: flow-php/telemetry-otlp-bridge
+---
+
 # Telemetry OTLP Bridge
 
 The OTLP (OpenTelemetry Protocol) Bridge provides serializers and transports for sending telemetry data to
@@ -5,12 +9,7 @@ OpenTelemetry-compatible backends.
 It extends the [Flow Telemetry](/documentation/components/libs/telemetry.md) library with production-ready export
 capabilities.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/telemetry-otlp-bridge)
-- [➡️ Installation](/documentation/installation/packages/telemetry-otlp-bridge.md)
-- [🐙GitHub](https://github.com/flow-php/telemetry-otlp-bridge)
-- [📚API Reference](/documentation/api/bridge/telemetry/otlp)
-- [🗺DSL](/documentation/api/bridge/telemetry/otlp/namespaces/flow-bridge-telemetry-otlp-dsl.html)
+[PACKAGE_NAV]
 
 [TOC]
 

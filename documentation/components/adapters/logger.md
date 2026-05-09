@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-logger
+---
+
 # ETL Adapter: Logger
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-logger)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-logger.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-logger)
-- [📚API Reference](/documentation/api/adapter/logger)
-- [📁Files](/documentation/api/adapter/logger/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

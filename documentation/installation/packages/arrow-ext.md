@@ -6,7 +6,8 @@ seo_description: >
 
 # Arrow Extension
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/extensions/arrow-ext.md]
+
 - [📜 Documentation](/documentation/components/extensions/arrow-ext.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/arrow-ext)
 

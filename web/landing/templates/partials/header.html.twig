@@ -1,0 +1,133 @@
+{# Sticky glass header. `wide` removes the max-w container for full-width pages. #}
+<header class="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md supports-[backdrop-filter]:bg-black/55">
+    <div class="{{ wide|default(false) ? 'px-4 lg:px-8 xl:px-12' : 'mx-auto max-w-screen-2xl px-4 sm:px-6' }} flex h-16 items-center justify-between gap-4">
+        <a href="{{ path('home') }}" class="shrink-0 inline-flex items-center" aria-label="Flow PHP — home">
+            <img src="{{ asset('images/logo.svg') }}" alt="" width="146" height="40" class="h-9 w-auto">
+        </a>
+
+        <button type="button" popovertarget="search-modal" popovertargetaction="show"
+                class="hidden lg:inline-flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-2 text-sm text-white/60 hover:text-white/85 transition-colors min-w-[18rem]"
+                aria-label="Search documentation">
+            <img src="{{ asset('images/icons/search.svg') }}" alt="" width="16" height="16" class="opacity-70">
+            <span class="flex-1 text-left">Search docs…</span>
+            <kbd class="hidden xl:inline-flex h-5 items-center rounded border border-white/15 bg-black/40 px-1.5 text-[10px] font-mono text-white/55">/</kbd>
+        </button>
+
+        <nav aria-label="Primary" class="hidden lg:flex items-center gap-1 text-sm">
+            {% set primary = [
+                {label: 'Docs',       href: path('documentation'),                                                                                       route: 'documentation'},
+                {label: 'Playground', href: path('playground'),                                                                                          route: 'playground'},
+                {label: 'Examples',   href: path('example_option', {topic: 'data_frame', example: 'data_reading', option: 'array', _fragment: 'example'}), route: 'example_option'},
+                {label: 'Blog',       href: path('blog'),                                                                                                route: 'blog'},
+            ] %}
+            {% for item in primary %}
+                {% set active = app.request.attributes.get('_route') starts with item.route %}
+                <a href="{{ item.href }}"
+                   class="rounded-md px-3 py-2 font-medium text-white/75 transition-colors hover:text-white hover:bg-white/[0.06] no-underline {{ active ? '!text-white bg-white/[0.08]' }}"
+                   {% if active %}aria-current="page"{% endif %}>
+                    {{ item.label }}
+                </a>
+            {% endfor %}
+        </nav>
+
+        <div class="hidden lg:flex items-center gap-2">
+            <a href="{{ path('sponsor') }}"
+               class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-white/75 hover:text-white hover:bg-white/[0.06] no-underline">
+                <img src="{{ asset('images/icons/heart.svg') }}" alt="" width="16" height="16" class="shrink-0">
+                Sponsor
+            </a>
+            <a href="https://discord.gg/5dNXfQyACW" target="_blank" rel="noopener"
+               aria-label="Discord (opens in new tab)"
+               class="inline-flex h-9 w-9 items-center justify-center rounded-md text-white/75 hover:text-white hover:bg-white/[0.06] no-underline">
+                <img src="{{ asset('images/icons/discord.svg') }}" alt="" width="18" height="18">
+            </a>
+            <a href="https://github.com/flow-php/flow" target="_blank" rel="noopener"
+               aria-label="Repository on GitHub (opens in new tab)"
+               class="inline-flex h-9 w-9 items-center justify-center rounded-md text-white/75 hover:text-white hover:bg-white/[0.06] no-underline">
+                <img src="{{ asset('images/icons/github.svg') }}" alt="" width="18" height="18">
+            </a>
+        </div>
+
+        <div class="lg:hidden inline-flex items-center gap-1">
+            <button type="button" popovertarget="search-modal" popovertargetaction="show"
+                    aria-label="Search"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
+                <img src="{{ asset('images/icons/search.svg') }}" alt="" width="20" height="20">
+            </button>
+            <button popovertarget="mobile-nav" popovertargetaction="show"
+                    aria-label="Open menu"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
+                <img src="{{ asset('images/icons/menu.svg') }}" alt="" width="24" height="24">
+            </button>
+        </div>
+
+        <nav popover id="mobile-nav" aria-label="Mobile" class="unset lg:hidden m-0 inset-0 max-h-none max-w-none w-full h-full bg-black text-white">
+            <div class="flex h-16 items-center justify-between px-4 sm:px-6 border-b border-white/10">
+                <span class="font-semibold tracking-wide">Menu</span>
+                <button popovertarget="mobile-nav" popovertargetaction="hide"
+                        aria-label="Close menu"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
+                    <img src="{{ asset('images/icons/close.svg') }}" alt="" width="24" height="24">
+                </button>
+            </div>
+            <div class="px-4 sm:px-6 py-6 space-y-6">
+                <ul class="space-y-1 text-base">
+                    {% set mobileNav = [
+                        {label: 'Docs',       href: path('documentation'),    icon: 'checklist'},
+                        {label: 'Playground', href: path('playground'),       icon: 'play'},
+                        {label: 'Examples',   href: path('example_option', {topic: 'data_frame', example: 'data_reading', option: 'array', _fragment: 'example'}), icon: 'code'},
+                        {label: 'Blog',       href: path('blog'),             icon: 'pencil'},
+                        {label: 'Sponsor',    href: path('sponsor'),          icon: 'heart'},
+                    ] %}
+                    {% for item in mobileNav %}
+                        <li>
+                            <a href="{{ item.href }}"
+                               class="flex items-center gap-3 rounded-lg px-3 py-3 font-medium text-white hover:bg-white/[0.06] no-underline">
+                                <img src="{{ asset('images/icons/' ~ item.icon ~ '.svg') }}" alt="" width="20" height="20" class="opacity-75">
+                                {{ item.label }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="pt-6 border-t border-white/10 space-y-1">
+                    <p class="px-3 mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Community</p>
+                    <a href="https://github.com/flow-php/flow" target="_blank" rel="noopener"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-white/85 hover:bg-white/[0.06] no-underline">
+                        <img src="{{ asset('images/icons/github.svg') }}" alt="" width="20" height="20" class="opacity-75">
+                        Repository
+                    </a>
+                    <a href="https://github.com/orgs/flow-php/projects/1" target="_blank" rel="noopener"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-white/85 hover:bg-white/[0.06] no-underline">
+                        <img src="{{ asset('images/icons/date.svg') }}" alt="" width="20" height="20" class="opacity-75">
+                        Roadmap
+                    </a>
+                    <a href="https://discord.gg/5dNXfQyACW" target="_blank" rel="noopener"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-white/85 hover:bg-white/[0.06] no-underline">
+                        <img src="{{ asset('images/icons/discord.svg') }}" alt="" width="20" height="20" class="opacity-75">
+                        Discord
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div popover id="search-modal"
+     class="unset m-0 inset-0 max-h-none max-w-none w-full h-full bg-black/80 backdrop-blur-md"
+     {{ stimulus_controller('site_search') }}
+     data-site-search-bundle-path-value="/pagefind/">
+    <div class="mx-auto mt-20 max-w-4xl px-4">
+        <div class="rounded-2xl border border-white/10 bg-[#1b1925] shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
+                <span class="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Search</span>
+                <button popovertarget="search-modal" popovertargetaction="hide"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-white/[0.06]"
+                        aria-label="Close search">
+                    <img src="{{ asset('images/icons/close.svg') }}" alt="" width="18" height="18">
+                </button>
+            </div>
+            <div id="site-search" data-site-search-target="mount" class="p-3"></div>
+        </div>
+    </div>
+</div>

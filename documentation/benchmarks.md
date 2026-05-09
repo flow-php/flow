@@ -1,6 +1,6 @@
 # Benchmarks
 
-- [⬅️️ Back](/documentation/introduction.md)
+[DOC_LINK:/documentation/introduction.md]
 
 [TOC]
 

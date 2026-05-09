@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-chartjs
+---
+
 # Chart JS Adapter
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-chartjs)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-chartjs.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-chartjs)
-- [📚API Reference](/documentation/api/adapter/chartjs)
-- [📁Files](/documentation/api/adapter/chartjs/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

@@ -1,5 +1,7 @@
 # Role and Grant Query Builder
 
+[DOC_LINK:/documentation/components/libs/postgresql]
+
 The PostgreSQL library provides fluent builders for managing PostgreSQL roles, users, and their privileges.
 
 ## Role Management

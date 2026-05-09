@@ -34,6 +34,7 @@
     {% block stylesheets %}
         <style>@font-face{font-family:'Cabin Variable';font-style:normal;font-display:swap;font-weight:400 700;src:url("{{ asset('vendor/@fontsource-variable/cabin/files/cabin-vietnamese-wght-normal.woff2') }}") format('woff2-variations');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Cabin Variable';font-style:normal;font-display:swap;font-weight:400 700;src:url("{{ asset('vendor/@fontsource-variable/cabin/files/cabin-latin-ext-wght-normal.woff2') }}") format('woff2-variations');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Cabin Variable';font-style:normal;font-display:swap;font-weight:400 700;src:url("{{ asset('vendor/@fontsource-variable/cabin/files/cabin-latin-wght-normal.woff2') }}") format('woff2-variations');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style>
         <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+        <link rel="stylesheet" href="/pagefind/pagefind-ui.css" onerror="this.remove()">
     {% endblock %}
 
     {% block tracking %}
@@ -96,76 +97,12 @@
     {% endblock %}
 </head>
 <body class="scroll-smooth bg-black text-white" data-environment="{{ app.environment }}">
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-orange-100 focus:px-3 focus:py-2 focus:text-white">
+        Skip to content
+    </a>
+
     {% block header %}
-    <header class="py-2 text-white bg-blue-200">
-        <div class="mx-auto max-w-screen-2xl px-4 flex items-center justify-between">
-            <a href="{{ path('home') }}">
-                <img src="{{ asset('images/logo.svg') }}" alt="flow php" width="176" height="48">
-            </a>
-
-            <button popovertarget="main-nav" popovertargetaction="show" class="sm:hidden">
-                <img src="{{ asset('images/icons/menu.svg') }}" alt="menu" width="32" height="32">
-            </button>
-
-            <nav popover id="main-nav" class="max-sm:absolute border-0 p-0 m-0 max-sm:top-0 max-sm:right-0 sm:relative sm:block text-white bg-blue-200 unset">
-                <ul class="sm:flex flex-nowrap whitespace-nowrap">
-                    <li class="sm:hidden text-right">
-                        <button popovertarget="main-nav" popovertargetaction="hide" class="sm:hidden h-16 pr-4">
-                            <img src="{{ asset('images/icons/close.svg') }}" alt="close" width="32" height="32">
-                        </button>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('sponsor') }}">
-                            Sponsor
-                            <img src="{{ asset('images/icons/heart.svg') }}" alt="external resource" width="20" height="20" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('playground') }}">
-                            Playground
-                            <img src="{{ asset('images/icons/play.svg') }}" alt="Flow PHP Playground" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('example_option', {topic: 'data_frame', 'example': 'data_reading', 'option' : 'array', _fragment: 'example'}) }}">
-                            Examples
-                            <img src="{{ asset('images/icons/code.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('blog') }}">
-                            Blog
-                            <img src="{{ asset('images/icons/pencil.svg') }}" alt="Flow PHP Blog" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('documentation') }}">
-                            Docs
-                            <img src="{{ asset('images/icons/checklist.svg') }}" alt="Flow PHP Blog" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="https://github.com/flow-php/flow" target="_blank">
-                            Repository
-                            <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="https://github.com/orgs/flow-php/projects/1" target="_blank">
-                            Roadmap
-                            <img src="{{ asset('images/icons/date.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center text-white" href="https://discord.gg/5dNXfQyACW" target="_blank">
-                            Discord
-                            <img src="{{ asset('images/icons/discord.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+        {% include 'partials/header.html.twig' with {wide: false} %}
     {% endblock %}
 
     <main id="main">
@@ -175,24 +112,21 @@
 
         {% block main %}{% endblock %}
 
-        {{ render(controller('Flow\\Website\\Controller\\LayoutController::contributors')) }}
+        {% block contributors %}
+            {{ render(controller('Flow\\Website\\Controller\\LayoutController::contributors')) }}
+        {% endblock %}
     </main>
 
     <a
         href="#main"
-        class="fixed bottom-4 right-4 bg-orange-200 text-white p-2 rounded-full shadow-lg hover:bg-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-100 focus:ring-opacity-50 sm:hidden opacity-0"
+        class="fixed bottom-4 right-4 bg-orange-100 text-white p-2 rounded-full shadow-lg hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-100 focus:ring-opacity-50 sm:hidden opacity-0"
         data-controller="scroll-to-top" data-action="click->scroll-to-top#scrollToTop"
     >
         <img src="{{ asset('images/icons/arrow-up.svg') }}" width="32" height="32" alt="scroll back to top" class="inline">
     </a>
 
     {% block footer %}
-    <footer class="text-center bg-orange-100">
-        <div class="py-4 mx-auto max-w-screen-2xl">
-            <a href="https://github.com/flow-php">&copy; Copyright {{ 'now' | date('Y') }} Flow PHP</a>
-            Built by <a href="https://norbert.tech" target="_blank">@norberttech</a> and <a href="https://github.com/flow-php/flow/graphs/contributors" target="_blank">contributors</a>.
-        </div>
-    </footer>
+        {% include 'partials/footer.html.twig' with {wide: false} %}
     {% endblock %}
 </body>
 </html>

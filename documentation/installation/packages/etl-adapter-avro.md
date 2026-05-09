@@ -6,7 +6,8 @@ seo_description: >
 
 # Avro Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/avro.md]
+
 - [📜 Documentation](/documentation/components/adapters/avro.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-avro)
 

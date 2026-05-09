@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony Telemetry Bundle
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-telemetry-bundle.md]
+
 - [📜 Documentation](/documentation/components/bridges/symfony-telemetry-bundle.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/symfony-telemetry-bundle)
 

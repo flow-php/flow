@@ -6,7 +6,8 @@ seo_description: >
 
 # PG Query Extension
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/extensions/pg-query-ext.md]
+
 - [📜 Documentation](/documentation/components/extensions/pg-query-ext.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/pg-query-ext)
 

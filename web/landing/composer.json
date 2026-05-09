@@ -187,6 +187,12 @@
             "APP_ENV=prod bin/console presta:sitemaps:dump",
             "APP_ENV=prod bin/console static-content-generator:generate:routes --clean --parallel=8",
             "APP_ENV=prod bin/console static-content-generator:copy:assets -d public"
+        ],
+        "build:search": [
+            "@build",
+            "npx --yes pagefind@1.5.2 --site build --output-subdir pagefind",
+            "rm -rf public/pagefind",
+            "cp -R build/pagefind public/pagefind"
         ]
     }
 }

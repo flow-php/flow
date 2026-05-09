@@ -6,7 +6,8 @@ seo_description: >
 
 # PostgreSQL Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/postgresql.md]
+
 - [📜 Documentation](/documentation/components/adapters/postgresql.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-postgresql)
 

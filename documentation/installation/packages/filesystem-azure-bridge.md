@@ -6,7 +6,8 @@ seo_description: >
 
 # Filesystem Azure Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/filesystem-azure-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/filesystem-azure-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/filesystem-azure-bridge)
 

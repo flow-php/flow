@@ -8,89 +8,124 @@
     {{ definition.name }} - function documentation - Documentation - DSL
 {%- endblock -%}
 
-{% block main %}
-    <div class="py-10 px-4 lg:px-8 xl:px-12" data-hx-boost="true">
-        <div class="grid grid-cols-1 lg:grid-cols-[16rem_1fr_14rem] xl:grid-cols-[18rem_1fr_16rem] gap-4">
-            <div class="order-1 lg:order-0 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pr-4">
-                <h1 class="font-bold text-2xl mb-4">DSL</h1>
-                <ul class="mb-10 mr-6">
-                    <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
-                        <a href="{{ path('documentation_dsl', {module: module_name | lower, _fragment:"dsl-functions"}) }}">⬅️️ Back</a>
-                    </li>
-                    {% for module in modules %}
-                        <li class="mb-1">
-                            <a
-                                href="{{ path('documentation_dsl', {module: module.name | lower, _fragment:"dsl-functions"}) }}"
-                                class="{% if module.name |lower == module_name |lower  %}text-white {% endif %}"
+{%- block hero -%}{%- endblock -%}
 
-                            >{{ module.value }}</a>
+{% block main %}
+{% set currentPath = app.request.pathInfo %}
+
+{% include 'partials/docs_mobile_nav_panel.html.twig' with {currentPath: currentPath} %}
+
+<section class="px-4 sm:px-6 lg:px-8 xl:px-12 mt-6 mb-12" data-hx-boost="true">
+    <div class="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)_14rem] xl:grid-cols-[18rem_minmax(0,1fr)_16rem] gap-8 lg:gap-10">
+
+        <aside class="hidden lg:block lg:order-1">
+            <nav aria-label="DSL modules">
+                <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+                    DSL References
+                </h2>
+
+                <a href="{{ path('documentation_dsl', {module: module_name | lower, _fragment: 'dsl-functions'}) }}"
+                   class="inline-flex items-center gap-2 mb-3 px-2.5 py-1 text-sm text-white/70 hover:text-white no-underline">
+                    <span aria-hidden="true">←</span> Back to {{ module_name|humanize }}
+                </a>
+
+                <ul class="space-y-0.5">
+                    {% for module in modules %}
+                        {% set isActive = (module.name | lower) == module_name | lower %}
+                        <li>
+                            <a href="{{ path('documentation_dsl', {module: module.name | lower, _fragment: 'dsl-functions'}) }}"
+                               class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
+                                      {{ isActive
+                                        ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
+                                        : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}">
+                                {{ module.value }}
+                            </a>
                         </li>
                     {% endfor %}
                 </ul>
-            </div>
-            <div class="order-3 lg:order-1 min-w-0 py-2 px-4 lg:px-8">
-                <hr class="lg:hidden"/>
-                <article data-dsl-function>
-                <h1 id="dsl-function" class="font-bold text-4xl mb-4">Definition</h1>
-                    <hr class="text-blue-100 my-4 border-t-2 rounded" />
-                    <div class="mb-2">
-                        <a class="btn btn-primary" href="{{ definition.githubUrl }}" target="_blank" data-dsl-source-link>
-                            View
-                            <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </div>
-                    <div class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
-                        {% apply spaceless %}
-                        <pre class="overflow-auto !m-0">
-                            <code id="code" class="language-php" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>
-                            {{- definition.toString | escape('html') -}}
-                            </code>
-                        </pre>
-                        {% endapply %}
-                    </div>
-                </article>
-                {% if examples|length %}
-                <h3 class="font-bold text-2xl mb-4">Usage Examples</h3>
-                <hr class="text-blue-100 my-4 border-t-2 rounded" />
+            </nav>
+        </aside>
 
-                    {% for example in examples %}
-                        <article class="mb-8">
-                        {% apply spaceless %}
-                            <h4 class="text-bold mt-5 mb-5">Example: <a href="{{ path('example', { topic: example.topic, example: example.name, '_fragment': 'example' }) }}">{{ example.topic|humanize }} - {{ example.name|humanize }}</a></h4>
-                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
-                            <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
-                                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+        <article class="order-1 lg:order-2 min-w-0" data-pagefind-body>
+            {% include 'partials/docs_mobile_nav.html.twig' with {currentPath: currentPath} %}
+
+            <span data-pagefind-meta="title:{{ definition.name }}" class="hidden" aria-hidden="true"></span>
+            {% if searchFacets.type|default(null) %}<span data-pagefind-filter="type:{{ searchFacets.type }}" class="hidden" aria-hidden="true"></span>{% endif %}
+            {% if searchFacets.component|default(null) %}<span data-pagefind-filter="component:{{ searchFacets.component }}" class="hidden" aria-hidden="true"></span>{% endif %}
+
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                DSL · {{ module_name|humanize }}
+            </span>
+            <h1 id="dsl-function" class="mt-3 text-3xl font-bold tracking-tight mb-4">
+                <span class="font-mono">{{ definition.name }}</span>
+            </h1>
+
+            <div class="flex gap-2 mb-6" data-pagefind-ignore>
+                <a class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium text-white/85 transition-colors no-underline"
+                   href="{{ definition.githubUrl }}" target="_blank" rel="noopener" data-dsl-source-link>
+                    View on GitHub
+                    <img src="{{ asset('images/icons/github.svg') }}" alt="" width="14" height="14" class="opacity-70">
+                </a>
+            </div>
+
+            <h2 class="text-xl font-semibold tracking-tight mt-2 mb-3">Definition</h2>
+            <article data-dsl-function class="card !p-0 overflow-hidden">
+                {% apply spaceless %}
+                <pre class="!m-0 !rounded-none !border-0 !bg-transparent overflow-auto language-php text-sm leading-6 px-5 py-4"><code class="language-php" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>{{- definition.toString | escape('html') -}}</code></pre>
+                {% endapply %}
+            </article>
+
+            {% if examples|length %}
+            <h2 class="text-xl font-semibold tracking-tight mt-10 mb-3">Usage examples</h2>
+            <div class="space-y-5">
+                {% for example in examples %}
+                    <article class="card !p-0 overflow-hidden">
+                        <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-white/10 bg-white/[0.02]">
+                            <h3 class="m-0 text-sm font-medium">
+                                <a class="text-white hover:text-orange-100 no-underline"
+                                   href="{{ path('example', { topic: example.topic, example: example.name, '_fragment': 'example' }) }}">
+                                    {{ example.topic|humanize }} · {{ example.name|humanize }}
+                                </a>
+                            </h3>
+                            <button class="inline-flex items-center justify-center h-8 w-8 rounded-md border border-white/10 bg-black/40 hover:bg-black/70 text-white [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
+                                    title="copy code"
+                                    aria-label="Copy code"
+                                    data-clipboard-target="#example-code-{{ loop.index }}"
+                                    {{ stimulus_controller('clipboard') }}>
+                                <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="14" height="14">
                             </button>
-                            <code id="code" class="language-php" data-controller="syntax-highlight" >
-                                {{- example.code | escape('html') -}}
-                            </code>
-                        </pre>
+                        </div>
+                        {% apply spaceless %}
+                        <pre class="!m-0 !rounded-none !border-0 !bg-transparent overflow-auto language-php text-sm leading-6 px-5 py-4"><code id="example-code-{{ loop.index }}" class="language-php" data-controller="syntax-highlight">{{- example.code | escape('html') -}}</code></pre>
                         {% endapply %}
-                        </article>
-                    {% endfor %}
-                {% endif %}
-
-                <hr class="text-blue-100 my-4 border-t-2 rounded" />
-
-                <script src="https://giscus.app/client.js"
-                        data-repo="flow-php/flow-php.com"
-                        data-repo-id="R_kgDOHja2Yg"
-                        data-category="Documentation"
-                        data-category-id="DIC_kwDOHja2Ys4Cidc1"
-                        data-mapping="url"
-                        data-strict="0"
-                        data-reactions-enabled="0"
-                        data-emit-metadata="0"
-                        data-input-position="bottom"
-                        data-theme="dark"
-                        data-lang="en"
-                        crossorigin="anonymous"
-                        async>
-                </script>
+                    </article>
+                {% endfor %}
             </div>
-            <div class="order-2 lg:order-2 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pl-4">
-                {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight')) }}
-            </div>
-        </div>
+            {% endif %}
+
+            <hr class="border-0 h-px bg-white/10 my-8"/>
+
+            <script src="https://giscus.app/client.js"
+                    data-repo="flow-php/flow-php.com"
+                    data-repo-id="R_kgDOHja2Yg"
+                    data-category="Documentation"
+                    data-category-id="DIC_kwDOHja2Ys4Cidc1"
+                    data-mapping="url"
+                    data-strict="0"
+                    data-reactions-enabled="0"
+                    data-emit-metadata="0"
+                    data-input-position="bottom"
+                    data-theme="dark"
+                    data-lang="en"
+                    crossorigin="anonymous"
+                    async>
+            </script>
+        </article>
+
+        <aside class="hidden lg:block order-3">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight', {currentPath: currentPath})) }}
+        </aside>
     </div>
+</section>
 {% endblock %}

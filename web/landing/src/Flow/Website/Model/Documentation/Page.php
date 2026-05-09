@@ -28,6 +28,15 @@ final readonly class Page
         return 'https://github.com/flow-php/flow/edit/1.x/documentation/' . ltrim($this->path, '/');
     }
 
+    public function package() : ?string
+    {
+        $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
+        $result = $frontMatterParser->parse($this->content);
+        $package = $result->getFrontMatter()['package'] ?? null;
+
+        return is_string($package) ? $package : null;
+    }
+
     public function title() : ?string
     {
         $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());

@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-text
+---
+
 # ETL Adapter: Text
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-text)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-text.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-text)
-- [📚API Reference](/documentation/api/adapter/text)
-- [📁Files](/documentation/api/adapter/text/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

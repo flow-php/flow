@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-json
+---
+
 # ETL Adapter: JSON
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-json)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-json.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-json)
-- [📚API Reference](/documentation/api/adapter/json)
-- [📁Files](/documentation/api/adapter/json/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

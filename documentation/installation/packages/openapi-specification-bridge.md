@@ -6,7 +6,8 @@ seo_description: >
 
 # OpenAPI Specification Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/openapi-specification-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/openapi-specification-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/openapi-specification-bridge)
 

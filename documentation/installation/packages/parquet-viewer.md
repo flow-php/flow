@@ -6,7 +6,8 @@ seo_description: >
 
 # Parquet Viewer
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/parquet-viewer.md]
+
 - [📜 Documentation](/documentation/components/libs/parquet-viewer.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/parquet-viewer)
 

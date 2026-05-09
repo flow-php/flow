@@ -6,7 +6,8 @@ seo_description: >
 
 # JSON Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/json.md]
+
 - [📜 Documentation](/documentation/components/adapters/json.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-json)
 

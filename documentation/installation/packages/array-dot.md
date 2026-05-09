@@ -6,7 +6,8 @@ seo_description: >
 
 # Array Dot
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/array-dot.md]
+
 - [📜 Documentation](/documentation/components/libs/array-dot.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/array-dot)
 

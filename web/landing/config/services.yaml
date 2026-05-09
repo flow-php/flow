@@ -70,10 +70,12 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
-    twig.markdown.league_common_mark_converter_factory:
-        class: Flow\Website\Service\Markdown\LeagueCommonMarkConverterFactory
+    Flow\Website\Service\Manifest\Manifest:
         arguments:
             $manifestPath: '%flow_root_dir%/manifest.json'
+
+    twig.markdown.league_common_mark_converter_factory:
+        class: Flow\Website\Service\Markdown\LeagueCommonMarkConverterFactory
 
     flow.telemetry.monolog.logger:
         class: Flow\Telemetry\Logger\Logger

@@ -1,6 +1,7 @@
 # Avro Adapter
 
-- [⬅️️ Back](/documentation/introduction.md)
+[DOC_LINK:/documentation/introduction.md]
+
 - [➡️ Installation](/documentation/installation/packages/etl-adapter-avro.md)
 
 Avro integration was temporarily abandoned due to the lack of availability of good libraries for PHP.

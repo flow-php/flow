@@ -6,7 +6,8 @@ seo_description: >
 
 # Parquet
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/parquet.md]
+
 - [📜 Documentation](/documentation/components/libs/parquet.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/parquet)
 

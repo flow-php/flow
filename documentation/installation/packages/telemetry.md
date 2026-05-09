@@ -6,7 +6,8 @@ seo_description: >
 
 # Telemetry
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/telemetry.md]
+
 - [📜 Documentation](/documentation/components/libs/telemetry.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/telemetry)
 

@@ -8,28 +8,29 @@
     Code example showing {{ currentExample|humanize|lower }} {{ currentTopic|humanize|lower }}.
 {%- endblock -%}
 
+{%- block hero -%}{%- endblock -%}
+
 {% block main %}
-    <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-2xl">
-        <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
-        <nav class="font-medium text-center bg-orange-100 rounded">
-            <ul class="flex whitespace-nowrap overflow-auto justify-between">
-                {% for topic, route in topicsNavigation %}
-                    <li class="grow">
-                        <a href="{{ path(route.name, route.arguments) }}#example" class="{% if currentTopic == topic %}active {% elseif currentTopic is null and loop.first %}active {% endif %}inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
-                            {{ topic|humanize }}
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        </nav>
+    <div class="pt-10 pb-5 px-4 sm:px-6 lg:px-8 mx-auto max-w-screen-2xl">
+        <span class="eyebrow">
+            <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+            Examples
+        </span>
+        <h1 class="mt-3 section-title mb-5">{{ currentTopic|humanize }}</h1>
+
+        {% include 'partials/topic_nav.html.twig' with {topicsNavigation: topicsNavigation, currentTopic: currentTopic} %}
 
         <div class="-mt-20 pt-20">
-            <nav>
-                <ul class="flex whitespace-nowrap overflow-auto py-2">
+            <nav aria-label="Example" class="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-1.5">
+                <ul class="flex whitespace-nowrap overflow-x-auto gap-1 scrollbar-hide">
                     {% for example, route in examplesNavigation %}
+                        {% set isActive = (currentExample == example) or (currentExample is null and loop.first) %}
                         <li>
-                            <a href="{{ path(route.name, route.arguments) }}#example" class="{% if currentExample == example %}active {% elseif currentExample is null and loop.first %}active {% endif %}w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
-                                <img src="{{ asset('images/icons/flow.svg') }}" alt="flow php icon" width="16" height="16" class="mr-2">
+                            <a href="{{ path(route.name, route.arguments) }}#example"
+                               class="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium no-underline transition-colors
+                                      {{ isActive ? 'bg-orange-100 text-white hover:bg-orange-200' : 'text-white/75 hover:text-white hover:bg-white/[0.06]' }}"
+                               {% if isActive %}aria-current="page"{% endif %}>
+                                <img src="{{ asset('images/icons/flow.svg') }}" alt="" width="14" height="14" class="opacity-80">
                                 {{ example|humanize }}
                             </a>
                         </li>
@@ -38,44 +39,47 @@
             </nav>
 
             {% if optionsNavigation|length > 0 %}
-            <nav class="bg-gray-50 rounded pb-2 mb-4"
+            <nav aria-label="Option" class="mt-3 relative"
                  data-controller="horizontal-scroll">
-                {# Scrollable Container #}
-                <ul class="flex whitespace-nowrap overflow-auto gap-1 scroll-smooth"
-                    data-horizontal-scroll-target="container">
-                    {% for option, route in optionsNavigation %}
-                        <li>
-                            <a href="{{ path(route.name, route.arguments) }}#example"
-                               class="{% if currentOption == option %}active {% elseif currentOption is null and loop.first %}active {% endif %}inline-block text-sm px-3 py-1 rounded hover:bg-orange-200 transition-colors [&.active]:bg-orange-300 [&.active]:font-medium [&.active]:rounded">
-                                {{ option|humanize }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-
-                {# Scroll Arrows - below the options, left and right #}
-                <div class="flex justify-between mt-1 px-2">
-                    <button type="button"
-                            class="w-8 h-8 flex items-center justify-center bg-orange-300 hover:bg-orange-200 rounded-full shadow transition-all duration-200 opacity-0 pointer-events-none"
-                            data-horizontal-scroll-target="leftArrow"
-                            data-action="click->horizontal-scroll#scrollLeft">
-                        <img src="{{ asset('images/icons/arrow-left.svg') }}" alt="scroll left" width="16" height="16">
-                    </button>
-                    <button type="button"
-                            class="w-8 h-8 flex items-center justify-center bg-orange-300 hover:bg-orange-200 rounded-full shadow transition-all duration-200 opacity-0 pointer-events-none"
-                            data-horizontal-scroll-target="rightArrow"
-                            data-action="click->horizontal-scroll#scrollRight">
-                        <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="scroll right" width="16" height="16">
-                    </button>
+                <div class="rounded-xl border border-white/10 bg-white/[0.03] p-1.5">
+                    <ul class="flex whitespace-nowrap overflow-auto gap-1 scroll-smooth"
+                        data-horizontal-scroll-target="container">
+                        {% for option, route in optionsNavigation %}
+                            {% set isActive = (currentOption == option) or (currentOption is null and loop.first) %}
+                            <li>
+                                <a href="{{ path(route.name, route.arguments) }}#example"
+                                   class="inline-block text-sm px-3 py-1.5 rounded-lg no-underline transition-colors
+                                          {{ isActive ? 'bg-orange-100 text-white font-medium hover:bg-orange-200' : 'text-white/75 hover:text-white hover:bg-white/[0.06]' }}"
+                                   {% if isActive %}aria-current="page"{% endif %}>
+                                    {{ option|humanize }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
+
+                <button type="button"
+                        class="absolute left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 inline-flex items-center justify-center bg-black/80 hover:bg-black border border-white/10 rounded-full transition-opacity duration-200 opacity-0 pointer-events-none"
+                        aria-label="Scroll left"
+                        data-horizontal-scroll-target="leftArrow"
+                        data-action="click->horizontal-scroll#scrollLeft">
+                    <img src="{{ asset('images/icons/arrow-left.svg') }}" alt="" width="14" height="14">
+                </button>
+                <button type="button"
+                        class="absolute right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 inline-flex items-center justify-center bg-black/80 hover:bg-black border border-white/10 rounded-full transition-opacity duration-200 opacity-0 pointer-events-none"
+                        aria-label="Scroll right"
+                        data-horizontal-scroll-target="rightArrow"
+                        data-action="click->horizontal-scroll#scrollRight">
+                    <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="" width="14" height="14">
+                </button>
             </nav>
             {% endif %}
 
             <div id="example" class="-mt-36 pt-36">
                 {% if description %}
-                    <h2 class="text-xl mt-5">Description</h2>
+                    <h2 class="text-xl font-semibold mt-8 mb-3">Description</h2>
                     <article id="example-description"
-                             class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-5"
+                             class="card overflow-auto"
                             {{ stimulus_controller('all_links_external') }}
                     >
                         {{ description|markdown_to_html }}
@@ -83,28 +87,30 @@
                 {% endif %}
 
                 {% if documentation %}
-                    <h2 class="text-xl mt-5">Documentation</h2>
-                    <article class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-5">
+                    <h2 class="text-xl font-semibold mt-8 mb-3">Documentation</h2>
+                    <article class="card overflow-auto">
                         {{ documentation|markdown_to_html }}
                     </article>
                 {% endif %}
 
                 {% apply spaceless %}
-                <h2 class="text-xl mt-5 mb-5" id="documentation">Code</h2>
+                <h2 class="text-xl font-semibold mt-8 mb-3" id="documentation">Code</h2>
                 <div id="code" class="relative">
-                    <div class="absolute top-[12px] right-[12px] flex gap-2">
+                    <div class="absolute top-3 right-3 flex gap-2 z-10">
                         <a href="{{ path(playgroundUrl.name, playgroundUrl.arguments) }}"
-                           class="bg-orange-100 rounded px-4 leading-9 hover:bg-orange-200"
-                           title="Try in Playground">
-                            <img src="{{ asset('images/icons/play.svg') }}" alt="play" width="20" height="20" class="inline">
+                           class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-orange-100 hover:bg-orange-200 text-white no-underline"
+                           title="Try in Playground"
+                           aria-label="Try in Playground">
+                            <img src="{{ asset('images/icons/play.svg') }}" alt="" width="18" height="18">
                         </a>
-                        <button class="bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
+                        <button class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
                                 data-clipboard-target="#code-php"
+                                aria-label="Copy code"
                                 {{ stimulus_controller('clipboard') }}>
-                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="18" height="18">
                         </button>
                     </div>
-                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-php" data-controller="syntax-highlight" >
+                    <pre class="card !p-4 overflow-auto language-php" data-controller="syntax-highlight">
                         <code id="code-php">
                             {{- code | escape('html') -}}
                         </code>

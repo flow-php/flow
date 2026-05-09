@@ -1,6 +1,6 @@
 # Filter
 
-- [⬅️️ Back](/documentation/components/core/core.md)
+[DOC_LINK:/documentation/components/core/core.md]
 
 To filter rows from the data frame you can use `DataFrame::filter` function.
 Filter function accepts only one argument which is a `ScalarFunction` that returns `bool` value.

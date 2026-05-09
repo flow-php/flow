@@ -1,0 +1,75 @@
+name: "🌐 Website"
+description: "Report an issue, share feedback, or request improvements for the Flow PHP website."
+title: "[Website]: "
+labels: []
+assignees: ["norberttech"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Thanks for helping us improve the Flow PHP website!**
+
+        This template is for everything related to https://flow-php.com — the landing page, documentation, examples, blog, playground UI, and search.
+        For framework bugs use the **🐛 Bug Report** template, and for feature ideas use the **💡 Proposal** template.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What's the issue or feedback?
+      description: |
+        Describe what's wrong, confusing, missing, or could be better. Concrete examples help a lot.
+      placeholder: |
+        e.g. "The CSV adapter docs page is missing an example for reading multi-line fields."
+        e.g. "The playground output panel overlaps the toolbar on Safari."
+        e.g. "I couldn't find anything about partitioning from the search."
+    validations:
+      required: true
+
+  - type: textarea
+    id: pages
+    attributes:
+      label: Affected page(s)
+      description: |
+        Paste one or more URLs to the page(s) that triggered this report. The more specific, the better — anchor links to a section are great.
+      placeholder: |
+        https://flow-php.com/documentation/components/adapters/csv
+        https://flow-php.com/documentation/dsl/core#dsl-functions
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / recordings
+      description: |
+        A picture is worth a thousand words. Drag-and-drop screenshots or short screen recordings here. Annotated screenshots (arrows, circles) are even better.
+
+        **Tip:** for browser-specific issues, include a screenshot from the browser you saw it in.
+      placeholder: |
+        Drag images or videos into this field, or paste them from clipboard.
+    validations:
+      required: false
+
+  - type: textarea
+    id: prior-art
+    attributes:
+      label: Documentation or sites that handled this well
+      description: |
+        Have you seen this kind of content / UX done well somewhere else? Share links — examples are the fastest way for us to understand what "better" looks like for you.
+      placeholder: |
+        https://example-framework.dev/docs/some-feature — explains it with a runnable example
+        https://other-tool.io/search — search filters group by version, which is what I'd expect here
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Browser & device (only for visual / behavioral bugs)
+      description: |
+        Skip this if your report isn't about a visual or interaction bug.
+      placeholder: |
+        Chrome 132 on macOS 14 (1440×900)
+        Safari iOS 18 on iPhone 15
+    validations:
+      required: false

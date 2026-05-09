@@ -1,19 +1,25 @@
-<div class="bg-blue-200">
-    <section class="mx-auto max-w-screen-2xl sm:flex justify-between items-center py-6 px-2 sm:px-4">
-        <div class="max-sm:mb-6 mr-6 whitespace-nowrap">
-            <h2 class="text-2xl font-semibold tracking-wide">Contributors</h2>
-            <a href="https://github.com/flow-php/flow/graphs/contributors" target="_blank" class="flex items-center text-white">
+<section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-20 lg:mt-28">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+        <div>
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                Contributors
+            </span>
+            <h2 class="mt-3 section-title">Built in the open.</h2>
+            <a href="https://github.com/flow-php/flow/graphs/contributors" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1 mt-2 text-sm text-white/75 hover:text-white no-underline">
                 Join us on GitHub
-                <img src="{{ asset('images/icons/external.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
+                <img src="{{ asset('images/icons/external.svg') }}" alt="" width="14" height="14">
             </a>
         </div>
+    </div>
 
-        <div class="grid gap-1 sm:gap-2 lg:gap-4 grid-cols-8 lg:grid-cols-12">
-            {% for contributor in contributors %}
-                <a href="{{ contributor.html_url }}" rel="nofollow" target="_blank">
-                    <img loading="lazy" src="{{ contributor.avatar_url }}" alt="{{ contributor.login }}" width="56" height="56" title="{{ contributor.login }}" class="rounded-full">
-                </a>
-            {% endfor %}
-        </div>
-    </section>
-</div>
+    <div class="grid gap-2 sm:gap-3 grid-cols-8 sm:grid-cols-10 lg:grid-cols-12">
+        {% for contributor in contributors %}
+            <a href="{{ contributor.html_url }}" rel="nofollow noopener" target="_blank"
+               class="block rounded-full ring-1 ring-white/10 hover:ring-white/40 transition-shadow">
+                <img loading="lazy" src="{{ contributor.avatar_url }}" alt="{{ contributor.login }}" width="56" height="56" title="{{ contributor.login }}" class="rounded-full w-full h-auto">
+            </a>
+        {% endfor %}
+    </div>
+</section>

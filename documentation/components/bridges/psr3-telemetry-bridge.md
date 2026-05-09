@@ -1,15 +1,14 @@
+---
+package: flow-php/psr3-telemetry-bridge
+---
+
 # PSR-3 Telemetry Bridge
 
 Flow PSR-3 Telemetry Bridge exposes a [PSR-3](https://www.php-fig.org/psr/psr-3/) `LoggerInterface` implementation
 backed by Flow PHP Telemetry. Any framework or library that depends on `Psr\Log\LoggerInterface` can write through this
 adapter and have its records emitted as Telemetry log signals.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/psr3-telemetry-bridge)
-- [➡️ Installation](/documentation/installation/packages/psr3-telemetry-bridge.md)
-- [🐙GitHub](https://github.com/flow-php/psr3-telemetry-bridge)
-- [📚API Reference](/documentation/api/bridge/psr3/telemetry)
-- [🗺DSL](/documentation/api/bridge/psr3/telemetry/namespaces/flow-bridge-psr3-telemetry-dsl.html)
+[PACKAGE_NAV]
 
 [TOC]
 

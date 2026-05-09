@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony Filesystem Cache Bridge
 
-- [Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-filesystem-cache-bridge.md]
+
 - [Documentation](/documentation/components/bridges/symfony-filesystem-cache-bridge.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-filesystem-cache-bridge)
 

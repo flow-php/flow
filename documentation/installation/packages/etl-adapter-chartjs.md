@@ -6,7 +6,8 @@ seo_description: >
 
 # ChartJS Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/chartjs.md]
+
 - [📜 Documentation](/documentation/components/adapters/chartjs.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-chartjs)
 

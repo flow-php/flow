@@ -6,7 +6,8 @@ seo_description: >
 
 # PostgreSQL Valinor Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/postgresql-valinor-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/postgresql-valinor-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/postgresql-valinor-bridge)
 

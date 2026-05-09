@@ -6,7 +6,8 @@ seo_description: >
 
 # Doctrine DBAL Bulk
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/doctrine-dbal-bulk.md]
+
 - [📜 Documentation](/documentation/components/libs/doctrine-dbal-bulk.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/doctrine-dbal-bulk)
 

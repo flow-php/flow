@@ -4,7 +4,7 @@ Flow Telemetry is designed as a **contract library** - it defines interfaces tha
 every part of the telemetry pipeline. This page documents all contracts (interfaces) and their available
 implementations.
 
-- [⬅️️ Back](/documentation/components/libs/telemetry.md)
+[DOC_LINK:/documentation/components/libs/telemetry.md]
 
 [TOC]
 

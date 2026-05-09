@@ -6,7 +6,8 @@ seo_description: >
 
 # Azure SDK
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/azure-sdk.md]
+
 - [📜 Documentation](/documentation/components/libs/azure-sdk.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/azure-sdk)
 

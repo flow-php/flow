@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony PostgreSQL Session Bridge
 
-- [Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-postgresql-session-bridge.md]
+
 - [Documentation](/documentation/components/bridges/symfony-postgresql-session-bridge.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-session-bridge)
 

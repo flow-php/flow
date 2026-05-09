@@ -1,255 +1,412 @@
 {
-  "name": "Flow PHP",
-  "packages": [
-    {
-      "name" : "flow-php/etl",
-      "path": "src/core/etl",
-      "type": "core"
-    },
-    {
-      "name" : "flow-php/cli",
-      "path": "src/cli",
-      "type": "cli"
-    },
-    {
-      "name" : "flow-php/etl-adapter-avro",
-      "path": "src/adapter/etl-adapter-avro",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-chartjs",
-      "path": "src/adapter/etl-adapter-chartjs",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-csv",
-      "path": "src/adapter/etl-adapter-csv",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-doctrine",
-      "path": "src/adapter/etl-adapter-doctrine",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-elasticsearch",
-      "path": "src/adapter/etl-adapter-elasticsearch",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-google-sheet",
-      "path": "src/adapter/etl-adapter-google-sheet",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-http",
-      "path": "src/adapter/etl-adapter-http",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-json",
-      "path": "src/adapter/etl-adapter-json",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-logger",
-      "path": "src/adapter/etl-adapter-logger",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-parquet",
-      "path": "src/adapter/etl-adapter-parquet",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-text",
-      "path": "src/adapter/etl-adapter-text",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-xml",
-      "path": "src/adapter/etl-adapter-xml",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/etl-adapter-excel",
-      "path": "src/adapter/etl-adapter-excel",
-      "type": "adapter"
-    },
-    {
-      "name" : "flow-php/filesystem-async-aws-bridge",
-      "path": "src/bridge/filesystem/async-aws",
-      "type": "bridge"
-    },
-    {
-      "name" : "flow-php/filesystem-azure-bridge",
-      "path": "src/bridge/filesystem/azure",
-      "type": "bridge"
-    },
-    {
-      "name" : "flow-php/monolog-http-bridge",
-      "path": "src/bridge/monolog/http",
-      "type": "bridge"
-    },
-    {
-      "name" : "flow-php/symfony-http-foundation-bridge",
-      "path": "src/bridge/symfony/http-foundation",
-      "type": "bridge"
-    },
-    {
-      "name" : "flow-php/openapi-specification-bridge",
-      "path": "src/bridge/openapi/specification",
-      "type": "bridge"
-    },
-    {
-      "name" : "flow-php/array-dot",
-      "path": "src/lib/array-dot",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/azure-sdk",
-      "path": "src/lib/azure-sdk",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/doctrine-dbal-bulk",
-      "path": "src/lib/doctrine-dbal-bulk",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/dremel",
-      "path": "src/lib/dremel",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/filesystem",
-      "path": "src/lib/filesystem",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/parquet",
-      "path": "src/lib/parquet",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/parquet-viewer",
-      "path": "src/lib/parquet-viewer",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/snappy",
-      "path": "src/lib/snappy",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/types",
-      "path": "src/lib/types",
-      "type": "lib"
-    },
-    {
-      "name" : "flow-php/postgresql",
-      "path": "src/lib/postgresql",
-      "type": "lib"
-    },
-    {
-      "name": "flow-php/phpunit-postgresql-bridge",
-      "path": "src/bridge/phpunit/postgresql",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/phpunit-telemetry-bridge",
-      "path": "src/bridge/phpunit/telemetry",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/etl-adapter-postgresql",
-      "path": "src/adapter/etl-adapter-postgresql",
-      "type": "adapter"
-    },
-    {
-      "name": "flow-php/monolog-telemetry-bridge",
-      "path": "src/bridge/monolog/telemetry",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/psr18-telemetry-bridge",
-      "path": "src/bridge/psr18/telemetry",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/psr3-telemetry-bridge",
-      "path": "src/bridge/psr3/telemetry",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/psr7-telemetry-bridge",
-      "path": "src/bridge/psr7/telemetry",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-http-foundation-telemetry-bridge",
-      "path": "src/bridge/symfony/http-foundation-telemetry",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-filesystem-bundle",
-      "path": "src/bridge/symfony/filesystem-bundle",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-filesystem-cache-bridge",
-      "path": "src/bridge/symfony/filesystem-cache",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-postgresql-bundle",
-      "path": "src/bridge/symfony/postgresql-bundle",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-postgresql-cache-bridge",
-      "path": "src/bridge/symfony/postgresql-cache",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-postgresql-messenger-bridge",
-      "path": "src/bridge/symfony/postgresql-messenger",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-postgresql-session-bridge",
-      "path": "src/bridge/symfony/postgresql-session",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/symfony-telemetry-bundle",
-      "path": "src/bridge/symfony/telemetry-bundle",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/telemetry-otlp-bridge",
-      "path": "src/bridge/telemetry/otlp",
-      "type": "bridge"
-    },
-    {
-      "name": "flow-php/telemetry",
-      "path": "src/lib/telemetry",
-      "type": "lib"
-    },
-    {
-      "name": "flow-php/arrow-ext",
-      "path": "src/extension/arrow-ext",
-      "type": "extension"
-    },
-    {
-      "name": "flow-php/pg-query-ext",
-      "path": "src/extension/pg-query-ext",
-      "type": "extension"
-    },
-    {
-      "name": "flow-php/postgresql-valinor-bridge",
-      "path": "src/bridge/postgresql/valinor",
-      "type": "bridge"
-    }
-  ]
+    "name": "Flow PHP",
+    "packages": [
+        {
+            "name": "flow-php/etl",
+            "path": "src/core/etl",
+            "type": "core",
+            "links": {
+                "api": "/documentation/api/core",
+                "files": "/documentation/api/core/indices/files.html",
+                "dsl": "/documentation/api/core/namespaces/flow-etl-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/cli",
+            "path": "src/cli",
+            "type": "cli",
+            "links": {
+                "api": "/documentation/api/cli",
+                "files": "/documentation/api/cli/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-avro",
+            "path": "src/adapter/etl-adapter-avro",
+            "type": "adapter"
+        },
+        {
+            "name": "flow-php/etl-adapter-chartjs",
+            "path": "src/adapter/etl-adapter-chartjs",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/chartjs",
+                "files": "/documentation/api/adapter/chartjs/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-csv",
+            "path": "src/adapter/etl-adapter-csv",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/csv",
+                "files": "/documentation/api/adapter/csv/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-doctrine",
+            "path": "src/adapter/etl-adapter-doctrine",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/doctrine",
+                "files": "/documentation/api/adapter/doctrine/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-elasticsearch",
+            "path": "src/adapter/etl-adapter-elasticsearch",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/elasticsearch",
+                "files": "/documentation/api/adapter/elasticsearch/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-google-sheet",
+            "path": "src/adapter/etl-adapter-google-sheet",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/google-sheet",
+                "files": "/documentation/api/adapter/google-sheet/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-http",
+            "path": "src/adapter/etl-adapter-http",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/http",
+                "files": "/documentation/api/adapter/http/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-json",
+            "path": "src/adapter/etl-adapter-json",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/json",
+                "files": "/documentation/api/adapter/json/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-logger",
+            "path": "src/adapter/etl-adapter-logger",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/logger",
+                "files": "/documentation/api/adapter/logger/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-parquet",
+            "path": "src/adapter/etl-adapter-parquet",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/parquet",
+                "files": "/documentation/api/adapter/parquet/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-text",
+            "path": "src/adapter/etl-adapter-text",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/text",
+                "files": "/documentation/api/adapter/text/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-xml",
+            "path": "src/adapter/etl-adapter-xml",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/xml",
+                "files": "/documentation/api/adapter/xml/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-excel",
+            "path": "src/adapter/etl-adapter-excel",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/excel",
+                "files": "/documentation/api/adapter/excel/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/filesystem-async-aws-bridge",
+            "path": "src/bridge/filesystem/async-aws",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/filesystem/async-aws",
+                "files": "/documentation/api/bridge/filesystem/async-aws/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/filesystem-azure-bridge",
+            "path": "src/bridge/filesystem/azure",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/filesystem/azure",
+                "files": "/documentation/api/bridge/filesystem/azure/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/monolog-http-bridge",
+            "path": "src/bridge/monolog/http",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/monolog/http",
+                "files": "/documentation/api/bridge/monolog/http/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/symfony-http-foundation-bridge",
+            "path": "src/bridge/symfony/http-foundation",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/symfony/http-foundation",
+                "files": "/documentation/api/bridge/symfony/http-foundation/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/openapi-specification-bridge",
+            "path": "src/bridge/openapi/specification",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/openapi/specification",
+                "files": "/documentation/api/bridge/openapi/specification/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/array-dot",
+            "path": "src/lib/array-dot",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/array-dot",
+                "files": "/documentation/api/lib/array-dot/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/azure-sdk",
+            "path": "src/lib/azure-sdk",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/azure-sdk",
+                "files": "/documentation/api/lib/azure-sdk/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/doctrine-dbal-bulk",
+            "path": "src/lib/doctrine-dbal-bulk",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/doctrine-dbal-bulk",
+                "files": "/documentation/api/lib/doctrine-dbal-bulk/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/dremel",
+            "path": "src/lib/dremel",
+            "type": "lib"
+        },
+        {
+            "name": "flow-php/filesystem",
+            "path": "src/lib/filesystem",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/filesystem",
+                "files": "/documentation/api/lib/filesystem/indices/files.html",
+                "dsl": "/documentation/api/lib/filesystem/namespaces/flow-filesystem-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/parquet",
+            "path": "src/lib/parquet",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/parquet",
+                "files": "/documentation/api/lib/parquet/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/parquet-viewer",
+            "path": "src/lib/parquet-viewer",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/parquet-viewer",
+                "files": "/documentation/api/lib/parquet-viewer/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/snappy",
+            "path": "src/lib/snappy",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/snappy",
+                "files": "/documentation/api/lib/snappy/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/types",
+            "path": "src/lib/types",
+            "type": "lib",
+            "links": {
+                "architecture": "/documentation/components/libs/types/architecture",
+                "api": "/documentation/api/lib/types",
+                "dsl": "/documentation/api/lib/types/namespaces/flow-types-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/postgresql",
+            "path": "src/lib/postgresql",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/postgresql",
+                "files": "/documentation/api/lib/postgresql/indices/files.html",
+                "dsl": "/documentation/api/lib/postgresql/namespaces/flow-pgquery-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/phpunit-postgresql-bridge",
+            "path": "src/bridge/phpunit/postgresql",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/phpunit/postgresql"
+            }
+        },
+        {
+            "name": "flow-php/phpunit-telemetry-bridge",
+            "path": "src/bridge/phpunit/telemetry",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/phpunit/telemetry"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-postgresql",
+            "path": "src/adapter/etl-adapter-postgresql",
+            "type": "adapter",
+            "links": {
+                "api": "/documentation/api/adapter/postgresql",
+                "files": "/documentation/api/adapter/postgresql/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/monolog-telemetry-bridge",
+            "path": "src/bridge/monolog/telemetry",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/monolog/telemetry",
+                "dsl": "/documentation/api/bridge/monolog/telemetry/namespaces/flow-bridge-monolog-telemetry-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/psr18-telemetry-bridge",
+            "path": "src/bridge/psr18/telemetry",
+            "type": "bridge"
+        },
+        {
+            "name": "flow-php/psr3-telemetry-bridge",
+            "path": "src/bridge/psr3/telemetry",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/psr3/telemetry",
+                "dsl": "/documentation/api/bridge/psr3/telemetry/namespaces/flow-bridge-psr3-telemetry-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/psr7-telemetry-bridge",
+            "path": "src/bridge/psr7/telemetry",
+            "type": "bridge"
+        },
+        {
+            "name": "flow-php/symfony-http-foundation-telemetry-bridge",
+            "path": "src/bridge/symfony/http-foundation-telemetry",
+            "type": "bridge"
+        },
+        {
+            "name": "flow-php/symfony-filesystem-bundle",
+            "path": "src/bridge/symfony/filesystem-bundle",
+            "type": "bridge"
+        },
+        {
+            "name": "flow-php/symfony-filesystem-cache-bridge",
+            "path": "src/bridge/symfony/filesystem-cache",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/symfony-filesystem-cache"
+            }
+        },
+        {
+            "name": "flow-php/symfony-postgresql-bundle",
+            "path": "src/bridge/symfony/postgresql-bundle",
+            "type": "bridge"
+        },
+        {
+            "name": "flow-php/symfony-postgresql-cache-bridge",
+            "path": "src/bridge/symfony/postgresql-cache",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/symfony-postgresql-cache"
+            }
+        },
+        {
+            "name": "flow-php/symfony-postgresql-messenger-bridge",
+            "path": "src/bridge/symfony/postgresql-messenger",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/symfony-postgresql-messenger"
+            }
+        },
+        {
+            "name": "flow-php/symfony-postgresql-session-bridge",
+            "path": "src/bridge/symfony/postgresql-session",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/symfony-postgresql-session"
+            }
+        },
+        {
+            "name": "flow-php/symfony-telemetry-bundle",
+            "path": "src/bridge/symfony/telemetry-bundle",
+            "type": "bridge"
+        },
+        {
+            "name": "flow-php/telemetry-otlp-bridge",
+            "path": "src/bridge/telemetry/otlp",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/telemetry/otlp",
+                "dsl": "/documentation/api/bridge/telemetry/otlp/namespaces/flow-bridge-telemetry-otlp-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/telemetry",
+            "path": "src/lib/telemetry",
+            "type": "lib",
+            "links": {
+                "api": "/documentation/api/lib/telemetry",
+                "dsl": "/documentation/api/lib/telemetry/namespaces/flow-telemetry-dsl.html"
+            }
+        },
+        {
+            "name": "flow-php/arrow-ext",
+            "path": "src/extension/arrow-ext",
+            "type": "extension"
+        },
+        {
+            "name": "flow-php/pg-query-ext",
+            "path": "src/extension/pg-query-ext",
+            "type": "extension"
+        },
+        {
+            "name": "flow-php/postgresql-valinor-bridge",
+            "path": "src/bridge/postgresql/valinor",
+            "type": "bridge",
+            "links": {
+                "api": "/documentation/api/bridge/postgresql/valinor"
+            }
+        }
+    ]
 }

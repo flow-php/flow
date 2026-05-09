@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-postgresql
+---
+
 # ETL Adapter: PostgreSQL
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-postgresql)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-postgresql.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-postgresql)
-- [📚API Reference](/documentation/api/adapter/postgresql)
-- [📁Files](/documentation/api/adapter/postgresql/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

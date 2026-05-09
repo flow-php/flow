@@ -1,81 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block header %}
-    <header class="py-2 text-white bg-blue-200">
-        <div class="px-4 lg:px-8 xl:px-12 flex items-center justify-between">
-            <a href="{{ path('home') }}">
-                <img src="{{ asset('images/logo.svg') }}" alt="flow php" width="176" height="48">
-            </a>
-
-            <button popovertarget="main-nav" popovertargetaction="show" class="sm:hidden">
-                <img src="{{ asset('images/icons/menu.svg') }}" alt="menu" width="32" height="32">
-            </button>
-
-            <nav popover id="main-nav" class="max-sm:absolute border-0 p-0 m-0 max-sm:top-0 max-sm:right-0 sm:relative sm:block text-white bg-blue-200 unset">
-                <ul class="sm:flex flex-nowrap whitespace-nowrap">
-                    <li class="sm:hidden text-right">
-                        <button popovertarget="main-nav" popovertargetaction="hide" class="sm:hidden h-16 pr-4">
-                            <img src="{{ asset('images/icons/close.svg') }}" alt="close" width="32" height="32">
-                        </button>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('sponsor') }}">
-                            Sponsor
-                            <img src="{{ asset('images/icons/heart.svg') }}" alt="external resource" width="20" height="20" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('playground') }}">
-                            Playground
-                            <img src="{{ asset('images/icons/play.svg') }}" alt="Flow PHP Playground" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('example_option', {topic: 'data_frame', 'example': 'data_reading', 'option' : 'array', _fragment: 'example'}) }}">
-                            Examples
-                            <img src="{{ asset('images/icons/code.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('blog') }}">
-                            Blog
-                            <img src="{{ asset('images/icons/pencil.svg') }}" alt="Flow PHP Blog" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="{{ path('documentation') }}">
-                            Docs
-                            <img src="{{ asset('images/icons/checklist.svg') }}" alt="Flow PHP Blog" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="https://github.com/flow-php/flow" target="_blank">
-                            Repository
-                            <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center" href="https://github.com/orgs/flow-php/projects/1" target="_blank">
-                            Roadmap
-                            <img src="{{ asset('images/icons/date.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                    <li>
-                        <a class="p-3 flex items-center text-white" href="https://discord.gg/5dNXfQyACW" target="_blank">
-                            Discord
-                            <img src="{{ asset('images/icons/discord.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    {% include 'partials/header.html.twig' with {wide: true} %}
 {% endblock %}
 
 {% block footer %}
-    <footer class="text-center bg-orange-100">
-        <div class="py-4 px-4 lg:px-8 xl:px-12">
-            <a href="https://github.com/flow-php">&copy; Copyright {{ 'now' | date('Y') }} Flow PHP</a>
-        </div>
-    </footer>
+    {% include 'partials/footer.html.twig' with {wide: true} %}
 {% endblock %}

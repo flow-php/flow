@@ -1,11 +1,10 @@
+---
+package: flow-php/array-dot
+---
+
 # Array Dot
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/array-dot)
-- [➡️ Installation](/documentation/installation/packages/array-dot.md)
-- [🐙GitHub](https://github.com/flow-php/array-dot)
-- [📚API Reference](/documentation/api/lib/array-dot)
-- [📁Files](/documentation/api/lib/array-dot/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

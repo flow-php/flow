@@ -1,14 +1,13 @@
+---
+package: flow-php/telemetry
+---
+
 # Telemetry
 
 Flow Telemetry is a lightweight, OpenTelemetry-compatible observability library for PHP applications.
 It provides a unified API for distributed tracing, metrics collection, and structured logging with minimal dependencies.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/telemetry)
-- [➡️ Installation](/documentation/installation/packages/telemetry.md)
-- [🐙GitHub](https://github.com/flow-php/telemetry)
-- [📚API Reference](/documentation/api/lib/telemetry)
-- [🗺DSL](/documentation/api/lib/telemetry/namespaces/flow-telemetry-dsl.html)
+[PACKAGE_NAV]
 
 [TOC]
 

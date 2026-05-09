@@ -6,7 +6,8 @@ seo_description: >
 
 # XML Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/xml.md]
+
 - [📜 Documentation](/documentation/components/adapters/xml.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-xml)
 

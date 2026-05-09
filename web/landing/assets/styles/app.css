@@ -6,6 +6,11 @@
 
 body {
     font-family: "Cabin Variable", system-ui;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image: radial-gradient(ellipse 80rem 40rem at 50% -20%, rgba(128, 109, 254, 0.18), transparent 60%);
+    background-attachment: fixed;
 }
 
 html {
@@ -20,12 +25,60 @@ html {
     @apply list-disc pl-6;
 }
 
+/* Surfaces — a single source of truth for card backgrounds, replacing the
+   repeated `rounded ... shadow-2xl shadow-gray border-gray border-2` pattern. */
+.card {
+    @apply relative rounded-xl border border-white/10 bg-white/[0.03] p-6
+           transition-colors duration-200;
+}
+
+.card > *:last-child {
+    margin-bottom: 0;
+}
+
+.card-hover {
+    @apply hover:border-white/20 hover:bg-white/[0.05];
+}
+
+.card-accent {
+    @apply relative rounded-xl border border-blue-100/30 bg-blue-100/[0.06] p-6;
+}
+
+.card-accent::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r
+           from-transparent via-blue-100/60 to-transparent;
+}
+
+.eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase
+           tracking-[0.18em] text-blue-100;
+}
+
+.section-title {
+    @apply text-3xl sm:text-4xl font-bold tracking-tight;
+}
+
+.muted {
+    @apply text-white/70;
+}
+
 .btn {
-    @apply font-medium text-white dark:text-white py-1 px-2 rounded;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+           font-medium text-white transition-colors duration-150;
 }
 
 .btn-primary {
-    @apply bg-blue-200 dark:bg-blue-100 hover:bg-blue-300 dark:hover:bg-blue-200;
+    @apply bg-orange-100 hover:bg-orange-200;
+}
+
+.btn-secondary {
+    @apply border border-white/15 bg-white/[0.04] hover:border-white/25
+           hover:bg-white/[0.08];
+}
+
+.btn-ghost {
+    @apply text-white/80 hover:text-white;
 }
 
 .btn img {
@@ -55,60 +108,71 @@ code {
     font-size: 0.9em;
 }
 
-#blog-post table {
-    @apply w-auto min-w-[450px] table-auto mb-3 border-collapse border-2 border-gray;
-}
-#blog-post table th {
-    @apply border border-gray p-2 text-left;
-}
-
-#blog-post table td {
-    @apply border border-gray p-2;
-}
-
+/* Blog post prose. Wraps full-width with comfortable reading measure. */
 #blog-post {
-    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl;
+    @apply pb-5 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl text-white/85;
 }
 
-#blog-post hr, p, pre, ul, h2, h3 {
-    @apply mb-3;
-}
-
-#blog-post pre {
-    @apply rounded my-6 p-4 overflow-auto rounded border-gray border-2 relative shadow-2xl shadow-gray;
-}
-
-#blog-post pre code {
-    @apply !p-0 !bg-transparent
+#blog-post a {
+    @apply text-blue-100 underline-offset-2 hover:text-orange-100 transition-colors;
 }
 
 #blog-post h1 {
-    @apply font-bold text-4xl;
+    @apply font-bold text-3xl sm:text-4xl tracking-tight text-white mt-2 mb-5;
+}
+
+#blog-post h2 {
+    @apply font-bold text-2xl tracking-tight text-white mt-10 mb-3;
+}
+
+#blog-post h3 {
+    @apply font-semibold text-xl text-white mt-7 mb-2;
+}
+
+#blog-post p,
+#blog-post ul,
+#blog-post ol {
+    @apply mb-4;
 }
 
 #blog-post ul {
     @apply list-disc pl-6;
 }
 
-#blog-post h2 {
-    @apply font-bold text-2xl mt-4;
+#blog-post ol {
+    @apply list-decimal pl-6;
 }
-
-#blog-post h3 {
-    @apply font-bold text-xl mt-4;
-}
-
 
 #blog-post hr {
-    @apply text-blue-100 my-4 border-t-2 rounded;
+    @apply my-8 border-0 h-px bg-white/10;
+}
+
+#blog-post pre {
+    @apply rounded-xl my-6 p-4 overflow-auto border border-white/10 bg-white/[0.03];
+}
+
+#blog-post pre code {
+    @apply !p-0 !bg-transparent;
+}
+
+#blog-post :not(pre) > code {
+    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-white/[0.06] text-[#d2a8ff];
 }
 
 #blog-post blockquote {
-    @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
+    @apply border-l-2 border-blue-100 pl-4 py-1 my-5 text-white/75 italic;
 }
 
-#blog-post code {
-    @apply text-orange-100;
+#blog-post table {
+    @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-white/10;
+}
+
+#blog-post table th {
+    @apply border-b border-white/10 bg-white/[0.04] px-3 py-2 text-left font-semibold text-white;
+}
+
+#blog-post table td {
+    @apply border-b border-white/10 px-3 py-2;
 }
 
 
@@ -120,7 +184,11 @@ code {
     @apply font-bold text-xl mt-4;
 }
 
-#example-description h1, h2, ul, hr, p {
+#example-description h1,
+#example-description h2,
+#example-description ul,
+#example-description hr,
+#example-description p {
     @apply mb-3;
 }
 
@@ -137,81 +205,112 @@ code {
 }
 
 
+/* Documentation prose. Markdown → HTML renders into #documentation-page; the
+   styles below replace the previous heavy borders/shadows with the lighter
+   .card-style surface system. */
 #documentation-page {
-    @apply pb-5;
+    @apply pb-8 text-white/85;
 }
 
 #documentation-page a {
-    @apply inline;
+    @apply inline text-blue-100 underline-offset-2 hover:text-orange-100 transition-colors;
+}
+
+#documentation-page h1 {
+    @apply font-bold text-3xl tracking-tight text-white mt-2 mb-5;
+}
+
+#documentation-page h2 {
+    @apply font-bold text-2xl tracking-tight text-white mt-10 mb-3;
+}
+
+#documentation-page h3 {
+    @apply font-semibold text-xl text-white mt-7 mb-2;
+}
+
+#documentation-page h4 {
+    @apply font-semibold text-base text-white mt-5 mb-2;
+}
+
+#documentation-page p,
+#documentation-page ul,
+#documentation-page ol {
+    @apply mb-4;
+}
+
+#documentation-page ul {
+    @apply list-disc pl-6;
+}
+
+#documentation-page ol {
+    @apply list-decimal pl-6;
+}
+
+#documentation-page li > ul,
+#documentation-page li > ol {
+    @apply mt-1 mb-1;
+}
+
+#documentation-page hr {
+    @apply my-8 border-0 h-px bg-white/10;
 }
 
 #documentation-page table {
-    @apply w-full table-auto mb-3 border-collapse border-2 border-gray;
+    @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-white/10;
 }
 
 #documentation-page th {
-    @apply border border-gray p-2;
+    @apply border-b border-white/10 bg-white/[0.04] px-3 py-2 text-left font-semibold text-white;
 }
 
 #documentation-page td {
-    @apply border border-gray p-2;
+    @apply border-b border-white/10 px-3 py-2;
 }
 
-#documentation-page hr, p, pre, ul, h2, h3 {
-    @apply mb-3;
+#documentation-page tr:last-child td {
+    @apply border-b-0;
 }
 
 #documentation-page pre {
-    @apply rounded my-6 p-4 overflow-auto rounded border-gray border-2 relative shadow-2xl shadow-gray;
+    @apply rounded-xl my-6 p-4 overflow-auto border border-white/10 bg-white/[0.03];
 }
 
 #documentation-page pre code {
-    @apply !p-0 !bg-transparent
+    @apply !p-0 !bg-transparent;
 }
 
-#documentation-page h1 {
-    @apply font-bold text-4xl;
-}
-
-#documentation-page ul {
-    @apply list-disc pl-6;
-}
-
-#documentation-page h2 {
-    @apply font-bold text-2xl mt-4;
-}
-
-#documentation-page hr {
-    @apply text-blue-100 my-4 border-t-2 rounded;
-}
-
-#documentation-page h1 {
-    @apply font-bold text-2xl;
-}
-
-#documentation-page h2 {
-    @apply font-bold text-xl mt-4;
-}
-
-#documentation-page h1, h2, ul, hr, p {
-    @apply mb-3;
-}
-
-#documentation-page ul {
-    @apply list-disc pl-6;
-}
-
-#documentation-page hr {
-    @apply text-blue-100 my-4 border-t-2 rounded;
-}
-
-#documentation-page code {
-    @apply text-orange-100;
+/* Inline code only (not the <code> inside <pre>). */
+#documentation-page :not(pre) > code {
+    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-white/[0.06] text-[#d2a8ff];
 }
 
 #documentation-page blockquote {
-    @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
+    @apply border-l-2 border-blue-100 pl-4 py-1 my-5 text-white/75 italic;
 }
+
+/* Package nav rendered by [PACKAGE_NAV] marker. Inherits #documentation-page
+   id specificity so it wins over the generic prose link colors. */
+.package-nav {
+    @apply flex flex-wrap gap-2 my-6;
+}
+
+#documentation-page .package-nav a {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04]
+           hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium
+           text-white/85 hover:text-white !no-underline transition-colors;
+}
+
+/* Back link rendered by [BACK:/path] marker. */
+#documentation-page a.back-link {
+    @apply inline-flex items-center gap-1.5 mb-4 text-sm text-white/65 hover:text-white !no-underline transition-colors;
+}
+
+/* Mobile docs popover lives inside #documentation-page so it inherits prose
+   list styling — reset it. */
+#docs-mobile-nav ul {
+    @apply list-none pl-0;
+}
+
 
 
 .mermaid-wrapper {
@@ -268,7 +367,7 @@ code {
 
 /* Foldable Table of Contents */
 .toc-wrapper {
-    @apply rounded mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray overflow-hidden;
+    @apply rounded-xl mt-4 mb-6 border border-white/10 bg-white/[0.03] overflow-hidden;
 }
 
 .toc-header {
@@ -315,24 +414,38 @@ code {
     display: none;
 }
 
-/* Hide scrollbar for horizontal scroll navigation while keeping scroll functionality */
-[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"] {
+/* Utility: hide native horizontal scrollbar while keeping scroll functionality.
+   Used by topic-nav and the horizontal-scroll Stimulus controller's container. */
+.scrollbar-hide {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
 }
 
-[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"]::-webkit-scrollbar {
+.scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari */
 }
 
+[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"] {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+[data-controller="horizontal-scroll"] [data-horizontal-scroll-target="container"]::-webkit-scrollbar {
+    display: none;
+}
+
+/* Playground — unified with brand palette: orange-100 = primary accent
+   (active states, CTAs), blue-100 = file-tree directories, white/* opacity =
+   neutral surfaces. Output semantic colors (cyan/green/yellow/red) are
+   intentionally kept for terminal-style readability. */
 #playground {
-    @apply py-10 px-4 lg:px-8 xl:px-12;
+    @apply py-8 lg:py-12 px-4 lg:px-8 xl:px-12;
 
     .playground-header {
         @apply mb-6;
 
         h1 {
-            @apply text-5xl mb-0 inline-block;
+            @apply text-4xl sm:text-5xl font-bold tracking-tight mb-0 inline-block;
         }
 
         .help-trigger {
@@ -340,7 +453,7 @@ code {
         }
 
         .back-link {
-            @apply inline-flex items-center gap-2 ml-4 text-sm text-stone-400 hover:text-white transition-colors no-underline;
+            @apply inline-flex items-center gap-2 ml-4 text-sm text-white/60 hover:text-white transition-colors no-underline;
 
             img {
                 @apply inline-block;
@@ -349,17 +462,17 @@ code {
     }
 
     #help-section {
-        @apply mb-6 rounded p-4 shadow-2xl shadow-gray border-gray border-2 bg-transparent;
+        @apply mb-6 rounded-xl p-5 border border-white/10 bg-white/[0.03];
 
         .help-header {
-            @apply flex justify-between items-center mb-4 pb-3 border-b border-gray;
+            @apply flex justify-between items-center mb-4 pb-3 border-b border-white/10;
 
             h2 {
                 @apply text-2xl font-bold mb-0;
             }
 
             .help-close {
-                @apply w-8 h-8 rounded-full bg-transparent hover:bg-stone-700 text-white text-2xl
+                @apply w-8 h-8 rounded-full bg-transparent hover:bg-white/[0.10] text-white text-2xl
                     flex items-center justify-center cursor-pointer border-0 transition-colors leading-none;
             }
         }
@@ -369,72 +482,67 @@ code {
                 @apply mb-6 last:mb-0;
 
                 h3 {
-                    @apply text-xl font-semibold mb-3 text-cyan-400;
+                    @apply text-xl font-semibold mb-3 text-orange-100;
                 }
 
                 p {
-                    @apply mb-3 text-stone-300 leading-relaxed;
+                    @apply mb-3 text-white/75 leading-relaxed;
 
                     a {
-                        @apply text-cyan-400 hover:text-cyan-300 underline;
+                        @apply text-blue-100 hover:text-orange-100 underline;
                     }
                 }
 
                 ul {
-                    @apply list-disc pl-6 mb-3 text-stone-300;
+                    @apply list-disc pl-6 mb-3 text-white/75;
 
                     li {
                         @apply mb-2;
 
                         strong {
-                            @apply text-cyan-400;
+                            @apply text-white font-semibold;
                         }
 
                         em {
-                            @apply text-stone-400 text-sm;
+                            @apply text-white/55 text-sm;
                         }
                     }
                 }
 
                 code {
-                    @apply bg-black px-2 py-1 rounded text-cyan-300 font-mono text-sm;
+                    @apply bg-white/[0.06] px-1.5 py-0.5 rounded text-[#d2a8ff] font-mono text-sm;
                 }
             }
         }
     }
 
     div.navigation {
-        @apply grid grid-cols-12 mb-4;
+        @apply grid grid-cols-12 mb-4 gap-2 items-center;
         display: none;
 
         div.storage-indicator {
-            @apply col-start-1 col-span-3 gap-2 text-sm;
+            @apply col-start-1 col-span-12 lg:col-span-3 gap-2 text-xs text-white/55;
         }
 
         div.actions {
-            @apply col-start-1 col-span-12 lg:col-start-8 lg:col-span-5 text-right;
+            @apply col-start-1 col-span-12 lg:col-start-4 lg:col-span-9 flex flex-wrap justify-end items-center gap-2;
 
             .help-trigger-nav {
-                @apply cursor-pointer border-0 bg-transparent p-0 mr-4 transition-opacity hover:opacity-70 inline-block;
-                margin-top: 5px;
+                @apply cursor-pointer border-0 bg-transparent p-1 transition-opacity hover:opacity-70 inline-flex items-center;
             }
 
-            button {
-                @apply mr-4 transition-opacity;
-            }
-
-            button:disabled {
-                @apply opacity-50 cursor-not-allowed;
-            }
-
+            button,
             a {
-                @apply mr-4 no-underline text-white transition-opacity;
+                @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium
+                    text-white/85 hover:text-white border border-white/10 bg-white/[0.04]
+                    hover:border-white/20 hover:bg-white/[0.08] transition-colors no-underline;
             }
 
-            a:hover {
-                @apply no-underline;
+            #action-run {
+                @apply bg-orange-100 hover:bg-orange-200 border-orange-100 hover:border-orange-200 text-white;
             }
 
+            button:disabled,
             a.disabled {
                 @apply opacity-50 cursor-not-allowed pointer-events-none;
             }
@@ -442,27 +550,27 @@ code {
     }
 
     div.editor {
-        @apply grid gap-6 grid-cols-1;
+        @apply grid gap-5 grid-cols-1;
         display: none; /* Hidden by default, shown by Stimulus */
 
         @screen lg {
-            grid-template-columns: 16rem 1fr; /* 256px | fluid */
-            align-items: stretch; /* File browser matches height of editor-main */
+            grid-template-columns: 16rem 1fr;
+            align-items: stretch;
         }
 
         @screen xl {
-            grid-template-columns: 18rem 1fr; /* 288px | fluid */
+            grid-template-columns: 18rem 1fr;
         }
 
         div.file-browser-mobile {
-            @apply grid grid-cols-[auto_1fr] items-center gap-4;
+            @apply grid grid-cols-[auto_1fr] items-center gap-3;
 
             @screen lg {
                 display: none;
             }
 
             .file-browser-label {
-                @apply text-sm font-bold text-stone-400 uppercase whitespace-nowrap;
+                @apply text-xs font-semibold uppercase tracking-[0.18em] text-white/55 whitespace-nowrap;
 
                 .help-trigger-workspace {
                     @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
@@ -470,18 +578,17 @@ code {
             }
 
             .file-select {
-                @apply bg-stone-800 text-white border border-gray rounded px-3 py-2 text-base
-                    focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent;
+                @apply bg-white/[0.06] text-white border border-white/10 rounded-md px-3 py-2 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent;
 
                 option {
-                    @apply text-base py-2;
+                    @apply text-base py-2 bg-black;
                 }
             }
         }
 
         div.file-browser {
-            @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
-                bg-transparent;
+            @apply rounded-xl p-4 overflow-auto border border-white/10 bg-white/[0.03];
             display: none;
 
             @screen lg {
@@ -489,7 +596,7 @@ code {
             }
 
             .file-browser-header {
-                @apply text-sm font-bold mb-3 text-stone-400 uppercase;
+                @apply text-xs font-semibold mb-3 text-white/55 uppercase tracking-[0.18em];
 
                 .help-trigger-workspace {
                     @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
@@ -501,28 +608,28 @@ code {
                     @apply list-none m-0 p-0;
 
                     .file-tree-item {
-                        @apply flex items-center gap-2 py-1 text-sm cursor-default text-stone-300;
+                        @apply flex items-center gap-2 py-1 text-sm cursor-default text-white/80;
 
                         &.directory {
-                            @apply font-medium text-cyan-400;
+                            @apply font-medium text-blue-100;
 
                             .icon {
-                                @apply text-cyan-400;
+                                @apply text-blue-100;
                             }
                         }
 
                         &.file {
-                            @apply text-stone-300;
+                            @apply text-white/80;
 
                             .icon {
-                                @apply text-stone-500;
+                                @apply text-white/45;
                             }
 
                             &.clickable {
-                                @apply cursor-pointer hover:text-cyan-400 transition-colors;
+                                @apply cursor-pointer hover:text-orange-100 transition-colors;
 
                                 &:hover .icon {
-                                    @apply text-cyan-400;
+                                    @apply text-orange-100;
                                 }
                             }
                         }
@@ -540,28 +647,27 @@ code {
         }
 
         div.code-container {
-            @apply
-                rounded overflow-hidden shadow-2xl shadow-gray rounded border-gray border-2
+            @apply rounded-xl overflow-hidden border border-white/10 bg-white/[0.03]
                 min-w-0 flex flex-col;
 
             .tab-bar {
-                @apply flex items-center border-b border-gray bg-stone-900 px-2;
+                @apply flex items-center border-b border-white/10 bg-white/[0.04] px-2;
 
                 .tab {
-                    @apply flex items-center gap-2 px-4 py-2 text-sm text-stone-400 border-b-2 border-transparent
+                    @apply flex items-center gap-2 px-4 py-2 text-sm text-white/60 border-b-2 border-transparent
                         cursor-pointer hover:text-white transition-colors -mb-[2px];
 
                     &.active {
-                        @apply text-white border-cyan-400;
+                        @apply text-white border-orange-100;
                     }
 
                     .tab-close {
-                        @apply ml-1 text-stone-500 hover:text-white text-lg leading-none;
+                        @apply ml-1 text-white/45 hover:text-white text-lg leading-none;
                     }
                 }
 
                 .tab-action {
-                    @apply ml-auto p-2 text-stone-400 hover:text-white cursor-pointer
+                    @apply ml-auto p-2 text-white/60 hover:text-white cursor-pointer
                         transition-colors border-0 bg-transparent;
                 }
             }
@@ -576,8 +682,7 @@ code {
         }
 
         div.editor-main {
-            @apply flex flex-col min-w-0;
-            gap: 2rem; /* More space between editor and output */
+            @apply flex flex-col min-w-0 gap-6;
         }
 
         div.dsl-sidebar {
@@ -586,19 +691,21 @@ code {
     }
 
     div.output-container {
-        @apply rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
-            min-h-[100px]
-        ;
+        @apply rounded-xl overflow-auto border border-white/10 bg-white/[0.03] min-h-[100px];
+
+        h2 {
+            @apply text-xs font-semibold uppercase tracking-[0.18em] text-white/55 px-4 pt-3;
+        }
 
         pre {
-            @apply w-full h-full resize-none outline-none p-4;
+            @apply w-full resize-none outline-none px-4 py-2;
         }
 
         .output-message {
             @apply py-1 font-mono text-sm;
 
             .output-timestamp {
-                @apply text-stone-500 mr-2;
+                @apply text-white/45 mr-2;
             }
 
             .output-prefix {
@@ -643,28 +750,111 @@ code {
         }
 
         .output-default {
-            @apply text-stone-300;
+            @apply text-white/80;
         }
     }
 
     .loading-bar {
-        @apply h-1 bg-blue-600 transition-all duration-300 ease-out;
+        @apply h-1 bg-orange-100 transition-all duration-300 ease-out;
         width: 0;
     }
 
     .action-spinner {
-        @apply inline-flex items-center mr-4;
+        @apply inline-flex items-center mr-2;
 
         &.hidden {
             display: none;
         }
 
         svg {
-            @apply text-cyan-400;
+            @apply text-orange-100;
         }
     }
 
     .file-tree.disabled {
         @apply pointer-events-none opacity-50;
     }
+}
+
+:root {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: #ff5547;
+    --pagefind-ui-text: rgba(255, 255, 255, 0.92);
+    --pagefind-ui-background: transparent;
+    --pagefind-ui-border: rgba(255, 255, 255, 0.10);
+    --pagefind-ui-tag: rgba(255, 255, 255, 0.06);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 0.5rem;
+    --pagefind-ui-image-border-radius: 0.5rem;
+    --pagefind-ui-image-box-ratio: 3 / 2;
+    --pagefind-ui-font: 'Cabin Variable', system-ui, sans-serif;
+}
+
+#site-search .pagefind-ui__search-input {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+#site-search .pagefind-ui__search-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+#site-search .pagefind-ui__result {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#site-search .pagefind-ui__result-link {
+    color: #fff;
+}
+
+#site-search .pagefind-ui__result-link:hover {
+    color: #ff5547;
+}
+
+#site-search .pagefind-ui__result-excerpt {
+    color: rgba(255, 255, 255, 0.70);
+}
+
+#site-search mark {
+    background: transparent;
+    color: #ff5547;
+    font-weight: 600;
+}
+
+#site-search .pagefind-ui__filter-panel,
+#site-search .pagefind-ui__filter-name,
+#site-search .pagefind-ui__filter-value {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+#site-search .pagefind-ui__filter-name {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+#site-search .pagefind-ui__filter-value input[type="checkbox"] {
+    accent-color: #ff5547;
+}
+
+#site-search .pagefind-ui__message {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+#site-search .pagefind-ui__search-clear {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.70);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.375rem;
+    transition: border-color 120ms, background 120ms, color 120ms;
+}
+
+#site-search .pagefind-ui__search-clear:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.20);
+    color: #fff;
 }

@@ -1,5 +1,7 @@
 # Types - Architecture
 
+[DOC_LINK:/documentation/components/libs/types]
+
 [TOC]
 
 Types is a small library designed to ensure type consistency at runtime.  

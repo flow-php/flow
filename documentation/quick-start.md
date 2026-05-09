@@ -1,6 +1,6 @@
 # Quick Start 
 
-- [⬅️️ Back](installation.md)
+[DOC_LINK:installation.md]
 
 [TOC]
 

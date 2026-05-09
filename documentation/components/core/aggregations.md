@@ -1,6 +1,6 @@
 # Aggregations
 
-- [⬅️️ Back](/documentation/components/core/group-by.md)
+[DOC_LINK:/documentation/components/core/group-by.md]
 
 [TOC]
 

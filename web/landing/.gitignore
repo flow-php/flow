@@ -4,5 +4,6 @@ build/
 vendor/
 var/
 public/assets
+public/pagefind
 public/*.xml
 !public/BingSiteAuth.xml

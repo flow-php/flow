@@ -1,12 +1,12 @@
+---
+package: flow-php/postgresql-valinor-bridge
+---
+
 # PostgreSQL Valinor Bridge
 
 Bridge that lets [cuyz/valinor](https://valinor.cuyz.io) act as a `RowMapper` for the [flow-php/postgresql](/documentation/components/libs/postgresql.md) client. Use it when you want Valinor's strict, type-safe object hydration to materialize PostgreSQL rows into immutable DTOs or value objects.
 
-- [Back](/documentation/introduction.md)
-- [➡️ Installation](/documentation/installation/packages/postgresql-valinor-bridge.md)
-- [Packagist](https://packagist.org/packages/flow-php/postgresql-valinor-bridge)
-- [GitHub](https://github.com/flow-php/postgresql-valinor-bridge)
-- [API Reference](/documentation/api/bridge/postgresql/valinor)
+[PACKAGE_NAV]
 
 [TOC]
 

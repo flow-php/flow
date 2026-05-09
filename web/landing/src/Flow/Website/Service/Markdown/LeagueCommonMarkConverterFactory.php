@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
+use Flow\Website\Service\Manifest\Manifest;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Event\DocumentParsedEvent;
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
@@ -23,7 +24,7 @@ final readonly class LeagueCommonMarkConverterFactory
     public function __construct(
         private ContainerBagInterface $parameters,
         private Packages $packages,
-        private string $manifestPath,
+        private Manifest $manifest,
     ) {
     }
 
@@ -79,7 +80,9 @@ final readonly class LeagueCommonMarkConverterFactory
             ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
             ->addRenderer(TableOfContents::class, new TableOfContentsRenderer(), 10)
             ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')))
-            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifestPath));
+            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifest))
+            ->addEventListener(DocumentParsedEvent::class, new FlowPackageNavRenderer($this->manifest))
+            ->addEventListener(DocumentParsedEvent::class, new FlowDocLinkRenderer());
 
         return $converter;
     }

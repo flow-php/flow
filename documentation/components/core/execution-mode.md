@@ -1,5 +1,7 @@
 # Execution Mode
 
+[DOC_LINK:/documentation/components/core/core]
+
 [TOC]
 
 Flow DataFrame supports two execution modes that control how scalar functions handle validation errors:

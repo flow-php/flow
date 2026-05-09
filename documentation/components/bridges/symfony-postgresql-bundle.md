@@ -1,12 +1,13 @@
+---
+package: flow-php/symfony-postgresql-bundle
+---
+
 # Symfony PostgreSQL Bundle
 
 Symfony bundle integrating Flow PHP's PostgreSQL library with Symfony applications, providing database management,
 schema migrations, catalog-driven schema diffing, and optional telemetry for query tracing and metrics.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-bundle)
-- [Installation](/documentation/installation/packages/symfony-postgresql-bundle.md)
-- [GitHub](https://github.com/flow-php/symfony-postgresql-bundle)
+[PACKAGE_NAV]
 
 [TOC]
 

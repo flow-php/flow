@@ -9,100 +9,117 @@
     Most of those functions are initializing a new instance of a class under the hood since Flow is fully object-oriented.
 {%- endblock -%}
 
-{%- block hero -%}
-{% endblock %}
+{%- block hero -%}{%- endblock -%}
 
 {% block main %}
-<div class="mt-5 mb-5 px-4 lg:px-8 xl:px-12" data-hx-boost="true">
-    <div class="grid grid-cols-1 lg:grid-cols-[16rem_1fr_14rem] xl:grid-cols-[18rem_1fr_16rem] gap-4">
-        <div class="order-1 lg:order-0 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pr-4">
-            <h1 class="font-bold text-2xl mb-4 hidden lg:block">
-                DSL References
-            </h1>
-            <div class="lg:hidden p-2 text-center">
-                <button class="font-bold text-xl" aria-controls="dsl-references-navigation" data-collapse-toggle="dsl-references-navigation">
+{% set currentPath = app.request.pathInfo %}
+
+{% include 'partials/docs_mobile_nav_panel.html.twig' with {currentPath: currentPath} %}
+
+<section class="px-4 sm:px-6 lg:px-8 xl:px-12 mt-6 mb-12" data-hx-boost="true">
+    <div class="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)_14rem] xl:grid-cols-[18rem_minmax(0,1fr)_16rem] gap-8 lg:gap-10">
+
+        <aside class="hidden lg:block lg:order-1">
+            <nav aria-label="DSL modules">
+                <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
                     DSL References
+                </h2>
 
-                    <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                    </svg>
-                </button>
-            </div>
-            <ul id="dsl-references-navigation" class="mb-10 mr-6 hidden lg:block">
-                <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
-                    <a href="{{ path('documentation') }}">⬅️️ Back</a>
-                </li>
-                {% for module in modules %}
-                    <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
-                        <a
-                            href="{{ path('documentation_dsl', {module: module.name | lower, _fragment:"dsl-functions"}) }}"
-                            class="{% if module.name | lower == module_name  %}text-white {% endif %}"
+                <a href="{{ path('documentation') }}"
+                   class="inline-flex items-center gap-2 mb-3 px-2.5 py-1 text-sm text-white/70 hover:text-white no-underline">
+                    <span aria-hidden="true">←</span> Back to docs
+                </a>
 
-                        >{{ module.value }}</a>
-                        {% if module.name | lower == module_name | lower %}
-                        <ul class="list-disc pl-6 mt-2">
-                            {% for type in types %}
-                                {% if definitions.onlyType(type).count %}
-                                    <li class="text-sm">
-                                        <a href="#type-{{ type.name|lower }}">{{ type.value }}</a>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="order-3 lg:order-1 min-w-0 py-2 px-4 lg:px-8">
-            <hr class="text-blue-100 my-4 border-t-2 rounded" />
-            <p class="mb-2 text-sm italic">
-                DSL stands for Domain Specific Language. In the case of Flow, the DSL is used to define simple functions that can be used to transform data.
-                Most of those functions are initializing a new instance of a class under the hood since Flow is fully object-oriented.
-                Please look at the <a href="{{ path('example', {topic: "data_frame", example: "data_frame", _fragment: "example"}) }}">examples</a> below to get a better understanding of how to use the DSL functions.
+                <ul class="space-y-0.5">
+                    {% for module in modules %}
+                        {% set isActive = (module.name | lower) == module_name | lower %}
+                        <li data-dsl-module="{{ module_name | slugify | lower }}">
+                            <a href="{{ path('documentation_dsl', {module: module.name | lower, _fragment: 'dsl-functions'}) }}"
+                               class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
+                                      {{ isActive
+                                        ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
+                                        : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+                               {% if isActive %}aria-current="page"{% endif %}>
+                                {{ module.value }}
+                            </a>
+                            {% if isActive %}
+                                <ul class="mt-1 ml-3 pl-3 border-l border-white/10 space-y-0.5">
+                                    {% for type in types %}
+                                        {% if definitions.onlyType(type).count %}
+                                            <li>
+                                                <a href="#type-{{ type.name|lower }}"
+                                                   class="block rounded-md px-2.5 py-1 text-xs text-white/65 hover:text-white hover:bg-white/[0.04] no-underline border-l-2 border-transparent">
+                                                    {{ type.value }}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </aside>
+
+        <article class="order-1 lg:order-2 min-w-0" data-pagefind-body>
+            {% include 'partials/docs_mobile_nav.html.twig' with {currentPath: currentPath} %}
+
+            <span data-pagefind-meta="title:DSL · {{ module_name|humanize }}" class="hidden" aria-hidden="true"></span>
+            {% if searchFacets.type|default(null) %}<span data-pagefind-filter="type:{{ searchFacets.type }}" class="hidden" aria-hidden="true"></span>{% endif %}
+            {% if searchFacets.component|default(null) %}<span data-pagefind-filter="component:{{ searchFacets.component }}" class="hidden" aria-hidden="true"></span>{% endif %}
+
+            <h1 class="font-bold text-3xl tracking-tight mb-3">DSL References</h1>
+            <p class="muted mb-8 max-w-3xl">
+                DSL stands for Domain Specific Language. In Flow, the DSL is a set of small
+                functions that wrap object construction so pipelines read top-to-bottom.
+                See the <a class="text-blue-100 hover:text-orange-100" href="{{ path('example', {topic: 'data_frame', example: 'data_frame', _fragment: 'example'}) }}">examples</a>
+                for usage in context.
             </p>
 
             {% for type in types %}
                 {% if definitions.onlyType(type).count %}
-                    <h2 id="type-{{ type.name|lower }}" class="font-bold text-2xl mb-2" data-dsl-type="{{ type.value }}">
-                        <a href="#type-{{ type.name|lower }}" class="text-white">
-                            {{ type.name }}
-                        </a>
-                    </h2>
-                    <hr class="text-blue-100 my-4 border-t-2 rounded" />
-                    {% for definition in definitions.onlyType(type).all %}
-                        <article data-dsl-function>
-                            <div class="grid grid-cols-2 mb-2">
-                                <div class="text-left">
-                                    <h4 class="mb-2 inline" id="dsl-{{ definition.name }}">
-                                        <a href="{{ path('documentation_dsl_function', {module: definition.module.name | lower, function: definition.name | slugify | lower, _fragment: "dsl-function"}) }}" class="text-white">
-                                            <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
-                                            {{ definition.name }}
+                    <section class="mb-10">
+                        <h2 id="type-{{ type.name|lower }}"
+                            class="font-bold text-2xl tracking-tight mb-4 scroll-mt-24"
+                            data-dsl-type="{{ type.value }}">
+                            <a href="#type-{{ type.name|lower }}" class="text-white no-underline hover:text-orange-100">
+                                {{ type.name }}
+                            </a>
+                        </h2>
+
+                        <div class="space-y-4">
+                            {% for definition in definitions.onlyType(type).all %}
+                                <article data-dsl-function class="card !p-0 overflow-hidden">
+                                    <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-white/10 bg-white/[0.02]">
+                                        <h3 class="m-0 font-mono text-sm font-medium" id="dsl-{{ definition.name }}">
+                                            <a href="{{ path('documentation_dsl_function', {module: definition.module.name | lower, function: definition.name | slugify | lower, _fragment: 'dsl-function'}) }}"
+                                               class="inline-flex items-center gap-2 text-white no-underline hover:text-orange-100">
+                                                <img src="{{ asset('images/icons/link.svg') }}" alt="" width="14" height="14" class="opacity-60">
+                                                {{ definition.name }}
+                                            </a>
+                                        </h3>
+                                        <a class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-2.5 py-1 text-xs text-white/85 no-underline transition-colors"
+                                           href="{{ definition.githubUrl }}" target="_blank" rel="noopener" data-dsl-source-link>
+                                            View
+                                            <img src="{{ asset('images/icons/github.svg') }}" alt="" width="12" height="12" class="opacity-70">
                                         </a>
-                                    </h4>
-                                </div>
-                                <div class="text-right">
-                                    <a class="btn btn-primary" href="{{ definition.githubUrl }}" target="_blank" data-dsl-source-link>
-                                        View
-                                        <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
-                                {% apply spaceless %}
-                                <pre class="overflow-auto !m-0 language-php"  {{ stimulus_controller('syntax_highlight') }}  data-prismjs-no-auto-linker>
-                                    <code id="code">{{- definition.toString | escape('html') -}}</code>
-                                </pre>
-                                {% endapply %}
-                            </div>
-                        </article>
-                    {% endfor %}
+                                    </div>
+                                    {% apply spaceless %}
+                                    <pre class="!m-0 !rounded-none !border-0 !bg-transparent overflow-auto language-php text-sm leading-6 px-5 py-4"
+                                         {{ stimulus_controller('syntax_highlight') }} data-prismjs-no-auto-linker><code>{{- definition.toString | escape('html') -}}</code></pre>
+                                    {% endapply %}
+                                </article>
+                            {% endfor %}
+                        </div>
+                    </section>
                 {% endif %}
             {% endfor %}
-        </div>
-        <div class="order-2 lg:order-2 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pl-4">
-            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight')) }}
-        </div>
+        </article>
+
+        <aside class="hidden lg:block order-3">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight', {currentPath: currentPath})) }}
+        </aside>
     </div>
-</div>
+</section>
 {% endblock %}

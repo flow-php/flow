@@ -15,6 +15,9 @@
     <server name="PANTHER_WEB_SERVER_ROUTER" value="../tests/router.php"/>
   </php>
   <testsuites>
+    <testsuite name="unit">
+      <directory>tests/Flow/Website/Tests/Unit</directory>
+    </testsuite>
     <testsuite name="integration">
       <directory>tests/Flow/Website/Tests/Integration</directory>
     </testsuite>

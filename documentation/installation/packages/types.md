@@ -6,7 +6,8 @@ seo_description: >
 
 # Types
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/types.md]
+
 - [📜 Documentation](/documentation/components/libs/types.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/types)
 
