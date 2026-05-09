@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "126a806538bbe2fdc45647bbe8fa5f56",
+    "content-hash": "f572a9a3310c2e71923aaae36db9d3f1",
     "packages": [
         {
             "name": "async-aws/core",
@@ -201,6 +201,81 @@
                 }
             ],
             "time": "2026-03-17T12:54:54+00:00"
+        },
+        {
+            "name": "cmsig/seal",
+            "version": "0.12.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHP-CMSIG/seal.git",
+                "reference": "9c4a696e5e4c3a529668b9cf9dbcfd9a175ad7cd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHP-CMSIG/seal/zipball/9c4a696e5e4c3a529668b9cf9dbcfd9a175ad7cd",
+                "reference": "9c4a696e5e4c3a529668b9cf9dbcfd9a175ad7cd",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "replace": {
+                "schranz-search/seal": "self.version"
+            },
+            "require-dev": {
+                "php-cs-fixer/shim": "^3.51",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^10.3",
+                "rector/rector": "^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "CmsIg\\Seal\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alexander Schranz",
+                    "email": "alexander@sulu.io"
+                }
+            ],
+            "description": "Search Engine Abstraction Layer",
+            "keywords": [
+                "abstraction",
+                "algolia",
+                "cmsig",
+                "elasticsearch",
+                "meilisearch",
+                "opensearch",
+                "redisearch",
+                "seal",
+                "search",
+                "search-abstraction",
+                "search-client",
+                "solr",
+                "typesense"
+            ],
+            "support": {
+                "source": "https://github.com/PHP-CMSIG/seal/tree/0.12.10"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/L91",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/alexander-schranz",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-04-09T06:30:16+00:00"
         },
         {
             "name": "coduo/php-humanizer",

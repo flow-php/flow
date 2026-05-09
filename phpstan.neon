@@ -22,6 +22,7 @@ parameters:
         - src/adapter/etl-adapter-text/src
         - src/adapter/etl-adapter-xml/src
         - src/adapter/etl-adapter-postgresql/src
+        - src/adapter/etl-adapter-seal/src
         - src/bridge/filesystem/azure/src
         - src/bridge/filesystem/async-aws/src
         - src/bridge/monolog/http/src
@@ -72,6 +73,7 @@ parameters:
         - src/adapter/etl-adapter-text/tests
         - src/adapter/etl-adapter-xml/tests
         - src/adapter/etl-adapter-postgresql/tests
+        - src/adapter/etl-adapter-seal/tests
         - src/bridge/filesystem/async-aws/tests
         - src/bridge/filesystem/azure/tests
         - src/bridge/monolog/http/tests
