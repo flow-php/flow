@@ -1,4 +1,5 @@
 ---
+package: flow-php/monolog-telemetry-bridge
 seo_title: "Installing Monolog Telemetry Bridge"
 seo_description: >
   How to install flow-php/monolog-telemetry-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Monolog Telemetry Bridge
 
-[DOC_LINK:/documentation/components/bridges/monolog-telemetry-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/monolog-telemetry-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/monolog-telemetry-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

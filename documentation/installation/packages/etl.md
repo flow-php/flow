@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl
 seo_title: "Installing Flow PHP ETL (Core)"
 seo_description: >
   How to install flow-php/etl in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Flow PHP ETL (Core)
 
-[DOC_LINK:/documentation/components/core/core.md]
-
-- [📜 Documentation](/documentation/components/core/core.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl)
+[PACKAGE_NAV:install]
 
 [TOC]
 

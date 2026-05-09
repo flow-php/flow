@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-doctrine
 seo_title: "Installing Doctrine DBAL Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-doctrine in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Doctrine DBAL Adapter
 
-[DOC_LINK:/documentation/components/adapters/doctrine.md]
-
-- [📜 Documentation](/documentation/components/adapters/doctrine.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-doctrine)
+[PACKAGE_NAV:install]
 
 [TOC]
 

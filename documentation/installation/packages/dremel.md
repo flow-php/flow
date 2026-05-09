@@ -1,4 +1,5 @@
 ---
+package: flow-php/dremel
 seo_title: "Installing Dremel"
 seo_description: >
   How to install flow-php/dremel in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Dremel
 
-[DOC_LINK:/documentation/components/libs/dremel.md]
-
-- [📜 Documentation](/documentation/components/libs/dremel.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/dremel)
+[PACKAGE_NAV:install]
 
 [TOC]
 

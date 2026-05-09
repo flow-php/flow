@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-http-foundation-bridge
 seo_title: "Installing Symfony HTTP Foundation Bridge"
 seo_description: >
   How to install flow-php/symfony-http-foundation-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony HTTP Foundation Bridge
 
-[DOC_LINK:/documentation/components/bridges/symfony-http-foundation-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/symfony-http-foundation-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/symfony-http-foundation-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

@@ -1,4 +1,5 @@
 ---
+package: flow-php/types
 seo_title: "Installing Types"
 seo_description: >
   How to install flow-php/types in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Types
 
-[DOC_LINK:/documentation/components/libs/types.md]
-
-- [📜 Documentation](/documentation/components/libs/types.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/types)
+[PACKAGE_NAV:install]
 
 [TOC]
 

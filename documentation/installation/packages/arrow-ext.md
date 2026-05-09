@@ -1,4 +1,5 @@
 ---
+package: flow-php/arrow-ext
 seo_title: "Installing Arrow Extension"
 seo_description: >
   How to install flow-php/arrow-ext PHP extension using precompiled binaries or PIE.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Arrow Extension
 
-[DOC_LINK:/documentation/components/extensions/arrow-ext.md]
-
-- [📜 Documentation](/documentation/components/extensions/arrow-ext.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/arrow-ext)
+[PACKAGE_NAV:install]
 
 [TOC]
 

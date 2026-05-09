@@ -1,4 +1,5 @@
 ---
+package: flow-php/monolog-http-bridge
 seo_title: "Installing Monolog HTTP Bridge"
 seo_description: >
   How to install flow-php/monolog-http-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Monolog HTTP Bridge
 
-[DOC_LINK:/documentation/components/bridges/monolog-http-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/monolog-http-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/monolog-http-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

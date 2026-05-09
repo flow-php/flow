@@ -1,4 +1,5 @@
 ---
+package: flow-php/telemetry-otlp-bridge
 seo_title: "Installing Telemetry OTLP Bridge"
 seo_description: >
   How to install flow-php/telemetry-otlp-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Telemetry OTLP Bridge
 
-[DOC_LINK:/documentation/components/bridges/telemetry-otlp-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/telemetry-otlp-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/telemetry-otlp-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

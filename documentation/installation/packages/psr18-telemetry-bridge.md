@@ -1,4 +1,5 @@
 ---
+package: flow-php/psr18-telemetry-bridge
 seo_title: "Installing PSR-18 Telemetry Bridge"
 seo_description: >
   How to install flow-php/psr18-telemetry-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PSR-18 Telemetry Bridge
 
-[DOC_LINK:/documentation/components/bridges/psr18-telemetry-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/psr18-telemetry-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/psr18-telemetry-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

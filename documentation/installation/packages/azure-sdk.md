@@ -1,4 +1,5 @@
 ---
+package: flow-php/azure-sdk
 seo_title: "Installing Azure SDK"
 seo_description: >
   How to install flow-php/azure-sdk in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Azure SDK
 
-[DOC_LINK:/documentation/components/libs/azure-sdk.md]
-
-- [📜 Documentation](/documentation/components/libs/azure-sdk.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/azure-sdk)
+[PACKAGE_NAV:install]
 
 [TOC]
 

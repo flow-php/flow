@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-postgresql
 seo_title: "Installing PostgreSQL Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-postgresql in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PostgreSQL Adapter
 
-[DOC_LINK:/documentation/components/adapters/postgresql.md]
-
-- [📜 Documentation](/documentation/components/adapters/postgresql.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-postgresql)
+[PACKAGE_NAV:install]
 
 [TOC]
 

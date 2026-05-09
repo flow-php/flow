@@ -12,11 +12,10 @@ use League\CommonMark\Node\Inline\Text;
 
 final readonly class FlowPackageNavRenderer
 {
-    private const string PLACEHOLDER = '[PACKAGE_NAV]';
+    private const string PLACEHOLDER_COMPONENT = '[PACKAGE_NAV]';
 
-    /** Which auto-derived links to include for each package type.
-     *  PHP extensions aren't published to Packagist, so they only get GitHub
-     *  and an Installation link by default. */
+    private const string PLACEHOLDER_INSTALL = '[PACKAGE_NAV:install]';
+
     private const array TYPE_AUTOLINKS = [
         'core' => ['packagist', 'github', 'installation'],
         'cli' => ['packagist', 'github', 'installation'],
@@ -24,6 +23,15 @@ final readonly class FlowPackageNavRenderer
         'lib' => ['packagist', 'github', 'installation'],
         'bridge' => ['packagist', 'github', 'installation'],
         'extension' => ['github', 'installation'],
+    ];
+
+    private const array TYPE_AUTOLINKS_INSTALL = [
+        'core' => ['documentation', 'packagist', 'github'],
+        'cli' => ['documentation', 'packagist', 'github'],
+        'adapter' => ['documentation', 'packagist', 'github'],
+        'lib' => ['documentation', 'packagist', 'github'],
+        'bridge' => ['documentation', 'packagist', 'github'],
+        'extension' => ['documentation', 'github'],
     ];
 
     /** Maps `manifest.json` `type` to its docs folder name. */
@@ -61,7 +69,9 @@ final readonly class FlowPackageNavRenderer
                 continue;
             }
 
-            if ($node->getLiteral() !== self::PLACEHOLDER) {
+            $literal = $node->getLiteral();
+
+            if ($literal !== self::PLACEHOLDER_COMPONENT && $literal !== self::PLACEHOLDER_INSTALL) {
                 continue;
             }
 
@@ -83,8 +93,10 @@ final readonly class FlowPackageNavRenderer
                 continue;
             }
 
+            $variant = $literal === self::PLACEHOLDER_INSTALL ? 'install' : 'component';
+
             $block = new HtmlBlock(HtmlBlock::TYPE_6_BLOCK_ELEMENT);
-            $block->setLiteral($this->buildNavHtml($package));
+            $block->setLiteral($this->buildNavHtml($package, $variant));
             $owner->insertBefore($block);
             $owner->detach();
         }
@@ -93,7 +105,7 @@ final readonly class FlowPackageNavRenderer
     /**
      * @param array<string, mixed> $package
      */
-    private function buildNavHtml(array $package) : string
+    private function buildNavHtml(array $package, string $variant) : string
     {
         $name = (string) $package['name'];
         $type = (string) $package['type'];
@@ -102,7 +114,13 @@ final readonly class FlowPackageNavRenderer
         $links = is_array($package['links'] ?? null) ? $package['links'] : [];
 
         $items = [];
-        $autolinks = self::TYPE_AUTOLINKS[$type] ?? ['packagist', 'github', 'installation'];
+        $autolinks = $variant === 'install'
+            ? (self::TYPE_AUTOLINKS_INSTALL[$type] ?? ['documentation', 'packagist', 'github'])
+            : (self::TYPE_AUTOLINKS[$type] ?? ['packagist', 'github', 'installation']);
+
+        if (in_array('documentation', $autolinks, true) && isset($links['documentation']) && is_string($links['documentation'])) {
+            $items[] = $this->item($links['documentation'], 'Documentation');
+        }
 
         if (in_array('packagist', $autolinks, true)) {
             $items[] = $this->item(

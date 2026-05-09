@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-postgresql-bundle
 seo_title: "Installing Symfony PostgreSQL Bundle"
 seo_description: >
   How to install flow-php/symfony-postgresql-bundle in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony PostgreSQL Bundle
 
-[DOC_LINK:/documentation/components/bridges/symfony-postgresql-bundle.md]
-
-- [Documentation](/documentation/components/bridges/symfony-postgresql-bundle.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-bundle)
+[PACKAGE_NAV:install]
 
 [TOC]
 

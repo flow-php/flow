@@ -1,4 +1,5 @@
 ---
+package: flow-php/snappy
 seo_title: "Installing Snappy"
 seo_description: >
   How to install flow-php/snappy in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Snappy
 
-[DOC_LINK:/documentation/components/libs/snappy.md]
-
-- [📜 Documentation](/documentation/components/libs/snappy.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/snappy)
+[PACKAGE_NAV:install]
 
 [TOC]
 

@@ -1,4 +1,5 @@
 ---
+package: flow-php/cli
 seo_title: "Installing Flow PHP CLI"
 seo_description: >
   How to install flow-php/cli in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Flow PHP CLI
 
-[DOC_LINK:/documentation/components/cli/docs.md]
-
-- [📜 Documentation](/documentation/components/cli/docs.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/cli)
+[PACKAGE_NAV:install]
 
 [TOC]
 

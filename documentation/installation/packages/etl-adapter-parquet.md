@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-parquet
 seo_title: "Installing Parquet Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-parquet in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Parquet Adapter
 
-[DOC_LINK:/documentation/components/adapters/parquet.md]
-
-- [📜 Documentation](/documentation/components/adapters/parquet.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-parquet)
+[PACKAGE_NAV:install]
 
 [TOC]
 

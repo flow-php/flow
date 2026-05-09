@@ -1,4 +1,5 @@
 ---
+package: flow-php/pg-query-ext
 seo_title: "Installing PG Query Extension"
 seo_description: >
   How to install flow-php/pg-query-ext PHP extension using PIE.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PG Query Extension
 
-[DOC_LINK:/documentation/components/extensions/pg-query-ext.md]
-
-- [📜 Documentation](/documentation/components/extensions/pg-query-ext.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/pg-query-ext)
+[PACKAGE_NAV:install]
 
 [TOC]
 

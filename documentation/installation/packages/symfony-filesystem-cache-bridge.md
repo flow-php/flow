@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-filesystem-cache-bridge
 seo_title: "Installing Symfony Filesystem Cache Bridge"
 seo_description: >
   How to install flow-php/symfony-filesystem-cache-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony Filesystem Cache Bridge
 
-[DOC_LINK:/documentation/components/bridges/symfony-filesystem-cache-bridge.md]
-
-- [Documentation](/documentation/components/bridges/symfony-filesystem-cache-bridge.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-filesystem-cache-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

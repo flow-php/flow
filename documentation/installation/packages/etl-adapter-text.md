@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-text
 seo_title: "Installing Text Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-text in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Text Adapter
 
-[DOC_LINK:/documentation/components/adapters/text.md]
-
-- [📜 Documentation](/documentation/components/adapters/text.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-text)
+[PACKAGE_NAV:install]
 
 [TOC]
 

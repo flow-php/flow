@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-postgresql-cache-bridge
 seo_title: "Installing Symfony PostgreSQL Cache Bridge"
 seo_description: >
   How to install flow-php/symfony-postgresql-cache-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony PostgreSQL Cache Bridge
 
-[DOC_LINK:/documentation/components/bridges/symfony-postgresql-cache-bridge.md]
-
-- [Documentation](/documentation/components/bridges/symfony-postgresql-cache-bridge.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-cache-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

@@ -6,9 +6,9 @@
        {% if external %}target="_blank" rel="noopener"{% endif %}
        class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
               {{ isActive
-                ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
-                : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
-       {% if isActive %}aria-current="page"{% endif %}>
+       ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
+       : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+            {% if isActive %}aria-current="page"{% endif %}>
         {{ label }}{% if external %} <span class="opacity-50">↗</span>{% endif %}
     </a>
 {% endmacro %}
@@ -21,17 +21,17 @@
             Introduction
         </h2>
         <ul class="space-y-0.5">
-            <li>{{ nav.nav_link('/documentation',                   'Features',                       currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/installation',      'Installation',                   currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/quick-start',       'Quick Start',                    currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/dsl#dsl-functions', 'DSL References',                 currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/benchmarks',        'Benchmarks',                     currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/adrs',              'Architecture Decision Records',  currentPath) }}</li>
-            <li>{{ nav.nav_link('https://github.com/orgs/flow-php/projects/1', 'Project Roadmap',     currentPath, true) }}</li>
-            <li>{{ nav.nav_link('/documentation/contributing',      'Contributing',                   currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/security',          'Security',                       currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/upgrading',         'Upgrading',                      currentPath) }}</li>
-            <li>{{ nav.nav_link('https://discord.gg/5dNXfQyACW',    'Discord Server',                 currentPath, true) }}</li>
+            <li>{{ nav.nav_link('/documentation', 'Introduction', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/installation', 'Installation', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/quick-start', 'Quick Start', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/dsl#dsl-functions', 'DSL References', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/benchmarks', 'Benchmarks', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/adrs', 'Architecture Decision Records', currentPath) }}</li>
+            <li>{{ nav.nav_link('https://github.com/orgs/flow-php/projects/1', 'Project Roadmap', currentPath, true) }}</li>
+            <li>{{ nav.nav_link('/documentation/contributing', 'Contributing', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/security', 'Security', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/upgrading', 'Upgrading', currentPath) }}</li>
+            <li>{{ nav.nav_link('https://discord.gg/5dNXfQyACW', 'Discord Server', currentPath, true) }}</li>
         </ul>
     </div>
 
@@ -40,34 +40,34 @@
             Data Frame
         </h2>
         <ul class="space-y-0.5">
-            <li>{{ nav.nav_link('/documentation/components/core/core',              'Data Frame',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/core', 'Data Frame', currentPath) }}</li>
         </ul>
         <ul class="mt-1 ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <li>{{ nav.nav_link('/documentation/components/core/building-blocks',   'Building Blocks',     currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/data-retrieval',    'Data Retrieval',      currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/data-manipulation', 'Data Manipulation',   currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/select-drop',       'Select / Drop',       currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/rename',            'Rename',              currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/map',               'Map',                 currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/filter',            'Filter',              currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/execution-mode',    'Execution Mode',      currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/save-mode',         'Save Mode',           currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/join',              'Join',                currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/group-by',          'Group By',            currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/building-blocks', 'Building Blocks', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/data-retrieval', 'Data Retrieval', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/data-manipulation', 'Data Manipulation', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/select-drop', 'Select / Drop', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/rename', 'Rename', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/map', 'Map', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/filter', 'Filter', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/execution-mode', 'Execution Mode', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/save-mode', 'Save Mode', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/join', 'Join', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/group-by', 'Group By', currentPath) }}</li>
             <li class="ml-3">{{ nav.nav_link('/documentation/components/core/aggregations', 'Aggregations', currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/pivot',             'Pivot',               currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/window-functions',  'Window Functions',    currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/sort',              'Sort',                currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/limit',             'Limit',               currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/offset',            'Offset',              currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/until',             'Until',               currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/batch-processing',  'Batch Processing',    currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/caching',           'Caching',             currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/partitioning',      'Partitioning',        currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/constraints',       'Constraints',         currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/schema',            'Schema',              currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/display',           'Display',             currentPath) }}</li>
-            <li>{{ nav.nav_link('/documentation/components/core/error-handling',    'Error Handling',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/pivot', 'Pivot', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/window-functions', 'Window Functions', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/sort', 'Sort', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/limit', 'Limit', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/offset', 'Offset', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/until', 'Until', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/batch-processing', 'Batch Processing', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/caching', 'Caching', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/partitioning', 'Partitioning', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/constraints', 'Constraints', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/schema', 'Schema', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/display', 'Display', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/error-handling', 'Error Handling', currentPath) }}</li>
         </ul>
         <ul class="mt-3 space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/cli/docs', 'CLI', currentPath) }}</li>

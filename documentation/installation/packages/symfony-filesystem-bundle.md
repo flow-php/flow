@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-filesystem-bundle
 seo_title: "Installing Symfony Filesystem Bundle"
 seo_description: >
   How to install flow-php/symfony-filesystem-bundle in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony Filesystem Bundle
 
-[DOC_LINK:/documentation/components/bridges/symfony-filesystem-bundle.md]
-
-- [Documentation](/documentation/components/bridges/symfony-filesystem-bundle.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-filesystem-bundle)
+[PACKAGE_NAV:install]
 
 [TOC]
 

@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-json
 seo_title: "Installing JSON Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-json in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # JSON Adapter
 
-[DOC_LINK:/documentation/components/adapters/json.md]
-
-- [📜 Documentation](/documentation/components/adapters/json.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-json)
+[PACKAGE_NAV:install]
 
 [TOC]
 

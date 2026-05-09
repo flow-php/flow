@@ -1,4 +1,5 @@
 ---
+package: flow-php/doctrine-dbal-bulk
 seo_title: "Installing Doctrine DBAL Bulk"
 seo_description: >
   How to install flow-php/doctrine-dbal-bulk in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Doctrine DBAL Bulk
 
-[DOC_LINK:/documentation/components/libs/doctrine-dbal-bulk.md]
-
-- [📜 Documentation](/documentation/components/libs/doctrine-dbal-bulk.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/doctrine-dbal-bulk)
+[PACKAGE_NAV:install]
 
 [TOC]
 

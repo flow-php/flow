@@ -9,6 +9,7 @@ use Doctrine\DBAL\Driver\{Connection, Result, Statement};
 use Doctrine\DBAL\{Driver, ParameterType};
 use Doctrine\DBAL\Platforms\{AbstractPlatform, DB2Platform, MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SqlitePlatform};
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Doctrine\DBAL\VersionAwarePlatformDriver;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingDriver;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;

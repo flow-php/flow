@@ -1,4 +1,5 @@
 ---
+package: flow-php/parquet-viewer
 seo_title: "Installing Parquet Viewer"
 seo_description: >
   How to install flow-php/parquet-viewer in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Parquet Viewer
 
-[DOC_LINK:/documentation/components/libs/parquet-viewer.md]
-
-- [📜 Documentation](/documentation/components/libs/parquet-viewer.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/parquet-viewer)
+[PACKAGE_NAV:install]
 
 [TOC]
 

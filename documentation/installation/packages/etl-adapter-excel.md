@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-excel
 seo_title: "Installing Excel Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-excel in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Excel Adapter
 
-[DOC_LINK:/documentation/components/adapters/excel.md]
-
-- [📜 Documentation](/documentation/components/adapters/excel.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-excel)
+[PACKAGE_NAV:install]
 
 [TOC]
 

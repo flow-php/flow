@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-telemetry-bundle
 seo_title: "Installing Symfony Telemetry Bundle"
 seo_description: >
   How to install flow-php/symfony-telemetry-bundle in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony Telemetry Bundle
 
-[DOC_LINK:/documentation/components/bridges/symfony-telemetry-bundle.md]
-
-- [📜 Documentation](/documentation/components/bridges/symfony-telemetry-bundle.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/symfony-telemetry-bundle)
+[PACKAGE_NAV:install]
 
 [TOC]
 

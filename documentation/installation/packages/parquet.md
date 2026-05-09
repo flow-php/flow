@@ -1,4 +1,5 @@
 ---
+package: flow-php/parquet
 seo_title: "Installing Parquet"
 seo_description: >
   How to install flow-php/parquet in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Parquet
 
-[DOC_LINK:/documentation/components/libs/parquet.md]
-
-- [📜 Documentation](/documentation/components/libs/parquet.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/parquet)
+[PACKAGE_NAV:install]
 
 [TOC]
 

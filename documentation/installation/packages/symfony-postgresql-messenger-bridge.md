@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-postgresql-messenger-bridge
 seo_title: "Installing Symfony PostgreSQL Messenger Bridge"
 seo_description: >
   How to install flow-php/symfony-postgresql-messenger-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony PostgreSQL Messenger Bridge
 
-[DOC_LINK:/documentation/components/bridges/symfony-postgresql-messenger-bridge.md]
-
-- [Documentation](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-messenger-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

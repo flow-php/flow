@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-google-sheet
 seo_title: "Installing Google Sheet Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-google-sheet in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Google Sheet Adapter
 
-[DOC_LINK:/documentation/components/adapters/google-sheet.md]
-
-- [📜 Documentation](/documentation/components/adapters/google-sheet.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-google-sheet)
+[PACKAGE_NAV:install]
 
 [TOC]
 

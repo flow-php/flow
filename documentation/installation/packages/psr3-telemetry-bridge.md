@@ -1,4 +1,5 @@
 ---
+package: flow-php/psr3-telemetry-bridge
 seo_title: "Installing PSR-3 Telemetry Bridge"
 seo_description: >
   How to install flow-php/psr3-telemetry-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PSR-3 Telemetry Bridge
 
-[DOC_LINK:/documentation/components/bridges/psr3-telemetry-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/psr3-telemetry-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/psr3-telemetry-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

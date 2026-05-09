@@ -1,4 +1,5 @@
 ---
+package: flow-php/symfony-postgresql-session-bridge
 seo_title: "Installing Symfony PostgreSQL Session Bridge"
 seo_description: >
   How to install flow-php/symfony-postgresql-session-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Symfony PostgreSQL Session Bridge
 
-[DOC_LINK:/documentation/components/bridges/symfony-postgresql-session-bridge.md]
-
-- [Documentation](/documentation/components/bridges/symfony-postgresql-session-bridge.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-session-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

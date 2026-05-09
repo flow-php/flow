@@ -1,4 +1,5 @@
 ---
+package: flow-php/postgresql-valinor-bridge
 seo_title: "Installing PostgreSQL Valinor Bridge"
 seo_description: >
   How to install flow-php/postgresql-valinor-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PostgreSQL Valinor Bridge
 
-[DOC_LINK:/documentation/components/bridges/postgresql-valinor-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/postgresql-valinor-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/postgresql-valinor-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

@@ -1,4 +1,5 @@
 ---
+package: flow-php/phpunit-postgresql-bridge
 seo_title: "Installing PHPUnit PostgreSQL Bridge"
 seo_description: >
   How to install flow-php/phpunit-postgresql-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PHPUnit PostgreSQL Bridge
 
-[DOC_LINK:/documentation/components/bridges/phpunit-postgresql-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/phpunit-postgresql-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/phpunit-postgresql-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

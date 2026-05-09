@@ -1,4 +1,5 @@
 ---
+package: flow-php/phpunit-telemetry-bridge
 seo_title: "Installing PHPUnit Telemetry Bridge"
 seo_description: >
   How to install flow-php/phpunit-telemetry-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PHPUnit Telemetry Bridge
 
-[DOC_LINK:/documentation/components/bridges/phpunit-telemetry-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/phpunit-telemetry-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/phpunit-telemetry-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

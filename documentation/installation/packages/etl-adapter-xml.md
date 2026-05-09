@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-xml
 seo_title: "Installing XML Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-xml in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # XML Adapter
 
-[DOC_LINK:/documentation/components/adapters/xml.md]
-
-- [📜 Documentation](/documentation/components/adapters/xml.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-xml)
+[PACKAGE_NAV:install]
 
 [TOC]
 

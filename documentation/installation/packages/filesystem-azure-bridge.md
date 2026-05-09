@@ -1,4 +1,5 @@
 ---
+package: flow-php/filesystem-azure-bridge
 seo_title: "Installing Filesystem Azure Bridge"
 seo_description: >
   How to install flow-php/filesystem-azure-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Filesystem Azure Bridge
 
-[DOC_LINK:/documentation/components/bridges/filesystem-azure-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/filesystem-azure-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/filesystem-azure-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

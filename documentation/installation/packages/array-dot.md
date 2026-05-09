@@ -1,4 +1,5 @@
 ---
+package: flow-php/array-dot
 seo_title: "Installing Array Dot"
 seo_description: >
   How to install flow-php/array-dot in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Array Dot
 
-[DOC_LINK:/documentation/components/libs/array-dot.md]
-
-- [📜 Documentation](/documentation/components/libs/array-dot.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/array-dot)
+[PACKAGE_NAV:install]
 
 [TOC]
 

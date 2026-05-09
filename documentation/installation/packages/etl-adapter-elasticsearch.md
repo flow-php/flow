@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-elasticsearch
 seo_title: "Installing Elasticsearch Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-elasticsearch in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Elasticsearch Adapter
 
-[DOC_LINK:/documentation/components/adapters/elasticsearch.md]
-
-- [📜 Documentation](/documentation/components/adapters/elasticsearch.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-elasticsearch)
+[PACKAGE_NAV:install]
 
 [TOC]
 

@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-http
 seo_title: "Installing HTTP Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-http in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # HTTP Adapter
 
-[DOC_LINK:/documentation/components/adapters/http.md]
-
-- [📜 Documentation](/documentation/components/adapters/http.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-http)
+[PACKAGE_NAV:install]
 
 [TOC]
 

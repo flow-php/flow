@@ -1,4 +1,5 @@
 ---
+package: flow-php/postgresql
 seo_title: "Installing PostgreSQL Library"
 seo_description: >
   How to install flow-php/postgresql in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # PostgreSQL Library
 
-[DOC_LINK:/documentation/components/libs/postgresql.md]
-
-- [📜 Documentation](/documentation/components/libs/postgresql.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/postgresql)
+[PACKAGE_NAV:install]
 
 [TOC]
 

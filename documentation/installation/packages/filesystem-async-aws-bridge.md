@@ -1,4 +1,5 @@
 ---
+package: flow-php/filesystem-async-aws-bridge
 seo_title: "Installing Filesystem Async AWS Bridge"
 seo_description: >
   How to install flow-php/filesystem-async-aws-bridge in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Filesystem Async AWS Bridge
 
-[DOC_LINK:/documentation/components/bridges/filesystem-async-aws-bridge.md]
-
-- [📜 Documentation](/documentation/components/bridges/filesystem-async-aws-bridge.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/filesystem-async-aws-bridge)
+[PACKAGE_NAV:install]
 
 [TOC]
 

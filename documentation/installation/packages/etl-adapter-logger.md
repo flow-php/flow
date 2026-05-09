@@ -1,4 +1,5 @@
 ---
+package: flow-php/etl-adapter-logger
 seo_title: "Installing Logger Adapter"
 seo_description: >
   How to install flow-php/etl-adapter-logger in your PHP project using Composer.
@@ -6,10 +7,7 @@ seo_description: >
 
 # Logger Adapter
 
-[DOC_LINK:/documentation/components/adapters/logger.md]
-
-- [📜 Documentation](/documentation/components/adapters/logger.md)
-- [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-logger)
+[PACKAGE_NAV:install]
 
 [TOC]
 
