@@ -13,10 +13,13 @@
 
 {% block main %}
 {% set currentPath = app.request.pathInfo %}
+
+{% include 'partials/docs_mobile_nav_panel.html.twig' with {currentPath: currentPath} %}
+
 <section class="px-4 sm:px-6 lg:px-8 xl:px-12 mt-6 mb-12" data-hx-boost="true">
     <div class="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)_14rem] xl:grid-cols-[18rem_minmax(0,1fr)_16rem] gap-8 lg:gap-10">
 
-        <aside class="order-2">
+        <aside class="hidden lg:block lg:order-1">
             <nav aria-label="DSL modules">
                 <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
                     DSL References
@@ -60,6 +63,8 @@
         </aside>
 
         <article class="order-1 lg:order-2 min-w-0">
+            {% include 'partials/docs_mobile_nav.html.twig' with {currentPath: currentPath} %}
+
             <h1 class="font-bold text-3xl tracking-tight mb-3">DSL References</h1>
             <p class="muted mb-8 max-w-3xl">
                 DSL stands for Domain Specific Language. In Flow, the DSL is a set of small
@@ -108,7 +113,7 @@
             {% endfor %}
         </article>
 
-        <aside class="order-3">
+        <aside class="hidden lg:block order-3">
             {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight', {currentPath: currentPath})) }}
         </aside>
     </div>

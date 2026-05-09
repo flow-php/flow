@@ -305,6 +305,12 @@ code {
     @apply inline-flex items-center gap-1.5 mb-4 text-sm text-white/65 hover:text-white !no-underline transition-colors;
 }
 
+/* Mobile docs popover lives inside #documentation-page so it inherits prose
+   list styling — reset it. */
+#docs-mobile-nav ul {
+    @apply list-none pl-0;
+}
+
 
 
 .mermaid-wrapper {
