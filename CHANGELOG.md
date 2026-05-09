@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-05-08
+## [Unreleased] - 2026-05-09
 
 ### Added
+- [#2354](https://github.com/flow-php/flow/pull/2354) - **search on website** - [@norberttech](https://github.com/norberttech)
 - [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - OTLP Protobuf Models to otlp telemetry bridge** - [@norberttech](https://github.com/norberttech)
 - [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - Added StreamTransport compatible with OTLP FileExporter** - [@norberttech](https://github.com/norberttech)
 - [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - ErrorHandler with few predefined implementations** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +16,7 @@
 - [#2329](https://github.com/flow-php/flow/pull/2329) - **phpunit telemetry bridge: support for env vars** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2354](https://github.com/flow-php/flow/pull/2354) - **Website look and feeling** - [@norberttech](https://github.com/norberttech)
 - [3ebf00](https://github.com/flow-php/flow/commit/3ebf001604b3c186e4957b564409b4c58c59f255) - **chore: update dependnecies and upgrading docs** - [@norberttech](https://github.com/norberttech)
 - [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - merged exporters into one contract** - [@norberttech](https://github.com/norberttech)
 - [#2352](https://github.com/flow-php/flow/pull/2352) - **Telemetry - allow to define different exporters for different types of signals** - [@norberttech](https://github.com/norberttech)
