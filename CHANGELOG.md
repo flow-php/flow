@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-05-09
+## [0.37.0] - 2026-05-09
 
 ### Added
 - [#2354](https://github.com/flow-php/flow/pull/2354) - **search on website** - [@norberttech](https://github.com/norberttech)
