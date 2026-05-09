@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-05-09
 
+### Changed
+- [#2356](https://github.com/flow-php/flow/pull/2356) - **Symfony PostgreSql Bundle - bundle skeleton** - [@norberttech](https://github.com/norberttech)
+
 ### Fixed
+- [#2356](https://github.com/flow-php/flow/pull/2356) - **Accessing S3 custom client through service container** - [@norberttech](https://github.com/norberttech)
 - [4256f8](https://github.com/flow-php/flow/commit/4256f8922516a7369eceb871e833fbd237dab041) - **mobile version website header** - [@norberttech](https://github.com/norberttech)
 
 ## [0.37.0] - 2026-05-09
