@@ -7,13 +7,13 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 use function Flow\Types\DSL\{type_instance_of, type_string};
 
 use Flow\PostgreSql\Migrations\{Configuration as MigrationsConfiguration, Direction, MigrationState, Migrator, VersionResolver};
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: 'flow:migrations:migrate', description: 'Execute migrations')]
 final class MigrateCommand extends Command

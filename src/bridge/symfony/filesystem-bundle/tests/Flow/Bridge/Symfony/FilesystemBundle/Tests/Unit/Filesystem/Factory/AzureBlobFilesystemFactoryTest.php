@@ -11,14 +11,13 @@ use Flow\Filesystem\Bridge\Azure\AzureBlobFilesystem;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpClient\Psr18Client;
 
 final class AzureBlobFilesystemFactoryTest extends TestCase
 {
     public function test_applies_block_size_option() : void
     {
-        $filesystem = (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')]],
             'options' => ['block_size' => 8 * 1024 * 1024, 'list_blob_max_results' => 100],
@@ -27,23 +26,37 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         self::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
     }
 
-    public function test_mode_a_builds_filesystem_from_client_service_id() : void
+    public function test_mode_a_builds_filesystem_from_resolved_client() : void
     {
-        $container = new ContainerBuilder();
-        $container->set('app.blob_service', self::createStub(BlobServiceInterface::class));
-
-        $filesystem = (new AzureBlobFilesystemFactory($container))->create('azure-blob', [
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'my-container',
-            'client_service_id' => 'app.blob_service',
+            'client' => self::createStub(BlobServiceInterface::class),
         ]);
 
         self::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
         self::assertSame('azure-blob', $filesystem->mount()->protocol);
     }
 
+    public function test_mode_b_accepts_resolved_http_and_factories() : void
+    {
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
+            'container' => 'c',
+            'client' => [
+                'account_name' => 'a',
+                'auth' => ['shared_key' => \base64_encode('k')],
+                'http_client' => new Psr18Client(),
+                'request_factory' => new Psr17Factory(),
+                'stream_factory' => new Psr17Factory(),
+                'logger' => new NullLogger(),
+            ],
+        ]);
+
+        self::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
+    }
+
     public function test_mode_b_builds_blob_service_from_inline_shared_key() : void
     {
-        $filesystem = (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'my-container',
             'client' => [
                 'account_name' => 'myaccount',
@@ -54,32 +67,9 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         self::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
     }
 
-    public function test_mode_b_resolves_optional_http_and_factories_from_container() : void
-    {
-        $container = new ContainerBuilder();
-        $container->set('app.http_client', new Psr18Client());
-        $container->set('app.request_factory', new Psr17Factory());
-        $container->set('app.stream_factory', new Psr17Factory());
-        $container->set('app.logger', new NullLogger());
-
-        $filesystem = (new AzureBlobFilesystemFactory($container))->create('azure-blob', [
-            'container' => 'c',
-            'client' => [
-                'account_name' => 'a',
-                'auth' => ['shared_key' => \base64_encode('k')],
-                'http_client_service' => 'app.http_client',
-                'request_factory_service' => 'app.request_factory',
-                'stream_factory_service' => 'app.stream_factory',
-                'logger_service_id' => 'app.logger',
-            ],
-        ]);
-
-        self::assertInstanceOf(AzureBlobFilesystem::class, $filesystem);
-    }
-
     public function test_mode_b_uses_azurite_url_factory_when_host_set() : void
     {
-        $filesystem = (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'my-container',
             'client' => [
                 'account_name' => 'devstoreaccount1',
@@ -96,7 +86,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('block_size');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => 'k']],
             'options' => ['block_size' => 'nope'],
@@ -108,7 +98,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('list_blob_max_results');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => 'k']],
             'options' => ['list_blob_max_results' => 'nope'],
@@ -120,7 +110,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('non-empty `container`');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', ['client' => []]);
+        (new AzureBlobFilesystemFactory())->create('azure-blob', ['client' => []]);
     }
 
     public function test_throws_on_unknown_auth_keys() : void
@@ -128,7 +118,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`client.auth` contains unknown keys: [sas_token]');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k'), 'sas_token' => 'x']],
         ]);
@@ -139,7 +129,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`client` contains unknown keys: [nope]');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')], 'nope' => 1],
         ]);
@@ -150,7 +140,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`options` contains unknown keys: [nope]');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')]],
             'options' => ['nope' => 1],
@@ -162,36 +152,36 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('received unknown keys: [bucket]');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')]],
             'bucket' => 'no',
         ]);
     }
 
-    public function test_throws_when_both_client_modes_supplied() : void
+    public function test_throws_when_client_is_invalid_type() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('exactly one of');
+        $this->expectExceptionMessage('`client` must be an array or Flow\\Azure\\SDK\\BlobServiceInterface instance');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client_service_id' => 'x',
-            'client' => ['account_name' => 'a'],
+            'client' => new \stdClass(),
         ]);
     }
 
-    public function test_throws_when_client_service_not_blob_service() : void
+    public function test_throws_when_http_client_is_wrong_type() : void
     {
-        $container = new ContainerBuilder();
-        $container->set('app.wrong', new \stdClass());
-
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('is not an instance of');
+        $this->expectExceptionMessage('`client.http_client_service` must reference a service implementing');
 
-        (new AzureBlobFilesystemFactory($container))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client_service_id' => 'app.wrong',
+            'client' => [
+                'account_name' => 'a',
+                'auth' => ['shared_key' => \base64_encode('k')],
+                'http_client' => new \stdClass(),
+            ],
         ]);
     }
 
@@ -200,7 +190,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`client.account_name`');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['auth' => ['shared_key' => 'k']],
         ]);
@@ -211,18 +201,18 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`client.auth.shared_key`');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a'],
         ]);
     }
 
-    public function test_throws_when_no_client_mode_supplied() : void
+    public function test_throws_when_no_client_supplied() : void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('exactly one of');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', ['container' => 'c']);
+        (new AzureBlobFilesystemFactory())->create('azure-blob', ['container' => 'c']);
     }
 
     public function test_throws_when_options_is_not_array() : void
@@ -230,7 +220,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`options` must be an array');
 
-        (new AzureBlobFilesystemFactory(new ContainerBuilder()))->create('azure-blob', [
+        (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
             'client' => ['account_name' => 'a', 'auth' => ['shared_key' => 'k']],
             'options' => 'nope',
@@ -239,6 +229,6 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
 
     public function test_type_returns_azure_blob() : void
     {
-        self::assertSame('azure_blob', (new AzureBlobFilesystemFactory(new ContainerBuilder()))->type());
+        self::assertSame('azure_blob', (new AzureBlobFilesystemFactory())->type());
     }
 }

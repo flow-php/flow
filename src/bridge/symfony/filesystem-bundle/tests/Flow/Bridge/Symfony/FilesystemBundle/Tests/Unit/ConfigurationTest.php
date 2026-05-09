@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit;
 
+use AsyncAws\S3\S3Client;
+use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Context\ConfigurationContext;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Double\TelemetryStubFactory;
 use Flow\Telemetry\Provider\Clock\SystemClock;
@@ -393,16 +395,27 @@ final class ConfigurationTest extends TestCase
 
     public function test_valid_hyphenated_mount_names_are_preserved_without_normalization() : void
     {
-        $config = $this->context->processConfig([
-            'fstabs' => [
-                'default' => [
-                    'filesystems' => [
-                        'aws-s3' => ['type' => 'aws_s3', 'bucket' => 'b', 'client_service_id' => 'x'],
-                        'azure-blob' => ['type' => 'azure_blob', 'container' => 'c', 'client_service_id' => 'y'],
+        $config = $this->context->processConfig(
+            [
+                'fstabs' => [
+                    'default' => [
+                        'filesystems' => [
+                            'aws-s3' => ['type' => 'aws_s3', 'bucket' => 'b', 'client_service_id' => 'x'],
+                            'azure-blob' => ['type' => 'azure_blob', 'container' => 'c', 'client_service_id' => 'y'],
+                        ],
                     ],
                 ],
             ],
-        ]);
+            static function (ContainerBuilder $container) : void {
+                $container->setDefinition('x', (new Definition(S3Client::class))
+                    ->setArguments([['accessKeyId' => 'k', 'accessKeySecret' => 's', 'region' => 'us-east-1']])
+                    ->setPublic(false));
+                $container->setDefinition('y', (new Definition(BlobServiceInterface::class))
+                    ->setSynthetic(true)
+                    ->setPublic(false));
+                $container->set('y', self::createStub(BlobServiceInterface::class));
+            },
+        );
 
         self::assertArrayHasKey('aws-s3', $config['fstabs']['default']['filesystems']);
         self::assertArrayHasKey('azure-blob', $config['fstabs']['default']['filesystems']);

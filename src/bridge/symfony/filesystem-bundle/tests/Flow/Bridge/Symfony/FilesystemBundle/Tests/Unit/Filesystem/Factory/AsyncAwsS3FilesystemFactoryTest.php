@@ -10,14 +10,13 @@ use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\AsyncAwsS3Filesystem
 use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3Filesystem;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpClient\HttpClient;
 
 final class AsyncAwsS3FilesystemFactoryTest extends TestCase
 {
     public function test_applies_block_size_option() : void
     {
-        $filesystem = (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        $filesystem = (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
             'client' => ['region' => 'us-east-1', 'access_key_id' => 'k', 'access_key_secret' => 's'],
             'options' => ['block_size' => 6 * 1024 * 1024],
@@ -26,20 +25,36 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         self::assertInstanceOf(AsyncAWSS3Filesystem::class, $filesystem);
     }
 
-    public function test_mode_a_builds_filesystem_from_client_service_id() : void
+    public function test_mode_a_builds_filesystem_from_resolved_client() : void
     {
-        $container = new ContainerBuilder();
-        $container->set('app.s3_client', new S3Client(['accessKeyId' => 'k', 'accessKeySecret' => 's', 'region' => 'us-east-1']));
-
-        $filesystem = (new AsyncAwsS3FilesystemFactory($container))->create('aws-s3', ['bucket' => 'my-bucket', 'client_service_id' => 'app.s3_client']);
+        $filesystem = (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
+            'bucket' => 'my-bucket',
+            'client' => new S3Client(['accessKeyId' => 'k', 'accessKeySecret' => 's', 'region' => 'us-east-1']),
+        ]);
 
         self::assertInstanceOf(AsyncAWSS3Filesystem::class, $filesystem);
         self::assertSame('aws-s3', $filesystem->mount()->protocol);
     }
 
+    public function test_mode_b_accepts_resolved_http_client_and_logger() : void
+    {
+        $filesystem = (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
+            'bucket' => 'b',
+            'client' => [
+                'region' => 'us-east-1',
+                'access_key_id' => 'k',
+                'access_key_secret' => 's',
+                'http_client' => HttpClient::create(),
+                'logger' => new NullLogger(),
+            ],
+        ]);
+
+        self::assertInstanceOf(AsyncAWSS3Filesystem::class, $filesystem);
+    }
+
     public function test_mode_b_builds_client_from_inline_config() : void
     {
-        $filesystem = (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        $filesystem = (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'my-bucket',
             'client' => [
                 'region' => 'eu-west-1',
@@ -51,29 +66,9 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         self::assertInstanceOf(AsyncAWSS3Filesystem::class, $filesystem);
     }
 
-    public function test_mode_b_resolves_http_client_and_logger_from_container() : void
-    {
-        $container = new ContainerBuilder();
-        $container->set('app.http_client', HttpClient::create());
-        $container->set('app.logger', new NullLogger());
-
-        $filesystem = (new AsyncAwsS3FilesystemFactory($container))->create('aws-s3', [
-            'bucket' => 'b',
-            'client' => [
-                'region' => 'us-east-1',
-                'access_key_id' => 'k',
-                'access_key_secret' => 's',
-                'http_client_service_id' => 'app.http_client',
-                'logger_service_id' => 'app.logger',
-            ],
-        ]);
-
-        self::assertInstanceOf(AsyncAWSS3Filesystem::class, $filesystem);
-    }
-
     public function test_mount_protocol_is_propagated_to_filesystem() : void
     {
-        $filesystem = (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('warehouse', [
+        $filesystem = (new AsyncAwsS3FilesystemFactory())->create('warehouse', [
             'bucket' => 'b',
             'client' => ['region' => 'us-east-1', 'access_key_id' => 'k', 'access_key_secret' => 's'],
         ]);
@@ -86,7 +81,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`options.block_size` must be an integer');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
             'client' => ['region' => 'us-east-1'],
             'options' => ['block_size' => 'not-an-int'],
@@ -98,7 +93,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('non-empty `bucket`');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', ['client' => []]);
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', ['client' => []]);
     }
 
     public function test_throws_on_unknown_client_keys() : void
@@ -106,7 +101,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`client` contains unknown keys: [nope]');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
             'client' => ['nope' => 'x'],
         ]);
@@ -117,7 +112,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`options` contains unknown keys: [nope]');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
             'client' => ['region' => 'us-east-1'],
             'options' => ['nope' => 1],
@@ -129,42 +124,58 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('received unknown keys: [container]');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
             'client' => ['region' => 'us-east-1'],
             'container' => 'nope',
         ]);
     }
 
-    public function test_throws_when_both_client_modes_supplied() : void
+    public function test_throws_when_client_is_invalid_type() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('exactly one of `client_service_id` or `client`');
+        $this->expectExceptionMessage('`client` must be an array or AsyncAws\\S3\\S3Client instance');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
-            'client_service_id' => 'some.service',
-            'client' => ['region' => 'us-east-1'],
+            'client' => new \stdClass(),
         ]);
     }
 
-    public function test_throws_when_client_service_not_s3_client() : void
+    public function test_throws_when_http_client_is_wrong_type() : void
     {
-        $container = new ContainerBuilder();
-        $container->set('app.wrong', new \stdClass());
-
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('is not an instance of');
+        $this->expectExceptionMessage('`client.http_client_service_id` must reference a service implementing');
 
-        (new AsyncAwsS3FilesystemFactory($container))->create('aws-s3', ['bucket' => 'b', 'client_service_id' => 'app.wrong']);
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
+            'bucket' => 'b',
+            'client' => [
+                'region' => 'us-east-1',
+                'http_client' => new \stdClass(),
+            ],
+        ]);
     }
 
-    public function test_throws_when_no_client_mode_supplied() : void
+    public function test_throws_when_logger_is_wrong_type() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('`client.logger_service_id` must reference a service implementing');
+
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
+            'bucket' => 'b',
+            'client' => [
+                'region' => 'us-east-1',
+                'logger' => new \stdClass(),
+            ],
+        ]);
+    }
+
+    public function test_throws_when_no_client_supplied() : void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('exactly one of');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', ['bucket' => 'b']);
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', ['bucket' => 'b']);
     }
 
     public function test_throws_when_options_is_not_array() : void
@@ -172,7 +183,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('`options` must be an array');
 
-        (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->create('aws-s3', [
+        (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
             'client' => ['region' => 'us-east-1'],
             'options' => 'not-an-array',
@@ -181,6 +192,6 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
 
     public function test_type_returns_aws_s3() : void
     {
-        self::assertSame('aws_s3', (new AsyncAwsS3FilesystemFactory(new ContainerBuilder()))->type());
+        self::assertSame('aws_s3', (new AsyncAwsS3FilesystemFactory())->type());
     }
 }

@@ -12,20 +12,15 @@ use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Bridge\Azure\Options;
 use Flow\Filesystem\Filesystem;
 use Http\Discovery\{Psr17FactoryDiscovery, Psr18ClientDiscovery};
-use Psr\Container\ContainerInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\{RequestFactoryInterface, StreamFactoryInterface};
 use Psr\Log\LoggerInterface;
 
 final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 {
-    public function __construct(private ContainerInterface $container)
-    {
-    }
-
     public function create(string $protocol, array $config) : Filesystem
     {
-        $allowed = ['container', 'client_service_id', 'client', 'options'];
+        $allowed = ['container', 'client', 'options'];
         $unknown = \array_diff(\array_keys($config), $allowed);
 
         if ($unknown !== []) {
@@ -40,23 +35,21 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" requires a non-empty `container` option.');
         }
 
-        $container = $config['container'];
-        $clientServiceId = $config['client_service_id'] ?? null;
-        $clientConfig = $config['client'] ?? null;
+        $containerName = $config['container'];
 
-        if (($clientServiceId === null) === ($clientConfig === null)) {
+        if (!\array_key_exists('client', $config) || $config['client'] === null) {
             throw new InvalidArgumentException('Filesystem factory for backend "azure_blob" requires exactly one of `client_service_id` or `client`.');
         }
 
-        if (\is_string($clientServiceId) && $clientServiceId !== '') {
-            $blobService = $this->container->get($clientServiceId);
+        $client = $config['client'];
 
-            if (!$blobService instanceof BlobServiceInterface) {
-                throw new InvalidArgumentException(\sprintf('Service "%s" is not an instance of %s.', $clientServiceId, BlobServiceInterface::class));
-            }
+        if ($client instanceof BlobServiceInterface) {
+            $blobService = $client;
+        } elseif (\is_array($client)) {
+            /** @var array<string, mixed> $client */
+            $blobService = $this->buildBlobService($containerName, $client);
         } else {
-            /** @var array<string, mixed> $clientConfig */
-            $blobService = $this->buildBlobService($container, $clientConfig ?? []);
+            throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "azure_blob" `client` must be an array or %s instance, got %s.', BlobServiceInterface::class, \get_debug_type($client)));
         }
 
         $options = $this->buildOptions($config['options'] ?? null);
@@ -74,7 +67,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
      */
     private function buildBlobService(string $containerName, array $clientConfig) : BlobServiceInterface
     {
-        $allowed = ['account_name', 'auth', 'url_factory', 'http_client_service', 'request_factory_service', 'stream_factory_service', 'logger_service_id'];
+        $allowed = ['account_name', 'auth', 'url_factory', 'http_client', 'request_factory', 'stream_factory', 'logger'];
         $unknown = \array_diff(\array_keys($clientConfig), $allowed);
 
         if ($unknown !== []) {
@@ -109,10 +102,10 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         $authFactory = azure_shared_key_authorization_factory($accountName, $clientConfig['auth']['shared_key']);
         $configuration = azure_blob_service_config($accountName, $containerName);
 
-        $httpClient = $this->resolveService($clientConfig['http_client_service'] ?? null, ClientInterface::class) ?? Psr18ClientDiscovery::find();
-        $requestFactory = $this->resolveService($clientConfig['request_factory_service'] ?? null, RequestFactoryInterface::class) ?? Psr17FactoryDiscovery::findRequestFactory();
-        $streamFactory = $this->resolveService($clientConfig['stream_factory_service'] ?? null, StreamFactoryInterface::class) ?? Psr17FactoryDiscovery::findStreamFactory();
-        $logger = $this->resolveService($clientConfig['logger_service_id'] ?? null, LoggerInterface::class);
+        $httpClient = $this->resolveResolvedService($clientConfig['http_client'] ?? null, ClientInterface::class, 'http_client_service') ?? Psr18ClientDiscovery::find();
+        $requestFactory = $this->resolveResolvedService($clientConfig['request_factory'] ?? null, RequestFactoryInterface::class, 'request_factory_service') ?? Psr17FactoryDiscovery::findRequestFactory();
+        $streamFactory = $this->resolveResolvedService($clientConfig['stream_factory'] ?? null, StreamFactoryInterface::class, 'stream_factory_service') ?? Psr17FactoryDiscovery::findStreamFactory();
+        $logger = $this->resolveResolvedService($clientConfig['logger'] ?? null, LoggerInterface::class, 'logger_service_id');
 
         $httpFactory = azure_http_factory($requestFactory, $streamFactory);
 
@@ -178,16 +171,14 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
      *
      * @return null|T
      */
-    private function resolveService(mixed $serviceId, string $expectedClass) : ?object
+    private function resolveResolvedService(mixed $service, string $expectedClass, string $configKey) : ?object
     {
-        if (!\is_string($serviceId) || $serviceId === '') {
+        if ($service === null) {
             return null;
         }
 
-        $service = $this->container->get($serviceId);
-
         if (!$service instanceof $expectedClass) {
-            throw new InvalidArgumentException(\sprintf('Service "%s" is not an instance of %s.', $serviceId, $expectedClass));
+            throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "azure_blob" `client.%s` must reference a service implementing %s.', $configKey, $expectedClass));
         }
 
         return $service;

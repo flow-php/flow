@@ -6,12 +6,12 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
 use function Flow\Types\DSL\{type_instance_of, type_string};
 use Flow\PostgreSql\Client\Client;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
-use Symfony\Component\Console\Output\OutputInterface;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(name: 'flow:sql:run', description: 'Execute SQL directly on the database')]
 final class RunSqlCommand extends Command
