@@ -87,16 +87,6 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertGreaterThan(0, $options->count());
     }
 
-    public function test_topic_page_returns_200() : void
-    {
-        $client = self::createClient();
-        $crawler = $client->request('GET', '/data_frame/');
-
-        self::assertResponseIsSuccessful();
-        $examplesHeading = $crawler->filter('h2:contains("Examples:")');
-        self::assertCount(1, $examplesHeading);
-    }
-
     public function test_try_it_in_playground_link_exists_on_example_page() : void
     {
         $client = self::createClient();

@@ -1,6 +1,6 @@
 # Map
 
-- [⬅️️ Back](/documentation/components/core/core.md)
+[DOC_LINK:/documentation/components/core/core.md]
 
 Quick `Row` transformations are available through `DataFrame::map` function
 

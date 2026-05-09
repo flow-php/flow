@@ -1,11 +1,10 @@
+---
+package: flow-php/monolog-http-bridge
+---
+
 # Monolog HTTP Bridge
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/monolog-http-bridge)
-- [➡️ Installation](/documentation/installation/packages/monolog-http-bridge.md)
-- [🐙GitHub](https://github.com/flow-php/monolog-http-bridge)
-- [📚API Reference](/documentation/api/bridge/monolog/http)
-- [📁Files](/documentation/api/bridge/monolog/http/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

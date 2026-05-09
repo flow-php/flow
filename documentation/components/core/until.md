@@ -1,6 +1,6 @@
 # Until
 
-- [⬅️️ Back](/documentation/components/core/core.md)
+[DOC_LINK:/documentation/components/core/core.md]
 
 `Until` works in a very similar way to [filter](/documentation/components/core/filter.md) function. 
 The difference is that it will send STOP signal to extractor when the condition is met.

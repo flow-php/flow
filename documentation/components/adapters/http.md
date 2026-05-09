@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-http
+---
+
 # ETL Adapter: HTTP
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-http)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-http.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-http)
-- [📚API Reference](/documentation/api/adapter/http)
-- [📁Files](/documentation/api/adapter/http/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

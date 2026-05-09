@@ -6,7 +6,8 @@ seo_description: >
 
 # Parquet Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/parquet.md]
+
 - [📜 Documentation](/documentation/components/adapters/parquet.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-parquet)
 

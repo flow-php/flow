@@ -1,0 +1,20 @@
+{# Shared topic navigation. Used on home and on the examples page so they stay visually identical.
+   Params:
+     topicsNavigation: dict<string topic, {name, arguments}>
+     currentTopic: string|null
+#}
+<nav aria-label="Example topics" class="rounded-xl border border-white/10 bg-white/[0.03] p-1.5">
+    <ul class="flex whitespace-nowrap overflow-x-auto gap-1 scrollbar-hide">
+        {% for topic, route in topicsNavigation %}
+            {% set isActive = (currentTopic == topic) or (currentTopic is null and loop.first) %}
+            <li class="grow">
+                <a href="{{ path(route.name, route.arguments) }}#example"
+                   class="flex items-center justify-center w-full rounded-lg px-4 py-2 text-sm font-medium no-underline transition-colors
+                          {{ isActive ? 'bg-orange-100 text-white hover:bg-orange-200' : 'text-white/75 hover:text-white hover:bg-white/[0.06]' }}"
+                   {% if isActive %}aria-current="page"{% endif %}>
+                    {{ topic|humanize }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</nav>

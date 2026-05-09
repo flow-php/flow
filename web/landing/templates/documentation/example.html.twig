@@ -8,65 +8,69 @@
     Code example showing {{ currentExample|humanize|lower }} {{ currentTopic|humanize|lower }}.
 {%- endblock -%}
 
-{%- block hero -%}
-{% endblock %}
+{%- block hero -%}{%- endblock -%}
 
 {% block main %}
-<section id="documentation-page" class="mt-5 mb-5 px-4 lg:px-8 xl:px-12">
-    <div class="grid grid-cols-1 lg:grid-cols-[16rem_1fr_14rem] xl:grid-cols-[18rem_1fr_16rem] gap-4">
-        <div class="order-1 lg:order-0 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pr-4">
-            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationLeft')) }}
-        </div>
-        <div class="order-3 lg:order-1 min-w-0 py-2 px-4 lg:px-8">
+{% set currentPath = app.request.pathInfo %}
+<section class="px-4 sm:px-6 lg:px-8 xl:px-12 mt-6 mb-12">
+    <div class="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)_14rem] xl:grid-cols-[18rem_minmax(0,1fr)_16rem] gap-8 lg:gap-10">
+
+        <aside class="order-2">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationLeft', {currentPath: currentPath})) }}
+        </aside>
+
+        <article id="documentation-page" class="order-1 lg:order-2 min-w-0">
             <div id="example">
-                <hr class="lg:hidden"/>
-                <h1>Example: {{ currentExample|humanize }}</h1>
-                <h3>Topic: {{ currentTopic|humanize }}</h3>
-                <div class="mb-5 text-left">
-                    <a class="btn btn-primary mr-2" href="https://github.com/flow-php/flow/tree/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}" target="_blank">
-                        View
-                        <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
+                <span class="eyebrow">
+                    <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                    Example · {{ currentTopic|humanize }}
+                </span>
+                <h1 class="!mt-3 !mb-4">{{ currentExample|humanize }}</h1>
+
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <a class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium text-white/85 transition-colors no-underline"
+                       href="https://github.com/flow-php/flow/tree/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}"
+                       target="_blank" rel="noopener">
+                        View on GitHub
+                        <img src="{{ asset('images/icons/github.svg') }}" alt="" width="14" height="14" class="opacity-70">
                     </a>
-                    <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
-                        Download
+                    <a class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium text-white/85 transition-colors no-underline"
+                       href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip"
+                       target="_blank" rel="noopener">
+                        Download zip
                     </a>
                 </div>
 
-                <hr class="hidden lg:block"/>
                 {% if description %}
-                    <h2 class="text-xl mt-5 mb-5" id="description">Description</h2>
-                    <article id="example-description"
-                             class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-10"
-                            {{ stimulus_controller('all_links_external') }}
-                    >
+                    <h2 id="description">Description</h2>
+                    <article id="example-description" class="card overflow-auto"
+                            {{ stimulus_controller('all_links_external') }}>
                         {{ description|markdown_to_html }}
                     </article>
                 {% endif %}
 
                 {% if documentation %}
-                    <h2 class="text-xl mt-5 mb-5" id="documentation">Documentation</h2>
-                    <article class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-10">
+                    <h2 id="documentation-section">Documentation</h2>
+                    <article class="card overflow-auto">
                         {{ documentation|markdown_to_html }}
                     </article>
                 {% endif %}
 
-                <hr class="hidden lg:block"/>
                 {% apply spaceless %}
-                    <h2 class="text-xl mt-5 mb-5" id="documentation">Code</h2>
-                    <div id="code" class="relative">
-                        <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code-php" {{ stimulus_controller('clipboard') }}>
-                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
-                        </button>
-                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 language-php" data-controller="syntax-highlight">
-                            <code id="code-php">
-                                {{- code | escape('html') -}}
-                            </code>
-                        </pre>
-                    </div>
+                <h2 id="code-heading">Code</h2>
+                <div id="code" class="relative">
+                    <button class="absolute top-3 right-3 inline-flex items-center justify-center h-9 w-9 rounded-md border border-white/10 bg-black/60 hover:bg-black/80 text-white [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
+                            data-clipboard-target="#code-php"
+                            aria-label="Copy code"
+                            {{ stimulus_controller('clipboard') }}>
+                        <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="16" height="16">
+                    </button>
+                    <pre class="card !p-4 overflow-auto language-php" data-controller="syntax-highlight"><code id="code-php">{{- code | escape('html') -}}</code></pre>
+                </div>
                 {% endapply %}
             </div>
 
-            <div class="mt-5">
+            <div class="mt-12">
                 <script src="https://giscus.app/client.js"
                         data-repo="flow-php/flow-php.com"
                         data-repo-id="R_kgDOHja2Yg"
@@ -83,11 +87,11 @@
                         async>
                 </script>
             </div>
+        </article>
 
-        </div>
-        <div class="order-2 lg:order-2 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:pl-4">
-            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight')) }}
-        </div>
+        <aside class="order-3">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight', {currentPath: currentPath})) }}
+        </aside>
     </div>
 </section>
 {% endblock %}

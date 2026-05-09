@@ -5,126 +5,93 @@
 {%- endblock -%}
 
 {%- block description -%}
-    Flow is a PHP-based, strongly typed data processing framework with low memory footprint that can process various data sources consistently.
-    It offers a unified API for all data sources, including CSV, JSON, XML, Text, Parquet, Avro, Rest API, RDBMS, Elasticsearch / Meilisearch.
-    Flow not only enables you to process various data sources consistently, but also strives to accurately detect data types and cast them to the appropriate PHP types.
+    Flow PHP is open source under the MIT license. Sponsor the project to help us
+    fund documentation, new features, and a sustainable roadmap.
 {%- endblock -%}
 
-{#{% block tracking %}#}
-{#{% endblock %}#}
-
-{% block hero %}
-{% endblock %}
+{%- block hero -%}{%- endblock -%}
 
 {% block main %}
-    <div class="max-w-screen-2xl mx-auto">
-        <section class="mx-auto my-10 px-2">
-            <h1 class="font-bold text-6xl">Sponsor Flow <img src="{{ asset('images/icons/heart.svg') }}" alt="external resource" width="64" height="64" class="ml-1 inline"></h1>
-            <p class="mt-4">
-                Flow PHP is an Open Source Project and is free to use. If you find Flow PHP useful, please consider sponsoring the project.<br/>
-                With your support, we can continue to improve the project and provide better support to the community.
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
+        <div class="max-w-3xl">
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                Sponsor
+            </span>
+            <h1 class="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">
+                Help keep Flow growing.
+            </h1>
+            <p class="mt-5 muted text-lg leading-relaxed">
+                Flow PHP is free and open source under the MIT license. If it saves
+                you time at work, a sponsorship goes straight back into documentation,
+                new features, and a sustainable roadmap.
             </p>
+        </div>
 
-            <p class="mt-2">
-                Flow PHP was originally inspired by the need for rapid, flexible data processing flows in modern PHP applications. Through the project, I aim to lessen the complexity of event-based architectures while providing maintainable, tested, and production-ready tools. Your sponsorship will help grow the project further—funding more in-depth documentation, additional features, and a sustainable roadmap. Thank you for supporting open-source innovation!
-            </p>
-            <p class="mt-2">
-                Flow PHP is developed under an the MIT license, and it's completely free to use by anyone, including commercial use cases!
-            </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
-                <div>
-                    <h3 class="mt-4 font-bold text-2xl">Hire me!</h3>
-                    <p>
-                        Another great way to support my work and help Flow to grow is to hire me to consult/support your project!
-                        If you hire me for a Workshop or a minimum of 20 hours, your logo can be added to a flow-php sponsors page.
-                    </p>
-                    <p>
-                        Please find more at <a href="https://norbert.tech/consulting" target="_blank">https://norbert.tech/consulting</a>
-                    </p>
+        <div class="mt-10 grid gap-5 md:grid-cols-2">
+            <article class="card flex flex-col">
+                <div class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100/15 ring-1 ring-orange-100/30">
+                    <img src="{{ asset('images/icons/heart.svg') }}" alt="" width="20" height="20">
                 </div>
-                <div>
-                    <h3 class="text-2xl mt-5">Sponsor Project</h3>
-
-                    <p>
-                        If you like Flow PHP and want to support the project, please consider sponsoring it on GitHub.<br/>
-                        Your sponsorship will help cover the costs of maintaining the project, including hosting, development, and documentation.
-                    </p>
-                    <p>
-                        Even a small, one-time contribution can make a big difference and gives us the motivation to keep improving Flow PHP <img src="{{ asset('images/icons/heart.svg') }}" alt="external resource" width="24" height="24" class="ml-1 inline"><br/>
-                    </p>
-
-                    <div>
-                    <a href="https://github.com/sponsors/norberttech?frequency=one-time" target="_blank" class="btn btn-primary inline-block">
-                        Sponsor on <img src="{{ asset('images/icons/github.svg') }}" alt="Sponsor Flow PHP at GitHub" class="inline-block"/>
-                    </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-    <div class="max-w-screen-2xl mx-auto">
-        <section class="mx-auto my-10 px-2">
-            <h2 class="font-bold text-5xl mb-5">Open Source Sponsorships</h2>
-            <div class="mb-5">
-                <p>
-                    Below you can find the list of companies that support Flow PHP development by providing their services free of charge or significantly discounted.
+                <h2 class="mt-5 text-xl font-semibold tracking-tight">Sponsor on GitHub</h2>
+                <p class="mt-2 muted text-sm leading-relaxed flex-1">
+                    Even a small one-time contribution makes a difference. Recurring
+                    sponsorship is the most impactful — it lets us plan ahead.
                 </p>
-                <p>
-                    It's a huge help for the project, and I would like to thank them for their support <img src="{{ asset('images/icons/heart.svg') }}" alt="external resource" width="16" height="16" class="ml-1 inline">
+                <a href="https://github.com/sponsors/norberttech?frequency=one-time" target="_blank" rel="noopener"
+                   class="btn btn-primary mt-5 self-start px-4 py-2">
+                    <img src="{{ asset('images/icons/github.svg') }}" alt="" width="16" height="16">
+                    Sponsor on GitHub
+                </a>
+            </article>
+
+            <article class="card flex flex-col">
+                <div class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/30">
+                    <img src="{{ asset('images/icons/users-group.svg') }}" alt="" width="20" height="20">
+                </div>
+                <h2 class="mt-5 text-xl font-semibold tracking-tight">Hire me</h2>
+                <p class="mt-2 muted text-sm leading-relaxed flex-1">
+                    Hire me for consulting, workshops, or implementation support.
+                    Engagements of 20+ hours include a sponsor logo on this page.
                 </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center">
-                        <a href="https://www.datadoghq.com/" target="_blank">
-                            <img src="{{ asset('images/sponsors/datadog.png') }}" alt="Data Dog" class="inline-block max-w-full max-h-full"/>
-                        </a>
-                    </div>
-                </div>
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center">
-                        <a href="https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge" target="_blank">
-                            <img src="https://res.cloudinary.com/df2cy8zhc/image/upload/h_146,w_450/digital-ocean_slmm2i.svg" alt="Digital Ocean" class="inline-block min-w-[350px] max-w-full max-h-full"/>
-                        </a>
-                    </div>
-                </div>
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center">
-                        <a href="https://blackfire.io/" target="_blank" class="inline-block">
-                            <img src="https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/blackfire_xiugzv.png" alt="Blackfire.io" class="inline-block max-w-full max-h-full" />
-                        </a>
-                    </div>
-                </div>
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center">
-                        <a href="https://sentry.io" target="_blank">
-                            <img src="https://res.cloudinary.com/df2cy8zhc/image/upload/h_200/sentry_ai9hi6.svg" alt="Sentry" class="inline-block max-w-full max-h-full"/>
-                        </a>
-                    </div>
-                </div>
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center">
-                        <a href="https://cloudflare.com/" target="_blank">
-                            <img src="https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/cloudflare_logjlf.png" alt="Cloudflare" class="inline-block max-w-full max-h-full"/>
-                        </a>
-                    </div>
-                </div>
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center bg-white">
-                        <a href="https://tailscale.com/" target="_blank">
-                            <img src="https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/tailscale_biexgf.png" alt="Tailscale" class="inline-block max-w-full max-h-full"/>
-                        </a>
-                    </div>
-                </div>
-                <div class="text-center h-[250px] text-center shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                    <div class="h-full w-full flex items-center justify-center">
-                        <a href="https://1password.com/" target="_blank">
-                            <img src="https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/1Password_sjoj4n.png" alt="1Password" class="inline-block max-w-full max-h-full"/>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
+                <a href="https://norbert.tech/consulting" target="_blank" rel="noopener"
+                   class="btn btn-secondary mt-5 self-start px-4 py-2 no-underline">
+                    Learn more <span aria-hidden="true">→</span>
+                </a>
+            </article>
+        </div>
+    </section>
+
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-16 lg:mt-24">
+        <div class="max-w-2xl">
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                Open Source Sponsors
+            </span>
+            <h2 class="mt-3 section-title">Backed by great companies.</h2>
+            <p class="mt-3 muted">
+                The companies below support Flow with services free of charge or significantly discounted. Thank you.
+            </p>
+        </div>
+
+        {% set sponsors = [
+            {url: 'https://www.datadoghq.com/',                                                                                                       name: 'Datadog',      img: asset('images/sponsors/datadog.png')},
+            {url: 'https://www.digitalocean.com/?refcode=0313c3031eb9&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge',     name: 'DigitalOcean', img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/h_146,w_450/digital-ocean_slmm2i.svg'},
+            {url: 'https://blackfire.io/',                                                                                                            name: 'Blackfire',    img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/blackfire_xiugzv.png'},
+            {url: 'https://sentry.io',                                                                                                                name: 'Sentry',       img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/h_200/sentry_ai9hi6.svg'},
+            {url: 'https://cloudflare.com/',                                                                                                          name: 'Cloudflare',   img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/cloudflare_logjlf.png'},
+            {url: 'https://tailscale.com/',                                                                                                           name: 'Tailscale',    img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/tailscale_biexgf.png',  light: true},
+            {url: 'https://1password.com/',                                                                                                           name: '1Password',    img: 'https://res.cloudinary.com/df2cy8zhc/image/upload/c_fill,h_200/1Password_sjoj4n.png'},
+        ] %}
+
+        <div class="mt-10 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {% for sponsor in sponsors %}
+                <a href="{{ sponsor.url }}" target="_blank" rel="noopener"
+                   class="card card-hover flex h-44 items-center justify-center no-underline {{ sponsor.light|default(false) ? '!bg-white/95 hover:!bg-white' : '' }}">
+                    <img src="{{ sponsor.img }}" alt="{{ sponsor.name }}" loading="lazy"
+                         class="max-h-20 max-w-[80%] w-auto h-auto object-contain"/>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
 {% endblock %}

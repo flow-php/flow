@@ -6,7 +6,8 @@ seo_description: >
 
 # Filesystem Async AWS Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/filesystem-async-aws-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/filesystem-async-aws-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/filesystem-async-aws-bridge)
 

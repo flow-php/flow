@@ -1,6 +1,6 @@
 # Docker
 
-- [⬅️️ Back](../installation.md)
+[DOC_LINK:../installation.md]
 
 Since some of the Flow adapters require additional PHP extensions, we have prepared a Docker image with all the necessary dependencies.
 

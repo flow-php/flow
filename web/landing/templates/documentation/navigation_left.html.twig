@@ -1,154 +1,76 @@
-<div class="grid grid-cols-2 lg:grid-cols-1">
+{% set currentPath = currentPath|default('') %}
+
+{% macro nav_link(href, label, currentPath, external = false) %}
+    {% set isActive = (href == currentPath) %}
+    <a href="{{ href }}"
+       {% if external %}target="_blank" rel="noopener"{% endif %}
+       class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
+              {{ isActive
+                ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
+                : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+       {% if isActive %}aria-current="page"{% endif %}>
+        {{ label }}{% if external %} <span class="opacity-50">↗</span>{% endif %}
+    </a>
+{% endmacro %}
+
+{% import _self as nav %}
+
+<nav aria-label="Documentation" class="space-y-7">
     <div>
-        <h1 class="hidden lg:block">
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
             Introduction
-        </h1>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-introduction" data-collapse-toggle="documentation-introduction">
-                Introduction
-
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <div id="documentation-introduction" class="hidden lg:block">
-            <ul>
-                <li>
-                    <a href="/documentation">Features</a>
-                </li>
-                <li>
-                    <a href="/documentation/installation">Installation</a>
-                </li>
-                <li>
-                    <a href="/documentation/quick-start">Quick Start</a>
-                </li>
-                <li>
-                    <a href="/documentation/dsl#dsl-functions">DSL References</a>
-                </li>
-                <li>
-                    <a href="/documentation/benchmarks">Benchmarks</a>
-                </li>
-                <li>
-                    <a href="/documentation/adrs">Architecture Decision Records</a>
-                </li>
-                <li>
-                    <a rel="noopener noreferrer" target="_blank" href="https://github.com/orgs/flow-php/projects/1">Project Roadmap</a>
-                </li>
-                <li>
-                    <a href="/documentation/contributing">Contributing</a>
-                </li>
-                <li>
-                    <a href="/documentation/security">Security</a>
-                </li>
-                <li>
-                    <a href="/documentation/upgrading">Upgrading</a>
-                </li>
-                <li>
-                    <a rel="noopener noreferrer" target="_blank" href="https://discord.gg/5dNXfQyACW">Discord Server</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div>
-        <h1 class="hidden lg:block">
-            Data Frame
-        </h1>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-core" data-collapse-toggle="documentation-core">
-                Data Frame
-
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <ul id="documentation-core" class="hidden lg:block">
-            <li>
-                <a href="/documentation/components/core/core">Data Frame</a>
-                <ul>
-                    <li>
-                        <a href="/documentation/components/core/building-blocks">Building Blocks</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/data-retrieval">Data Retrieval</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/data-manipulation">Data Manipulation</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/select-drop">Select/Drop</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/rename">Rename</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/map">Map</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/filter">Filter</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/execution-mode">Execution Mode</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/save-mode">Save Mode</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/join">Join</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/group-by">Group By</a>
-                        <ul>
-                            <li>
-                                <a href="/documentation/components/core/aggregations">Aggregations</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/pivot">Pivot</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/window-functions">Window Functions</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/sort">Sort</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/limit">Limit</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/offset">Offset</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/until">Until</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/batch-processing">Batch Processing</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/caching">Caching</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/partitioning">Partitioning</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/constraints">Constraints</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/schema">Schema</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/display">Display</a>
-                    </li>
-                    <li>
-                        <a href="/documentation/components/core/error-handling">Error Handling</a>
-                    </li>
-                </ul>
-            </li>
-            <li>
-                <a href="/documentation/components/cli/docs">CLI</a>
-            </li>
+        </h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation',                   'Features',                       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/installation',      'Installation',                   currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/quick-start',       'Quick Start',                    currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/dsl#dsl-functions', 'DSL References',                 currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/benchmarks',        'Benchmarks',                     currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/adrs',              'Architecture Decision Records',  currentPath) }}</li>
+            <li>{{ nav.nav_link('https://github.com/orgs/flow-php/projects/1', 'Project Roadmap',     currentPath, true) }}</li>
+            <li>{{ nav.nav_link('/documentation/contributing',      'Contributing',                   currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/security',          'Security',                       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/upgrading',         'Upgrading',                      currentPath) }}</li>
+            <li>{{ nav.nav_link('https://discord.gg/5dNXfQyACW',    'Discord Server',                 currentPath, true) }}</li>
         </ul>
     </div>
-</div>
+
+    <div>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+            Data Frame
+        </h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/core/core',              'Data Frame',          currentPath) }}</li>
+        </ul>
+        <ul class="mt-1 ml-3 pl-3 border-l border-white/10 space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/core/building-blocks',   'Building Blocks',     currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/data-retrieval',    'Data Retrieval',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/data-manipulation', 'Data Manipulation',   currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/select-drop',       'Select / Drop',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/rename',            'Rename',              currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/map',               'Map',                 currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/filter',            'Filter',              currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/execution-mode',    'Execution Mode',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/save-mode',         'Save Mode',           currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/join',              'Join',                currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/group-by',          'Group By',            currentPath) }}</li>
+            <li class="ml-3">{{ nav.nav_link('/documentation/components/core/aggregations', 'Aggregations', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/pivot',             'Pivot',               currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/window-functions',  'Window Functions',    currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/sort',              'Sort',                currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/limit',             'Limit',               currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/offset',            'Offset',              currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/until',             'Until',               currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/batch-processing',  'Batch Processing',    currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/caching',           'Caching',             currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/partitioning',      'Partitioning',        currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/constraints',       'Constraints',         currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/schema',            'Schema',              currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/display',           'Display',             currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/core/error-handling',    'Error Handling',      currentPath) }}</li>
+        </ul>
+        <ul class="mt-3 space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/cli/docs', 'CLI', currentPath) }}</li>
+        </ul>
+    </div>
+</nav>

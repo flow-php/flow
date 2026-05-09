@@ -6,7 +6,8 @@ seo_description: >
 
 # Flow PHP ETL (Core)
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/core/core.md]
+
 - [📜 Documentation](/documentation/components/core/core.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl)
 

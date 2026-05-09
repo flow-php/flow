@@ -1,6 +1,6 @@
 # Error Handling
 
-- [⬅️️ Back](/documentation/components/core/core.md)
+[DOC_LINK:/documentation/components/core/core.md]
 
 In case of any exception in transform/load steps, an ETL process will break, 
 to change that behavior, please set custom [ErrorHandler](/src/core/etl/src/Flow/ETL/ErrorHandler.php).

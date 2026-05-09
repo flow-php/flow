@@ -1,12 +1,10 @@
+---
+package: flow-php/etl
+---
+
 # Data Frame
 
-- [⬅️️ Back](/documentation/quick-start.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl)
-- [➡️ Installation](/documentation/installation/packages/etl.md)
-- [🐙GitHub](https://github.com/flow-php/etl)
-- [📚API Reference](/documentation/api/core)
-- [📁Files](/documentation/api/core/indices/files.html)
-- [🗺DSL](/documentation/api/core/namespaces/flow-etl-dsl.html)
+[PACKAGE_NAV]
 
 [TOC]
 

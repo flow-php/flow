@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony PostgreSQL Bundle
 
-- [Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-postgresql-bundle.md]
+
 - [Documentation](/documentation/components/bridges/symfony-postgresql-bundle.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-bundle)
 

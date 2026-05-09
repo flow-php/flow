@@ -1,14 +1,13 @@
+---
+package: flow-php/monolog-telemetry-bridge
+---
+
 # Monolog Telemetry Bridge
 
 Flow Monolog Telemetry Bridge connects Monolog with Flow PHP Telemetry library, allowing you to use Monolog as your
 logging interface while exporting logs through Flow's telemetry system.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/monolog-telemetry-bridge)
-- [➡️ Installation](/documentation/installation/packages/monolog-telemetry-bridge.md)
-- [🐙GitHub](https://github.com/flow-php/monolog-telemetry-bridge)
-- [📚API Reference](/documentation/api/bridge/monolog/telemetry)
-- [🗺DSL](/documentation/api/bridge/monolog/telemetry/namespaces/flow-bridge-monolog-telemetry-dsl.html)
+[PACKAGE_NAV]
 
 [TOC]
 

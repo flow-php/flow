@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-excel
+---
+
 # Excel Adapter
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-excel)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-excel.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-excel)
-- [📚API Reference](/documentation/api/adapter/excel)
-- [📁Files](/documentation/api/adapter/excel/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

@@ -79,7 +79,9 @@ final readonly class LeagueCommonMarkConverterFactory
             ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
             ->addRenderer(TableOfContents::class, new TableOfContentsRenderer(), 10)
             ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')))
-            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifestPath));
+            ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifestPath))
+            ->addEventListener(DocumentParsedEvent::class, new FlowPackageNavRenderer($this->manifestPath))
+            ->addEventListener(DocumentParsedEvent::class, new FlowDocLinkRenderer());
 
         return $converter;
     }

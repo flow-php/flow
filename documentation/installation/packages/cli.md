@@ -6,7 +6,8 @@ seo_description: >
 
 # Flow PHP CLI
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/cli/docs.md]
+
 - [📜 Documentation](/documentation/components/cli/docs.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/cli)
 

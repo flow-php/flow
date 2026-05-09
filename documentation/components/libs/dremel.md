@@ -1,6 +1,7 @@
 # Dremel
 
-- [⬅️️ Back](/documentation/introduction.md)
+[DOC_LINK:/documentation/introduction.md]
+
 - [➡️ Installation](/documentation/installation/packages/dremel.md)
 
 ## Installation

@@ -205,45 +205,49 @@ Parameters:
             </button>
             <button
                     id="action-run"
+                    aria-label="Run"
                     data-controller="image-swap"
                     data-action="click->playground-run#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
-                Run <img src="{{ asset('images/icons/play.svg') }}"
-                         alt="Run"
-                         class="ml-1 inline-block"
-                         data-image-swap-target="image"
-                         data-hover-src="{{ asset('images/icons/play-active.svg') }}">
+                <span class="hidden sm:inline">Run</span>
+                <img src="{{ asset('images/icons/play.svg') }}"
+                     alt=""
+                     data-image-swap-target="image"
+                     data-hover-src="{{ asset('images/icons/play-active.svg') }}">
             </button>
             <button
                     id="action-format"
+                    aria-label="Format"
                     data-controller="image-swap"
                     data-action="click->playground-format#format mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
-                Format <img src="{{ asset('images/icons/code.svg') }}"
-                            alt="Format"
-                            class="ml-1 inline-block"
-                            data-image-swap-target="image"
-                            data-hover-src="{{ asset('images/icons/code-active.svg') }}">
+                <span class="hidden sm:inline">Format</span>
+                <img src="{{ asset('images/icons/code.svg') }}"
+                     alt=""
+                     data-image-swap-target="image"
+                     data-hover-src="{{ asset('images/icons/code-active.svg') }}">
             </button>
             {% if show_share %}
             <button
                     id="action-share"
+                    aria-label="Share"
                     data-controller="image-swap"
                     data-action="click->playground-share#share mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
-                Share <img src="{{ asset('images/icons/share.svg') }}"
-                     alt="Share"
-                     class="ml-1 inline-block"
+                <span class="hidden sm:inline">Share</span>
+                <img src="{{ asset('images/icons/share.svg') }}"
+                     alt=""
                      data-image-swap-target="image"
                      data-hover-src="{{ asset('images/icons/share-active.svg') }}">
             </button>
             {% endif %}
             <button
                     id="action-upload"
+                    aria-label="Upload"
                     data-controller="image-swap"
                     data-action="click->playground-upload#triggerUpload mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
-                Upload <img src="{{ asset('images/icons/upload.svg') }}"
-                            alt="Upload"
-                            class="ml-1 inline-block"
-                            data-image-swap-target="image"
-                            data-hover-src="{{ asset('images/icons/upload-active.svg') }}">
+                <span class="hidden sm:inline">Upload</span>
+                <img src="{{ asset('images/icons/upload.svg') }}"
+                     alt=""
+                     data-image-swap-target="image"
+                     data-hover-src="{{ asset('images/icons/upload-active.svg') }}">
             </button>
             <input type="file"
                    data-playground-upload-target="fileInput"
@@ -253,14 +257,15 @@ Parameters:
                    style="display: none;">
             <a href="{{ path('playground') }}"
                id="action-reset"
+               aria-label="Reset"
                data-controller="image-swap playground-reset"
                data-playground-reset-playground-storage-outlet="#playground"
                data-action="click->playground-reset#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
-                Reset <img src="{{ asset('images/icons/refresh.svg') }}"
-                           alt="Reset"
-                           class="ml-1 inline-block"
-                           data-image-swap-target="image"
-                           data-hover-src="{{ asset('images/icons/refresh-active.svg') }}">
+                <span class="hidden sm:inline">Reset</span>
+                <img src="{{ asset('images/icons/refresh.svg') }}"
+                     alt=""
+                     data-image-swap-target="image"
+                     data-hover-src="{{ asset('images/icons/refresh-active.svg') }}">
             </a>
         </div>
     </div>

@@ -6,7 +6,8 @@ seo_description: >
 
 # Dremel
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/libs/dremel.md]
+
 - [📜 Documentation](/documentation/components/libs/dremel.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/dremel)
 

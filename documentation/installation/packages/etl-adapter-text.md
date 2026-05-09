@@ -6,7 +6,8 @@ seo_description: >
 
 # Text Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/text.md]
+
 - [📜 Documentation](/documentation/components/adapters/text.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-text)
 

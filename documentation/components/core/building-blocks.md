@@ -1,6 +1,6 @@
 # Building Blocks
 
-- [⬅️️ Back](/documentation/components/core/core.md)
+[DOC_LINK:/documentation/components/core/core.md]
 
 Entries are the columns of the [Data Frame](/documentation/components/core/core.md), they are represented by
 the [Entry](/src/core/etl/src/Flow/ETL/Row/Entry.php) interface.

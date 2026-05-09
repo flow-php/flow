@@ -1,13 +1,14 @@
+---
+package: flow-php/symfony-filesystem-bundle
+---
+
 # Symfony Filesystem Bundle
 
 Symfony bundle integrating Flow PHP's Filesystem library with Symfony applications, providing a typed
 `FilesystemTable` service that mounts multiple filesystems under URI protocols, pluggable factories,
 console commands for managing files across mounted protocols, and first-class OpenTelemetry integration.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-filesystem-bundle)
-- [Installation](/documentation/installation/packages/symfony-filesystem-bundle.md)
-- [GitHub](https://github.com/flow-php/symfony-filesystem-bundle)
+[PACKAGE_NAV]
 
 [TOC]
 

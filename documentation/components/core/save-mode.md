@@ -1,5 +1,7 @@
 # Save Mode
 
+[DOC_LINK:/documentation/components/core/core]
+
 [TOC]
 
 Flow DataFrame provides four save modes that control how data is written when the destination file or path already exists:

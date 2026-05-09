@@ -41,7 +41,13 @@ final class DocumentationController extends AbstractController
                 default => 'text/html',
             };
 
-            return new Response(\file_get_contents($docsDir . '/' . $page), 200, [
+            $body = \file_get_contents($docsDir . '/' . $page);
+
+            if ($extension === 'html' && $body !== false) {
+                $body = \str_replace('</head>', '<link rel="stylesheet" href="/styles/api-overrides.css"></head>', $body);
+            }
+
+            return new Response($body, 200, [
                 'Content-Type' => $contentType,
             ]);
         }
@@ -116,7 +122,7 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    public function navigationLeft() : Response
+    public function navigationLeft(string $currentPath = '') : Response
     {
         $modules = $this->dslDefinitions->modules();
 
@@ -124,12 +130,15 @@ final class DocumentationController extends AbstractController
             'examples' => $this->examples,
             'modules' => $modules,
             'types' => $this->dslDefinitions->types(),
+            'currentPath' => $currentPath,
         ]);
     }
 
-    public function navigationRight() : Response
+    public function navigationRight(string $currentPath = '') : Response
     {
-        return $this->render('documentation/navigation_right.html.twig');
+        return $this->render('documentation/navigation_right.html.twig', [
+            'currentPath' => $currentPath,
+        ]);
     }
 
     #[Route('/documentation/{path}', name: 'documentation_page', requirements: ['path' => '.*'], priority: -100)]

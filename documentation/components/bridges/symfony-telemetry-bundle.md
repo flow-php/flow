@@ -1,13 +1,14 @@
+---
+package: flow-php/symfony-telemetry-bundle
+---
+
 # Symfony Telemetry Bundle
 
 Flow Symfony Telemetry Bundle provides automatic telemetry integration for Symfony applications, including HTTP
 request/response tracing, console command instrumentation, and configurable exporters through OpenTelemetry-compatible
 backends.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-telemetry-bundle)
-- [➡️ Installation](/documentation/installation/packages/symfony-telemetry-bundle.md)
-- [GitHub](https://github.com/flow-php/symfony-telemetry-bundle)
+[PACKAGE_NAV]
 
 [TOC]
 

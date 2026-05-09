@@ -6,7 +6,8 @@ seo_description: >
 
 # Monolog HTTP Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/monolog-http-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/monolog-http-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/monolog-http-bridge)
 

@@ -6,7 +6,8 @@ seo_description: >
 
 # Google Sheet Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/google-sheet.md]
+
 - [📜 Documentation](/documentation/components/adapters/google-sheet.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-google-sheet)
 

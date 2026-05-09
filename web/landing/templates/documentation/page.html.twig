@@ -8,28 +8,30 @@
     {{ page.description }}
 {%- endblock -%}
 
-{%- block hero -%}
-{% endblock %}
+{%- block hero -%}{%- endblock -%}
 
 {% block main %}
-<section id="documentation-page" class="mt-5 mb-5 px-4 lg:px-8 xl:px-12">
-    <div class="grid grid-cols-1 lg:grid-cols-[16rem_1fr_14rem] xl:grid-cols-[18rem_1fr_16rem] gap-4">
-        <div class="order-1 lg:order-0 lg:sticky lg:top-0 lg:max lg:overflow-y-auto lg:pr-4">
-            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationLeft')) }}
-        </div>
-        <div class="order-3 lg:order-1 min-w-0 py-2 px-4 lg:px-8">
-            <hr class="lg:hidden"/>
+{% set currentPath = app.request.pathInfo %}
+<section class="px-4 sm:px-6 lg:px-8 xl:px-12 mt-6 mb-12">
+    <div class="grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)_14rem] xl:grid-cols-[18rem_minmax(0,1fr)_16rem] gap-8 lg:gap-10">
 
-            <div class="mb-3 text-left">
-                <a class="btn btn-primary" href="{{ page.editOnGitHubUrl }}" target="_blank">
-                    Edit
-                    <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-                </a>
-            </div>
+        <aside class="order-2 lg:order-1">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationLeft', {currentPath: currentPath})) }}
+        </aside>
 
+        <article id="documentation-page" class="order-1 lg:order-2 min-w-0">
             {{ page.content|markdown_to_html }}
 
-            <hr class="!mt-8 !mb-8"/>
+            <p class="!mt-12 !mb-8 text-sm text-white/55">
+                Found a typo or an outdated section?
+                <a class="inline-flex items-center gap-1 text-white/80 hover:text-white !no-underline"
+                   href="{{ page.editOnGitHubUrl }}" target="_blank" rel="noopener">
+                    Edit this page on GitHub
+                    <span aria-hidden="true">↗</span>
+                </a>
+            </p>
+
+            <hr class="!my-8"/>
 
             <script src="https://giscus.app/client.js"
                     data-repo="flow-php/flow-php.com"
@@ -46,10 +48,11 @@
                     crossorigin="anonymous"
                     async>
             </script>
-        </div>
-        <div class="order-2 lg:order-2 lg:sticky lg:top-0 lg:max lg:overflow-y-auto lg:pl-4">
-            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight')) }}
-        </div>
+        </article>
+
+        <aside class="order-3">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigationRight', {currentPath: currentPath})) }}
+        </aside>
     </div>
 </section>
 {% endblock %}

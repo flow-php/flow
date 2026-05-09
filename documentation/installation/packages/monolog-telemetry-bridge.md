@@ -6,7 +6,8 @@ seo_description: >
 
 # Monolog Telemetry Bridge
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/monolog-telemetry-bridge.md]
+
 - [📜 Documentation](/documentation/components/bridges/monolog-telemetry-bridge.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/monolog-telemetry-bridge)
 

@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony PostgreSQL Messenger Bridge
 
-- [Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-postgresql-messenger-bridge.md]
+
 - [Documentation](/documentation/components/bridges/symfony-postgresql-messenger-bridge.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-messenger-bridge)
 

@@ -1,12 +1,12 @@
+---
+package: flow-php/symfony-filesystem-cache-bridge
+---
+
 # Symfony Filesystem Cache Bridge
 
 A Symfony Cache adapter backed by Flow PHP's native `Filesystem` library. Cache items are stored as files on top of any filesystem the library can mount — local disk, in-memory, AWS S3, Azure Blob — without depending on Symfony's `FilesystemAdapter` and the local-only assumptions baked into it.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-filesystem-cache-bridge)
-- [Installation](/documentation/installation/packages/symfony-filesystem-cache-bridge.md)
-- [GitHub](https://github.com/flow-php/symfony-filesystem-cache-bridge)
-- [API Reference](/documentation/api/bridge/symfony-filesystem-cache)
+[PACKAGE_NAV]
 
 [TOC]
 

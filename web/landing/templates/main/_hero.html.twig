@@ -1,52 +1,94 @@
-<div class="mx-auto max-w-screen-2xl max-lg:text-center px-2 sm:px-4 relative max-lg:py-10 p-[100px]">
-    <h1 class="font-bold max-sm:text-5xl max-lg:mx-auto text-6xl tracking-wider leading-[70px] max-w-[450px] mb-8 z-10">UNIFIED DATA PROCESSING FRAMEWORK</h1>
-    {% apply spaceless %}
-        <code class="w-fit py-2 px-3 before:content-['$'] before:mr-2 bg-orange-100 rounded">
-            <span id="command">composer require flow-php/etl ~{{ flow_version }}</span>
-            <button class="ml-2 [&.copied]:after:content-['Copied!'] after:absolute after:translate-x-6 select-none" title="copy command" data-clipboard-target="#command" {{ stimulus_controller('clipboard') }}>
-                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy command" width="20" height="20" class="inline">
-            </button>
-        </code>
-        <p class="mt-5">
-            <a class="text-white" href="{{ url('changelog') }}">Changelog</a>
-            <a class="text-white ml-4" href="{{ url('blog_post', {'date': '2025-03-16', 'slug': 'flow-php-release-cycle'}) }}">Release Cycle</a>
-        </p>
-        <p class="mt-4">
-            <a class="py-2 px-4 bg-orange-100 rounded font-semibold hover:bg-orange-200 transition-colors whitespace-nowrap text-white" href="{{ path('playground') }}">
-                <img src="{{ asset('images/icons/play.svg') }}" alt="play" width="20" height="20" class="mr-2 inline-block">
-                Try Playground
-            </a>
-        </p>
-    {% endapply %}
-    <img src="{{ asset('images/elephant.svg') }}" alt="elephant" width="720" class="max-lg:hidden absolute right-0 top-0">
-</div>
+<section class="relative overflow-hidden">
+    <div class="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-gradient-to-b from-blue-100/15 via-transparent to-transparent"></div>
 
-<div class="bg-blue-200">
-    <div class="mx-auto max-w-screen-2xl max-sm:px-2 py-4 flex flex-wrap sm:flex-nowrap items-start text-center lg:pr-[550px]">
-        <div class="basis-2/5 sm:basis-1/3">
-            <img src="{{ asset('images/icons/extract.svg') }}" alt="extract" width="64" height="64" class="inline">
-            <h2 class="my-2 text-2xl font-semibold tracking-wide">Extracts</h2>
-            <p>Read from various data sources.</p>
-        </div>
-
-        <span class="basis-1/5 self-center sm:flex-none sm:mx-2">
-                    <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="arrow" width="32" height="32" class="mx-auto">
+    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-12 pb-10 lg:pt-20 lg:pb-14">
+        <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-10 lg:gap-12 items-center">
+            <div class="max-lg:text-center max-lg:mx-auto max-w-2xl">
+                <span class="eyebrow">
+                    <span class="h-1.5 w-1.5 rounded-full bg-blue-100"></span>
+                    PHP {{ '8.3 · 8.4 · 8.5' }}
                 </span>
 
-        <div class="basis-2/5 sm:basis-1/3">
-            <img src="{{ asset('images/icons/transform.svg') }}" alt="transform" width="64" height="64" class="inline">
-            <h2 class="my-2 text-2xl font-semibold tracking-wide">Transforms</h2>
-            <p>Shape and optimize for your needs.</p>
-        </div>
+                <h1 class="mt-5 font-bold tracking-tight text-balance text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05]">
+                    Unified data processing for&nbsp;PHP.
+                </h1>
 
-        <span class="basis-2/5 self-center ml-auto mt-6 sm:flex-none sm:my-0 sm:mx-2">
-            <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="arrow" width="32" height="32" class="max-sm:rotate-[135deg]">
-        </span>
+                <p class="mt-6 max-w-xl max-lg:mx-auto text-lg text-white/75 leading-relaxed">
+                    Strongly typed. Memory efficient. One DataFrame API for CSV, JSON, XML, Parquet,
+                    Avro, REST, RDBMS, Elasticsearch, and more.
+                </p>
 
-        <div class="basis-full sm:basis-1/3">
-            <img src="{{ asset('images/icons/load.svg') }}" alt="load" width="64" height="64" class="inline">
-            <h2 class="my-2 text-2xl font-semibold tracking-wide">Loads</h2>
-            <p>Store and secure in one of many available data sinks.</p>
+                <div class="mt-8 flex flex-col sm:flex-row sm:items-center gap-3 max-lg:justify-center">
+                    <a href="{{ path('playground') }}" class="btn btn-primary px-5 py-3">
+                        <img src="{{ asset('images/icons/play.svg') }}" alt="" width="18" height="18">
+                        Try Playground
+                    </a>
+                    <a href="{{ path('documentation') }}" class="btn btn-secondary px-5 py-3 no-underline">
+                        Read the docs
+                        <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+
+                <div class="mt-8 max-lg:mx-auto max-w-md">
+                    <div class="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 font-mono text-sm">
+                        <span class="text-white/40 select-none">$</span>
+                        <span id="command" class="flex-1 truncate text-white/90">composer require flow-php/etl ~{{ flow_version }}</span>
+                        <button type="button"
+                                class="ml-2 [&.copied]:after:content-['Copied!'] after:absolute after:translate-x-2 select-none text-white/60 hover:text-white"
+                                title="copy command"
+                                aria-label="Copy install command"
+                                data-clipboard-target="#command"
+                                {{ stimulus_controller('clipboard') }}>
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="16" height="16" class="inline">
+                        </button>
+                    </div>
+                </div>
+
+                <p class="mt-5 text-sm text-white/55 max-lg:text-center">
+                    <a class="text-white/80 hover:text-white no-underline" href="{{ url('changelog') }}">Changelog</a>
+                    <span class="mx-2 text-white/30">•</span>
+                    <a class="text-white/80 hover:text-white no-underline" href="{{ url('blog_post', {'date': '2025-03-16', 'slug': 'flow-php-release-cycle'}) }}">Release cycle</a>
+                </p>
+            </div>
+
+            <div class="relative max-lg:hidden" aria-hidden="true">
+                <div class="absolute inset-0 -z-10 rounded-full bg-blue-100/15 blur-3xl"></div>
+                <img src="{{ asset('images/elephant.svg') }}" alt="" width="720" height="720" class="w-full h-auto max-w-[640px] ml-auto">
+            </div>
         </div>
     </div>
-</div>
+</section>
+
+<section class="border-y border-white/10 bg-white/[0.02]">
+    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            <div class="flex items-start gap-4">
+                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/25">
+                    <img src="{{ asset('images/icons/extract.svg') }}" alt="" width="24" height="24">
+                </div>
+                <div>
+                    <h2 class="text-base font-semibold tracking-wide">Extract</h2>
+                    <p class="mt-1 text-sm text-white/65">Read from any data source with a single typed API.</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-4">
+                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/25">
+                    <img src="{{ asset('images/icons/transform.svg') }}" alt="" width="24" height="24">
+                </div>
+                <div>
+                    <h2 class="text-base font-semibold tracking-wide">Transform</h2>
+                    <p class="mt-1 text-sm text-white/65">Map, join, aggregate, window — composable and lazy.</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-4">
+                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/25">
+                    <img src="{{ asset('images/icons/load.svg') }}" alt="" width="24" height="24">
+                </div>
+                <div>
+                    <h2 class="text-base font-semibold tracking-wide">Load</h2>
+                    <p class="mt-1 text-sm text-white/65">Stream into any sink without blowing up memory.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

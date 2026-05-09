@@ -6,7 +6,8 @@ seo_description: >
 
 # Excel Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/excel.md]
+
 - [📜 Documentation](/documentation/components/adapters/excel.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-excel)
 

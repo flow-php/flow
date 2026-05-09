@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-xml
+---
+
 # ETL Adapter: XML
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-xml)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-xml.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-xml)
-- [📚API Reference](/documentation/api/adapter/xml)
-- [📁Files](/documentation/api/adapter/xml/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

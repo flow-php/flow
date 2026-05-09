@@ -1,210 +1,93 @@
-<div class="grid grid-cols-3 gap-2 lg:grid-cols-1">
-    <div>
-        <h2 class="hidden lg:block">Adapters</h2>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-adapters" data-collapse-toggle="documentation-adapters">
-                Adapters
+{% set currentPath = currentPath|default('') %}
 
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <ul id="documentation-adapters" class="hidden lg:block">
-            <li>
-                <a href="/documentation/components/adapters/chartjs">ChartJS</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/csv">CSV</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/doctrine">Doctrine</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/postgresql">PostgreSql</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/elasticsearch">ElasticSearch</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/excel">Excel</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/google-sheet">Google Sheets</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/http">HTTP</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/json">JSON</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/logger">Logger</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/parquet">Parquet</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/text">Text</a>
-            </li>
-            <li>
-                <a href="/documentation/components/adapters/xml">XML</a>
-            </li>
+{% macro nav_link(href, label, currentPath) %}
+    {% set isActive = (href == currentPath) %}
+    <a href="{{ href }}"
+       class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
+              {{ isActive
+                ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
+                : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+       {% if isActive %}aria-current="page"{% endif %}>
+        {{ label }}
+    </a>
+{% endmacro %}
+
+{% import _self as nav %}
+
+<nav aria-label="Components" class="space-y-7">
+    <div>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Adapters</h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/adapters/chartjs',       'ChartJS',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/csv',           'CSV',           currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/doctrine',      'Doctrine',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/postgresql',    'PostgreSql',    currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/elasticsearch', 'ElasticSearch', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/excel',         'Excel',         currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/google-sheet',  'Google Sheets', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/http',          'HTTP',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/json',          'JSON',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/logger',        'Logger',        currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/parquet',       'Parquet',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/text',          'Text',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/adapters/xml',           'XML',           currentPath) }}</li>
         </ul>
     </div>
-    <div>
-        <h2 class="hidden lg:block">Libraries</h2>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-libraries" data-collapse-toggle="documentation-libraries">
-                Libraries
 
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <ul id="documentation-libraries" class="hidden lg:block">
-            <li>
-                <a href="/documentation/components/libs/filesystem">Filesystem</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/types">Types</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/array-dot">Array Dot</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/azure-sdk">Azure SDK</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/doctrine-dbal-bulk">Doctrine DBAL Bulk</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/parquet">Parquet</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/parquet-viewer">Parquet Viewer</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/snappy">Snappy</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/postgresql">Postgresql</a>
-            </li>
-            <li>
-                <a href="/documentation/components/libs/telemetry">Telemetry</a>
-            </li>
+    <div>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Libraries</h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/libs/filesystem',         'Filesystem',         currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/types',              'Types',              currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/array-dot',          'Array Dot',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/azure-sdk',          'Azure SDK',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/doctrine-dbal-bulk', 'Doctrine DBAL Bulk', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/parquet',            'Parquet',            currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/parquet-viewer',     'Parquet Viewer',     currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/snappy',             'Snappy',             currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/postgresql',         'Postgresql',         currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/libs/telemetry',          'Telemetry',          currentPath) }}</li>
         </ul>
     </div>
-    <div>
-        <h2 class="hidden lg:block">PHP Extensions</h2>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-libraries" data-collapse-toggle="documentation-libraries">
-                PHP Extensions
 
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <ul id="documentation-libraries" class="hidden lg:block">
-            <li>
-                <a href="/documentation/components/extensions/pg-query-ext">PostgreSql Query</a>
-            </li>
-            <li>
-                <a href="/documentation/components/extensions/arrow-ext">Arrow</a>
-            </li>
+    <div>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">PHP Extensions</h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/extensions/pg-query-ext', 'PostgreSql Query', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/extensions/arrow-ext',    'Arrow',            currentPath) }}</li>
         </ul>
     </div>
-    <div>
-        <h2 class="hidden lg:block">Symfony</h2>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-bridges" data-collapse-toggle="documentation-bridges">
-                Bridges
 
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <ul id="documentation-bridges" class="mb-5 hidden lg:block">
-            <li>
-                <a href="/documentation/components/bridges/symfony-postgresql-bundle">PostgreSQL Bundle</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-filesystem-bundle">Filesystem Bundle</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-telemetry-bundle">Telemetry Bundle</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-filesystem-cache-bridge">Filesystem Cache - Bridge</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-postgresql-cache-bridge">PostgreSQL Cache - Bridge</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-postgresql-messenger-bridge">PostgreSQL Messenger - Bridge</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-postgresql-session-bridge">PostgreSQL Session - Bridge</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-http-foundation-bridge">Streamed Response - Bridge</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/symfony-http-foundation-telemetry-bridge">HttpFoundation Telemetry - Bridge</a>
-            </li>
+    <div>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Symfony</h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-postgresql-bundle',            'PostgreSQL Bundle',             currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-filesystem-bundle',            'Filesystem Bundle',             currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-telemetry-bundle',             'Telemetry Bundle',              currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-filesystem-cache-bridge',      'Filesystem Cache Bridge',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-postgresql-cache-bridge',      'PostgreSQL Cache Bridge',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-postgresql-messenger-bridge',  'PostgreSQL Messenger Bridge',   currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-postgresql-session-bridge',    'PostgreSQL Session Bridge',     currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-http-foundation-bridge',       'Streamed Response Bridge',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/symfony-http-foundation-telemetry-bridge', 'HttpFoundation Telemetry',   currentPath) }}</li>
         </ul>
     </div>
-    <div>
-        <h2 class="hidden lg:block">Bridges</h2>
-        <div class="lg:hidden p-2 text-center">
-            <button class="font-bold text-xl" aria-controls="documentation-bridges" data-collapse-toggle="documentation-bridges">
-                Bridges
 
-                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                </svg>
-            </button>
-        </div>
-        <ul id="documentation-bridges" class="mb-10 hidden lg:block">
-            <li>
-                <a href="/documentation/components/bridges/filesystem-azure-bridge">Filesystem Azure</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/filesystem-async-aws-bridge">Filesystem S3</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/psr3-telemetry-bridge">PSR-3 Telemetry</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/psr7-telemetry-bridge">PSR-7 Telemetry</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/psr18-telemetry-bridge">PSR-18 Telemetry</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/monolog-http-bridge">Monolog Http</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/monolog-telemetry-bridge">Monolog Telemetry</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/openapi-specification-bridge">OpenApi Specification</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/phpunit-postgresql-bridge">PHPUnit PostgreSQL</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/phpunit-telemetry-bridge">PHPUnit Telemetry</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/postgresql-valinor-bridge">PostgreSQL Valinor</a>
-            </li>
-            <li>
-                <a href="/documentation/components/bridges/telemetry-otlp-bridge">Telemetry OTLP</a>
-            </li>
+    <div>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Bridges</h2>
+        <ul class="space-y-0.5">
+            <li>{{ nav.nav_link('/documentation/components/bridges/filesystem-azure-bridge',     'Filesystem Azure',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/filesystem-async-aws-bridge', 'Filesystem S3',         currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/psr3-telemetry-bridge',       'PSR-3 Telemetry',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/psr7-telemetry-bridge',       'PSR-7 Telemetry',       currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/psr18-telemetry-bridge',      'PSR-18 Telemetry',      currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/monolog-http-bridge',         'Monolog Http',          currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/monolog-telemetry-bridge',    'Monolog Telemetry',     currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/openapi-specification-bridge','OpenApi Specification', currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/phpunit-postgresql-bridge',   'PHPUnit PostgreSQL',    currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/phpunit-telemetry-bridge',    'PHPUnit Telemetry',     currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/postgresql-valinor-bridge',   'PostgreSQL Valinor',    currentPath) }}</li>
+            <li>{{ nav.nav_link('/documentation/components/bridges/telemetry-otlp-bridge',       'Telemetry OTLP',        currentPath) }}</li>
         </ul>
     </div>
-</div>
+</nav>

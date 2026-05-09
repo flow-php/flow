@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony Filesystem Bundle
 
-- [Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-filesystem-bundle.md]
+
 - [Documentation](/documentation/components/bridges/symfony-filesystem-bundle.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-filesystem-bundle)
 

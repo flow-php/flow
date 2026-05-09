@@ -1,11 +1,10 @@
+---
+package: flow-php/etl-adapter-doctrine
+---
+
 # ETL Adapter: Doctrine
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/etl-adapter-doctrine)
-- [➡️ Installation](/documentation/installation/packages/etl-adapter-doctrine.md)
-- [🐙GitHub](https://github.com/flow-php/etl-adapter-doctrine)
-- [📚API Reference](/documentation/api/adapter/doctrine)
-- [📁Files](/documentation/api/adapter/doctrin/indices/files.html)
+[PACKAGE_NAV]
 
 [TOC]
 

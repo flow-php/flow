@@ -1,7 +1,10 @@
+---
+package: flow-php/arrow-ext
+---
+
 # Arrow Extension
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [➡️ Installation](/documentation/installation/packages/arrow-ext.md)
+[PACKAGE_NAV]
 
 [TOC]
 

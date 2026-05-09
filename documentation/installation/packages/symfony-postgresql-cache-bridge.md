@@ -6,7 +6,8 @@ seo_description: >
 
 # Symfony PostgreSQL Cache Bridge
 
-- [Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/bridges/symfony-postgresql-cache-bridge.md]
+
 - [Documentation](/documentation/components/bridges/symfony-postgresql-cache-bridge.md)
 - [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-cache-bridge)
 

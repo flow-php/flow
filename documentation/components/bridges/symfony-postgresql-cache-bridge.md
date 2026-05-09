@@ -1,12 +1,12 @@
+---
+package: flow-php/symfony-postgresql-cache-bridge
+---
+
 # Symfony PostgreSQL Cache Bridge
 
 A Symfony Cache adapter backed by Flow PHP's native PostgreSQL library. Replaces `symfony/doctrine-dbal-adapter` without requiring Doctrine DBAL — cache items are stored directly in PostgreSQL using Flow's query builder and client.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-cache-bridge)
-- [Installation](/documentation/installation/packages/symfony-postgresql-cache-bridge.md)
-- [GitHub](https://github.com/flow-php/symfony-postgresql-cache-bridge)
-- [API Reference](/documentation/api/bridge/symfony-postgresql-cache)
+[PACKAGE_NAV]
 
 [TOC]
 

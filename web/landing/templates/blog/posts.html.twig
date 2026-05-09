@@ -8,30 +8,42 @@
     Blog posts and tutorials about Flow PHP, a PHP-based, strongly typed data processing framework with low memory footprint.
 {%- endblock -%}
 
+{%- block hero -%}{%- endblock -%}
+
 {% block main %}
-<div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-2xl">
-    <h1 class="text-5xl mb-10">Flow PHP - Blog</h1>
-    {% for post in posts %}
-    <article class="shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded mb-10">
-        <img src="{{ asset('images/icons/pencil.svg') }}" width="32" height="32" alt="feature" class="inline mr-2 bg-blue-100 p-1 -mt-4 rounded">
-        <a
-            class="text-white"
-            href="{{ path('blog_post', {date: post.date | date('Y-m-d'), slug: post.slug}) }}"
-        >
-        <h2 class="inline text-4xl font-bold">{{ post.title }}</h2>
-        </a>
-        <hr class="text-blue-100 my-4 border-t-2 rounded">
-        <h3 class="mb-2">Posted on {{ post.date | date }}</h3>
-        <p class="mb-2">
-            {{ post.description }}
-        </p>
-        <a
-                href="{{ path('blog_post', {date: post.date | date('Y-m-d'), slug: post.slug}) }}"
-                class="text-blue-500 hover:underline mt-2"
-        >
-            Read more
-        </a>
-    </article>
-    {% endfor %}
-</div>
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-10 lg:mt-14">
+        <div class="max-w-2xl">
+            <span class="eyebrow">
+                <span class="h-1.5 w-1.5 rounded-full bg-orange-100"></span>
+                Blog
+            </span>
+            <h1 class="mt-3 section-title">Notes from the project.</h1>
+            <p class="mt-3 muted">
+                Release notes, design decisions, and stories from building Flow.
+            </p>
+        </div>
+
+        <div class="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {% for post in posts %}
+                {% set postUrl = path('blog_post', {date: post.date | date('Y-m-d'), slug: post.slug}) %}
+                <article class="card card-hover flex flex-col">
+                    <time datetime="{{ post.date | date('c') }}" class="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
+                        {{ post.date | date('M j, Y') }}
+                    </time>
+                    <h2 class="mt-3 text-xl font-semibold tracking-tight">
+                        <a class="text-white hover:text-orange-100 no-underline" href="{{ postUrl }}">
+                            {{ post.title }}
+                        </a>
+                    </h2>
+                    <p class="mt-2 muted text-sm leading-relaxed flex-1">
+                        {{ post.description }}
+                    </p>
+                    <a class="mt-4 inline-flex items-center gap-1 text-sm text-blue-100 hover:text-orange-100 no-underline self-start"
+                       href="{{ postUrl }}">
+                        Read more <span aria-hidden="true">→</span>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
 {% endblock %}

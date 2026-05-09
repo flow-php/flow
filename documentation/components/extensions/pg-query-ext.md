@@ -1,7 +1,10 @@
+---
+package: flow-php/pg-query-ext
+---
+
 # PG Query Extension
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [➡️ Installation](/documentation/installation/packages/pg-query-ext.md)
+[PACKAGE_NAV]
 
 [TOC]
 

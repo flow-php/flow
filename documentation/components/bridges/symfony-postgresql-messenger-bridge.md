@@ -1,11 +1,12 @@
+---
+package: flow-php/symfony-postgresql-messenger-bridge
+---
+
 # Symfony PostgreSQL Messenger Bridge
 
 A Symfony Messenger transport backed by Flow PHP's native PostgreSQL library. Replaces `symfony/doctrine-messenger` without requiring Doctrine DBAL — messages are stored directly in PostgreSQL using Flow's query builder and client.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/symfony-postgresql-messenger-bridge)
-- [GitHub](https://github.com/flow-php/symfony-postgresql-messenger-bridge)
-- [API Reference](/documentation/api/bridge/symfony-postgresql-messenger)
+[PACKAGE_NAV]
 
 [TOC]
 

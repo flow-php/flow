@@ -1,5 +1,7 @@
 # Trigger and Rule Query Builder
 
+[DOC_LINK:/documentation/components/libs/postgresql]
+
 This document describes the PostgreSQL Trigger and Rule Query Builder components.
 
 ## Trigger Commands

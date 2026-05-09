@@ -1,12 +1,13 @@
+---
+package: flow-php/symfony-http-foundation-telemetry-bridge
+---
+
 # Symfony HttpFoundation Telemetry Bridge
 
 Flow Symfony HttpFoundation Telemetry Bridge provides carriers for propagators that can pass and read telemetry context
 and baggage via Symfony HttpFoundation request and response objects.
 
-- [⬅️️ Back](/documentation/introduction.md)
-- [📦Packagist](https://packagist.org/packages/flow-php/symfony-http-foundation-telemetry-bridge)
-- [➡️ Installation](/documentation/installation/packages/symfony-http-foundation-telemetry-bridge.md)
-- [🐙GitHub](https://github.com/flow-php/symfony-http-foundation-telemetry-bridge)
+[PACKAGE_NAV]
 
 [TOC]
 

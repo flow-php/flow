@@ -1,12 +1,12 @@
+---
+package: flow-php/phpunit-postgresql-bridge
+---
+
 # PHPUnit PostgreSQL Bridge
 
 PHPUnit extension for flow-php/postgresql that can wrap tests in transactions.
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/phpunit-postgresql-bridge)
-- [➡️ Installation](/documentation/installation/packages/phpunit-postgresql-bridge.md)
-- [GitHub](https://github.com/flow-php/phpunit-postgresql-bridge)
-- [API Reference](/documentation/api/bridge/phpunit/postgresql)
+[PACKAGE_NAV]
 
 [TOC]
 

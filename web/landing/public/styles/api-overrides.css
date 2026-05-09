@@ -1,0 +1,146 @@
+:root {
+    --flow-brand-orange: #ff5547;
+    --flow-brand-orange-2: #db4b3d;
+    --flow-brand-blue: #806dfe;
+    --flow-surface-1: rgba(255, 255, 255, 0.04);
+    --flow-surface-2: rgba(255, 255, 255, 0.08);
+    --flow-border: rgba(255, 255, 255, 0.10);
+    --flow-border-strong: rgba(255, 255, 255, 0.20);
+    --flow-text: rgba(255, 255, 255, 0.85);
+    --flow-text-muted: rgba(255, 255, 255, 0.65);
+}
+
+body {
+    background-image: radial-gradient(ellipse 80rem 40rem at 50% -20%,
+        rgba(128, 109, 254, 0.18), transparent 60%);
+    background-attachment: fixed;
+    color: var(--flow-text);
+}
+
+.flow-header-wrapper {
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: saturate(140%) blur(12px);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    border-bottom: 1px solid var(--flow-border) !important;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.phpdocumentor-header {
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.phpdocumentor-title__link {
+    color: #fff !important;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.phpdocumentor-search {
+    color: var(--flow-text);
+}
+
+.phpdocumentor-search__field {
+    background: var(--flow-surface-1) !important;
+    border: 1px solid var(--flow-border) !important;
+    color: #fff !important;
+    border-radius: 0.5rem !important;
+    height: 2.25rem !important;
+    padding-left: 2rem !important;
+}
+
+.phpdocumentor-search__field:focus {
+    outline: none !important;
+    border-color: var(--flow-brand-orange) !important;
+    background: var(--flow-surface-2) !important;
+}
+
+.phpdocumentor-search__field::placeholder {
+    color: var(--flow-text-muted) !important;
+}
+
+.phpdocumentor-topnav__menu-item a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid var(--flow-border);
+    background: var(--flow-surface-1);
+    color: var(--flow-text) !important;
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    text-decoration: none !important;
+}
+
+.phpdocumentor-topnav__menu-item a:hover {
+    background: var(--flow-surface-2);
+    border-color: var(--flow-border-strong);
+    color: #fff !important;
+}
+
+.phpdocumentor-sidebar {
+    color: var(--flow-text);
+}
+
+.phpdocumentor-sidebar__category-header {
+    color: var(--flow-text-muted) !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+}
+
+.phpdocumentor-sidebar__root-namespace,
+.phpdocumentor-sidebar__root-package {
+    color: var(--flow-text) !important;
+    font-weight: 600 !important;
+}
+
+.phpdocumentor-sidebar a {
+    color: var(--flow-text) !important;
+    text-decoration: none !important;
+    transition: color 0.15s;
+}
+
+.phpdocumentor-sidebar a:hover {
+    color: var(--flow-brand-orange) !important;
+}
+
+.phpdocumentor-content a,
+.phpdocumentor a:not(.phpdocumentor-topnav__menu-item a):not(.phpdocumentor-title__link) {
+    color: var(--flow-brand-blue);
+    text-decoration: none;
+}
+
+.phpdocumentor-content a:hover {
+    color: var(--flow-brand-orange);
+}
+
+.phpdocumentor-content code,
+.phpdocumentor-code,
+code:not([class*="language-"]) {
+    color: #d2a8ff !important;
+    background: var(--flow-surface-2) !important;
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.9em;
+}
+
+.phpdocumentor-sidebar,
+.phpdocumentor-section {
+    border-color: var(--flow-border) !important;
+}
+
+.phpdocumentor-back-to-top {
+    background: var(--flow-brand-orange) !important;
+    color: #fff !important;
+    border: 0 !important;
+}
+
+.phpdocumentor-back-to-top:hover {
+    background: var(--flow-brand-orange-2) !important;
+}

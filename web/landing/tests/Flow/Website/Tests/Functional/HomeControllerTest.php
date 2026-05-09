@@ -19,16 +19,6 @@ final class HomeControllerTest extends WebTestCase
         self::assertGreaterThan(0, $topicLinks->count());
     }
 
-    public function test_homepage_has_examples_navigation() : void
-    {
-        $client = self::createClient();
-        $crawler = $client->request('GET', '/');
-
-        self::assertResponseIsSuccessful();
-        $examplesHeading = $crawler->filter('h2:contains("Examples:")');
-        self::assertCount(1, $examplesHeading);
-    }
-
     public function test_homepage_has_playground_link() : void
     {
         $client = self::createClient();

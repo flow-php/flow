@@ -6,7 +6,8 @@ seo_description: >
 
 # Doctrine DBAL Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/doctrine.md]
+
 - [📜 Documentation](/documentation/components/adapters/doctrine.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-doctrine)
 

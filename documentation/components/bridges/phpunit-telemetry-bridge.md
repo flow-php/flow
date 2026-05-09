@@ -1,13 +1,13 @@
+---
+package: flow-php/phpunit-telemetry-bridge
+---
+
 # PHPUnit Telemetry Bridge
 
 PHPUnit extension allowing to collect test suite telemetry and export it to any OTLP-compatible backend (OpenTelemetry
 Collector, Grafana Alloy, Honeycomb, Datadog, Jaeger, etc.).
 
-- [Back](/documentation/introduction.md)
-- [Packagist](https://packagist.org/packages/flow-php/phpunit-telemetry-bridge)
-- [➡️ Installation](/documentation/installation/packages/phpunit-telemetry-bridge.md)
-- [GitHub](https://github.com/flow-php/phpunit-telemetry-bridge)
-- [API Reference](/documentation/api/bridge/phpunit/telemetry)
+[PACKAGE_NAV]
 
 [TOC]
 

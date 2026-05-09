@@ -6,7 +6,8 @@ seo_description: >
 
 # CSV Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/csv.md]
+
 - [📜 Documentation](/documentation/components/adapters/csv.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-csv)
 

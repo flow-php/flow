@@ -6,7 +6,8 @@ seo_description: >
 
 # HTTP Adapter
 
-- [⬅️️ Back](/documentation/installation.md)
+[DOC_LINK:/documentation/components/adapters/http.md]
+
 - [📜 Documentation](/documentation/components/adapters/http.md)
 - [📦 Packagist](https://packagist.org/packages/flow-php/etl-adapter-http)
 

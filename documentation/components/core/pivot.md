@@ -1,6 +1,6 @@
 # Pivot
 
-- [⬅️️ Back](/documentation/components/core/core.md)
+[DOC_LINK:/documentation/components/core/core.md]
 
 [TOC]
 

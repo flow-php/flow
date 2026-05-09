@@ -8,29 +8,34 @@
     {{ post.description }}
 {%- endblock -%}
 
+{%- block hero -%}{%- endblock -%}
+
 {% block main %}
-    <section class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-2xl">
-        <ul class="inline">
-            <li class="inline mr-2">
-                <a href="{{ path('blog') }}" class="text-blue-500 hover:underline">Blog</a>
-            </li>
-            <li class="inline mr-2">
-                <span class="text-gray-500">/</span>
-            </li>
-            <li class="inline mr-2">
-                <span>{{ post.title }}</span>
-            </li>
-        </ul>
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-8">
+        <nav aria-label="Breadcrumb" class="text-sm text-white/55 mb-4">
+            <ol class="inline-flex items-center gap-2">
+                <li><a class="text-white/75 hover:text-white no-underline" href="{{ path('blog') }}">Blog</a></li>
+                <li aria-hidden="true">/</li>
+                <li class="text-white/85">{{ post.title }}</li>
+            </ol>
+        </nav>
     </section>
-    <div class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-2xl">
-        <a class="btn btn-primary" href="https://github.com/flow-php/flow/edit/1.x/web/landing/templates/blog/posts/{{ date }}/{{ slug }}/post.html.twig" target="_blank">
-            Edit
-            <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
-        </a>
-    </div>
 
     {{ block('article') }}
-    <section class="mb-10 px-2 sm:px-4 mx-auto max-w-screen-2xl">
+
+    <section class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 mt-12 mb-16">
+        <p class="text-sm text-white/55 mb-8">
+            Found a typo or an outdated section?
+            <a class="inline-flex items-center gap-1 text-white/80 hover:text-white !no-underline"
+               href="https://github.com/flow-php/flow/edit/1.x/web/landing/templates/blog/posts/{{ date }}/{{ slug }}/post.html.twig"
+               target="_blank" rel="noopener">
+                Edit this post on GitHub
+                <span aria-hidden="true">↗</span>
+            </a>
+        </p>
+
+        <hr class="border-0 h-px bg-white/10 mb-8"/>
+
         <script src="https://giscus.app/client.js"
                 data-repo="flow-php/flow-php.com"
                 data-repo-id="R_kgDOHja2Yg"
