@@ -4,6 +4,7 @@
 - [#2356](https://github.com/flow-php/flow/pull/2356) - **Symfony PostgreSql Bundle - bundle skeleton** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [4d59c7](https://github.com/flow-php/flow/commit/4d59c7efd795b13987f133141d0aa15c7c933dbd) - **website mobile navigation** - [@norberttech](https://github.com/norberttech)
 - [#2356](https://github.com/flow-php/flow/pull/2356) - **Accessing S3 custom client through service container** - [@norberttech](https://github.com/norberttech)
 - [4256f8](https://github.com/flow-php/flow/commit/4256f8922516a7369eceb871e833fbd237dab041) - **mobile version website header** - [@norberttech](https://github.com/norberttech)
 
