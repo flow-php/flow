@@ -50,7 +50,7 @@ jobs:
           node-version: "22"
 
       - name: "Setup Chrome"
-        uses: "browser-actions/setup-chrome@v1"
+        uses: "browser-actions/setup-chrome@v2"
         with:
           chrome-version: "146"
           install-chromedriver: true
