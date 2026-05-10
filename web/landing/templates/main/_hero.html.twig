@@ -2,8 +2,8 @@
     <div class="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-gradient-to-b from-blue-100/15 via-transparent to-transparent"></div>
 
     <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-12 pb-10 lg:pt-20 lg:pb-14">
-        <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-10 lg:gap-12 items-center">
-            <div class="max-lg:text-center max-lg:mx-auto max-w-2xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            <div class="max-lg:text-center w-full max-w-2xl min-w-0">
                 <span class="eyebrow">
                     <span class="h-1.5 w-1.5 rounded-full bg-blue-100"></span>
                     PHP {{ '8.3 · 8.4 · 8.5' }}
@@ -32,7 +32,7 @@
                 <div class="mt-8 max-lg:mx-auto max-w-md">
                     <div class="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 font-mono text-sm">
                         <span class="text-white/40 select-none">$</span>
-                        <span id="command" class="flex-1 truncate text-white/90">composer require flow-php/etl ~{{ flow_version }}</span>
+                        <span id="command" class="flex-1 min-w-0 truncate text-white/90">composer require flow-php/etl ~{{ flow_version }}</span>
                         <button type="button"
                                 class="ml-2 [&.copied]:after:content-['Copied!'] after:absolute after:translate-x-2 select-none text-white/60 hover:text-white"
                                 title="copy command"

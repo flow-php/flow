@@ -6,7 +6,7 @@
         </a>
 
         <button type="button" popovertarget="search-modal" popovertargetaction="show"
-                class="hidden lg:inline-flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-2 text-sm text-white/60 hover:text-white/85 transition-colors min-w-[18rem]"
+                class="hidden lg:inline-flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-2 text-sm text-white/60 hover:text-white/85 transition-colors lg:min-w-[12rem] xl:min-w-[18rem]"
                 aria-label="Search documentation">
             <img src="{{ asset('images/icons/search.svg') }}" alt="" width="16" height="16" class="opacity-70">
             <span class="flex-1 text-left">Search docs…</span>
@@ -32,7 +32,7 @@
 
         <div class="hidden lg:flex items-center gap-2">
             <a href="{{ path('sponsor') }}"
-               class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-white/75 hover:text-white hover:bg-white/[0.06] no-underline">
+               class="hidden xl:inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-white/75 hover:text-white hover:bg-white/[0.06] no-underline">
                 <img src="{{ asset('images/icons/heart.svg') }}" alt="" width="16" height="16" class="shrink-0">
                 Sponsor
             </a>
