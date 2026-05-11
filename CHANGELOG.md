@@ -1,5 +1,8 @@
 ## [Unreleased] - 2026-05-11
 
+### Added
+- [#2360](https://github.com/flow-php/flow/pull/2360) - **website light / dark / system theme** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
 - [#2356](https://github.com/flow-php/flow/pull/2356) - **Symfony PostgreSql Bundle - bundle skeleton** - [@norberttech](https://github.com/norberttech)
 
