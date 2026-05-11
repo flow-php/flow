@@ -38,7 +38,7 @@ jobs:
       - name: Check for uncommitted changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Uncommitted changes detected, please run `just docs` and commit the changes."
+            echo "Uncommitted changes detected, please run \`just docs\` and commit the changes."
             git status
             exit 1
           else

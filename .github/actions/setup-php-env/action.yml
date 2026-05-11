@@ -71,10 +71,7 @@ runs:
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
 
     - name: "Install just"
-      shell: bash
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
-        just --version
+      uses: extractions/setup-just@v3
 
     - name: "Install PIE"
       if: ${{ inputs.pie-extensions != '' }}
