@@ -1,11 +1,11 @@
 <section class="relative overflow-hidden">
-    <div class="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-gradient-to-b from-blue-100/15 via-transparent to-transparent"></div>
+    <div class="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-gradient-to-b from-blue-300/10 via-transparent to-transparent dark:from-blue-100/15"></div>
 
     <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-12 pb-10 lg:pt-20 lg:pb-14">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
             <div class="max-lg:text-center w-full max-w-2xl min-w-0">
                 <span class="eyebrow">
-                    <span class="h-1.5 w-1.5 rounded-full bg-blue-100"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-blue-300 dark:bg-blue-100"></span>
                     PHP {{ '8.3 · 8.4 · 8.5' }}
                 </span>
 
@@ -13,7 +13,7 @@
                     Unified data processing for&nbsp;PHP.
                 </h1>
 
-                <p class="mt-6 max-w-xl max-lg:mx-auto text-lg text-white/75 leading-relaxed">
+                <p class="mt-6 max-w-xl max-lg:mx-auto text-lg text-slate-700 leading-relaxed dark:text-white/75">
                     Strongly typed. Memory efficient. One DataFrame API for CSV, JSON, XML, Parquet,
                     Avro, REST, RDBMS, Elasticsearch, and more.
                 </p>
@@ -30,63 +30,63 @@
                 </div>
 
                 <div class="mt-8 max-lg:mx-auto max-w-md">
-                    <div class="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 font-mono text-sm">
-                        <span class="text-white/40 select-none">$</span>
-                        <span id="command" class="flex-1 min-w-0 truncate text-white/90">composer require flow-php/etl ~{{ flow_version }}</span>
+                    <div class="group flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 font-mono text-sm dark:border-white/10 dark:bg-white/[0.04]">
+                        <span class="text-slate-400 select-none dark:text-white/40">$</span>
+                        <span id="command" class="flex-1 min-w-0 truncate text-slate-800 dark:text-white/90">composer require flow-php/etl ~{{ flow_version }}</span>
                         <button type="button"
-                                class="ml-2 [&.copied]:after:content-['Copied!'] after:absolute after:translate-x-2 select-none text-white/60 hover:text-white"
+                                class="ml-2 [&.copied]:after:content-['Copied!'] after:absolute after:translate-x-2 select-none text-slate-500 hover:text-slate-900 dark:text-white/60 dark:hover:text-white"
                                 title="copy command"
                                 aria-label="Copy install command"
                                 data-clipboard-target="#command"
                                 {{ stimulus_controller('clipboard') }}>
-                            <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="16" height="16" class="inline">
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="16" height="16" class="inline dark:invert-0 invert">
                         </button>
                     </div>
                 </div>
 
-                <p class="mt-5 text-sm text-white/55 max-lg:text-center">
-                    <a class="text-white/80 hover:text-white no-underline" href="{{ url('changelog') }}">Changelog</a>
-                    <span class="mx-2 text-white/30">•</span>
-                    <a class="text-white/80 hover:text-white no-underline" href="{{ url('blog_post', {'date': '2025-03-16', 'slug': 'flow-php-release-cycle'}) }}">Release cycle</a>
+                <p class="mt-5 text-sm text-slate-500 max-lg:text-center dark:text-white/55">
+                    <a class="text-slate-700 hover:text-slate-900 no-underline dark:text-white/80 dark:hover:text-white" href="{{ url('changelog') }}">Changelog</a>
+                    <span class="mx-2 text-slate-300 dark:text-white/30">•</span>
+                    <a class="text-slate-700 hover:text-slate-900 no-underline dark:text-white/80 dark:hover:text-white" href="{{ url('blog_post', {'date': '2025-03-16', 'slug': 'flow-php-release-cycle'}) }}">Release cycle</a>
                 </p>
             </div>
 
             <div class="relative max-lg:hidden" aria-hidden="true">
-                <div class="absolute inset-0 -z-10 rounded-full bg-blue-100/15 blur-3xl"></div>
+                <div class="absolute inset-0 -z-10 rounded-full bg-blue-300/10 blur-3xl dark:bg-blue-100/15"></div>
                 <img src="{{ asset('images/elephant.svg') }}" alt="" width="720" height="720" class="w-full h-auto max-w-[640px] ml-auto">
             </div>
         </div>
     </div>
 </section>
 
-<section class="border-y border-white/10 bg-white/[0.02]">
+<section class="border-y border-slate-200 bg-white/40 dark:border-white/10 dark:bg-white/[0.02]">
     <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             <div class="flex items-start gap-4">
-                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/25">
-                    <img src="{{ asset('images/icons/extract.svg') }}" alt="" width="24" height="24">
+                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-300/10 ring-1 ring-blue-300/25 dark:bg-blue-100/15 dark:ring-blue-100/25">
+                    <img src="{{ asset('images/icons/extract.svg') }}" alt="" width="24" height="24" class="dark:invert-0 invert">
                 </div>
                 <div>
                     <h2 class="text-base font-semibold tracking-wide">Extract</h2>
-                    <p class="mt-1 text-sm text-white/65">Read from any data source with a single typed API.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-white/65">Read from any data source with a single typed API.</p>
                 </div>
             </div>
             <div class="flex items-start gap-4">
-                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/25">
-                    <img src="{{ asset('images/icons/transform.svg') }}" alt="" width="24" height="24">
+                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-300/10 ring-1 ring-blue-300/25 dark:bg-blue-100/15 dark:ring-blue-100/25">
+                    <img src="{{ asset('images/icons/transform.svg') }}" alt="" width="24" height="24" class="dark:invert-0 invert">
                 </div>
                 <div>
                     <h2 class="text-base font-semibold tracking-wide">Transform</h2>
-                    <p class="mt-1 text-sm text-white/65">Map, join, aggregate, window — composable and lazy.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-white/65">Map, join, aggregate, window — composable and lazy.</p>
                 </div>
             </div>
             <div class="flex items-start gap-4">
-                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-100/15 ring-1 ring-blue-100/25">
-                    <img src="{{ asset('images/icons/load.svg') }}" alt="" width="24" height="24">
+                <div class="shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-300/10 ring-1 ring-blue-300/25 dark:bg-blue-100/15 dark:ring-blue-100/25">
+                    <img src="{{ asset('images/icons/load.svg') }}" alt="" width="24" height="24" class="dark:invert-0 invert">
                 </div>
                 <div>
                     <h2 class="text-base font-semibold tracking-wide">Load</h2>
-                    <p class="mt-1 text-sm text-white/65">Stream into any sink without blowing up memory.</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-white/65">Stream into any sink without blowing up memory.</p>
                 </div>
             </div>
         </div>

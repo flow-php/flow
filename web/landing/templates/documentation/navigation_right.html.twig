@@ -5,8 +5,8 @@
     <a href="{{ href }}"
        class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
               {{ isActive
-                ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
-                : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+                ? 'border-orange-100 bg-slate-100 text-slate-900 font-medium dark:bg-white/[0.06] dark:text-white'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/[0.04]' }}"
        {% if isActive %}aria-current="page"{% endif %}>
         {{ label }}
     </a>
@@ -16,7 +16,7 @@
 
 <nav aria-label="Components" class="space-y-7">
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Adapters</h2>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">Adapters</h2>
         <ul class="space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/adapters/chartjs',       'ChartJS',       currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/adapters/csv',           'CSV',           currentPath) }}</li>
@@ -35,7 +35,7 @@
     </div>
 
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Libraries</h2>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">Libraries</h2>
         <ul class="space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/libs/filesystem',         'Filesystem',         currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/libs/types',              'Types',              currentPath) }}</li>
@@ -51,7 +51,7 @@
     </div>
 
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">PHP Extensions</h2>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">PHP Extensions</h2>
         <ul class="space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/extensions/pg-query-ext', 'PostgreSql Query', currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/extensions/arrow-ext',    'Arrow',            currentPath) }}</li>
@@ -59,7 +59,7 @@
     </div>
 
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Symfony</h2>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">Symfony</h2>
         <ul class="space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/bridges/symfony-postgresql-bundle',            'PostgreSQL Bundle',             currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/bridges/symfony-filesystem-bundle',            'Filesystem Bundle',             currentPath) }}</li>
@@ -74,7 +74,7 @@
     </div>
 
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Bridges</h2>
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">Bridges</h2>
         <ul class="space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/bridges/filesystem-azure-bridge',     'Filesystem Azure',      currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/bridges/filesystem-async-aws-bridge', 'Filesystem S3',         currentPath) }}</li>

@@ -6,8 +6,8 @@
        {% if external %}target="_blank" rel="noopener"{% endif %}
        class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
               {{ isActive
-       ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
-       : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+       ? 'border-orange-100 bg-slate-100 text-slate-900 font-medium dark:bg-white/[0.06] dark:text-white'
+       : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/[0.04]' }}"
             {% if isActive %}aria-current="page"{% endif %}>
         {{ label }}{% if external %} <span class="opacity-50">↗</span>{% endif %}
     </a>
@@ -17,7 +17,7 @@
 
 <nav aria-label="Documentation" class="space-y-7">
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
             Introduction
         </h2>
         <ul class="space-y-0.5">
@@ -36,13 +36,13 @@
     </div>
 
     <div>
-        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+        <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
             Data Frame
         </h2>
         <ul class="space-y-0.5">
             <li>{{ nav.nav_link('/documentation/components/core/core', 'Data Frame', currentPath) }}</li>
         </ul>
-        <ul class="mt-1 ml-3 pl-3 border-l border-white/10 space-y-0.5">
+        <ul class="mt-1 ml-3 pl-3 border-l border-slate-200 space-y-0.5 dark:border-white/10">
             <li>{{ nav.nav_link('/documentation/components/core/building-blocks', 'Building Blocks', currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/core/data-retrieval', 'Data Retrieval', currentPath) }}</li>
             <li>{{ nav.nav_link('/documentation/components/core/data-manipulation', 'Data Manipulation', currentPath) }}</li>

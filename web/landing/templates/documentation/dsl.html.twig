@@ -21,12 +21,12 @@
 
         <aside class="hidden lg:block lg:order-1">
             <nav aria-label="DSL modules">
-                <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+                <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
                     DSL References
                 </h2>
 
                 <a href="{{ path('documentation') }}"
-                   class="inline-flex items-center gap-2 mb-3 px-2.5 py-1 text-sm text-white/70 hover:text-white no-underline">
+                   class="inline-flex items-center gap-2 mb-3 px-2.5 py-1 text-sm text-slate-600 hover:text-slate-900 no-underline dark:text-white/70 dark:hover:text-white">
                     <span aria-hidden="true">←</span> Back to docs
                 </a>
 
@@ -37,18 +37,18 @@
                             <a href="{{ path('documentation_dsl', {module: module.name | lower, _fragment: 'dsl-functions'}) }}"
                                class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
                                       {{ isActive
-                                        ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
-                                        : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}"
+                                        ? 'border-orange-100 bg-slate-100 text-slate-900 font-medium dark:bg-white/[0.06] dark:text-white'
+                                        : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/[0.04]' }}"
                                {% if isActive %}aria-current="page"{% endif %}>
                                 {{ module.value }}
                             </a>
                             {% if isActive %}
-                                <ul class="mt-1 ml-3 pl-3 border-l border-white/10 space-y-0.5">
+                                <ul class="mt-1 ml-3 pl-3 border-l border-slate-200 space-y-0.5 dark:border-white/10">
                                     {% for type in types %}
                                         {% if definitions.onlyType(type).count %}
                                             <li>
                                                 <a href="#type-{{ type.name|lower }}"
-                                                   class="block rounded-md px-2.5 py-1 text-xs text-white/65 hover:text-white hover:bg-white/[0.04] no-underline border-l-2 border-transparent">
+                                                   class="block rounded-md px-2.5 py-1 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-100 no-underline border-l-2 border-transparent dark:text-white/65 dark:hover:text-white dark:hover:bg-white/[0.04]">
                                                     {{ type.value }}
                                                 </a>
                                             </li>
@@ -73,7 +73,7 @@
             <p class="muted mb-8 max-w-3xl">
                 DSL stands for Domain Specific Language. In Flow, the DSL is a set of small
                 functions that wrap object construction so pipelines read top-to-bottom.
-                See the <a class="text-blue-100 hover:text-orange-100" href="{{ path('example', {topic: 'data_frame', example: 'data_frame', _fragment: 'example'}) }}">examples</a>
+                See the <a class="text-blue-300 hover:text-orange-300 dark:text-blue-100 dark:hover:text-orange-100" href="{{ path('example', {topic: 'data_frame', example: 'data_frame', _fragment: 'example'}) }}">examples</a>
                 for usage in context.
             </p>
 
@@ -83,7 +83,7 @@
                         <h2 id="type-{{ type.name|lower }}"
                             class="font-bold text-2xl tracking-tight mb-4 scroll-mt-24"
                             data-dsl-type="{{ type.value }}">
-                            <a href="#type-{{ type.name|lower }}" class="text-white no-underline hover:text-orange-100">
+                            <a href="#type-{{ type.name|lower }}" class="text-slate-900 no-underline hover:text-orange-300 dark:text-white dark:hover:text-orange-100">
                                 {{ type.name }}
                             </a>
                         </h2>
@@ -91,18 +91,18 @@
                         <div class="space-y-4">
                             {% for definition in definitions.onlyType(type).all %}
                                 <article data-dsl-function class="card !p-0 overflow-hidden">
-                                    <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-white/10 bg-white/[0.02]">
+                                    <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.02]">
                                         <h3 class="m-0 font-mono text-sm font-medium" id="dsl-{{ definition.name }}">
                                             <a href="{{ path('documentation_dsl_function', {module: definition.module.name | lower, function: definition.name | slugify | lower, _fragment: 'dsl-function'}) }}"
-                                               class="inline-flex items-center gap-2 text-white no-underline hover:text-orange-100">
-                                                <img src="{{ asset('images/icons/link.svg') }}" alt="" width="14" height="14" class="opacity-60">
+                                               class="inline-flex items-center gap-2 text-slate-900 no-underline hover:text-orange-300 dark:text-white dark:hover:text-orange-100">
+                                                <img src="{{ asset('images/icons/link.svg') }}" alt="" width="14" height="14" class="opacity-60 dark:invert-0 invert">
                                                 {{ definition.name }}
                                             </a>
                                         </h3>
-                                        <a class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-2.5 py-1 text-xs text-white/85 no-underline transition-colors"
+                                        <a class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50 px-2.5 py-1 text-xs text-slate-700 no-underline transition-colors dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20 dark:hover:bg-white/[0.08] dark:text-white/85"
                                            href="{{ definition.githubUrl }}" target="_blank" rel="noopener" data-dsl-source-link>
                                             View
-                                            <img src="{{ asset('images/icons/github.svg') }}" alt="" width="12" height="12" class="opacity-70">
+                                            <img src="{{ asset('images/icons/github.svg') }}" alt="" width="12" height="12" class="opacity-70 dark:invert-0 invert">
                                         </a>
                                     </div>
                                     {% apply spaceless %}

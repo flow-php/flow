@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, minimum-scale=1.0">
 
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('theme');
+                var resolved = stored === 'light' || stored === 'dark'
+                    ? stored
+                    : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                if (resolved === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <title>{{ block('title') }}</title>
     <meta property="og:title" content="{{ block('title') }}" />
     <meta name="twitter:title" content="{{ block('title') }}" >
@@ -80,7 +96,7 @@
         <script>
             mermaid.initialize({
                 startOnLoad: false,
-                theme: 'dark',
+                theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
                 securityLevel: 'loose',
                 flowchart: {
                     useMaxWidth: true,
@@ -92,11 +108,36 @@
             window.flow = {
                 dsl: {{ dsl() | raw }},
             };
+
+            (function () {
+                function resolvedTheme() {
+                    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                }
+
+                function pushGiscusTheme(theme) {
+                    document.querySelectorAll('iframe.giscus-frame').forEach(function (iframe) {
+                        iframe.contentWindow.postMessage(
+                            { giscus: { setConfig: { theme: theme } } },
+                            'https://giscus.app'
+                        );
+                    });
+                }
+
+                window.addEventListener('message', function (event) {
+                    if (event.origin !== 'https://giscus.app') return;
+                    if (!event.data || !event.data.giscus) return;
+                    pushGiscusTheme(resolvedTheme());
+                });
+
+                document.addEventListener('theme:changed', function (event) {
+                    pushGiscusTheme((event.detail && event.detail.resolved) || resolvedTheme());
+                });
+            })();
         </script>
         {{ importmap() }}
     {% endblock %}
 </head>
-<body class="scroll-smooth bg-black text-white" data-environment="{{ app.environment }}">
+<body class="scroll-smooth bg-[#e8eef7] text-slate-900 dark:bg-black dark:text-white" data-environment="{{ app.environment }}">
     <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-orange-100 focus:px-3 focus:py-2 focus:text-white">
         Skip to content
     </a>

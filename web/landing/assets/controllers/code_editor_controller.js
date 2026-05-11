@@ -1,12 +1,12 @@
 import { Controller } from "@hotwired/stimulus"
 import { EditorView, basicSetup } from "codemirror"
-import { EditorState, StateField, StateEffect } from "@codemirror/state"
+import { EditorState, StateField, StateEffect, Compartment } from "@codemirror/state"
 import { Decoration } from "@codemirror/view"
 import { keymap } from "@codemirror/view"
 import { php } from "@codemirror/lang-php"
 import { autocompletion, snippetKeymap, acceptCompletion } from "@codemirror/autocomplete"
 import { indentWithTab } from "@codemirror/commands"
-import { flowThemeExtension } from "../codemirror/themes/theme-flow.js"
+import { flowThemeExtension, flowLightThemeExtension } from "../codemirror/themes/theme-flow.js"
 import { flowCompletions } from "../codemirror/completions/flow.js"
 import { dslCompletions } from "../codemirror/completions/dsl.js"
 import { dataframeCompletions } from "../codemirror/completions/dataframe.js"
@@ -19,6 +19,8 @@ export default class extends Controller {
     #textarea
     #errorEffect
     #editorReady = false
+    #themeCompartment = new Compartment()
+    #onThemeChanged = null
 
     #log(...args) {
         if (this.#debug) {
@@ -61,7 +63,7 @@ export default class extends Controller {
             extensions: [
                 basicSetup,
                 php(),
-                flowThemeExtension,
+                this.#themeCompartment.of(this.#currentThemeExtension()),
                 errorField,
                 keymap.of(snippetKeymap),
                 keymap.of([indentWithTab]),
@@ -92,6 +94,22 @@ export default class extends Controller {
         this.#debug = this.application.debug
         this.#log('Connecting Code editor controller')
         this.#initializeEditor()
+
+        this.#onThemeChanged = this.#handleThemeChange.bind(this)
+        document.addEventListener('theme:changed', this.#onThemeChanged)
+    }
+
+    #currentThemeExtension() {
+        return document.documentElement.getAttribute('data-theme') === 'dark'
+            ? flowThemeExtension
+            : flowLightThemeExtension
+    }
+
+    #handleThemeChange() {
+        if (!this.#editor) return
+        this.#editor.dispatch({
+            effects: this.#themeCompartment.reconfigure(this.#currentThemeExtension())
+        })
     }
 
     isReady() {
@@ -116,6 +134,9 @@ export default class extends Controller {
     }
 
     disconnect() {
+        if (this.#onThemeChanged) {
+            document.removeEventListener('theme:changed', this.#onThemeChanged)
+        }
         if (this.#editor) {
             this.#editor.destroy()
             this.#editor = null

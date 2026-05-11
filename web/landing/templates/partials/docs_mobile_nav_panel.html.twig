@@ -1,11 +1,11 @@
 <nav popover id="docs-mobile-nav" aria-label="Documentation"
-     class="lg:hidden fixed inset-0 m-0 w-screen h-[100dvh] max-h-none max-w-none overflow-y-auto overscroll-contain bg-black text-white">
-    <div class="sticky top-0 z-10 flex h-16 items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-black/90 backdrop-blur">
+     class="lg:hidden fixed inset-0 m-0 w-screen h-[100dvh] max-h-none max-w-none overflow-y-auto overscroll-contain bg-[#e8eef7] text-slate-900 dark:bg-black dark:text-white">
+    <div class="sticky top-0 z-10 flex h-16 items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-[#e8eef7]/90 backdrop-blur dark:border-white/10 dark:bg-black/90">
         <span class="font-semibold tracking-wide">Documentation</span>
         <button type="button" popovertarget="docs-mobile-nav" popovertargetaction="hide"
                 aria-label="Close documentation menu"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-white/[0.06]">
-            <img src="{{ asset('images/icons/close.svg') }}" alt="" width="24" height="24">
+                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 dark:text-white dark:hover:bg-white/[0.06]">
+            <img src="{{ asset('images/icons/close.svg') }}" alt="" width="24" height="24" class="dark:invert-0 invert">
         </button>
     </div>
     <div class="px-4 sm:px-6 py-6 space-y-10">

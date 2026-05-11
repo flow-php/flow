@@ -20,12 +20,12 @@
 
         <aside class="hidden lg:block lg:order-1">
             <nav aria-label="DSL modules">
-                <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
+                <h2 class="px-2.5 mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
                     DSL References
                 </h2>
 
                 <a href="{{ path('documentation_dsl', {module: module_name | lower, _fragment: 'dsl-functions'}) }}"
-                   class="inline-flex items-center gap-2 mb-3 px-2.5 py-1 text-sm text-white/70 hover:text-white no-underline">
+                   class="inline-flex items-center gap-2 mb-3 px-2.5 py-1 text-sm text-slate-600 hover:text-slate-900 no-underline dark:text-white/70 dark:hover:text-white">
                     <span aria-hidden="true">←</span> Back to {{ module_name|humanize }}
                 </a>
 
@@ -36,8 +36,8 @@
                             <a href="{{ path('documentation_dsl', {module: module.name | lower, _fragment: 'dsl-functions'}) }}"
                                class="block rounded-md px-2.5 py-1.5 text-sm transition-colors no-underline border-l-2
                                       {{ isActive
-                                        ? 'border-orange-100 bg-white/[0.06] text-white font-medium'
-                                        : 'border-transparent text-white/70 hover:text-white hover:bg-white/[0.04]' }}">
+                                        ? 'border-orange-100 bg-slate-100 text-slate-900 font-medium dark:bg-white/[0.06] dark:text-white'
+                                        : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/[0.04]' }}">
                                 {{ module.value }}
                             </a>
                         </li>
@@ -62,10 +62,10 @@
             </h1>
 
             <div class="flex gap-2 mb-6" data-pagefind-ignore>
-                <a class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium text-white/85 transition-colors no-underline"
+                <a class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors no-underline dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20 dark:hover:bg-white/[0.08] dark:text-white/85"
                    href="{{ definition.githubUrl }}" target="_blank" rel="noopener" data-dsl-source-link>
                     View on GitHub
-                    <img src="{{ asset('images/icons/github.svg') }}" alt="" width="14" height="14" class="opacity-70">
+                    <img src="{{ asset('images/icons/github.svg') }}" alt="" width="14" height="14" class="opacity-70 dark:invert-0 invert">
                 </a>
             </div>
 
@@ -81,19 +81,19 @@
             <div class="space-y-5">
                 {% for example in examples %}
                     <article class="card !p-0 overflow-hidden">
-                        <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-white/10 bg-white/[0.02]">
+                        <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.02]">
                             <h3 class="m-0 text-sm font-medium">
-                                <a class="text-white hover:text-orange-100 no-underline"
+                                <a class="text-slate-900 hover:text-orange-300 no-underline dark:text-white dark:hover:text-orange-100"
                                    href="{{ path('example', { topic: example.topic, example: example.name, '_fragment': 'example' }) }}">
                                     {{ example.topic|humanize }} · {{ example.name|humanize }}
                                 </a>
                             </h3>
-                            <button class="inline-flex items-center justify-center h-8 w-8 rounded-md border border-white/10 bg-black/40 hover:bg-black/70 text-white [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20"
+                            <button class="inline-flex items-center justify-center h-8 w-8 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20 dark:border-white/10 dark:bg-black/40 dark:hover:bg-black/70 dark:text-white"
                                     title="copy code"
                                     aria-label="Copy code"
                                     data-clipboard-target="#example-code-{{ loop.index }}"
                                     {{ stimulus_controller('clipboard') }}>
-                                <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="14" height="14">
+                                <img src="{{ asset('images/icons/copy.svg') }}" alt="" width="14" height="14" class="dark:invert-0 invert">
                             </button>
                         </div>
                         {% apply spaceless %}
@@ -104,7 +104,7 @@
             </div>
             {% endif %}
 
-            <hr class="border-0 h-px bg-white/10 my-8"/>
+            <hr class="border-0 h-px bg-slate-200 my-8 dark:bg-white/10"/>
 
             <script src="https://giscus.app/client.js"
                     data-repo="flow-php/flow-php.com"
@@ -116,7 +116,7 @@
                     data-reactions-enabled="0"
                     data-emit-metadata="0"
                     data-input-position="bottom"
-                    data-theme="dark"
+                    data-theme="preferred_color_scheme"
                     data-lang="en"
                     crossorigin="anonymous"
                     async>
