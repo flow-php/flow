@@ -12,7 +12,7 @@ namespace Flow\Telemetry\Resource\Attribute;
  *
  * @see https://opentelemetry.io/docs/specs/semconv/resource/#service
  */
-enum ServiceAttribute : string
+enum ServiceAttribute: string
 {
     /**
      * The string ID of the service instance.

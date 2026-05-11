@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\{row, rows, str_entry};
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Rows, Transformer};
-use Flow\ETL\Row\{Reference, References};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
+
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
 
 final readonly class SelectEntriesTransformer implements Transformer
 {
@@ -18,7 +24,7 @@ final readonly class SelectEntriesTransformer implements Transformer
         $this->refs = References::init(...$refs);
     }
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 

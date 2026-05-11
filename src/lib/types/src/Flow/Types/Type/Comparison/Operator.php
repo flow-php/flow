@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Comparison;
 
-enum Operator : string
+enum Operator: string
 {
     case DIFFERENT = '<>';
     case EQUAL = '==';

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function preg_match;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
+use function preg_match;
 
 final class Regex extends ScalarFunctionChain
 {
@@ -21,13 +23,12 @@ final class Regex extends ScalarFunctionChain
         private readonly ScalarFunction|string|array $subject,
         private readonly ScalarFunction|int $flags = 0,
         private readonly ScalarFunction|int $offset = 0,
-    ) {
-    }
+    ) {}
 
     /**
      * @return null|array<array-key, mixed>
      */
-    public function eval(Row $row, FlowContext $context) : ?array
+    public function eval(Row $row, FlowContext $context): ?array
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
         $subject = (new Parameter($this->subject))->asString($row, $context);
@@ -35,11 +36,15 @@ final class Regex extends ScalarFunctionChain
         $offset = (new Parameter($this->offset))->asInt($row, $context);
 
         if ($pattern === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Regex requires non-null pattern'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('Regex requires non-null pattern'));
         }
 
         if ($subject === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Regex requires non-null subject'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('Regex requires non-null subject'));
         }
 
         if ($flags === null) {

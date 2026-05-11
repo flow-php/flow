@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, TraceBasedExemplarFilter};
-use Flow\Telemetry\Meter\Instrument\{Counter, Gauge, Histogram, Instrument, Throughput, UpDownCounter};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
+use Flow\Telemetry\Meter\Instrument\Counter;
+use Flow\Telemetry\Meter\Instrument\Gauge;
+use Flow\Telemetry\Meter\Instrument\Histogram;
+use Flow\Telemetry\Meter\Instrument\Instrument;
+use Flow\Telemetry\Meter\Instrument\Throughput;
+use Flow\Telemetry\Meter\Instrument\UpDownCounter;
+use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -57,15 +65,14 @@ final class Meter
         private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
         private readonly MetricLimits $limits = new MetricLimits(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Collect all aggregated metrics from all instruments.
      *
      * @return array<Metric>
      */
-    public function collect() : array
+    public function collect(): array
     {
         $metrics = [];
 
@@ -88,7 +95,7 @@ final class Meter
      *
      * @param Instrument $instrument The instrument to complete
      */
-    public function complete(Instrument $instrument) : void
+    public function complete(Instrument $instrument): void
     {
         foreach ($instrument->collect() as $metric) {
             try {
@@ -112,11 +119,8 @@ final class Meter
      * @param null|string $unit Unit of measurement (e.g., 'rows', 'bytes')
      * @param null|string $description Human-readable description
      */
-    public function createCounter(
-        string $name,
-        ?string $unit = null,
-        ?string $description = null,
-    ) : Counter {
+    public function createCounter(string $name, ?string $unit = null, ?string $description = null): Counter
+    {
         $key = $name . ':' . Counter::class;
 
         if (!array_key_exists($key, $this->instruments)) {
@@ -147,11 +151,8 @@ final class Meter
      * @param null|string $unit Unit of measurement (e.g., 'bytes', '%')
      * @param null|string $description Human-readable description
      */
-    public function createGauge(
-        string $name,
-        ?string $unit = null,
-        ?string $description = null,
-    ) : Gauge {
+    public function createGauge(string $name, ?string $unit = null, ?string $description = null): Gauge
+    {
         $key = $name . ':' . Gauge::class;
 
         if (!array_key_exists($key, $this->instruments)) {
@@ -187,7 +188,7 @@ final class Meter
         ?string $unit = null,
         ?string $description = null,
         ?array $boundaries = null,
-    ) : Histogram {
+    ): Histogram {
         $key = $name . ':' . Histogram::class;
 
         if (!array_key_exists($key, $this->instruments)) {
@@ -228,7 +229,7 @@ final class Meter
         ?string $description = null,
         ?int $ratePrecision = 2,
         TimeUnit $timeUnit = TimeUnit::SECONDS,
-    ) : Throughput {
+    ): Throughput {
         $key = $name . ':' . Throughput::class;
 
         if (!array_key_exists($key, $this->instruments)) {
@@ -261,11 +262,8 @@ final class Meter
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description
      */
-    public function createUpDownCounter(
-        string $name,
-        ?string $unit = null,
-        ?string $description = null,
-    ) : UpDownCounter {
+    public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null): UpDownCounter
+    {
         $key = $name . ':' . UpDownCounter::class;
 
         if (!array_key_exists($key, $this->instruments)) {
@@ -289,7 +287,7 @@ final class Meter
     /**
      * Collect all metrics and flush to processor.
      */
-    public function flush() : bool
+    public function flush(): bool
     {
         foreach ($this->collect() as $metric) {
             try {
@@ -311,7 +309,7 @@ final class Meter
     /**
      * Get the instrumentation scope.
      */
-    public function instrumentationScope() : InstrumentationScope
+    public function instrumentationScope(): InstrumentationScope
     {
         return $this->scope;
     }
@@ -319,7 +317,7 @@ final class Meter
     /**
      * Get the meter name.
      */
-    public function name() : string
+    public function name(): string
     {
         return $this->scope->name;
     }
@@ -327,7 +325,7 @@ final class Meter
     /**
      * Get the processor used by this meter.
      */
-    public function processor() : MetricProcessor
+    public function processor(): MetricProcessor
     {
         return $this->processor;
     }
@@ -335,7 +333,7 @@ final class Meter
     /**
      * Get the meter version.
      */
-    public function version() : string
+    public function version(): string
     {
         return $this->scope->version;
     }
@@ -345,7 +343,7 @@ final class Meter
      *
      * This mutates the meter instance and returns it for method chaining.
      */
-    public function withInstrumentationScope(InstrumentationScope $scope) : self
+    public function withInstrumentationScope(InstrumentationScope $scope): self
     {
         $this->scope = $scope;
 

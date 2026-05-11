@@ -4,31 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class SlugTest extends FlowTestCase
 {
-    public function test_ascii_on_null() : void
+    public function test_ascii_on_null(): void
     {
-        self::assertNull(
-            ref('str')->slug()->eval(row(str_entry('str', null)), flow_context())
-        );
+        static::assertNull(ref('str')->slug()->eval(row(str_entry('str', null)), flow_context()));
     }
 
-    public function test_slug() : void
+    public function test_slug(): void
     {
-        self::assertSame(
-            'azcz',
-            ref('str')->slug()->eval(row(str_entry('str', 'ąźćż')), flow_context())
-        );
+        static::assertSame('azcz', ref('str')->slug()->eval(row(str_entry('str', 'ąźćż')), flow_context()));
     }
 
-    public function test_slug_separator() : void
+    public function test_slug_separator(): void
     {
-        self::assertSame(
-            'Some_Text',
-            ref('str')->slug('_')->eval(row(str_entry('str', 'Some Text')), flow_context())
-        );
+        static::assertSame('Some_Text', ref('str')
+            ->slug('_')
+            ->eval(row(str_entry('str', 'Some Text')), flow_context()));
     }
 }

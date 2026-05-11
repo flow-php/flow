@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-use Flow\Telemetry\Context\{SpanId, TraceFlags, TraceId, TraceState};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Context\TraceState;
 
 /**
  * Immutable identification of a span within a trace.
@@ -51,7 +54,7 @@ final readonly class SpanContext
         ?SpanId $parentSpanId = null,
         ?TraceFlags $traceFlags = null,
         ?TraceState $traceState = null,
-    ) : self {
+    ): self {
         return new self(
             $traceId,
             $spanId,
@@ -71,7 +74,7 @@ final readonly class SpanContext
         ?SpanId $parentSpanId = null,
         ?TraceFlags $traceFlags = null,
         ?TraceState $traceState = null,
-    ) : self {
+    ): self {
         return new self(
             $traceId,
             $spanId,
@@ -87,7 +90,7 @@ final readonly class SpanContext
      *
      * @param array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}} $data Normalized SpanContext data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             TraceId::fromArray($data['traceId']),
@@ -104,18 +107,15 @@ final readonly class SpanContext
      *
      * Returns a context representing no active trace.
      */
-    public static function getInvalid() : self
+    public static function getInvalid(): self
     {
-        return new self(
-            TraceId::invalid(),
-            SpanId::invalid(),
-        );
+        return new self(TraceId::invalid(), SpanId::invalid());
     }
 
     /**
      * Check if this is a root span (no parent).
      */
-    public function isRoot() : bool
+    public function isRoot(): bool
     {
         return $this->parentSpanId === null;
     }
@@ -126,7 +126,7 @@ final readonly class SpanContext
      * A SpanContext is valid when both the trace ID and span ID are non-zero.
      * An invalid SpanContext indicates no active trace context.
      */
-    public function isValid() : bool
+    public function isValid(): bool
     {
         return $this->traceId->isValid() && $this->spanId->isValid();
     }
@@ -136,7 +136,7 @@ final readonly class SpanContext
      *
      * @return array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'traceId' => $this->traceId->normalize(),
@@ -151,7 +151,7 @@ final readonly class SpanContext
     /**
      * Create a new SpanContext with the specified trace flags.
      */
-    public function withTraceFlags(TraceFlags $traceFlags) : self
+    public function withTraceFlags(TraceFlags $traceFlags): self
     {
         return new self(
             $this->traceId,
@@ -166,7 +166,7 @@ final readonly class SpanContext
     /**
      * Create a new SpanContext with the specified trace state.
      */
-    public function withTraceState(TraceState $traceState) : self
+    public function withTraceState(TraceState $traceState): self
     {
         return new self(
             $this->traceId,

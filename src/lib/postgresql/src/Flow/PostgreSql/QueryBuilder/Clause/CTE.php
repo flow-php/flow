@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{CommonTableExpr, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\CommonTableExpr;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
@@ -22,10 +24,9 @@ final readonly class CTE implements AstConvertible
         private array $columnNames = [],
         private CTEMaterialization $materialization = CTEMaterialization::DEFAULT,
         private bool $recursive = false,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $commonTableExpr = $node->getCommonTableExpr();
 
@@ -53,7 +54,11 @@ final readonly class CTE implements AstConvertible
                 $stringNode = $aliasNode->getString();
 
                 if ($stringNode === null) {
-                    throw InvalidAstException::invalidFieldValue('aliascolnames', 'CommonTableExpr', 'Expected String node');
+                    throw InvalidAstException::invalidFieldValue(
+                        'aliascolnames',
+                        'CommonTableExpr',
+                        'Expected String node',
+                    );
                 }
 
                 $columnNames[] = $stringNode->getSval();
@@ -69,42 +74,54 @@ final readonly class CTE implements AstConvertible
     /**
      * @return array<string>
      */
-    public function columnNames() : array
+    public function columnNames(): array
     {
         return $this->columnNames;
     }
 
-    public function materialization() : CTEMaterialization
+    public function materialization(): CTEMaterialization
     {
         return $this->materialization;
     }
 
-    public function materialized() : self
+    public function materialized(): self
     {
-        return new self($this->name, $this->query, $this->columnNames, CTEMaterialization::MATERIALIZED, $this->recursive);
+        return new self(
+            $this->name,
+            $this->query,
+            $this->columnNames,
+            CTEMaterialization::MATERIALIZED,
+            $this->recursive,
+        );
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function notMaterialized() : self
+    public function notMaterialized(): self
     {
-        return new self($this->name, $this->query, $this->columnNames, CTEMaterialization::NOT_MATERIALIZED, $this->recursive);
+        return new self(
+            $this->name,
+            $this->query,
+            $this->columnNames,
+            CTEMaterialization::NOT_MATERIALIZED,
+            $this->recursive,
+        );
     }
 
-    public function query() : Node
+    public function query(): Node
     {
         return $this->query;
     }
 
-    public function recursive() : bool
+    public function recursive(): bool
     {
         return $this->recursive;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $commonTableExpr = new CommonTableExpr();
         $commonTableExpr->setCtename($this->name);
@@ -137,7 +154,7 @@ final readonly class CTE implements AstConvertible
     /**
      * @param array<string> $columns
      */
-    public function withColumns(array $columns) : self
+    public function withColumns(array $columns): self
     {
         return new self($this->name, $this->query, $columns, $this->materialization, $this->recursive);
     }

@@ -15,17 +15,16 @@ final class CapturingFilesystemFactory implements FilesystemFactory
     public function __construct(
         private readonly string $type,
         private readonly Filesystem $filesystem,
-    ) {
-    }
+    ) {}
 
-    public function create(string $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config): Filesystem
     {
         $this->calls[] = ['mount' => $protocol, 'config' => $config];
 
         return $this->filesystem;
     }
 
-    public function type() : string
+    public function type(): string
     {
         return $this->type;
     }

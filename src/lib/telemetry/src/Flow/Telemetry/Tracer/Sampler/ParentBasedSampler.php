@@ -40,15 +40,14 @@ final readonly class ParentBasedSampler implements Sampler
         private ?Sampler $remoteParentNotSampled = null,
         private ?Sampler $localParentSampled = null,
         private ?Sampler $localParentNotSampled = null,
-    ) {
-    }
+    ) {}
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return \sprintf('ParentBased{root=%s}', (string) $this->rootSampler);
     }
 
-    public function shouldSample(Span $span) : SamplingResult
+    public function shouldSample(Span $span): SamplingResult
     {
         $context = $span->context();
 
@@ -61,7 +60,7 @@ final readonly class ParentBasedSampler implements Sampler
         return $sampler->shouldSample($span);
     }
 
-    private function getSamplerForParent(bool $isSampled, bool $isRemote) : Sampler
+    private function getSamplerForParent(bool $isSampled, bool $isRemote): Sampler
     {
         if ($isRemote) {
             if ($isSampled) {

@@ -4,31 +4,40 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    InstanceOfType,
-    JsonType,
-    ListType,
-    MapType,
-    StructureType,
-    TimeType,
-    TimeZoneType,
-    UuidType,
-    XMLElementType,
-    XMLType};
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\HTMLType;
-use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
+use Flow\Types\Type\Logical\InstanceOfType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Native\NullType;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeDetector;
-use Flow\Types\Value\{Json, Uuid};
-use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 
 final class TypeDetectorTest extends TestCase
 {
-    public static function provide_logical_types_data() : \Generator
+    public static function provide_logical_types_data(): \Generator
     {
         yield 'null' => [
             null,
@@ -130,7 +139,9 @@ final class TypeDetectorTest extends TestCase
                 'two' => 'two',
                 'three' => 'three',
                 'list' => [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
                 'map' => [
                     'one' => 'one',
@@ -250,7 +261,9 @@ final class TypeDetectorTest extends TestCase
                     'three' => 'three',
                 ],
                 'list' => [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
             ],
             ArrayType::class,
@@ -267,7 +280,9 @@ final class TypeDetectorTest extends TestCase
                     'two' => 'two',
                     'three' => 'three',
                     'list' => [
-                        1, 2, 3,
+                        1,
+                        2,
+                        3,
                     ],
                     'map' => [
                         'one' => 'one',
@@ -276,7 +291,9 @@ final class TypeDetectorTest extends TestCase
                     ],
                 ],
                 'list' => [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
             ],
             ArrayType::class,
@@ -302,10 +319,14 @@ final class TypeDetectorTest extends TestCase
         yield 'list of lists' => [
             [
                 [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
                 [
-                    4, 5, 6,
+                    4,
+                    5,
+                    6,
                 ],
             ],
             ListType::class,
@@ -315,10 +336,14 @@ final class TypeDetectorTest extends TestCase
         yield 'list of floats' => [
             [
                 [
-                    1.2, 2.15414, 3.13,
+                    1.2,
+                    2.15414,
+                    3.13,
                 ],
                 [
-                    4.0, 5, 6,
+                    4.0,
+                    5,
+                    6,
                 ],
             ],
             ListType::class,
@@ -328,11 +353,15 @@ final class TypeDetectorTest extends TestCase
         yield 'list of lists with null' => [
             [
                 [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
                 null,
                 [
-                    4, 5, 6,
+                    4,
+                    5,
+                    6,
                 ],
             ],
             ListType::class,
@@ -342,12 +371,15 @@ final class TypeDetectorTest extends TestCase
         yield 'list of lists with empty' => [
             [
                 [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
+                [],
                 [
-                ],
-                [
-                    4, 5, 6,
+                    4,
+                    5,
+                    6,
                 ],
             ],
             ListType::class,
@@ -357,13 +389,17 @@ final class TypeDetectorTest extends TestCase
         yield 'list of lists with array of nulls' => [
             [
                 [
-                    1, 2, 3,
+                    1,
+                    2,
+                    3,
                 ],
                 [
                     null,
                 ],
                 [
-                    4, 5, 6,
+                    4,
+                    5,
+                    6,
                 ],
             ],
             ListType::class,
@@ -381,14 +417,14 @@ final class TypeDetectorTest extends TestCase
         ];
     }
 
-    public static function provide_object_data() : \Generator
+    public static function provide_object_data(): \Generator
     {
         yield 'stdclass' => [
             new \stdClass(),
         ];
     }
 
-    public static function provide_scalar_data() : \Generator
+    public static function provide_scalar_data(): \Generator
     {
         yield 'bool' => [
             true,
@@ -415,58 +451,58 @@ final class TypeDetectorTest extends TestCase
         ];
     }
 
-    public function test_enum_type() : void
+    public function test_enum_type(): void
     {
-        self::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+        static::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
     }
 
     #[RequiresPhp('>= 8.4')]
-    public function test_logical_html_element_type() : void
+    public function test_logical_html_element_type(): void
     {
-        $document = \Dom\HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>');
-
-        $type = (new TypeDetector())->detectType(
-            $document->querySelector('body')
+        $document = \Dom\HTMLDocument::createFromString(
+            '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
         );
 
-        self::assertInstanceOf(Type\Logical\HTMLElementType::class, $type);
-        self::assertSame('html_element', $type->toString());
+        $type = (new TypeDetector())->detectType($document->querySelector('body'));
+
+        static::assertInstanceOf(Type\Logical\HTMLElementType::class, $type);
+        static::assertSame('html_element', $type->toString());
     }
 
     #[RequiresPhp('>= 8.4')]
-    public function test_logical_html_type() : void
+    public function test_logical_html_type(): void
     {
-        $type = (new TypeDetector())->detectType(
-            \Dom\HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>')
-        );
+        $type = (new TypeDetector())->detectType(\Dom\HTMLDocument::createFromString(
+            '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+        ));
 
-        self::assertInstanceOf(HTMLType::class, $type);
-        self::assertSame('html', $type->toString());
+        static::assertInstanceOf(HTMLType::class, $type);
+        static::assertSame('html', $type->toString());
     }
 
     #[DataProvider('provide_logical_types_data')]
-    public function test_logical_types(mixed $data, string $class, string $description) : void
+    public function test_logical_types(mixed $data, string $class, string $description): void
     {
         $type = (new TypeDetector())->detectType($data);
 
-        self::assertInstanceOf($class, $type);
-        self::assertSame($description, $type->toString());
+        static::assertInstanceOf($class, $type);
+        static::assertSame($description, $type->toString());
     }
 
     #[DataProvider('provide_object_data')]
-    public function test_object_types(mixed $data) : void
+    public function test_object_types(mixed $data): void
     {
-        self::assertInstanceOf(InstanceOfType::class, (new TypeDetector())->detectType($data));
+        static::assertInstanceOf(InstanceOfType::class, (new TypeDetector())->detectType($data));
     }
 
     /**
      * @param Type<mixed> $expectedType
      */
     #[DataProvider('provide_scalar_data')]
-    public function test_scalar_types(mixed $data, string $description, Type $expectedType) : void
+    public function test_scalar_types(mixed $data, string $description, Type $expectedType): void
     {
         $type = (new TypeDetector())->detectType($data);
-        self::assertInstanceOf($expectedType::class, $type);
-        self::assertSame($description, $type->toString());
+        static::assertInstanceOf($expectedType::class, $type);
+        static::assertSame($description, $type->toString());
     }
 }

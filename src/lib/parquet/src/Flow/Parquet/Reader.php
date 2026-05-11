@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use function Flow\Filesystem\DSL\path_real;
-use Flow\Filesystem\{SourceStream, Stream\NativeLocalSourceStream};
+use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\Engine\{AdaptiveParquetEngine, ArrowParquetEngine, PhpParquetEngine};
+use Flow\Parquet\Engine\AdaptiveParquetEngine;
+use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
+
+use function Flow\Filesystem\DSL\path_real;
 
 final readonly class Reader
 {
@@ -21,17 +25,17 @@ final readonly class Reader
         $this->engine = $engine ?? new AdaptiveParquetEngine($this->byteOrder, $this->options);
     }
 
-    public static function arrow(Options $options = new Options()) : self
+    public static function arrow(Options $options = new Options()): self
     {
         return new self(options: $options, engine: new ArrowParquetEngine($options));
     }
 
-    public static function php(Options $options = new Options()) : self
+    public static function php(Options $options = new Options()): self
     {
         return new self(options: $options, engine: new PhpParquetEngine(options: $options));
     }
 
-    public function read(string $path) : ParquetFile
+    public function read(string $path): ParquetFile
     {
         return new ParquetFile(
             NativeLocalSourceStream::open(path_real($path)),
@@ -41,13 +45,8 @@ final readonly class Reader
         );
     }
 
-    public function readStream(SourceStream $stream) : ParquetFile
+    public function readStream(SourceStream $stream): ParquetFile
     {
-        return new ParquetFile(
-            $stream,
-            $this->byteOrder,
-            $this->options,
-            $this->engine,
-        );
+        return new ParquetFile($stream, $this->byteOrder, $this->options, $this->engine);
     }
 }

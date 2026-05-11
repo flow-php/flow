@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\PostgreSql\DSL\sql_to_keyset_query;
-use Flow\ETL\Adapter\PostgreSql\Pagination\{Key, KeySet};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
+use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\PostgreSql\DSL\sql_to_keyset_query;
 
 final class PostgreSqlKeySetExtractor implements Extractor
 {
@@ -29,12 +34,10 @@ final class PostgreSqlKeySetExtractor implements Extractor
         private readonly string|Sql $query,
         private readonly KeySet $keySet,
         private readonly array $parameters = [],
-    ) {
-    }
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
-        $uri = 'postgresql://keyset';
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
         $totalFetched = 0;
@@ -79,7 +82,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         }
     }
 
-    public function withMaximum(int $maximum) : self
+    public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
             throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
@@ -90,7 +93,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         return $this;
     }
 
-    public function withPageSize(int $pageSize) : self
+    public function withPageSize(int $pageSize): self
     {
         if ($pageSize <= 0) {
             throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
@@ -101,7 +104,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
@@ -111,7 +114,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
     /**
      * @param null|list<null|bool|float|int|string> $cursorValues
      */
-    private function applyKeysetPagination(string $sql, int $limit, ?array $cursorValues) : string
+    private function applyKeysetPagination(string $sql, int $limit, ?array $cursorValues): string
     {
         return sql_to_keyset_query($sql, $limit, $this->keySet->toKeysetColumns(), $cursorValues);
     }
@@ -121,7 +124,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
      *
      * @return list<bool|float|int|string>
      */
-    private function extractCursorValues(array $row) : array
+    private function extractCursorValues(array $row): array
     {
         $values = [];
 
@@ -131,7 +134,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
             if (!\array_key_exists($columnName, $row)) {
                 throw new RuntimeException(\sprintf(
                     'Column "%s" not found in result row for keyset pagination',
-                    $columnName
+                    $columnName,
                 ));
             }
 
@@ -140,7 +143,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
             if ($value === null) {
                 throw new RuntimeException(\sprintf(
                     'NULL value found in column "%s" for keyset pagination; key columns must be non-null',
-                    $columnName
+                    $columnName,
                 ));
             }
 
@@ -148,7 +151,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
                 throw new RuntimeException(\sprintf(
                     'Unsupported value type "%s" in column "%s" for keyset pagination',
                     \get_debug_type($value),
-                    $columnName
+                    $columnName,
                 ));
             }
 
@@ -158,7 +161,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         return $values;
     }
 
-    private function getColumnName(Key $key) : string
+    private function getColumnName(Key $key): string
     {
         $parts = \explode('.', $key->column);
 

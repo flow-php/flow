@@ -31,10 +31,9 @@ final readonly class PostgreSqlTelemetryOptions
         public bool $includeParameters = false,
         public ?int $maxParameters = 10,
         public ?int $maxParameterLength = 100,
-    ) {
-    }
+    ) {}
 
-    public function collectMetrics(bool $collect = true) : self
+    public function collectMetrics(bool $collect = true): self
     {
         return new self(
             $this->traceQueries,
@@ -48,7 +47,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function includeParameters(bool $include = true) : self
+    public function includeParameters(bool $include = true): self
     {
         return new self(
             $this->traceQueries,
@@ -62,7 +61,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function logQueries(bool $log = true) : self
+    public function logQueries(bool $log = true): self
     {
         return new self(
             $this->traceQueries,
@@ -76,7 +75,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function maxParameterLength(?int $length) : self
+    public function maxParameterLength(?int $length): self
     {
         return new self(
             $this->traceQueries,
@@ -90,7 +89,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function maxParameters(?int $max) : self
+    public function maxParameters(?int $max): self
     {
         return new self(
             $this->traceQueries,
@@ -104,7 +103,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function maxQueryLength(?int $length) : self
+    public function maxQueryLength(?int $length): self
     {
         return new self(
             $this->traceQueries,
@@ -118,7 +117,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function traceQueries(bool $trace = true) : self
+    public function traceQueries(bool $trace = true): self
     {
         return new self(
             $trace,
@@ -132,7 +131,7 @@ final readonly class PostgreSqlTelemetryOptions
         );
     }
 
-    public function traceTransactions(bool $trace = true) : self
+    public function traceTransactions(bool $trace = true): self
     {
         return new self(
             $this->traceQueries,

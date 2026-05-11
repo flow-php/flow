@@ -35,15 +35,14 @@ final readonly class InstrumentationScope
         public string $version = 'unknown',
         public ?string $schemaUrl = null,
         public Attributes $attributes = new Attributes(),
-    ) {
-    }
+    ) {}
 
     /**
      * Create an InstrumentationScope from a normalized array representation.
      *
      * @param array{name: string, version?: string, schemaUrl?: null|string, attributes?: array<string, array<bool|float|int|string>|bool|float|int|string>} $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             $data['name'],
@@ -58,7 +57,7 @@ final readonly class InstrumentationScope
      *
      * @return array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -73,28 +72,18 @@ final readonly class InstrumentationScope
      *
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public function withAttributes(Attributes|array $attributes) : self
+    public function withAttributes(Attributes|array $attributes): self
     {
         $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
 
-        return new self(
-            $this->name,
-            $this->version,
-            $this->schemaUrl,
-            $this->attributes->merge($attrs),
-        );
+        return new self($this->name, $this->version, $this->schemaUrl, $this->attributes->merge($attrs));
     }
 
     /**
      * Create a new scope with a specific schema URL.
      */
-    public function withSchemaUrl(string $schemaUrl) : self
+    public function withSchemaUrl(string $schemaUrl): self
     {
-        return new self(
-            $this->name,
-            $this->version,
-            $schemaUrl,
-            $this->attributes,
-        );
+        return new self($this->name, $this->version, $schemaUrl, $this->attributes);
     }
 }

@@ -5,46 +5,51 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
 use AsyncAws\S3\S3Client;
-use Flow\Filesystem\{Bridge\AsyncAWS\AsyncAWSS3SourceStream\Range, Path, SourceStream};
+use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3SourceStream\Range;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 
 final class AsyncAWSS3SourceStream implements SourceStream
 {
     private ?int $size = null;
 
-    public function __construct(private readonly Path $path, private readonly string $bucket, private readonly S3Client $s3Client)
+    public function __construct(
+        private readonly Path $path,
+        private readonly string $bucket,
+        private readonly S3Client $s3Client,
+    ) {}
+
+    public function close(): void {}
+
+    public function content(): string
     {
+        return $this->s3Client
+            ->getObject([
+                'Bucket' => $this->bucket,
+                'Key' => ltrim($this->path->path(), '/'),
+            ])
+            ->getBody()
+            ->getContentAsString();
     }
 
-    public function close() : void
-    {
-    }
-
-    public function content() : string
-    {
-        return $this->s3Client->getObject([
-            'Bucket' => $this->bucket,
-            'Key' => ltrim($this->path->path(), '/'),
-        ])->getBody()->getContentAsString();
-    }
-
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return true;
     }
 
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         for ($offset = 0; $offset < $this->size(); $offset += $length) {
             yield $this->read($length, $offset);
         }
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }
 
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         $response = $this->s3Client->getObject([
             'Bucket' => $this->bucket,
@@ -55,14 +60,14 @@ final class AsyncAWSS3SourceStream implements SourceStream
         return $response->getBody()->getContentAsString();
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         $offset = 0;
         $content = '';
 
         while ($offset < $this->size()) {
             // Read a chunk of the file
-            $chunk = $this->read($length ?? 1024 * 1024 * 9, $offset);
+            $chunk = $this->read($length ?? (1024 * 1024 * 9), $offset);
             $offset += \strlen($chunk);
             $content .= $chunk;
 
@@ -98,7 +103,7 @@ final class AsyncAWSS3SourceStream implements SourceStream
         }
     }
 
-    public function size() : ?int
+    public function size(): ?int
     {
         if ($this->size === null) {
             $this->size = $this->s3Client->headObject([

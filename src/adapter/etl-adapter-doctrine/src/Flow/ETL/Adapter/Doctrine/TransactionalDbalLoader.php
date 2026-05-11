@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\{Connection, DriverManager, TransactionIsolationLevel};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\TransactionIsolationLevel;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
 
 final class TransactionalDbalLoader implements Loader
 {
@@ -39,17 +43,15 @@ final class TransactionalDbalLoader implements Loader
      * Since Connection::getParams() is marked as an internal method, please
      * use this constructor with caution.
      */
-    public static function fromConnection(
-        Connection $connection,
-        Loader ...$loaders,
-    ) : self {
+    public static function fromConnection(Connection $connection, Loader ...$loaders): self
+    {
         $loader = new self($connection->getParams(), ...$loaders);
         $loader->connection = $connection;
 
         return $loader;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if ($rows->count() === 0) {
             return;
@@ -68,14 +70,14 @@ final class TransactionalDbalLoader implements Loader
         }
     }
 
-    public function withIsolationLevel(TransactionIsolationLevel|int $level) : self
+    public function withIsolationLevel(TransactionIsolationLevel|int $level): self
     {
         $this->isolationLevel = $level;
 
         return $this;
     }
 
-    private function connection() : Connection
+    private function connection(): Connection
     {
         if ($this->connection === null) {
             /** @phpstan-ignore-next-line */
@@ -85,7 +87,7 @@ final class TransactionalDbalLoader implements Loader
         return $this->connection;
     }
 
-    private function executeInTransaction(Connection $connection, Rows $rows, FlowContext $context) : void
+    private function executeInTransaction(Connection $connection, Rows $rows, FlowContext $context): void
     {
         $previousIsolationLevel = null;
 

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 if (!\function_exists('dd')) {
-    function dd(...$args) : void
+    function dd(...$args): void
     {
         try {
             throw new RuntimeException();
@@ -21,7 +21,7 @@ if (!\function_exists('dd')) {
 }
 
 if (!\function_exists('dj')) {
-    function dj(mixed $args, int $indention = 0, ?string $header = null) : void
+    function dj(mixed $args, int $indention = 0, ?string $header = null): void
     {
         if (!\is_array($args)) {
             $args = [$args];
@@ -85,7 +85,7 @@ if (!\function_exists('dj')) {
 }
 
 if (!\function_exists('ddj')) {
-    function ddj(mixed $args, int $indention = 0) : void
+    function ddj(mixed $args, int $indention = 0): void
     {
         try {
             throw new RuntimeException();

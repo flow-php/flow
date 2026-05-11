@@ -7,7 +7,5 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Attribute;
 #[\Attribute(\Attribute::TARGET_CLASS)]
 final readonly class AsCatalogProvider
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 }

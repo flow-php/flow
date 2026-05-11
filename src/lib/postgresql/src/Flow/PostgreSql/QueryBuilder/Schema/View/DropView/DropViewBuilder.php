@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\DropView;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class DropViewBuilder implements DropViewFinalStep
 {
@@ -18,42 +24,29 @@ final readonly class DropViewBuilder implements DropViewFinalStep
         private array $views,
         private bool $ifExists = false,
         private int $behavior = DropBehavior::DROP_BEHAVIOR_UNDEFINED,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$views) : DropViewFinalStep
+    public static function create(string ...$views): DropViewFinalStep
     {
         return new self(\array_values($views));
     }
 
-    public function cascade() : DropViewFinalStep
+    public function cascade(): DropViewFinalStep
     {
-        return new self(
-            $this->views,
-            $this->ifExists,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->views, $this->ifExists, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropViewFinalStep
+    public function ifExists(): DropViewFinalStep
     {
-        return new self(
-            $this->views,
-            true,
-            $this->behavior,
-        );
+        return new self($this->views, true, $this->behavior);
     }
 
-    public function restrict() : DropViewFinalStep
+    public function restrict(): DropViewFinalStep
     {
-        return new self(
-            $this->views,
-            $this->ifExists,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->views, $this->ifExists, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_VIEW);
@@ -77,7 +70,7 @@ final readonly class DropViewBuilder implements DropViewFinalStep
         return $stmt;
     }
 
-    private function createViewListNode(string $view) : Node
+    private function createViewListNode(string $view): Node
     {
         $identifier = QualifiedIdentifier::parse($view);
         $listItems = [];

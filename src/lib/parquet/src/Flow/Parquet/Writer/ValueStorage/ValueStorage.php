@@ -11,13 +11,13 @@ interface ValueStorage
     /**
      * @param array<mixed> $values
      */
-    public function addValues(FlatColumn $column, array $values) : void;
+    public function addValues(FlatColumn $column, array $values): void;
 
-    public function getBuffer() : string;
+    public function getBuffer(): string;
 
-    public function isEmpty() : bool;
+    public function isEmpty(): bool;
 
-    public function reset() : void;
+    public function reset(): void;
 
-    public function size() : int;
+    public function size(): int;
 }

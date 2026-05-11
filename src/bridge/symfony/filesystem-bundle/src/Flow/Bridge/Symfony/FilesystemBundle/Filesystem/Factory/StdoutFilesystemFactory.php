@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory;
 
-use function Flow\Filesystem\DSL\stdout_filesystem;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Filesystem;
 
+use function Flow\Filesystem\DSL\stdout_filesystem;
+
 final class StdoutFilesystemFactory implements FilesystemFactory
 {
-    public function create(string $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config): Filesystem
     {
         if ($config !== []) {
             throw new InvalidArgumentException(\sprintf(
@@ -24,7 +25,7 @@ final class StdoutFilesystemFactory implements FilesystemFactory
         return stdout_filesystem($protocol);
     }
 
-    public function type() : string
+    public function type(): string
     {
         return 'stdout';
     }

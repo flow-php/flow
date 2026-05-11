@@ -29,7 +29,7 @@ use Flow\Telemetry\Resource\ResourceDetector;
  */
 final readonly class OsDetector implements ResourceDetector
 {
-    public function detect() : Resource
+    public function detect(): Resource
     {
         $osType = $this->detectOsType();
 
@@ -60,7 +60,7 @@ final readonly class OsDetector implements ResourceDetector
         return Resource::create($attributes);
     }
 
-    private function detectOsType() : ?string
+    private function detectOsType(): ?string
     {
         return match (PHP_OS_FAMILY) {
             'Darwin' => 'darwin',
@@ -72,7 +72,7 @@ final readonly class OsDetector implements ResourceDetector
         };
     }
 
-    private function determineBsdVariant() : string
+    private function determineBsdVariant(): string
     {
         $os = \strtolower(\php_uname('s'));
 

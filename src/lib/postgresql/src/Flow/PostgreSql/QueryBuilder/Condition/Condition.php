@@ -14,9 +14,9 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
  */
 interface Condition extends Expression
 {
-    public function and(self $other) : AndCondition;
+    public function and(self $other): AndCondition;
 
-    public function not() : NotCondition;
+    public function not(): NotCondition;
 
-    public function or(self $other) : OrCondition;
+    public function or(self $other): OrCondition;
 }

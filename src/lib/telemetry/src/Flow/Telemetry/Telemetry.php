@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry;
 
-use Flow\Telemetry\Logger\{LogProcessor, Logger, LoggerProvider};
-use Flow\Telemetry\Meter\{Meter, MeterProvider, MetricProcessor};
-use Flow\Telemetry\Tracer\{SpanProcessor, Tracer, TracerProvider};
+use Flow\Telemetry\Logger\Logger;
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Meter\Meter;
+use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Telemetry\Meter\MetricProcessor;
+use Flow\Telemetry\Tracer\SpanProcessor;
+use Flow\Telemetry\Tracer\Tracer;
+use Flow\Telemetry\Tracer\TracerProvider;
 
 /**
  * Main entry point to all telemetry operations.
@@ -41,8 +47,7 @@ final class Telemetry
         private readonly TracerProvider $tracerProvider,
         private readonly MeterProvider $meterProvider,
         private readonly LoggerProvider $loggerProvider,
-    ) {
-    }
+    ) {}
 
     /**
      * Flush all pending telemetry data.
@@ -50,7 +55,7 @@ final class Telemetry
      * Flushes all cached tracers, meters, and loggers.
      * Returns true only if all flush operations succeed.
      */
-    public function flush() : bool
+    public function flush(): bool
     {
         $success = true;
 
@@ -80,12 +85,22 @@ final class Telemetry
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
      */
-    public function logger(string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Logger
-    {
+    public function logger(
+        string $name,
+        string $version = 'unknown',
+        ?string $schemaUrl = null,
+        ?Attributes $attributes = null,
+    ): Logger {
         $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
         if (!\array_key_exists($key, $this->loggers)) {
-            $this->loggers[$key] = $this->loggerProvider->logger($this->resource, $name, $version, $schemaUrl, $attributes);
+            $this->loggers[$key] = $this->loggerProvider->logger(
+                $this->resource,
+                $name,
+                $version,
+                $schemaUrl,
+                $attributes,
+            );
         }
 
         return $this->loggers[$key];
@@ -102,12 +117,22 @@ final class Telemetry
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
      */
-    public function meter(string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Meter
-    {
+    public function meter(
+        string $name,
+        string $version = 'unknown',
+        ?string $schemaUrl = null,
+        ?Attributes $attributes = null,
+    ): Meter {
         $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
         if (!\array_key_exists($key, $this->meters)) {
-            $this->meters[$key] = $this->meterProvider->meter($this->resource, $name, $version, $schemaUrl, $attributes);
+            $this->meters[$key] = $this->meterProvider->meter(
+                $this->resource,
+                $name,
+                $version,
+                $schemaUrl,
+                $attributes,
+            );
         }
 
         return $this->meters[$key];
@@ -122,9 +147,9 @@ final class Telemetry
      *
      * @return $this For method chaining
      */
-    public function registerShutdownFunction() : self
+    public function registerShutdownFunction(): self
     {
-        \register_shutdown_function(fn () => $this->shutdown());
+        \register_shutdown_function(fn() => $this->shutdown());
 
         return $this;
     }
@@ -136,7 +161,7 @@ final class Telemetry
      * Transport shutdown is idempotent, allowing multiple exporters
      * to share the same transport safely.
      */
-    public function shutdown() : bool
+    public function shutdown(): bool
     {
         $flushed = $this->flush();
 
@@ -173,12 +198,22 @@ final class Telemetry
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
      */
-    public function tracer(string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Tracer
-    {
+    public function tracer(
+        string $name,
+        string $version = 'unknown',
+        ?string $schemaUrl = null,
+        ?Attributes $attributes = null,
+    ): Tracer {
         $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
         if (!\array_key_exists($key, $this->tracers)) {
-            $this->tracers[$key] = $this->tracerProvider->tracer($this->resource, $name, $version, $schemaUrl, $attributes);
+            $this->tracers[$key] = $this->tracerProvider->tracer(
+                $this->resource,
+                $name,
+                $version,
+                $schemaUrl,
+                $attributes,
+            );
         }
 
         return $this->tracers[$key];

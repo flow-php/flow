@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
-use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
-use function Flow\Types\DSL\type_string;
 use AsyncAws\S3\S3Client;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
 
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
+use function Flow\Types\DSL\type_string;
+
 abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
 {
     #[\Override]
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -32,7 +33,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
     }
 
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         parent::tearDown();
 
@@ -48,12 +49,12 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         }
     }
 
-    public function bucket() : string
+    public function bucket(): string
     {
         return type_string()->assert($_ENV['S3_BUCKET']);
     }
 
-    public function s3Client() : S3Client
+    public function s3Client(): S3Client
     {
         return aws_s3_client([
             'pathStyleEndpoint' => true,
@@ -64,7 +65,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         ]);
     }
 
-    protected function givenFileExists(Path $path, string $content) : void
+    protected function givenFileExists(Path $path, string $content): void
     {
         $this->s3Client()->putObject([
             'Bucket' => $this->bucket(),
@@ -73,7 +74,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         ]);
     }
 
-    private function deleteBucketContents(S3Client $s3Client, string $bucket) : void
+    private function deleteBucketContents(S3Client $s3Client, string $bucket): void
     {
         $objects = $s3Client->listObjectsV2(['Bucket' => $bucket]);
 

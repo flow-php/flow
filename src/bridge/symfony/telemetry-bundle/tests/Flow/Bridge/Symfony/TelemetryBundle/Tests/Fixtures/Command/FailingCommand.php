@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'test:failing', description: 'A failing test command for telemetry')]
 final class FailingCommand extends Command
 {
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         return Command::FAILURE;
     }

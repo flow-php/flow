@@ -14,7 +14,7 @@ final class StubLogger extends AbstractLogger
     /**
      * @param array<array-key, mixed> $context
      */
-    public function log($level, string|\Stringable $message, array $context = []) : void
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         $this->records[] = [
             'level' => $level,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Exception;
 
-enum PostgreSqlErrorCategory : string
+enum PostgreSqlErrorCategory: string
 {
     case CARDINALITY_VIOLATION = '21';
     case CASE_NOT_FOUND = '20';
@@ -51,7 +51,7 @@ enum PostgreSqlErrorCategory : string
     case WARNING = '01';
     case WITH_CHECK_OPTION_VIOLATION = '44';
 
-    public static function fromSqlState(string $sqlState) : self
+    public static function fromSqlState(string $sqlState): self
     {
         if (\strlen($sqlState) < 2) {
             return self::UNKNOWN;
@@ -62,7 +62,7 @@ enum PostgreSqlErrorCategory : string
         return self::tryFrom($class) ?? self::UNKNOWN;
     }
 
-    public function isRecoverable() : bool
+    public function isRecoverable(): bool
     {
         return match ($this) {
             self::TRANSACTION_ROLLBACK => true,
@@ -70,7 +70,7 @@ enum PostgreSqlErrorCategory : string
         };
     }
 
-    public function safeMessage() : string
+    public function safeMessage(): string
     {
         return match ($this) {
             self::SUCCESSFUL_COMPLETION => 'Operation completed successfully',

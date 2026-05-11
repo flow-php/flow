@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, DefElem, Integer, Node, PBString, TransactionStmt, TransactionStmtKind};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
+use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class BeginBuilder implements BeginOptionsStep
@@ -15,60 +21,39 @@ final readonly class BeginBuilder implements BeginOptionsStep
         private ?IsolationLevel $isolationLevel = null,
         private ?bool $readOnly = null,
         private ?bool $deferrable = null,
-    ) {
-    }
+    ) {}
 
-    public static function create() : BeginOptionsStep
+    public static function create(): BeginOptionsStep
     {
         return new self();
     }
 
-    public function deferrable() : BeginOptionsStep
+    public function deferrable(): BeginOptionsStep
     {
-        return new self(
-            $this->isolationLevel,
-            $this->readOnly,
-            true,
-        );
+        return new self($this->isolationLevel, $this->readOnly, true);
     }
 
-    public function isolationLevel(IsolationLevel $level) : BeginOptionsStep
+    public function isolationLevel(IsolationLevel $level): BeginOptionsStep
     {
-        return new self(
-            $level,
-            $this->readOnly,
-            $this->deferrable,
-        );
+        return new self($level, $this->readOnly, $this->deferrable);
     }
 
-    public function notDeferrable() : BeginOptionsStep
+    public function notDeferrable(): BeginOptionsStep
     {
-        return new self(
-            $this->isolationLevel,
-            $this->readOnly,
-            false,
-        );
+        return new self($this->isolationLevel, $this->readOnly, false);
     }
 
-    public function readOnly() : BeginOptionsStep
+    public function readOnly(): BeginOptionsStep
     {
-        return new self(
-            $this->isolationLevel,
-            true,
-            $this->deferrable,
-        );
+        return new self($this->isolationLevel, true, $this->deferrable);
     }
 
-    public function readWrite() : BeginOptionsStep
+    public function readWrite(): BeginOptionsStep
     {
-        return new self(
-            $this->isolationLevel,
-            false,
-            $this->deferrable,
-        );
+        return new self($this->isolationLevel, false, $this->deferrable);
     }
 
-    public function toAst() : TransactionStmt
+    public function toAst(): TransactionStmt
     {
         $stmt = new TransactionStmt();
         $stmt->setKind(TransactionStmtKind::TRANS_STMT_BEGIN);
@@ -85,7 +70,7 @@ final readonly class BeginBuilder implements BeginOptionsStep
     /**
      * @return list<Node>
      */
-    private function buildOptions() : array
+    private function buildOptions(): array
     {
         $options = [];
 
@@ -104,7 +89,7 @@ final readonly class BeginBuilder implements BeginOptionsStep
         return $options;
     }
 
-    private function createBoolOption(string $name, bool $value) : Node
+    private function createBoolOption(string $name, bool $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -125,7 +110,7 @@ final readonly class BeginBuilder implements BeginOptionsStep
         return $node;
     }
 
-    private function createIsolationLevelOption(IsolationLevel $level) : Node
+    private function createIsolationLevelOption(IsolationLevel $level): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname('transaction_isolation');

@@ -11,7 +11,7 @@ final class RetriesRecord implements \Countable
      */
     private array $attempts = [];
 
-    public function add(FailedRetry $attempt) : void
+    public function add(FailedRetry $attempt): void
     {
         $this->attempts[] = $attempt;
     }
@@ -19,17 +19,17 @@ final class RetriesRecord implements \Countable
     /**
      * @return array<FailedRetry>
      */
-    public function attempts() : array
+    public function attempts(): array
     {
         return $this->attempts;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->attempts);
     }
 
-    public function last() : ?FailedRetry
+    public function last(): ?FailedRetry
     {
         if ($this->attempts === []) {
             return null;

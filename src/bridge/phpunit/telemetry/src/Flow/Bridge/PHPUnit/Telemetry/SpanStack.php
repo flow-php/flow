@@ -25,7 +25,7 @@ final class SpanStack
         $this->stack = $stack;
     }
 
-    public function clear() : void
+    public function clear(): void
     {
         /** @var \SplStack<Span> $stack */
         $stack = new \SplStack();
@@ -33,7 +33,7 @@ final class SpanStack
         $this->suiteSpans = [];
     }
 
-    public function current() : ?Span
+    public function current(): ?Span
     {
         if ($this->stack->isEmpty()) {
             return null;
@@ -42,17 +42,17 @@ final class SpanStack
         return $this->stack->top();
     }
 
-    public function getSuiteSpan(string $suiteName) : ?Span
+    public function getSuiteSpan(string $suiteName): ?Span
     {
         return $this->suiteSpans[$suiteName] ?? null;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->stack->isEmpty();
     }
 
-    public function pop() : ?Span
+    public function pop(): ?Span
     {
         if ($this->stack->isEmpty()) {
             return null;
@@ -61,17 +61,17 @@ final class SpanStack
         return $this->stack->pop();
     }
 
-    public function push(Span $span) : void
+    public function push(Span $span): void
     {
         $this->stack->push($span);
     }
 
-    public function removeSuiteSpan(string $suiteName) : void
+    public function removeSuiteSpan(string $suiteName): void
     {
         unset($this->suiteSpans[$suiteName]);
     }
 
-    public function setSuiteSpan(string $suiteName, Span $span) : void
+    public function setSuiteSpan(string $suiteName, Span $span): void
     {
         $this->suiteSpans[$suiteName] = $span;
     }

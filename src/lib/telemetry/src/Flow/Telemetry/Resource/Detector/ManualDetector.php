@@ -39,10 +39,9 @@ final readonly class ManualDetector implements ResourceDetector
      */
     public function __construct(
         private array $attributes = [],
-    ) {
-    }
+    ) {}
 
-    public function detect() : Resource
+    public function detect(): Resource
     {
         return Resource::create($this->attributes);
     }

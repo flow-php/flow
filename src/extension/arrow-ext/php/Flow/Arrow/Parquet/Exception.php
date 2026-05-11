@@ -8,6 +8,4 @@ if (\extension_loaded('arrow')) {
     return;
 }
 
-final class Exception extends \Exception
-{
-}
+final class Exception extends \Exception {}

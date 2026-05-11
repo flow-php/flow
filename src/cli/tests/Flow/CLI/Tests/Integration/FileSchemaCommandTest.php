@@ -12,7 +12,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 final class FileSchemaCommandTest extends TestCase
 {
     use CommandOutputNormalizer;
-    public function test_run_schema() : void
+
+    public function test_run_schema(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -20,16 +21,13 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-[{"ref":"order_id","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"string"},"nullable":false,"metadata":[]}]
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            [{"ref":"order_id","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"string"},"nullable":false,"metadata":[]}]
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_as_ascii() : void
+    public function test_run_schema_as_ascii(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -37,23 +35,20 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-schema
-|-- order_id: string
-|-- created_at: string
-|-- updated_at: string
-|-- discount: ?string
-|-- address: string
-|-- notes: string
-|-- items: string
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- order_id: string
+            |-- created_at: string
+            |-- updated_at: string
+            |-- discount: ?string
+            |-- address: string
+            |-- notes: string
+            |-- items: string
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_large_offset() : void
+    public function test_run_schema_with_large_offset(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -69,7 +64,7 @@ OUTPUT,
         self::assertCommandOutputIdentical("schema\n\n", $tester->getDisplay());
     }
 
-    public function test_run_schema_with_offset() : void
+    public function test_run_schema_with_offset(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -82,23 +77,20 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // Schema should be the same regardless of offset since schema is inferred from structure
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-schema
-|-- order_id: string
-|-- created_at: string
-|-- updated_at: string
-|-- discount: ?string
-|-- address: string
-|-- notes: string
-|-- items: string
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- order_id: string
+            |-- created_at: string
+            |-- updated_at: string
+            |-- discount: ?string
+            |-- address: string
+            |-- notes: string
+            |-- items: string
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_offset_and_limit() : void
+    public function test_run_schema_with_offset_and_limit(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -112,27 +104,24 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // Schema should be the same even with offset and limit
-        self::assertCommandOutputEquals(
-            <<<'OUTPUT'
-+------------+--------+----------+----------+
-|       name |   type | nullable | metadata |
-+------------+--------+----------+----------+
-|   order_id | string |    false |       [] |
-| created_at | string |    false |       [] |
-| updated_at | string |    false |       [] |
-|   discount | string |    false |       [] |
-|    address | string |    false |       [] |
-|      notes | string |    false |       [] |
-|      items | string |    false |       [] |
-+------------+--------+----------+----------+
-7 rows
+        self::assertCommandOutputEquals(<<<'OUTPUT'
+            +------------+--------+----------+----------+
+            |       name |   type | nullable | metadata |
+            +------------+--------+----------+----------+
+            |   order_id | string |    false |       [] |
+            | created_at | string |    false |       [] |
+            | updated_at | string |    false |       [] |
+            |   discount | string |    false |       [] |
+            |    address | string |    false |       [] |
+            |      notes | string |    false |       [] |
+            |      items | string |    false |       [] |
+            +------------+--------+----------+----------+
+            7 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_php_output() : void
+    public function test_run_schema_with_php_output(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -140,24 +129,21 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-\Flow\ETL\DSL\schema(
-    \Flow\ETL\DSL\string_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\string_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\string_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\string_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\string_schema("address", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\string_schema("notes", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\string_schema("items", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-);
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            \Flow\ETL\DSL\schema(
+                \Flow\ETL\DSL\string_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\string_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\string_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\string_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\string_schema("address", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\string_schema("notes", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+                \Flow\ETL\DSL\string_schema("items", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+            );
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_pretty_output() : void
+    public function test_run_schema_with_pretty_output(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -165,73 +151,70 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-[
-    {
-        "ref": "order_id",
-        "type": {
-            "type": "string"
-        },
-        "nullable": false,
-        "metadata": []
-    },
-    {
-        "ref": "created_at",
-        "type": {
-            "type": "string"
-        },
-        "nullable": false,
-        "metadata": []
-    },
-    {
-        "ref": "updated_at",
-        "type": {
-            "type": "string"
-        },
-        "nullable": false,
-        "metadata": []
-    },
-    {
-        "ref": "discount",
-        "type": {
-            "type": "string"
-        },
-        "nullable": true,
-        "metadata": []
-    },
-    {
-        "ref": "address",
-        "type": {
-            "type": "string"
-        },
-        "nullable": false,
-        "metadata": []
-    },
-    {
-        "ref": "notes",
-        "type": {
-            "type": "string"
-        },
-        "nullable": false,
-        "metadata": []
-    },
-    {
-        "ref": "items",
-        "type": {
-            "type": "string"
-        },
-        "nullable": false,
-        "metadata": []
-    }
-]
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            [
+                {
+                    "ref": "order_id",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": false,
+                    "metadata": []
+                },
+                {
+                    "ref": "created_at",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": false,
+                    "metadata": []
+                },
+                {
+                    "ref": "updated_at",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": false,
+                    "metadata": []
+                },
+                {
+                    "ref": "discount",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": true,
+                    "metadata": []
+                },
+                {
+                    "ref": "address",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": false,
+                    "metadata": []
+                },
+                {
+                    "ref": "notes",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": false,
+                    "metadata": []
+                },
+                {
+                    "ref": "items",
+                    "type": {
+                        "type": "string"
+                    },
+                    "nullable": false,
+                    "metadata": []
+                }
+            ]
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output() : void
+    public function test_run_schema_with_table_output(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -239,83 +222,83 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputEquals(
-            <<<'OUTPUT'
-+------------+--------+----------+----------+
-|       name |   type | nullable | metadata |
-+------------+--------+----------+----------+
-|   order_id | string |    false |       [] |
-| created_at | string |    false |       [] |
-| updated_at | string |    false |       [] |
-|   discount | string |     true |       [] |
-|    address | string |    false |       [] |
-|      notes | string |    false |       [] |
-|      items | string |    false |       [] |
-+------------+--------+----------+----------+
-7 rows
+        self::assertCommandOutputEquals(<<<'OUTPUT'
+            +------------+--------+----------+----------+
+            |       name |   type | nullable | metadata |
+            +------------+--------+----------+----------+
+            |   order_id | string |    false |       [] |
+            | created_at | string |    false |       [] |
+            | updated_at | string |    false |       [] |
+            |   discount | string |     true |       [] |
+            |    address | string |    false |       [] |
+            |      notes | string |    false |       [] |
+            |      items | string |    false |       [] |
+            +------------+--------+----------+----------+
+            7 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_and_auto_cast() : void
+    public function test_run_schema_with_table_output_and_auto_cast(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true]);
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--output-table' => true,
+            '--schema-auto-cast' => true,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-+------------+----------+----------+----------+
-|       name |     type | nullable | metadata |
-+------------+----------+----------+----------+
-|   order_id |     uuid |    false |       [] |
-| created_at | datetime |    false |       [] |
-| updated_at | datetime |    false |       [] |
-|   discount |    float |     true |       [] |
-|    address |     json |    false |       [] |
-|      notes |     json |    false |       [] |
-|      items |     json |    false |       [] |
-+------------+----------+----------+----------+
-7 rows
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +------------+----------+----------+----------+
+            |       name |     type | nullable | metadata |
+            +------------+----------+----------+----------+
+            |   order_id |     uuid |    false |       [] |
+            | created_at | datetime |    false |       [] |
+            | updated_at | datetime |    false |       [] |
+            |   discount |    float |     true |       [] |
+            |    address |     json |    false |       [] |
+            |      notes |     json |    false |       [] |
+            |      items |     json |    false |       [] |
+            +------------+----------+----------+----------+
+            7 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_and_limit_5() : void
+    public function test_run_schema_with_table_output_and_limit_5(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--output-table' => true,
+            '--schema-auto-cast' => true,
+            '--input-file-limit' => 5,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-+------------+----------+----------+----------+
-|       name |     type | nullable | metadata |
-+------------+----------+----------+----------+
-|   order_id |     uuid |    false |       [] |
-| created_at | datetime |    false |       [] |
-| updated_at | datetime |    false |       [] |
-|   discount |    float |     true |       [] |
-|    address |     json |    false |       [] |
-|      notes |     json |    false |       [] |
-|      items |     json |    false |       [] |
-+------------+----------+----------+----------+
-7 rows
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +------------+----------+----------+----------+
+            |       name |     type | nullable | metadata |
+            +------------+----------+----------+----------+
+            |   order_id |     uuid |    false |       [] |
+            | created_at | datetime |    false |       [] |
+            | updated_at | datetime |    false |       [] |
+            |   discount |    float |     true |       [] |
+            |    address |     json |    false |       [] |
+            |      notes |     json |    false |       [] |
+            |      items |     json |    false |       [] |
+            +------------+----------+----------+----------+
+            7 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_on_excel() : void
+    public function test_run_schema_with_table_output_on_excel(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -323,131 +306,136 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputEquals(
-            <<<'OUTPUT'
-+------------+--------+----------+----------+
-|       name |   type | nullable | metadata |
-+------------+--------+----------+----------+
-|   order_id | string |    false |       [] |
-| created_at | string |    false |       [] |
-| updated_at | string |    false |       [] |
-|   discount | string |     true |       [] |
-|    address | string |    false |       [] |
-|      notes | string |    false |       [] |
-|      items | string |    false |       [] |
-+------------+--------+----------+----------+
-7 rows
+        self::assertCommandOutputEquals(<<<'OUTPUT'
+            +------------+--------+----------+----------+
+            |       name |   type | nullable | metadata |
+            +------------+--------+----------+----------+
+            |   order_id | string |    false |       [] |
+            | created_at | string |    false |       [] |
+            | updated_at | string |    false |       [] |
+            |   discount | string |     true |       [] |
+            |    address | string |    false |       [] |
+            |      notes | string |    false |       [] |
+            |      items | string |    false |       [] |
+            +------------+--------+----------+----------+
+            7 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_on_json() : void
+    public function test_run_schema_with_table_output_on_json(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.json', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.json',
+            '--output-table' => true,
+            '--schema-auto-cast' => true,
+            '--input-file-limit' => 5,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-+--------------+-----------+----------+--------------------+
-|         name |      type | nullable |           metadata |
-+--------------+-----------+----------+--------------------+
-|     order_id |      uuid |    false |                 [] |
-|   created_at |  datetime |    false |                 [] |
-|   updated_at |  datetime |    false |                 [] |
-| cancelled_at |    string |     true | {"from_null":true} |
-|  total_price |     float |    false |                 [] |
-|     discount |     float |    false |                 [] |
-|     customer | structure |    false |                 [] |
-|      address | structure |    false |                 [] |
-|        notes |      list |    false |                 [] |
-+--------------+-----------+----------+--------------------+
-9 rows
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +--------------+-----------+----------+--------------------+
+            |         name |      type | nullable |           metadata |
+            +--------------+-----------+----------+--------------------+
+            |     order_id |      uuid |    false |                 [] |
+            |   created_at |  datetime |    false |                 [] |
+            |   updated_at |  datetime |    false |                 [] |
+            | cancelled_at |    string |     true | {"from_null":true} |
+            |  total_price |     float |    false |                 [] |
+            |     discount |     float |    false |                 [] |
+            |     customer | structure |    false |                 [] |
+            |      address | structure |    false |                 [] |
+            |        notes |      list |    false |                 [] |
+            +--------------+-----------+----------+--------------------+
+            9 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_on_parquet() : void
+    public function test_run_schema_with_table_output_on_parquet(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.parquet', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.parquet',
+            '--output-table' => true,
+            '--schema-auto-cast' => true,
+            '--input-file-limit' => 5,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-+------------+----------+----------+----------+
-|       name |     type | nullable | metadata |
-+------------+----------+----------+----------+
-|   order_id |     uuid |    false |       [] |
-| created_at | datetime |    false |       [] |
-| updated_at | datetime |     true |       [] |
-|   discount |    float |     true |       [] |
-|      email |   string |    false |       [] |
-|   customer |   string |    false |       [] |
-|    address |      map |    false |       [] |
-|      notes |     list |    false |       [] |
-|      items |     list |    false |       [] |
-+------------+----------+----------+----------+
-9 rows
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +------------+----------+----------+----------+
+            |       name |     type | nullable | metadata |
+            +------------+----------+----------+----------+
+            |   order_id |     uuid |    false |       [] |
+            | created_at | datetime |    false |       [] |
+            | updated_at | datetime |     true |       [] |
+            |   discount |    float |     true |       [] |
+            |      email |   string |    false |       [] |
+            |   customer |   string |    false |       [] |
+            |    address |      map |    false |       [] |
+            |      notes |     list |    false |       [] |
+            |      items |     list |    false |       [] |
+            +------------+----------+----------+----------+
+            9 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_on_txt() : void
+    public function test_run_schema_with_table_output_on_txt(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.txt', '--output-table' => true, '--schema-auto-cast' => true]);
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.txt',
+            '--output-table' => true,
+            '--schema-auto-cast' => true,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-+------+--------+----------+----------+
-| name |   type | nullable | metadata |
-+------+--------+----------+----------+
-| text | string |    false |       [] |
-+------+--------+----------+----------+
-1 rows
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +------+--------+----------+----------+
+            | name |   type | nullable | metadata |
+            +------+--------+----------+----------+
+            | text | string |    false |       [] |
+            +------+--------+----------+----------+
+            1 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_table_output_on_xml() : void
+    public function test_run_schema_with_table_output_on_xml(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xml', '--input-xml-node-path' => 'root/row', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.xml',
+            '--input-xml-node-path' => 'root/row',
+            '--output-table' => true,
+            '--schema-auto-cast' => true,
+            '--input-file-limit' => 5,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-+------+------+----------+----------+
-| name | type | nullable | metadata |
-+------+------+----------+----------+
-| node |  xml |    false |       [] |
-+------+------+----------+----------+
-1 rows
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +------+------+----------+----------+
+            | name | type | nullable | metadata |
+            +------+------+----------+----------+
+            | node |  xml |    false |       [] |
+            +------+------+----------+----------+
+            1 rows
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_schema_with_zero_offset() : void
+    public function test_run_schema_with_zero_offset(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
@@ -460,19 +448,16 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // Zero offset should behave same as no offset
-        self::assertCommandOutputIdentical(
-            <<<'OUTPUT'
-schema
-|-- order_id: string
-|-- created_at: string
-|-- updated_at: string
-|-- discount: ?string
-|-- address: string
-|-- notes: string
-|-- items: string
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            schema
+            |-- order_id: string
+            |-- created_at: string
+            |-- updated_at: string
+            |-- discount: ?string
+            |-- address: string
+            |-- notes: string
+            |-- items: string
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 }

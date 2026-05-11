@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 /**
@@ -12,7 +13,7 @@ use Flow\Types\Type;
  */
 final readonly class DateTimeType implements Type
 {
-    public function assert(mixed $value) : \DateTimeInterface
+    public function assert(mixed $value): \DateTimeInterface
     {
         if ($this->isValid($value)) {
             return $value;
@@ -21,7 +22,7 @@ final readonly class DateTimeType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : \DateTimeInterface
+    public function cast(mixed $value): \DateTimeInterface
     {
         if ($value instanceof \DateTimeImmutable) {
             return $value;
@@ -51,7 +52,6 @@ final readonly class DateTimeType implements Type
 
             if ($value instanceof \DateInterval) {
                 return (new \DateTimeImmutable('@0'))->add($value);
-
             }
         } catch (\Throwable) {
             throw new CastingException($value, $this);
@@ -60,19 +60,19 @@ final readonly class DateTimeType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DateTimeInterface;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'datetime',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'datetime';
     }

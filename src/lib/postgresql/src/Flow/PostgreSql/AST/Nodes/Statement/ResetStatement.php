@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
 
 /**
@@ -19,10 +20,9 @@ final readonly class ResetStatement implements Statement
 
     public function __construct(
         private VariableSetStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : VariableSetStmt
+    public function raw(): VariableSetStmt
     {
         return $this->stmt;
     }

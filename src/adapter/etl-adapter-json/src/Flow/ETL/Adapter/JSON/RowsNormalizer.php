@@ -9,15 +9,14 @@ use Flow\ETL\Rows;
 
 final readonly class RowsNormalizer
 {
-    public function __construct(private EntryNormalizer $normalizer)
-    {
-
-    }
+    public function __construct(
+        private EntryNormalizer $normalizer,
+    ) {}
 
     /**
      * @return \Generator<array<string, null|array<string, mixed>|bool|float|int|string>>
      */
-    public function normalize(Rows $rows) : \Generator
+    public function normalize(Rows $rows): \Generator
     {
         foreach ($rows as $row) {
             $normalizedRow = [];

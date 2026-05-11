@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 
 final class Coalesce extends ScalarFunctionChain
 {
@@ -13,13 +14,12 @@ final class Coalesce extends ScalarFunctionChain
      */
     private readonly array $values;
 
-    public function __construct(
-        ScalarFunction ...$values,
-    ) {
+    public function __construct(ScalarFunction ...$values)
+    {
         $this->values = $values;
     }
 
-    public function eval(Row $row, FlowContext $context) : mixed
+    public function eval(Row $row, FlowContext $context): mixed
     {
         foreach ($this->values as $value) {
             try {

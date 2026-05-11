@@ -10,5 +10,5 @@ if (\extension_loaded('arrow')) {
 
 interface OutputStream
 {
-    public function append(string $data) : self;
+    public function append(string $data): self;
 }

@@ -11,7 +11,7 @@ final class MissingExtensionException extends Exception
         parent::__construct(
             \sprintf('Missing extension %s, please check available extensions using CLI command `php -m` ', $extension),
             $code,
-            $previous
+            $previous,
         );
     }
 }

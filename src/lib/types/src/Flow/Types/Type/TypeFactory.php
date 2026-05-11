@@ -4,34 +4,43 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array,
-    type_boolean,
-    type_callable,
-    type_date,
-    type_datetime,
-    type_float,
-    type_html,
-    type_html_element,
-    type_integer,
-    type_json,
-    type_mixed,
-    type_non_empty_string,
-    type_null,
-    type_numeric_string,
-    type_object,
-    type_positive_integer,
-    type_resource,
-    type_scalar,
-    type_string,
-    type_time,
-    type_time_zone,
-    type_uuid,
-    type_xml,
-    type_xml_element};
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{ClassStringType, InstanceOfType, ListType, LiteralType, MapType, OptionalType, StructureType};
-use Flow\Types\Type\Native\{EnumType, IntersectionType, UnionType};
+use Flow\Types\Type\Logical\ClassStringType;
+use Flow\Types\Type\Logical\InstanceOfType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\LiteralType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Native\IntersectionType;
+use Flow\Types\Type\Native\UnionType;
+
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_callable;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_html_element;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_non_empty_string;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_numeric_string;
+use function Flow\Types\DSL\type_object;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_resource;
+use function Flow\Types\DSL\type_scalar;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
+use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_xml_element;
 
 final class TypeFactory
 {
@@ -40,7 +49,7 @@ final class TypeFactory
      *
      * @return Type<mixed>
      */
-    public static function fromArray(array $data) : Type
+    public static function fromArray(array $data): Type
     {
         type_array()->assert($data);
 
@@ -85,7 +94,9 @@ final class TypeFactory
             'numeric-string' => type_numeric_string(),
             'html' => type_html(),
             'html_element' => type_html_element(),
-            default => throw new InvalidArgumentException("Unknown type '" . (\is_string($data['type']) ? $data['type'] : \gettype($data['type'])) . "'"),
+            default => throw new InvalidArgumentException(
+                "Unknown type '" . (\is_string($data['type']) ? $data['type'] : \gettype($data['type'])) . "'",
+            ),
         };
     }
 
@@ -94,13 +105,13 @@ final class TypeFactory
      *
      * @return Type<mixed>
      */
-    public static function fromString(string $name) : Type
+    public static function fromString(string $name): Type
     {
         return match (\mb_strtolower($name)) {
-            'int','integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
+            'int', 'integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
             'float' => self::fromArray(['type' => 'float', 'scalar_type' => 'float']),
             'string' => self::fromArray(['type' => 'string', 'scalar_type' => 'string']),
-            'bool','boolean' => self::fromArray(['type' => 'boolean', 'scalar_type' => 'boolean']),
+            'bool', 'boolean' => self::fromArray(['type' => 'boolean', 'scalar_type' => 'boolean']),
             default => self::fromArray(['type' => $name]),
         };
     }

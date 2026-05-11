@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Row, Rows};
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
 
 final readonly class Body
 {
-    public function __construct(private Rows $rows)
-    {
-    }
+    public function __construct(
+        private Rows $rows,
+    ) {}
 
-    public function maximumLength(string $entry, int|bool $truncate = 20) : int
+    public function maximumLength(string $entry, int|bool $truncate = 20): int
     {
         $max = 0;
 
@@ -35,7 +36,7 @@ final readonly class Body
     /**
      * @return array<Partition>
      */
-    public function partitions() : array
+    public function partitions(): array
     {
         return $this->rows->partitions()->toArray();
     }
@@ -43,7 +44,7 @@ final readonly class Body
     /**
      * @return array<Row>
      */
-    public function rows() : array
+    public function rows(): array
     {
         $rows = [];
 

@@ -8,6 +8,4 @@ use Flow\Bridge\PHPUnit\PostgreSQL\SkipTransactionRollback;
 use PHPUnit\Framework\TestCase;
 
 #[SkipTransactionRollback]
-abstract class AbstractSkippedTestCase extends TestCase
-{
-}
+abstract class AbstractSkippedTestCase extends TestCase {}

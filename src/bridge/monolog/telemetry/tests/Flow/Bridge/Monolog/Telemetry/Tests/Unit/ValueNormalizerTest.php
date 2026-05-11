@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
 use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
-use PHPUnit\Framework\Attributes\{CoversClass, DataProvider};
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(ValueNormalizer::class)]
@@ -14,7 +15,7 @@ final class ValueNormalizerTest extends TestCase
     /**
      * @return \Generator<string, array{mixed, mixed}>
      */
-    public static function scalarValuesProvider() : \Generator
+    public static function scalarValuesProvider(): \Generator
     {
         yield 'string' => ['hello', 'hello'];
         yield 'empty string' => ['', ''];
@@ -26,7 +27,7 @@ final class ValueNormalizerTest extends TestCase
         yield 'boolean false' => [false, false];
     }
 
-    public function test_normalizes_anonymous_class_without_to_string() : void
+    public function test_normalizes_anonymous_class_without_to_string(): void
     {
         $normalizer = new ValueNormalizer();
         $object = new class {
@@ -35,11 +36,11 @@ final class ValueNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($object);
 
-        self::assertIsString($result);
-        self::assertStringContainsString('class@anonymous', $result);
+        static::assertIsString($result);
+        static::assertStringContainsString('class@anonymous', $result);
     }
 
-    public function test_normalizes_array_recursively() : void
+    public function test_normalizes_array_recursively(): void
     {
         $normalizer = new ValueNormalizer();
         $input = [
@@ -50,13 +51,13 @@ final class ValueNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($input);
 
-        self::assertIsArray($result);
-        self::assertSame('John', $result['name']);
-        self::assertSame(30, $result['age']);
-        self::assertTrue($result['active']);
+        static::assertIsArray($result);
+        static::assertSame('John', $result['name']);
+        static::assertSame(30, $result['age']);
+        static::assertTrue($result['active']);
     }
 
-    public function test_normalizes_array_with_null_values() : void
+    public function test_normalizes_array_with_null_values(): void
     {
         $normalizer = new ValueNormalizer();
         $input = [
@@ -66,16 +67,16 @@ final class ValueNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($input);
 
-        self::assertIsArray($result);
-        self::assertSame('null', $result['value']);
-        self::assertSame('test', $result['other']);
+        static::assertIsArray($result);
+        static::assertSame('null', $result['value']);
+        static::assertSame('test', $result['other']);
     }
 
-    public function test_normalizes_array_with_objects() : void
+    public function test_normalizes_array_with_objects(): void
     {
         $normalizer = new ValueNormalizer();
         $object = new class {
-            public function __toString() : string
+            public function __toString(): string
             {
                 return 'stringified';
             }
@@ -88,48 +89,48 @@ final class ValueNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($input);
 
-        self::assertIsArray($result);
-        self::assertSame('stringified', $result['obj']);
-        self::assertSame('stdClass', $result['std']);
+        static::assertIsArray($result);
+        static::assertSame('stringified', $result['obj']);
+        static::assertSame('stdClass', $result['std']);
     }
 
-    public function test_normalizes_closed_resource_to_debug_type() : void
+    public function test_normalizes_closed_resource_to_debug_type(): void
     {
         $normalizer = new ValueNormalizer();
         $resource = \fopen('php://memory', 'rb');
-        self::assertIsResource($resource);
+        static::assertIsResource($resource);
         \fclose($resource);
 
         $result = $normalizer->normalize($resource);
 
-        self::assertSame('resource (closed)', $result);
+        static::assertSame('resource (closed)', $result);
     }
 
-    public function test_normalizes_datetime_unchanged() : void
+    public function test_normalizes_datetime_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
         $datetime = new \DateTimeImmutable('2024-01-15 10:30:00');
 
-        self::assertSame($datetime, $normalizer->normalize($datetime));
+        static::assertSame($datetime, $normalizer->normalize($datetime));
     }
 
-    public function test_normalizes_error_unchanged() : void
+    public function test_normalizes_error_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
         $error = new \Error('Fatal error');
 
-        self::assertSame($error, $normalizer->normalize($error));
+        static::assertSame($error, $normalizer->normalize($error));
     }
 
-    public function test_normalizes_mutable_datetime_unchanged() : void
+    public function test_normalizes_mutable_datetime_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
         $datetime = new \DateTime('2024-01-15 10:30:00');
 
-        self::assertSame($datetime, $normalizer->normalize($datetime));
+        static::assertSame($datetime, $normalizer->normalize($datetime));
     }
 
-    public function test_normalizes_nested_arrays() : void
+    public function test_normalizes_nested_arrays(): void
     {
         $normalizer = new ValueNormalizer();
         $input = [
@@ -143,67 +144,67 @@ final class ValueNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($input);
 
-        self::assertIsArray($result);
-        self::assertIsArray($result['user']);
-        self::assertSame('John', $result['user']['name']);
-        self::assertIsArray($result['user']['metadata']);
-        self::assertSame('admin', $result['user']['metadata']['role']);
+        static::assertIsArray($result);
+        static::assertIsArray($result['user']);
+        static::assertSame('John', $result['user']['name']);
+        static::assertIsArray($result['user']['metadata']);
+        static::assertSame('admin', $result['user']['metadata']['role']);
     }
 
-    public function test_normalizes_null_to_string() : void
+    public function test_normalizes_null_to_string(): void
     {
         $normalizer = new ValueNormalizer();
 
-        self::assertSame('null', $normalizer->normalize(null));
+        static::assertSame('null', $normalizer->normalize(null));
     }
 
-    public function test_normalizes_object_with_to_string() : void
+    public function test_normalizes_object_with_to_string(): void
     {
         $normalizer = new ValueNormalizer();
         $object = new class {
-            public function __toString() : string
+            public function __toString(): string
             {
                 return 'custom-string-value';
             }
         };
 
-        self::assertSame('custom-string-value', $normalizer->normalize($object));
+        static::assertSame('custom-string-value', $normalizer->normalize($object));
     }
 
-    public function test_normalizes_object_without_to_string_to_class_name() : void
+    public function test_normalizes_object_without_to_string_to_class_name(): void
     {
         $normalizer = new ValueNormalizer();
         $object = new \stdClass();
 
-        self::assertSame('stdClass', $normalizer->normalize($object));
+        static::assertSame('stdClass', $normalizer->normalize($object));
     }
 
-    public function test_normalizes_resource_to_debug_type() : void
+    public function test_normalizes_resource_to_debug_type(): void
     {
         $normalizer = new ValueNormalizer();
         $resource = \fopen('php://memory', 'rb');
-        self::assertIsResource($resource);
+        static::assertIsResource($resource);
 
         $result = $normalizer->normalize($resource);
 
         \fclose($resource);
 
-        self::assertSame('resource (stream)', $result);
+        static::assertSame('resource (stream)', $result);
     }
 
     #[DataProvider('scalarValuesProvider')]
-    public function test_normalizes_scalar_values_unchanged(mixed $input, mixed $expected) : void
+    public function test_normalizes_scalar_values_unchanged(mixed $input, mixed $expected): void
     {
         $normalizer = new ValueNormalizer();
 
-        self::assertSame($expected, $normalizer->normalize($input));
+        static::assertSame($expected, $normalizer->normalize($input));
     }
 
-    public function test_normalizes_throwable_unchanged() : void
+    public function test_normalizes_throwable_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
         $exception = new \RuntimeException('Something went wrong');
 
-        self::assertSame($exception, $normalizer->normalize($exception));
+        static::assertSame($exception, $normalizer->normalize($exception));
     }
 }

@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Rule;
 
 use Flow\PostgreSql\Protobuf\AST\CmdType;
 
-enum RuleEvent : int
+enum RuleEvent: int
 {
     case DELETE = CmdType::CMD_DELETE;
     case INSERT = CmdType::CMD_INSERT;

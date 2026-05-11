@@ -4,18 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
-use function Flow\ETL\DSL\generate_random_string;
-use Flow\Parquet\Engine\{ArrowParquetEngine, PhpParquetEngine};
-use Flow\Parquet\{Options, Reader, Writer};
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, Repetition};
+use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Reader;
+use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\generate_random_string;
 
 #[Group('native-extension')]
 final class CrossEngineTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
@@ -26,7 +32,7 @@ final class CrossEngineTest extends TestCase
         }
     }
 
-    public function test_arrow_write_arrow_read_roundtrip() : void
+    public function test_arrow_write_arrow_read_roundtrip(): void
     {
         $path = __DIR__ . '/var/test-cross-arrow-arrow-' . generate_random_string() . '.parquet';
 
@@ -43,22 +49,24 @@ final class CrossEngineTest extends TestCase
 
         $engine = new ArrowParquetEngine();
 
-        $writeStream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
+        $writeStream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path(
+            $path,
+        ));
         $engine->writeRows($writeStream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
         $parquetFile = (new Reader())->read($path);
         $readStream = \Flow\Filesystem\Stream\NativeLocalSourceStream::open(\Flow\Filesystem\DSL\path_real($path));
         $result = \iterator_to_array($engine->readValues($readStream, $parquetFile->schema()));
 
-        self::assertCount(2, $result);
-        self::assertSame(1, $result[0]['id']);
-        self::assertSame('first', $result[0]['label']);
-        self::assertSame(1_000_000_000_000, $result[0]['big_number']);
+        static::assertCount(2, $result);
+        static::assertSame(1, $result[0]['id']);
+        static::assertSame('first', $result[0]['label']);
+        static::assertSame(1_000_000_000_000, $result[0]['big_number']);
 
         \unlink($path);
     }
 
-    public function test_arrow_write_php_read() : void
+    public function test_arrow_write_php_read(): void
     {
         $path = __DIR__ . '/var/test-cross-arrow-php-' . generate_random_string() . '.parquet';
 
@@ -77,26 +85,27 @@ final class CrossEngineTest extends TestCase
         $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array((new Reader(engine: new PhpParquetEngine()))->read($path)->values());
+        $result = \iterator_to_array(
+            (new Reader(engine: new PhpParquetEngine()))
+                ->read($path)
+                ->values(),
+        );
 
-        self::assertCount(2, $result);
-        self::assertSame(10, $result[0]['id']);
-        self::assertSame('alpha', $result[0]['name']);
-        self::assertTrue($result[0]['active']);
-        self::assertSame(20, $result[1]['id']);
-        self::assertFalse($result[1]['active']);
+        static::assertCount(2, $result);
+        static::assertSame(10, $result[0]['id']);
+        static::assertSame('alpha', $result[0]['name']);
+        static::assertTrue($result[0]['active']);
+        static::assertSame(20, $result[1]['id']);
+        static::assertFalse($result[1]['active']);
 
         \unlink($path);
     }
 
-    public function test_explicit_php_engine() : void
+    public function test_explicit_php_engine(): void
     {
         $path = __DIR__ . '/var/test-php-engine-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(
-            FlatColumn::int32('id', Repetition::REQUIRED),
-            FlatColumn::string('name'),
-        );
+        $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('name'));
 
         $inputData = [
             ['id' => 1, 'name' => 'forced-php'],
@@ -106,16 +115,20 @@ final class CrossEngineTest extends TestCase
 
         (new Writer(engine: $phpEngine))->write($path, $schema, $inputData);
 
-        $result = \iterator_to_array((new Reader(engine: $phpEngine))->read($path)->values());
+        $result = \iterator_to_array(
+            (new Reader(engine: $phpEngine))
+                ->read($path)
+                ->values(),
+        );
 
-        self::assertCount(1, $result);
-        self::assertSame(1, $result[0]['id']);
-        self::assertSame('forced-php', $result[0]['name']);
+        static::assertCount(1, $result);
+        static::assertSame(1, $result[0]['id']);
+        static::assertSame('forced-php', $result[0]['name']);
 
         \unlink($path);
     }
 
-    public function test_php_write_arrow_read() : void
+    public function test_php_write_arrow_read(): void
     {
         $path = __DIR__ . '/var/test-cross-php-arrow-' . generate_random_string() . '.parquet';
 
@@ -140,10 +153,10 @@ final class CrossEngineTest extends TestCase
             $parquetFile->schema(),
         ));
 
-        self::assertCount(3, $result);
-        self::assertSame(1, $result[0]['id']);
-        self::assertSame('one', $result[0]['name']);
-        self::assertEqualsWithDelta(1.1, $result[0]['value'], 0.001);
+        static::assertCount(3, $result);
+        static::assertSame(1, $result[0]['id']);
+        static::assertSame('one', $result[0]['name']);
+        static::assertEqualsWithDelta(1.1, $result[0]['value'], 0.001);
 
         \unlink($path);
     }

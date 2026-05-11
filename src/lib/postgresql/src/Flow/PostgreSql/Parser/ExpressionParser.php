@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Parser;
 
 use Flow\PostgreSql\AST\Transformers\TypeCastStripper;
-use Flow\PostgreSql\{ParsedQuery, Parser};
-use Flow\PostgreSql\Protobuf\AST\{Node, ParseResult, RawStmt, ResTarget, SelectStmt, SetOperation};
+use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\Protobuf\AST\SetOperation;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class ExpressionParser
@@ -35,7 +41,7 @@ final readonly class ExpressionParser
      * that matches what a user would write in a generation expression, default, check
      * constraint, index predicate, etc.
      */
-    public function normalize(string $expression) : string
+    public function normalize(string $expression): string
     {
         $parsed = $this->parser->parse(self::SELECT_PREFIX . $expression . self::EXPR_SUFFIX);
         $parsed->traverse($this->stripper);
@@ -51,7 +57,7 @@ final readonly class ExpressionParser
      * deparse/re-parse round-trip that would otherwise be needed to go through the
      * string-based normalize() entry point.
      */
-    public function normalizeNode(Node $node) : string
+    public function normalizeNode(Node $node): string
     {
         $parsed = new ParsedQuery($this->wrapInSelect($node));
         $parsed->traverse($this->stripper);
@@ -59,7 +65,7 @@ final readonly class ExpressionParser
         return $this->stripSelectWrapper($parsed->deparse());
     }
 
-    public function parse(string $expression) : Node
+    public function parse(string $expression): Node
     {
         $parsed = $this->parser->parse(self::SELECT_PREFIX . $expression . self::EXPR_SUFFIX);
 
@@ -96,17 +102,17 @@ final readonly class ExpressionParser
         return $val;
     }
 
-    public function parseStatement(string $sql) : ParsedQuery
+    public function parseStatement(string $sql): ParsedQuery
     {
         return $this->parser->parse($sql);
     }
 
-    private function stripSelectWrapper(string $sql) : string
+    private function stripSelectWrapper(string $sql): string
     {
         return \substr($sql, \strlen(self::SELECT_PREFIX), -\strlen(self::EXPR_SUFFIX));
     }
 
-    private function wrapInSelect(Node $node) : ParseResult
+    private function wrapInSelect(Node $node): ParseResult
     {
         $resTarget = new ResTarget();
         $resTarget->setName(self::EXPR_ALIAS);

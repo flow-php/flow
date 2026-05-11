@@ -16,7 +16,7 @@ final class SeverityMapperTest extends TestCase
     /**
      * @return \Generator<string, array{string, Severity}>
      */
-    public static function default_mapping_provider() : \Generator
+    public static function default_mapping_provider(): \Generator
     {
         yield 'debug' => [LogLevel::DEBUG, Severity::DEBUG];
         yield 'info' => [LogLevel::INFO, Severity::INFO];
@@ -28,20 +28,20 @@ final class SeverityMapperTest extends TestCase
         yield 'emergency' => [LogLevel::EMERGENCY, Severity::FATAL];
     }
 
-    public function test_accepts_stringable_level() : void
+    public function test_accepts_stringable_level(): void
     {
         $mapper = new SeverityMapper();
         $level = new class implements \Stringable {
-            public function __toString() : string
+            public function __toString(): string
             {
                 return LogLevel::WARNING;
             }
         };
 
-        self::assertSame(Severity::WARN, $mapper->map($level));
+        static::assertSame(Severity::WARN, $mapper->map($level));
     }
 
-    public function test_custom_mapping_overrides_defaults() : void
+    public function test_custom_mapping_overrides_defaults(): void
     {
         $mapper = new SeverityMapper([
             LogLevel::DEBUG => Severity::TRACE,
@@ -54,35 +54,38 @@ final class SeverityMapperTest extends TestCase
             LogLevel::EMERGENCY => Severity::FATAL,
         ]);
 
-        self::assertSame(Severity::TRACE, $mapper->map(LogLevel::DEBUG));
-        self::assertSame(Severity::WARN, $mapper->map(LogLevel::NOTICE));
+        static::assertSame(Severity::TRACE, $mapper->map(LogLevel::DEBUG));
+        static::assertSame(Severity::WARN, $mapper->map(LogLevel::NOTICE));
     }
 
-    public function test_default_mapping_exposes_full_psr3_level_set() : void
+    public function test_default_mapping_exposes_full_psr3_level_set(): void
     {
         $mapping = SeverityMapper::defaultMapping();
 
-        self::assertSame([
-            LogLevel::DEBUG,
-            LogLevel::INFO,
-            LogLevel::NOTICE,
-            LogLevel::WARNING,
-            LogLevel::ERROR,
-            LogLevel::CRITICAL,
-            LogLevel::ALERT,
-            LogLevel::EMERGENCY,
-        ], array_keys($mapping));
+        static::assertSame(
+            [
+                LogLevel::DEBUG,
+                LogLevel::INFO,
+                LogLevel::NOTICE,
+                LogLevel::WARNING,
+                LogLevel::ERROR,
+                LogLevel::CRITICAL,
+                LogLevel::ALERT,
+                LogLevel::EMERGENCY,
+            ],
+            array_keys($mapping),
+        );
     }
 
     #[DataProvider('default_mapping_provider')]
-    public function test_default_mapping_matches_psr3_to_otel_severity(string $level, Severity $expected) : void
+    public function test_default_mapping_matches_psr3_to_otel_severity(string $level, Severity $expected): void
     {
         $mapper = new SeverityMapper();
 
-        self::assertSame($expected, $mapper->map($level));
+        static::assertSame($expected, $mapper->map($level));
     }
 
-    public function test_throws_on_unknown_level() : void
+    public function test_throws_on_unknown_level(): void
     {
         $mapper = new SeverityMapper();
 
@@ -92,7 +95,7 @@ final class SeverityMapperTest extends TestCase
         $mapper->map('verbose');
     }
 
-    public function test_throws_when_custom_mapping_lacks_level() : void
+    public function test_throws_when_custom_mapping_lacks_level(): void
     {
         $mapper = new SeverityMapper([
             LogLevel::ERROR => Severity::ERROR,

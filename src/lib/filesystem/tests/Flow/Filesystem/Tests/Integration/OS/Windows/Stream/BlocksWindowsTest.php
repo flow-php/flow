@@ -14,7 +14,7 @@ final class BlocksWindowsTest extends TestCase
 {
     use OperatingSystem;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -23,7 +23,7 @@ final class BlocksWindowsTest extends TestCase
         }
     }
 
-    public function test_moving_resource_to_blocks_windows() : void
+    public function test_moving_resource_to_blocks_windows(): void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -31,22 +31,22 @@ final class BlocksWindowsTest extends TestCase
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         if ($file === false || $fileSize === false) {
-            self::markTestSkipped('Could not open test fixture file');
+            static::markTestSkipped('Could not open test fixture file');
         }
 
         try {
             $blocks->fromResource($file);
 
-            self::assertSame($fileSize, $blocks->size());
-            self::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
+            static::assertSame($fileSize, $blocks->size());
+            static::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
-            self::markTestSkipped('Windows file handling issue: ' . $e->getMessage());
+            static::markTestSkipped('Windows file handling issue: ' . $e->getMessage());
         }
     }
 
-    public function test_moving_resource_to_existing_blocks_windows() : void
+    public function test_moving_resource_to_existing_blocks_windows(): void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -54,23 +54,23 @@ final class BlocksWindowsTest extends TestCase
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         if ($file === false || $fileSize === false) {
-            self::markTestSkipped('Could not open test fixture file');
+            static::markTestSkipped('Could not open test fixture file');
         }
 
         try {
             $blocks->append(\str_repeat('a', 100));
             $blocks->fromResource($file);
 
-            self::assertSame($fileSize + 100, $blocks->size());
-            self::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
+            static::assertSame($fileSize + 100, $blocks->size());
+            static::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
-            self::markTestSkipped('Windows file handling issue: ' . $e->getMessage());
+            static::markTestSkipped('Windows file handling issue: ' . $e->getMessage());
         }
     }
 
-    public function test_windows_large_file_streaming() : void
+    public function test_windows_large_file_streaming(): void
     {
         // Create a temporary large file
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
@@ -84,12 +84,12 @@ final class BlocksWindowsTest extends TestCase
 
             if ($file !== false) {
                 $blocks->fromResource($file);
-                self::assertSame(\strlen($largeContent), $blocks->size());
-                self::assertGreaterThan(1, \count($blocks->all()));
+                static::assertSame(\strlen($largeContent), $blocks->size());
+                static::assertGreaterThan(1, \count($blocks->all()));
             }
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking
-            self::markTestSkipped('Windows large file streaming issue: ' . $e->getMessage());
+            static::markTestSkipped('Windows large file streaming issue: ' . $e->getMessage());
         } finally {
             if (\file_exists($tempFile)) {
                 \unlink($tempFile);
@@ -97,7 +97,7 @@ final class BlocksWindowsTest extends TestCase
         }
     }
 
-    public function test_windows_specific_stream_handling() : void
+    public function test_windows_specific_stream_handling(): void
     {
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
 
@@ -105,10 +105,10 @@ final class BlocksWindowsTest extends TestCase
         $testContent = "Windows test content\r\nWith CRLF line endings\r\n";
         $blocks->append($testContent);
 
-        self::assertSame(\strlen($testContent), $blocks->size());
-        self::assertGreaterThan(0, \count($blocks->all()));
+        static::assertSame(\strlen($testContent), $blocks->size());
+        static::assertGreaterThan(0, \count($blocks->all()));
 
         // Verify blocks are created correctly
-        self::assertGreaterThan(0, \count($blocks->all()));
+        static::assertGreaterThan(0, \count($blocks->all()));
     }
 }

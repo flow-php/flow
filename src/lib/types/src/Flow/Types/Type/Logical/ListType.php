@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{
-    type_from_array,
-    type_literal,
-    type_map,
-    type_mixed,
-    type_string,
-    type_structure};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
+
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_literal;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 /**
  * @template T
@@ -25,16 +26,16 @@ final readonly class ListType implements Type
     /**
      * @param Type<T> $element
      */
-    public function __construct(private Type $element)
-    {
-    }
+    public function __construct(
+        private Type $element,
+    ) {}
 
     /**
      * @param array<string, mixed> $data
      *
      * @return ListType<mixed>
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'type' => type_literal('list'),
@@ -44,7 +45,7 @@ final readonly class ListType implements Type
         return new self(type_from_array($data['element']));
     }
 
-    public function assert(mixed $value) : array
+    public function assert(mixed $value): array
     {
         if ($this->isValid($value)) {
             return $value;
@@ -53,7 +54,7 @@ final readonly class ListType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : array
+    public function cast(mixed $value): array
     {
         if ($this->isValid($value)) {
             return $value;
@@ -87,15 +88,14 @@ final readonly class ListType implements Type
     /**
      * @return Type<T>
      */
-    public function element() : Type
+    public function element(): Type
     {
         return $this->element;
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if (!\is_array($value)) {
-
             return false;
         }
 
@@ -115,7 +115,7 @@ final readonly class ListType implements Type
     /**
      * @return array{type: 'list', element: array<string, mixed>}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'list',
@@ -123,7 +123,7 @@ final readonly class ListType implements Type
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'list<' . $this->element->toString() . '>';
     }

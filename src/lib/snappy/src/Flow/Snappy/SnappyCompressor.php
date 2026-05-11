@@ -25,15 +25,16 @@ final class SnappyCompressor
     /**
      * @param array<int> $array
      */
-    public function __construct(private readonly array $array)
-    {
+    public function __construct(
+        private readonly array $array,
+    ) {
         $this->arrayLength = \count($this->array);
     }
 
     /**
      * @param array<int> $outBuffer
      */
-    public function compressToBuffer(array &$outBuffer) : int
+    public function compressToBuffer(array &$outBuffer): int
     {
         $pos = 0;
         $outPos = 0;
@@ -49,7 +50,7 @@ final class SnappyCompressor
         return $outPos;
     }
 
-    public function maxCompressedLength() : int
+    public function maxCompressedLength(): int
     {
         $sourceLen = \count($this->array);
 
@@ -60,7 +61,7 @@ final class SnappyCompressor
      * @param array<int> $input
      * @param array<int> $output
      */
-    private function compressFragment(array $input, int $ip, int $inputSize, array &$output, int $op) : int
+    private function compressFragment(array $input, int $ip, int $inputSize, array &$output, int $op): int
     {
         $hashTableBits = 1;
 
@@ -77,7 +78,7 @@ final class SnappyCompressor
 
         $hashTable = [];
 
-        foreach ($this->globalHashTables[$hashTableBits] as $key => $value) {
+        foreach ($this->globalHashTables[$hashTableBits] as $key => $_value) {
             $hashTable[$key] = 0;
         }
 
@@ -122,7 +123,7 @@ final class SnappyCompressor
                     $base = $ip;
                     $matched = 4;
 
-                    while ($ip + $matched < $ipEnd && $input[$ip + $matched] === $input[$candidate + $matched]) {
+                    while (($ip + $matched) < $ipEnd && $input[$ip + $matched] === $input[$candidate + $matched]) {
                         $matched++;
                     }
 
@@ -159,7 +160,7 @@ final class SnappyCompressor
      * @param array<int> $fromArray
      * @param array<int> $toArray
      */
-    private function copyBytes(array $fromArray, int $fromPos, array &$toArray, int $toPos, int $length) : void
+    private function copyBytes(array $fromArray, int $fromPos, array &$toArray, int $toPos, int $length): void
     {
         for ($i = 0; $i < $length; $i++) {
             $toArray[$toPos + $i] = $fromArray[$fromPos + $i];
@@ -169,7 +170,7 @@ final class SnappyCompressor
     /**
      * @param array<int> $output
      */
-    private function emitCopy(array &$output, int $op, int $offset, int $len) : int
+    private function emitCopy(array &$output, int $op, int $offset, int $len): int
     {
         while ($len >= 68) {
             $op = $this->emitCopyLessThan64($output, $op, $offset, 64);
@@ -187,7 +188,7 @@ final class SnappyCompressor
     /**
      * @param array<int> $output
      */
-    private function emitCopyLessThan64(array &$output, int $op, int $offset, int $len) : int
+    private function emitCopyLessThan64(array &$output, int $op, int $offset, int $len): int
     {
         if ($len < 12 && $offset < 2048) {
             $output[$op] = 1 + (($len - 4) << 2) + (($offset >> 8) << 5);
@@ -206,7 +207,7 @@ final class SnappyCompressor
      * @param array<int> $input
      * @param array<int> $output
      */
-    private function emitLiteral(array &$input, int $ip, int $len, array &$output, int $op) : int
+    private function emitLiteral(array &$input, int $ip, int $len, array &$output, int $op): int
     {
         if ($len <= 60) {
             $output[$op] = ($len - 1) << 2;
@@ -229,15 +230,17 @@ final class SnappyCompressor
     /**
      * @param array<int> $array
      */
-    private function equals32(array $array, int $pos1, int $pos2) : bool
+    private function equals32(array $array, int $pos1, int $pos2): bool
     {
-        return $array[$pos1] === $array[$pos2]
+        return (
+            $array[$pos1] === $array[$pos2]
             && $array[$pos1 + 1] === $array[$pos2 + 1]
             && $array[$pos1 + 2] === $array[$pos2 + 2]
-            && $array[$pos1 + 3] === $array[$pos2 + 3];
+            && $array[$pos1 + 3] === $array[$pos2 + 3]
+        );
     }
 
-    private function hashFunc(int $key, int $hashFuncShift) : int
+    private function hashFunc(int $key, int $hashFuncShift): int
     {
         $multiplied = $key * 0x1E35A7BD;
 
@@ -248,7 +251,7 @@ final class SnappyCompressor
     /**
      * @param array<int> $array
      */
-    private function load32(array $array, int $pos) : int
+    private function load32(array $array, int $pos): int
     {
         if (!isset($array[$pos])) {
             return 0;
@@ -272,11 +275,11 @@ final class SnappyCompressor
     /**
      * @param array<int> $output
      */
-    private function putVarInt(int $value, array &$output, int $op) : int
+    private function putVarInt(int $value, array &$output, int $op): int
     {
         do {
             $output[$op] = $value & 0x7F;
-            $value = $value >> 7;
+            $value >>= 7;
 
             if ($value > 0) {
                 $output[$op] += 0x80;

@@ -9,5 +9,5 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CopyFromFinalStep extends Sql
 {
-    public function toAst() : CopyStmt;
+    public function toAst(): CopyStmt;
 }

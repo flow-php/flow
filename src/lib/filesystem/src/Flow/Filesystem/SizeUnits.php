@@ -12,7 +12,7 @@ final class SizeUnits
 
     public const int MiB_SIZE = 1048576;
 
-    public static function gbToBytes(int $gb) : int
+    public static function gbToBytes(int $gb): int
     {
         return $gb * self::GiB_SIZE;
     }
@@ -33,7 +33,7 @@ final class SizeUnits
         string $decimalSeparator = '.',
         string $thousandsSeparator = ',',
         string $null = '-',
-    ) : string {
+    ): string {
         if ($bytes === null) {
             return $null;
         }
@@ -58,12 +58,12 @@ final class SizeUnits
         return \number_format($value, $decimals, $decimalSeparator, $thousandsSeparator) . ' ' . $unit;
     }
 
-    public static function kbToBytes(int $kb) : int
+    public static function kbToBytes(int $kb): int
     {
         return $kb * self::KiB_SIZE;
     }
 
-    public static function mbToBytes(int $mb) : int
+    public static function mbToBytes(int $mb): int
     {
         return $mb * self::MiB_SIZE;
     }

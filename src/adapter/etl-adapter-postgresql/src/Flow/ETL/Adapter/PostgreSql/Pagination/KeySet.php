@@ -26,11 +26,8 @@ final readonly class KeySet
     /**
      * @return list<KeysetColumn>
      */
-    public function toKeysetColumns() : array
+    public function toKeysetColumns(): array
     {
-        return \array_values(\array_map(
-            static fn (Key $key) : KeysetColumn => $key->toKeysetColumn(),
-            $this->keys
-        ));
+        return \array_values(\array_map(static fn(Key $key): KeysetColumn => $key->toKeysetColumn(), $this->keys));
     }
 }

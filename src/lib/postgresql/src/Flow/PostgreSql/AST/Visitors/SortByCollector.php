@@ -17,12 +17,12 @@ final class SortByCollector implements NodeVisitor
      */
     private array $sortByClauses = [];
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [SortBy::class];
     }
 
-    public function enter(object $node) : ?int
+    public function enter(object $node): ?int
     {
         /** @var SortBy $node */
         $this->sortByClauses[] = $node;
@@ -33,22 +33,22 @@ final class SortByCollector implements NodeVisitor
     /**
      * @return array<SortBy>
      */
-    public function getSortByClauses() : array
+    public function getSortByClauses(): array
     {
         return $this->sortByClauses;
     }
 
-    public function hasSortBy() : bool
+    public function hasSortBy(): bool
     {
         return \count($this->sortByClauses) > 0;
     }
 
-    public function leave(object $node) : ?int
+    public function leave(object $node): ?int
     {
         return null;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->sortByClauses = [];
     }

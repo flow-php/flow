@@ -6,16 +6,20 @@ namespace Flow\PostgreSql\Migrations\Tests\Unit\Generator;
 
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
-use Flow\PostgreSql\Migrations\Tests\Double\{FakeCatalogProvider, SpyMigrationGenerator};
+use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
+use Flow\PostgreSql\Migrations\Tests\Double\SpyMigrationGenerator;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
-use Flow\PostgreSql\Schema\{Catalog, Column, Schema, Table};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Diff\CatalogComparator;
+use Flow\PostgreSql\Schema\Schema;
+use Flow\PostgreSql\Schema\Table;
 use PHPUnit\Framework\TestCase;
 
 final class DiffMigrationGeneratorTest extends TestCase
 {
-    public function test_does_not_generate_rollback_when_disabled() : void
+    public function test_does_not_generate_rollback_when_disabled(): void
     {
         $source = new Catalog([]);
         $target = new Catalog([
@@ -39,11 +43,11 @@ final class DiffMigrationGeneratorTest extends TestCase
 
         $diffGenerator->generate('create_users');
 
-        self::assertNotEmpty($spy->lastUpSql);
-        self::assertNull($spy->lastDownSql);
+        static::assertNotEmpty($spy->lastUpSql);
+        static::assertNull($spy->lastDownSql);
     }
 
-    public function test_does_not_throw_when_no_changes_and_allow_empty_is_true() : void
+    public function test_does_not_throw_when_no_changes_and_allow_empty_is_true(): void
     {
         $catalog = new Catalog([]);
         $spy = new SpyMigrationGenerator(Version::fromString('20260403120000'));
@@ -57,12 +61,12 @@ final class DiffMigrationGeneratorTest extends TestCase
 
         $result = $diffGenerator->generate('empty_migration', allowEmpty: true);
 
-        self::assertTrue($result->equals(Version::fromString('20260403120000')));
-        self::assertSame([], $spy->lastUpSql);
-        self::assertSame([], $spy->lastDownSql);
+        static::assertTrue($result->equals(Version::fromString('20260403120000')));
+        static::assertSame([], $spy->lastUpSql);
+        static::assertSame([], $spy->lastDownSql);
     }
 
-    public function test_from_empty_schema_uses_empty_catalog_as_source() : void
+    public function test_from_empty_schema_uses_empty_catalog_as_source(): void
     {
         $sourceCatalogWithData = new Catalog([
             new Schema('public', [
@@ -96,11 +100,11 @@ final class DiffMigrationGeneratorTest extends TestCase
         $diffGenerator->generate('initial_schema', fromEmptySchema: true);
 
         $upSqlJoined = \implode(' ', $spy->lastUpSql ?? []);
-        self::assertStringContainsString('new_table', $upSqlJoined);
-        self::assertStringContainsString('existing_table', $upSqlJoined);
+        static::assertStringContainsString('new_table', $upSqlJoined);
+        static::assertStringContainsString('existing_table', $upSqlJoined);
     }
 
-    public function test_generated_sql_content_comes_from_catalog_diff() : void
+    public function test_generated_sql_content_comes_from_catalog_diff(): void
     {
         $source = new Catalog([]);
         $target = new Catalog([
@@ -126,12 +130,12 @@ final class DiffMigrationGeneratorTest extends TestCase
 
         $upSqlJoined = \implode(' ', $spy->lastUpSql ?? []);
         $downSqlJoined = \implode(' ', $spy->lastDownSql ?? []);
-        self::assertStringContainsString('CREATE', $upSqlJoined);
-        self::assertStringContainsString('users', $upSqlJoined);
-        self::assertStringContainsString('DROP', $downSqlJoined);
+        static::assertStringContainsString('CREATE', $upSqlJoined);
+        static::assertStringContainsString('users', $upSqlJoined);
+        static::assertStringContainsString('DROP', $downSqlJoined);
     }
 
-    public function test_generates_migration_when_diff_has_changes() : void
+    public function test_generates_migration_when_diff_has_changes(): void
     {
         $source = new Catalog([]);
         $target = new Catalog([
@@ -154,13 +158,13 @@ final class DiffMigrationGeneratorTest extends TestCase
 
         $result = $diffGenerator->generate('create_users');
 
-        self::assertTrue($result->equals($version));
-        self::assertSame('create_users', $spy->lastSchemaName);
-        self::assertNotEmpty($spy->lastUpSql);
-        self::assertNotEmpty($spy->lastDownSql);
+        static::assertTrue($result->equals($version));
+        static::assertSame('create_users', $spy->lastSchemaName);
+        static::assertNotEmpty($spy->lastUpSql);
+        static::assertNotEmpty($spy->lastDownSql);
     }
 
-    public function test_throws_when_no_changes_detected_and_allow_empty_is_false() : void
+    public function test_throws_when_no_changes_detected_and_allow_empty_is_false(): void
     {
         $catalog = new Catalog([]);
 

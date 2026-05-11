@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_list, type_string, type_union};
-use function Symfony\Component\String\u;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function Symfony\Component\String\u;
 
 final class StringBefore extends ScalarFunctionChain
 {
@@ -15,18 +19,22 @@ final class StringBefore extends ScalarFunctionChain
         private readonly ScalarFunction|string $string,
         private readonly ScalarFunction|string $needle,
         private readonly ScalarFunction|bool $includeNeedle = false,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : ?string
+    public function eval(Row $row, FlowContext $context): ?string
     {
         $string = (new Parameter($this->string))->asString($row, $context);
 
         if ($string === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('StringBefore function requires non-null value'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('StringBefore function requires non-null value'));
         }
 
-        $needle = (new Parameter($this->needle))->asString($row, $context) ?? (new Parameter($this->needle))->asArray($row, $context);
+        $needle = (new Parameter($this->needle))->asString($row, $context) ?? (new Parameter($this->needle))->asArray(
+            $row,
+            $context,
+        );
         $typedNeedle = type_union(type_string(), type_list(type_string()))->assert($needle);
         $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row, $context);
 

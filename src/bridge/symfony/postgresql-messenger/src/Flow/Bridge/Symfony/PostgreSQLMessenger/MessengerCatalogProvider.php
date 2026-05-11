@@ -4,20 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger;
 
-use function Flow\PostgreSql\DSL\{schema, schema_column, schema_column_text, schema_column_timestamp_tz, schema_column_varchar, schema_index, schema_primary_key, schema_table};
-
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider, IdentityGeneration};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
+use Flow\PostgreSql\Schema\IdentityGeneration;
+
+use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_column;
+use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_column_timestamp_tz;
+use function Flow\PostgreSql\DSL\schema_column_varchar;
+use function Flow\PostgreSql\DSL\schema_index;
+use function Flow\PostgreSql\DSL\schema_primary_key;
+use function Flow\PostgreSql\DSL\schema_table;
 
 final readonly class MessengerCatalogProvider implements CatalogProvider
 {
     public function __construct(
         private string $tableName = 'messenger_messages',
         private string $schemaName = 'public',
-    ) {
-    }
+    ) {}
 
-    public function get() : Catalog
+    public function get(): Catalog
     {
         return new Catalog([
             schema($this->schemaName, [

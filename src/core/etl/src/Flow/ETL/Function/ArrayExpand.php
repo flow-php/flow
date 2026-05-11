@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
+use Flow\ETL\Row;
 
 final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
 {
-    public function __construct(private readonly ScalarFunction $ref, private readonly ArrayExpand\ArrayExpand $expand)
-    {
-    }
+    public function __construct(
+        private readonly ScalarFunction $ref,
+        private readonly ArrayExpand\ArrayExpand $expand,
+    ) {}
 
     /**
      * @return array<mixed>
      */
-    public function eval(Row $row, FlowContext $context) : array
+    public function eval(Row $row, FlowContext $context): array
     {
         $array = (new Parameter($this->ref))->asArray($row, $context);
 
@@ -32,7 +34,7 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::BOTH) {
-            return \array_map(static fn ($key, $value) => [$key => $value], \array_keys($array), $array);
+            return \array_map(static fn($key, $value) => [$key => $value], \array_keys($array), $array);
         }
 
         return $array;

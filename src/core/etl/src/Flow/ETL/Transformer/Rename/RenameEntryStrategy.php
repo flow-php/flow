@@ -8,5 +8,5 @@ use Flow\ETL\Row;
 
 interface RenameEntryStrategy
 {
-    public function rename(Row $row) : Row;
+    public function rename(Row $row): Row;
 }

@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use function Flow\Types\DSL\dom_element_to_string;
-use Dom\{HTMLDocument, HTMLElement};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Dom\HTMLDocument;
+use Dom\HTMLElement;
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\dom_element_to_string;
 
 /**
  * @implements Type<string>
  */
 final readonly class StringType implements Type
 {
-    public function assert(mixed $value) : string
+    public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,7 +26,7 @@ final readonly class StringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : string
+    public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -70,7 +73,7 @@ final readonly class StringType implements Type
                 return '';
             }
 
-            if (\is_scalar($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+            if (\is_scalar($value) || \is_object($value) && method_exists($value, '__toString')) {
                 return (string) $value;
             }
 
@@ -80,24 +83,28 @@ final readonly class StringType implements Type
         }
     }
 
-    public function isStringable(mixed $value) : bool
+    public function isStringable(mixed $value): bool
     {
-        return \is_string($value) || (\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable;
+        return (
+            \is_string($value)
+            || \is_object($value) && method_exists($value, '__toString')
+            || $value instanceof \Stringable
+        );
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_string($value);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'string',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'string';
     }

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
-use Flow\PostgreSql\Protobuf\AST\{ObjectType, RangeVar, RenameStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, Sql};
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RenameStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final readonly class RenameTableBuilder implements Sql
 {
@@ -18,46 +21,34 @@ final readonly class RenameTableBuilder implements Sql
         private ?string $subname,
         private string $newname,
         private bool $ifExists = false,
-    ) {
+    ) {}
+
+    public static function renameColumn(
+        string $table,
+        ?string $schema,
+        string $oldName,
+        string $newName,
+        bool $ifExists,
+    ): self {
+        return new self($table, $schema, ObjectType::OBJECT_COLUMN, $oldName, $newName, $ifExists);
     }
 
-    public static function renameColumn(string $table, ?string $schema, string $oldName, string $newName, bool $ifExists) : self
+    public static function renameConstraint(
+        string $table,
+        ?string $schema,
+        string $oldName,
+        string $newName,
+        bool $ifExists,
+    ): self {
+        return new self($table, $schema, ObjectType::OBJECT_TABCONSTRAINT, $oldName, $newName, $ifExists);
+    }
+
+    public static function renameTo(string $table, ?string $schema, string $newName, bool $ifExists): self
     {
-        return new self(
-            $table,
-            $schema,
-            ObjectType::OBJECT_COLUMN,
-            $oldName,
-            $newName,
-            $ifExists,
-        );
+        return new self($table, $schema, ObjectType::OBJECT_TABLE, null, $newName, $ifExists);
     }
 
-    public static function renameConstraint(string $table, ?string $schema, string $oldName, string $newName, bool $ifExists) : self
-    {
-        return new self(
-            $table,
-            $schema,
-            ObjectType::OBJECT_TABCONSTRAINT,
-            $oldName,
-            $newName,
-            $ifExists,
-        );
-    }
-
-    public static function renameTo(string $table, ?string $schema, string $newName, bool $ifExists) : self
-    {
-        return new self(
-            $table,
-            $schema,
-            ObjectType::OBJECT_TABLE,
-            null,
-            $newName,
-            $ifExists,
-        );
-    }
-
-    public function toAst() : RenameStmt
+    public function toAst(): RenameStmt
     {
         $stmt = new RenameStmt();
         $stmt->setRenameType($this->renameType);

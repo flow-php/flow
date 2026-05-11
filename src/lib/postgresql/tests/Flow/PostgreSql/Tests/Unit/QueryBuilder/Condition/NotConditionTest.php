@@ -4,23 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
-use function Flow\PostgreSql\DSL\{col, eq, literal};
-use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition};
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
+use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\QueryBuilder\Condition\AndCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\NotCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\literal;
 
 final class NotConditionTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_and_returns_and_condition() : void
+    public function test_and_returns_and_condition(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -28,10 +36,10 @@ final class NotConditionTest extends TestCase
         $not = new NotCondition($cond1);
         $and = $not->and($cond2);
 
-        self::assertInstanceOf(AndCondition::class, $and);
+        static::assertInstanceOf(AndCondition::class, $and);
     }
 
-    public function test_double_negation() : void
+    public function test_double_negation(): void
     {
         $cond = eq(col('x'), literal(1));
         $not1 = new NotCondition($cond);
@@ -39,22 +47,22 @@ final class NotConditionTest extends TestCase
 
         $ast = $not2->toAst();
 
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
-        self::assertCount(1, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
+        static::assertCount(1, $boolExpr->getArgs());
 
         $innerNode = $boolExpr->getArgs()[0];
-        self::assertTrue($innerNode->hasBoolExpr());
+        static::assertTrue($innerNode->hasBoolExpr());
 
         $innerBoolExpr = $innerNode->getBoolExpr();
-        self::assertNotNull($innerBoolExpr);
-        self::assertSame(BoolExprType::NOT_EXPR, $innerBoolExpr->getBoolop());
+        static::assertNotNull($innerBoolExpr);
+        static::assertSame(BoolExprType::NOT_EXPR, $innerBoolExpr->getBoolop());
     }
 
-    public function test_from_ast_reconstructs_not_condition() : void
+    public function test_from_ast_reconstructs_not_condition(): void
     {
         $cond = eq(col('x'), literal(1));
         $original = new NotCondition($cond);
@@ -62,18 +70,18 @@ final class NotConditionTest extends TestCase
 
         $reconstructed = NotCondition::fromAst($ast);
 
-        self::assertInstanceOf(NotCondition::class, $reconstructed);
+        static::assertInstanceOf(NotCondition::class, $reconstructed);
 
         $reconstructedAst = $reconstructed->toAst();
-        self::assertTrue($reconstructedAst->hasBoolExpr());
+        static::assertTrue($reconstructedAst->hasBoolExpr());
 
         $boolExpr = $reconstructedAst->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
-        self::assertCount(1, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
+        static::assertCount(1, $boolExpr->getArgs());
     }
 
-    public function test_from_ast_throws_on_empty_args() : void
+    public function test_from_ast_throws_on_empty_args(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('NOT_EXPR must have exactly one argument, got 0');
@@ -88,7 +96,7 @@ final class NotConditionTest extends TestCase
         NotCondition::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_multiple_args() : void
+    public function test_from_ast_throws_on_multiple_args(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('NOT_EXPR must have exactly one argument, got 2');
@@ -106,7 +114,7 @@ final class NotConditionTest extends TestCase
         NotCondition::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_non_bool_expr() : void
+    public function test_from_ast_throws_on_non_bool_expr(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Expected BoolExpr node, got unknown');
@@ -115,7 +123,7 @@ final class NotConditionTest extends TestCase
         NotCondition::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_wrong_bool_type() : void
+    public function test_from_ast_throws_on_wrong_bool_type(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Expected BoolExpr with NOT_EXPR');
@@ -129,30 +137,30 @@ final class NotConditionTest extends TestCase
         NotCondition::fromAst($node);
     }
 
-    public function test_not_negates_condition() : void
+    public function test_not_negates_condition(): void
     {
         $cond = eq(col('x'), literal(1));
         $not = new NotCondition($cond);
         $ast = $not->toAst();
 
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
-        self::assertCount(1, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
+        static::assertCount(1, $boolExpr->getArgs());
     }
 
-    public function test_not_returns_not_condition() : void
+    public function test_not_returns_not_condition(): void
     {
         $cond = eq(col('x'), literal(1));
         $not = new NotCondition($cond);
         $notNot = $not->not();
 
-        self::assertInstanceOf(NotCondition::class, $notNot);
+        static::assertInstanceOf(NotCondition::class, $notNot);
     }
 
-    public function test_or_returns_or_condition() : void
+    public function test_or_returns_or_condition(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -160,20 +168,20 @@ final class NotConditionTest extends TestCase
         $not = new NotCondition($cond1);
         $or = $not->or($cond2);
 
-        self::assertInstanceOf(OrCondition::class, $or);
+        static::assertInstanceOf(OrCondition::class, $or);
     }
 
-    public function test_to_ast_creates_bool_expr() : void
+    public function test_to_ast_creates_bool_expr(): void
     {
         $cond = eq(col('x'), literal(1));
         $not = new NotCondition($cond);
         $ast = $not->toAst();
 
-        self::assertInstanceOf(Node::class, $ast);
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertInstanceOf(Node::class, $ast);
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::NOT_EXPR, $boolExpr->getBoolop());
     }
 }

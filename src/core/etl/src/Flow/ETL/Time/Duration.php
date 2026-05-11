@@ -19,42 +19,42 @@ final readonly class Duration
         $this->microseconds = $microseconds;
     }
 
-    public static function fromMicroseconds(int $microseconds) : self
+    public static function fromMicroseconds(int $microseconds): self
     {
         return new self($microseconds);
     }
 
-    public static function fromMilliseconds(int $milliseconds) : self
+    public static function fromMilliseconds(int $milliseconds): self
     {
         return new self($milliseconds * 1000);
     }
 
-    public static function fromMinutes(int $minutes) : self
+    public static function fromMinutes(int $minutes): self
     {
         return new self($minutes * 60 * 1_000_000);
     }
 
-    public static function fromSeconds(int $seconds) : self
+    public static function fromSeconds(int $seconds): self
     {
         return new self($seconds * 1_000_000);
     }
 
-    public function microseconds() : int
+    public function microseconds(): int
     {
         return $this->microseconds;
     }
 
-    public function milliseconds() : int
+    public function milliseconds(): int
     {
         return (int) ($this->microseconds / 1000);
     }
 
-    public function minutes() : int
+    public function minutes(): int
     {
         return (int) ($this->microseconds / 60_000_000);
     }
 
-    public function seconds() : int
+    public function seconds(): int
     {
         return (int) ($this->microseconds / 1_000_000);
     }

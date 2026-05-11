@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\ContextStorage;
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -40,8 +43,7 @@ final readonly class LoggerProvider
         private ContextStorage $contextStorage,
         private LogRecordLimits $limits = new LogRecordLimits(),
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Create a logger for the given instrumentation scope.
@@ -55,8 +57,13 @@ final readonly class LoggerProvider
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
      */
-    public function logger(Resource $resource, string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Logger
-    {
+    public function logger(
+        Resource $resource,
+        string $name,
+        string $version = 'unknown',
+        ?string $schemaUrl = null,
+        ?Attributes $attributes = null,
+    ): Logger {
         return new Logger(
             $resource,
             new InstrumentationScope($name, $version, $schemaUrl, $attributes ?? new Attributes()),

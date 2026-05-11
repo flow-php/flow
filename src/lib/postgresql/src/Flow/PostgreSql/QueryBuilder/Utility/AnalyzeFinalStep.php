@@ -9,15 +9,15 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AnalyzeFinalStep extends Sql
 {
-    public function skipLocked() : self;
+    public function skipLocked(): self;
 
-    public function table(string $table, string ...$columns) : self;
+    public function table(string $table, string ...$columns): self;
 
-    public function tables(string ...$tables) : self;
+    public function tables(string ...$tables): self;
 
-    public function toAst() : VacuumStmt;
+    public function toAst(): VacuumStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function verbose() : self;
+    public function verbose(): self;
 }

@@ -20,6 +20,5 @@ final readonly class StructPlan
         public bool $isRequired,
         public array $children,
         public array $nullFlatChildren,
-    ) {
-    }
+    ) {}
 }

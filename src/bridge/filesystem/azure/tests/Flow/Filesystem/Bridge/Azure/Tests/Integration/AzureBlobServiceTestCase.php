@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
-use function Flow\Azure\SDK\DSL\{azure_blob_service,
-    azure_blob_service_config,
-    azure_http_factory,
-    azure_shared_key_authorization_factory,
-    azurite_url_factory};
-use function Flow\Types\DSL\type_string;
-use Flow\Azure\SDK\{BlobServiceInterface, Exception\AzureException};
+use Flow\Azure\SDK\BlobServiceInterface;
+use Flow\Azure\SDK\Exception\AzureException;
 use Flow\ETL\Tests\FlowTestCase;
-use Http\Discovery\{Psr17FactoryDiscovery, Psr18ClientDiscovery};
+use Http\Discovery\Psr17FactoryDiscovery;
+use Http\Discovery\Psr18ClientDiscovery;
+
+use function Flow\Azure\SDK\DSL\azure_blob_service;
+use function Flow\Azure\SDK\DSL\azure_blob_service_config;
+use function Flow\Azure\SDK\DSL\azure_http_factory;
+use function Flow\Azure\SDK\DSL\azure_shared_key_authorization_factory;
+use function Flow\Azure\SDK\DSL\azurite_url_factory;
+use function Flow\Types\DSL\type_string;
 
 abstract class AzureBlobServiceTestCase extends FlowTestCase
 {
@@ -21,7 +24,7 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
      */
     private array $containers = [];
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         foreach ($this->containers as $container) {
             try {
@@ -31,12 +34,12 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
         }
     }
 
-    public function givenFileExists(string $container, string $path, string $content) : void
+    public function givenFileExists(string $container, string $path, string $content): void
     {
         $this->blobService($container)->putBlockBlob($path, $content, \strlen($content));
     }
 
-    public function givenFileExistsFromPath(string $container, string $path, string $sourcePath) : void
+    public function givenFileExistsFromPath(string $container, string $path, string $sourcePath): void
     {
         $resource = fopen($sourcePath, 'rb');
         $filesize = \filesize($sourcePath);
@@ -52,7 +55,7 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
         $this->blobService($container)->putBlockBlob($path, $resource, $filesize);
     }
 
-    protected function blobService(string $container) : BlobServiceInterface
+    protected function blobService(string $container): BlobServiceInterface
     {
         $accountName = type_string()->assert($_ENV['AZURITE_ACCOUNT_NAME']);
         $accountKey = type_string()->assert($_ENV['AZURITE_ACCOUNT_KEY']);
@@ -64,14 +67,14 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
             azure_shared_key_authorization_factory($accountName, $accountKey),
             Psr18ClientDiscovery::find(),
             azure_http_factory(Psr17FactoryDiscovery::findRequestFactory(), Psr17FactoryDiscovery::findStreamFactory()),
-            azurite_url_factory($host, $port, false)
+            azurite_url_factory($host, $port, false),
         );
 
         $properties = $blobService->getContainerProperties();
 
         if (!$properties) {
             $blobService->putContainer();
-            $properties = $blobService->getContainerProperties();
+            $blobService->getContainerProperties();
 
             if (!\in_array($container, $this->containers, true)) {
                 $this->containers[] = $container;

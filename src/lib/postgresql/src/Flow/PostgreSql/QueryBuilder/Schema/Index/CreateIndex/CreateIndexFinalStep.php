@@ -10,17 +10,17 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateIndexFinalStep extends Sql
 {
-    public function include(string ...$columns) : self;
+    public function include(string ...$columns): self;
 
-    public function nullsDistinct() : self;
+    public function nullsDistinct(): self;
 
-    public function nullsNotDistinct() : self;
+    public function nullsNotDistinct(): self;
 
-    public function tablespace(string $tablespace) : self;
+    public function tablespace(string $tablespace): self;
 
-    public function toAst() : IndexStmt;
+    public function toAst(): IndexStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function where(Condition $predicate) : self;
+    public function where(Condition $predicate): self;
 }

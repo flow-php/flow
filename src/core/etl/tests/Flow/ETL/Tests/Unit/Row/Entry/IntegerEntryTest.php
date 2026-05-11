@@ -4,81 +4,83 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\integer_entry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\integer_entry;
+
 final class IntegerEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider(): \Generator
     {
         yield 'equal names and values' => [true, integer_entry('name', 1), integer_entry('name', 1)];
         yield 'different names and values' => [false, integer_entry('name', 1), integer_entry('different_name', 1)];
         yield 'equal names and different values' => [false, integer_entry('name', 1), integer_entry('name', 2)];
-        yield 'different names characters and equal values' => [false, integer_entry('NAME', 1), integer_entry('name', 1)];
+        yield 'different names characters and equal values' => [
+            false,
+            integer_entry('NAME', 1),
+            integer_entry('name', 1),
+        ];
     }
 
-    public function test_duplicating_entry() : void
+    public function test_duplicating_entry(): void
     {
         $entry = integer_entry('int', 1);
         $duplicated = $entry->duplicate();
 
-        self::assertNotSame($entry, $duplicated);
-        self::assertEquals($entry, $duplicated);
+        static::assertNotSame($entry, $duplicated);
+        static::assertEquals($entry, $duplicated);
     }
 
-    public function test_entry_name_can_be_zero() : void
+    public function test_entry_name_can_be_zero(): void
     {
-        self::assertSame('0', (integer_entry('0', 0))->name());
+        static::assertSame('0', integer_entry('0', 0)->name());
     }
 
     #[DataProvider('is_equal_data_provider')]
-    public function test_is_equal(bool $equals, IntegerEntry $entry, IntegerEntry $nextEntry) : void
+    public function test_is_equal(bool $equals, IntegerEntry $entry, IntegerEntry $nextEntry): void
     {
-        self::assertSame($equals, $entry->isEqual($nextEntry));
+        static::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
-    public function test_map() : void
+    public function test_map(): void
     {
         $entry = integer_entry('entry-name', 1);
 
-        self::assertEquals(
-            $entry,
-            $entry->map(static fn (?int $int) : ?int => $int)
-        );
+        static::assertEquals($entry, $entry->map(static fn(?int $int): ?int => $int));
     }
 
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    public function test_prevents_from_creating_entry_with_empty_entry_name(): void
     {
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         integer_entry('', 100);
     }
 
-    public function test_rename_preserves_metadata() : void
+    public function test_rename_preserves_metadata(): void
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = integer_entry('old_name', 100, $metadata);
 
         $renamedEntry = $entry->rename('new_name');
 
-        self::assertSame('new_name', $renamedEntry->name());
-        self::assertSame(100, $renamedEntry->value());
-        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
+        static::assertSame('new_name', $renamedEntry->name());
+        static::assertSame(100, $renamedEntry->value());
+        static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
-    public function test_renames_entry() : void
+    public function test_renames_entry(): void
     {
         $entry = integer_entry('entry-name', 100);
         $newEntry = $entry->rename('new-entry-name');
 
-        self::assertEquals('new-entry-name', $newEntry->name());
-        self::assertEquals(100, $newEntry->value());
+        static::assertEquals('new-entry-name', $newEntry->name());
+        static::assertEquals(100, $newEntry->value());
     }
 
-    public function test_serialization() : void
+    public function test_serialization(): void
     {
         $string = integer_entry('name', 1);
 
@@ -86,6 +88,6 @@ final class IntegerEntryTest extends FlowTestCase
         /** @var IntegerEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        self::assertTrue($string->isEqual($unserialized));
+        static::assertTrue($string->isEqual($unserialized));
     }
 }

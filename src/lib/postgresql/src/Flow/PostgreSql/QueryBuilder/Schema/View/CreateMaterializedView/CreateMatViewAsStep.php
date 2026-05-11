@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface CreateMatViewAsStep extends CreateMatViewFinalStep
 {
-    public function as(SelectFinalStep $query) : CreateMatViewDataStep;
+    public function as(SelectFinalStep $query): CreateMatViewDataStep;
 }

@@ -10,5 +10,5 @@ if (\interface_exists(KeepaliveReceiverInterface::class)) {
 
 interface KeepaliveReceiverInterface extends ReceiverInterface
 {
-    public function keepalive(\Symfony\Component\Messenger\Envelope $envelope, ?int $seconds = null) : void;
+    public function keepalive(\Symfony\Component\Messenger\Envelope $envelope, ?int $seconds = null): void;
 }

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
-use function Flow\ETL\DSL\{df, from_cache, lit, not, ref, rename_replace, to_memory};
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\Website\Factory\Github\ContributorsRequestFactory;
@@ -13,16 +11,24 @@ use Http\Client\Curl\Client;
 use Http\Discovery\Psr17Factory;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
+use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\not;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\rename_replace;
+use function Flow\ETL\DSL\to_memory;
+
 final readonly class Github
 {
     public function __construct(
         private ContributorsRequestFactory $requestFactory,
         private ContainerBagInterface $parameters,
         private FlowConfigFactory $configFactory,
-    ) {
-    }
+    ) {}
 
-    public function contributors() : array
+    public function contributors(): array
     {
         if (in_array($this->parameters->get('kernel.environment'), ['test', 'dev'], true)) {
             return [
@@ -41,12 +47,7 @@ final readonly class Github
 
         try {
             df($this->configFactory->configBuilderWithCache('github_contributors'))
-                ->read(
-                    from_cache(
-                        'flow_github_contributors',
-                        $from_github
-                    )
-                )
+                ->read(from_cache('flow_github_contributors', $from_github))
                 ->cache('flow_github_contributors')
                 ->withEntry('unpacked', ref('response_body')->jsonDecode())
                 ->select('unpacked')

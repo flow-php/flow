@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
-use Flow\ETL\Row\{Reference, References};
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
 final class PieChart implements Chart
@@ -32,10 +33,9 @@ final class PieChart implements Chart
     public function __construct(
         private readonly Reference $label,
         private readonly References $datasets,
-    ) {
-    }
+    ) {}
 
-    public function collect(Rows $rows) : void
+    public function collect(Rows $rows): void
     {
         foreach ($rows as $row) {
             foreach ($this->datasets as $dataset) {
@@ -56,7 +56,7 @@ final class PieChart implements Chart
     /**
      * @return array<array-key, mixed>
      */
-    public function data() : array
+    public function data(): array
     {
         $labels = [];
 
@@ -71,10 +71,10 @@ final class PieChart implements Chart
             'type' => 'pie',
             'data' => [
                 'labels' => $labels,
-                'datasets' => \array_values(\array_map(
-                    static fn (array $dataset) : array => \array_merge($dataset, $options),
-                    $this->data['datasets']
-                )),
+                'datasets' => \array_values(\array_map(static fn(array $dataset): array => \array_merge(
+                    $dataset,
+                    $options,
+                ), $this->data['datasets'])),
             ],
         ];
 
@@ -88,7 +88,7 @@ final class PieChart implements Chart
     /**
      * @param array<array-key, mixed> $options
      */
-    public function setDatasetOptions(Reference $dataset, array $options) : self
+    public function setDatasetOptions(Reference $dataset, array $options): self
     {
         $this->datasetOptions[$dataset->name()] = $options;
 
@@ -98,7 +98,7 @@ final class PieChart implements Chart
     /**
      * @param array<array-key, mixed> $options
      */
-    public function setOptions(array $options) : self
+    public function setOptions(array $options): self
     {
         $this->options = $options;
 

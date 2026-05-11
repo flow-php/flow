@@ -6,13 +6,16 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler;
 
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference, ServiceLocator};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
 final class CommandLocatorPass implements CompilerPassInterface
 {
     public const string LOCATOR_SERVICE_ID = 'flow.postgresql.command_locator';
 
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter('flow.postgresql.connections')) {
             return;
@@ -38,7 +41,14 @@ final class CommandLocatorPass implements CompilerPassInterface
             $migrationConnections = $container->getParameter('flow.postgresql.migrations.connections');
 
             foreach ($migrationConnections as $connection) {
-                foreach (['configuration', 'migrator', 'store', 'version_resolver', 'generator', 'diff_generator'] as $kind) {
+                foreach ([
+                    'configuration',
+                    'migrator',
+                    'store',
+                    'version_resolver',
+                    'generator',
+                    'diff_generator',
+                ] as $kind) {
                     $serviceId = "flow.postgresql.{$connection}.migrations.{$kind}";
 
                     if ($container->hasDefinition($serviceId)) {

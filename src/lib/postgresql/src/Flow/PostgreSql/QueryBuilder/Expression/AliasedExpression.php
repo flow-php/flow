@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, Node, ResTarget};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 /**
  * Represents an aliased expression: expr AS alias.
@@ -21,12 +23,12 @@ final readonly class AliasedExpression implements Expression
         }
     }
 
-    public static function create(Expression $expression, string $alias) : self
+    public static function create(Expression $expression, string $alias): self
     {
         return new self($expression, $alias);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $resTarget = $node->getResTarget();
 
@@ -51,22 +53,22 @@ final readonly class AliasedExpression implements Expression
         return new self($expression, $aliasName);
     }
 
-    public function as(string $alias) : self
+    public function as(string $alias): self
     {
         return new self($this->expression, $alias);
     }
 
-    public function getAlias() : string
+    public function getAlias(): string
     {
         return $this->alias;
     }
 
-    public function getExpression() : Expression
+    public function getExpression(): Expression
     {
         return $this->expression;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $resTarget = new ResTarget();
         $resTarget->setName($this->alias);
@@ -78,12 +80,12 @@ final readonly class AliasedExpression implements Expression
         return $node;
     }
 
-    public function withAlias(string $alias) : self
+    public function withAlias(string $alias): self
     {
         return new self($this->expression, $alias);
     }
 
-    public function withExpression(Expression $expression) : self
+    public function withExpression(Expression $expression): self
     {
         return new self($expression, $this->alias);
     }

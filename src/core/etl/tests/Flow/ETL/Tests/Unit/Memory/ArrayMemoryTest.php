@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Memory;
 
-use function Flow\Types\DSL\{type_integer, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_optional;
+
 final class ArrayMemoryTest extends FlowTestCase
 {
-    public function test_chunk_size_must_be_greater_than_0() : void
+    public function test_chunk_size_must_be_greater_than_0(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Chunk size must be greater than 0');
@@ -19,17 +21,17 @@ final class ArrayMemoryTest extends FlowTestCase
         (new ArrayMemory())->chunks(0);
     }
 
-    public function test_chunks() : void
+    public function test_chunks(): void
     {
         $memory = new ArrayMemory([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]);
 
-        self::assertCount(4, $memory->chunks(1));
-        self::assertCount(1, $memory->chunks(4));
-        self::assertCount(1, $memory->chunks(5));
-        self::assertCount(2, $memory->chunks(2));
+        static::assertCount(4, $memory->chunks(1));
+        static::assertCount(1, $memory->chunks(4));
+        static::assertCount(1, $memory->chunks(5));
+        static::assertCount(2, $memory->chunks(2));
     }
 
-    public function test_create_memory_from_invalid_data_structure() : void
+    public function test_create_memory_from_invalid_data_structure(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
@@ -38,24 +40,22 @@ final class ArrayMemoryTest extends FlowTestCase
         new ArrayMemory([1, 2, 3]);
     }
 
-    public function test_flat_values() : void
+    public function test_flat_values(): void
     {
         $memory = new ArrayMemory([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]);
 
-        self::assertSame([1, 2, 3, 4], $memory->flatValues());
+        static::assertSame([1, 2, 3, 4], $memory->flatValues());
     }
 
-    public function test_map() : void
+    public function test_map(): void
     {
         $memory = new ArrayMemory([['id' => 1], ['id' => 2]]);
 
-        self::assertSame(
-            [1, 2],
-            $memory->map(static fn (?array $data) : int => type_optional(type_integer())->assert($data['id'] ?? null))
-        );
+        static::assertSame([1, 2], $memory->map(static fn(?array $data): int => type_optional(type_integer())
+            ->assert($data['id'] ?? null)));
     }
 
-    public function test_save_memory_from_invalid_data_structure() : void
+    public function test_save_memory_from_invalid_data_structure(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
@@ -65,16 +65,13 @@ final class ArrayMemoryTest extends FlowTestCase
         $memory->save([1, 2, 3]);
     }
 
-    public function test_saving_multiple_entries_into_memory() : void
+    public function test_saving_multiple_entries_into_memory(): void
     {
         $memory = new ArrayMemory();
         $memory->save([['id' => 1], ['id' => 2]]);
         $memory->save([['id' => 3], ['id' => 4]]);
 
-        self::assertSame(
-            [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]],
-            $memory->dump()
-        );
-        $this->assertcount(4, $memory);
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], $memory->dump());
+        static::assertcount(4, $memory);
     }
 }

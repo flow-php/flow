@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{get_type, type_uuid};
 use Flow\Types\Type;
 use Flow\Types\Type\TypeNarrower;
+
+use function Flow\Types\DSL\get_type;
+use function Flow\Types\DSL\type_uuid;
 
 final readonly class InstanceOfTypeNarrower implements TypeNarrower
 {
     /**
      * @return Type<mixed>
      */
-    public function narrow(mixed $value) : Type
+    public function narrow(mixed $value): Type
     {
         if (!\is_object($value)) {
             return get_type($value);

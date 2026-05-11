@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{DataFrame, Extractor, FlowContext};
+use Flow\ETL\DataFrame;
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 
 final readonly class DataFrameExtractor implements Extractor
 {
-    public function __construct(private DataFrame $dataFrame)
-    {
-    }
+    public function __construct(
+        private DataFrame $dataFrame,
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($this->dataFrame->get() as $rows) {
             $signal = yield $rows;

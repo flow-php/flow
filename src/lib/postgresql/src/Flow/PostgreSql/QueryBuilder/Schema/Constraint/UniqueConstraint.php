@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 
 final readonly class UniqueConstraint implements TableConstraint
 {
@@ -15,25 +18,24 @@ final readonly class UniqueConstraint implements TableConstraint
         private array $columns,
         private ?string $name = null,
         private bool $nullsNotDistinct = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$columns) : self
+    public static function create(string ...$columns): self
     {
         return new self(\array_values($columns));
     }
 
-    public function name(string $name) : self
+    public function name(string $name): self
     {
         return new self($this->columns, $name, $this->nullsNotDistinct);
     }
 
-    public function nullsNotDistinct() : self
+    public function nullsNotDistinct(): self
     {
         return new self($this->columns, $this->name, true);
     }
 
-    public function toAst() : Constraint
+    public function toAst(): Constraint
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_UNIQUE);
@@ -57,7 +59,7 @@ final readonly class UniqueConstraint implements TableConstraint
         return $constraint;
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);

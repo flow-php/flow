@@ -24,7 +24,7 @@ final readonly class CheckConstraint
     /**
      * @param CheckConstraintShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             expression: $data['expression'],
@@ -33,21 +33,20 @@ final readonly class CheckConstraint
         );
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
     }
 
-    public function isEqualStructure(self $other) : bool
+    public function isEqualStructure(self $other): bool
     {
-        return $this->expression === $other->expression
-            && $this->noInherit === $other->noInherit;
+        return $this->expression === $other->expression && $this->noInherit === $other->noInherit;
     }
 
     /**
      * @return CheckConstraintShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'expression' => $this->expression,

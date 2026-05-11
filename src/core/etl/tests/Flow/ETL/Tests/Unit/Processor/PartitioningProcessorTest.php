@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use function Flow\ETL\DSL\{config_builder, flow_context, int_entry, ref, row, rows, str_entry};
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\PartitioningProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+
 final class PartitioningProcessorTest extends FlowTestCase
 {
-    public function test_handles_empty_input() : void
+    public function test_handles_empty_input(): void
     {
         $cache = new InMemoryCache();
         $context = flow_context(config_builder()->cache($cache)->build());
@@ -25,10 +32,10 @@ final class PartitioningProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, $context));
 
-        self::assertCount(0, $result);
+        static::assertCount(0, $result);
     }
 
-    public function test_partitions_rows_by_column() : void
+    public function test_partitions_rows_by_column(): void
     {
         $cache = new InMemoryCache();
         $context = flow_context(config_builder()->cache($cache)->build());
@@ -52,10 +59,10 @@ final class PartitioningProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(3, $allRows);
+        static::assertCount(3, $allRows);
     }
 
-    public function test_partitions_with_order_by() : void
+    public function test_partitions_with_order_by(): void
     {
         $cache = new InMemoryCache();
         $context = flow_context(config_builder()->cache($cache)->build());
@@ -78,11 +85,11 @@ final class PartitioningProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertEquals(2, $allRows[0]['id']);
-        self::assertEquals(1, $allRows[1]['id']);
+        static::assertEquals(2, $allRows[0]['id']);
+        static::assertEquals(1, $allRows[1]['id']);
     }
 
-    public function test_throws_exception_without_partition_columns() : void
+    public function test_throws_exception_without_partition_columns(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('PartitioningProcessor requires at least one partitionBy entry');

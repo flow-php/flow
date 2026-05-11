@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
+use Flow\ETL\Row;
 
 final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
 {
@@ -19,20 +20,21 @@ final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
         private readonly ScalarFunction|array $array,
         private readonly ScalarFunction|array $skipKeys = [],
         private readonly ScalarFunction|string|null $entryPrefix = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function eval(Row $row, FlowContext $context) : array
+    public function eval(Row $row, FlowContext $context): array
     {
         $array = (new Parameter($this->array))->asArray($row, $context);
         $skipKeys = (new Parameter($this->skipKeys))->asArray($row, $context);
         $entryPrefix = (new Parameter($this->entryPrefix))->asString($row, $context);
 
         if ($array === null || $skipKeys === null) {
-            $context->functions()->invalidResult(new InvalidArgumentException('ArrayUnpack requires non-null array and skipKeys'));
+            $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('ArrayUnpack requires non-null array and skipKeys'));
 
             return [];
         }

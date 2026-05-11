@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine;
 
-use Flow\Arrow\Parquet\{Reader, Writer};
-use Flow\Filesystem\{DestinationStream, SourceStream};
-use Flow\Parquet\Engine\Arrow\{DestinationStreamAdapter, OptionsConverter, SchemaConverter, SourceStreamAdapter};
+use Flow\Arrow\Parquet\Reader;
+use Flow\Arrow\Parquet\Writer;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
+use Flow\Parquet\Engine\Arrow\DestinationStreamAdapter;
+use Flow\Parquet\Engine\Arrow\OptionsConverter;
+use Flow\Parquet\Engine\Arrow\SchemaConverter;
+use Flow\Parquet\Engine\Arrow\SourceStreamAdapter;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\{Option, Options, ParquetEngine};
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema;
 
 final class ArrowParquetEngine implements ParquetEngine
 {
@@ -31,14 +39,12 @@ final class ArrowParquetEngine implements ParquetEngine
         private readonly Options $options = new Options(),
     ) {
         if (!\extension_loaded('arrow')) {
-            throw new RuntimeException(
-                'The arrow extension is required for ArrowParquetEngine. '
-                . 'Install it from flow-php/arrow-ext.'
-            );
+            throw new RuntimeException('The arrow extension is required for ArrowParquetEngine. '
+            . 'Install it from flow-php/arrow-ext.');
         }
     }
 
-    public static function mapCompression(Compressions $compression) : string
+    public static function mapCompression(Compressions $compression): string
     {
         return match ($compression) {
             Compressions::UNCOMPRESSED => 'UNCOMPRESSED',
@@ -51,7 +57,7 @@ final class ArrowParquetEngine implements ParquetEngine
         };
     }
 
-    public function closeWrite() : void
+    public function closeWrite(): void
     {
         if ($this->arrowWriter === null) {
             throw new RuntimeException('Writer is not open');
@@ -73,18 +79,13 @@ final class ArrowParquetEngine implements ParquetEngine
         Schema $schema,
         Compressions $compression,
         Options $options,
-    ) : void {
+    ): void {
         $adapter = new DestinationStreamAdapter($stream);
         $extensionSchema = SchemaConverter::toExtension($schema);
         $compressionStr = self::mapCompression($compression);
         $extensionOptions = OptionsConverter::toExtension($options);
 
-        $this->arrowWriter = new Writer(
-            $adapter,
-            $extensionSchema,
-            $compressionStr,
-            $extensionOptions,
-        );
+        $this->arrowWriter = new Writer($adapter, $extensionSchema, $compressionStr, $extensionOptions);
 
         /** @var array<string> $colNames */
         $colNames = \array_column($extensionSchema, 'name');
@@ -98,7 +99,7 @@ final class ArrowParquetEngine implements ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ) : \Generator {
+    ): \Generator {
         $adapter = new SourceStreamAdapter($stream);
         $extensionOptions = OptionsConverter::toExtension($this->options);
         $reader = new Reader($adapter, $extensionOptions);
@@ -142,14 +143,14 @@ final class ArrowParquetEngine implements ParquetEngine
         }
     }
 
-    public function writeBatch(iterable $rows) : void
+    public function writeBatch(iterable $rows): void
     {
         foreach ($rows as $row) {
             $this->writeRow($row);
         }
     }
 
-    public function writeRow(array $row) : void
+    public function writeRow(array $row): void
     {
         if ($this->arrowWriter === null) {
             throw new RuntimeException('Writer is not open');
@@ -173,7 +174,7 @@ final class ArrowParquetEngine implements ParquetEngine
         Compressions $compression,
         Options $options,
         iterable $rows,
-    ) : void {
+    ): void {
         $this->openForWrite($stream, $schema, $compression, $options);
 
         try {
@@ -183,7 +184,7 @@ final class ArrowParquetEngine implements ParquetEngine
         }
     }
 
-    private function resetBatch() : void
+    private function resetBatch(): void
     {
         $this->batch = [];
 

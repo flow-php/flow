@@ -9,11 +9,11 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CommentFinalStep extends Sql
 {
-    public function is(string $comment) : self;
+    public function is(string $comment): self;
 
-    public function isNull() : self;
+    public function isNull(): self;
 
-    public function toAst() : CommentStmt;
+    public function toAst(): CommentStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

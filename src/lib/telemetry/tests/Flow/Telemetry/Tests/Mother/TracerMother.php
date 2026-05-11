@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Mother;
 
-use Flow\Telemetry\Context\{Context, ContextStorage, MemoryContextStorage};
-use Flow\Telemetry\{InstrumentationScope, Resource};
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\{VoidExporter, VoidSpanProcessor};
-use Flow\Telemetry\Tracer\{SpanProcessor, Tracer};
+use Flow\Telemetry\Provider\Void\VoidExporter;
+use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Tracer\SpanProcessor;
+use Flow\Telemetry\Tracer\Tracer;
 use Psr\Clock\ClockInterface;
 
 final class TracerMother
@@ -20,7 +25,7 @@ final class TracerMother
         ?ClockInterface $clock = null,
         ?ContextStorage $contextStorage = null,
         ?Resource $resource = null,
-    ) : Tracer {
+    ): Tracer {
         return new Tracer(
             $resource ?? ResourceMother::default(),
             new InstrumentationScope($name, $version),
@@ -30,27 +35,27 @@ final class TracerMother
         );
     }
 
-    public static function createMemoryProcessor() : MemorySpanProcessor
+    public static function createMemoryProcessor(): MemorySpanProcessor
     {
         return new MemorySpanProcessor(new VoidExporter());
     }
 
-    public static function withContext(Context $context) : Tracer
+    public static function withContext(Context $context): Tracer
     {
         return self::create(contextStorage: new MemoryContextStorage($context));
     }
 
-    public static function withContextStorage(ContextStorage $storage) : Tracer
+    public static function withContextStorage(ContextStorage $storage): Tracer
     {
         return self::create(contextStorage: $storage);
     }
 
-    public static function withInMemoryProcessor(MemorySpanProcessor $processor) : Tracer
+    public static function withInMemoryProcessor(MemorySpanProcessor $processor): Tracer
     {
         return self::create(processor: $processor);
     }
 
-    public static function withProcessor(SpanProcessor $processor) : Tracer
+    public static function withProcessor(SpanProcessor $processor): Tracer
     {
         return self::create(processor: $processor);
     }

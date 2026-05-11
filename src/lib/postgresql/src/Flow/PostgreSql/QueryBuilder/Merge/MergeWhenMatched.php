@@ -17,51 +17,34 @@ final readonly class MergeWhenMatched
         private MergeBuilder $builder,
         private MergeMatchKind $matchKind,
         private ?Condition $condition,
-    ) {
-    }
+    ) {}
 
-    public static function create(
-        MergeBuilder $builder,
-        MergeMatchKind $matchKind,
-        ?Condition $condition = null,
-    ) : self {
+    public static function create(MergeBuilder $builder, MergeMatchKind $matchKind, ?Condition $condition = null): self
+    {
         return new self($builder, $matchKind, $condition);
     }
 
-    public function thenDelete() : MergeWhenStep
+    public function thenDelete(): MergeWhenStep
     {
         return $this->builder->addWhenClause(
-            new MergeWhenClauseData(
-                $this->matchKind,
-                MergeActionType::DELETE,
-                $this->condition,
-            )
+            new MergeWhenClauseData($this->matchKind, MergeActionType::DELETE, $this->condition),
         );
     }
 
-    public function thenDoNothing() : MergeWhenStep
+    public function thenDoNothing(): MergeWhenStep
     {
         return $this->builder->addWhenClause(
-            new MergeWhenClauseData(
-                $this->matchKind,
-                MergeActionType::DO_NOTHING,
-                $this->condition,
-            )
+            new MergeWhenClauseData($this->matchKind, MergeActionType::DO_NOTHING, $this->condition),
         );
     }
 
     /**
      * @param array<string, Expression> $assignments Column => value pairs for SET clause
      */
-    public function thenUpdate(array $assignments) : MergeWhenStep
+    public function thenUpdate(array $assignments): MergeWhenStep
     {
         return $this->builder->addWhenClause(
-            new MergeWhenClauseData(
-                $this->matchKind,
-                MergeActionType::UPDATE,
-                $this->condition,
-                $assignments,
-            )
+            new MergeWhenClauseData($this->matchKind, MergeActionType::UPDATE, $this->condition, $assignments),
         );
     }
 }

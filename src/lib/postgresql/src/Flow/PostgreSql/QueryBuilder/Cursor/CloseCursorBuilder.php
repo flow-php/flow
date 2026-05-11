@@ -13,20 +13,19 @@ final readonly class CloseCursorBuilder implements CloseCursorFinalStep
 
     private function __construct(
         private string $cursorName,
-    ) {
-    }
+    ) {}
 
-    public static function close(string $cursorName) : CloseCursorFinalStep
+    public static function close(string $cursorName): CloseCursorFinalStep
     {
         return new self($cursorName);
     }
 
-    public static function closeAll() : CloseCursorFinalStep
+    public static function closeAll(): CloseCursorFinalStep
     {
         return new self('');
     }
 
-    public function toAst() : ClosePortalStmt
+    public function toAst(): ClosePortalStmt
     {
         $stmt = new ClosePortalStmt();
         $stmt->setPortalname($this->cursorName);

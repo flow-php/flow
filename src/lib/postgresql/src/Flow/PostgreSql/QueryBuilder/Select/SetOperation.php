@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 
 use Flow\PostgreSql\Protobuf\AST\SetOperation as ProtobufSetOperation;
 
-enum SetOperation : string
+enum SetOperation: string
 {
     case EXCEPT = 'EXCEPT';
     case EXCEPT_ALL = 'EXCEPT ALL';
@@ -15,7 +15,7 @@ enum SetOperation : string
     case UNION = 'UNION';
     case UNION_ALL = 'UNION ALL';
 
-    public static function fromProtobuf(int $op, bool $all) : self
+    public static function fromProtobuf(int $op, bool $all): self
     {
         return match ($op) {
             ProtobufSetOperation::SETOP_UNION => $all ? self::UNION_ALL : self::UNION,
@@ -25,7 +25,7 @@ enum SetOperation : string
         };
     }
 
-    public function hasAll() : bool
+    public function hasAll(): bool
     {
         return match ($this) {
             self::UNION_ALL, self::INTERSECT_ALL, self::EXCEPT_ALL => true,
@@ -33,7 +33,7 @@ enum SetOperation : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::UNION, self::UNION_ALL => ProtobufSetOperation::SETOP_UNION,

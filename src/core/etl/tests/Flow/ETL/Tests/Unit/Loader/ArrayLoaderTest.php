@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, row, rows, str_entry, to_array};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\to_array;
 
 final class ArrayLoaderTest extends FlowTestCase
 {
-    public function test_loads_rows_data_into_memory() : void
+    public function test_loads_rows_data_into_memory(): void
     {
         $rows1 = rows(
             row(int_entry('number', 1), str_entry('name', 'one')),
@@ -27,6 +33,6 @@ final class ArrayLoaderTest extends FlowTestCase
         $loader->load($rows1, flow_context());
         $loader->load($rows2, flow_context());
 
-        self::assertEquals($rows1->merge($rows2)->toArray(), $array);
+        static::assertEquals($rows1->merge($rows2)->toArray(), $array);
     }
 }

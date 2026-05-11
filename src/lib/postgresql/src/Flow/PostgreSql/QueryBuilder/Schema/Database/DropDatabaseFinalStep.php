@@ -9,11 +9,11 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface DropDatabaseFinalStep extends Sql
 {
-    public function force() : self;
+    public function force(): self;
 
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function toAst() : DropdbStmt;
+    public function toAst(): DropdbStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\String;
 
-use function Symfony\Component\String\u;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Component\String\UnicodeString;
 
-enum StringStyles : string
+use function Symfony\Component\String\u;
+
+enum StringStyles: string
 {
     case ASCII = 'ascii';
     case CAMEL = 'camel';
@@ -25,7 +26,7 @@ enum StringStyles : string
     /**
      * @return array<string>
      */
-    public static function all() : array
+    public static function all(): array
     {
         $cases = [];
 
@@ -39,7 +40,7 @@ enum StringStyles : string
     /**
      * @throws InvalidArgumentException
      */
-    public static function fromString(string $style) : self
+    public static function fromString(string $style): self
     {
         foreach (self::cases() as $case) {
             if ($style === $case->value) {
@@ -47,10 +48,12 @@ enum StringStyles : string
             }
         }
 
-        throw new InvalidArgumentException("Unrecognized style {$style}, please use one of following: " . \implode(', ', self::all()));
+        throw new InvalidArgumentException(
+            "Unrecognized style {$style}, please use one of following: " . \implode(', ', self::all()),
+        );
     }
 
-    public function convert(string $value) : string
+    public function convert(string $value): string
     {
         return match ($this) {
             self::ASCII => u($value)->ascii()->toString(),
@@ -66,7 +69,7 @@ enum StringStyles : string
         };
     }
 
-    private function kebab(string $value) : string
+    private function kebab(string $value): string
     {
         // @phpstan-ignore-next-line Available from Symfony 7.2+
         if (!\method_exists(UnicodeString::class, 'kebab')) {
@@ -76,12 +79,14 @@ enum StringStyles : string
         return u($value)->kebab()->toString();
     }
 
-    private function slug(string $string) : string
+    private function slug(string $string): string
     {
-        return (new AsciiSlugger())->slug($string)->toString();
+        return (new AsciiSlugger())
+            ->slug($string)
+            ->toString();
     }
 
-    private function ucFirst(string $string) : string
+    private function ucFirst(string $string): string
     {
         // Available from PHP 8.4+
         if (\function_exists('mb_ucfirst')) {
@@ -90,10 +95,12 @@ enum StringStyles : string
 
         $encoding = \mb_internal_encoding();
 
-        return \mb_strtoupper(\mb_substr($string, 0, 1, $encoding), $encoding) . \mb_substr($string, 1, null, $encoding);
+        return (
+            \mb_strtoupper(\mb_substr($string, 0, 1, $encoding), $encoding) . \mb_substr($string, 1, null, $encoding)
+        );
     }
 
-    private function ucWords(string $string) : string
+    private function ucWords(string $string): string
     {
         $result = '';
         $previousCharacter = ' ';

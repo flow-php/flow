@@ -4,37 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
 final class StringContainsAnyTest extends FlowTestCase
 {
-    public function test_contains_any() : void
+    public function test_contains_any(): void
     {
-        (data_frame())
-            ->read(
-                from_array(
-                    [
-                        ['text' => 'hello world', 'needles' => ['hello', 'foo']],
-                        ['text' => 'hello world', 'needles' => ['foo', 'bar']],
-                        ['text' => 'hello world', 'needles' => ['world', 'test']],
-                        ['text' => 'hello world', 'needles' => []],
-                        ['text' => '', 'needles' => ['hello']],
-                        ['text' => null, 'needles' => ['hello']],
-                        ['text' => 'hello world', 'needles' => null],
-                        ['text' => 'नमस्ते', 'needles' => ['स्ते', 'foo']],
-                        ['text' => 'hello🚀world', 'needles' => ['🚀', 'bar']],
-                        ['text' => 'testing', 'needles' => ['test', 'ing']],
-                    ]
-                )
-            )
+        data_frame()
+            ->read(from_array([
+                ['text' => 'hello world', 'needles' => ['hello', 'foo']],
+                ['text' => 'hello world', 'needles' => ['foo', 'bar']],
+                ['text' => 'hello world', 'needles' => ['world', 'test']],
+                ['text' => 'hello world', 'needles' => []],
+                ['text' => '', 'needles' => ['hello']],
+                ['text' => null, 'needles' => ['hello']],
+                ['text' => 'hello world', 'needles' => null],
+                ['text' => 'नमस्ते', 'needles' => ['स्ते', 'foo']],
+                ['text' => 'hello🚀world', 'needles' => ['🚀', 'bar']],
+                ['text' => 'testing', 'needles' => ['test', 'ing']],
+            ]))
             ->withEntry('contains_any', ref('text')->stringContainsAny(ref('needles')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['text' => 'hello world', 'needles' => ['hello', 'foo'], 'contains_any' => true],
                 ['text' => 'hello world', 'needles' => ['foo', 'bar'], 'contains_any' => false],
@@ -47,7 +46,7 @@ final class StringContainsAnyTest extends FlowTestCase
                 ['text' => 'hello🚀world', 'needles' => ['🚀', 'bar'], 'contains_any' => true],
                 ['text' => 'testing', 'needles' => ['test', 'ing'], 'contains_any' => true],
             ],
-            $memory->dump()
+            $memory->dump(),
         );
     }
 }

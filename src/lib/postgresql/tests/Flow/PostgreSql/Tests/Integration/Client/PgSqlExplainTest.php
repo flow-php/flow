@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client;
 
-use function Flow\PostgreSql\DSL\{
-    binary_expr,
-    cast,
-    col,
-    column,
-    column_type_integer,
-    column_type_text,
-    create,
-    eq,
-    insert,
-    literal,
-    param,
-    select,
-    sql_explain_config,
-    star,
-    table
-};
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Explain\Analyzer\{PlanAnalyzer, PlanSummary};
+use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
+use Flow\PostgreSql\Explain\Analyzer\PlanSummary;
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\PostgreSql\DSL\binary_expr;
+use function Flow\PostgreSql\DSL\cast;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\column;
+use function Flow\PostgreSql\DSL\column_type_integer;
+use function Flow\PostgreSql\DSL\column_type_text;
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\insert;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sql_explain_config;
+use function Flow\PostgreSql\DSL\star;
+use function Flow\PostgreSql\DSL\table;
 
 final class PgSqlExplainTest extends PostgreSqlTestCase
 {
@@ -38,7 +38,7 @@ final class PgSqlExplainTest extends PostgreSqlTestCase
      *     hasBuffers: bool
      * }}>
      */
-    public static function provideExplainConfigCombinations() : \Generator
+    public static function provideExplainConfigCombinations(): \Generator
     {
         yield 'forAnalysis - full execution data' => [
             ExplainConfig::forAnalysis(),
@@ -118,58 +118,70 @@ final class PgSqlExplainTest extends PostgreSqlTestCase
         ];
     }
 
-    public function test_explain_for_estimate() : void
+    public function test_explain_for_estimate(): void
     {
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(literal(1)),
-            config: ExplainConfig::forEstimate()
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(literal(1)), config: ExplainConfig::forEstimate());
 
-        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
-        self::assertNull($plan->executionTime());
-        self::assertNull($plan->planningTime());
+        static::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        static::assertNull($plan->executionTime());
+        static::assertNull($plan->planningTime());
     }
 
-    public function test_explain_returns_plan_for_select_query() : void
+    public function test_explain_returns_plan_for_select_query(): void
     {
-        $this->pgsqlContext()->client()->execute(
-            create()->temporaryTable('test_explain')
-                ->column(column('id', column_type_integer()))
-                ->column(column('name', column_type_text()))
-        );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(
+                create()
+                    ->temporaryTable('test_explain')
+                    ->column(column('id', column_type_integer()))
+                    ->column(column('name', column_type_text())),
+            );
 
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(star())->from(table('test_explain'))
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(star())->from(table('test_explain')));
 
-        self::assertNotNull($plan->executionTime());
-        self::assertNotNull($plan->planningTime());
+        static::assertNotNull($plan->executionTime());
+        static::assertNotNull($plan->planningTime());
     }
 
-    public function test_explain_returns_plan_with_parameters() : void
+    public function test_explain_returns_plan_with_parameters(): void
     {
-        $this->pgsqlContext()->client()->execute(
-            create()->temporaryTable('test_explain_params')
-                ->column(column('id', column_type_integer()))
-                ->column(column('name', column_type_text()))
-        );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(
+                create()
+                    ->temporaryTable('test_explain_params')
+                    ->column(column('id', column_type_integer()))
+                    ->column(column('name', column_type_text())),
+            );
 
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(star())->from(table('test_explain_params'))->where(eq(col('id'), param(1))),
-            ['42']
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(star())->from(table('test_explain_params'))->where(eq(col('id'), param(1))), ['42']);
 
-        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        static::assertGreaterThanOrEqual(0.0, $plan->totalCost());
     }
 
-    public function test_explain_returns_plan_with_raw_sql() : void
+    public function test_explain_returns_plan_with_raw_sql(): void
     {
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(binary_expr(cast(param(1), column_type_integer()), '+', cast(param(2), column_type_integer()))),
-            ['10', '32']
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(
+                select(binary_expr(cast(param(1), column_type_integer()), '+', cast(param(2), column_type_integer()))),
+                ['10', '32'],
+            );
 
-        self::assertSame(PlanNodeType::RESULT, $plan->rootNode()->nodeType());
+        static::assertSame(PlanNodeType::RESULT, $plan->rootNode()->nodeType());
     }
 
     /**
@@ -182,86 +194,88 @@ final class PgSqlExplainTest extends PostgreSqlTestCase
      * } $expected
      */
     #[DataProvider('provideExplainConfigCombinations')]
-    public function test_explain_with_config_combinations(ExplainConfig $config, array $expected) : void
+    public function test_explain_with_config_combinations(ExplainConfig $config, array $expected): void
     {
-        $this->pgsqlContext()->client()->execute(
-            create()->temporaryTable('test_explain_combinations')
-                ->column(column('id', column_type_integer()))
-                ->column(column('name', column_type_text()))
-        );
-        $this->pgsqlContext()->client()->execute(
-            insert()->into('test_explain_combinations')->columns('id', 'name')
-                ->values(literal(1), literal('test'))
-        );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(
+                create()
+                    ->temporaryTable('test_explain_combinations')
+                    ->column(column('id', column_type_integer()))
+                    ->column(column('name', column_type_text())),
+            );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(
+                insert()->into('test_explain_combinations')->columns('id', 'name')->values(literal(1), literal('test')),
+            );
 
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(star())->from(table('test_explain_combinations')),
-            config: $config
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(star())->from(table('test_explain_combinations')), config: $config);
 
         if ($expected['hasExecutionTime']) {
-            self::assertNotNull($plan->executionTime(), 'Expected executionTime to be present');
+            static::assertNotNull($plan->executionTime(), 'Expected executionTime to be present');
         } else {
-            self::assertNull($plan->executionTime(), 'Expected executionTime to be null');
+            static::assertNull($plan->executionTime(), 'Expected executionTime to be null');
         }
 
         if ($expected['hasPlanningTime']) {
-            self::assertNotNull($plan->planningTime(), 'Expected planningTime to be present');
+            static::assertNotNull($plan->planningTime(), 'Expected planningTime to be present');
         } else {
-            self::assertNull($plan->planningTime(), 'Expected planningTime to be null');
+            static::assertNull($plan->planningTime(), 'Expected planningTime to be null');
         }
 
         if ($expected['hasActualRows']) {
-            self::assertNotNull($plan->rootNode()->actualRows(), 'Expected actualRows to be present');
+            static::assertNotNull($plan->rootNode()->actualRows(), 'Expected actualRows to be present');
         } else {
-            self::assertNull($plan->rootNode()->actualRows(), 'Expected actualRows to be null');
+            static::assertNull($plan->rootNode()->actualRows(), 'Expected actualRows to be null');
         }
 
         if ($expected['hasTiming']) {
-            self::assertNotNull($plan->rootNode()->timing(), 'Expected timing to be present');
+            static::assertNotNull($plan->rootNode()->timing(), 'Expected timing to be present');
         } else {
-            self::assertNull($plan->rootNode()->timing(), 'Expected timing to be null');
+            static::assertNull($plan->rootNode()->timing(), 'Expected timing to be null');
         }
 
         if ($expected['hasBuffers']) {
-            self::assertNotNull($plan->rootNode()->buffers(), 'Expected buffers to be present');
+            static::assertNotNull($plan->rootNode()->buffers(), 'Expected buffers to be present');
         } else {
-            self::assertNull($plan->rootNode()->buffers(), 'Expected buffers to be null');
+            static::assertNull($plan->rootNode()->buffers(), 'Expected buffers to be null');
         }
 
-        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        static::assertGreaterThanOrEqual(0.0, $plan->totalCost());
     }
 
-    public function test_explain_with_custom_config() : void
+    public function test_explain_with_custom_config(): void
     {
-        $this->pgsqlContext()->client()->execute(
-            create()->temporaryTable('test_explain_config')
-                ->column(column('id', column_type_integer()))
-        );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(create()->temporaryTable('test_explain_config')->column(column('id', column_type_integer())));
 
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(star())->from(table('test_explain_config')),
-            config: sql_explain_config()
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(star())->from(table('test_explain_config')), config: sql_explain_config());
 
-        self::assertNotNull($plan->executionTime());
-        self::assertGreaterThanOrEqual(0.0, $plan->rootNode()->cost()->totalCost());
+        static::assertNotNull($plan->executionTime());
+        static::assertGreaterThanOrEqual(0.0, $plan->rootNode()->cost()->totalCost());
     }
 
-    public function test_explain_without_analyze() : void
+    public function test_explain_without_analyze(): void
     {
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(literal(1)),
-            config: sql_explain_config(
-                analyze: false,
-                buffers: false,
-                timing: false,
-            )
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(literal(1)), config: sql_explain_config(analyze: false, buffers: false, timing: false));
 
-        self::assertGreaterThanOrEqual(0.0, $plan->totalCost());
-        self::assertNull($plan->executionTime());
-        self::assertNull($plan->rootNode()->timing());
+        static::assertGreaterThanOrEqual(0.0, $plan->totalCost());
+        static::assertNull($plan->executionTime());
+        static::assertNull($plan->rootNode()->timing());
     }
 
     /**
@@ -274,50 +288,56 @@ final class PgSqlExplainTest extends PostgreSqlTestCase
      * } $expected
      */
     #[DataProvider('provideExplainConfigCombinations')]
-    public function test_plan_summary_with_config_combinations(ExplainConfig $config, array $expected) : void
+    public function test_plan_summary_with_config_combinations(ExplainConfig $config, array $expected): void
     {
-        $this->pgsqlContext()->client()->execute(
-            create()->temporaryTable('test_summary_combinations')
-                ->column(column('id', column_type_integer()))
-                ->column(column('name', column_type_text()))
-        );
-        $this->pgsqlContext()->client()->execute(
-            insert()->into('test_summary_combinations')->columns('id', 'name')
-                ->values(literal(1), literal('test'))
-        );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(
+                create()
+                    ->temporaryTable('test_summary_combinations')
+                    ->column(column('id', column_type_integer()))
+                    ->column(column('name', column_type_text())),
+            );
+        $this
+            ->pgsqlContext()
+            ->client()
+            ->execute(
+                insert()->into('test_summary_combinations')->columns('id', 'name')->values(literal(1), literal('test')),
+            );
 
-        $plan = $this->pgsqlContext()->client()->explain(
-            select(star())->from(table('test_summary_combinations')),
-            config: $config
-        );
+        $plan = $this
+            ->pgsqlContext()
+            ->client()
+            ->explain(select(star())->from(table('test_summary_combinations')), config: $config);
 
         $analyzer = new PlanAnalyzer($plan);
         $summary = $analyzer->summary();
 
         if ($expected['hasExecutionTime']) {
-            self::assertNotNull($summary->executionTime, 'Expected summary executionTime to be present');
+            static::assertNotNull($summary->executionTime, 'Expected summary executionTime to be present');
         } else {
-            self::assertNull($summary->executionTime, 'Expected summary executionTime to be null');
+            static::assertNull($summary->executionTime, 'Expected summary executionTime to be null');
         }
 
         if ($expected['hasPlanningTime']) {
-            self::assertNotNull($summary->planningTime, 'Expected summary planningTime to be present');
+            static::assertNotNull($summary->planningTime, 'Expected summary planningTime to be present');
         } else {
-            self::assertNull($summary->planningTime, 'Expected summary planningTime to be null');
+            static::assertNull($summary->planningTime, 'Expected summary planningTime to be null');
         }
 
         if ($expected['hasActualRows']) {
-            self::assertNotNull($summary->actualRows, 'Expected summary actualRows to be present');
+            static::assertNotNull($summary->actualRows, 'Expected summary actualRows to be present');
         } else {
-            self::assertNull($summary->actualRows, 'Expected summary actualRows to be null');
+            static::assertNull($summary->actualRows, 'Expected summary actualRows to be null');
         }
 
-        self::assertGreaterThanOrEqual(0, $summary->nodeCount);
-        self::assertGreaterThanOrEqual(0, $summary->estimatedRows);
-        self::assertGreaterThanOrEqual(0.0, $summary->totalCost);
+        static::assertGreaterThanOrEqual(0, $summary->nodeCount);
+        static::assertGreaterThanOrEqual(0, $summary->estimatedRows);
+        static::assertGreaterThanOrEqual(0.0, $summary->totalCost);
 
         $normalized = $summary->normalize();
         $restored = PlanSummary::fromArray($normalized);
-        self::assertEquals($summary, $restored);
+        static::assertEquals($summary, $restored);
     }
 }

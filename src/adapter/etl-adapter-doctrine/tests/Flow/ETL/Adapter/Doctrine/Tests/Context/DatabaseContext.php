@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 
-use Doctrine\DBAL\{Connection, ParameterType};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 
@@ -19,15 +20,14 @@ final class DatabaseContext
         private readonly Connection $connection,
         private readonly InsertQueryCounter $insertQueryCounter,
         private readonly SelectQueryCounter $selectQueryCounter,
-    ) {
-    }
+    ) {}
 
-    public function connection() : Connection
+    public function connection(): Connection
     {
         return $this->connection;
     }
 
-    public function createTable(Table $table) : void
+    public function createTable(Table $table): void
     {
         $schemaManager = $this->connection->createSchemaManager();
 
@@ -39,7 +39,7 @@ final class DatabaseContext
         $this->createdTables[] = $table->getName();
     }
 
-    public function dropAllTables() : void
+    public function dropAllTables(): void
     {
         $schemaManager = $this->connection->createSchemaManager();
 
@@ -51,7 +51,7 @@ final class DatabaseContext
     /**
      * @return array<string>
      */
-    public function executedSelectQueries() : array
+    public function executedSelectQueries(): array
     {
         return $this->selectQueryCounter->queries;
     }
@@ -60,29 +60,29 @@ final class DatabaseContext
      * @param array<string, mixed> $data
      * @param array<string, mixed> $types
      */
-    public function insert(string $tableName, array $data, array $types = []) : void
+    public function insert(string $tableName, array $data, array $types = []): void
     {
         /** @var array<int<0, max>|string, ParameterType|string|Type> $doctrineTypes */
         $doctrineTypes = $types;
         $this->connection->insert($tableName, $data, $doctrineTypes);
     }
 
-    public function numberOfExecutedInsertQueries() : int
+    public function numberOfExecutedInsertQueries(): int
     {
         return $this->insertQueryCounter->count;
     }
 
-    public function numberOfExecutedSelectQueries() : int
+    public function numberOfExecutedSelectQueries(): int
     {
         return $this->selectQueryCounter->count;
     }
 
-    public function resetInsertQueryCounter() : void
+    public function resetInsertQueryCounter(): void
     {
         $this->insertQueryCounter->reset();
     }
 
-    public function resetSelectQueryCounter() : void
+    public function resetSelectQueryCounter(): void
     {
         $this->selectQueryCounter->reset();
     }
@@ -90,28 +90,22 @@ final class DatabaseContext
     /**
      * @return array<array<string, mixed>>
      */
-    public function selectAll(string $tableName) : array
+    public function selectAll(string $tableName): array
     {
         return $this->connection->fetchAllAssociative(
-            $this
-                ->connection
+            $this->connection
                 ->createQueryBuilder()
                 ->select('*')
                 ->from($tableName)
                 ->orderBy('id')
-                ->getSQL()
+                ->getSQL(),
         );
     }
 
-    public function tableCount(string $tableName) : int
+    public function tableCount(string $tableName): int
     {
         $result = $this->connection->fetchOne(
-            $this
-                ->connection
-                ->createQueryBuilder()
-                ->select('COUNT(*)')
-                ->from($tableName)
-                ->getSQL()
+            $this->connection->createQueryBuilder()->select('COUNT(*)')->from($tableName)->getSQL(),
         );
 
         return \is_numeric($result) ? (int) $result : 0;

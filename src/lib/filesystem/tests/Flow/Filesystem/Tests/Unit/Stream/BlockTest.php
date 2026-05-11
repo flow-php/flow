@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BlockTest extends TestCase
 {
-    public function test_append_throws_on_closed_handle() : void
+    public function test_append_throws_on_closed_handle(): void
     {
         $filePath = \sys_get_temp_dir() . '/flow_block_test_' . \uniqid() . '.bin';
         $path = Path::realpath($filePath);
@@ -30,7 +30,7 @@ final class BlockTest extends TestCase
         $block->append('more data');
     }
 
-    public function test_append_throws_when_block_is_full() : void
+    public function test_append_throws_when_block_is_full(): void
     {
         $path = Path::realpath(\sys_get_temp_dir() . '/flow_block_test_' . \uniqid() . '.bin');
         $block = new Block('test-block', 10, $path);
@@ -40,7 +40,7 @@ final class BlockTest extends TestCase
         $block->append(\str_repeat('a', 11));
     }
 
-    public function test_append_writes_data_to_block() : void
+    public function test_append_writes_data_to_block(): void
     {
         $path = Path::realpath(\sys_get_temp_dir() . '/flow_block_test_' . \uniqid() . '.bin');
         $block = new Block('test-block', 1024, $path);
@@ -48,7 +48,7 @@ final class BlockTest extends TestCase
         $block->append('hello');
         $block->append(' world');
 
-        self::assertSame(11, $block->size());
-        self::assertSame(1013, $block->spaceLeft());
+        static::assertSame(11, $block->size());
+        static::assertSame(1013, $block->spaceLeft());
     }
 }

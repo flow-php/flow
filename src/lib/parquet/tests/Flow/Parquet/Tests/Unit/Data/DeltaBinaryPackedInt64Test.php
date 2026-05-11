@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
-use Flow\Parquet\Data\{DeltaBinaryPackedDecoder, DeltaBinaryPackedEncoder};
+use Flow\Parquet\Data\DeltaBinaryPackedDecoder;
+use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +18,7 @@ final class DeltaBinaryPackedInt64Test extends TestCase
     /**
      * @return array<string, array<array<int>>>
      */
-    public static function problematicInt64ValuesProvider() : array
+    public static function problematicInt64ValuesProvider(): array
     {
         return [
             // ✅ These should now work with ZigZag fixes
@@ -47,7 +48,7 @@ final class DeltaBinaryPackedInt64Test extends TestCase
         ];
     }
 
-    public function test_delta_encoding_with_known_working_values() : void
+    public function test_delta_encoding_with_known_working_values(): void
     {
         // Test with values we know should work to ensure baseline functionality
         $workingValues = [
@@ -60,10 +61,10 @@ final class DeltaBinaryPackedInt64Test extends TestCase
             $encoded = (new DeltaBinaryPackedEncoder())->encode($values);
             $decoded = (new DeltaBinaryPackedDecoder())->decode($encoded, count($values));
 
-            self::assertSame(
+            static::assertSame(
                 $values,
                 $decoded,
-                'Known working values should always roundtrip correctly: ' . implode(', ', $values)
+                'Known working values should always roundtrip correctly: ' . implode(', ', $values),
             );
         }
     }
@@ -72,17 +73,17 @@ final class DeltaBinaryPackedInt64Test extends TestCase
      * @param array<int> $values
      */
     #[DataProvider('problematicInt64ValuesProvider')]
-    public function test_int64_delta_encoding_roundtrip(array $values) : void
+    public function test_int64_delta_encoding_roundtrip(array $values): void
     {
         $encoded = (new DeltaBinaryPackedEncoder())->encode($values);
         $decoded = (new DeltaBinaryPackedDecoder())->decode($encoded, count($values));
 
         $testName = $this->dataName();
 
-        self::assertSame(
+        static::assertSame(
             $values,
             $decoded,
-            "Int64 values should roundtrip correctly through delta encoding for test case: {$testName}"
+            "Int64 values should roundtrip correctly through delta encoding for test case: {$testName}",
         );
     }
 }

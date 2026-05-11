@@ -17,5 +17,5 @@ interface CellStyler
      * @param int $columnIndex the 0-based column index
      * @param string $sheetName the name of the sheet being written to
      */
-    public function style(Entry $entry, int $rowNumber, int $columnIndex, string $sheetName) : ?Style;
+    public function style(Entry $entry, int $rowNumber, int $columnIndex, string $sheetName): ?Style;
 }

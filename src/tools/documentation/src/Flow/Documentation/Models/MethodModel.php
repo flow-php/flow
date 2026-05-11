@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_integer, type_optional, type_string, type_structure};
 use Flow\ETL\Function\ScalarFunctionChain;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class MethodModel
 {
@@ -22,14 +28,12 @@ final readonly class MethodModel
         public AttributesModel $attributes,
         public bool $scalarFunctionChain,
         public ?string $docComment = null,
-    ) {
-
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'repository_path' => type_string(),
@@ -63,21 +67,27 @@ final readonly class MethodModel
             TypesModel::fromArray($returnType),
             AttributesModel::fromArray($attributes),
             $data['scalar_function_chain'],
-            $data['doc_comment']
+            $data['doc_comment'],
         );
     }
 
-    public static function fromReflection(string $relativePath, \ReflectionMethod $reflectionMethod) : self
+    public static function fromReflection(string $relativePath, \ReflectionMethod $reflectionMethod): self
     {
         $returnTypeReflection = $reflectionMethod->getReturnType();
         $declaringClass = $reflectionMethod->getDeclaringClass();
         $className = $declaringClass->getName();
-        $classSlug = (new AsciiSlugger())->slug($declaringClass->getShortName())->lower()->toString();
+        $classSlug = (new AsciiSlugger())
+            ->slug($declaringClass->getShortName())
+            ->lower()
+            ->toString();
 
         return new self(
             $relativePath,
             $reflectionMethod->getStartLine(),
-            (new AsciiSlugger())->slug($reflectionMethod->getShortName())->lower()->toString(),
+            (new AsciiSlugger())
+                ->slug($reflectionMethod->getShortName())
+                ->lower()
+                ->toString(),
             $reflectionMethod->getShortName(),
             $className,
             $classSlug,
@@ -92,7 +102,7 @@ final readonly class MethodModel
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'repository_path' => $this->repositoryPath,
@@ -109,7 +119,7 @@ final readonly class MethodModel
         ];
     }
 
-    private static function isScalarFunctionChain(\ReflectionType $reflectionType) : bool
+    private static function isScalarFunctionChain(\ReflectionType $reflectionType): bool
     {
         if ($reflectionType instanceof \ReflectionNamedType) {
             $typeName = $reflectionType->getName();

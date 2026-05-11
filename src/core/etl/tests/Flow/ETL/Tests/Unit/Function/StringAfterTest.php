@@ -4,60 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class StringAfterTest extends FlowTestCase
 {
-    public function test_string_after() : void
+    public function test_string_after(): void
     {
-        self::assertSame(
-            ' world',
-            ref('str')->stringAfter(ref('needle'))->eval(
-                row(
-                    str_entry('str', 'hello world'),
-                    str_entry('needle', 'hello')
-                ),
-                flow_context()
-            )
-        );
+        static::assertSame(' world', ref('str')
+            ->stringAfter(ref('needle'))
+            ->eval(row(str_entry('str', 'hello world'), str_entry('needle', 'hello')), flow_context()));
 
-        self::assertSame(
-            ' world',
-            ref('str')->stringAfter(ref('needle'))->eval(
-                row(
-                    str_entry('str', 'hello world'),
-                    str_entry('needle', 'o')
-                ),
-                flow_context()
-            )
-        );
+        static::assertSame(' world', ref('str')
+            ->stringAfter(ref('needle'))
+            ->eval(row(str_entry('str', 'hello world'), str_entry('needle', 'o')), flow_context()));
     }
 
-    public function test_string_after_including_needle() : void
+    public function test_string_after_including_needle(): void
     {
-        self::assertSame(
-            'o world',
-            ref('str')->stringAfter(ref('needle'), includeNeedle: true)->eval(
-                row(
-                    str_entry('str', 'hello world'),
-                    str_entry('needle', 'o')
-                ),
-                flow_context()
-            )
-        );
+        static::assertSame('o world', ref('str')
+            ->stringAfter(ref('needle'), includeNeedle: true)
+            ->eval(row(str_entry('str', 'hello world'), str_entry('needle', 'o')), flow_context()));
     }
 
-    public function test_string_after_returns_null() : void
+    public function test_string_after_returns_null(): void
     {
-        self::assertNull(
-            ref('str')->stringAfter('x')->eval(
-                row(
-                    str_entry('str', null),
-                ),
-                flow_context()
-            )
-        );
+        static::assertNull(ref('str')->stringAfter('x')->eval(row(str_entry('str', null)), flow_context()));
     }
 }

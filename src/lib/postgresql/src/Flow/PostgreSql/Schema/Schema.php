@@ -6,7 +6,8 @@ namespace Flow\PostgreSql\Schema;
 
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\Exception\{SchemaException, TableNotFoundException};
+use Flow\PostgreSql\Schema\Exception\SchemaException;
+use Flow\PostgreSql\Schema\Exception\TableNotFoundException;
 
 /**
  * @phpstan-import-type TableShape from Table
@@ -42,58 +43,23 @@ final readonly class Schema
         public array $procedures = [],
         public array $domains = [],
         public array $extensions = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param SchemaShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        return new self(
-            name: $data['name'],
-            tables: \array_map(
-                static function (array $t) use ($data) : Table {
-                    if (!\array_key_exists('schema', $t)) {
-                        $t['schema'] = $data['name'];
-                    }
+        return new self(name: $data['name'], tables: \array_map(static function (array $t) use ($data): Table {
+            if (!\array_key_exists('schema', $t)) {
+                $t['schema'] = $data['name'];
+            }
 
-                    return Table::fromArray($t);
-                },
-                $data['tables'] ?? [],
-            ),
-            sequences: \array_map(
-                static fn (array $s) : Sequence => Sequence::fromArray($s),
-                $data['sequences'] ?? [],
-            ),
-            views: \array_map(
-                static fn (array $v) : View => View::fromArray($v),
-                $data['views'] ?? [],
-            ),
-            materializedViews: \array_map(
-                static fn (array $mv) : MaterializedView => MaterializedView::fromArray($mv),
-                $data['materialized_views'] ?? [],
-            ),
-            functions: \array_map(
-                static fn (array $f) : Func => Func::fromArray($f),
-                $data['functions'] ?? [],
-            ),
-            procedures: \array_map(
-                static fn (array $p) : Procedure => Procedure::fromArray($p),
-                $data['procedures'] ?? [],
-            ),
-            domains: \array_map(
-                static fn (array $d) : Domain => Domain::fromArray($d),
-                $data['domains'] ?? [],
-            ),
-            extensions: \array_map(
-                static fn (array $e) : Extension => Extension::fromArray($e),
-                $data['extensions'] ?? [],
-            ),
-        );
+            return Table::fromArray($t);
+        }, $data['tables'] ?? []), sequences: \array_map(static fn(array $s): Sequence => Sequence::fromArray($s), $data['sequences'] ?? []), views: \array_map(static fn(array $v): View => View::fromArray($v), $data['views'] ?? []), materializedViews: \array_map(static fn(array $mv): MaterializedView => MaterializedView::fromArray($mv), $data['materialized_views'] ?? []), functions: \array_map(static fn(array $f): Func => Func::fromArray($f), $data['functions'] ?? []), procedures: \array_map(static fn(array $p): Procedure => Procedure::fromArray($p), $data['procedures'] ?? []), domains: \array_map(static fn(array $d): Domain => Domain::fromArray($d), $data['domains'] ?? []), extensions: \array_map(static fn(array $e): Extension => Extension::fromArray($e), $data['extensions'] ?? []));
     }
 
-    public function hasSequence(string $name) : bool
+    public function hasSequence(string $name): bool
     {
         foreach ($this->sequences as $sequence) {
             if ($sequence->name === $name) {
@@ -104,7 +70,7 @@ final readonly class Schema
         return false;
     }
 
-    public function hasTable(string $name) : bool
+    public function hasTable(string $name): bool
     {
         foreach ($this->tables as $table) {
             if ($table->name === $name) {
@@ -115,7 +81,7 @@ final readonly class Schema
         return false;
     }
 
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
         return new self(
             name: $this->name,
@@ -133,46 +99,25 @@ final readonly class Schema
     /**
      * @return SchemaShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
-            'tables' => \array_map(
-                static fn (Table $t) : array => $t->normalize(),
-                $this->tables,
-            ),
-            'sequences' => \array_map(
-                static fn (Sequence $s) : array => $s->normalize(),
-                $this->sequences,
-            ),
-            'views' => \array_map(
-                static fn (View $v) : array => $v->normalize(),
-                $this->views,
-            ),
+            'tables' => \array_map(static fn(Table $t): array => $t->normalize(), $this->tables),
+            'sequences' => \array_map(static fn(Sequence $s): array => $s->normalize(), $this->sequences),
+            'views' => \array_map(static fn(View $v): array => $v->normalize(), $this->views),
             'materialized_views' => \array_map(
-                static fn (MaterializedView $mv) : array => $mv->normalize(),
+                static fn(MaterializedView $mv): array => $mv->normalize(),
                 $this->materializedViews,
             ),
-            'functions' => \array_map(
-                static fn (Func $f) : array => $f->normalize(),
-                $this->functions,
-            ),
-            'procedures' => \array_map(
-                static fn (Procedure $p) : array => $p->normalize(),
-                $this->procedures,
-            ),
-            'domains' => \array_map(
-                static fn (Domain $d) : array => $d->normalize(),
-                $this->domains,
-            ),
-            'extensions' => \array_map(
-                static fn (Extension $e) : array => $e->normalize(),
-                $this->extensions,
-            ),
+            'functions' => \array_map(static fn(Func $f): array => $f->normalize(), $this->functions),
+            'procedures' => \array_map(static fn(Procedure $p): array => $p->normalize(), $this->procedures),
+            'domains' => \array_map(static fn(Domain $d): array => $d->normalize(), $this->domains),
+            'extensions' => \array_map(static fn(Extension $e): array => $e->normalize(), $this->extensions),
         ];
     }
 
-    public function sequence(string $name) : Sequence
+    public function sequence(string $name): Sequence
     {
         foreach ($this->sequences as $sequence) {
             if ($sequence->name === $name) {
@@ -183,7 +128,7 @@ final readonly class Schema
         throw new SchemaException(\sprintf('Sequence "%s" not found in schema "%s".', $name, $this->name));
     }
 
-    public function table(string $name) : Table
+    public function table(string $name): Table
     {
         foreach ($this->tables as $table) {
             if ($table->name === $name) {
@@ -197,12 +142,9 @@ final readonly class Schema
     /**
      * @return list<string>
      */
-    public function tableNames() : array
+    public function tableNames(): array
     {
-        return \array_map(
-            static fn (Table $t) : string => $t->name,
-            $this->tables,
-        );
+        return \array_map(static fn(Table $t): string => $t->name, $this->tables);
     }
 
     /**
@@ -216,7 +158,7 @@ final readonly class Schema
         ExecutionOrderStrategy $tableOrderStrategy = new ForeignKeyDependencyOrder(),
         ExecutionOrderStrategy $viewOrderStrategy = new ViewDependencyOrder(new Parser()),
         ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(new Parser()),
-    ) : array {
+    ): array {
         $sqls = [];
 
         foreach ($this->extensions as $ext) {
@@ -270,7 +212,7 @@ final readonly class Schema
      *
      * @return list<T>
      */
-    private static function mergeByName(array $base, array $override) : array
+    private static function mergeByName(array $base, array $override): array
     {
         $indexed = [];
 

@@ -8,11 +8,13 @@ use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
 use Flow\Telemetry\Telemetry;
 use Psr\Http\Client\ClientInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class Psr18ClientTelemetryPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter('flow.telemetry.psr18_client.enabled')) {
             return;
@@ -48,7 +50,7 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
         }
     }
 
-    private function implementsPsr18Interface(Definition $definition) : bool
+    private function implementsPsr18Interface(Definition $definition): bool
     {
         $class = $definition->getClass();
 
@@ -70,7 +72,7 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
     /**
      * @param array<string> $patterns
      */
-    private function isExcluded(string $serviceId, array $patterns) : bool
+    private function isExcluded(string $serviceId, array $patterns): bool
     {
         foreach ($patterns as $pattern) {
             if ($this->matchesPattern($serviceId, $pattern)) {
@@ -81,7 +83,7 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
         return false;
     }
 
-    private function matchesPattern(string $serviceId, string $pattern) : bool
+    private function matchesPattern(string $serviceId, string $pattern): bool
     {
         $result = @\preg_match($pattern, $serviceId);
 

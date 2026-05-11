@@ -11,18 +11,19 @@ use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
-use Monolog\{Level, Logger as MonologLogger};
+use Monolog\Level;
+use Monolog\Logger as MonologLogger;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
 final class TelemetryHandlerErrorHandlingTest extends TestCase
 {
-    public function test_does_not_propagate_exception_to_monolog_caller() : void
+    public function test_does_not_propagate_exception_to_monolog_caller(): void
     {
         $this->expectNotToPerformAssertions();
 
         $throwingClock = new class implements ClockInterface {
-            public function now() : \DateTimeImmutable
+            public function now(): \DateTimeImmutable
             {
                 throw new \RuntimeException('clock blew up');
             }
@@ -44,10 +45,10 @@ final class TelemetryHandlerErrorHandlingTest extends TestCase
         $monolog->info('hello');
     }
 
-    public function test_routes_emit_failures_to_error_handler() : void
+    public function test_routes_emit_failures_to_error_handler(): void
     {
         $throwingClock = new class implements ClockInterface {
-            public function now() : \DateTimeImmutable
+            public function now(): \DateTimeImmutable
             {
                 throw new \RuntimeException('clock blew up');
             }
@@ -68,7 +69,7 @@ final class TelemetryHandlerErrorHandlingTest extends TestCase
 
         $monolog->info('hello');
 
-        self::assertSame(1, $spy->count());
-        self::assertSame('clock blew up', $spy->last()?->getMessage());
+        static::assertSame(1, $spy->count());
+        static::assertSame('clock blew up', $spy->last()?->getMessage());
     }
 }

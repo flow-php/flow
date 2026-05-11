@@ -38,32 +38,32 @@ final class ConsoleOutput
         $this->stream = $stream ?? \STDOUT;
     }
 
-    public function blue(string $text) : string
+    public function blue(string $text): string
     {
         return $this->color($text, self::BLUE);
     }
 
-    public function bold(string $text) : string
+    public function bold(string $text): string
     {
         return $this->color($text, self::BOLD);
     }
 
-    public function border(int $width) : string
+    public function border(int $width): string
     {
         return '+' . \str_repeat('-', $width - 2) . '+';
     }
 
-    public function cyan(string $text) : string
+    public function cyan(string $text): string
     {
         return $this->color($text, self::CYAN);
     }
 
-    public function dim(string $text) : string
+    public function dim(string $text): string
     {
         return $this->color($text, self::DIM);
     }
 
-    public function formatDuration(?float $ms) : string
+    public function formatDuration(?float $ms): string
     {
         if ($ms === null) {
             return '-';
@@ -80,7 +80,7 @@ final class ConsoleOutput
         return \sprintf('%.2fs', $ms / 1000);
     }
 
-    public function formatTimestamp(\DateTimeImmutable $dt) : string
+    public function formatTimestamp(\DateTimeImmutable $dt): string
     {
         return $dt->format('Y-m-d H:i:s.u');
     }
@@ -88,7 +88,7 @@ final class ConsoleOutput
     /**
      * @param null|array<mixed>|bool|float|int|string $value
      */
-    public function formatValue(array|bool|float|int|string|null $value) : string
+    public function formatValue(array|bool|float|int|string|null $value): string
     {
         if ($value === null) {
             return 'null';
@@ -109,12 +109,12 @@ final class ConsoleOutput
         return (string) $value;
     }
 
-    public function gray(string $text) : string
+    public function gray(string $text): string
     {
         return $this->color($text, self::GRAY);
     }
 
-    public function green(string $text) : string
+    public function green(string $text): string
     {
         return $this->color($text, self::GREEN);
     }
@@ -124,7 +124,7 @@ final class ConsoleOutput
      *
      * @see Flow\ETL\Formatter\ASCII\ASCIIValue::mb_str_pad
      */
-    public function pad(string $input, int $length, string $padding = ' ', int $padType = STR_PAD_RIGHT) : string
+    public function pad(string $input, int $length, string $padding = ' ', int $padType = STR_PAD_RIGHT): string
     {
         $visibleLength = \mb_strlen($this->stripColors($input));
         $paddingRequired = $length - $visibleLength;
@@ -135,19 +135,27 @@ final class ConsoleOutput
 
         return match ($padType) {
             STR_PAD_LEFT => \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired) . $input,
-            STR_PAD_BOTH => \mb_substr(\str_repeat($padding, (int) \floor($paddingRequired / 2)), 0, (int) \floor($paddingRequired / 2))
+            STR_PAD_BOTH => \mb_substr(
+                \str_repeat($padding, (int) \floor($paddingRequired / 2)),
+                0,
+                (int) \floor($paddingRequired / 2),
+            )
                 . $input
-                . \mb_substr(\str_repeat($padding, $paddingRequired - (int) \floor($paddingRequired / 2)), 0, $paddingRequired - (int) \floor($paddingRequired / 2)),
+                . \mb_substr(
+                    \str_repeat($padding, $paddingRequired - (int) \floor($paddingRequired / 2)),
+                    0,
+                    $paddingRequired - (int) \floor($paddingRequired / 2),
+                ),
             default => $input . \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired),
         };
     }
 
-    public function red(string $text) : string
+    public function red(string $text): string
     {
         return $this->color($text, self::RED);
     }
 
-    public function row(string $content, int $width) : string
+    public function row(string $content, int $width): string
     {
         $contentLength = \mb_strlen($this->stripColors($content));
         $padding = $width - 4 - $contentLength;
@@ -159,7 +167,7 @@ final class ConsoleOutput
         return '| ' . $content . \str_repeat(' ', $padding) . ' |';
     }
 
-    public function stripColors(string $text) : string
+    public function stripColors(string $text): string
     {
         return (string) \preg_replace('/\033\[[0-9;]*m/', '', $text);
     }
@@ -167,7 +175,7 @@ final class ConsoleOutput
     /**
      * Truncate text to a maximum visible length, accounting for ANSI codes.
      */
-    public function truncate(string $text, int $max) : string
+    public function truncate(string $text, int $max): string
     {
         $stripped = $this->stripColors($text);
 
@@ -178,17 +186,17 @@ final class ConsoleOutput
         return \mb_substr($stripped, 0, $max - 3) . '...';
     }
 
-    public function write(string $text) : void
+    public function write(string $text): void
     {
         \fwrite($this->stream, $text . PHP_EOL);
     }
 
-    public function yellow(string $text) : string
+    public function yellow(string $text): string
     {
         return $this->color($text, self::YELLOW);
     }
 
-    private function color(string $text, string $code) : string
+    private function color(string $text, string $code): string
     {
         if (!$this->colors) {
             return $text;

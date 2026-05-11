@@ -15,7 +15,7 @@ final class ZigZagTest extends TestCase
     /**
      * @return array<string, array<int>>
      */
-    public static function edgeCaseValuesProvider() : array
+    public static function edgeCaseValuesProvider(): array
     {
         return [
             'half_int_max' => [PHP_INT_MAX >> 1],
@@ -28,7 +28,7 @@ final class ZigZagTest extends TestCase
     /**
      * @return array<string, array<int>>
      */
-    public static function extremeValuesProvider() : array
+    public static function extremeValuesProvider(): array
     {
         return [
             'int_max' => [PHP_INT_MAX],
@@ -45,7 +45,7 @@ final class ZigZagTest extends TestCase
     /**
      * @return array<string, array<int>>
      */
-    public static function largeValuesProvider() : array
+    public static function largeValuesProvider(): array
     {
         return [
             'medium_large_positive_1' => [1000000000000000000],
@@ -60,7 +60,7 @@ final class ZigZagTest extends TestCase
     /**
      * @return array<string, array<int>>
      */
-    public static function standardMappingProvider() : array
+    public static function standardMappingProvider(): array
     {
         return [
             'zero' => [0, 0],
@@ -77,78 +77,78 @@ final class ZigZagTest extends TestCase
         ];
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->zigzag = new ZigZag();
     }
 
     #[DataProvider('edgeCaseValuesProvider')]
-    public function test_edge_case_values_roundtrip(int $value) : void
+    public function test_edge_case_values_roundtrip(int $value): void
     {
         $encoded = $this->zigzag->encode($value);
         $decoded = $this->zigzag->decode($encoded);
 
-        self::assertSame($value, $decoded, "Edge case value {$value} should roundtrip correctly");
+        static::assertSame($value, $decoded, "Edge case value {$value} should roundtrip correctly");
     }
 
-    public function test_encode_preserves_ordering_for_small_values() : void
+    public function test_encode_preserves_ordering_for_small_values(): void
     {
         $values = [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        $encoded = array_map(fn ($v) => $this->zigzag->encode($v), $values);
+        $encoded = array_map(fn($v) => $this->zigzag->encode($v), $values);
 
         $expected = [19, 17, 15, 13, 11, 9, 7, 5, 3, 1, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
 
-        self::assertSame($expected, $encoded);
+        static::assertSame($expected, $encoded);
     }
 
     #[DataProvider('extremeValuesProvider')]
-    public function test_extreme_values_follow_zigzag_mapping(int $value) : void
+    public function test_extreme_values_follow_zigzag_mapping(int $value): void
     {
         $encoded = $this->zigzag->encode($value);
 
-        self::assertIsInt($encoded, 'ZigZag encoding should always produce an integer');
+        static::assertIsInt($encoded, 'ZigZag encoding should always produce an integer');
 
         if ($value >= 0) {
             if ($value <= (PHP_INT_MAX >> 1)) {
-                self::assertTrue(
+                static::assertTrue(
                     $encoded >= 0 && ($encoded & 1) === 0,
-                    "Positive value {$value} should encode to non-negative even number, got {$encoded}"
+                    "Positive value {$value} should encode to non-negative even number, got {$encoded}",
                 );
             }
         } else {
             if ($value >= -(PHP_INT_MAX >> 1)) {
-                self::assertTrue(
+                static::assertTrue(
                     $encoded > 0 && ($encoded & 1) === 1,
-                    "Negative value {$value} should encode to positive odd number, got {$encoded}"
+                    "Negative value {$value} should encode to positive odd number, got {$encoded}",
                 );
             }
         }
     }
 
     #[DataProvider('largeValuesProvider')]
-    public function test_large_values_roundtrip(int $value) : void
+    public function test_large_values_roundtrip(int $value): void
     {
         $encoded = $this->zigzag->encode($value);
         $decoded = $this->zigzag->decode($encoded);
 
-        self::assertSame($value, $decoded, "Value {$value} should roundtrip correctly");
+        static::assertSame($value, $decoded, "Value {$value} should roundtrip correctly");
     }
 
     /**
      * @param array<int, int> $expected
      */
     #[DataProvider('standardMappingProvider')]
-    public function test_standard_zigzag_mapping(int $original, int $expected) : void
+    public function test_standard_zigzag_mapping(int $original, int $expected): void
     {
-        self::assertSame($expected, $this->zigzag->encode($original));
+        static::assertSame($expected, $this->zigzag->encode($original));
     }
 
     /**
      * @param array<int, int> $expected
      */
     #[DataProvider('standardMappingProvider')]
-    public function test_zigzag_roundtrip(int $original, int $encoded) : void
+    public function test_zigzag_roundtrip(int $original, int $encoded): void
     {
-        self::assertSame($original, $this->zigzag->decode($encoded));
+        static::assertSame($original, $this->zigzag->decode($encoded));
     }
 }

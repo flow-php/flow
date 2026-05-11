@@ -9,28 +9,28 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class RunSqlCommandTest extends CommandTestCase
 {
-    public function test_runs_ddl_and_verifies_table_created() : void
+    public function test_runs_ddl_and_verifies_table_created(): void
     {
         /** @var Command $command */
         $command = $this->context->container()->get('flow.postgresql.command.sql_run');
         $tester = new CommandTester($command);
         $tester->execute(['sql' => 'CREATE TABLE flow_sql_test (id SERIAL PRIMARY KEY, name TEXT NOT NULL)']);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertTrue($this->context->tableExists('flow_sql_test'));
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertTrue($this->context->tableExists('flow_sql_test'));
     }
 
-    public function test_runs_select_query_and_returns_data() : void
+    public function test_runs_select_query_and_returns_data(): void
     {
         /** @var Command $command */
         $command = $this->context->container()->get('flow.postgresql.command.sql_run');
         $tester = new CommandTester($command);
         $tester->execute(['sql' => "SELECT 1 AS result, 'hello' AS greeting"]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('result', $tester->getDisplay());
-        self::assertStringContainsString('greeting', $tester->getDisplay());
-        self::assertStringContainsString('hello', $tester->getDisplay());
-        self::assertStringContainsString('1 row(s) returned', $tester->getDisplay());
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString('result', $tester->getDisplay());
+        static::assertStringContainsString('greeting', $tester->getDisplay());
+        static::assertStringContainsString('hello', $tester->getDisplay());
+        static::assertStringContainsString('1 row(s) returned', $tester->getDisplay());
     }
 }

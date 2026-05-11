@@ -21,8 +21,7 @@ final readonly class ChangeSet
         public array $removed,
         public ?array $modified = null,
         public ?array $renamed = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @template TObj
@@ -35,8 +34,12 @@ final readonly class ChangeSet
      *
      * @return self<TObj, TObjDiff>
      */
-    public static function fromNamedObjects(array $source, array $target, callable $identityFn, ?callable $modifiedFn = null) : self
-    {
+    public static function fromNamedObjects(
+        array $source,
+        array $target,
+        callable $identityFn,
+        ?callable $modifiedFn = null,
+    ): self {
         $sourceMap = [];
 
         foreach ($source as $item) {

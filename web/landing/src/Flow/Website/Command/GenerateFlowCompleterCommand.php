@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\DSL\{df, lit, ref};
-use function Flow\Filesystem\DSL\path;
 use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -15,10 +12,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
-#[AsCommand(
-    name: 'app:generate:flow-completer',
-    description: 'Generate CodeMirror completer for Flow methods'
-)]
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\Filesystem\DSL\path;
+
+#[AsCommand(name: 'app:generate:flow-completer', description: 'Generate CodeMirror completer for Flow methods')]
 final class GenerateFlowCompleterCommand extends Command
 {
     public function __construct(
@@ -29,7 +29,7 @@ final class GenerateFlowCompleterCommand extends Command
         parent::__construct();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -56,10 +56,19 @@ final class GenerateFlowCompleterCommand extends Command
             ->read(from_json($dslJsonPath))
             ->collect()
             ->filter(ref('return_type')->isNotNull())
-            ->withEntry('has_flow_return', ref('return_type')->onEach(
-                ref('element')->arrayGet('name')->equals(lit('Flow'))
-                    ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL')))
-            )->arrayKeep(true)->size()->greaterThan(lit(0)))
+            ->withEntry(
+                'has_flow_return',
+                ref('return_type')
+                    ->onEach(
+                        ref('element')
+                            ->arrayGet('name')
+                            ->equals(lit('Flow'))
+                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL'))),
+                    )
+                    ->arrayKeep(true)
+                    ->size()
+                    ->greaterThan(lit(0)),
+            )
             ->filter(ref('has_flow_return')->equals(lit(true)))
             ->fetch()
             ->reduceToArray('name');

@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AlterEnumTypeFinalStep extends Sql
 {
-    public function ifNotExists() : self;
+    public function ifNotExists(): self;
 
-    public function toAst() : AlterEnumStmt;
+    public function toAst(): AlterEnumStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

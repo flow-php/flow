@@ -6,9 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\View\CreateMaterializedView;
 
 interface CreateMatViewDataStep extends CreateMatViewFinalStep
 {
-    public function tablespace(string $tablespace) : self;
+    public function tablespace(string $tablespace): self;
 
-    public function withData() : CreateMatViewFinalStep;
+    public function withData(): CreateMatViewFinalStep;
 
-    public function withNoData() : CreateMatViewFinalStep;
+    public function withNoData(): CreateMatViewFinalStep;
 }

@@ -8,13 +8,16 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor, VoidSpanProcessor};
-use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Provider\Void\VoidLogProcessor;
+use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
+use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 
 final class VoidTelemetryFactory
 {
-    public static function create() : Telemetry
+    public static function create(): Telemetry
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();

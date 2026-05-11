@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Requirements
 {
-    public static function requireGrpc() : void
+    public static function requireGrpc(): void
     {
         if (!\extension_loaded('grpc')) {
             TestCase::markTestSkipped('The grpc extension is not available');
@@ -23,7 +23,7 @@ final class Requirements
         self::requireProtobuf();
     }
 
-    public static function requireProtobuf() : void
+    public static function requireProtobuf(): void
     {
         if (!\class_exists(Message::class)) {
             TestCase::markTestSkipped('The google/protobuf package is not installed');

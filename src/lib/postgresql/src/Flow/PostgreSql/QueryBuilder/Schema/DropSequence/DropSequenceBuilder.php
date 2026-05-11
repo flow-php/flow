@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\DropSequence;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropSequenceNameStep
 {
@@ -18,51 +24,34 @@ final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropS
         private array $sequences = [],
         private bool $ifExists = false,
         private int $behavior = DropBehavior::DROP_BEHAVIOR_UNDEFINED,
-    ) {
-    }
+    ) {}
 
-    public static function create() : DropSequenceNameStep
+    public static function create(): DropSequenceNameStep
     {
         return new self();
     }
 
-    public function cascade() : DropSequenceFinalStep
+    public function cascade(): DropSequenceFinalStep
     {
-        return new self(
-            $this->sequences,
-            $this->ifExists,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->sequences, $this->ifExists, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropSequenceFinalStep
+    public function ifExists(): DropSequenceFinalStep
     {
-        return new self(
-            $this->sequences,
-            true,
-            $this->behavior,
-        );
+        return new self($this->sequences, true, $this->behavior);
     }
 
-    public function restrict() : DropSequenceFinalStep
+    public function restrict(): DropSequenceFinalStep
     {
-        return new self(
-            $this->sequences,
-            $this->ifExists,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->sequences, $this->ifExists, DropBehavior::DROP_RESTRICT);
     }
 
-    public function sequence(string ...$names) : DropSequenceFinalStep
+    public function sequence(string ...$names): DropSequenceFinalStep
     {
-        return new self(
-            \array_values($names),
-            $this->ifExists,
-            $this->behavior,
-        );
+        return new self(\array_values($names), $this->ifExists, $this->behavior);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_SEQUENCE);
@@ -86,7 +75,7 @@ final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropS
         return $stmt;
     }
 
-    private function createSequenceListNode(string $sequence) : Node
+    private function createSequenceListNode(string $sequence): Node
     {
         $identifier = QualifiedIdentifier::parse($sequence);
         $listItems = [];

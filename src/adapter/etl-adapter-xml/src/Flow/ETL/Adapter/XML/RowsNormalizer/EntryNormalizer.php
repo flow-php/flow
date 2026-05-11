@@ -4,40 +4,43 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\RowsNormalizer;
 
-use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
+use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
+use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{BooleanEntry,
-    DateTimeEntry,
-    EnumEntry,
-    FloatEntry,
-    IntegerEntry,
-    JsonEntry,
-    ListEntry,
-    MapEntry,
-    StringEntry,
-    StructureEntry,
-    UuidEntry,
-    XMLEntry};
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{MapType, StructureType};
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
 
 final readonly class EntryNormalizer
 {
     public function __construct(
         private PHPValueNormalizer $valueNormalizer,
-    ) {
-
-    }
+    ) {}
 
     /**
      * @param Entry<mixed> $entry
      */
-    public function normalize(Entry $entry) : XMLNode|XMLAttribute
+    public function normalize(Entry $entry): XMLNode|XMLAttribute
     {
         if (\str_starts_with($entry->name(), $this->valueNormalizer->attributePrefix)) {
-            return new XMLAttribute(\substr($entry->name(), \strlen($this->valueNormalizer->attributePrefix)), $entry->toString());
+            return new XMLAttribute(
+                \substr($entry->name(), \strlen($this->valueNormalizer->attributePrefix)),
+                $entry->toString(),
+            );
         }
 
         if ($entry instanceof ListEntry) {
@@ -57,12 +60,16 @@ final readonly class EntryNormalizer
             IntegerEntry::class => XMLNode::flatNode($entry->name(), (string) $entry->value()),
             FloatEntry::class => XMLNode::flatNode($entry->name(), (string) $entry->value()),
             BooleanEntry::class => XMLNode::flatNode($entry->name(), $entry->value() ? 'true' : 'false'),
-            DateTimeEntry::class => XMLNode::flatNode($entry->name(), $entry->value()?->format($this->valueNormalizer->dateTimeFormat)),
+            DateTimeEntry::class => XMLNode::flatNode(
+                $entry->name(),
+                $entry->value()?->format($this->valueNormalizer->dateTimeFormat),
+            ),
             EnumEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             JsonEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             UuidEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             XMLEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
-            default => throw new InvalidArgumentException("Given entry type can't be converted to node, given entry type: " . $entry::class),
+            default => throw new InvalidArgumentException("Given entry type can't be converted to node, given entry type: "
+            . $entry::class),
         };
     }
 
@@ -73,7 +80,7 @@ final readonly class EntryNormalizer
      *
      * @param ListEntry<mixed> $entry
      */
-    private function listToNode(ListEntry $entry) : XMLNode
+    private function listToNode(ListEntry $entry): XMLNode
     {
         $node = XMLNode::nestedNode($entry->name());
 
@@ -86,7 +93,11 @@ final readonly class EntryNormalizer
         }
 
         foreach ($listValue as $value) {
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->listElementName, $type, $value));
+            $node = $node->append($this->valueNormalizer->normalize(
+                $this->valueNormalizer->listElementName,
+                $type,
+                $value,
+            ));
         }
 
         return $node;
@@ -126,7 +137,7 @@ final readonly class EntryNormalizer
      *
      * @param MapEntry<array-key, mixed> $entry
      */
-    private function mapToNode(MapEntry $entry) : XMLNode
+    private function mapToNode(MapEntry $entry): XMLNode
     {
         $node = XMLNode::nestedNode($entry->name());
         $mapValue = $entry->value();
@@ -139,8 +150,16 @@ final readonly class EntryNormalizer
         $type = $entry->type();
 
         foreach ($mapValue as $key => $value) {
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementKeyName, $type->key(), $key));
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementValueName, $type->value(), $value));
+            $node = $node->append($this->valueNormalizer->normalize(
+                $this->valueNormalizer->mapElementKeyName,
+                $type->key(),
+                $key,
+            ));
+            $node = $node->append($this->valueNormalizer->normalize(
+                $this->valueNormalizer->mapElementValueName,
+                $type->value(),
+                $value,
+            ));
         }
 
         return $node;
@@ -149,7 +168,7 @@ final readonly class EntryNormalizer
     /**
      * @param StructureEntry<array<string, mixed>> $entry
      */
-    private function structureToNode(StructureEntry $entry) : XMLNode
+    private function structureToNode(StructureEntry $entry): XMLNode
     {
         $node = XMLNode::nestedNode($entry->name());
 
@@ -171,7 +190,11 @@ final readonly class EntryNormalizer
             $structureElementType = $element['structure_element'];
             $structureValue = $element['value_element'];
 
-            $node = $node->append($this->valueNormalizer->normalize($keys['structure_element'], $structureElementType, $structureValue));
+            $node = $node->append($this->valueNormalizer->normalize(
+                $keys['structure_element'],
+                $structureElementType,
+                $structureValue,
+            ));
         }
 
         return $node;

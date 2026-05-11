@@ -8,15 +8,15 @@ use Flow\PostgreSql\Migrations\Version;
 
 interface MigrationStore
 {
-    public function complete(Version $version, int $executionTimeMs) : void;
+    public function complete(Version $version, int $executionTimeMs): void;
 
-    public function executedMigrations() : ExecutedMigrations;
+    public function executedMigrations(): ExecutedMigrations;
 
-    public function initialize() : void;
+    public function initialize(): void;
 
-    public function isInitialized() : bool;
+    public function isInitialized(): bool;
 
-    public function remove(Version $version) : void;
+    public function remove(Version $version): void;
 
-    public function reset() : void;
+    public function reset(): void;
 }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Sanitization;
 
-use function Flow\Types\DSL\type_string;
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
+
+use function Flow\Types\DSL\type_string;
 
 final class SanitizerFactory
 {
@@ -16,7 +17,7 @@ final class SanitizerFactory
      *
      * @throws InvalidArgumentException When the sanitizer type is not supported or required data is missing
      */
-    public static function fromArray(array $data) : Sanitizer
+    public static function fromArray(array $data): Sanitizer
     {
         if (!isset($data['type'])) {
             throw new InvalidArgumentException('Sanitizer type is required');

@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\{Connection, DriverManager};
-use Flow\Doctrine\Bulk\{Bulk, BulkData, InsertOptions, UpdateOptions};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Flow\Doctrine\Bulk\Bulk;
+use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\UpdateOptions;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
 
 final class DbalLoader implements Loader
 {
@@ -28,8 +34,7 @@ final class DbalLoader implements Loader
     public function __construct(
         private readonly string $tableName,
         private readonly array $connectionParams,
-    ) {
-    }
+    ) {}
 
     /**
      * Since Connection::getParams() is marked as an internal method, please
@@ -42,8 +47,8 @@ final class DbalLoader implements Loader
         string $tableName,
         InsertOptions|UpdateOptions|null $operationOptions = null,
         string $operation = 'insert',
-    ) : self {
-        $loader = (new self($tableName, $connection->getParams()));
+    ): self {
+        $loader = new self($tableName, $connection->getParams());
 
         if ($operation !== 'insert') {
             $loader->withOperation($operation);
@@ -58,7 +63,7 @@ final class DbalLoader implements Loader
         return $loader;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if ($rows->count() === 0) {
             return;
@@ -74,7 +79,7 @@ final class DbalLoader implements Loader
                 $this->connection(),
                 $this->tableName,
                 new BulkData($normalizedData, $this->typesMap()->flowRowTypes($sortedRows->first())),
-                $this->operationOptions
+                $this->operationOptions,
             );
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -88,7 +93,7 @@ final class DbalLoader implements Loader
     /**
      * @throws InvalidArgumentException
      */
-    public function withOperation(string $operation) : self
+    public function withOperation(string $operation): self
     {
         if (false === \in_array(\strtolower($operation), ['update', 'insert', 'delete'], true)) {
             throw new InvalidArgumentException("Operation can be insert, update, or delete, {$operation} given.");
@@ -99,7 +104,7 @@ final class DbalLoader implements Loader
         return $this;
     }
 
-    public function withOperationOptions(InsertOptions|UpdateOptions|null $operationOptions) : self
+    public function withOperationOptions(InsertOptions|UpdateOptions|null $operationOptions): self
     {
         $this->operationOptions = $operationOptions;
 
@@ -109,14 +114,14 @@ final class DbalLoader implements Loader
     /**
      * Set custom types map for Flow Type to DBAL Type conversion.
      */
-    public function withTypesMap(TypesMap $typesMap) : self
+    public function withTypesMap(TypesMap $typesMap): self
     {
         $this->typesMap = $typesMap;
 
         return $this;
     }
 
-    private function bulk() : Bulk
+    private function bulk(): Bulk
     {
         if ($this->bulk === null) {
             $this->bulk = Bulk::create();
@@ -125,7 +130,7 @@ final class DbalLoader implements Loader
         return $this->bulk;
     }
 
-    private function connection() : Connection
+    private function connection(): Connection
     {
         if ($this->connection === null) {
             /** @phpstan-ignore-next-line */
@@ -135,7 +140,7 @@ final class DbalLoader implements Loader
         return $this->connection;
     }
 
-    private function typesMap() : TypesMap
+    private function typesMap(): TypesMap
     {
         return $this->typesMap ??= new TypesMap([]);
     }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\{FlowContext, Processor, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Processor;
+use Flow\ETL\Rows;
 
 /**
  * Caches pipeline output for reuse.
@@ -17,11 +19,11 @@ use Flow\ETL\{FlowContext, Processor, Rows};
  */
 final readonly class CachingProcessor implements Processor
 {
-    public function __construct(private ?string $id = null)
-    {
-    }
+    public function __construct(
+        private ?string $id = null,
+    ) {}
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         $id = $this->id ?: $context->config->id();
         $cacheIndexExists = $context->cache()->has($id);

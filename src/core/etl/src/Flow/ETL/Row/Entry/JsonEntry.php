@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_optional;
 
 /**
  * @implements Entry<?Json>
@@ -43,7 +46,10 @@ final class JsonEntry implements Entry
             try {
                 $this->json = new Json($value);
             } catch (\Throwable $e) {
-                throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
+                throw new InvalidArgumentException(
+                    "Invalid value given: '{$value}', reason: " . $e->getMessage(),
+                    previous: $e,
+                );
             }
         } elseif (\is_array($value)) {
             $this->json = Json::fromArray($value);
@@ -61,7 +67,7 @@ final class JsonEntry implements Entry
      *
      * @return Entry<?Json>
      */
-    public static function object(string $name, ?array $value, ?Metadata $metadata = null) : Entry
+    public static function object(string $name, ?array $value, ?Metadata $metadata = null): Entry
     {
         if (\is_array($value)) {
             foreach (\array_keys($value) as $key) {
@@ -78,22 +84,22 @@ final class JsonEntry implements Entry
         return new self($name, Json::fromArray($value, asObject: true), $metadata);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function definition() : JsonDefinition
+    public function definition(): JsonDefinition
     {
         return $this->definition;
     }
 
-    public function duplicate() : static
+    public function duplicate(): static
     {
         return new self($this->name, $this->json, $this->definition->metadata());
     }
 
-    public function is(string|Reference $name) : bool
+    public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
             return $this->name === $name->name();
@@ -102,7 +108,7 @@ final class JsonEntry implements Entry
         return $this->name === $name;
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function isEqual(Entry $entry): bool
     {
         if (!$entry instanceof self) {
             return false;
@@ -130,22 +136,22 @@ final class JsonEntry implements Entry
         return $thisJson->isEqual($entryJson);
     }
 
-    public function map(callable $mapper) : static
+    public function map(callable $mapper): static
     {
         return new self($this->name, $mapper($this->json), $this->definition->metadata());
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function rename(string $name) : static
+    public function rename(string $name): static
     {
         return new self($name, $this->json, $this->definition->metadata());
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         if ($this->json === null) {
             return '';
@@ -157,17 +163,17 @@ final class JsonEntry implements Entry
     /**
      * @return Type<Json>
      */
-    public function type() : Type
+    public function type(): Type
     {
         return $this->definition->type();
     }
 
-    public function value() : ?Json
+    public function value(): ?Json
     {
         return $this->json;
     }
 
-    public function withValue(mixed $value) : static
+    public function withValue(mixed $value): static
     {
         return new self($this->name, type_optional($this->type())->cast($value), $this->definition->metadata());
     }

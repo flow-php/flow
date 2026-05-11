@@ -13,10 +13,9 @@ final class ContextScope implements Scope
     public function __construct(
         private readonly Context $previous,
         private readonly MemoryContextStorage $storage,
-    ) {
-    }
+    ) {}
 
-    public function detach() : int
+    public function detach(): int
     {
         if ($this->detached) {
             return self::DETACHED;

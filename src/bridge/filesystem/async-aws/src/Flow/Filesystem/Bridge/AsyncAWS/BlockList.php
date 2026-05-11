@@ -11,14 +11,14 @@ final class BlockList
      */
     private array $blocks = [];
 
-    public function add(string $blockETag) : self
+    public function add(string $blockETag): self
     {
         $this->blocks[\count($this->blocks) + 1] = $blockETag;
 
         return $this;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->blocks);
     }
@@ -26,7 +26,7 @@ final class BlockList
     /**
      * @return array<array{PartNumber: int, ETag: string}>
      */
-    public function toArray() : array
+    public function toArray(): array
     {
         $array = [];
 

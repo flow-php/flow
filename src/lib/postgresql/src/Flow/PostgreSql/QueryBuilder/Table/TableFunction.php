@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, PBList, RangeFunction};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\RangeFunction;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 
@@ -21,10 +23,9 @@ final readonly class TableFunction implements TableReference
     public function __construct(
         private FunctionCall $function,
         private bool $withOrdinality = false,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeFunction = $node->getRangeFunction();
 
@@ -59,22 +60,22 @@ final readonly class TableFunction implements TableReference
         return new self($function, $withOrdinality);
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function getFunction() : FunctionCall
+    public function getFunction(): FunctionCall
     {
         return $this->function;
     }
 
-    public function isWithOrdinality() : bool
+    public function isWithOrdinality(): bool
     {
         return $this->withOrdinality;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $functionList = new PBList();
         $functionList->setItems([$this->function->toAst()]);
@@ -94,7 +95,7 @@ final readonly class TableFunction implements TableReference
         return $node;
     }
 
-    public function withOrdinality(bool $withOrdinality = true) : self
+    public function withOrdinality(bool $withOrdinality = true): self
     {
         return new self($this->function, $withOrdinality);
     }

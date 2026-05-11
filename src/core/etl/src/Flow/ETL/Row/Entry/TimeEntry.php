@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\date_interval_to_microseconds;
-use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\TimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+
+use function Flow\ETL\DSL\date_interval_to_microseconds;
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_optional;
 
 /**
  * @implements Entry<?\DateInterval>
@@ -42,7 +46,10 @@ final class TimeEntry implements Entry
 
         if ($value instanceof \DateInterval) {
             if ($value->y !== 0 || $value->m !== 0) {
-                throw new InvalidArgumentException("Relative DateInterval (with months/years) can't be converted to TimeEntry. Given" . \json_encode($value, JSON_THROW_ON_ERROR));
+                throw new InvalidArgumentException(
+                    "Relative DateInterval (with months/years) can't be converted to TimeEntry. Given"
+                        . \json_encode($value, JSON_THROW_ON_ERROR),
+                );
             }
 
             $this->value = $value;
@@ -51,7 +58,10 @@ final class TimeEntry implements Entry
                 $interval = new \DateInterval($value);
 
                 if ($interval->y !== 0 || $interval->m !== 0) {
-                    throw new InvalidArgumentException("Relative DateInterval (with months/years) can't be converted to microseconds. Given" . \json_encode($interval, JSON_THROW_ON_ERROR));
+                    throw new InvalidArgumentException(
+                        "Relative DateInterval (with months/years) can't be converted to microseconds. Given"
+                            . \json_encode($interval, JSON_THROW_ON_ERROR),
+                    );
                 }
 
                 $this->value = $interval;
@@ -70,7 +80,10 @@ final class TimeEntry implements Entry
                     $interval->f = $fraction; // Set the fractional seconds
 
                     if ($interval->y !== 0 || $interval->m !== 0) {
-                        throw new InvalidArgumentException("Relative DateInterval (with months/years) can't be converted to microseconds. Given" . \json_encode($interval, JSON_THROW_ON_ERROR));
+                        throw new InvalidArgumentException(
+                            "Relative DateInterval (with months/years) can't be converted to microseconds. Given"
+                                . \json_encode($interval, JSON_THROW_ON_ERROR),
+                        );
                     }
 
                     $this->value = $interval;
@@ -85,17 +98,17 @@ final class TimeEntry implements Entry
         $this->definition = new TimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
-    public static function fromDays(string $name, int $days) : self
+    public static function fromDays(string $name, int $days): self
     {
         return new self($name, 'P' . $days . 'D');
     }
 
-    public static function fromHours(string $name, int $hours) : self
+    public static function fromHours(string $name, int $hours): self
     {
         return new self($name, 'PT' . $hours . 'H');
     }
 
-    public static function fromMicroseconds(string $name, int $microseconds) : self
+    public static function fromMicroseconds(string $name, int $microseconds): self
     {
         $seconds = intdiv($microseconds, 1_000_000);
         $fraction = ($microseconds % 1_000_000) / 1_000_000;
@@ -106,7 +119,7 @@ final class TimeEntry implements Entry
         return new self($name, $interval);
     }
 
-    public static function fromMilliseconds(string $name, int $milliseconds) : self
+    public static function fromMilliseconds(string $name, int $milliseconds): self
     {
         $seconds = intdiv($milliseconds, 1000);
         $fraction = ($milliseconds % 1000) / 1000;
@@ -117,37 +130,37 @@ final class TimeEntry implements Entry
         return new self($name, $interval);
     }
 
-    public static function fromMinutes(string $name, int $minutes) : self
+    public static function fromMinutes(string $name, int $minutes): self
     {
         return new self($name, 'PT' . $minutes . 'M');
     }
 
-    public static function fromSeconds(string $name, int $seconds) : self
+    public static function fromSeconds(string $name, int $seconds): self
     {
         return new self($name, 'PT' . $seconds . 'S');
     }
 
-    public static function fromString(string $name, string $time) : self
+    public static function fromString(string $name, string $time): self
     {
         return new self($name, $time);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function definition() : TimeDefinition
+    public function definition(): TimeDefinition
     {
         return $this->definition;
     }
 
-    public function duplicate() : static
+    public function duplicate(): static
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
-    public function is(string|Reference $name) : bool
+    public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
             return $this->name === $name->name();
@@ -156,7 +169,7 @@ final class TimeEntry implements Entry
         return $this->name === $name;
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function isEqual(Entry $entry): bool
     {
         $entryValue = $entry->value();
         $thisValue = $this->value();
@@ -172,28 +185,30 @@ final class TimeEntry implements Entry
         type_instance_of(\DateInterval::class)->assert($entryValue);
         type_instance_of(\DateInterval::class)->assert($thisValue);
 
-        return $this->is($entry->name())
+        return (
+            $this->is($entry->name())
             && $entry instanceof self
             && type_equals($this->type(), $entry->type())
-            && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue);
+            && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue)
+        );
     }
 
-    public function map(callable $mapper) : static
+    public function map(callable $mapper): static
     {
         return new self($this->name, $mapper($this->value));
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function rename(string $name) : static
+    public function rename(string $name): static
     {
         return new self($name, $this->value, $this->definition->metadata());
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         $value = $this->value;
 
@@ -210,17 +225,17 @@ final class TimeEntry implements Entry
         return sprintf('%02d:%02d:%02d', $totalHours, $value->i, $value->s);
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->definition->type();
     }
 
-    public function value() : ?\DateInterval
+    public function value(): ?\DateInterval
     {
         return $this->value;
     }
 
-    public function withValue(mixed $value) : static
+    public function withValue(mixed $value): static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }

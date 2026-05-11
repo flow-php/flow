@@ -16,7 +16,7 @@ final class SpyLogger extends AbstractLogger
     /**
      * @param array<array-key, mixed> $context
      */
-    public function log($level, \Stringable|string $message, array $context = []) : void
+    public function log($level, \Stringable|string $message, array $context = []): void
     {
         $this->records[] = [
             'level' => $level,

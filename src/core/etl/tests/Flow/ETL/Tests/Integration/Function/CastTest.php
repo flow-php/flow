@@ -4,49 +4,48 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{df, from_array, ref, to_memory};
-use function Flow\Types\DSL\{type_integer, type_list, type_optional};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+
 final class CastTest extends FlowTestCase
 {
-    public function test_cast() : void
+    public function test_cast(): void
     {
         df()
-            ->read(from_array(
-                [
-                    ['date' => new \DateTimeImmutable('2023-01-01')],
-                ]
-            ))
+            ->read(from_array([
+                ['date' => new \DateTimeImmutable('2023-01-01')],
+            ]))
             ->withEntry('date', ref('date')->cast('string'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['date' => '2023-01-01T00:00:00+00:00'],
             ],
-            $memory->dump()
+            $memory->dump(),
         );
     }
 
-    public function test_cast_non_deterministic_values() : void
+    public function test_cast_non_deterministic_values(): void
     {
         $row = df()
-            ->read(from_array(
-                [
-                    ['array' => []],
-                ]
-            ))
+            ->read(from_array([
+                ['array' => []],
+            ]))
             ->withEntry('list_int', ref('array')->cast(type_optional(type_list(type_integer()))))
             ->drop('array')
             ->fetch()
             ->first();
 
-        self::assertEquals(
-            type_list(type_integer()),
-            $row->get('list_int')->type()
-        );
+        static::assertEquals(type_list(type_integer()), $row->get('list_int')->type());
     }
 }

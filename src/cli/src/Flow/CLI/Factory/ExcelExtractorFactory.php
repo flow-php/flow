@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_bool_nullable, option_int_nullable, option_string_nullable};
-use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use Flow\ETL\Adapter\Excel\ExcelExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_bool_nullable;
+use function Flow\CLI\option_int_nullable;
+use function Flow\CLI\option_string_nullable;
+use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 
 final readonly class ExcelExtractorFactory
 {
@@ -17,10 +20,9 @@ final readonly class ExcelExtractorFactory
         private string $headerOption = 'input-excel-header',
         private string $sheetNameOption = 'input-excel-sheet-name',
         private string $offsetOption = 'input-excel-offset',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : ExcelExtractor
+    public function get(InputInterface $input): ExcelExtractor
     {
         $extractor = from_excel($this->path);
 

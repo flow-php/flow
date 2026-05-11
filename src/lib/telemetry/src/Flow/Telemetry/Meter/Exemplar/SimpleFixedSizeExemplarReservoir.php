@@ -37,7 +37,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         }
     }
 
-    public function collect(bool $reset = true) : array
+    public function collect(bool $reset = true): array
     {
         $result = \array_values($this->exemplars);
 
@@ -54,17 +54,11 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         SpanContext $context,
         \DateTimeImmutable $timestamp,
         int $bucketIndex = 0,
-    ) : void {
+    ): void {
         $this->count++;
 
         $filteredAttributes = $this->filterAttributes($attributes);
-        $exemplar = new Exemplar(
-            $value,
-            $timestamp,
-            $context->traceId,
-            $context->spanId,
-            $filteredAttributes,
-        );
+        $exemplar = new Exemplar($value, $timestamp, $context->traceId, $context->spanId, $filteredAttributes);
 
         if (\count($this->exemplars) < $this->size) {
             $this->exemplars[] = $exemplar;
@@ -85,7 +79,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         }
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->exemplars = [];
         $this->count = 0;
@@ -98,7 +92,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
      *
      * @return array<string, bool|float|int|string>
      */
-    private function filterAttributes(array $attributes) : array
+    private function filterAttributes(array $attributes): array
     {
         $filtered = [];
 

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class PhpParquetEngineTest extends TestCase
 {
-    public function test_close_write_throws_when_writer_not_open() : void
+    public function test_close_write_throws_when_writer_not_open(): void
     {
         $engine = new PhpParquetEngine();
 
@@ -20,7 +20,7 @@ final class PhpParquetEngineTest extends TestCase
         $engine->closeWrite();
     }
 
-    public function test_write_batch_throws_when_writer_not_open() : void
+    public function test_write_batch_throws_when_writer_not_open(): void
     {
         $engine = new PhpParquetEngine();
 
@@ -30,7 +30,7 @@ final class PhpParquetEngineTest extends TestCase
         $engine->writeBatch([['col' => 'value']]);
     }
 
-    public function test_write_row_throws_when_writer_not_open() : void
+    public function test_write_row_throws_when_writer_not_open(): void
     {
         $engine = new PhpParquetEngine();
 

@@ -8,15 +8,14 @@ final readonly class ConditionBuilder
 {
     private function __construct(
         private ?Condition $condition = null,
-    ) {
-    }
+    ) {}
 
-    public static function create() : self
+    public static function create(): self
     {
         return new self();
     }
 
-    public function and(Condition|self $condition) : self
+    public function and(Condition|self $condition): self
     {
         $resolved = $condition instanceof self ? $condition->condition : $condition;
 
@@ -31,7 +30,7 @@ final readonly class ConditionBuilder
         return new self($this->condition->and($resolved));
     }
 
-    public function getCondition() : ?Condition
+    public function getCondition(): ?Condition
     {
         return $this->condition;
     }
@@ -39,12 +38,12 @@ final readonly class ConditionBuilder
     /**
      * @phpstan-assert-if-true Condition $this->condition
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->condition === null;
     }
 
-    public function or(Condition|self $condition) : self
+    public function or(Condition|self $condition): self
     {
         $resolved = $condition instanceof self ? $condition->condition : $condition;
 

@@ -34,7 +34,7 @@ final class Buckets
     /**
      * @return array<string>
      */
-    public function bucketIds() : array
+    public function bucketIds(): array
     {
         return \array_keys($this->buckets);
     }
@@ -42,7 +42,7 @@ final class Buckets
     /**
      * @return \Generator<Row>
      */
-    public function sort(Reference ...$refs) : \Generator
+    public function sort(Reference ...$refs): \Generator
     {
         $heap = new RowsMinHeap(...$refs);
 
@@ -72,7 +72,7 @@ final class Buckets
                     $heap->insert($row);
                     $bucket->next();
                 } else {
-                    unset($bucketsCopy[$cachedRow->bucketId]);  // Remove the empty generator
+                    unset($bucketsCopy[$cachedRow->bucketId]); // Remove the empty generator
                 }
             }
         }

@@ -4,17 +4,71 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
-use function Flow\PostgreSql\DSL\{agg, and_, any_, asc, case_when, cast, col, concat, eq, func, gt, in_, is_null, is_true, literal, ne, not_, not_like, param, select, sub_select, table, type_mapper, when};
-
-use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string, type_structure, type_union};
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Parser\{CheckDefinitionParser, ColumnTypeParser, ExpressionParser, TriggerDefinitionParser};
+use Flow\PostgreSql\Parser\CheckDefinitionParser;
+use Flow\PostgreSql\Parser\ColumnTypeParser;
+use Flow\PostgreSql\Parser\ExpressionParser;
+use Flow\PostgreSql\Parser\TriggerDefinitionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
-
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnType, ReferentialAction};
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider, Column, Domain, Extension, Func, FunctionVolatility, IdentityGeneration, Index, IndexMethod, MaterializedView, PartitionStrategy, Procedure, Schema, Sequence, Table, Trigger, TriggerEvent, TriggerTiming, View};
-use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, ForeignKey, PrimaryKey, UniqueConstraint};
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
+use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
+use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
+use Flow\PostgreSql\Schema\Constraint\ForeignKey;
+use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
+use Flow\PostgreSql\Schema\Domain;
+use Flow\PostgreSql\Schema\Extension;
+use Flow\PostgreSql\Schema\Func;
+use Flow\PostgreSql\Schema\FunctionVolatility;
+use Flow\PostgreSql\Schema\IdentityGeneration;
+use Flow\PostgreSql\Schema\Index;
+use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\PartitionStrategy;
+use Flow\PostgreSql\Schema\Procedure;
+use Flow\PostgreSql\Schema\Schema;
+use Flow\PostgreSql\Schema\Sequence;
+use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\Trigger;
+use Flow\PostgreSql\Schema\TriggerEvent;
+use Flow\PostgreSql\Schema\TriggerTiming;
+use Flow\PostgreSql\Schema\View;
+
+use function Flow\PostgreSql\DSL\agg;
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\any_;
+use function Flow\PostgreSql\DSL\asc;
+use function Flow\PostgreSql\DSL\case_when;
+use function Flow\PostgreSql\DSL\cast;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\concat;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\gt;
+use function Flow\PostgreSql\DSL\in_;
+use function Flow\PostgreSql\DSL\is_null;
+use function Flow\PostgreSql\DSL\is_true;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\ne;
+use function Flow\PostgreSql\DSL\not_;
+use function Flow\PostgreSql\DSL\not_like;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sub_select;
+use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\type_mapper;
+use function Flow\PostgreSql\DSL\when;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
 
 final readonly class PgCatalogProvider implements CatalogProvider
 {
@@ -41,7 +95,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $this->triggerDefinitionParser = new TriggerDefinitionParser($this->expressionParser);
     }
 
-    public function get() : Catalog
+    public function get(): Catalog
     {
         $schemas = [];
 
@@ -52,12 +106,12 @@ final readonly class PgCatalogProvider implements CatalogProvider
         return new Catalog($schemas);
     }
 
-    private function mapIndexMethod(string $amname) : IndexMethod
+    private function mapIndexMethod(string $amname): IndexMethod
     {
         return IndexMethod::tryFrom($amname) ?? IndexMethod::BTREE;
     }
 
-    private function mapReferentialAction(string $code) : ReferentialAction
+    private function mapReferentialAction(string $code): ReferentialAction
     {
         return ReferentialAction::tryFrom($code) ?? ReferentialAction::NO_ACTION;
     }
@@ -69,7 +123,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
      * and redundant since the column type is already known. This method parses the expression
      * and removes the outer TypeCast when it wraps a simple constant.
      */
-    private function normalizeDefault(?string $default) : ?string
+    private function normalizeDefault(?string $default): ?string
     {
         if ($default === null) {
             return null;
@@ -114,7 +168,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<string>
      */
-    private function parseArgumentTypes(string $arguments) : array
+    private function parseArgumentTypes(string $arguments): array
     {
         if ($arguments === '') {
             return [];
@@ -133,7 +187,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return non-empty-list<string>
      */
-    private function parseArrayLiteral(string $literal) : array
+    private function parseArrayLiteral(string $literal): array
     {
         $trimmed = \trim($literal, '{}');
 
@@ -147,7 +201,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<CheckConstraint>
      */
-    private function readCheckConstraints(string $tableName, string $schemaName) : array
+    private function readCheckConstraints(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -188,7 +242,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return non-empty-list<Column>
      */
-    private function readColumns(string $tableName, string $schemaName) : array
+    private function readColumns(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -213,10 +267,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_attribute', 'pg_catalog')->as('a'))
                 ->leftJoin(
                     table('pg_attrdef', 'pg_catalog')->as('d'),
-                    and_(
-                        eq(col('adrelid', 'd'), col('attrelid', 'a')),
-                        eq(col('adnum', 'd'), col('attnum', 'a')),
-                    ),
+                    and_(eq(col('adrelid', 'd'), col('attrelid', 'a')), eq(col('adnum', 'd'), col('attnum', 'a'))),
                 )
                 ->where(and_(
                     eq(
@@ -224,11 +275,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
                         sub_select(
                             select(col('oid', 'c'))
                                 ->from(table('pg_class', 'pg_catalog')->as('c'))
-                                ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
-                                ->where(and_(
-                                    eq(col('relname', 'c'), param(1)),
-                                    eq(col('nspname', 'n'), param(2)),
-                                ))
+                                ->join(
+                                    table('pg_namespace', 'pg_catalog')->as('n'),
+                                    eq(col('oid', 'n'), col('relnamespace', 'c')),
+                                )
+                                ->where(and_(eq(col('relname', 'c'), param(1)), eq(col('nspname', 'n'), param(2)))),
                         ),
                     ),
                     gt(col('attnum', 'a'), literal(0)),
@@ -269,7 +320,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<CheckConstraint>
      */
-    private function readDomainCheckConstraints(string $domainName, string $schemaName) : array
+    private function readDomainCheckConstraints(string $domainName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -295,10 +346,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $constraints = [];
 
         foreach ($rows as $row) {
-            $constraints[] = new CheckConstraint(
-                $this->checkDefinitionParser->parse($row['definition']),
-                $row['name'],
-            );
+            $constraints[] = new CheckConstraint($this->checkDefinitionParser->parse($row['definition']), $row['name']);
         }
 
         return $constraints;
@@ -307,7 +355,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<Domain>
      */
-    private function readDomains(string $schemaName) : array
+    private function readDomains(string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -325,10 +373,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
             )
                 ->from(table('pg_type', 'pg_catalog')->as('t'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('typnamespace', 't')))
-                ->where(and_(
-                    eq(col('nspname', 'n'), param(1)),
-                    eq(col('typtype', 't'), literal('d')),
-                ))
+                ->where(and_(eq(col('nspname', 'n'), param(1)), eq(col('typtype', 't'), literal('d'))))
                 ->orderBy(asc(col('typname', 't'))),
             [$schemaName],
         );
@@ -351,7 +396,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<ExcludeConstraint>
      */
-    private function readExcludeConstraints(string $tableName, string $schemaName) : array
+    private function readExcludeConstraints(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -386,7 +431,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<Extension>
      */
-    private function readExtensions(string $schemaName) : array
+    private function readExtensions(string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -394,10 +439,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
             ], [
                 'version' => type_union(type_string(), type_null()),
             ])),
-            select(
-                col('extname', 'e')->as('name'),
-                col('extversion', 'e')->as('version'),
-            )
+            select(col('extname', 'e')->as('name'), col('extversion', 'e')->as('version'))
                 ->from(table('pg_extension', 'pg_catalog')->as('e'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('extnamespace', 'e')))
                 ->where(eq(col('nspname', 'n'), param(1)))
@@ -417,7 +459,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<ForeignKey>
      */
-    private function readForeignKeys(string $tableName, string $schemaName) : array
+    private function readForeignKeys(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -433,10 +475,14 @@ final readonly class PgCatalogProvider implements CatalogProvider
             ])),
             select(
                 col('conname', 'con')->as('name'),
-                agg('array_agg', [col('attname', 'a')], distinct: true)->withOrderBy(asc(col('attname', 'a')))->as('columns'),
+                agg('array_agg', [col('attname', 'a')], distinct: true)->withOrderBy(asc(col('attname', 'a')))->as(
+                    'columns',
+                ),
                 col('nspname', 'nf')->as('reference_schema'),
                 col('relname', 'cf')->as('reference_table'),
-                agg('array_agg', [col('attname', 'af')], distinct: true)->withOrderBy(asc(col('attname', 'af')))->as('reference_columns'),
+                agg('array_agg', [col('attname', 'af')], distinct: true)->withOrderBy(asc(col('attname', 'af')))->as(
+                    'reference_columns',
+                ),
                 col('confupdtype', 'con')->as('on_update'),
                 col('confdeltype', 'con')->as('on_delete'),
                 col('condeferrable', 'con')->as('deferrable'),
@@ -445,16 +491,22 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_constraint', 'pg_catalog')->as('con'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('conrelid', 'con')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
-                ->join(table('pg_attribute', 'pg_catalog')->as('a'), and_(
-                    eq(col('attrelid', 'a'), col('conrelid', 'con')),
-                    any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
-                ))
+                ->join(
+                    table('pg_attribute', 'pg_catalog')->as('a'),
+                    and_(
+                        eq(col('attrelid', 'a'), col('conrelid', 'con')),
+                        any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
+                    ),
+                )
                 ->join(table('pg_class', 'pg_catalog')->as('cf'), eq(col('oid', 'cf'), col('confrelid', 'con')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('nf'), eq(col('oid', 'nf'), col('relnamespace', 'cf')))
-                ->join(table('pg_attribute', 'pg_catalog')->as('af'), and_(
-                    eq(col('attrelid', 'af'), col('confrelid', 'con')),
-                    any_(col('attnum', 'af'), ComparisonOperator::EQ, col('confkey', 'con')),
-                ))
+                ->join(
+                    table('pg_attribute', 'pg_catalog')->as('af'),
+                    and_(
+                        eq(col('attrelid', 'af'), col('confrelid', 'con')),
+                        any_(col('attnum', 'af'), ComparisonOperator::EQ, col('confkey', 'con')),
+                    ),
+                )
                 ->where(and_(
                     eq(col('relname', 'c'), param(1)),
                     eq(col('nspname', 'n'), param(2)),
@@ -494,7 +546,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<Func>
      */
-    private function readFunctions(string $schemaName) : array
+    private function readFunctions(string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -515,17 +567,18 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 col('prosrc', 'p')->as('definition'),
                 col('proisstrict', 'p')->as('is_strict'),
                 case_when(
-                    [when(literal('i'), literal('immutable')), when(literal('s'), literal('stable')), when(literal('v'), literal('volatile'))],
+                    [
+                        when(literal('i'), literal('immutable')),
+                        when(literal('s'), literal('stable')),
+                        when(literal('v'), literal('volatile')),
+                    ],
                     operand: col('provolatile', 'p'),
                 )->as('volatility'),
             )
                 ->from(table('pg_proc', 'pg_catalog')->as('p'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('pronamespace', 'p')))
                 ->join(table('pg_language', 'pg_catalog')->as('l'), eq(col('oid', 'l'), col('prolang', 'p')))
-                ->where(and_(
-                    eq(col('nspname', 'n'), param(1)),
-                    eq(col('prokind', 'p'), literal('f')),
-                ))
+                ->where(and_(eq(col('nspname', 'n'), param(1)), eq(col('prokind', 'p'), literal('f'))))
                 ->orderBy(asc(col('proname', 'p'))),
             [$schemaName],
         );
@@ -540,7 +593,9 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $row['language'],
                 $row['definition'],
                 $row['is_strict'],
-                array_key_exists('volatility', $row) && $row['volatility'] !== null ? FunctionVolatility::from($row['volatility']) : null,
+                array_key_exists('volatility', $row) && $row['volatility'] !== null
+                    ? FunctionVolatility::from($row['volatility'])
+                    : null,
             );
         }
 
@@ -550,7 +605,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<Index>
      */
-    private function readIndexes(string $tableName, string $schemaName) : array
+    private function readIndexes(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -567,7 +622,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 col('indisunique', 'ix')->as('is_unique'),
                 col('indisprimary', 'ix')->as('is_primary'),
                 col('amname', 'am')->as('method'),
-                agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [cast(col('indkey', 'ix'), ColumnType::array(ColumnType::integer())), col('attnum', 'a')])))->as('columns'),
+                agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [
+                    cast(col('indkey', 'ix'), ColumnType::array(ColumnType::integer())),
+                    col('attnum', 'a'),
+                ])))->as('columns'),
                 func('pg_catalog.pg_get_expr', [col('indpred', 'ix'), col('indrelid', 'ix')])->as('predicate'),
             )
                 ->from(table('pg_index', 'pg_catalog')->as('ix'))
@@ -575,10 +633,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->join(table('pg_class', 'pg_catalog')->as('t'), eq(col('oid', 't'), col('indrelid', 'ix')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 't')))
                 ->join(table('pg_am', 'pg_catalog')->as('am'), eq(col('oid', 'am'), col('relam', 'i')))
-                ->join(table('pg_attribute', 'pg_catalog')->as('a'), and_(
-                    eq(col('attrelid', 'a'), col('oid', 't')),
-                    any_(col('attnum', 'a'), ComparisonOperator::EQ, col('indkey', 'ix')),
-                ))
+                ->join(
+                    table('pg_attribute', 'pg_catalog')->as('a'),
+                    and_(
+                        eq(col('attrelid', 'a'), col('oid', 't')),
+                        any_(col('attnum', 'a'), ComparisonOperator::EQ, col('indkey', 'ix')),
+                    ),
+                )
                 ->leftJoin(
                     table('pg_constraint', 'pg_catalog')->as('con'),
                     eq(col('conindid', 'con'), col('indexrelid', 'ix')),
@@ -620,43 +681,35 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<string>
      */
-    private function readInherits(string $tableName, string $schemaName) : array
+    private function readInherits(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure(['parent' => type_string()])),
-            select(
-                concat(col('nspname', 'pn'), literal('.'), col('relname', 'pc'))->as('parent'),
-            )
+            select(concat(col('nspname', 'pn'), literal('.'), col('relname', 'pc'))->as('parent'))
                 ->from(table('pg_inherits', 'pg_catalog')->as('i'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('inhrelid', 'i')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
                 ->join(table('pg_class', 'pg_catalog')->as('pc'), eq(col('oid', 'pc'), col('inhparent', 'i')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('pn'), eq(col('oid', 'pn'), col('relnamespace', 'pc')))
-                ->where(and_(
-                    eq(col('relname', 'c'), param(1)),
-                    eq(col('nspname', 'n'), param(2)),
-                ))
+                ->where(and_(eq(col('relname', 'c'), param(1)), eq(col('nspname', 'n'), param(2))))
                 ->orderBy(asc(col('inhseqno', 'i'))),
             [$tableName, $schemaName],
         );
 
-        return \array_map(static fn (array $row) : string => $row['parent'], $rows);
+        return \array_map(static fn(array $row): string => $row['parent'], $rows);
     }
 
     /**
      * @return list<MaterializedView>
      */
-    private function readMaterializedViews(string $schemaName) : array
+    private function readMaterializedViews(string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
                 'definition' => type_string(),
             ])),
-            select(
-                col('matviewname')->as('name'),
-                col('definition'),
-            )
+            select(col('matviewname')->as('name'), col('definition'))
                 ->from(table('pg_matviews', 'pg_catalog'))
                 ->where(eq(col('schemaname'), param(1)))
                 ->orderBy(asc(col('matviewname'))),
@@ -675,24 +728,23 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return array{0: PartitionStrategy, 1: list<string>}
      */
-    private function readPartitionInfo(string $tableName, string $schemaName) : array
+    private function readPartitionInfo(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure(['partdef' => type_string()])),
-            select(
-                func('pg_catalog.pg_get_partkeydef', [col('oid', 'c')])->as('partdef'),
-            )
+            select(func('pg_catalog.pg_get_partkeydef', [col('oid', 'c')])->as('partdef'))
                 ->from(table('pg_class', 'pg_catalog')->as('c'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
-                ->where(and_(
-                    eq(col('relname', 'c'), param(1)),
-                    eq(col('nspname', 'n'), param(2)),
-                )),
+                ->where(and_(eq(col('relname', 'c'), param(1)), eq(col('nspname', 'n'), param(2)))),
             [$tableName, $schemaName],
         );
 
         if ($rows === [] || $rows[0]['partdef'] === '') {
-            throw new \RuntimeException(\sprintf('Could not read partition info for table "%s"."%s".', $schemaName, $tableName));
+            throw new \RuntimeException(\sprintf(
+                'Could not read partition info for table "%s"."%s".',
+                $schemaName,
+                $tableName,
+            ));
         }
 
         $partdef = $rows[0]['partdef'];
@@ -707,7 +759,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         ];
     }
 
-    private function readPrimaryKey(string $tableName, string $schemaName) : ?PrimaryKey
+    private function readPrimaryKey(string $tableName, string $schemaName): ?PrimaryKey
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -716,15 +768,21 @@ final readonly class PgCatalogProvider implements CatalogProvider
             ])),
             select(
                 col('conname', 'con')->as('name'),
-                agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [col('conkey', 'con'), col('attnum', 'a')])))->as('columns'),
+                agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [
+                    col('conkey', 'con'),
+                    col('attnum', 'a'),
+                ])))->as('columns'),
             )
                 ->from(table('pg_constraint', 'pg_catalog')->as('con'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('conrelid', 'con')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
-                ->join(table('pg_attribute', 'pg_catalog')->as('a'), and_(
-                    eq(col('attrelid', 'a'), col('conrelid', 'con')),
-                    any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
-                ))
+                ->join(
+                    table('pg_attribute', 'pg_catalog')->as('a'),
+                    and_(
+                        eq(col('attrelid', 'a'), col('conrelid', 'con')),
+                        any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
+                    ),
+                )
                 ->where(and_(
                     eq(col('relname', 'c'), param(1)),
                     eq(col('nspname', 'n'), param(2)),
@@ -738,16 +796,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
             return null;
         }
 
-        return new PrimaryKey(
-            $this->parseArrayLiteral($rows[0]['columns']),
-            $rows[0]['name'],
-        );
+        return new PrimaryKey($this->parseArrayLiteral($rows[0]['columns']), $rows[0]['name']);
     }
 
     /**
      * @return list<Procedure>
      */
-    private function readProcedures(string $schemaName) : array
+    private function readProcedures(string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -766,10 +821,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_proc', 'pg_catalog')->as('p'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('pronamespace', 'p')))
                 ->join(table('pg_language', 'pg_catalog')->as('l'), eq(col('oid', 'l'), col('prolang', 'p')))
-                ->where(and_(
-                    eq(col('nspname', 'n'), param(1)),
-                    eq(col('prokind', 'p'), literal('p')),
-                ))
+                ->where(and_(eq(col('nspname', 'n'), param(1)), eq(col('prokind', 'p'), literal('p'))))
                 ->orderBy(asc(col('proname', 'p'))),
             [$schemaName],
         );
@@ -788,7 +840,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         return $procedures;
     }
 
-    private function readSchema(string $schemaName) : Schema
+    private function readSchema(string $schemaName): Schema
     {
         $tables = [];
 
@@ -818,7 +870,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<Sequence>
      */
-    private function readSequences(string $schemaName) : array
+    private function readSequences(string $schemaName): array
     {
         $intOrString = type_union(type_integer(), type_string());
 
@@ -851,15 +903,21 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->from(table('pg_sequence', 'pg_catalog')->as('s'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('seqrelid', 's')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
-                ->leftJoin(table('pg_depend', 'pg_catalog')->as('d'), and_(
-                    eq(col('objid', 'd'), col('seqrelid', 's')),
-                    in_(col('deptype', 'd'), [literal('a'), literal('i')]),
-                ))
+                ->leftJoin(
+                    table('pg_depend', 'pg_catalog')->as('d'),
+                    and_(eq(col('objid', 'd'), col('seqrelid', 's')), in_(col('deptype', 'd'), [
+                        literal('a'),
+                        literal('i'),
+                    ])),
+                )
                 ->leftJoin(table('pg_class', 'pg_catalog')->as('dep_c'), eq(col('oid', 'dep_c'), col('refobjid', 'd')))
-                ->leftJoin(table('pg_attribute', 'pg_catalog')->as('dep_a'), and_(
-                    eq(col('attrelid', 'dep_a'), col('refobjid', 'd')),
-                    eq(col('attnum', 'dep_a'), col('refobjsubid', 'd')),
-                ))
+                ->leftJoin(
+                    table('pg_attribute', 'pg_catalog')->as('dep_a'),
+                    and_(
+                        eq(col('attrelid', 'dep_a'), col('refobjid', 'd')),
+                        eq(col('attnum', 'dep_a'), col('refobjsubid', 'd')),
+                    ),
+                )
                 ->where(eq(col('nspname', 'n'), param(1)))
                 ->orderBy(asc(col('relname', 'c'))),
             [$schemaName],
@@ -889,8 +947,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
         return $sequences;
     }
 
-    private function readTable(string $tableName, string $schemaName, bool $unlogged = false, string $relkind = 'r', ?string $tablespace = null) : Table
-    {
+    private function readTable(
+        string $tableName,
+        string $schemaName,
+        bool $unlogged = false,
+        string $relkind = 'r',
+        ?string $tablespace = null,
+    ): Table {
         $partitionStrategy = null;
         $partitionColumns = [];
 
@@ -922,17 +985,17 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<array{relname: string, relpersistence: string, relkind: string, tablespace?: ?string}>
      */
-    private function readTableNames(string $schemaName) : array
+    private function readTableNames(string $schemaName): array
     {
-        $conditions = and_(
-            eq(col('nspname', 'n'), param(1)),
-            in_(col('relkind', 'c'), [literal('r'), literal('p')]),
-        );
+        $conditions = and_(eq(col('nspname', 'n'), param(1)), in_(col('relkind', 'c'), [literal('r'), literal('p')]));
 
         if ($this->excludeTables !== []) {
             $conditions = and_(
                 $conditions,
-                not_(in_(col('relname', 'c'), \array_map(static fn (string $t) : Literal => literal($t), $this->excludeTables))),
+                not_(in_(
+                    col('relname', 'c'),
+                    \array_map(static fn(string $t): Literal => literal($t), $this->excludeTables),
+                )),
             );
         }
 
@@ -955,7 +1018,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
             )
                 ->from(table('pg_class', 'pg_catalog')->as('c'))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
-                ->leftJoin(table('pg_tablespace', 'pg_catalog')->as('ts'), eq(col('oid', 'ts'), col('reltablespace', 'c')))
+                ->leftJoin(
+                    table('pg_tablespace', 'pg_catalog')->as('ts'),
+                    eq(col('oid', 'ts'), col('reltablespace', 'c')),
+                )
                 ->where($conditions)
                 ->orderBy(asc(col('relname', 'c'))),
             [$schemaName],
@@ -965,7 +1031,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<Trigger>
      */
-    private function readTriggers(string $tableName, string $schemaName) : array
+    private function readTriggers(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -1045,7 +1111,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<UniqueConstraint>
      */
-    private function readUniqueConstraints(string $tableName, string $schemaName) : array
+    private function readUniqueConstraints(string $tableName, string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -1055,17 +1121,23 @@ final readonly class PgCatalogProvider implements CatalogProvider
             ])),
             select(
                 col('conname', 'con')->as('name'),
-                agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [col('conkey', 'con'), col('attnum', 'a')])))->as('columns'),
+                agg('array_agg', [col('attname', 'a')])->withOrderBy(asc(func('array_position', [
+                    col('conkey', 'con'),
+                    col('attnum', 'a'),
+                ])))->as('columns'),
                 col('indnullsnotdistinct', 'i')->as('nulls_not_distinct'),
             )
                 ->from(table('pg_constraint', 'pg_catalog')->as('con'))
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('conrelid', 'con')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
                 ->join(table('pg_index', 'pg_catalog')->as('i'), eq(col('indexrelid', 'i'), col('conindid', 'con')))
-                ->join(table('pg_attribute', 'pg_catalog')->as('a'), and_(
-                    eq(col('attrelid', 'a'), col('conrelid', 'con')),
-                    any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
-                ))
+                ->join(
+                    table('pg_attribute', 'pg_catalog')->as('a'),
+                    and_(
+                        eq(col('attrelid', 'a'), col('conrelid', 'con')),
+                        any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con')),
+                    ),
+                )
                 ->where(and_(
                     eq(col('relname', 'c'), param(1)),
                     eq(col('nspname', 'n'), param(2)),
@@ -1091,17 +1163,14 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<View>
      */
-    private function readViews(string $schemaName) : array
+    private function readViews(string $schemaName): array
     {
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
                 'name' => type_string(),
                 'definition' => type_string(),
             ])),
-            select(
-                col('viewname')->as('name'),
-                col('definition'),
-            )
+            select(col('viewname')->as('name'), col('definition'))
                 ->from(table('pg_views', 'pg_catalog'))
                 ->where(eq(col('schemaname'), param(1)))
                 ->orderBy(asc(col('viewname'))),
@@ -1120,20 +1189,22 @@ final readonly class PgCatalogProvider implements CatalogProvider
     /**
      * @return list<string>
      */
-    private function resolveSchemaNames() : array
+    private function resolveSchemaNames(): array
     {
-        return $this->schemaNames ?? \array_values(\array_map(
-            static fn (array $row) : string => $row['nspname'],
-            $this->client->fetchAllInto(
-                type_mapper(type_structure(['nspname' => type_string()])),
-                select(col('nspname'))
-                    ->from(table('pg_namespace', 'pg_catalog'))
-                    ->where(and_(
-                        not_like(col('nspname'), literal('pg_%')),
-                        ne(col('nspname'), literal('information_schema')),
-                    ))
-                    ->orderBy(asc(col('nspname'))),
-            ),
-        ));
+        return (
+            $this->schemaNames ?? \array_values(\array_map(
+                static fn(array $row): string => $row['nspname'],
+                $this->client->fetchAllInto(
+                    type_mapper(type_structure(['nspname' => type_string()])),
+                    select(col('nspname'))
+                        ->from(table('pg_namespace', 'pg_catalog'))
+                        ->where(and_(
+                            not_like(col('nspname'), literal('pg_%')),
+                            ne(col('nspname'), literal('information_schema')),
+                        ))
+                        ->orderBy(asc(col('nspname'))),
+                ),
+            ))
+        );
     }
 }

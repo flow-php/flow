@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\Exception\{InvalidArgumentException, LimitReachedException};
-use Flow\ETL\{FlowContext, Rows, Transformer};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\LimitReachedException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final class LimitTransformer implements Transformer
 {
     private int $rowsCount = 0;
 
-    public function __construct(public readonly int $limit)
-    {
+    public function __construct(
+        public readonly int $limit,
+    ) {
         if ($this->limit <= 0) {
             throw new InvalidArgumentException("Limit can't be lower or equal zero, given: " . $this->limit);
         }
     }
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $inputRowCount = $rows->count();
 

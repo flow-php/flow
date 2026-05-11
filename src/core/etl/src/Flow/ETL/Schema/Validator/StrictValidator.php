@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Validator;
 
-use function Flow\Types\DSL\{type_equals, type_string};
 use Flow\ETL\Schema;
-use Flow\ETL\{SchemaValidator, Schema\Metadata};
+use Flow\ETL\Schema\Metadata;
+use Flow\ETL\SchemaValidator;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_string;
 
 /**
  * Matches all entries in the schema, if row comes with any extra entry it will fail validation.
@@ -17,7 +20,7 @@ final class StrictValidator implements SchemaValidator
      * @param Schema $expected
      * @param Schema $given
      */
-    public function isValid(Schema $expected, Schema $given) : bool
+    public function isValid(Schema $expected, Schema $given): bool
     {
         if ($expected->count() !== $given->count()) {
             return false;
@@ -30,7 +33,11 @@ final class StrictValidator implements SchemaValidator
                 return false;
             }
 
-            if ($expectedDefinition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL) && type_equals($givenDefinition->type(), type_string())) {
+            if (
+                $expectedDefinition->isNullable()
+                && $givenDefinition->metadata()->has(Metadata::FROM_NULL)
+                && type_equals($givenDefinition->type(), type_string())
+            ) {
                 continue;
             }
 

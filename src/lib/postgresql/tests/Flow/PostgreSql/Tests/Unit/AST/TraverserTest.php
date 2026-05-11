@@ -4,21 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier, NodeVisitor, Traverser};
-use Flow\PostgreSql\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
-use Flow\PostgreSql\Protobuf\AST\{ColumnRef, Node, ParseResult, SelectStmt};
+use Flow\PostgreSql\AST\ModificationContext;
+use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\AST\NodeVisitor;
+use Flow\PostgreSql\AST\Traverser;
+use Flow\PostgreSql\AST\Visitors\ColumnRefCollector;
+use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
+use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use PHPUnit\Framework\TestCase;
 
 final class TraverserTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_column_ref_collector() : void
+    public function test_column_ref_collector(): void
     {
         $collector = new ColumnRefCollector();
         $traverser = new Traverser($collector);
@@ -26,10 +36,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT id, name FROM users');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getColumnRefs());
+        static::assertCount(2, $collector->getColumnRefs());
     }
 
-    public function test_column_ref_collector_from_join_condition() : void
+    public function test_column_ref_collector_from_join_condition(): void
     {
         $collector = new ColumnRefCollector();
         $traverser = new Traverser($collector);
@@ -37,10 +47,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users u JOIN orders o ON u.id = o.user_id');
         $traverser->traverse($result);
 
-        self::assertCount(3, $collector->getColumnRefs());
+        static::assertCount(3, $collector->getColumnRefs());
     }
 
-    public function test_column_ref_collector_from_order_by() : void
+    public function test_column_ref_collector_from_order_by(): void
     {
         $collector = new ColumnRefCollector();
         $traverser = new Traverser($collector);
@@ -48,10 +58,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT id FROM users ORDER BY name');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getColumnRefs());
+        static::assertCount(2, $collector->getColumnRefs());
     }
 
-    public function test_column_ref_collector_from_subquery() : void
+    public function test_column_ref_collector_from_subquery(): void
     {
         $collector = new ColumnRefCollector();
         $traverser = new Traverser($collector);
@@ -59,10 +69,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getColumnRefs());
+        static::assertCount(2, $collector->getColumnRefs());
     }
 
-    public function test_column_ref_collector_from_where_clause() : void
+    public function test_column_ref_collector_from_where_clause(): void
     {
         $collector = new ColumnRefCollector();
         $traverser = new Traverser($collector);
@@ -70,10 +80,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT 1 FROM users WHERE active = true AND status = 1');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getColumnRefs());
+        static::assertCount(2, $collector->getColumnRefs());
     }
 
-    public function test_column_ref_collector_with_table_qualifier() : void
+    public function test_column_ref_collector_with_table_qualifier(): void
     {
         $collector = new ColumnRefCollector();
         $traverser = new Traverser($collector);
@@ -81,32 +91,32 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT u.id, u.name FROM users u');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getColumnRefs());
+        static::assertCount(2, $collector->getColumnRefs());
 
         foreach ($collector->getColumnRefs() as $ref) {
             $fields = $ref->getFields();
-            self::assertCount(2, $fields);
+            static::assertCount(2, $fields);
         }
     }
 
-    public function test_dont_traverse_children() : void
+    public function test_dont_traverse_children(): void
     {
         $visitor = new class implements NodeVisitor {
             public int $nodeCount = 0;
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function enter(object $node) : int
+            public function enter(object $node): int
             {
                 $this->nodeCount++;
 
                 return NodeVisitor::DONT_TRAVERSE_CHILDREN;
             }
 
-            public function leave(object $node) : ?int
+            public function leave(object $node): ?int
             {
                 return null;
             }
@@ -116,10 +126,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT id, name FROM users');
         $traverser->traverse($result);
 
-        self::assertSame(1, $visitor->nodeCount);
+        static::assertSame(1, $visitor->nodeCount);
     }
 
-    public function test_func_call_collector() : void
+    public function test_func_call_collector(): void
     {
         $collector = new FuncCallCollector();
         $traverser = new Traverser($collector);
@@ -127,10 +137,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT COUNT(*), MAX(id) FROM users');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getFuncCalls());
+        static::assertCount(2, $collector->getFuncCalls());
     }
 
-    public function test_func_call_collector_nested() : void
+    public function test_func_call_collector_nested(): void
     {
         $collector = new FuncCallCollector();
         $traverser = new Traverser($collector);
@@ -138,10 +148,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT UPPER(TRIM(name)) FROM users');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getFuncCalls());
+        static::assertCount(2, $collector->getFuncCalls());
     }
 
-    public function test_func_call_collector_with_schema() : void
+    public function test_func_call_collector_with_schema(): void
     {
         $collector = new FuncCallCollector();
         $traverser = new Traverser($collector);
@@ -149,21 +159,21 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT pg_catalog.now()');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getFuncCalls());
+        static::assertCount(1, $collector->getFuncCalls());
 
         $funcname = $collector->getFuncCalls()[0]->getFuncname();
-        self::assertCount(2, $funcname);
+        static::assertCount(2, $funcname);
     }
 
-    public function test_modifier_can_mutate_node_in_place() : void
+    public function test_modifier_can_mutate_node_in_place(): void
     {
         $modifier = new class implements NodeModifier {
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : int|object|null
+            public function modify(object $node, ModificationContext $context): int|object|null
             {
                 /** @var SelectStmt $node */
                 if ($context->isTopLevel()) {
@@ -191,10 +201,10 @@ final class TraverserTest extends TestCase
 
         $deparsed = \pg_query_deparse($result->serializeToString());
 
-        self::assertStringContainsString('LIMIT 10', $deparsed);
+        static::assertStringContainsString('LIMIT 10', $deparsed);
     }
 
-    public function test_modifier_can_skip_children() : void
+    public function test_modifier_can_skip_children(): void
     {
         $modifyCount = 0;
 
@@ -206,12 +216,12 @@ final class TraverserTest extends TestCase
                 $this->count = &$count;
             }
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : int
+            public function modify(object $node, ModificationContext $context): int
             {
                 $this->count++;
 
@@ -223,10 +233,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
         $traverser->traverse($result);
 
-        self::assertSame(1, $modifyCount);
+        static::assertSame(1, $modifyCount);
     }
 
-    public function test_modifier_can_stop_traversal() : void
+    public function test_modifier_can_stop_traversal(): void
     {
         $modifyCount = 0;
 
@@ -238,12 +248,12 @@ final class TraverserTest extends TestCase
                 $this->count = &$count;
             }
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : int
+            public function modify(object $node, ModificationContext $context): int
             {
                 $this->count++;
 
@@ -255,10 +265,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
         $traverser->traverse($result);
 
-        self::assertSame(1, $modifyCount);
+        static::assertSame(1, $modifyCount);
     }
 
-    public function test_modifier_is_top_level_check() : void
+    public function test_modifier_is_top_level_check(): void
     {
         /** @var array<bool> $topLevelResults */
         $topLevelResults = [];
@@ -269,16 +279,16 @@ final class TraverserTest extends TestCase
              *
              * @phpstan-ignore property.onlyWritten (accessed via reference)
              */
-            public function __construct(private array &$results)
-            {
-            }
+            public function __construct(
+                private array &$results,
+            ) {}
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : null
+            public function modify(object $node, ModificationContext $context): null
             {
                 $this->results[] = $context->isTopLevel();
 
@@ -290,11 +300,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
         $traverser->traverse($result);
 
-        self::assertContains(true, $topLevelResults);
-        self::assertContains(false, $topLevelResults);
+        static::assertContains(true, $topLevelResults);
+        static::assertContains(false, $topLevelResults);
     }
 
-    public function test_modifier_receives_context_with_nested_depth() : void
+    public function test_modifier_receives_context_with_nested_depth(): void
     {
         /** @var array<int> $depths */
         $depths = [];
@@ -305,16 +315,16 @@ final class TraverserTest extends TestCase
              *
              * @phpstan-ignore property.onlyWritten (accessed via reference)
              */
-            public function __construct(private array &$depths)
-            {
-            }
+            public function __construct(
+                private array &$depths,
+            ) {}
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : null
+            public function modify(object $node, ModificationContext $context): null
             {
                 $this->depths[] = $context->depth();
 
@@ -326,12 +336,12 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
         $traverser->traverse($result);
 
-        self::assertCount(2, $depths);
-        self::assertSame(1, $depths[0]);
-        self::assertGreaterThan(1, $depths[1]);
+        static::assertCount(2, $depths);
+        static::assertSame(1, $depths[0]);
+        static::assertGreaterThan(1, $depths[1]);
     }
 
-    public function test_modifier_receives_context_with_top_level_depth() : void
+    public function test_modifier_receives_context_with_top_level_depth(): void
     {
         /** @var array<int> $depths */
         $depths = [];
@@ -342,16 +352,16 @@ final class TraverserTest extends TestCase
              *
              * @phpstan-ignore property.onlyWritten (accessed via reference)
              */
-            public function __construct(private array &$depths)
-            {
-            }
+            public function __construct(
+                private array &$depths,
+            ) {}
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : null
+            public function modify(object $node, ModificationContext $context): null
             {
                 $this->depths[] = $context->depth();
 
@@ -363,11 +373,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users');
         $traverser->traverse($result);
 
-        self::assertContains(1, $depths);
-        self::assertTrue($depths[0] === 1);
+        static::assertContains(1, $depths);
+        static::assertTrue($depths[0] === 1);
     }
 
-    public function test_multiple_visitors() : void
+    public function test_multiple_visitors(): void
     {
         $columnCollector = new ColumnRefCollector();
         $funcCollector = new FuncCallCollector();
@@ -378,12 +388,12 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT COUNT(id), name FROM users WHERE active = true');
         $traverser->traverse($result);
 
-        self::assertCount(3, $columnCollector->getColumnRefs());
-        self::assertCount(1, $funcCollector->getFuncCalls());
-        self::assertCount(1, $rangeVarCollector->getRangeVars());
+        static::assertCount(3, $columnCollector->getColumnRefs());
+        static::assertCount(1, $funcCollector->getFuncCalls());
+        static::assertCount(1, $rangeVarCollector->getRangeVars());
     }
 
-    public function test_range_var_collector() : void
+    public function test_range_var_collector(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -391,11 +401,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
     }
 
-    public function test_range_var_collector_from_cte() : void
+    public function test_range_var_collector_from_cte(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -403,14 +413,14 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('WITH active AS (SELECT * FROM users WHERE active = true) SELECT * FROM active');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getRangeVars());
+        static::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(static fn ($rv) => $rv->getRelname(), $collector->getRangeVars());
-        self::assertContains('users', $tableNames);
-        self::assertContains('active', $tableNames);
+        $tableNames = \array_map(static fn($rv) => $rv->getRelname(), $collector->getRangeVars());
+        static::assertContains('users', $tableNames);
+        static::assertContains('active', $tableNames);
     }
 
-    public function test_range_var_collector_from_delete() : void
+    public function test_range_var_collector_from_delete(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -418,11 +428,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('DELETE FROM users WHERE id = 1');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
     }
 
-    public function test_range_var_collector_from_insert() : void
+    public function test_range_var_collector_from_insert(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -430,11 +440,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('INSERT INTO users (name) VALUES (\'john\')');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
     }
 
-    public function test_range_var_collector_from_join() : void
+    public function test_range_var_collector_from_join(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -442,10 +452,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users u JOIN orders o ON u.id = o.user_id');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getRangeVars());
+        static::assertCount(2, $collector->getRangeVars());
     }
 
-    public function test_range_var_collector_from_subquery() : void
+    public function test_range_var_collector_from_subquery(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -453,11 +463,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM (SELECT * FROM users) sub');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
     }
 
-    public function test_range_var_collector_from_update() : void
+    public function test_range_var_collector_from_update(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -465,11 +475,11 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('UPDATE users SET name = \'john\' WHERE id = 1');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
     }
 
-    public function test_range_var_collector_with_alias() : void
+    public function test_range_var_collector_with_alias(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -477,13 +487,13 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users AS u');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
-        self::assertNotNull($collector->getRangeVars()[0]->getAlias());
-        self::assertSame('u', $collector->getRangeVars()[0]->getAlias()->getAliasname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertNotNull($collector->getRangeVars()[0]->getAlias());
+        static::assertSame('u', $collector->getRangeVars()[0]->getAlias()->getAliasname());
     }
 
-    public function test_range_var_collector_with_schema() : void
+    public function test_range_var_collector_with_schema(): void
     {
         $collector = new RangeVarCollector();
         $traverser = new Traverser($collector);
@@ -491,22 +501,22 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM public.users');
         $traverser->traverse($result);
 
-        self::assertCount(1, $collector->getRangeVars());
-        self::assertSame('users', $collector->getRangeVars()[0]->getRelname());
-        self::assertSame('public', $collector->getRangeVars()[0]->getSchemaname());
+        static::assertCount(1, $collector->getRangeVars());
+        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
+        static::assertSame('public', $collector->getRangeVars()[0]->getSchemaname());
     }
 
-    public function test_stop_traversal() : void
+    public function test_stop_traversal(): void
     {
         $visitor = new class implements NodeVisitor {
             public int $nodeCount = 0;
 
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [ColumnRef::class];
             }
 
-            public function enter(object $node) : ?int
+            public function enter(object $node): ?int
             {
                 $this->nodeCount++;
 
@@ -517,7 +527,7 @@ final class TraverserTest extends TestCase
                 return null;
             }
 
-            public function leave(object $node) : ?int
+            public function leave(object $node): ?int
             {
                 return null;
             }
@@ -527,20 +537,20 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT id, name, email FROM users');
         $traverser->traverse($result);
 
-        self::assertSame(2, $visitor->nodeCount);
+        static::assertSame(2, $visitor->nodeCount);
     }
 
-    public function test_traverser_accepts_both_visitors_and_modifiers() : void
+    public function test_traverser_accepts_both_visitors_and_modifiers(): void
     {
         $collector = new ColumnRefCollector();
 
         $modifier = new class implements NodeModifier {
-            public static function nodeClasses() : array
+            public static function nodeClasses(): array
             {
                 return [SelectStmt::class];
             }
 
-            public function modify(object $node, ModificationContext $context) : int|object|null
+            public function modify(object $node, ModificationContext $context): int|object|null
             {
                 return null;
             }
@@ -550,10 +560,10 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT id, name FROM users');
         $traverser->traverse($result);
 
-        self::assertCount(2, $collector->getColumnRefs());
+        static::assertCount(2, $collector->getColumnRefs());
     }
 
-    public function test_traverser_without_visitors() : void
+    public function test_traverser_without_visitors(): void
     {
         $traverser = new Traverser();
         $result = $this->parseQuery('SELECT id FROM users');
@@ -563,7 +573,7 @@ final class TraverserTest extends TestCase
         $this->expectNotToPerformAssertions();
     }
 
-    private function parseQuery(string $sql) : ParseResult
+    private function parseQuery(string $sql): ParseResult
     {
         /** @var string $json */
         $json = \pg_query_parse($sql);

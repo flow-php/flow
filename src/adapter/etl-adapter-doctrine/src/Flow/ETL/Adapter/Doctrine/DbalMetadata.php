@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Flow\ETL\Schema\Metadata;
 
-enum DbalMetadata : string
+enum DbalMetadata: string
 {
     case COLUMN_DEFINITION = 'dbal_column_column_definition';
     case COMMENT = 'dbal_column_comment';
@@ -23,37 +23,37 @@ enum DbalMetadata : string
     case TYPE = 'dbal_column_type';
     case UNSIGNED = 'dbal_column_unsigned';
 
-    public static function columnDefinition(string $definition) : Metadata
+    public static function columnDefinition(string $definition): Metadata
     {
         return Metadata::with(self::COLUMN_DEFINITION->value, $definition);
     }
 
-    public static function comment(string|int $comment) : Metadata
+    public static function comment(string|int $comment): Metadata
     {
         return Metadata::with(self::COMMENT->value, $comment);
     }
 
-    public static function default(int|string|bool|float $value) : Metadata
+    public static function default(int|string|bool|float $value): Metadata
     {
         return Metadata::with(self::DEFAULT->value, $value);
     }
 
-    public static function fixed(bool $fixed = true) : Metadata
+    public static function fixed(bool $fixed = true): Metadata
     {
         return Metadata::with(self::FIXED->value, $fixed);
     }
 
-    public static function index(string $name) : Metadata
+    public static function index(string $name): Metadata
     {
         return Metadata::with(self::INDEX->value, $name);
     }
 
-    public static function indexUnique(string $name) : Metadata
+    public static function indexUnique(string $name): Metadata
     {
         return Metadata::with(self::INDEX_UNIQUE->value, $name);
     }
 
-    public static function length(int $length) : Metadata
+    public static function length(int $length): Metadata
     {
         return Metadata::with(self::LENGTH->value, $length);
     }
@@ -61,32 +61,32 @@ enum DbalMetadata : string
     /**
      * @param array<array-key, mixed> $options
      */
-    public static function platformOptions(array $options) : Metadata
+    public static function platformOptions(array $options): Metadata
     {
         return Metadata::with(self::PLATFORM_OPTIONS->value, $options);
     }
 
-    public static function precision(int $precision) : Metadata
+    public static function precision(int $precision): Metadata
     {
         return Metadata::with(self::PRECISION->value, $precision);
     }
 
-    public static function primaryKey(string $name = '') : Metadata
+    public static function primaryKey(string $name = ''): Metadata
     {
         return Metadata::with(self::PRIMARY_KEY->value, $name);
     }
 
-    public static function scale(int $scale) : Metadata
+    public static function scale(int $scale): Metadata
     {
         return Metadata::with(self::SCALE->value, $scale);
     }
 
-    public static function type(string $type) : Metadata
+    public static function type(string $type): Metadata
     {
         return Metadata::with(self::TYPE->value, $type);
     }
 
-    public static function unsigned(bool $unsigned = true) : Metadata
+    public static function unsigned(bool $unsigned = true): Metadata
     {
         return Metadata::with(self::UNSIGNED->value, $unsigned);
     }

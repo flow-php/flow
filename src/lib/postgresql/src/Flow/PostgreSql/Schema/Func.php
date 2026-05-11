@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use function Flow\PostgreSql\DSL\{column_type_from_string, create};
-
 use Flow\PostgreSql\QueryBuilder\Schema\Function\FunctionArgument;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\column_type_from_string;
+use function Flow\PostgreSql\DSL\create;
 
 /**
  * @phpstan-type FuncShape = array{name: string, return_type: string, argument_types: list<string>, language: string, definition: ?string, is_strict: bool, volatility: ?string}
@@ -25,13 +26,12 @@ final readonly class Func
         public ?string $definition = null,
         public bool $isStrict = false,
         public ?FunctionVolatility $volatility = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param FuncShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -40,14 +40,16 @@ final readonly class Func
             language: $data['language'] ?? 'sql',
             definition: $data['definition'] ?? null,
             isStrict: $data['is_strict'] ?? false,
-            volatility: array_key_exists('volatility', $data) && $data['volatility'] !== null ? FunctionVolatility::from($data['volatility']) : null,
+            volatility: array_key_exists('volatility', $data) && $data['volatility'] !== null
+                ? FunctionVolatility::from($data['volatility'])
+                : null,
         );
     }
 
     /**
      * @return FuncShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -60,7 +62,7 @@ final readonly class Func
         ];
     }
 
-    public function toSql() : ?Sql
+    public function toSql(): ?Sql
     {
         if ($this->definition === null) {
             return null;
@@ -70,14 +72,13 @@ final readonly class Func
 
         if ($this->argumentTypes !== []) {
             $args = \array_map(
-                static fn (string $type) : FunctionArgument => FunctionArgument::of(column_type_from_string($type)),
+                static fn(string $type): FunctionArgument => FunctionArgument::of(column_type_from_string($type)),
                 $this->argumentTypes,
             );
             $builder = $builder->arguments(...$args);
         }
 
-        $builder = $builder->returns(column_type_from_string($this->returnType))
-            ->language($this->language);
+        $builder = $builder->returns(column_type_from_string($this->returnType))->language($this->language);
 
         if ($this->isStrict) {
             $builder = $builder->strict();

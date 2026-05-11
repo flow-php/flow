@@ -7,11 +7,12 @@ namespace Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
 
 final class JsonConverter implements Converter
 {
-    public function fromParquetType(mixed $data) : string
+    public function fromParquetType(mixed $data): string
     {
         if (!\is_string($data)) {
             throw new RuntimeException('Json must be read as a string from Parquet file');
@@ -20,7 +21,7 @@ final class JsonConverter implements Converter
         return $data;
     }
 
-    public function isFor(FlatColumn $column, Options $options) : bool
+    public function isFor(FlatColumn $column, Options $options): bool
     {
         if ($column->logicalType()?->name() === LogicalType::JSON) {
             return true;
@@ -29,7 +30,7 @@ final class JsonConverter implements Converter
         return false;
     }
 
-    public function toParquetType(mixed $data) : string
+    public function toParquetType(mixed $data): string
     {
         if (!\is_string($data)) {
             throw new RuntimeException('Json must be written as a string from Parquet file');

@@ -9,13 +9,13 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateTableAsFinalStep extends Sql
 {
-    public function columnNames(string ...$names) : self;
+    public function columnNames(string ...$names): self;
 
-    public function ifNotExists() : self;
+    public function ifNotExists(): self;
 
-    public function toAst() : CreateTableAsStmt;
+    public function toAst(): CreateTableAsStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function withNoData() : self;
+    public function withNoData(): self;
 }

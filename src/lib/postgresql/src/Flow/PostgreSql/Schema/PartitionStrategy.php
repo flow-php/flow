@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-enum PartitionStrategy : string
+enum PartitionStrategy: string
 {
     case HASH = 'hash';
     case LIST = 'list';

@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\Types\DSL\{type_integer, type_string, type_union};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Row\{Reference, References};
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class GroupBy
 {
@@ -47,20 +52,22 @@ final class GroupBy
         $this->pivot = null;
     }
 
-    public function aggregate(AggregatingFunction ...$aggregator) : void
+    public function aggregate(AggregatingFunction ...$aggregator): void
     {
         if (!\count($aggregator)) {
             throw new InvalidArgumentException("Aggregations can't be empty");
         }
 
         if ($this->pivot !== null && \count($aggregator) !== 1) {
-            throw new RuntimeException('Pivot requires exactly one aggregation in group by, given: ' . \count($aggregator));
+            throw new RuntimeException(
+                'Pivot requires exactly one aggregation in group by, given: ' . \count($aggregator),
+            );
         }
 
         $this->aggregations = $aggregator;
     }
 
-    public function group(Rows $rows, FlowContext $context) : void
+    public function group(Rows $rows, FlowContext $context): void
     {
         if ($this->pivot) {
             foreach ($rows as $row) {
@@ -109,9 +116,7 @@ final class GroupBy
                     $aggregator->aggregate($row, $context);
                 }
             }
-
         } else {
-
             foreach ($rows as $row) {
                 /** @var array<string, null|mixed> $values */
                 $values = [];
@@ -146,12 +151,12 @@ final class GroupBy
         }
     }
 
-    public function pivot(Reference $ref) : void
+    public function pivot(Reference $ref): void
     {
         $this->pivot = $ref;
     }
 
-    public function result(FlowContext $context) : Rows
+    public function result(FlowContext $context): Rows
     {
         $rows = [];
 
@@ -202,7 +207,7 @@ final class GroupBy
     /**
      * @param array<array-key, mixed> $values
      */
-    private function hash(array $values) : string
+    private function hash(array $values): string
     {
         /** @var array<string> $stringValues */
         $stringValues = [];

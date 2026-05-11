@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use Flow\PostgreSql\Schema\{Column, Table, Trigger};
+use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
+use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\Trigger;
 
 final readonly class TableComparator
 {
@@ -13,10 +15,9 @@ final readonly class TableComparator
         private IndexComparator $indexComparator,
         private ConstraintComparator $constraintComparator,
         private RenameStrategy $renameStrategy,
-    ) {
-    }
+    ) {}
 
-    public function compare(Table $source, Table $target) : TableDiff
+    public function compare(Table $source, Table $target): TableDiff
     {
         $sourceColumnMap = [];
 
@@ -60,12 +61,22 @@ final readonly class TableComparator
 
         $indexes = $this->indexComparator->compare($source->indexes, $target->indexes);
         $foreignKeys = $this->constraintComparator->diffForeignKeys($source->foreignKeys, $target->foreignKeys);
-        $uniqueConstraints = $this->constraintComparator->diffUniqueConstraints($source->uniqueConstraints, $target->uniqueConstraints);
-        $checkConstraints = $this->constraintComparator->diffCheckConstraints($source->checkConstraints, $target->checkConstraints);
-        $excludeConstraints = $this->constraintComparator->diffExcludeConstraints($source->excludeConstraints, $target->excludeConstraints);
+        $uniqueConstraints = $this->constraintComparator->diffUniqueConstraints(
+            $source->uniqueConstraints,
+            $target->uniqueConstraints,
+        );
+        $checkConstraints = $this->constraintComparator->diffCheckConstraints(
+            $source->checkConstraints,
+            $target->checkConstraints,
+        );
+        $excludeConstraints = $this->constraintComparator->diffExcludeConstraints(
+            $source->excludeConstraints,
+            $target->excludeConstraints,
+        );
         $triggers = $this->diffTriggers($source->triggers, $target->triggers);
 
-        $partitionChanged = $source->partitionStrategy !== $target->partitionStrategy
+        $partitionChanged =
+            $source->partitionStrategy !== $target->partitionStrategy
             || $source->partitionColumns !== $target->partitionColumns;
 
         $sourceInherits = $source->inherits;
@@ -111,8 +122,12 @@ final readonly class TableComparator
      * @param array<string, Column> $removedColumns
      * @param list<ColumnDiff> $modifiedColumns
      */
-    private function detectColumnRenames(string $qualifiedTableName, array &$addedColumns, array &$removedColumns, array &$modifiedColumns) : void
-    {
+    private function detectColumnRenames(
+        string $qualifiedTableName,
+        array &$addedColumns,
+        array &$removedColumns,
+        array &$modifiedColumns,
+    ): void {
         $candidates = [];
 
         foreach ($addedColumns as $addedName => $addedCol) {
@@ -124,12 +139,16 @@ final readonly class TableComparator
         }
 
         foreach ($this->renameStrategy->resolve($candidates) as $match) {
-            $modifiedColumns[] = new ColumnDiff($qualifiedTableName, $removedColumns[$match->removedName], $addedColumns[$match->addedName]);
+            $modifiedColumns[] = new ColumnDiff(
+                $qualifiedTableName,
+                $removedColumns[$match->removedName],
+                $addedColumns[$match->addedName],
+            );
             unset($addedColumns[$match->addedName], $removedColumns[$match->removedName]);
         }
     }
 
-    private function diffPrimaryKeyAdded(?PrimaryKey $source, ?PrimaryKey $target) : ?PrimaryKey
+    private function diffPrimaryKeyAdded(?PrimaryKey $source, ?PrimaryKey $target): ?PrimaryKey
     {
         if ($target === null) {
             return null;
@@ -146,7 +165,7 @@ final readonly class TableComparator
         return $target;
     }
 
-    private function diffPrimaryKeyRemoved(?PrimaryKey $source, ?PrimaryKey $target) : ?PrimaryKey
+    private function diffPrimaryKeyRemoved(?PrimaryKey $source, ?PrimaryKey $target): ?PrimaryKey
     {
         if ($source === null) {
             return null;
@@ -169,7 +188,7 @@ final readonly class TableComparator
      *
      * @return ChangeSet<Trigger, mixed>
      */
-    private function diffTriggers(array $sourceTriggers, array $targetTriggers) : ChangeSet
+    private function diffTriggers(array $sourceTriggers, array $targetTriggers): ChangeSet
     {
         $sourceMap = [];
 

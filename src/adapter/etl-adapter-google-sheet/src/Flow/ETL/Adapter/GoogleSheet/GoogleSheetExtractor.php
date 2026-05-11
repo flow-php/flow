@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor\{Limitable, LimitableExtractor, Signal};
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
 use Google\Service\Sheets;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 {
@@ -35,12 +40,12 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
-        $spreadsheet = $this->service->spreadsheets->get(
-            $this->spreadsheetId,
-            ['ranges' => [], 'includeGridData' => false]
-        );
+        $spreadsheet = $this->service->spreadsheets->get($this->spreadsheetId, [
+            'ranges' => [],
+            'includeGridData' => false,
+        ]);
 
         $maxRows = 0;
 
@@ -67,7 +72,9 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $headers = [];
         $headersCount = 0;
 
-        $response = $this->service->spreadsheets_values->batchGet($this->spreadsheetId, array_merge($this->options, ['ranges' => $ranges]));
+        $response = $this->service->spreadsheets_values->batchGet($this->spreadsheetId, array_merge($this->options, [
+            'ranges' => $ranges,
+        ]));
 
         foreach ($response->getValueRanges() as $valueRange) {
             foreach ($valueRange->getValues() ?: [] as $rowData) {
@@ -98,7 +105,11 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
                 if ($rowDataCount > $headersCount) {
                     if (!$this->dropExtraColumns) {
-                        throw InvalidArgumentException::because('Row has more columns (%d) than headers (%d)', $rowDataCount, $headersCount);
+                        throw InvalidArgumentException::because(
+                            'Row has more columns (%d) than headers (%d)',
+                            $rowDataCount,
+                            $headersCount,
+                        );
                     }
 
                     $rowData = \array_slice($rowData, 0, $headersCount);
@@ -124,14 +135,14 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         }
     }
 
-    public function withDropExtraColumns(bool $dropExtraColumns) : self
+    public function withDropExtraColumns(bool $dropExtraColumns): self
     {
         $this->dropExtraColumns = $dropExtraColumns;
 
         return $this;
     }
 
-    public function withHeader(bool $withHeader) : self
+    public function withHeader(bool $withHeader): self
     {
         $this->withHeader = $withHeader;
 
@@ -141,14 +152,14 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
     /**
      * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
      */
-    public function withOptions(array $options) : self
+    public function withOptions(array $options): self
     {
         $this->options = $options;
 
         return $this;
     }
 
-    public function withRowsPerPage(int $rowsPerPage) : self
+    public function withRowsPerPage(int $rowsPerPage): self
     {
         if ($rowsPerPage < 1) {
             throw new InvalidArgumentException('Rows per page must be greater than 0');
@@ -159,7 +170,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 

@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
-use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
-use function Flow\ETL\DSL\{flow_context, row};
-use function Flow\ETL\DSL\{str_entry, string_entry};
-use Flow\ETL\{Config\ConfigBuilder, Rows, Tests\FlowTestCase};
+use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\FlowTestCase;
 use Google\Service\Sheets;
 use Google\Service\Sheets\Resource\SpreadsheetsValues;
 use Google\Service\Sheets\ValueRange;
 
+use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\string_entry;
+
 final class GoogleSheetExtractorTest extends FlowTestCase
 {
-    public function test_its_fails_if_sheet_not_found() : void
+    public function test_its_fails_if_sheet_not_found(): void
     {
         $spreadsheet = $this->createMock(Sheets\Spreadsheet::class);
-        $spreadsheet->expects(self::once())
-            ->method('getSheets')
-            ->willReturn([]);
+        $spreadsheet->expects(self::once())->method('getSheets')->willReturn([]);
 
         $resource = $this->createMock(Sheets\Resource\Spreadsheets::class);
-        $resource->expects(self::once())
+        $resource
+            ->expects(self::once())
             ->method('get')
             ->with('spread-id', ['ranges' => [], 'includeGridData' => false])
             ->willReturn($spreadsheet);
@@ -41,7 +45,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
     }
 
-    public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row() : void
+    public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row(): void
     {
         $sheetName = 'sheet';
 
@@ -60,9 +64,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $response->setValueRanges([$firstValueRangeMock, $secondValueRangeMock]);
 
         $spreadsheetsValues = $this->createMock(SpreadsheetsValues::class);
-        $spreadsheetsValues->expects(self::once())
-            ->method('batchGet')
-            ->willReturn($response);
+        $spreadsheetsValues->expects(self::once())->method('batchGet')->willReturn($response);
 
         $service->spreadsheets_values = $spreadsheetsValues;
 
@@ -70,29 +72,31 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $sheetNameEntry = string_entry('_sheet_name', $sheetName);
 
         /** @var array<Rows> $rowsArray */
-        $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
-        self::assertCount(2, $rowsArray);
-        self::assertSame(1, $rowsArray[0]->count());
-        self::assertEquals(row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')), $rowsArray[0]->first());
-        self::assertSame(1, $rowsArray[1]->count());
-        self::assertEquals(row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')), $rowsArray[1]->first());
+        $rowsArray = \iterator_to_array($extractor->extract(
+            flow_context((new ConfigBuilder())->putInputIntoRows()->build()),
+        ));
+        static::assertCount(2, $rowsArray);
+        static::assertSame(1, $rowsArray[0]->count());
+        static::assertEquals(
+            row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')),
+            $rowsArray[0]->first(),
+        );
+        static::assertSame(1, $rowsArray[1]->count());
+        static::assertEquals(
+            row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')),
+            $rowsArray[1]->first(),
+        );
     }
 
-    public function test_rows_in_batch_must_be_positive_integer() : void
+    public function test_rows_in_batch_must_be_positive_integer(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Rows per page must be greater than 0');
 
-        from_google_sheet_columns(
-            $this->createMock(Sheets::class),
-            'spread-id',
-            'sheet',
-            'A',
-            'B',
-        )->withRowsPerPage(0);
+        from_google_sheet_columns($this->createMock(Sheets::class), 'spread-id', 'sheet', 'A', 'B')->withRowsPerPage(0);
     }
 
-    public function test_works_for_no_data() : void
+    public function test_works_for_no_data(): void
     {
         $service = $this->createGoogleService('sheet');
 
@@ -107,18 +111,16 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $response->setValueRanges([$valueRangeMock]);
 
         $spreadsheetsValues = $this->createMock(SpreadsheetsValues::class);
-        $spreadsheetsValues->expects(self::once())
-            ->method('batchGet')
-            ->willReturn($response);
+        $spreadsheetsValues->expects(self::once())->method('batchGet')->willReturn($response);
 
         $service->spreadsheets_values = $spreadsheetsValues;
 
         /** @var array<Rows> $rowsArray */
         $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
-        self::assertCount(0, $rowsArray);
+        static::assertCount(0, $rowsArray);
     }
 
-    private function createGoogleService(string $sheetName) : Sheets
+    private function createGoogleService(string $sheetName): Sheets
     {
         $gridProperties = new Sheets\GridProperties();
         $gridProperties->setRowCount(100);
@@ -131,12 +133,11 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $sheet->setProperties($properties);
 
         $spreadsheet = $this->createMock(Sheets\Spreadsheet::class);
-        $spreadsheet->expects(self::once())
-            ->method('getSheets')
-            ->willReturn([$sheet]);
+        $spreadsheet->expects(self::once())->method('getSheets')->willReturn([$sheet]);
 
         $resource = $this->createMock(Sheets\Resource\Spreadsheets::class);
-        $resource->expects(self::once())
+        $resource
+            ->expects(self::once())
             ->method('get')
             ->with('spread-id', ['ranges' => [], 'includeGridData' => false])
             ->willReturn($spreadsheet);

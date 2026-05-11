@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Meter;
 
-use Flow\Telemetry\Meter\{MeterProvider, MetricType};
+use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
@@ -18,14 +19,14 @@ final class MetricsIntegrationTest extends TestCase
 
     private Resource $resource;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->clock = $this->createMock(ClockInterface::class);
         $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00.123456'));
         $this->resource = ResourceMother::default();
     }
 
-    public function test_complete_metrics_workflow() : void
+    public function test_complete_metrics_workflow(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
@@ -56,19 +57,19 @@ final class MetricsIntegrationTest extends TestCase
         $processor->flush();
 
         $metrics = $processor->metrics();
-        $counterMetrics = \array_filter($metrics, static fn ($m) => $m->type === MetricType::COUNTER);
-        $histogramMetrics = \array_filter($metrics, static fn ($m) => $m->type === MetricType::HISTOGRAM);
-        $gaugeMetrics = \array_filter($metrics, static fn ($m) => $m->type === MetricType::GAUGE);
-        $upDownCounterMetrics = \array_filter($metrics, static fn ($m) => $m->type === MetricType::UP_DOWN_COUNTER);
+        $counterMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::COUNTER);
+        $histogramMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::HISTOGRAM);
+        $gaugeMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::GAUGE);
+        $upDownCounterMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::UP_DOWN_COUNTER);
 
-        self::assertCount(8, $metrics);
-        self::assertCount(3, $counterMetrics);
-        self::assertCount(2, $histogramMetrics);
-        self::assertCount(2, $gaugeMetrics);
-        self::assertCount(1, $upDownCounterMetrics);
+        static::assertCount(8, $metrics);
+        static::assertCount(3, $counterMetrics);
+        static::assertCount(2, $histogramMetrics);
+        static::assertCount(2, $gaugeMetrics);
+        static::assertCount(1, $upDownCounterMetrics);
     }
 
-    public function test_filtering_metrics_by_name() : void
+    public function test_filtering_metrics_by_name(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
@@ -90,15 +91,15 @@ final class MetricsIntegrationTest extends TestCase
         $processor->flush();
 
         $metrics = $processor->metrics();
-        $requestsMetrics = \array_filter($metrics, static fn ($m) => $m->name === 'requests.total');
-        $errorsMetrics = \array_filter($metrics, static fn ($m) => $m->name === 'errors.total');
+        $requestsMetrics = \array_filter($metrics, static fn($m) => $m->name === 'requests.total');
+        $errorsMetrics = \array_filter($metrics, static fn($m) => $m->name === 'errors.total');
 
-        self::assertCount(3, $metrics);
-        self::assertCount(1, $requestsMetrics);
-        self::assertCount(1, $errorsMetrics);
+        static::assertCount(3, $metrics);
+        static::assertCount(1, $requestsMetrics);
+        static::assertCount(1, $errorsMetrics);
     }
 
-    public function test_metric_attributes_are_captured() : void
+    public function test_metric_attributes_are_captured(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
@@ -118,27 +119,26 @@ final class MetricsIntegrationTest extends TestCase
 
         $metric = $processor->metrics()[0];
 
-        self::assertSame('http.requests', $metric->name);
-        self::assertSame(MetricType::COUNTER, $metric->type);
-        self::assertSame(1, $metric->value);
-        self::assertSame([
-            'method' => 'GET',
-            'status' => 200,
-            'path' => '/api/users',
-        ], $metric->attributes->normalize());
+        static::assertSame('http.requests', $metric->name);
+        static::assertSame(MetricType::COUNTER, $metric->type);
+        static::assertSame(1, $metric->value);
+        static::assertSame(
+            [
+                'method' => 'GET',
+                'status' => 200,
+                'path' => '/api/users',
+            ],
+            $metric->attributes->normalize(),
+        );
     }
 
-    public function test_metric_unit_and_description_are_captured() : void
+    public function test_metric_unit_and_description_are_captured(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
         $meter = $provider->meter($this->resource, 'test', '1.0');
 
-        $histogram = $meter->createHistogram(
-            'request.duration',
-            'ms',
-            'Request duration in milliseconds'
-        );
+        $histogram = $meter->createHistogram('request.duration', 'ms', 'Request duration in milliseconds');
         $histogram->record(125.5, ['endpoint' => '/api/data']);
 
         foreach ($meter->collect() as $metric) {
@@ -148,11 +148,11 @@ final class MetricsIntegrationTest extends TestCase
 
         $metric = $processor->metrics()[0];
 
-        self::assertSame('ms', $metric->unit);
-        self::assertSame('Request duration in milliseconds', $metric->description);
+        static::assertSame('ms', $metric->unit);
+        static::assertSame('Request duration in milliseconds', $metric->description);
     }
 
-    public function test_multiple_services_recording_metrics() : void
+    public function test_multiple_services_recording_metrics(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
@@ -175,15 +175,15 @@ final class MetricsIntegrationTest extends TestCase
         $processor->flush();
 
         $metrics = $processor->metrics();
-        $counterMetrics = \array_filter($metrics, static fn ($m) => $m->type === MetricType::COUNTER);
-        $histogramMetrics = \array_filter($metrics, static fn ($m) => $m->type === MetricType::HISTOGRAM);
+        $counterMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::COUNTER);
+        $histogramMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::HISTOGRAM);
 
-        self::assertCount(5, $metrics);
-        self::assertCount(3, $counterMetrics);
-        self::assertCount(2, $histogramMetrics);
+        static::assertCount(5, $metrics);
+        static::assertCount(3, $counterMetrics);
+        static::assertCount(2, $histogramMetrics);
     }
 
-    public function test_provider_creates_new_meter_each_time() : void
+    public function test_provider_creates_new_meter_each_time(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
@@ -191,9 +191,9 @@ final class MetricsIntegrationTest extends TestCase
         $meter1 = $provider->meter($this->resource, 'service-a', '1.0');
         $meter2 = $provider->meter($this->resource, 'service-a', '1.0');
 
-        self::assertNotSame($meter1, $meter2);
-        self::assertSame($meter1->name(), $meter2->name());
-        self::assertSame($meter1->version(), $meter2->version());
+        static::assertNotSame($meter1, $meter2);
+        static::assertSame($meter1->name(), $meter2->name());
+        static::assertSame($meter1->version(), $meter2->version());
 
         $meter1->createCounter('requests')->add(1);
         $meter2->createCounter('requests')->add(1);
@@ -207,10 +207,10 @@ final class MetricsIntegrationTest extends TestCase
         }
         $processor->flush();
 
-        self::assertCount(2, $processor->metrics());
+        static::assertCount(2, $processor->metrics());
     }
 
-    public function test_timestamp_is_set_from_clock() : void
+    public function test_timestamp_is_set_from_clock(): void
     {
         $processor = $this->createProcessor();
         $provider = new MeterProvider($processor, $this->clock);
@@ -225,10 +225,10 @@ final class MetricsIntegrationTest extends TestCase
 
         $metric = $processor->metrics()[0];
 
-        self::assertSame('2024-01-01 12:00:00.123456', $metric->timestamp->format('Y-m-d H:i:s.u'));
+        static::assertSame('2024-01-01 12:00:00.123456', $metric->timestamp->format('Y-m-d H:i:s.u'));
     }
 
-    private function createProcessor() : MemoryMetricProcessor
+    private function createProcessor(): MemoryMetricProcessor
     {
         return new MemoryMetricProcessor(new VoidExporter());
     }

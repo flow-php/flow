@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 
 final class ASCIIValue
 {
@@ -14,9 +15,9 @@ final class ASCIIValue
     /**
      * @param null|array<mixed>|bool|Entry<mixed>|float|int|string $value
      */
-    public function __construct(private readonly string|int|bool|float|array|Entry|null $value)
-    {
-    }
+    public function __construct(
+        private readonly string|int|bool|float|array|Entry|null $value,
+    ) {}
 
     /**
      * Solution and all credits goes to https://stackoverflow.com/a/58272671.
@@ -29,8 +30,13 @@ final class ASCIIValue
      *
      * @return string
      */
-    public static function mb_str_pad(string $input, int $length, string $padding = ' ', int $padType = STR_PAD_RIGHT, string $encoding = 'UTF-8') : string
-    {
+    public static function mb_str_pad(
+        string $input,
+        int $length,
+        string $padding = ' ',
+        int $padType = STR_PAD_RIGHT,
+        string $encoding = 'UTF-8',
+    ): string {
         $result = $input;
 
         if (($paddingRequired = $length - \mb_strlen($input, $encoding)) > 0) {
@@ -43,19 +49,23 @@ final class ASCIIValue
                     $leftPaddingLength = (int) \floor($paddingRequired / 2);
                     $rightPaddingLength = $paddingRequired - $leftPaddingLength;
 
-                    return \mb_substr(\str_repeat($padding, $leftPaddingLength), 0, $leftPaddingLength, $encoding) . $input . \mb_substr(\str_repeat($padding, $rightPaddingLength), 0, $rightPaddingLength, $encoding);
+                    return (
+                        \mb_substr(\str_repeat($padding, $leftPaddingLength), 0, $leftPaddingLength, $encoding)
+                        . $input
+                        . \mb_substr(\str_repeat($padding, $rightPaddingLength), 0, $rightPaddingLength, $encoding)
+                    );
             }
         }
 
         return $result;
     }
 
-    public function length(int|bool $truncate = 20) : int
+    public function length(int|bool $truncate = 20): int
     {
         return \mb_strlen($this->print($truncate));
     }
 
-    public function print(int|bool $truncate = 20) : string
+    public function print(int|bool $truncate = 20): string
     {
         if ($truncate === 0) {
             $truncate = false;
@@ -81,7 +91,7 @@ final class ASCIIValue
         return \mb_substr($this->stringValue(), 0, 20);
     }
 
-    private function stringValue() : string
+    private function stringValue(): string
     {
         if ($this->stringValue === null) {
             try {

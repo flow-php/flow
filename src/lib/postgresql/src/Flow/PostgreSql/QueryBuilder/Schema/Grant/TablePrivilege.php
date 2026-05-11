@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
-enum TablePrivilege : string
+enum TablePrivilege: string
 {
     case ALL = 'all';
     case DELETE = 'delete';

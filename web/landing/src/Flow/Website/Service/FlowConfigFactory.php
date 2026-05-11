@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use function Flow\ETL\DSL\{config_builder, telemetry_options};
-use function Flow\Filesystem\DSL\{filesystem_telemetry_config, filesystem_telemetry_options, native_local_filesystem, traceable_filesystem};
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\Filesystem\Filesystem;
@@ -15,18 +13,24 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\telemetry_options;
+use function Flow\Filesystem\DSL\filesystem_telemetry_config;
+use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\traceable_filesystem;
+
 final readonly class FlowConfigFactory
 {
     public function __construct(
         private Telemetry $telemetry,
         private ContainerBagInterface $parameters,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a ConfigBuilder with telemetry pre-configured.
      */
-    public function configBuilder(string $name) : ConfigBuilder
+    public function configBuilder(string $name): ConfigBuilder
     {
         return config_builder()
             ->name($name)
@@ -37,11 +41,7 @@ final readonly class FlowConfigFactory
                     ->traceLoading()
                     ->traceCache()
                     ->traceTransformations()
-                    ->filesystem(
-                        filesystem_telemetry_options()
-                            ->collectMetrics()
-                            ->traceStreams()
-                    )
+                    ->filesystem(filesystem_telemetry_options()->collectMetrics()->traceStreams()),
             );
     }
 
@@ -50,41 +50,33 @@ final readonly class FlowConfigFactory
      *
      * @param int $ttl Cache TTL in seconds (default: 24 hours)
      */
-    public function configBuilderWithCache(string $name, int $ttl = 86400) : ConfigBuilder
+    public function configBuilderWithCache(string $name, int $ttl = 86400): ConfigBuilder
     {
-        return $this->configBuilder($name)
-            ->cache($this->cache($name, $ttl));
+        return $this->configBuilder($name)->cache($this->cache($name, $ttl));
     }
 
-    public function filesystem() : Filesystem
+    public function filesystem(): Filesystem
     {
-        return traceable_filesystem(
-            native_local_filesystem(),
-            filesystem_telemetry_config(
-                $this->telemetry,
-                new SystemClock(),
-                filesystem_telemetry_options()
-                    ->collectMetrics()
-                    ->traceStreams()
-            )
-        );
+        return traceable_filesystem(native_local_filesystem(), filesystem_telemetry_config(
+            $this->telemetry,
+            new SystemClock(),
+            filesystem_telemetry_options()->collectMetrics()->traceStreams(),
+        ));
     }
 
-    public function telemetry() : Telemetry
+    public function telemetry(): Telemetry
     {
         return $this->telemetry;
     }
 
-    private function cache(string $directoryName, int $ttl) : PSRSimpleCache
+    private function cache(string $directoryName, int $ttl): PSRSimpleCache
     {
-        return new PSRSimpleCache(
-            new Psr16Cache(
-                new FilesystemAdapter(
-                    'flow-website',
-                    $ttl,
-                    directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
-                ),
-            )
-        );
+        return new PSRSimpleCache(new Psr16Cache(
+            new FilesystemAdapter(
+                'flow-website',
+                $ttl,
+                directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/'),
+            ),
+        ));
     }
 }

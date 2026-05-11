@@ -10,8 +10,7 @@ final readonly class IndexComparator
 {
     public function __construct(
         private RenameStrategy $renameStrategy,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<Index> $sourceIndexes
@@ -19,7 +18,7 @@ final readonly class IndexComparator
      *
      * @return ChangeSet<Index, mixed>
      */
-    public function compare(array $sourceIndexes, array $targetIndexes) : ChangeSet
+    public function compare(array $sourceIndexes, array $targetIndexes): ChangeSet
     {
         $sourceMap = [];
 
@@ -62,7 +61,7 @@ final readonly class IndexComparator
      *
      * @return ChangeSet<Index, mixed>
      */
-    private function detectIndexRenames(array $added, array $removed) : ChangeSet
+    private function detectIndexRenames(array $added, array $removed): ChangeSet
     {
         $addedMap = [];
 
@@ -93,6 +92,10 @@ final readonly class IndexComparator
             unset($addedMap[$match->addedName], $removedMap[$match->removedName]);
         }
 
-        return new ChangeSet(\array_values($addedMap), \array_values($removedMap), renamed: $renamed !== [] ? $renamed : null);
+        return new ChangeSet(
+            \array_values($addedMap),
+            \array_values($removedMap),
+            renamed: $renamed !== [] ? $renamed : null,
+        );
     }
 }

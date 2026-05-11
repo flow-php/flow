@@ -10,7 +10,7 @@ abstract class CacheIntegrationTestCase extends TestCase
 {
     private ?CacheTestContext $context = null;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
@@ -21,7 +21,7 @@ abstract class CacheIntegrationTestCase extends TestCase
         $this->context->createCacheTable('cache_items');
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         if ($this->context !== null) {
             $this->context->dropCacheTable('cache_items');
@@ -30,7 +30,7 @@ abstract class CacheIntegrationTestCase extends TestCase
         }
     }
 
-    protected function cacheContext() : CacheTestContext
+    protected function cacheContext(): CacheTestContext
     {
         if ($this->context === null) {
             static::fail('CacheTestContext not initialized. Ensure setUp() was called.');

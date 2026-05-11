@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, Node, PBString, RangeSubselect};
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -20,10 +23,9 @@ final readonly class DerivedTable implements TableReference
         public string $alias,
         public ?array $columnAliases = null,
         public bool $lateral = false,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeSubselect = $node->getRangeSubselect();
 
@@ -45,20 +47,15 @@ final readonly class DerivedTable implements TableReference
 
         $lateral = $rangeSubselect->getLateral();
 
-        return new self(
-            $subquery,
-            $alias->getAliasname(),
-            self::extractColumnAliases($alias),
-            $lateral
-        );
+        return new self($subquery, $alias->getAliasname(), self::extractColumnAliases($alias), $lateral);
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $alias = new Alias([
             'aliasname' => $this->alias,
@@ -86,7 +83,7 @@ final readonly class DerivedTable implements TableReference
     /**
      * @return null|array<string>
      */
-    private static function extractColumnAliases(Alias $alias) : ?array
+    private static function extractColumnAliases(Alias $alias): ?array
     {
         $colnames = $alias->getColnames();
 

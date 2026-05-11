@@ -6,7 +6,9 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache;
 
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
-use Symfony\Component\Cache\{CacheItem, PruneableInterface, ResettableInterface};
+use Symfony\Component\Cache\CacheItem;
+use Symfony\Component\Cache\PruneableInterface;
+use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 
 final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, PruneableInterface, ResettableInterface
@@ -17,7 +19,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
     /** @var array<string, CacheItem> */
     private array $deferred = [];
 
-    public function clear(string $prefix = '') : bool
+    public function clear(string $prefix = ''): bool
     {
         if ($prefix === '') {
             $this->cache = [];
@@ -34,7 +36,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
         return true;
     }
 
-    public function commit() : bool
+    public function commit(): bool
     {
         foreach ($this->deferred as $item) {
             $this->save($item);
@@ -44,14 +46,14 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
         return true;
     }
 
-    public function delete(string $key) : bool
+    public function delete(string $key): bool
     {
         unset($this->cache[$key]);
 
         return true;
     }
 
-    public function deleteItem(mixed $key) : bool
+    public function deleteItem(mixed $key): bool
     {
         unset($this->cache[$key]);
 
@@ -61,7 +63,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
     /**
      * @param array<string> $keys
      */
-    public function deleteItems(array $keys) : bool
+    public function deleteItems(array $keys): bool
     {
         foreach ($keys as $key) {
             unset($this->cache[$key]);
@@ -70,7 +72,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
         return true;
     }
 
-    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null) : mixed
+    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         if (isset($this->cache[$key])) {
             return $this->cache[$key];
@@ -87,7 +89,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
         return $value;
     }
 
-    public function getItem(mixed $key) : CacheItem
+    public function getItem(mixed $key): CacheItem
     {
         $item = new CacheItem();
         $reflection = new \ReflectionClass($item);
@@ -111,30 +113,30 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
      *
      * @return iterable<string, CacheItem>
      */
-    public function getItems(array $keys = []) : iterable
+    public function getItems(array $keys = []): iterable
     {
         foreach ($keys as $key) {
             yield $key => $this->getItem($key);
         }
     }
 
-    public function hasItem(mixed $key) : bool
+    public function hasItem(mixed $key): bool
     {
         return isset($this->cache[$key]);
     }
 
-    public function prune() : bool
+    public function prune(): bool
     {
         return true;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->cache = [];
         $this->deferred = [];
     }
 
-    public function save(CacheItemInterface $item) : bool
+    public function save(CacheItemInterface $item): bool
     {
         $reflection = new \ReflectionClass($item);
         $valueProperty = $reflection->getProperty('value');
@@ -143,7 +145,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
         return true;
     }
 
-    public function saveDeferred(CacheItemInterface $item) : bool
+    public function saveDeferred(CacheItemInterface $item): bool
     {
         $this->deferred[$item->getKey()] = $item;
 

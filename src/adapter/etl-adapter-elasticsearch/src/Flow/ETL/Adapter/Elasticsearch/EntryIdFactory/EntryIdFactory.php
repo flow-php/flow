@@ -10,11 +10,11 @@ use Flow\ETL\Row\Entry;
 
 final readonly class EntryIdFactory implements IdFactory
 {
-    public function __construct(private string $entryName)
-    {
-    }
+    public function __construct(
+        private string $entryName,
+    ) {}
 
-    public function create(Row $row) : Entry
+    public function create(Row $row): Entry
     {
         return $row->get($this->entryName)->rename('id');
     }

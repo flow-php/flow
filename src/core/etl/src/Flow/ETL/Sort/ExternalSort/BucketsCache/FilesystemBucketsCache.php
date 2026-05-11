@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\ExternalSort\BucketsCache;
 
-use Flow\ETL\{Exception\InvalidArgumentException, Hash\NativePHPHash, Row, Rows, Sort\ExternalSort\BucketsCache};
-use Flow\Filesystem\{Filesystem, Path};
-use Flow\Serializer\{NativePHPSerializer, Serializer};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Hash\NativePHPHash;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Sort\ExternalSort\BucketsCache;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
+use Flow\Serializer\NativePHPSerializer;
+use Flow\Serializer\Serializer;
 
 final readonly class FilesystemBucketsCache implements BucketsCache
 {
@@ -33,7 +39,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
     /**
      * @return \Generator<Row>
      */
-    public function get(string $bucketId) : \Generator
+    public function get(string $bucketId): \Generator
     {
         $path = $this->keyPath($bucketId);
 
@@ -50,7 +56,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
         $stream->close();
     }
 
-    public function remove(string $bucketId) : void
+    public function remove(string $bucketId): void
     {
         // we want to remove not only cache file but entire directory
         $this->filesystem->rm($this->keyPath($bucketId)->parentDirectory());
@@ -60,7 +66,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
      * @param string $bucketId
      * @param iterable<Row>|Rows $rows
      */
-    public function set(string $bucketId, iterable $rows) : void
+    public function set(string $bucketId, iterable $rows): void
     {
         $path = $this->keyPath($bucketId);
 
@@ -87,9 +93,8 @@ final readonly class FilesystemBucketsCache implements BucketsCache
         $stream->close();
     }
 
-    private function keyPath(string $key) : Path
+    private function keyPath(string $key): Path
     {
-
         return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.php.cache');
     }
 }

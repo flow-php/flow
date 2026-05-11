@@ -13,54 +13,57 @@ use Symfony\Component\Console\Tester\CommandTester;
 final class PipelineRunCommandTest extends TestCase
 {
     use CommandOutputNormalizer;
-    public function test_run_and_analyze_command() : void
+
+    public function test_run_and_analyze_command(): void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));
 
-        $tester->execute(['pipeline-file' => __DIR__ . '/Fixtures/pipeline.php', '--analyze' => true, '--stats-schema' => true, '--stats-columns' => true]);
+        $tester->execute([
+            'pipeline-file' => __DIR__ . '/Fixtures/pipeline.php',
+            '--analyze' => true,
+            '--stats-schema' => true,
+            '--stats-columns' => true,
+        ]);
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(
-            <<<'OUTPUT'
-+----+---------+--------+
-| id |    name | active |
-+----+---------+--------+
-|  1 | User 01 |   true |
-|  2 | User 02 |  false |
-|  3 | User 03 |   true |
-+----+---------+--------+
-3 rows
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            +----+---------+--------+
+            | id |    name | active |
+            +----+---------+--------+
+            |  1 | User 01 |   true |
+            |  2 | User 02 |  false |
+            |  3 | User 03 |   true |
+            +----+---------+--------+
+            3 rows
 
 
-Schema
-------
+            Schema
+            ------
 
-┌────────┬─────────┬──────────┬──────────┐
-│ Name   │ Type    │ Nullable │ Metadata │
-├────────┼─────────┼──────────┼──────────┤
-│ id     │ integer │ false    │ {}       │
-│ name   │ string  │ false    │ {}       │
-│ active │ boolean │ false    │ {}       │
-└────────┴─────────┴──────────┴──────────┘
+            ┌────────┬─────────┬──────────┬──────────┐
+            │ Name   │ Type    │ Nullable │ Metadata │
+            ├────────┼─────────┼──────────┼──────────┤
+            │ id     │ integer │ false    │ {}       │
+            │ name   │ string  │ false    │ {}       │
+            │ active │ boolean │ false    │ {}       │
+            └────────┴─────────┴──────────┴──────────┘
 
-Columns
--------
+            Columns
+            -------
 
-┌────────┬─────────┬───────┬─────────────────┬───────┬──────┬────────────┬────────────┬────────────────────┬────────────────────┐
-│ Name   │ Type    │ Nulls │ Distinct Values │ Min   │ Max  │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
-├────────┼─────────┼───────┼─────────────────┼───────┼──────┼────────────┼────────────┼────────────────────┼────────────────────┤
-│ id     │ integer │ 0     │ 3               │ 1     │ 3    │ -          │ -          │ -                  │ -                  │
-│ name   │ string  │ 0     │ 3               │ -     │ -    │ 7          │ 7          │ -                  │ -                  │
-│ active │ boolean │ 0     │ 2               │ false │ true │ -          │ -          │ -                  │ -                  │
-└────────┴─────────┴───────┴─────────────────┴───────┴──────┴────────────┴────────────┴────────────────────┴────────────────────┘
+            ┌────────┬─────────┬───────┬─────────────────┬───────┬──────┬────────────┬────────────┬────────────────────┬────────────────────┐
+            │ Name   │ Type    │ Nulls │ Distinct Values │ Min   │ Max  │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
+            ├────────┼─────────┼───────┼─────────────────┼───────┼──────┼────────────┼────────────┼────────────────────┼────────────────────┤
+            │ id     │ integer │ 0     │ 3               │ 1     │ 3    │ -          │ -          │ -                  │ -                  │
+            │ name   │ string  │ 0     │ 3               │ -     │ -    │ 7          │ 7          │ -                  │ -                  │
+            │ active │ boolean │ 0     │ 2               │ false │ true │ -          │ -          │ -                  │ -                  │
+            └────────┴─────────┴───────┴─────────────────┴───────┴──────┴────────────┴────────────┴────────────────────┴────────────────────┘
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_command() : void
+    public function test_run_command(): void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));
 
@@ -68,22 +71,19 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(
-            <<<'OUTPUT'
-+----+---------+--------+
-| id |    name | active |
-+----+---------+--------+
-|  1 | User 01 |   true |
-|  2 | User 02 |  false |
-|  3 | User 03 |   true |
-+----+---------+--------+
-3 rows
-OUTPUT,
-            $tester->getDisplay()
-        );
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            +----+---------+--------+
+            | id |    name | active |
+            +----+---------+--------+
+            |  1 | User 01 |   true |
+            |  2 | User 02 |  false |
+            |  3 | User 03 |   true |
+            +----+---------+--------+
+            3 rows
+            OUTPUT, $tester->getDisplay());
     }
 
-    public function test_run_command_without_pipeline_input_file_provided() : void
+    public function test_run_command_without_pipeline_input_file_provided(): void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));
 

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\HttpKernel;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\{HttpKernelSpanSubscriber, PathExclusionRule};
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\PathExclusionRule;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller\TestController;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
@@ -13,23 +14,24 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\{Route, Router};
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\Router;
 
 #[CoversClass(HttpKernelSpanSubscriber::class)]
 #[CoversClass(PathExclusionRule::class)]
 final class HttpKernelSpanSubscriberTest extends KernelTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         restore_exception_handler();
         parent::tearDown();
     }
 
-    public function test_does_not_extract_context_when_propagation_disabled() : void
+    public function test_does_not_extract_context_when_propagation_disabled(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -76,23 +78,23 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
-        self::assertSame(200, $response->getStatusCode());
+        static::assertSame(200, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertNotSame($incomingTraceId, $span->context()->traceId->toHex());
-        self::assertNull($span->context()->parentSpanId);
+        static::assertNotSame($incomingTraceId, $span->context()->traceId->toHex());
+        static::assertNull($span->context()->parentSpanId);
     }
 
-    public function test_does_not_trace_when_disabled() : void
+    public function test_does_not_trace_when_disabled(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -135,13 +137,13 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(0, $spans);
+        static::assertCount(0, $spans);
     }
 
-    public function test_excludes_path_with_exact_match() : void
+    public function test_excludes_path_with_exact_match(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -194,14 +196,14 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
-        self::assertSame('GET /test', $spans[0]->name());
+        static::assertCount(1, $spans);
+        static::assertSame('GET /test', $spans[0]->name());
     }
 
-    public function test_excludes_path_with_method_filter() : void
+    public function test_excludes_path_with_method_filter(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -240,7 +242,10 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $router = $container->get('router');
         $routes = $router->getRouteCollection();
         $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
-        $routes->add('wdt', new Route('/_wdt', ['_controller' => TestController::class . '::index'], [], [], '', [], ['GET', 'POST']));
+        $routes->add(
+            'wdt',
+            new Route('/_wdt', ['_controller' => TestController::class . '::index'], [], [], '', [], ['GET', 'POST']),
+        );
 
         $request = Request::create('/_wdt', 'GET');
         $response = $kernel->handle($request);
@@ -254,14 +259,14 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
-        self::assertSame('POST /_wdt', $spans[0]->name());
+        static::assertCount(1, $spans);
+        static::assertSame('POST /_wdt', $spans[0]->name());
     }
 
-    public function test_excludes_path_with_regex_pattern() : void
+    public function test_excludes_path_with_regex_pattern(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -301,7 +306,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $routes = $router->getRouteCollection();
         $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
         $routes->add('_profiler_home', new Route('/_profiler', ['_controller' => TestController::class . '::index']));
-        $routes->add('_profiler_search', new Route('/_profiler/search', ['_controller' => TestController::class . '::index']));
+        $routes->add('_profiler_search', new Route('/_profiler/search', [
+            '_controller' => TestController::class . '::index',
+        ]));
 
         $request = Request::create('/test', 'GET');
         $response = $kernel->handle($request);
@@ -319,14 +326,14 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
-        self::assertSame('GET /test', $spans[0]->name());
+        static::assertCount(1, $spans);
+        static::assertSame('GET /test', $spans[0]->name());
     }
 
-    public function test_extracts_context_from_traceparent_header() : void
+    public function test_extracts_context_from_traceparent_header(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -373,23 +380,23 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
-        self::assertSame(200, $response->getStatusCode());
+        static::assertSame(200, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame($incomingTraceId, $span->context()->traceId->toHex());
-        self::assertSame($incomingSpanId, $span->context()->parentSpanId?->toHex());
+        static::assertSame($incomingTraceId, $span->context()->traceId->toHex());
+        static::assertSame($incomingSpanId, $span->context()->parentSpanId?->toHex());
     }
 
-    public function test_handles_missing_trace_headers_gracefully() : void
+    public function test_handles_missing_trace_headers_gracefully(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -431,23 +438,23 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
-        self::assertSame(200, $response->getStatusCode());
+        static::assertSame(200, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertNotEmpty($span->context()->traceId->toHex());
-        self::assertNull($span->context()->parentSpanId);
+        static::assertNotEmpty($span->context()->traceId->toHex());
+        static::assertNull($span->context()->parentSpanId);
     }
 
-    public function test_traces_http_request_with_error_status() : void
+    public function test_traces_http_request_with_error_status(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -486,28 +493,28 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
-        self::assertSame(404, $response->getStatusCode());
+        static::assertSame(404, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
         $attributes = $span->attributes();
-        self::assertSame(404, $attributes['http.response.status_code']);
+        static::assertSame(404, $attributes['http.response.status_code']);
 
         $status = $span->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isError());
-        self::assertSame('HTTP 404', $status->description);
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('HTTP 404', $status->description);
     }
 
-    public function test_traces_successful_http_request() : void
+    public function test_traces_successful_http_request(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -546,22 +553,22 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
-        self::assertSame(200, $response->getStatusCode());
+        static::assertSame(200, $response->getStatusCode());
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('GET /test', $span->name());
-        self::assertSame(SpanKind::SERVER, $span->kind());
+        static::assertSame('GET /test', $span->name());
+        static::assertSame(SpanKind::SERVER, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('GET', $attributes['http.request.method']);
-        self::assertSame(200, $attributes['http.response.status_code']);
-        self::assertSame('test_index', $attributes['http.route']);
-        self::assertSame(TestController::class . '::index', $attributes['controller']);
+        static::assertSame('GET', $attributes['http.request.method']);
+        static::assertSame(200, $attributes['http.response.status_code']);
+        static::assertSame('test_index', $attributes['http.route']);
+        static::assertSame(TestController::class . '::index', $attributes['controller']);
     }
 }

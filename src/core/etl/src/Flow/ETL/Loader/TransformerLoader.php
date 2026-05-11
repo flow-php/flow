@@ -4,26 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use function Flow\ETL\DSL\{df, from_rows};
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows, Transformation, Transformer};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformation;
+use Flow\ETL\Transformer;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_rows;
 
 final readonly class TransformerLoader implements Closure, Loader, OverridingLoader
 {
     public function __construct(
         private Transformer|Transformation $transformer,
         private Loader $loader,
-    ) {
-    }
+    ) {}
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         if ($this->loader instanceof Closure) {
             $this->loader->closure($context);
         }
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this);
 
@@ -42,7 +47,7 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
         }
     }
 
-    public function loaders() : array
+    public function loaders(): array
     {
         return [$this->loader];
     }

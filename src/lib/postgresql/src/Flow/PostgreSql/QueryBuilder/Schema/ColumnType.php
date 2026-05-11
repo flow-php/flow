@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, Integer, Node, PBString, TypeName};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -18,66 +22,59 @@ final readonly class ColumnType
         private ?int $precision = null,
         private ?int $scale = null,
         private bool $isArray = false,
-    ) {
-    }
+    ) {}
 
-    public static function array(self $elementType) : self
+    public static function array(self $elementType): self
     {
-        return new self(
-            $elementType->name,
-            $elementType->schema,
-            $elementType->precision,
-            $elementType->scale,
-            true,
-        );
+        return new self($elementType->name, $elementType->schema, $elementType->precision, $elementType->scale, true);
     }
 
-    public static function bigint() : self
+    public static function bigint(): self
     {
         return new self('int8', 'pg_catalog');
     }
 
-    public static function bigserial() : self
+    public static function bigserial(): self
     {
         return new self('bigserial');
     }
 
-    public static function boolean() : self
+    public static function boolean(): self
     {
         return new self('bool', 'pg_catalog');
     }
 
-    public static function bytea() : self
+    public static function bytea(): self
     {
         return new self('bytea', 'pg_catalog');
     }
 
-    public static function char(int $length) : self
+    public static function char(int $length): self
     {
         return new self('bpchar', 'pg_catalog', $length);
     }
 
-    public static function cidr() : self
+    public static function cidr(): self
     {
         return new self('cidr', 'pg_catalog');
     }
 
-    public static function custom(string $typeName, ?string $schema = null) : self
+    public static function custom(string $typeName, ?string $schema = null): self
     {
         return new self($typeName, $schema);
     }
 
-    public static function date() : self
+    public static function date(): self
     {
         return new self('date', 'pg_catalog');
     }
 
-    public static function decimal(?int $precision = null, ?int $scale = null) : self
+    public static function decimal(?int $precision = null, ?int $scale = null): self
     {
         return self::numeric($precision, $scale);
     }
 
-    public static function doublePrecision() : self
+    public static function doublePrecision(): self
     {
         return new self('float8', 'pg_catalog');
     }
@@ -85,7 +82,7 @@ final readonly class ColumnType
     /**
      * @param ColumnTypeShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -96,7 +93,7 @@ final readonly class ColumnType
         );
     }
 
-    public static function fromAst(TypeName $typeName) : self
+    public static function fromAst(TypeName $typeName): self
     {
         $namesNodes = $typeName->getNames();
 
@@ -158,113 +155,109 @@ final readonly class ColumnType
             }
         }
 
-        return new self(
-            $name,
-            $schema,
-            $typmods[0] ?? null,
-            $typmods[1] ?? null,
-            $isArray,
-        );
+        return new self($name, $schema, $typmods[0] ?? null, $typmods[1] ?? null, $isArray);
     }
 
-    public static function inet() : self
+    public static function inet(): self
     {
         return new self('inet', 'pg_catalog');
     }
 
-    public static function integer() : self
+    public static function integer(): self
     {
         return new self('int4', 'pg_catalog');
     }
 
-    public static function interval() : self
+    public static function interval(): self
     {
         return new self('interval', 'pg_catalog');
     }
 
-    public static function json() : self
+    public static function json(): self
     {
         return new self('json', 'pg_catalog');
     }
 
-    public static function jsonb() : self
+    public static function jsonb(): self
     {
         return new self('jsonb', 'pg_catalog');
     }
 
-    public static function macaddr() : self
+    public static function macaddr(): self
     {
         return new self('macaddr', 'pg_catalog');
     }
 
-    public static function numeric(?int $precision = null, ?int $scale = null) : self
+    public static function numeric(?int $precision = null, ?int $scale = null): self
     {
         return new self('numeric', 'pg_catalog', $precision, $scale);
     }
 
-    public static function real() : self
+    public static function real(): self
     {
         return new self('float4', 'pg_catalog');
     }
 
-    public static function serial() : self
+    public static function serial(): self
     {
         return new self('serial');
     }
 
-    public static function smallint() : self
+    public static function smallint(): self
     {
         return new self('int2', 'pg_catalog');
     }
 
-    public static function smallserial() : self
+    public static function smallserial(): self
     {
         return new self('smallserial');
     }
 
-    public static function text() : self
+    public static function text(): self
     {
         return new self('text', 'pg_catalog');
     }
 
-    public static function time(?int $precision = null) : self
+    public static function time(?int $precision = null): self
     {
         return new self('time', 'pg_catalog', $precision);
     }
 
-    public static function timestamp(?int $precision = null) : self
+    public static function timestamp(?int $precision = null): self
     {
         return new self('timestamp', 'pg_catalog', $precision);
     }
 
-    public static function timestamptz(?int $precision = null) : self
+    public static function timestamptz(?int $precision = null): self
     {
         return new self('timestamptz', 'pg_catalog', $precision);
     }
 
-    public static function uuid() : self
+    public static function uuid(): self
     {
         return new self('uuid', 'pg_catalog');
     }
 
-    public static function varchar(int $length) : self
+    public static function varchar(int $length): self
     {
         return new self('varchar', 'pg_catalog', $length);
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
-        return self::normalizedName($this->name) === self::normalizedName($other->name)
+        return (
+            self::normalizedName($this->name) === self::normalizedName($other->name)
             && $this->normalizedSchema() === $other->normalizedSchema()
             && $this->precision === $other->precision
             && $this->scale === $other->scale
-            && $this->isArray === $other->isArray;
+            && $this->isArray === $other->isArray
+        );
     }
 
     /**
      * @return ColumnTypeShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -275,7 +268,7 @@ final readonly class ColumnType
         ];
     }
 
-    public function toAst() : TypeName
+    public function toAst(): TypeName
     {
         $typeName = new TypeName();
 
@@ -309,7 +302,7 @@ final readonly class ColumnType
         return $typeName;
     }
 
-    private function createIntegerConstNode(int $value) : Node
+    private function createIntegerConstNode(int $value): Node
     {
         $aConst = new A_Const();
         $ival = new Integer();
@@ -323,7 +316,7 @@ final readonly class ColumnType
         return $node;
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);
@@ -334,7 +327,7 @@ final readonly class ColumnType
         return $node;
     }
 
-    private function normalizedSchema() : ?string
+    private function normalizedSchema(): ?string
     {
         if ($this->schema === 'pg_catalog') {
             return null;
@@ -346,7 +339,7 @@ final readonly class ColumnType
     /**
      * Serial types are syntactic sugar — PostgreSQL stores them as their base integer types.
      */
-    private static function normalizedName(string $name) : string
+    private static function normalizedName(string $name): string
     {
         return match ($name) {
             'bigserial' => 'int8',

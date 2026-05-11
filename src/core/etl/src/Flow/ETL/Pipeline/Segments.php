@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\{Loader, Processor, Transformer};
+use Flow\ETL\Loader;
+use Flow\ETL\Processor;
+use Flow\ETL\Transformer;
 
 /**
  * Manages pipeline segments, grouping steps at Processor boundaries.
@@ -23,7 +25,7 @@ final class Segments
         $this->currentSegment = new Segment();
     }
 
-    public function add(Transformer|Loader|Processor $step) : void
+    public function add(Transformer|Loader|Processor $step): void
     {
         if ($step instanceof Processor) {
             $this->segments[] = $this->currentSegment->withProcessor($step);
@@ -38,7 +40,7 @@ final class Segments
      *
      * @return array<Segment>
      */
-    public function all() : array
+    public function all(): array
     {
         return [...$this->segments, $this->currentSegment];
     }
@@ -48,7 +50,7 @@ final class Segments
      *
      * Returns the last completed segment if any exist, otherwise the current segment being built.
      */
-    public function current() : Segment
+    public function current(): Segment
     {
         if ($this->segments === []) {
             return $this->currentSegment;
@@ -62,7 +64,7 @@ final class Segments
      *
      * @param class-string<Loader|Processor|Transformer> $class
      */
-    public function has(string $class) : bool
+    public function has(string $class): bool
     {
         foreach ($this->segments as $segment) {
             if ($segment->has($class)) {
@@ -73,7 +75,7 @@ final class Segments
         return $this->currentSegment->has($class);
     }
 
-    public function segmentFor(Transformer|Loader|Processor $step) : ?Segment
+    public function segmentFor(Transformer|Loader|Processor $step): ?Segment
     {
         foreach ($this->segments as $segment) {
             if ($segment->contains($step)) {
@@ -93,7 +95,7 @@ final class Segments
      *
      * @return array<Loader|Processor|Transformer>
      */
-    public function steps() : array
+    public function steps(): array
     {
         $steps = [];
 

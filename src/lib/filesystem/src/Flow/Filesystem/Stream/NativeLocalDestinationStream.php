@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-use Flow\Filesystem\{DestinationStream,
-    Exception\InvalidArgumentException,
-    Exception\RuntimeException,
-    Path
-};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Path;
 
 final class NativeLocalDestinationStream implements DestinationStream
 {
@@ -21,8 +20,10 @@ final class NativeLocalDestinationStream implements DestinationStream
      * @param Path $path
      * @param resource $handle
      */
-    public function __construct(private readonly Path $path, $handle)
-    {
+    public function __construct(
+        private readonly Path $path,
+        $handle,
+    ) {
         if (!\is_resource($handle)) {
             throw new InvalidArgumentException('DestinationStream expects resource type, given: ' . \gettype($handle));
         }
@@ -30,7 +31,7 @@ final class NativeLocalDestinationStream implements DestinationStream
         $this->handle = $handle;
     }
 
-    public static function openAppend(Path $path) : self
+    public static function openAppend(Path $path): self
     {
         $resource = \fopen($path->path(), 'ab', false, $path->context()->resource());
 
@@ -41,7 +42,7 @@ final class NativeLocalDestinationStream implements DestinationStream
         return new self($path, $resource);
     }
 
-    public static function openBlank(Path $path) : self
+    public static function openBlank(Path $path): self
     {
         $resource = \fopen($path->path(), 'wb', false, $path->context()->resource());
 
@@ -52,7 +53,7 @@ final class NativeLocalDestinationStream implements DestinationStream
         return new self($path, $resource);
     }
 
-    public function append(string $data) : self
+    public function append(string $data): self
     {
         if (!$this->isOpen()) {
             throw new RuntimeException('Cannot write to closed stream');
@@ -63,13 +64,18 @@ final class NativeLocalDestinationStream implements DestinationStream
         $written = \fwrite($this->handle(), $data);
 
         if ($written === false || $written !== \strlen($data)) {
-            throw new RuntimeException('Failed to write all bytes to stream, expected ' . \strlen($data) . ' bytes, written: ' . ($written === false ? '0' : $written));
+            throw new RuntimeException(
+                'Failed to write all bytes to stream, expected '
+                . \strlen($data)
+                . ' bytes, written: '
+                . ($written === false ? '0' : $written),
+            );
         }
 
         return $this;
     }
 
-    public function close() : void
+    public function close(): void
     {
         if (!\is_resource($this->handle)) {
             $this->handle = null;
@@ -84,10 +90,12 @@ final class NativeLocalDestinationStream implements DestinationStream
     /**
      * @param resource $resource
      */
-    public function fromResource($resource) : self
+    public function fromResource($resource): self
     {
         if (!\is_resource($resource)) {
-            throw new InvalidArgumentException('DestinationStream::fromResource expects resource type, given: ' . \gettype($resource));
+            throw new InvalidArgumentException(
+                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+            );
         }
 
         if (!$this->isOpen()) {
@@ -105,12 +113,12 @@ final class NativeLocalDestinationStream implements DestinationStream
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return \is_resource($this->handle);
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }

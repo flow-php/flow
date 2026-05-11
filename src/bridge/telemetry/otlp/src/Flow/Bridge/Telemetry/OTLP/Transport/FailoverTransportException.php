@@ -17,11 +17,12 @@ final class FailoverTransportException extends TransportException
     /**
      * @param non-empty-list<array{primary: \Throwable, failover: null|\Throwable}> $failures
      */
-    public function __construct(public readonly array $failures)
-    {
+    public function __construct(
+        public readonly array $failures,
+    ) {
         $count = \count($failures);
         $first = $failures[0];
-        $absorbed = \count(\array_filter($failures, static fn (array $f) : bool => $f['failover'] === null));
+        $absorbed = \count(\array_filter($failures, static fn(array $f): bool => $f['failover'] === null));
         $lost = $count - $absorbed;
 
         $message = \sprintf(
@@ -30,9 +31,7 @@ final class FailoverTransportException extends TransportException
             $absorbed,
             $lost,
             $first['primary']->getMessage(),
-            $first['failover'] !== null
-                ? \sprintf('; first failover error: %s', $first['failover']->getMessage())
-                : '',
+            $first['failover'] !== null ? \sprintf('; first failover error: %s', $first['failover']->getMessage()) : '',
         );
 
         parent::__construct($message, 0, $first['primary']);

@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 
 interface SelectLimitStep extends SelectOffsetStep
 {
-    public function limit(int $limit) : SelectOffsetStep;
+    public function limit(int $limit): SelectOffsetStep;
 }

@@ -4,21 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\{schema_column_integer, schema_column_text, schema_domain, schema_extension, schema_function, schema_index, schema_materialized_view, schema_primary_key, schema_procedure, schema_sequence, schema_table, schema_view};
-
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
-use Flow\PostgreSql\Schema\Diff\{ConstraintComparator, GreedySimilarityRenameStrategy, IndexComparator, SchemaComparator, SimilarTextStrategy, TableComparator, TableStructureComparator};
-use Flow\PostgreSql\Schema\{FunctionVolatility, PartitionStrategy, Schema};
+use Flow\PostgreSql\Schema\Diff\ConstraintComparator;
+use Flow\PostgreSql\Schema\Diff\GreedySimilarityRenameStrategy;
+use Flow\PostgreSql\Schema\Diff\IndexComparator;
+use Flow\PostgreSql\Schema\Diff\SchemaComparator;
+use Flow\PostgreSql\Schema\Diff\SimilarTextStrategy;
+use Flow\PostgreSql\Schema\Diff\TableComparator;
+use Flow\PostgreSql\Schema\Diff\TableStructureComparator;
+use Flow\PostgreSql\Schema\FunctionVolatility;
+use Flow\PostgreSql\Schema\PartitionStrategy;
+use Flow\PostgreSql\Schema\Schema;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_domain;
+use function Flow\PostgreSql\DSL\schema_extension;
+use function Flow\PostgreSql\DSL\schema_function;
+use function Flow\PostgreSql\DSL\schema_index;
+use function Flow\PostgreSql\DSL\schema_materialized_view;
+use function Flow\PostgreSql\DSL\schema_primary_key;
+use function Flow\PostgreSql\DSL\schema_procedure;
+use function Flow\PostgreSql\DSL\schema_sequence;
+use function Flow\PostgreSql\DSL\schema_table;
+use function Flow\PostgreSql\DSL\schema_view;
 
 final class SchemaComparatorTest extends TestCase
 {
-    public function test_domain_added() : void
+    public function test_domain_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -28,14 +51,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedDomains);
+        static::assertCount(1, $diff->addedDomains);
     }
 
-    public function test_domain_modified_base_type() : void
+    public function test_domain_modified_base_type(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -45,14 +72,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedDomains);
+        static::assertCount(1, $diff->modifiedDomains);
     }
 
-    public function test_domain_modified_check_constraint() : void
+    public function test_domain_modified_check_constraint(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -66,14 +97,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedDomains);
+        static::assertCount(1, $diff->modifiedDomains);
     }
 
-    public function test_domain_modified_default() : void
+    public function test_domain_modified_default(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -83,14 +118,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedDomains);
+        static::assertCount(1, $diff->modifiedDomains);
     }
 
-    public function test_domain_modified_nullable() : void
+    public function test_domain_modified_nullable(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -100,14 +139,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedDomains);
+        static::assertCount(1, $diff->modifiedDomains);
     }
 
-    public function test_domain_removed() : void
+    public function test_domain_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -117,14 +160,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedDomains);
+        static::assertCount(1, $diff->removedDomains);
     }
 
-    public function test_extension_added() : void
+    public function test_extension_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -134,14 +181,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedExtensions);
+        static::assertCount(1, $diff->addedExtensions);
     }
 
-    public function test_extension_modified_version() : void
+    public function test_extension_modified_version(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -151,14 +202,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedExtensions);
+        static::assertCount(1, $diff->modifiedExtensions);
     }
 
-    public function test_extension_removed() : void
+    public function test_extension_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -168,31 +223,44 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedExtensions);
+        static::assertCount(1, $diff->removedExtensions);
     }
 
-    public function test_function_added() : void
+    public function test_function_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public');
-        $target = new Schema('public', functions: [schema_function('add', 'integer', ['integer', 'integer'], definition: 'SELECT $1 + $2')]);
+        $target = new Schema('public', functions: [schema_function(
+            'add',
+            'integer',
+            ['integer', 'integer'],
+            definition: 'SELECT $1 + $2',
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedFunctions);
+        static::assertCount(1, $diff->addedFunctions);
     }
 
-    public function test_function_modified_argument_types() : void
+    public function test_function_modified_argument_types(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -202,14 +270,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedFunctions);
+        static::assertCount(1, $diff->modifiedFunctions);
     }
 
-    public function test_function_modified_definition() : void
+    public function test_function_modified_definition(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -219,14 +291,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedFunctions);
+        static::assertCount(1, $diff->modifiedFunctions);
     }
 
-    public function test_function_modified_is_strict() : void
+    public function test_function_modified_is_strict(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -236,14 +312,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedFunctions);
+        static::assertCount(1, $diff->modifiedFunctions);
     }
 
-    public function test_function_modified_language() : void
+    public function test_function_modified_language(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -253,14 +333,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedFunctions);
+        static::assertCount(1, $diff->modifiedFunctions);
     }
 
-    public function test_function_modified_return_type() : void
+    public function test_function_modified_return_type(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -270,48 +354,73 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedFunctions);
+        static::assertCount(1, $diff->modifiedFunctions);
     }
 
-    public function test_function_modified_volatility() : void
+    public function test_function_modified_volatility(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
-        $source = new Schema('public', functions: [schema_function('fn', 'integer', volatility: FunctionVolatility::VOLATILE)]);
-        $target = new Schema('public', functions: [schema_function('fn', 'integer', volatility: FunctionVolatility::STABLE)]);
+        $source = new Schema('public', functions: [schema_function(
+            'fn',
+            'integer',
+            volatility: FunctionVolatility::VOLATILE,
+        )]);
+        $target = new Schema('public', functions: [schema_function(
+            'fn',
+            'integer',
+            volatility: FunctionVolatility::STABLE,
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedFunctions);
+        static::assertCount(1, $diff->modifiedFunctions);
     }
 
-    public function test_function_removed() : void
+    public function test_function_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
-        $source = new Schema('public', functions: [schema_function('add', 'integer', ['integer', 'integer'], definition: 'SELECT $1 + $2')]);
+        $source = new Schema('public', functions: [schema_function(
+            'add',
+            'integer',
+            ['integer', 'integer'],
+            definition: 'SELECT $1 + $2',
+        )]);
         $target = new Schema('public');
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedFunctions);
+        static::assertCount(1, $diff->removedFunctions);
     }
 
-    public function test_identical_schemas_produce_empty_diff() : void
+    public function test_identical_schemas_produce_empty_diff(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -322,84 +431,123 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($schema, $schema);
 
-        self::assertTrue($diff->isEmpty());
+        static::assertTrue($diff->isEmpty());
     }
 
-    public function test_materialized_view_added() : void
+    public function test_materialized_view_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public');
-        $target = new Schema('public', materializedViews: [schema_materialized_view('mv_users', 'SELECT * FROM users')]);
+        $target = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv_users',
+            'SELECT * FROM users',
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedMaterializedViews);
+        static::assertCount(1, $diff->addedMaterializedViews);
     }
 
-    public function test_materialized_view_modified_definition() : void
+    public function test_materialized_view_modified_definition(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
-        $source = new Schema('public', materializedViews: [schema_materialized_view('mv_users', 'SELECT * FROM users')]);
-        $target = new Schema('public', materializedViews: [schema_materialized_view('mv_users', 'SELECT id FROM users')]);
+        $source = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv_users',
+            'SELECT * FROM users',
+        )]);
+        $target = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv_users',
+            'SELECT id FROM users',
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedMaterializedViews);
+        static::assertCount(1, $diff->modifiedMaterializedViews);
     }
 
-    public function test_materialized_view_modified_index() : void
+    public function test_materialized_view_modified_index(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
-        $source = new Schema('public', materializedViews: [schema_materialized_view('mv_users', 'SELECT * FROM users')]);
-        $target = new Schema('public', materializedViews: [schema_materialized_view('mv_users', 'SELECT * FROM users', indexes: [
-            schema_index('idx_mv_id', ['id']),
-        ])]);
+        $source = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv_users',
+            'SELECT * FROM users',
+        )]);
+        $target = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv_users',
+            'SELECT * FROM users',
+            indexes: [
+                schema_index('idx_mv_id', ['id']),
+            ],
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedMaterializedViews);
+        static::assertCount(1, $diff->modifiedMaterializedViews);
     }
 
-    public function test_materialized_view_removed() : void
+    public function test_materialized_view_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
-        $source = new Schema('public', materializedViews: [schema_materialized_view('mv_users', 'SELECT * FROM users')]);
+        $source = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv_users',
+            'SELECT * FROM users',
+        )]);
         $target = new Schema('public');
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedMaterializedViews);
+        static::assertCount(1, $diff->removedMaterializedViews);
     }
 
-    public function test_procedure_added() : void
+    public function test_procedure_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -409,14 +557,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedProcedures);
+        static::assertCount(1, $diff->addedProcedures);
     }
 
-    public function test_procedure_modified_argument_types() : void
+    public function test_procedure_modified_argument_types(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -426,31 +578,42 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedProcedures);
+        static::assertCount(1, $diff->modifiedProcedures);
     }
 
-    public function test_procedure_modified_definition() : void
+    public function test_procedure_modified_definition(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', procedures: [schema_procedure('do_stuff', definition: 'BEGIN END')]);
-        $target = new Schema('public', procedures: [schema_procedure('do_stuff', definition: 'BEGIN RAISE NOTICE; END')]);
+        $target = new Schema('public', procedures: [schema_procedure(
+            'do_stuff',
+            definition: 'BEGIN RAISE NOTICE; END',
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedProcedures);
+        static::assertCount(1, $diff->modifiedProcedures);
     }
 
-    public function test_procedure_modified_language() : void
+    public function test_procedure_modified_language(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -460,14 +623,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedProcedures);
+        static::assertCount(1, $diff->modifiedProcedures);
     }
 
-    public function test_procedure_removed() : void
+    public function test_procedure_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -477,14 +644,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedProcedures);
+        static::assertCount(1, $diff->removedProcedures);
     }
 
-    public function test_sequence_added() : void
+    public function test_sequence_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -494,15 +665,19 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedSequences);
-        self::assertSame('users_id_seq', $diff->addedSequences[0]->name);
+        static::assertCount(1, $diff->addedSequences);
+        static::assertSame('users_id_seq', $diff->addedSequences[0]->name);
     }
 
-    public function test_sequence_modified_cache_value() : void
+    public function test_sequence_modified_cache_value(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -512,14 +687,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_cycle() : void
+    public function test_sequence_modified_cycle(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -529,14 +708,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_data_type() : void
+    public function test_sequence_modified_data_type(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -546,14 +729,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_increment_by() : void
+    public function test_sequence_modified_increment_by(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -563,14 +750,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_max_value() : void
+    public function test_sequence_modified_max_value(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -580,14 +771,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_min_value() : void
+    public function test_sequence_modified_min_value(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -597,14 +792,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_owned_by_column() : void
+    public function test_sequence_modified_owned_by_column(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -614,14 +813,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_owned_by_table() : void
+    public function test_sequence_modified_owned_by_table(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -631,14 +834,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_modified_start_value() : void
+    public function test_sequence_modified_start_value(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -648,14 +855,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedSequences);
+        static::assertCount(1, $diff->modifiedSequences);
     }
 
-    public function test_sequence_removed() : void
+    public function test_sequence_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -665,14 +876,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedSequences);
+        static::assertCount(1, $diff->removedSequences);
     }
 
-    public function test_table_added() : void
+    public function test_table_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -682,69 +897,97 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedTables);
-        self::assertSame('users', $diff->addedTables[0]->name);
+        static::assertCount(1, $diff->addedTables);
+        static::assertSame('users', $diff->addedTables[0]->name);
     }
 
-    public function test_table_inherits_changed() : void
+    public function test_table_inherits_changed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', tables: [schema_table('employees', [schema_column_integer('id', false)])]);
-        $target = new Schema('public', tables: [schema_table('employees', [schema_column_integer('id', false)], inherits: ['persons'])]);
+        $target = new Schema('public', tables: [schema_table(
+            'employees',
+            [schema_column_integer('id', false)],
+            inherits: ['persons'],
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedTables);
-        self::assertSame(['persons'], $diff->modifiedTables[0]->addedInherits);
-        self::assertSame([], $diff->modifiedTables[0]->removedInherits);
+        static::assertCount(1, $diff->modifiedTables);
+        static::assertSame(['persons'], $diff->modifiedTables[0]->addedInherits);
+        static::assertSame([], $diff->modifiedTables[0]->removedInherits);
     }
 
-    public function test_table_modified() : void
+    public function test_table_modified(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', tables: [schema_table('users', [schema_column_integer('id', false)])]);
-        $target = new Schema('public', tables: [schema_table('users', [schema_column_integer('id', false), schema_column_text('email')])]);
+        $target = new Schema('public', tables: [schema_table('users', [
+            schema_column_integer('id', false),
+            schema_column_text('email'),
+        ])]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedTables);
+        static::assertCount(1, $diff->modifiedTables);
     }
 
-    public function test_table_partition_changed() : void
+    public function test_table_partition_changed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', tables: [schema_table('events', [schema_column_integer('id', false)])]);
-        $target = new Schema('public', tables: [schema_table('events', [schema_column_integer('id', false)], partitionStrategy: PartitionStrategy::RANGE, partitionColumns: ['id'])]);
+        $target = new Schema('public', tables: [schema_table(
+            'events',
+            [schema_column_integer('id', false)],
+            partitionStrategy: PartitionStrategy::RANGE,
+            partitionColumns: ['id'],
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedTables);
-        self::assertTrue($diff->modifiedTables[0]->partitionChanged);
+        static::assertCount(1, $diff->modifiedTables);
+        static::assertTrue($diff->modifiedTables[0]->partitionChanged);
     }
 
-    public function test_table_removed() : void
+    public function test_table_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -754,76 +997,108 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedTables);
-        self::assertSame('users', $diff->removedTables[0]->name);
+        static::assertCount(1, $diff->removedTables);
+        static::assertSame('users', $diff->removedTables[0]->name);
     }
 
-    public function test_table_rename_populates_schema_diff() : void
+    public function test_table_rename_populates_schema_diff(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', tables: [
-            schema_table('old_users', [schema_column_integer('id', false), schema_column_text('name')], schema_primary_key(['id'])),
+            schema_table(
+                'old_users',
+                [schema_column_integer('id', false), schema_column_text('name')],
+                schema_primary_key(['id']),
+            ),
         ]);
         $target = new Schema('public', tables: [
-            schema_table('new_users', [schema_column_integer('id', false), schema_column_text('name')], schema_primary_key(['id'])),
+            schema_table(
+                'new_users',
+                [schema_column_integer('id', false), schema_column_text('name')],
+                schema_primary_key(['id']),
+            ),
         ]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(0, $diff->addedTables);
-        self::assertCount(0, $diff->removedTables);
-        self::assertCount(1, $diff->renamedTables);
-        self::assertArrayHasKey('public.old_users', $diff->renamedTables);
-        self::assertSame('new_users', $diff->renamedTables['public.old_users']->name);
+        static::assertCount(0, $diff->addedTables);
+        static::assertCount(0, $diff->removedTables);
+        static::assertCount(1, $diff->renamedTables);
+        static::assertArrayHasKey('public.old_users', $diff->renamedTables);
+        static::assertSame('new_users', $diff->renamedTables['public.old_users']->name);
     }
 
-    public function test_table_tablespace_changed() : void
+    public function test_table_tablespace_changed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', tables: [schema_table('users', [schema_column_integer('id', false)])]);
-        $target = new Schema('public', tables: [schema_table('users', [schema_column_integer('id', false)], tablespace: 'fast_storage')]);
+        $target = new Schema('public', tables: [schema_table(
+            'users',
+            [schema_column_integer('id', false)],
+            tablespace: 'fast_storage',
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedTables);
-        self::assertTrue($diff->modifiedTables[0]->tablespaceChanged);
+        static::assertCount(1, $diff->modifiedTables);
+        static::assertTrue($diff->modifiedTables[0]->tablespaceChanged);
     }
 
-    public function test_table_unlogged_changed() : void
+    public function test_table_unlogged_changed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
         );
         $source = new Schema('public', tables: [schema_table('users', [schema_column_integer('id', false)])]);
-        $target = new Schema('public', tables: [schema_table('users', [schema_column_integer('id', false)], unlogged: true)]);
+        $target = new Schema('public', tables: [schema_table(
+            'users',
+            [schema_column_integer('id', false)],
+            unlogged: true,
+        )]);
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedTables);
-        self::assertTrue($diff->modifiedTables[0]->unloggedChanged);
+        static::assertCount(1, $diff->modifiedTables);
+        static::assertTrue($diff->modifiedTables[0]->unloggedChanged);
     }
 
-    public function test_view_added() : void
+    public function test_view_added(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -833,15 +1108,19 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->addedViews);
-        self::assertSame('v_users', $diff->addedViews[0]->name);
+        static::assertCount(1, $diff->addedViews);
+        static::assertSame('v_users', $diff->addedViews[0]->name);
     }
 
-    public function test_view_modified_definition() : void
+    public function test_view_modified_definition(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -851,14 +1130,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedViews);
+        static::assertCount(1, $diff->modifiedViews);
     }
 
-    public function test_view_modified_is_updatable() : void
+    public function test_view_modified_is_updatable(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -868,14 +1151,18 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->modifiedViews);
+        static::assertCount(1, $diff->modifiedViews);
     }
 
-    public function test_view_removed() : void
+    public function test_view_removed(): void
     {
         $constraintComparator = new ConstraintComparator();
         $comparator = new SchemaComparator(
-            new TableComparator(new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())), $constraintComparator, new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
             new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
             $constraintComparator,
             new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
@@ -885,6 +1172,6 @@ final class SchemaComparatorTest extends TestCase
 
         $diff = $comparator->compare($source, $target);
 
-        self::assertCount(1, $diff->removedViews);
+        static::assertCount(1, $diff->removedViews);
     }
 }

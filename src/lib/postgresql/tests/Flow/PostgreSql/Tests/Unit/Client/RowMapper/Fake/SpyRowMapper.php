@@ -26,7 +26,7 @@ final class SpyRowMapper implements RowMapper
      */
     public array $receivedRows = [];
 
-    public function map(array $row, Context $context) : mixed
+    public function map(array $row, Context $context): mixed
     {
         $this->receivedRows[] = $row;
         $this->receivedContexts[] = $context;

@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Condition;
 /**
  * Comparison operators enum.
  */
-enum ComparisonOperator : string
+enum ComparisonOperator: string
 {
     case EQ = '=';
     case GT = '>';

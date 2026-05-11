@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateDomainFinalStep extends Sql
 {
-    public function toAst() : CreateDomainStmt;
+    public function toAst(): CreateDomainStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

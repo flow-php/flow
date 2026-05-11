@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ZigZagLargeValuesTest extends TestCase
 {
-    public function test_zigzag_large_positive_values() : void
+    public function test_zigzag_large_positive_values(): void
     {
         $zigzag = new ZigZag();
 
@@ -29,11 +29,11 @@ final class ZigZagLargeValuesTest extends TestCase
         foreach (\array_merge($failingValues, $problematicValues) as $value) {
             $encoded = $zigzag->encode($value);
             $decoded = $zigzag->decode($encoded);
-            self::assertSame($value, $decoded, "ZigZag should roundtrip correctly for value: {$value}");
+            static::assertSame($value, $decoded, "ZigZag should roundtrip correctly for value: {$value}");
         }
     }
 
-    public function test_zigzag_php_int_max_variations() : void
+    public function test_zigzag_php_int_max_variations(): void
     {
         $zigzag = new ZigZag();
 
@@ -49,7 +49,7 @@ final class ZigZagLargeValuesTest extends TestCase
             $encoded = $zigzag->encode($value);
             $decoded = $zigzag->decode($encoded);
 
-            self::assertSame($value, $decoded, "ZigZag roundtrip failed for value: {$value}");
+            static::assertSame($value, $decoded, "ZigZag roundtrip failed for value: {$value}");
         }
     }
 }

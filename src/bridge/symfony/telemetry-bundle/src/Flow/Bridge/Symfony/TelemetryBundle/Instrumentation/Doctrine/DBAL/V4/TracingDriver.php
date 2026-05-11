@@ -5,12 +5,20 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4;
 
 use Doctrine\DBAL\Connection\StaticServerVersionProvider;
-use Doctrine\DBAL\{Driver as DriverInterface, DriverManager};
+use Doctrine\DBAL\Driver as DriverInterface;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\Middleware\AbstractDriverMiddleware;
-use Doctrine\DBAL\Platforms\{AbstractMySQLPlatform, DB2Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SQLitePlatform};
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
+use Doctrine\DBAL\Platforms\DB2Platform;
+use Doctrine\DBAL\Platforms\OraclePlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
 
 /**
  * @phpstan-import-type Params from DriverManager
@@ -31,20 +39,14 @@ final class TracingDriver extends AbstractDriverMiddleware
      * @param Params $params
      */
     #[\Override]
-    public function connect(
-        #[\SensitiveParameter]
-        array $params,
-    ) : Connection {
+    public function connect(#[\SensitiveParameter] array $params): Connection
+    {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
-        $span = $tracer->span(
-            'doctrine.dbal.connection',
-            SpanKind::CLIENT,
-            [
-                'db.namespace' => $params['dbname'] ?? 'default',
-                'db.connection.name' => $this->connectionName,
-            ]
-        );
+        $span = $tracer->span('doctrine.dbal.connection', SpanKind::CLIENT, [
+            'db.namespace' => $params['dbname'] ?? 'default',
+            'db.connection.name' => $this->connectionName,
+        ]);
 
         try {
             $connection = parent::connect($params);
@@ -52,12 +54,7 @@ final class TracingDriver extends AbstractDriverMiddleware
             $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
             $span->setStatus(SpanStatus::ok());
 
-            return new TracingConnection(
-                $connection,
-                $this->telemetry,
-                $this->logSql,
-                $this->maxSqlLength,
-            );
+            return new TracingConnection($connection, $this->telemetry, $this->logSql, $this->maxSqlLength);
         } catch (\Throwable $exception) {
             $span->recordException($exception, new \DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
@@ -68,7 +65,7 @@ final class TracingDriver extends AbstractDriverMiddleware
         }
     }
 
-    private function getSemanticDbSystem(string $serverVersion) : string
+    private function getSemanticDbSystem(string $serverVersion): string
     {
         $platform = $this->getDatabasePlatform(new StaticServerVersionProvider($serverVersion));
 

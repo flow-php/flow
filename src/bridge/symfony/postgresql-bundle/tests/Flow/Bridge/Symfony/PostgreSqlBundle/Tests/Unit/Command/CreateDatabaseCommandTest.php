@@ -10,10 +10,10 @@ use Symfony\Component\DependencyInjection\Container;
 
 final class CreateDatabaseCommandTest extends TestCase
 {
-    public function test_has_correct_command_name() : void
+    public function test_has_correct_command_name(): void
     {
         $command = new CreateDatabaseCommand(new Container(), 'default');
 
-        self::assertSame('flow:database:create', $command->getName());
+        static::assertSame('flow:database:create', $command->getName());
     }
 }

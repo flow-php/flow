@@ -9,15 +9,15 @@ use Flow\ETL\Row\Reference;
 
 interface Comparison
 {
-    public function compare(Row $left, Row $right) : bool;
+    public function compare(Row $left, Row $right): bool;
 
     /**
      * @return array<Reference>
      */
-    public function left() : array;
+    public function left(): array;
 
     /**
      * @return array<Reference>
      */
-    public function right() : array;
+    public function right(): array;
 }

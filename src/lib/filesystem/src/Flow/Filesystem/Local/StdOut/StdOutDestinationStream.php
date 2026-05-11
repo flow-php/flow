@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\StdOut;
 
-use Flow\Filesystem\{DestinationStream, Exception\RuntimeException, Path};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Path;
 
 final class StdOutDestinationStream implements DestinationStream
 {
@@ -34,20 +36,25 @@ final class StdOutDestinationStream implements DestinationStream
         }
     }
 
-    public function append(string $data) : DestinationStream
+    public function append(string $data): DestinationStream
     {
         if (\is_resource($this->handle)) {
             $written = \fwrite($this->handle, $data);
 
             if ($written === false || $written !== \strlen($data)) {
-                throw new RuntimeException('Failed to write all bytes to stream, expected ' . \strlen($data) . ' bytes, written: ' . ($written === false ? '0' : $written));
+                throw new RuntimeException(
+                    'Failed to write all bytes to stream, expected '
+                    . \strlen($data)
+                    . ' bytes, written: '
+                    . ($written === false ? '0' : $written),
+                );
             }
         }
 
         return $this;
     }
 
-    public function close() : void
+    public function close(): void
     {
         if (\is_resource($this->handle)) {
             \fclose($this->handle);
@@ -58,7 +65,7 @@ final class StdOutDestinationStream implements DestinationStream
         }
     }
 
-    public function fromResource($resource) : DestinationStream
+    public function fromResource($resource): DestinationStream
     {
         if (\is_resource($this->handle)) {
             stream_copy_to_stream($resource, $this->handle);
@@ -67,12 +74,12 @@ final class StdOutDestinationStream implements DestinationStream
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return \is_resource($this->handle);
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }

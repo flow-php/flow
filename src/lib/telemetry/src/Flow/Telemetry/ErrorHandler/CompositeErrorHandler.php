@@ -18,7 +18,7 @@ final readonly class CompositeErrorHandler implements ErrorHandler
         $this->handlers = $handlers;
     }
 
-    public function handle(\Throwable $error) : void
+    public function handle(\Throwable $error): void
     {
         foreach ($this->handlers as $handler) {
             try {
@@ -31,7 +31,7 @@ final readonly class CompositeErrorHandler implements ErrorHandler
     /**
      * @return array<ErrorHandler>
      */
-    public function handlers() : array
+    public function handlers(): array
     {
         return $this->handlers;
     }

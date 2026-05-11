@@ -57,7 +57,7 @@ final readonly class StaticFactoryMapper implements RowMapper
     /**
      * @return T
      */
-    public function map(array $row, Context $context) : object
+    public function map(array $row, Context $context): object
     {
         try {
             /** @var T */

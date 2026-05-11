@@ -14,5 +14,5 @@ interface RenameStrategy
      *
      * @return list<RenameMatch>
      */
-    public function resolve(array $candidates) : array;
+    public function resolve(array $candidates): array;
 }

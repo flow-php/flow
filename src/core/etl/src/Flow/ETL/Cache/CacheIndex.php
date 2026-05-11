@@ -11,11 +11,11 @@ final class CacheIndex
      */
     private array $index = [];
 
-    public function __construct(public readonly string $key)
-    {
-    }
+    public function __construct(
+        public readonly string $key,
+    ) {}
 
-    public function add(string $value) : void
+    public function add(string $value): void
     {
         $this->index[] = $value;
     }
@@ -23,7 +23,7 @@ final class CacheIndex
     /**
      * @return array<string>
      */
-    public function values() : array
+    public function values(): array
     {
         return $this->index;
     }

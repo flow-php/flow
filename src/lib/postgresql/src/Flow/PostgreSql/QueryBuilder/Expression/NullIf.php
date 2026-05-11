@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -15,10 +18,9 @@ final readonly class NullIf implements Expression
     public function __construct(
         private Expression $first,
         private Expression $second,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aExpr = $node->getAExpr();
 
@@ -27,7 +29,11 @@ final readonly class NullIf implements Expression
         }
 
         if ($aExpr->getKind() !== A_Expr_Kind::AEXPR_NULLIF) {
-            throw InvalidAstException::invalidFieldValue('kind', 'A_Expr', 'Expected AEXPR_NULLIF for NullIf expression');
+            throw InvalidAstException::invalidFieldValue(
+                'kind',
+                'A_Expr',
+                'Expected AEXPR_NULLIF for NullIf expression',
+            );
         }
 
         $lexpr = $aExpr->getLexpr();
@@ -37,28 +43,25 @@ final readonly class NullIf implements Expression
             throw InvalidAstException::missingRequiredField('lexpr/rexpr', 'A_Expr');
         }
 
-        return new self(
-            ExpressionFactory::fromAst($lexpr),
-            ExpressionFactory::fromAst($rexpr)
-        );
+        return new self(ExpressionFactory::fromAst($lexpr), ExpressionFactory::fromAst($rexpr));
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function first() : Expression
+    public function first(): Expression
     {
         return $this->first;
     }
 
-    public function second() : Expression
+    public function second(): Expression
     {
         return $this->second;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $nameString = new PBString();
         $nameString->setSval('=');

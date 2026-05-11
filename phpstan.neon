@@ -97,6 +97,7 @@ parameters:
         - src/cli/src/Flow/CLI/Command/*
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIIValue.php
+        - src/core/etl/tests/Flow/ETL/Tests/Fixtures/empty.php
         - src/core/etl/src/Flow/ETL/Sort/ExternalSort/RowsMinHeap.php
         - src/adapter/etl-adapter-avro/*
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php
@@ -189,6 +190,22 @@ parameters:
         -
             path: src/core/etl/src/Flow/Calculator/Calculator.php
             identifier: argument.type
+            reportUnmatched: false
+        -
+            path: src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/DbalKeySetExtractor.php
+            identifier: method.notFound
+            reportUnmatched: false
+        -
+            path: src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/DbalKeySetExtractor.php
+            identifier: function.alreadyNarrowedType
+            reportUnmatched: false
+        -
+            path: src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/DbalLimitOffsetExtractor.php
+            identifier: method.notFound
+            reportUnmatched: false
+        -
+            path: src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/DbalLimitOffsetExtractor.php
+            identifier: function.alreadyNarrowedType
             reportUnmatched: false
 
 includes:

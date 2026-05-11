@@ -4,62 +4,54 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Exemplar;
 
-use Flow\Telemetry\Context\{SpanId, TraceFlags, TraceId};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Meter\Exemplar\AlwaysOnExemplarFilter;
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 
 final class AlwaysOnExemplarFilterTest extends TestCase
 {
-    public function test_returns_correct_string_representation() : void
+    public function test_returns_correct_string_representation(): void
     {
         $filter = new AlwaysOnExemplarFilter();
 
-        self::assertSame('AlwaysOnExemplarFilter', (string) $filter);
+        static::assertSame('AlwaysOnExemplarFilter', (string) $filter);
     }
 
-    public function test_should_sample_returns_false_when_context_is_null() : void
+    public function test_should_sample_returns_false_when_context_is_null(): void
     {
         $filter = new AlwaysOnExemplarFilter();
 
-        self::assertFalse($filter->shouldSample(null, 100, []));
+        static::assertFalse($filter->shouldSample(null, 100, []));
     }
 
-    public function test_should_sample_returns_true_regardless_of_sampled_flag() : void
+    public function test_should_sample_returns_true_regardless_of_sampled_flag(): void
     {
         $filter = new AlwaysOnExemplarFilter();
 
-        $sampledContext = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-            null,
-            TraceFlags::sampled()
-        );
+        $sampledContext = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
 
-        $unsampledContext = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-            null,
-            TraceFlags::default()
-        );
+        $unsampledContext = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::default());
 
-        self::assertTrue($filter->shouldSample($sampledContext, 100, []));
-        self::assertTrue($filter->shouldSample($unsampledContext, 100, []));
+        static::assertTrue($filter->shouldSample($sampledContext, 100, []));
+        static::assertTrue($filter->shouldSample($unsampledContext, 100, []));
     }
 
-    public function test_should_sample_returns_true_when_context_exists() : void
+    public function test_should_sample_returns_true_when_context_exists(): void
     {
         $filter = new AlwaysOnExemplarFilter();
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        self::assertTrue($filter->shouldSample($context, 100, []));
+        static::assertTrue($filter->shouldSample($context, 100, []));
     }
 
-    public function test_should_sample_returns_true_when_context_exists_with_attributes() : void
+    public function test_should_sample_returns_true_when_context_exists_with_attributes(): void
     {
         $filter = new AlwaysOnExemplarFilter();
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        self::assertTrue($filter->shouldSample($context, 42.5, ['http.method' => 'GET']));
+        static::assertTrue($filter->shouldSample($context, 42.5, ['http.method' => 'GET']));
     }
 }

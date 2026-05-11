@@ -15,6 +15,5 @@ final readonly class QueryAttributes
     public function __construct(
         public ?string $operation,
         public ?string $target,
-    ) {
-    }
+    ) {}
 }

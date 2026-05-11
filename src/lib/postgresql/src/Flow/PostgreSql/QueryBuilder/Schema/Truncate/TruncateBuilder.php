@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Truncate;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, Node, RangeVar, TruncateStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\TruncateStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class TruncateBuilder implements TruncateFinalStep
 {
@@ -18,51 +22,34 @@ final readonly class TruncateBuilder implements TruncateFinalStep
         private array $tables,
         private bool $restartIdentity = false,
         private int $behavior = DropBehavior::DROP_BEHAVIOR_UNDEFINED,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$tables) : TruncateFinalStep
+    public static function create(string ...$tables): TruncateFinalStep
     {
         return new self(\array_values($tables));
     }
 
-    public function cascade() : TruncateFinalStep
+    public function cascade(): TruncateFinalStep
     {
-        return new self(
-            $this->tables,
-            $this->restartIdentity,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->tables, $this->restartIdentity, DropBehavior::DROP_CASCADE);
     }
 
-    public function continueIdentity() : TruncateFinalStep
+    public function continueIdentity(): TruncateFinalStep
     {
-        return new self(
-            $this->tables,
-            false,
-            $this->behavior,
-        );
+        return new self($this->tables, false, $this->behavior);
     }
 
-    public function restartIdentity() : TruncateFinalStep
+    public function restartIdentity(): TruncateFinalStep
     {
-        return new self(
-            $this->tables,
-            true,
-            $this->behavior,
-        );
+        return new self($this->tables, true, $this->behavior);
     }
 
-    public function restrict() : TruncateFinalStep
+    public function restrict(): TruncateFinalStep
     {
-        return new self(
-            $this->tables,
-            $this->restartIdentity,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->tables, $this->restartIdentity, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : TruncateStmt
+    public function toAst(): TruncateStmt
     {
         $stmt = new TruncateStmt();
 
@@ -85,7 +72,7 @@ final readonly class TruncateBuilder implements TruncateFinalStep
         return $stmt;
     }
 
-    private function createRangeVarNode(string $table) : Node
+    private function createRangeVarNode(string $table): Node
     {
         $identifier = QualifiedIdentifier::parse($table);
 

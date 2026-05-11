@@ -11,14 +11,14 @@ final class NamedParameterNormalizer
      *
      * @return array<string, int> Map of parameter names to their positional index (1-based)
      */
-    public function extractParameters(string $sql) : array
+    public function extractParameters(string $sql): array
     {
         $parameters = [];
         $position = 1;
 
         preg_replace_callback(
             '/(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)/',
-            static function (array $matches) use (&$parameters, &$position) : string {
+            static function (array $matches) use (&$parameters, &$position): string {
                 $name = $matches[1];
 
                 if (!\array_key_exists($name, $parameters)) {
@@ -27,7 +27,7 @@ final class NamedParameterNormalizer
 
                 return '';
             },
-            $sql
+            $sql,
         );
 
         return $parameters;
@@ -36,14 +36,14 @@ final class NamedParameterNormalizer
     /**
      * Convert named parameters (e.g., :id, :name) to PostgreSQL positional parameters ($1, $2, etc.).
      */
-    public function normalize(string $sql) : string
+    public function normalize(string $sql): string
     {
         $parameters = [];
         $position = 1;
 
         $converted = preg_replace_callback(
             '/(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)/',
-            static function (array $matches) use (&$parameters, &$position) : string {
+            static function (array $matches) use (&$parameters, &$position): string {
                 $name = $matches[1];
 
                 if (!\array_key_exists($name, $parameters)) {
@@ -52,7 +52,7 @@ final class NamedParameterNormalizer
 
                 return '$' . $parameters[$name];
             },
-            $sql
+            $sql,
         );
 
         return $converted ?? $sql;

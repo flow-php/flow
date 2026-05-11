@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, DefElem, Integer, Node, PBString, VariableSetKind, VariableSetStmt};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\VariableSetKind;
+use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
@@ -17,86 +23,49 @@ final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
         private ?IsolationLevel $isolationLevel = null,
         private ?bool $readOnly = null,
         private ?bool $deferrable = null,
-    ) {
-    }
+    ) {}
 
-    public static function create() : SetTransactionOptionsStep
+    public static function create(): SetTransactionOptionsStep
     {
         return new self();
     }
 
-    public static function session() : SetTransactionOptionsStep
+    public static function session(): SetTransactionOptionsStep
     {
         return new self(true);
     }
 
-    public function deferrable() : SetTransactionOptionsStep
+    public function deferrable(): SetTransactionOptionsStep
     {
-        return new self(
-            $this->isSession,
-            $this->snapshotId,
-            $this->isolationLevel,
-            $this->readOnly,
-            true,
-        );
+        return new self($this->isSession, $this->snapshotId, $this->isolationLevel, $this->readOnly, true);
     }
 
-    public function isolationLevel(IsolationLevel $level) : SetTransactionOptionsStep
+    public function isolationLevel(IsolationLevel $level): SetTransactionOptionsStep
     {
-        return new self(
-            $this->isSession,
-            $this->snapshotId,
-            $level,
-            $this->readOnly,
-            $this->deferrable,
-        );
+        return new self($this->isSession, $this->snapshotId, $level, $this->readOnly, $this->deferrable);
     }
 
-    public function notDeferrable() : SetTransactionOptionsStep
+    public function notDeferrable(): SetTransactionOptionsStep
     {
-        return new self(
-            $this->isSession,
-            $this->snapshotId,
-            $this->isolationLevel,
-            $this->readOnly,
-            false,
-        );
+        return new self($this->isSession, $this->snapshotId, $this->isolationLevel, $this->readOnly, false);
     }
 
-    public function readOnly() : SetTransactionOptionsStep
+    public function readOnly(): SetTransactionOptionsStep
     {
-        return new self(
-            $this->isSession,
-            $this->snapshotId,
-            $this->isolationLevel,
-            true,
-            $this->deferrable,
-        );
+        return new self($this->isSession, $this->snapshotId, $this->isolationLevel, true, $this->deferrable);
     }
 
-    public function readWrite() : SetTransactionOptionsStep
+    public function readWrite(): SetTransactionOptionsStep
     {
-        return new self(
-            $this->isSession,
-            $this->snapshotId,
-            $this->isolationLevel,
-            false,
-            $this->deferrable,
-        );
+        return new self($this->isSession, $this->snapshotId, $this->isolationLevel, false, $this->deferrable);
     }
 
-    public function snapshot(string $snapshotId) : SetTransactionFinalStep
+    public function snapshot(string $snapshotId): SetTransactionFinalStep
     {
-        return new self(
-            $this->isSession,
-            $snapshotId,
-            $this->isolationLevel,
-            $this->readOnly,
-            $this->deferrable,
-        );
+        return new self($this->isSession, $snapshotId, $this->isolationLevel, $this->readOnly, $this->deferrable);
     }
 
-    public function toAst() : VariableSetStmt
+    public function toAst(): VariableSetStmt
     {
         $stmt = new VariableSetStmt();
         $stmt->setKind(VariableSetKind::VAR_SET_MULTI);
@@ -124,7 +93,7 @@ final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
     /**
      * @return list<Node>
      */
-    private function buildOptions() : array
+    private function buildOptions(): array
     {
         $options = [];
 
@@ -143,7 +112,7 @@ final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
         return $options;
     }
 
-    private function createBoolOption(string $name, bool $value) : Node
+    private function createBoolOption(string $name, bool $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -164,7 +133,7 @@ final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
         return $node;
     }
 
-    private function createIsolationLevelOption(IsolationLevel $level) : Node
+    private function createIsolationLevelOption(IsolationLevel $level): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname('transaction_isolation');

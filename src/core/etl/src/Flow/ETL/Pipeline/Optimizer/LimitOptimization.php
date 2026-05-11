@@ -6,15 +6,20 @@ namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
-use Flow\ETL\{Loader, Pipeline, Processor, Transformer};
-use Flow\ETL\Processor\{BatchingProcessor, CollectingProcessor, VoidProcessor};
-use Flow\ETL\Transformer\{CallbackRowTransformer,
-    DropEntriesTransformer,
-    LimitTransformer,
-    RenameEachEntryTransformer,
-    RenameEntryTransformer,
-    ScalarFunctionTransformer,
-    SelectEntriesTransformer};
+use Flow\ETL\Loader;
+use Flow\ETL\Pipeline;
+use Flow\ETL\Processor;
+use Flow\ETL\Processor\BatchingProcessor;
+use Flow\ETL\Processor\CollectingProcessor;
+use Flow\ETL\Processor\VoidProcessor;
+use Flow\ETL\Transformer;
+use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\Transformer\DropEntriesTransformer;
+use Flow\ETL\Transformer\LimitTransformer;
+use Flow\ETL\Transformer\RenameEachEntryTransformer;
+use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\Transformer\SelectEntriesTransformer;
 
 final class LimitOptimization implements Optimization
 {
@@ -42,7 +47,7 @@ final class LimitOptimization implements Optimization
         LimitTransformer::class,
     ];
 
-    public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
+    public function isFor(Loader|Transformer $element, Pipeline $pipeline): bool
     {
         if (!$element instanceof LimitTransformer) {
             return false;
@@ -55,7 +60,7 @@ final class LimitOptimization implements Optimization
         return $this->hasOnlyNonExpandingSteps($pipeline);
     }
 
-    public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
+    public function optimize(Loader|Transformer $element, Pipeline $pipeline): Pipeline
     {
         /** @var LimitableExtractor $extractor */
         $extractor = $pipeline->extractor();
@@ -91,7 +96,7 @@ final class LimitOptimization implements Optimization
         return $pipeline->add($element);
     }
 
-    private function hasOnlyNonExpandingSteps(Pipeline $pipeline) : bool
+    private function hasOnlyNonExpandingSteps(Pipeline $pipeline): bool
     {
         foreach ($pipeline->segments()->steps() as $step) {
             if ($step instanceof Processor) {

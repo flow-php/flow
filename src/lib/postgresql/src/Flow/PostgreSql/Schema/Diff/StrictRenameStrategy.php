@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 final readonly class StrictRenameStrategy implements RenameStrategy
 {
-    public function resolve(array $candidates) : array
+    public function resolve(array $candidates): array
     {
         $candidatesByAdded = [];
 

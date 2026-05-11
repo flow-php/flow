@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_array, type_from_array};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_from_array;
+
 final class ArrayTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid empty array' => [
             'value' => [],
@@ -54,7 +57,7 @@ final class ArrayTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'array stays as is' => [
             'value' => ['test'],
@@ -99,7 +102,7 @@ final class ArrayTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'empty array' => [
             'value' => [],
@@ -138,58 +141,55 @@ final class ArrayTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_array()->assert($value);
         } else {
-            self::assertIsArray(type_array()->assert($value));
+            static::assertIsArray(type_array()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_array()->cast($value);
         } else {
-            self::assertEquals($expected, type_array()->cast($value));
+            static::assertEquals($expected, type_array()->cast($value));
         }
     }
 
-    public function test_casting_xml_document_to_array() : void
+    public function test_casting_xml_document_to_array(): void
     {
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        self::assertSame(
+        static::assertSame(
             ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
-            type_array()->cast($xml)
+            type_array()->cast($xml),
         );
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_array()->isValid($value));
+        static::assertSame($expected, type_array()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_array();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'array<mixed>',
-            type_array()->toString()
-        );
+        static::assertSame('array<mixed>', type_array()->toString());
     }
 }

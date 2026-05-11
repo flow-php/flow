@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView;
 
 interface RefreshMatViewOptionsStep extends RefreshMatViewFinalStep
 {
-    public function concurrently() : RefreshMatViewFinalStep;
+    public function concurrently(): RefreshMatViewFinalStep;
 }

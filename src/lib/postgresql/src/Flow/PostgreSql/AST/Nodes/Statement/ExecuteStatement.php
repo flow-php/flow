@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\ExecuteStmt;
 
 /**
@@ -16,10 +17,9 @@ final readonly class ExecuteStatement implements Statement
 
     public function __construct(
         private ExecuteStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : ExecuteStmt
+    public function raw(): ExecuteStmt
     {
         return $this->stmt;
     }

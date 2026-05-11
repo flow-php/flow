@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Repository;
 
-use Flow\Filesystem\{Filesystem, Path};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter\KeepAll;
-use Flow\PostgreSql\Migrations\{Configuration, Migration, Rollback, Version};
+use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
-use Flow\PostgreSql\Migrations\Repository\{AvailableMigration, AvailableMigrations, MigrationRepository};
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\Repository\AvailableMigration;
+use Flow\PostgreSql\Migrations\Repository\AvailableMigrations;
+use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
+use Flow\PostgreSql\Migrations\Rollback;
+use Flow\PostgreSql\Migrations\Version;
 
 final readonly class FilesystemMigrationRepository implements MigrationRepository
 {
@@ -16,10 +22,9 @@ final readonly class FilesystemMigrationRepository implements MigrationRepositor
         private Filesystem $filesystem,
         private Path $migrationsDirectory,
         private Configuration $configuration,
-    ) {
-    }
+    ) {}
 
-    public function all() : AvailableMigrations
+    public function all(): AvailableMigrations
     {
         $pattern = Path::from($this->migrationsDirectory->path() . '/*');
         $migrations = [];
@@ -47,17 +52,17 @@ final readonly class FilesystemMigrationRepository implements MigrationRepositor
         return new AvailableMigrations(...$migrations);
     }
 
-    public function get(Version $version) : AvailableMigration
+    public function get(Version $version): AvailableMigration
     {
         return $this->all()->get($version);
     }
 
-    public function has(Version $version) : bool
+    public function has(Version $version): bool
     {
         return $this->all()->has($version);
     }
 
-    private function loadMigration(Path $directoryPath, Version $version, string $name) : AvailableMigration
+    private function loadMigration(Path $directoryPath, Version $version, string $name): AvailableMigration
     {
         $migrationPath = Path::from($directoryPath->path() . '/' . $this->configuration->migrationFileName);
 

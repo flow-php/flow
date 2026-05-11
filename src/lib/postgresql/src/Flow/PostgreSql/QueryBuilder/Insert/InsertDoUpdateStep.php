@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 
 interface InsertDoUpdateStep extends InsertReturningStep
 {
-    public function where(Condition $condition) : InsertReturningStep;
+    public function where(Condition $condition): InsertReturningStep;
 }

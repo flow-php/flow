@@ -6,7 +6,7 @@ namespace Flow\Parquet\Data;
 
 final class BitWidth
 {
-    public static function calculate(int $value) : int
+    public static function calculate(int $value): int
     {
         return (int) \ceil(\log($value + 1, 2));
     }
@@ -14,7 +14,7 @@ final class BitWidth
     /**
      * @param array<int> $ints
      */
-    public static function fromArray(array $ints) : int
+    public static function fromArray(array $ints): int
     {
         if (!\count($ints)) {
             return 0;
@@ -44,7 +44,7 @@ final class BitWidth
     /**
      * @return array<int>
      */
-    public static function toBytes(int $value, int $bitWidth) : array
+    public static function toBytes(int $value, int $bitWidth): array
     {
         $bytes = [];
         $width = (int) (($bitWidth + 7) / 8);

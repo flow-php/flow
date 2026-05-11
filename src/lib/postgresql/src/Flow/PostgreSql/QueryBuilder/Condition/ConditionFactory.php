@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr_Kind, BoolExprType, Node, SubLinkType};
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SubLinkType;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
 /**
@@ -12,7 +15,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
  */
 final class ConditionFactory
 {
-    public static function fromAst(Node $node) : Condition
+    public static function fromAst(Node $node): Condition
     {
         if ($node->getAExpr() !== null) {
             $aExpr = $node->getAExpr();
@@ -73,7 +76,7 @@ final class ConditionFactory
      * Parse an AEXPR_OP node, trying Comparison first for standard operators,
      * falling back to OperatorCondition for other operators.
      */
-    private static function parseOperatorCondition(Node $node) : Condition
+    private static function parseOperatorCondition(Node $node): Condition
     {
         $aExpr = $node->getAExpr();
 

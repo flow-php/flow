@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Generator;
 
-use Flow\Filesystem\{Filesystem, Path};
-use Flow\PostgreSql\Migrations\{Configuration, Version, VersionGenerator};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
+use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
+use Flow\PostgreSql\Migrations\Version;
+use Flow\PostgreSql\Migrations\VersionGenerator;
 use Twig\Environment;
 
 final readonly class TwigMigrationGenerator implements MigrationGenerator
@@ -16,21 +19,26 @@ final readonly class TwigMigrationGenerator implements MigrationGenerator
         private VersionGenerator $versionGenerator,
         private Environment $twig,
         private Filesystem $filesystem,
-    ) {
-    }
+    ) {}
 
-    public function generateDataMigration(?string $name = null) : Version
+    public function generateDataMigration(?string $name = null): Version
     {
         $version = $this->versionGenerator->generate();
         $directory = $this->migrationDirectory($version, $name);
 
-        $this->filesystem->writeTo(Path::from($directory . '/' . $this->configuration->migrationFileName))
-            ->append($this->twig->render('data_migration.php.twig', ['namespace' => $this->configuration->migrationsNamespace]))
+        $this->filesystem
+            ->writeTo(Path::from($directory . '/' . $this->configuration->migrationFileName))
+            ->append($this->twig->render('data_migration.php.twig', [
+                'namespace' => $this->configuration->migrationsNamespace,
+            ]))
             ->close();
 
         if ($this->configuration->generateRollback) {
-            $this->filesystem->writeTo(Path::from($directory . '/' . $this->configuration->rollbackFileName))
-                ->append($this->twig->render('data_rollback.php.twig', ['namespace' => $this->configuration->migrationsNamespace]))
+            $this->filesystem
+                ->writeTo(Path::from($directory . '/' . $this->configuration->rollbackFileName))
+                ->append($this->twig->render('data_rollback.php.twig', [
+                    'namespace' => $this->configuration->migrationsNamespace,
+                ]))
                 ->close();
         }
 
@@ -41,12 +49,13 @@ final readonly class TwigMigrationGenerator implements MigrationGenerator
      * @param list<string> $upSql
      * @param null|list<string> $downSql
      */
-    public function generateSchemaMigration(?string $name, array $upSql, ?array $downSql = null) : Version
+    public function generateSchemaMigration(?string $name, array $upSql, ?array $downSql = null): Version
     {
         $version = $this->versionGenerator->generate();
         $directory = $this->migrationDirectory($version, $name);
 
-        $this->filesystem->writeTo(Path::from($directory . '/' . $this->configuration->migrationFileName))
+        $this->filesystem
+            ->writeTo(Path::from($directory . '/' . $this->configuration->migrationFileName))
             ->append($this->twig->render('schema_migration.php.twig', [
                 'namespace' => $this->configuration->migrationsNamespace,
                 'queries' => $upSql,
@@ -54,7 +63,8 @@ final readonly class TwigMigrationGenerator implements MigrationGenerator
             ->close();
 
         if ($downSql !== null) {
-            $this->filesystem->writeTo(Path::from($directory . '/' . $this->configuration->rollbackFileName))
+            $this->filesystem
+                ->writeTo(Path::from($directory . '/' . $this->configuration->rollbackFileName))
                 ->append($this->twig->render('schema_rollback.php.twig', [
                     'namespace' => $this->configuration->migrationsNamespace,
                     'queries' => $downSql,
@@ -65,7 +75,7 @@ final readonly class TwigMigrationGenerator implements MigrationGenerator
         return $version;
     }
 
-    private function migrationDirectory(Version $version, ?string $name) : string
+    private function migrationDirectory(Version $version, ?string $name): string
     {
         if ($name === null) {
             return $this->configuration->migrationsDirectory . '/' . $version;

@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Unit\Subscriber;
 
-use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
-
-use Flow\Bridge\PHPUnit\Telemetry\{SpanStack, TestStatusRegistry};
+use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
 use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestFinishedSubscriber;
-use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\{ConfigurationMother, TelemetryMother, TestEventMother};
+use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\ConfigurationMother;
+use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\TelemetryMother;
+use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\TestEventMother;
+use Flow\Bridge\PHPUnit\Telemetry\TestStatusRegistry;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Telemetry\DSL\memory_span_processor;
+use function Flow\Telemetry\DSL\void_exporter;
+
 final class TestFinishedSubscriberTest extends TestCase
 {
-    public function test_clears_status_registry_when_emit_test_spans_is_disabled() : void
+    public function test_clears_status_registry_when_emit_test_spans_is_disabled(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
@@ -28,10 +32,10 @@ final class TestFinishedSubscriberTest extends TestCase
         $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry);
         $subscriber->notify($event);
 
-        self::assertNull($statusRegistry->getMessage($event->test()->id()));
+        static::assertNull($statusRegistry->getMessage($event->test()->id()));
     }
 
-    public function test_does_not_pop_span_when_emit_test_spans_is_disabled() : void
+    public function test_does_not_pop_span_when_emit_test_spans_is_disabled(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
@@ -48,11 +52,11 @@ final class TestFinishedSubscriberTest extends TestCase
         $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry);
         $subscriber->notify($event);
 
-        self::assertFalse($spanStack->isEmpty());
-        self::assertSame($suiteSpan, $spanStack->current());
+        static::assertFalse($spanStack->isEmpty());
+        static::assertSame($suiteSpan, $spanStack->current());
     }
 
-    public function test_pops_span_when_emit_test_spans_is_enabled() : void
+    public function test_pops_span_when_emit_test_spans_is_enabled(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
@@ -69,7 +73,7 @@ final class TestFinishedSubscriberTest extends TestCase
         $subscriber = new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry);
         $subscriber->notify($event);
 
-        self::assertTrue($spanStack->isEmpty());
-        self::assertCount(1, $spanProcessor->endedSpans());
+        static::assertTrue($spanStack->isEmpty());
+        static::assertCount(1, $spanProcessor->endedSpans());
     }
 }

@@ -4,26 +4,40 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
-use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string, type_union};
-use Flow\Filesystem\{FileStatus, Path, SizeUnits};
+use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Flow\Filesystem\SizeUnits;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'flow:filesystem:ls', description: 'List files under a URI on a configured fstab.', aliases: ['flow:fs:ls'])]
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
+#[AsCommand(
+    name: 'flow:filesystem:ls',
+    description: 'List files under a URI on a configured fstab.',
+    aliases: ['flow:fs:ls'],
+)]
 final class LsCommand extends Command
 {
     public const int DEFAULT_PAGE_SIZE = 10;
 
-    public function __construct(private readonly FstabResolver $resolver)
-    {
+    public function __construct(
+        private readonly FstabResolver $resolver,
+    ) {
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('path', InputArgument::REQUIRED, 'Directory URI, e.g. memory://data or file:///tmp')
@@ -32,8 +46,20 @@ final class LsCommand extends Command
             ->addOption('short', 's', InputOption::VALUE_NONE, 'Show only URIs (skip the type/size/modified columns).')
             ->addOption('limit', null, InputOption::VALUE_REQUIRED, 'Cap total entries at N. Default: unlimited.')
             ->addOption('offset', null, InputOption::VALUE_REQUIRED, 'Skip the first N entries before listing.', '0')
-            ->addOption('page-size', null, InputOption::VALUE_REQUIRED, 'Entries per table page. Default: ' . self::DEFAULT_PAGE_SIZE . '.', (string) self::DEFAULT_PAGE_SIZE)
-            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: "table" (default) or "json" (NDJSON, one JSON object per line).', 'table')
+            ->addOption(
+                'page-size',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Entries per table page. Default: ' . self::DEFAULT_PAGE_SIZE . '.',
+                (string) self::DEFAULT_PAGE_SIZE,
+            )
+            ->addOption(
+                'format',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Output format: "table" (default) or "json" (NDJSON, one JSON object per line).',
+                'table',
+            )
             ->setHelp(<<<'HELP'
                 Lists entries under a directory URI on the chosen fstab.
 
@@ -56,7 +82,7 @@ final class LsCommand extends Command
                 HELP);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -113,7 +139,7 @@ final class LsCommand extends Command
             : $this->renderTables($io, $input, $iterator, $offset, $limit, $pageSize, $long);
     }
 
-    private function buildListPath(Path $userPath, bool $recursive) : Path
+    private function buildListPath(Path $userPath, bool $recursive): Path
     {
         if ($userPath->isPattern()) {
             return $userPath;
@@ -132,7 +158,7 @@ final class LsCommand extends Command
     /**
      * @param iterable<FileStatus> $iterator
      */
-    private function renderNdjson(OutputInterface $output, iterable $iterator, int $offset, ?int $limit) : int
+    private function renderNdjson(OutputInterface $output, iterable $iterator, int $offset, ?int $limit): int
     {
         $skipped = 0;
         $count = 0;
@@ -165,8 +191,15 @@ final class LsCommand extends Command
      * @param iterable<FileStatus> $iterator
      * @param int<1, max> $pageSize
      */
-    private function renderTables(SymfonyStyle $io, InputInterface $input, iterable $iterator, int $offset, ?int $limit, int $pageSize, bool $long) : int
-    {
+    private function renderTables(
+        SymfonyStyle $io,
+        InputInterface $input,
+        iterable $iterator,
+        int $offset,
+        ?int $limit,
+        int $pageSize,
+        bool $long,
+    ): int {
         $headers = $long ? ['Type', 'Size', 'Modified', 'URI'] : ['URI'];
 
         $skipped = 0;
@@ -207,7 +240,11 @@ final class LsCommand extends Command
 
                 $limitReached = $limit !== null && $rendered >= $limit;
 
-                if (!$limitReached && $interactive && !$io->confirm(\sprintf('Show next %d entries?', $pageSize), true)) {
+                if (
+                    !$limitReached
+                    && $interactive
+                    && !$io->confirm(\sprintf('Show next %d entries?', $pageSize), true)
+                ) {
                     return Command::SUCCESS;
                 }
             }
@@ -219,10 +256,7 @@ final class LsCommand extends Command
         }
 
         if ($hasMore) {
-            $io->getErrorStyle()->warning(\sprintf(
-                'Output truncated at %d entries. Raise with --limit=N.',
-                $limit,
-            ));
+            $io->getErrorStyle()->warning(\sprintf('Output truncated at %d entries. Raise with --limit=N.', $limit));
         }
 
         if ($pageCount === 0) {

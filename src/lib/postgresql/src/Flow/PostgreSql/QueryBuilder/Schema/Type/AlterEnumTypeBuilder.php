@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterEnumStmt, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\AlterEnumStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterEnumTypeBuilder implements AlterEnumTypeActionStep, AlterEnumTypeFinalStep
 {
@@ -19,56 +22,31 @@ final readonly class AlterEnumTypeBuilder implements AlterEnumTypeActionStep, Al
         private ?string $neighbor = null,
         private bool $isAfter = false,
         private bool $skipIfExists = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : AlterEnumTypeActionStep
+    public static function create(string $name): AlterEnumTypeActionStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function addValue(string $value) : AlterEnumTypeFinalStep
+    public function addValue(string $value): AlterEnumTypeFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            null,
-            $value,
-            null,
-            false,
-            $this->skipIfExists,
-        );
+        return new self($this->name, $this->schema, null, $value, null, false, $this->skipIfExists);
     }
 
-    public function addValueAfter(string $value, string $neighbor) : AlterEnumTypeFinalStep
+    public function addValueAfter(string $value, string $neighbor): AlterEnumTypeFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            null,
-            $value,
-            $neighbor,
-            true,
-            $this->skipIfExists,
-        );
+        return new self($this->name, $this->schema, null, $value, $neighbor, true, $this->skipIfExists);
     }
 
-    public function addValueBefore(string $value, string $neighbor) : AlterEnumTypeFinalStep
+    public function addValueBefore(string $value, string $neighbor): AlterEnumTypeFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            null,
-            $value,
-            $neighbor,
-            false,
-            $this->skipIfExists,
-        );
+        return new self($this->name, $this->schema, null, $value, $neighbor, false, $this->skipIfExists);
     }
 
-    public function ifNotExists() : AlterEnumTypeFinalStep
+    public function ifNotExists(): AlterEnumTypeFinalStep
     {
         return new self(
             $this->name,
@@ -81,20 +59,12 @@ final readonly class AlterEnumTypeBuilder implements AlterEnumTypeActionStep, Al
         );
     }
 
-    public function renameValue(string $oldValue, string $newValue) : AlterEnumTypeFinalStep
+    public function renameValue(string $oldValue, string $newValue): AlterEnumTypeFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $oldValue,
-            $newValue,
-            null,
-            false,
-            false,
-        );
+        return new self($this->name, $this->schema, $oldValue, $newValue, null, false, false);
     }
 
-    public function toAst() : AlterEnumStmt
+    public function toAst(): AlterEnumStmt
     {
         $stmt = new AlterEnumStmt();
 

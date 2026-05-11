@@ -11,7 +11,7 @@ use League\CommonMark\Node\Inline\Text;
 
 final class FlowDocLinkRenderer
 {
-    public function __invoke(DocumentParsedEvent $event) : void
+    public function __invoke(DocumentParsedEvent $event): void
     {
         $document = $event->getDocument();
         $walker = $document->walker();
@@ -53,7 +53,7 @@ final class FlowDocLinkRenderer
         }
     }
 
-    private function normaliseHref(string $href) : string
+    private function normaliseHref(string $href): string
     {
         $parts = parse_url($href);
 

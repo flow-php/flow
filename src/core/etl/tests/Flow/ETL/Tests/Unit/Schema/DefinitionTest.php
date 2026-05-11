@@ -4,140 +4,129 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, definition_from_array, float_schema, int_entry, int_schema, integer_schema, json_schema, list_schema, map_schema, str_entry, string_schema, struct_entry, structure_schema, time_schema};
-use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_array;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 final class DefinitionTest extends FlowTestCase
 {
-    public function test_compatibility_with_differences_in_metadat() : void
+    public function test_compatibility_with_differences_in_metadat(): void
     {
         $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
 
-        self::assertTrue(
-            $definition->isCompatible(
-                integer_schema('id', false, Metadata::fromArray(['description' => 'some_random_description']))
-            )
-        );
+        static::assertTrue($definition->isCompatible(integer_schema('id', false, Metadata::fromArray([
+            'description' => 'some_random_description',
+        ]))));
     }
 
-    public function test_compatibility_with_differences_in_nullability_that_is_a_backward_compatibility_break() : void
+    public function test_compatibility_with_differences_in_nullability_that_is_a_backward_compatibility_break(): void
     {
         $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
 
-        self::assertFalse(
-            $definition->isCompatible(
-                integer_schema('id', true, Metadata::fromArray(['description' => 'some_random_description']))
-            )
-        );
+        static::assertFalse($definition->isCompatible(integer_schema('id', true, Metadata::fromArray([
+            'description' => 'some_random_description',
+        ]))));
     }
 
-    public function test_equals_nullability() : void
+    public function test_equals_nullability(): void
     {
         $def = integer_schema('id', nullable: true);
 
-        self::assertFalse(
-            $def->isSame(
-                integer_schema('id', nullable: false)
-            )
-        );
-        self::assertTrue(
-            $def->isSame(
-                integer_schema('id', nullable: true)
-            )
-        );
+        static::assertFalse($def->isSame(integer_schema('id', nullable: false)));
+        static::assertTrue($def->isSame(integer_schema('id', nullable: true)));
     }
 
-    public function test_equals_types() : void
+    public function test_equals_types(): void
     {
         $def = list_schema('list', type_list(type_integer()));
 
-        self::assertTrue(
-            $def->isSame(
-                list_schema('list', type_list(type_integer()))
-            )
-        );
+        static::assertTrue($def->isSame(list_schema('list', type_list(type_integer()))));
     }
 
-    public function test_matches_when_type_and_name_match() : void
+    public function test_matches_when_type_and_name_match(): void
     {
         $def = integer_schema('test');
 
-        self::assertTrue($def->matches(int_entry('test', 1)));
+        static::assertTrue($def->matches(int_entry('test', 1)));
     }
 
-    public function test_merge_definitions() : void
+    public function test_merge_definitions(): void
     {
-        self::assertEquals(
+        static::assertEquals(integer_schema('id', true), integer_schema('id')->merge(integer_schema('id', true)));
+    }
+
+    public function test_merge_nullable_with_non_nullable_dateime_definitions(): void
+    {
+        static::assertEquals(datetime_schema('col', true), datetime_schema('col')->merge(datetime_schema('col', true)));
+
+        static::assertEquals(datetime_schema('col'), datetime_schema('col')->merge(datetime_schema('col')));
+    }
+
+    public function test_merging_anything_and_assumed_string(): void
+    {
+        static::assertEquals(
             integer_schema('id', true),
-            integer_schema('id')->merge(integer_schema('id', true))
+            integer_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
+                Metadata::FROM_NULL => true,
+            ]))),
         );
-    }
-
-    public function test_merge_nullable_with_non_nullable_dateime_definitions() : void
-    {
-        self::assertEquals(
-            datetime_schema('col', true),
-            datetime_schema('col')->merge(datetime_schema('col', true))
-        );
-
-        self::assertEquals(
-            datetime_schema('col'),
-            datetime_schema('col')->merge(datetime_schema('col'))
-        );
-    }
-
-    public function test_merging_anything_and_assumed_string() : void
-    {
-        self::assertEquals(
-            integer_schema('id', true),
-            integer_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
-        );
-        self::assertEquals(
+        static::assertEquals(
             float_schema('id', true),
-            float_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
+            float_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
+                Metadata::FROM_NULL => true,
+            ]))),
         );
-        self::assertEquals(
+        static::assertEquals(
             bool_schema('id', true),
-            bool_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
+            bool_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
+                Metadata::FROM_NULL => true,
+            ]))),
         );
-        self::assertEquals(
+        static::assertEquals(
             datetime_schema('id', true),
-            datetime_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
+            datetime_schema('id', false)->merge(string_schema('id', true, Metadata::fromArray([
+                Metadata::FROM_NULL => true,
+            ]))),
         );
     }
 
-    public function test_merging_anything_and_string() : void
+    public function test_merging_anything_and_string(): void
     {
-        self::assertEquals(
-            string_schema('id', true),
-            integer_schema('id', false)->merge(string_schema('id', true))
-        );
-        self::assertEquals(
-            string_schema('id', true),
-            float_schema('id', false)->merge(string_schema('id', true))
-        );
-        self::assertEquals(
-            string_schema('id', true),
-            bool_schema('id', false)->merge(string_schema('id', true))
-        );
-        self::assertEquals(
-            string_schema('id', true),
-            datetime_schema('id', false)->merge(string_schema('id', true))
-        );
+        static::assertEquals(string_schema('id', true), integer_schema('id', false)->merge(string_schema('id', true)));
+        static::assertEquals(string_schema('id', true), float_schema('id', false)->merge(string_schema('id', true)));
+        static::assertEquals(string_schema('id', true), bool_schema('id', false)->merge(string_schema('id', true)));
+        static::assertEquals(string_schema('id', true), datetime_schema('id', false)->merge(string_schema('id', true)));
     }
 
-    public function test_merging_date_with_datetime() : void
+    public function test_merging_date_with_datetime(): void
     {
-        self::assertEquals(
-            datetime_schema('datetime'),
-            datetime_schema('datetime')->merge(date_schema('datetime'))
-        );
+        static::assertEquals(datetime_schema('datetime'), datetime_schema('datetime')->merge(date_schema('datetime')));
     }
 
-    public function test_merging_different_entries() : void
+    public function test_merging_different_entries(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot merge different definitions, int and string');
@@ -145,171 +134,149 @@ final class DefinitionTest extends FlowTestCase
         integer_schema('int')->merge(string_schema('string'));
     }
 
-    public function test_merging_float_and_int_definition() : void
+    public function test_merging_float_and_int_definition(): void
     {
-        self::assertEquals(
-            float_schema('id', false),
-            float_schema('id')->merge(int_schema('id'))
-        );
+        static::assertEquals(float_schema('id', false), float_schema('id')->merge(int_schema('id')));
 
-        self::assertEquals(
-            float_schema('id', true),
-            float_schema('id')->merge(int_schema('id', true))
-        );
+        static::assertEquals(float_schema('id', true), float_schema('id')->merge(int_schema('id', true)));
     }
 
-    public function test_merging_list_of_ints_and_floats() : void
+    public function test_merging_list_of_ints_and_floats(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             list_schema('list', type_list(type_float())),
-            list_schema('list', type_list(type_integer()))->merge(list_schema('list', type_list(type_float())))
+            list_schema('list', type_list(type_integer()))->merge(list_schema('list', type_list(type_float()))),
         );
     }
 
-    public function test_merging_numeric_types() : void
+    public function test_merging_numeric_types(): void
     {
-        self::assertEquals(
-            float_schema('id', true),
-            integer_schema('id', false)->merge(float_schema('id', true))
-        );
-        self::assertEquals(
-            float_schema('id', true),
-            float_schema('id', false)->merge(integer_schema('id', true))
-        );
+        static::assertEquals(float_schema('id', true), integer_schema('id', false)->merge(float_schema('id', true)));
+        static::assertEquals(float_schema('id', true), float_schema('id', false)->merge(integer_schema('id', true)));
     }
 
-    public function test_merging_time_with_date() : void
+    public function test_merging_time_with_date(): void
     {
-        self::assertEquals(
-            datetime_schema('datetime'),
-            date_schema('datetime')->merge(time_schema('datetime'))
-        );
+        static::assertEquals(datetime_schema('datetime'), date_schema('datetime')->merge(time_schema('datetime')));
     }
 
-    public function test_merging_time_with_datetime() : void
+    public function test_merging_time_with_datetime(): void
     {
-        self::assertEquals(
-            datetime_schema('datetime'),
-            datetime_schema('datetime')->merge(time_schema('datetime'))
-        );
+        static::assertEquals(datetime_schema('datetime'), datetime_schema('datetime')->merge(time_schema('datetime')));
     }
 
-    public function test_merging_two_definitions_created_from_null() : void
+    public function test_merging_two_definitions_created_from_null(): void
     {
-        self::assertTrue(
+        static::assertTrue(
             string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true]))
                 ->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
-                ->metadata()->has(Metadata::FROM_NULL)
+                ->metadata()
+                ->has(Metadata::FROM_NULL),
         );
     }
 
-    public function test_merging_two_different_lists() : void
+    public function test_merging_two_different_lists(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             json_schema('list'),
-            list_schema('list', type_list(type_string()))->merge(list_schema('list', type_list(type_integer())))
+            list_schema('list', type_list(type_string()))->merge(list_schema('list', type_list(type_integer()))),
         );
     }
 
-    public function test_merging_two_different_maps() : void
+    public function test_merging_two_different_maps(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             json_schema('map'),
-            map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(type_string(), type_integer())))
+            map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(
+                type_string(),
+                type_integer(),
+            ))),
         );
     }
 
-    public function test_merging_two_different_structures() : void
+    public function test_merging_two_different_structures(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             json_schema('structure'),
             structure_schema('structure', type_structure([
                 'street' => type_string(),
                 'city' => type_string(),
-            ]))->merge(
-                structure_schema('structure', type_structure([
-                    'street' => type_string(),
-                    'city' => type_integer(),
-                ]))
-            )
+            ]))->merge(structure_schema('structure', type_structure([
+                'street' => type_string(),
+                'city' => type_integer(),
+            ]))),
         );
     }
 
-    public function test_merging_two_same_lists() : void
+    public function test_merging_two_same_lists(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             list_schema('list', type_list(type_integer())),
-            list_schema('list', type_list(type_integer()))->merge(list_schema('list', type_list(type_integer())))
+            list_schema('list', type_list(type_integer()))->merge(list_schema('list', type_list(type_integer()))),
         );
     }
 
-    public function test_merging_two_same_maps() : void
+    public function test_merging_two_same_maps(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             map_schema('map', type_map(type_string(), type_string())),
-            map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(type_string(), type_string())))
+            map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(
+                type_string(),
+                type_string(),
+            ))),
         );
     }
 
-    public function test_normalize_and_from_array() : void
+    public function test_normalize_and_from_array(): void
     {
         $definition = structure_schema(
             'structure',
-            type_structure(
-                [
-                    'street' => type_string(),
-                    'city' => type_string(),
-                    'location' => type_structure(
-                        [
-                            'lat' => type_float(),
-                            'lng' => type_float(),
-                        ]
-                    ),
-                ]
-            ),
+            type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+                'location' => type_structure([
+                    'lat' => type_float(),
+                    'lng' => type_float(),
+                ]),
+            ]),
             false,
-            Metadata::with('description', 'some_random_description')->add('priority', 1)
+            Metadata::with('description', 'some_random_description')->add('priority', 1),
         );
 
-        self::assertEquals(
-            $definition,
-            definition_from_array($definition->normalize())
-        );
+        static::assertEquals($definition, definition_from_array($definition->normalize()));
     }
 
-    public function test_not_matches_when_not_nullable_name_matches_but_null_given() : void
+    public function test_not_matches_when_not_nullable_name_matches_but_null_given(): void
     {
-        $def = integer_schema('test', $nullable = false);
+        $def = integer_schema('test', false);
 
-        self::assertFalse($def->matches(str_entry('test', null)));
+        static::assertFalse($def->matches(str_entry('test', null)));
     }
 
-    public function test_not_matches_when_type_does_not_match() : void
+    public function test_not_matches_when_type_does_not_match(): void
     {
         $def = integer_schema('test');
 
-        self::assertFalse($def->matches(str_entry('test', 'test')));
+        static::assertFalse($def->matches(str_entry('test', 'test')));
     }
 
-    public function test_not_matches_when_type_name_not_match() : void
+    public function test_not_matches_when_type_name_not_match(): void
     {
         $def = integer_schema('test');
 
-        self::assertFalse($def->matches(int_entry('not-test', 1)));
+        static::assertFalse($def->matches(int_entry('not-test', 1)));
     }
 
-    public function test_set_metadata() : void
+    public function test_set_metadata(): void
     {
         $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
 
-        self::assertEquals(
-            integer_schema('id', false, Metadata::fromArray(['description' => 'some_random_description'])),
-            $definition->setMetadata(Metadata::fromArray(['description' => 'some_random_description']))
-        );
-
+        static::assertEquals(integer_schema('id', false, Metadata::fromArray([
+            'description' => 'some_random_description',
+        ])), $definition->setMetadata(Metadata::fromArray(['description' => 'some_random_description'])));
     }
 
-    public function test_structure_definition_metadata() : void
+    public function test_structure_definition_metadata(): void
     {
         $address = struct_entry(
             'address',
@@ -328,7 +295,7 @@ final class DefinitionTest extends FlowTestCase
             ]),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             type_structure([
                 'street' => type_string(),
                 'city' => type_string(),
@@ -337,7 +304,7 @@ final class DefinitionTest extends FlowTestCase
                     'lng' => type_float(),
                 ]),
             ]),
-            $address->definition()->type()
+            $address->definition()->type(),
         );
     }
 }

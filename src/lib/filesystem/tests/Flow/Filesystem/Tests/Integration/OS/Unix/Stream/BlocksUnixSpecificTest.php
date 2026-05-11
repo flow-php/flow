@@ -17,7 +17,7 @@ final class BlocksUnixSpecificTest extends TestCase
 {
     use OperatingSystem;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -26,45 +26,45 @@ final class BlocksUnixSpecificTest extends TestCase
         }
     }
 
-    public function test_moving_resource_to_blocks_unix() : void
+    public function test_moving_resource_to_blocks_unix(): void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
         $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
-        self::assertIsResource($file);
+        static::assertIsResource($file);
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
-        self::assertIsInt($fileSize);
+        static::assertIsInt($fileSize);
 
         $blocks->fromResource($file);
 
-        self::assertSame($fileSize, $blocks->size());
-        self::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
+        static::assertSame($fileSize, $blocks->size());
+        static::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
     }
 
-    public function test_moving_resource_to_existing_blocks_unix() : void
+    public function test_moving_resource_to_existing_blocks_unix(): void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
         $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
-        self::assertIsResource($file);
+        static::assertIsResource($file);
         $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
-        self::assertIsInt($fileSize);
+        static::assertIsInt($fileSize);
 
         $blocks->append(\str_repeat('a', 100));
         $blocks->fromResource($file);
 
-        self::assertSame($fileSize + 100, $blocks->size());
-        self::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
+        static::assertSame($fileSize + 100, $blocks->size());
+        static::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
     }
 
-    public function test_unix_file_permissions_during_streaming() : void
+    public function test_unix_file_permissions_during_streaming(): void
     {
         if (!\function_exists('chmod')) {
-            self::markTestSkipped('chmod functionality not available');
+            static::markTestSkipped('chmod functionality not available');
         }
 
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
-        self::assertIsString($tempFile);
+        static::assertIsString($tempFile);
         $content = \str_repeat("Permission test content\n", 100);
         \file_put_contents($tempFile, $content);
 
@@ -74,36 +74,36 @@ final class BlocksUnixSpecificTest extends TestCase
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
         $file = \fopen($tempFile, 'rb');
 
-        self::assertIsResource($file, 'Should be able to open file with 644 permissions');
+        static::assertIsResource($file, 'Should be able to open file with 644 permissions');
 
         $blocks->fromResource($file);
-        self::assertSame(\strlen($content), $blocks->size());
+        static::assertSame(\strlen($content), $blocks->size());
 
         \unlink($tempFile);
     }
 
-    public function test_unix_large_file_streaming() : void
+    public function test_unix_large_file_streaming(): void
     {
         // Create a temporary large file
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
-        self::assertIsString($tempFile);
+        static::assertIsString($tempFile);
         $largeContent = \str_repeat("Large file test content\n", 1000);
         \file_put_contents($tempFile, $largeContent);
 
         $blocks = new Blocks(SizeUnits::kbToBytes(5));
         $file = \fopen($tempFile, 'rb');
-        self::assertIsResource($file);
+        static::assertIsResource($file);
 
         $blocks->fromResource($file);
 
-        self::assertSame(\strlen($largeContent), $blocks->size());
-        self::assertGreaterThan(1, \count($blocks->all()));
+        static::assertSame(\strlen($largeContent), $blocks->size());
+        static::assertGreaterThan(1, \count($blocks->all()));
 
         // Cleanup
         \unlink($tempFile);
     }
 
-    public function test_unix_specific_stream_handling() : void
+    public function test_unix_specific_stream_handling(): void
     {
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
 
@@ -111,10 +111,10 @@ final class BlocksUnixSpecificTest extends TestCase
         $testContent = "Unix test content\nWith LF line endings\n";
         $blocks->append($testContent);
 
-        self::assertSame(\strlen($testContent), $blocks->size());
-        self::assertGreaterThan(0, \count($blocks->all()));
+        static::assertSame(\strlen($testContent), $blocks->size());
+        static::assertGreaterThan(0, \count($blocks->all()));
 
         // Verify blocks are created correctly
-        self::assertGreaterThan(0, \count($blocks->all()));
+        static::assertGreaterThan(0, \count($blocks->all()));
     }
 }

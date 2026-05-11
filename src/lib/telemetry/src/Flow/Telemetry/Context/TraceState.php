@@ -31,13 +31,12 @@ final readonly class TraceState implements \Stringable
      */
     private function __construct(
         private array $entries,
-    ) {
-    }
+    ) {}
 
     /**
      * Create an empty TraceState.
      */
-    public static function empty() : self
+    public static function empty(): self
     {
         return new self([]);
     }
@@ -47,7 +46,7 @@ final readonly class TraceState implements \Stringable
      *
      * @param array{entries: array<string, string>} $data Normalized TraceState data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self($data['entries']);
     }
@@ -59,7 +58,7 @@ final readonly class TraceState implements \Stringable
      *
      * @throws \InvalidArgumentException if the string is malformed
      */
-    public static function fromString(string $string) : self
+    public static function fromString(string $string): self
     {
         if ($string === '') {
             return self::empty();
@@ -78,10 +77,7 @@ final readonly class TraceState implements \Stringable
             $parts = \explode('=', $pair, 2);
 
             if (\count($parts) !== 2) {
-                throw new \InvalidArgumentException(\sprintf(
-                    'Invalid tracestate entry: "%s"',
-                    $pair
-                ));
+                throw new \InvalidArgumentException(\sprintf('Invalid tracestate entry: "%s"', $pair));
             }
 
             [$key, $value] = $parts;
@@ -101,7 +97,7 @@ final readonly class TraceState implements \Stringable
         return new self($entries);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
@@ -111,7 +107,7 @@ final readonly class TraceState implements \Stringable
      *
      * @return array<string, string>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->entries;
     }
@@ -119,7 +115,7 @@ final readonly class TraceState implements \Stringable
     /**
      * Check if this TraceState equals another TraceState.
      */
-    public function equals(self $other) : bool
+    public function equals(self $other): bool
     {
         return $this->entries === $other->entries;
     }
@@ -129,7 +125,7 @@ final readonly class TraceState implements \Stringable
      *
      * @return null|string The value or null if not found
      */
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         return $this->entries[$key] ?? null;
     }
@@ -137,7 +133,7 @@ final readonly class TraceState implements \Stringable
     /**
      * Check if this TraceState has any entries.
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->entries === [];
     }
@@ -147,7 +143,7 @@ final readonly class TraceState implements \Stringable
      *
      * @return array{entries: array<string, string>}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return ['entries' => $this->entries];
     }
@@ -155,7 +151,7 @@ final readonly class TraceState implements \Stringable
     /**
      * Convert to W3C tracestate header string.
      */
-    public function toString() : string
+    public function toString(): string
     {
         if ($this->entries === []) {
             return '';
@@ -177,7 +173,7 @@ final readonly class TraceState implements \Stringable
      *
      * @throws \InvalidArgumentException if the key or value is invalid
      */
-    public function with(string $key, string $value) : self
+    public function with(string $key, string $value): self
     {
         self::validateKey($key);
         self::validateValue($value);
@@ -197,7 +193,7 @@ final readonly class TraceState implements \Stringable
     /**
      * Create a new TraceState with a key removed.
      */
-    public function without(string $key) : self
+    public function without(string $key): self
     {
         if (!isset($this->entries[$key])) {
             return $this;
@@ -214,17 +210,14 @@ final readonly class TraceState implements \Stringable
      *
      * @throws \InvalidArgumentException if the key is invalid
      */
-    private static function validateKey(string $key) : void
+    private static function validateKey(string $key): void
     {
         if ($key === '') {
             throw new \InvalidArgumentException('TraceState key cannot be empty');
         }
 
         if (!\preg_match(self::KEY_PATTERN, $key)) {
-            throw new \InvalidArgumentException(\sprintf(
-                'Invalid TraceState key: "%s"',
-                $key
-            ));
+            throw new \InvalidArgumentException(\sprintf('Invalid TraceState key: "%s"', $key));
         }
     }
 
@@ -233,7 +226,7 @@ final readonly class TraceState implements \Stringable
      *
      * @throws \InvalidArgumentException if the value is invalid
      */
-    private static function validateValue(string $value) : void
+    private static function validateValue(string $value): void
     {
         if ($value === '') {
             throw new \InvalidArgumentException('TraceState value cannot be empty');
@@ -242,7 +235,7 @@ final readonly class TraceState implements \Stringable
         if (\strlen($value) > 256) {
             throw new \InvalidArgumentException(\sprintf(
                 'TraceState value exceeds maximum length of 256: %d',
-                \strlen($value)
+                \strlen($value),
             ));
         }
 
@@ -252,7 +245,7 @@ final readonly class TraceState implements \Stringable
             if ($ord < 0x20 || $ord > 0x7E || $value[$i] === ',' || $value[$i] === '=') {
                 throw new \InvalidArgumentException(\sprintf(
                     'TraceState value contains invalid character at position %d',
-                    $i
+                    $i,
                 ));
             }
         }

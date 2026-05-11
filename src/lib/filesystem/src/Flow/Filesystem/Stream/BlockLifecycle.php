@@ -17,5 +17,5 @@ interface BlockLifecycle
      * If necessary after uploading a block, it's identifier should be appended to the BlockList
      * that at the end will be used to commit the block list into a file.
      */
-    public function filled(Block $block) : void;
+    public function filled(Block $block): void;
 }

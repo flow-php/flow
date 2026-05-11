@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Double;
 
-use function Flow\Filesystem\DSL\path_real;
-use function Flow\Types\DSL\type_string;
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, SourceStream};
-use Flow\Filesystem\Exception\{InvalidArgumentException, InvalidSchemeException, RuntimeException};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\InvalidSchemeException;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Mount;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
-use Flow\Filesystem\Stream\{NativeLocalDestinationStream, NativeLocalSourceStream};
+use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\NativeLocalDestinationStream;
+use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Webmozart\Glob\Iterator\GlobIterator;
+
+use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_string;
 
 final class FakeNativeLocalFilesystem implements Filesystem
 {
@@ -22,7 +31,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         $this->mount = new Mount($protocol);
     }
 
-    public function appendTo(Path $path) : DestinationStream
+    public function appendTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             throw new RuntimeException('Cannot write to system tmp directory');
@@ -35,7 +44,10 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
 
         if (!$this->status($path->parentDirectory())) {
-            if (!\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true) && !\is_dir($concurrentDirectory)) {
+            if (
+                !\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
+                && !\is_dir($concurrentDirectory)
+            ) {
                 throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
@@ -43,12 +55,12 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalDestinationStream::openAppend($path);
     }
 
-    public function getSystemTmpDir() : Path
+    public function getSystemTmpDir(): Path
     {
         return \Flow\Filesystem\DSL\path(\sys_get_temp_dir());
     }
 
-    public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
+    public function list(Path $path, Filter $pathFilter = new OnlyFiles()): \Generator
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
@@ -58,7 +70,6 @@ final class FakeNativeLocalFilesystem implements Filesystem
             }
 
             return;
-
         }
 
         foreach (new GlobIterator($path->path()) as $filePath) {
@@ -71,12 +82,12 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
     }
 
-    public function mount() : Mount
+    public function mount(): Mount
     {
         return $this->mount;
     }
 
-    public function mv(Path $from, Path $to) : bool
+    public function mv(Path $from, Path $to): bool
     {
         $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
         $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
@@ -92,7 +103,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return true;
     }
 
-    public function readFrom(Path $path) : SourceStream
+    public function readFrom(Path $path): SourceStream
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
@@ -101,7 +112,10 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
 
         if (!$this->status($path->parentDirectory())) {
-            if (!\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true) && !\is_dir($concurrentDirectory)) {
+            if (
+                !\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
+                && !\is_dir($concurrentDirectory)
+            ) {
                 throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
@@ -109,7 +123,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalSourceStream::open($path);
     }
 
-    public function rm(Path $path) : bool
+    public function rm(Path $path): bool
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
@@ -144,15 +158,12 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return (bool) $deletedCount;
     }
 
-    public function status(Path $path) : ?FileStatus
+    public function status(Path $path): ?FileStatus
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         if (!$path->isPattern() && \file_exists($path->path())) {
-            return new FileStatus(
-                $path,
-                \is_file($path->path())
-            );
+            return new FileStatus($path, \is_file($path->path()));
         }
 
         foreach (new GlobIterator($path->path()) as $filePath) {
@@ -166,7 +177,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return null;
     }
 
-    public function writeTo(Path $path) : DestinationStream
+    public function writeTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             throw new RuntimeException('Cannot write to system tmp directory');
@@ -179,7 +190,10 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
 
         if (!$this->status($path->parentDirectory())) {
-            if (!\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true) && !\is_dir($concurrentDirectory)) {
+            if (
+                !\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
+                && !\is_dir($concurrentDirectory)
+            ) {
                 throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
@@ -187,7 +201,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalDestinationStream::openBlank($path);
     }
 
-    private function rmdir(string $dirPath) : void
+    private function rmdir(string $dirPath): void
     {
         if (!\is_dir($dirPath)) {
             throw new InvalidArgumentException("{$dirPath} must be a directory");

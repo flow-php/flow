@@ -34,21 +34,18 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
         private float $ratio,
     ) {
         if ($ratio < 0.0 || $ratio > 1.0) {
-            throw new \InvalidArgumentException(\sprintf(
-                'Sampling ratio must be between 0.0 and 1.0, got %f',
-                $ratio
-            ));
+            throw new \InvalidArgumentException(\sprintf('Sampling ratio must be between 0.0 and 1.0, got %f', $ratio));
         }
 
         $this->threshold = $ratio >= 1.0 ? PHP_INT_MAX : (int) ($ratio * PHP_INT_MAX);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return \sprintf('TraceIdRatioBasedSampler{%.6f}', $this->ratio);
     }
 
-    public function shouldSample(Span $span) : SamplingResult
+    public function shouldSample(Span $span): SamplingResult
     {
         if ($this->ratio >= 1.0) {
             return SamplingResult::recordAndSample();
@@ -72,7 +69,7 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
      *
      * Uses the lower 8 bytes of the trace ID for the comparison.
      */
-    private function traceIdToInt(TraceId $traceId) : int
+    private function traceIdToInt(TraceId $traceId): int
     {
         $bytes = $traceId->toBytes();
         $lowerBytes = \substr($bytes, 8, 8);

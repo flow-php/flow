@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ResourceTest extends TestCase
 {
-    public function test_all_returns_all_attributes() : void
+    public function test_all_returns_all_attributes(): void
     {
         $attributes = [
             'a' => '1',
@@ -18,38 +18,38 @@ final class ResourceTest extends TestCase
         ];
         $resource = Resource::create($attributes);
 
-        self::assertSame($attributes, $resource->all());
+        static::assertSame($attributes, $resource->all());
     }
 
-    public function test_chained_operations() : void
+    public function test_chained_operations(): void
     {
         $resource = Resource::create()
             ->with('service.name', 'my-service')
             ->with('service.version', '1.0.0')
             ->with('host.name', 'localhost');
 
-        self::assertSame(3, $resource->count());
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('1.0.0', $resource->get('service.version'));
-        self::assertSame('localhost', $resource->get('host.name'));
+        static::assertSame(3, $resource->count());
+        static::assertSame('my-service', $resource->get('service.name'));
+        static::assertSame('1.0.0', $resource->get('service.version'));
+        static::assertSame('localhost', $resource->get('host.name'));
     }
 
-    public function test_count_returns_correct_number() : void
+    public function test_count_returns_correct_number(): void
     {
         $resource = Resource::create(['a' => '1', 'b' => '2', 'c' => '3']);
 
-        self::assertSame(3, $resource->count());
+        static::assertSame(3, $resource->count());
     }
 
-    public function test_create_empty_resource() : void
+    public function test_create_empty_resource(): void
     {
         $resource = Resource::create();
 
-        self::assertTrue($resource->isEmpty());
-        self::assertSame(0, $resource->count());
+        static::assertTrue($resource->isEmpty());
+        static::assertSame(0, $resource->count());
     }
 
-    public function test_create_with_attributes() : void
+    public function test_create_with_attributes(): void
     {
         $attributes = [
             'service.name' => 'my-service',
@@ -58,19 +58,19 @@ final class ResourceTest extends TestCase
 
         $resource = Resource::create($attributes);
 
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('1.0.0', $resource->get('service.version'));
+        static::assertSame('my-service', $resource->get('service.name'));
+        static::assertSame('1.0.0', $resource->get('service.version'));
     }
 
-    public function test_empty_factory_method() : void
+    public function test_empty_factory_method(): void
     {
         $resource = Resource::empty();
 
-        self::assertTrue($resource->isEmpty());
-        self::assertSame([], $resource->all());
+        static::assertTrue($resource->isEmpty());
+        static::assertSame([], $resource->all());
     }
 
-    public function test_from_array_creates_resource() : void
+    public function test_from_array_creates_resource(): void
     {
         $data = [
             'attributes' => [
@@ -81,91 +81,91 @@ final class ResourceTest extends TestCase
 
         $resource = Resource::fromArray($data);
 
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('1.0.0', $resource->get('service.version'));
-        self::assertSame(2, $resource->count());
+        static::assertSame('my-service', $resource->get('service.name'));
+        static::assertSame('1.0.0', $resource->get('service.version'));
+        static::assertSame(2, $resource->count());
     }
 
-    public function test_from_array_with_empty_attributes() : void
+    public function test_from_array_with_empty_attributes(): void
     {
         $data = ['attributes' => []];
 
         $resource = Resource::fromArray($data);
 
-        self::assertTrue($resource->isEmpty());
+        static::assertTrue($resource->isEmpty());
     }
 
-    public function test_get_returns_null_for_missing_key() : void
+    public function test_get_returns_null_for_missing_key(): void
     {
         $resource = Resource::create();
 
-        self::assertNull($resource->get('missing'));
+        static::assertNull($resource->get('missing'));
     }
 
-    public function test_has_returns_false_for_missing_key() : void
+    public function test_has_returns_false_for_missing_key(): void
     {
         $resource = Resource::create();
 
-        self::assertFalse($resource->has('missing'));
+        static::assertFalse($resource->has('missing'));
     }
 
-    public function test_has_returns_true_for_existing_key() : void
+    public function test_has_returns_true_for_existing_key(): void
     {
         $resource = Resource::create(['key' => 'value']);
 
-        self::assertTrue($resource->has('key'));
+        static::assertTrue($resource->has('key'));
     }
 
-    public function test_is_empty_returns_false_for_non_empty_resource() : void
+    public function test_is_empty_returns_false_for_non_empty_resource(): void
     {
         $resource = Resource::create(['key' => 'value']);
 
-        self::assertFalse($resource->isEmpty());
+        static::assertFalse($resource->isEmpty());
     }
 
-    public function test_is_empty_returns_true_for_empty_resource() : void
+    public function test_is_empty_returns_true_for_empty_resource(): void
     {
         $resource = Resource::empty();
 
-        self::assertTrue($resource->isEmpty());
+        static::assertTrue($resource->isEmpty());
     }
 
-    public function test_merge_combines_resources() : void
+    public function test_merge_combines_resources(): void
     {
         $resource1 = Resource::create(['a' => '1', 'b' => '2']);
         $resource2 = Resource::create(['c' => '3']);
 
         $merged = $resource1->merge($resource2);
 
-        self::assertSame('1', $merged->get('a'));
-        self::assertSame('2', $merged->get('b'));
-        self::assertSame('3', $merged->get('c'));
+        static::assertSame('1', $merged->get('a'));
+        static::assertSame('2', $merged->get('b'));
+        static::assertSame('3', $merged->get('c'));
     }
 
-    public function test_merge_is_immutable() : void
+    public function test_merge_is_immutable(): void
     {
         $resource1 = Resource::create(['a' => '1']);
         $resource2 = Resource::create(['b' => '2']);
 
         $merged = $resource1->merge($resource2);
 
-        self::assertNotSame($resource1, $merged);
-        self::assertNotSame($resource2, $merged);
-        self::assertFalse($resource1->has('b'));
-        self::assertFalse($resource2->has('a'));
+        static::assertNotSame($resource1, $merged);
+        static::assertNotSame($resource2, $merged);
+        static::assertFalse($resource1->has('b'));
+        static::assertFalse($resource2->has('a'));
     }
 
-    public function test_merge_other_takes_precedence() : void
+    public function test_merge_other_takes_precedence(): void
     {
         $resource1 = Resource::create(['key' => 'original']);
         $resource2 = Resource::create(['key' => 'override']);
 
         $merged = $resource1->merge($resource2);
 
-        self::assertSame('override', $merged->get('key'));
+        static::assertSame('override', $merged->get('key'));
     }
 
-    public function test_normalize_from_array_round_trip() : void
+    public function test_normalize_from_array_round_trip(): void
     {
         $original = Resource::create([
             'service.name' => 'test-service',
@@ -177,11 +177,11 @@ final class ResourceTest extends TestCase
         $normalized = $original->normalize();
         $restored = Resource::fromArray($normalized);
 
-        self::assertSame($original->all(), $restored->all());
-        self::assertSame($original->count(), $restored->count());
+        static::assertSame($original->all(), $restored->all());
+        static::assertSame($original->count(), $restored->count());
     }
 
-    public function test_normalize_returns_array_representation() : void
+    public function test_normalize_returns_array_representation(): void
     {
         $resource = Resource::create([
             'service.name' => 'my-service',
@@ -191,47 +191,50 @@ final class ResourceTest extends TestCase
 
         $normalized = $resource->normalize();
 
-        self::assertEquals([
-            'attributes' => [
-                'service.name' => 'my-service',
-                'count' => 42,
-                'enabled' => true,
+        static::assertEquals(
+            [
+                'attributes' => [
+                    'service.name' => 'my-service',
+                    'count' => 42,
+                    'enabled' => true,
+                ],
             ],
-        ], $normalized);
+            $normalized,
+        );
     }
 
-    public function test_resource_is_immutable() : void
+    public function test_resource_is_immutable(): void
     {
         $original = Resource::create(['key' => 'value']);
 
         $withAdded = $original->with('new', 'entry');
         $merged = $original->merge(Resource::create(['other' => 'data']));
 
-        self::assertNotSame($original, $withAdded);
-        self::assertNotSame($original, $merged);
-        self::assertSame(1, $original->count());
+        static::assertNotSame($original, $withAdded);
+        static::assertNotSame($original, $merged);
+        static::assertSame(1, $original->count());
     }
 
-    public function test_with_adds_attribute() : void
+    public function test_with_adds_attribute(): void
     {
         $resource = Resource::create();
         $newResource = $resource->with('key', 'value');
 
-        self::assertFalse($resource->has('key'));
-        self::assertTrue($newResource->has('key'));
-        self::assertSame('value', $newResource->get('key'));
+        static::assertFalse($resource->has('key'));
+        static::assertTrue($newResource->has('key'));
+        static::assertSame('value', $newResource->get('key'));
     }
 
-    public function test_with_replaces_existing_attribute() : void
+    public function test_with_replaces_existing_attribute(): void
     {
         $resource = Resource::create(['key' => 'old']);
         $newResource = $resource->with('key', 'new');
 
-        self::assertSame('old', $resource->get('key'));
-        self::assertSame('new', $newResource->get('key'));
+        static::assertSame('old', $resource->get('key'));
+        static::assertSame('new', $newResource->get('key'));
     }
 
-    public function test_with_supports_various_types() : void
+    public function test_with_supports_various_types(): void
     {
         $resource = Resource::create()
             ->with('string', 'value')
@@ -240,10 +243,10 @@ final class ResourceTest extends TestCase
             ->with('bool', true)
             ->with('array', ['a', 'b', 'c']);
 
-        self::assertSame('value', $resource->get('string'));
-        self::assertSame(42, $resource->get('int'));
-        self::assertSame(3.14, $resource->get('float'));
-        self::assertTrue($resource->get('bool'));
-        self::assertSame(['a', 'b', 'c'], $resource->get('array'));
+        static::assertSame('value', $resource->get('string'));
+        static::assertSame(42, $resource->get('int'));
+        static::assertSame(3.14, $resource->get('float'));
+        static::assertTrue($resource->get('bool'));
+        static::assertSame(['a', 'b', 'c'], $resource->get('array'));
     }
 }

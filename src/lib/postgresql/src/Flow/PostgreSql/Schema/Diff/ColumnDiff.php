@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\{alter, column};
-
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\{Column, IdentityGeneration};
+use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\IdentityGeneration;
+
+use function Flow\PostgreSql\DSL\alter;
+use function Flow\PostgreSql\DSL\column;
 
 final readonly class ColumnDiff implements Diff
 {
@@ -17,13 +19,12 @@ final readonly class ColumnDiff implements Diff
         public string $qualifiedTableName,
         public Column $source,
         public Column $target,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $sqls = [];
         $columnName = $this->source->name;
@@ -34,8 +35,12 @@ final readonly class ColumnDiff implements Diff
         }
 
         // PostgreSQL cannot ALTER generated columns or identity — must drop and re-add
-        if ($this->target->isGenerated !== $this->source->isGenerated || $this->target->generationExpression !== $this->source->generationExpression
-            || $this->target->isIdentity !== $this->source->isIdentity || $this->target->identityGeneration !== $this->source->identityGeneration) {
+        if (
+            $this->target->isGenerated !== $this->source->isGenerated
+            || $this->target->generationExpression !== $this->source->generationExpression
+            || $this->target->isIdentity !== $this->source->isIdentity
+            || $this->target->identityGeneration !== $this->source->identityGeneration
+        ) {
             $sqls[] = alter()->table($this->qualifiedTableName)->dropColumn($columnName);
 
             $colDef = column($this->target->name, $this->target->type);
@@ -74,40 +79,49 @@ final readonly class ColumnDiff implements Diff
         if ($this->target->default !== $this->source->default) {
             $sqls[] = $this->target->default === null
                 ? alter()->table($this->qualifiedTableName)->alterColumnDropDefault($columnName)
-                : alter()->table($this->qualifiedTableName)->alterColumnSetDefault($columnName, ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)));
+                : alter()
+                    ->table($this->qualifiedTableName)
+                    ->alterColumnSetDefault(
+                        $columnName,
+                        ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)),
+                    );
         }
 
         return $sqls;
     }
 
-    public function hasDefaultChanged() : bool
+    public function hasDefaultChanged(): bool
     {
         return $this->source->default !== $this->target->default;
     }
 
-    public function hasGenerationChanged() : bool
+    public function hasGenerationChanged(): bool
     {
-        return $this->source->isGenerated !== $this->target->isGenerated
-            || $this->source->generationExpression !== $this->target->generationExpression;
+        return (
+            $this->source->isGenerated !== $this->target->isGenerated
+            || $this->source->generationExpression !== $this->target->generationExpression
+        );
     }
 
-    public function hasIdentityChanged() : bool
+    public function hasIdentityChanged(): bool
     {
-        return $this->source->isIdentity !== $this->target->isIdentity
-            || $this->source->identityGeneration !== $this->target->identityGeneration;
+        return (
+            $this->source->isIdentity !== $this->target->isIdentity
+            || $this->source->identityGeneration !== $this->target->identityGeneration
+        );
     }
 
-    public function hasNameChanged() : bool
+    public function hasNameChanged(): bool
     {
         return $this->source->name !== $this->target->name;
     }
 
-    public function hasNullableChanged() : bool
+    public function hasNullableChanged(): bool
     {
         return $this->source->nullable !== $this->target->nullable;
     }
 
-    public function hasTypeChanged() : bool
+    public function hasTypeChanged(): bool
     {
         return !$this->source->type->isEqual($this->target->type);
     }

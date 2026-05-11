@@ -11,5 +11,5 @@ interface Transformer
     /**
      * @throws LimitReachedException
      */
-    public function transform(Rows $rows, FlowContext $context) : Rows;
+    public function transform(Rows $rows, FlowContext $context): Rows;
 }

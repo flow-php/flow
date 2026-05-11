@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Star, ColumnRef, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Star;
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -14,18 +17,17 @@ final readonly class Star implements Expression
 {
     private function __construct(
         private ?string $table = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a plain star: SELECT *.
      */
-    public static function all() : self
+    public static function all(): self
     {
         return new self();
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aStar = $node->getAStar();
 
@@ -73,27 +75,27 @@ final readonly class Star implements Expression
     /**
      * Create a qualified star: SELECT table.*.
      */
-    public static function fromTable(string $table) : self
+    public static function fromTable(string $table): self
     {
         return new self($table);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return AliasedExpression::create($this, $alias);
     }
 
-    public function isQualified() : bool
+    public function isQualified(): bool
     {
         return $this->table !== null;
     }
 
-    public function table() : ?string
+    public function table(): ?string
     {
         return $this->table;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $columnRef = new ColumnRef();
         $fields = [];

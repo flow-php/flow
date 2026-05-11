@@ -4,238 +4,336 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle;
 
-use function Flow\Types\DSL\type_string;
 use Flow\Bridge\PHPUnit\PostgreSQL\StaticClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Attribute\AsCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\SessionPurgeCommand;
-use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\{CatalogProviderPass, CommandLocatorPass};
+use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CatalogProviderPass;
+use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CommandLocatorPass;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
-use Flow\Bridge\Symfony\PostgreSQLCache\{CacheCatalogProvider, FlowPostgreSqlCacheAdapter};
+use Flow\Bridge\Symfony\PostgreSQLCache\CacheCatalogProvider;
+use Flow\Bridge\Symfony\PostgreSQLCache\FlowPostgreSqlCacheAdapter;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
-use Flow\Bridge\Symfony\PostgreSQLSession\{FlowPostgreSqlSessionHandler, SessionCatalogProvider};
+use Flow\Bridge\Symfony\PostgreSQLSession\FlowPostgreSqlSessionHandler;
+use Flow\Bridge\Symfony\PostgreSQLSession\SessionCatalogProvider;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context, DsnParser};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\Context;
+use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
-use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableClient};
-use Flow\PostgreSql\Migrations\{Configuration as MigrationsConfiguration, MigrationsFactory, Migrator, VersionResolver};
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
+use Flow\PostgreSql\Client\Telemetry\TraceableClient;
+use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
-use Flow\PostgreSql\Migrations\Generator\{DiffMigrationGenerator, MigrationGenerator};
+use Flow\PostgreSql\Migrations\Generator\DiffMigrationGenerator;
+use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
+use Flow\PostgreSql\Migrations\MigrationsFactory;
+use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\VersionGenerator\TimestampVersionGenerator;
+use Flow\PostgreSql\Migrations\VersionResolver;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
-use Symfony\Component\DependencyInjection\{ChildDefinition, ContainerBuilder, Definition, Reference, ServiceLocator};
+use Symfony\Component\DependencyInjection\ChildDefinition;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+
+use function Flow\Types\DSL\type_string;
 
 final class FlowPostgreSqlBundle extends AbstractBundle
 {
     protected string $extensionAlias = 'flow_postgresql';
 
     #[\Override]
-    public function build(ContainerBuilder $container) : void
+    public function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
         $container->addCompilerPass(new CatalogProviderPass());
         $container->addCompilerPass(new CommandLocatorPass());
 
-        $container->registerAttributeForAutoconfiguration(
-            AsCatalogProvider::class,
-            static function (ChildDefinition $definition, AsCatalogProvider $attribute, \Reflector $reflector) : void {
-                $definition->addTag('flow.postgresql.catalog_provider');
-            },
-        );
+        $container->registerAttributeForAutoconfiguration(AsCatalogProvider::class, static function (
+            ChildDefinition $definition,
+            AsCatalogProvider $attribute,
+            \Reflector $reflector,
+        ): void {
+            $definition->addTag('flow.postgresql.catalog_provider');
+        });
     }
 
     #[\Override]
-    public function configure(DefinitionConfigurator $definition) : void
+    public function configure(DefinitionConfigurator $definition): void
     {
-        $definition->rootNode()
+        $definition
+            ->rootNode()
             ->children()
-                ->arrayNode('connections')
-                    ->requiresAtLeastOneElement()
-                    ->useAttributeAsKey('name')
-                    ->arrayPrototype()
-                        ->children()
-                            ->scalarNode('dsn')
-                                ->isRequired()
-                                ->cannotBeEmpty()
-                                ->info('PostgreSQL connection DSN (e.g. postgresql://user:pass@localhost:5432/dbname)')
-                            ->end()
-                            ->booleanNode('test_transaction_rollback')
-                                ->defaultFalse()
-                                ->info('When true and flow-php/phpunit-postgresql-bridge is installed, wraps the connection with StaticClient for transaction rollback in tests.')
-                            ->end()
-                            ->arrayNode('context')
-                                ->info('Extra key/value pairs merged into the Flow\\PostgreSql\\Client\\Context for every mapper call. Values can be literals, @service_id references, %parameter% placeholders, or %env(VAR)% expressions.')
-                                ->useAttributeAsKey('name')
-                                ->variablePrototype()->end()
-                            ->end()
-                            ->arrayNode('telemetry')
-                                ->children()
-                                    ->scalarNode('service_id')
-                                        ->isRequired()
-                                        ->cannotBeEmpty()
-                                        ->info('Service ID of the Telemetry instance (e.g. flow.telemetry)')
-                                    ->end()
-                                    ->scalarNode('clock_service_id')
-                                        ->defaultNull()
-                                        ->info('Service ID of a PSR ClockInterface implementation. Default: creates SystemClock')
-                                    ->end()
-                                    ->booleanNode('trace_queries')->defaultTrue()->end()
-                                    ->booleanNode('trace_transactions')->defaultTrue()->end()
-                                    ->booleanNode('collect_metrics')->defaultTrue()->end()
-                                    ->booleanNode('log_queries')->defaultFalse()->end()
-                                    ->integerNode('max_query_length')->defaultValue(1000)->min(0)->end()
-                                    ->booleanNode('include_parameters')->defaultFalse()->end()
-                                    ->integerNode('max_parameters')->defaultValue(10)->min(0)->end()
-                                    ->integerNode('max_parameter_length')->defaultValue(100)->min(0)->end()
-                                ->end()
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('messenger')
-                    ->info('Enables the Symfony Messenger PostgreSQL transport. Requires flow-php/symfony-postgresql-messenger-bridge.')
-                    ->canBeEnabled()
-                    ->children()
-                        ->scalarNode('table_name')
-                            ->defaultValue('messenger_messages')
-                            ->cannotBeEmpty()
-                            ->info('Name of the table that stores messenger messages.')
-                        ->end()
-                        ->scalarNode('schema')
-                            ->defaultValue('public')
-                            ->cannotBeEmpty()
-                            ->info('Schema that owns the messenger table.')
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('cache')
-                    ->info('Defines PostgreSQL-backed Symfony Cache pools. Requires flow-php/symfony-postgresql-cache-bridge.')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->arrayNode('pools')
-                            ->info('Named cache pools. Each becomes a service "flow.postgresql.cache.pool.<name>" usable as adapter: <id> in framework.cache.pools.')
-                            ->useAttributeAsKey('name')
-                            ->arrayPrototype()
-                                ->children()
-                                    ->scalarNode('connection')
-                                        ->defaultNull()
-                                        ->info('flow_postgresql.connections key to use. Defaults to the first declared connection when null.')
-                                    ->end()
-                                    ->scalarNode('table_name')->defaultValue('cache_items')->cannotBeEmpty()->end()
-                                    ->scalarNode('schema')->defaultValue('public')->cannotBeEmpty()->end()
-                                    ->scalarNode('id_col')->defaultValue('item_id')->cannotBeEmpty()->end()
-                                    ->scalarNode('data_col')->defaultValue('item_data')->cannotBeEmpty()->end()
-                                    ->scalarNode('lifetime_col')->defaultValue('item_lifetime')->cannotBeEmpty()->end()
-                                    ->scalarNode('time_col')->defaultValue('item_time')->cannotBeEmpty()->end()
-                                    ->scalarNode('namespace')
-                                        ->defaultValue('')
-                                        ->info('Cache pool namespace. Allowed chars: -+.A-Za-z0-9')
-                                    ->end()
-                                    ->integerNode('default_lifetime')->defaultValue(0)->min(0)->end()
-                                    ->scalarNode('marshaller_service_id')->defaultNull()->end()
-                                    ->booleanNode('share_connection')
-                                        ->defaultFalse()
-                                        ->info('When true, the pool reuses the named connection\'s Client instead of opening its own pg_connect. Off by default.')
-                                    ->end()
-                                ->end()
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('session')
-                    ->info('Defines the PostgreSQL-backed Symfony Session handler. Requires flow-php/symfony-postgresql-session-bridge.')
-                    ->canBeEnabled()
-                    ->children()
-                        ->scalarNode('connection')
-                            ->defaultNull()
-                            ->info('flow_postgresql.connections key to use. Defaults to the first declared connection when null.')
-                        ->end()
-                        ->scalarNode('table_name')->defaultValue('sessions')->cannotBeEmpty()->end()
-                        ->scalarNode('schema')->defaultValue('public')->cannotBeEmpty()->end()
-                        ->scalarNode('id_col')->defaultValue('sess_id')->cannotBeEmpty()->end()
-                        ->scalarNode('data_col')->defaultValue('sess_data')->cannotBeEmpty()->end()
-                        ->scalarNode('lifetime_col')->defaultValue('sess_lifetime')->cannotBeEmpty()->end()
-                        ->scalarNode('time_col')->defaultValue('sess_time')->cannotBeEmpty()->end()
-                        ->enumNode('lock_mode')
-                            ->values(['none', 'advisory', 'transactional'])
-                            ->defaultValue('transactional')
-                            ->info('Locking strategy. "transactional" uses SELECT FOR UPDATE; "advisory" uses pg_advisory_lock; "none" disables locking.')
-                        ->end()
-                        ->integerNode('ttl')
-                            ->defaultNull()
-                            ->min(0)
-                            ->info('Session lifetime in seconds. When null, falls back to ini "session.gc_maxlifetime".')
-                        ->end()
-                        ->booleanNode('share_connection')
-                            ->defaultFalse()
-                            ->info('When true, the handler reuses the named connection\'s Client instead of opening its own pg_connect. Off by default.')
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('migrations')
-                    ->canBeEnabled()
-                    ->children()
-                        ->scalarNode('directory')
-                            ->defaultValue('%kernel.project_dir%/migrations')
-                            ->cannotBeEmpty()
-                        ->end()
-                        ->scalarNode('namespace')
-                            ->defaultValue('App\\Migrations')
-                            ->cannotBeEmpty()
-                        ->end()
-                        ->scalarNode('table_name')
-                            ->defaultValue('flow_migrations')
-                            ->cannotBeEmpty()
-                        ->end()
-                        ->scalarNode('table_schema')
-                            ->defaultValue('public')
-                            ->cannotBeEmpty()
-                        ->end()
-                        ->scalarNode('migration_file_name')
-                            ->defaultValue('migration.php')
-                            ->cannotBeEmpty()
-                        ->end()
-                        ->scalarNode('rollback_file_name')
-                            ->defaultValue('rollback.php')
-                            ->cannotBeEmpty()
-                        ->end()
-                        ->booleanNode('all_or_nothing')
-                            ->defaultFalse()
-                            ->info('Wrap all migrations in a single transaction (default: false)')
-                        ->end()
-                        ->booleanNode('generate_rollback')
-                            ->defaultTrue()
-                            ->info('Generate rollback files when creating migrations (default: true)')
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('catalog_providers')
-                    ->info('List of catalog providers to merge into the target schema. Each entry must have either "catalog_provider_id" or "catalog".')
-                    ->arrayPrototype()
-                        ->children()
-                            ->scalarNode('catalog_provider_id')
-                                ->defaultNull()
-                                ->info('Service ID of Flow\\PostgreSql\\Schema\\CatalogProvider')
-                            ->end()
-                            ->variableNode('catalog')
-                                ->defaultNull()
-                                ->info('Inline catalog definition matching Catalog::fromArray() shape')
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end()
+            ->arrayNode('connections')
+            ->requiresAtLeastOneElement()
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+            ->children()
+            ->scalarNode('dsn')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->info('PostgreSQL connection DSN (e.g. postgresql://user:pass@localhost:5432/dbname)')
+            ->end()
+            ->booleanNode('test_transaction_rollback')
+            ->defaultFalse()
+            ->info(
+                'When true and flow-php/phpunit-postgresql-bridge is installed, wraps the connection with StaticClient for transaction rollback in tests.',
+            )
+            ->end()
+            ->arrayNode('context')
+            ->info(
+                'Extra key/value pairs merged into the Flow\\PostgreSql\\Client\\Context for every mapper call. Values can be literals, @service_id references, %parameter% placeholders, or %env(VAR)% expressions.',
+            )
+            ->useAttributeAsKey('name')
+            ->variablePrototype()
+            ->end()
+            ->end()
+            ->arrayNode('telemetry')
+            ->children()
+            ->scalarNode('service_id')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->info('Service ID of the Telemetry instance (e.g. flow.telemetry)')
+            ->end()
+            ->scalarNode('clock_service_id')
+            ->defaultNull()
+            ->info('Service ID of a PSR ClockInterface implementation. Default: creates SystemClock')
+            ->end()
+            ->booleanNode('trace_queries')
+            ->defaultTrue()
+            ->end()
+            ->booleanNode('trace_transactions')
+            ->defaultTrue()
+            ->end()
+            ->booleanNode('collect_metrics')
+            ->defaultTrue()
+            ->end()
+            ->booleanNode('log_queries')
+            ->defaultFalse()
+            ->end()
+            ->integerNode('max_query_length')
+            ->defaultValue(1000)
+            ->min(0)
+            ->end()
+            ->booleanNode('include_parameters')
+            ->defaultFalse()
+            ->end()
+            ->integerNode('max_parameters')
+            ->defaultValue(10)
+            ->min(0)
+            ->end()
+            ->integerNode('max_parameter_length')
+            ->defaultValue(100)
+            ->min(0)
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('messenger')
+            ->info(
+                'Enables the Symfony Messenger PostgreSQL transport. Requires flow-php/symfony-postgresql-messenger-bridge.',
+            )
+            ->canBeEnabled()
+            ->children()
+            ->scalarNode('table_name')
+            ->defaultValue('messenger_messages')
+            ->cannotBeEmpty()
+            ->info('Name of the table that stores messenger messages.')
+            ->end()
+            ->scalarNode('schema')
+            ->defaultValue('public')
+            ->cannotBeEmpty()
+            ->info('Schema that owns the messenger table.')
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('cache')
+            ->info('Defines PostgreSQL-backed Symfony Cache pools. Requires flow-php/symfony-postgresql-cache-bridge.')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('pools')
+            ->info(
+                'Named cache pools. Each becomes a service "flow.postgresql.cache.pool.<name>" usable as adapter: <id> in framework.cache.pools.',
+            )
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+            ->children()
+            ->scalarNode('connection')
+            ->defaultNull()
+            ->info('flow_postgresql.connections key to use. Defaults to the first declared connection when null.')
+            ->end()
+            ->scalarNode('table_name')
+            ->defaultValue('cache_items')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('schema')
+            ->defaultValue('public')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('id_col')
+            ->defaultValue('item_id')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('data_col')
+            ->defaultValue('item_data')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('lifetime_col')
+            ->defaultValue('item_lifetime')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('time_col')
+            ->defaultValue('item_time')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('namespace')
+            ->defaultValue('')
+            ->info('Cache pool namespace. Allowed chars: -+.A-Za-z0-9')
+            ->end()
+            ->integerNode('default_lifetime')
+            ->defaultValue(0)
+            ->min(0)
+            ->end()
+            ->scalarNode('marshaller_service_id')
+            ->defaultNull()
+            ->end()
+            ->booleanNode('share_connection')
+            ->defaultFalse()
+            ->info(
+                'When true, the pool reuses the named connection\'s Client instead of opening its own pg_connect. Off by default.',
+            )
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('session')
+            ->info(
+                'Defines the PostgreSQL-backed Symfony Session handler. Requires flow-php/symfony-postgresql-session-bridge.',
+            )
+            ->canBeEnabled()
+            ->children()
+            ->scalarNode('connection')
+            ->defaultNull()
+            ->info('flow_postgresql.connections key to use. Defaults to the first declared connection when null.')
+            ->end()
+            ->scalarNode('table_name')
+            ->defaultValue('sessions')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('schema')
+            ->defaultValue('public')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('id_col')
+            ->defaultValue('sess_id')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('data_col')
+            ->defaultValue('sess_data')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('lifetime_col')
+            ->defaultValue('sess_lifetime')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('time_col')
+            ->defaultValue('sess_time')
+            ->cannotBeEmpty()
+            ->end()
+            ->enumNode('lock_mode')
+            ->values(['none', 'advisory', 'transactional'])
+            ->defaultValue('transactional')
+            ->info(
+                'Locking strategy. "transactional" uses SELECT FOR UPDATE; "advisory" uses pg_advisory_lock; "none" disables locking.',
+            )
+            ->end()
+            ->integerNode('ttl')
+            ->defaultNull()
+            ->min(0)
+            ->info('Session lifetime in seconds. When null, falls back to ini "session.gc_maxlifetime".')
+            ->end()
+            ->booleanNode('share_connection')
+            ->defaultFalse()
+            ->info(
+                'When true, the handler reuses the named connection\'s Client instead of opening its own pg_connect. Off by default.',
+            )
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('migrations')
+            ->canBeEnabled()
+            ->children()
+            ->scalarNode('directory')
+            ->defaultValue('%kernel.project_dir%/migrations')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('namespace')
+            ->defaultValue('App\\Migrations')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('table_name')
+            ->defaultValue('flow_migrations')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('table_schema')
+            ->defaultValue('public')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('migration_file_name')
+            ->defaultValue('migration.php')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('rollback_file_name')
+            ->defaultValue('rollback.php')
+            ->cannotBeEmpty()
+            ->end()
+            ->booleanNode('all_or_nothing')
+            ->defaultFalse()
+            ->info('Wrap all migrations in a single transaction (default: false)')
+            ->end()
+            ->booleanNode('generate_rollback')
+            ->defaultTrue()
+            ->info('Generate rollback files when creating migrations (default: true)')
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('catalog_providers')
+            ->info(
+                'List of catalog providers to merge into the target schema. Each entry must have either "catalog_provider_id" or "catalog".',
+            )
+            ->arrayPrototype()
+            ->children()
+            ->scalarNode('catalog_provider_id')
+            ->defaultNull()
+            ->info('Service ID of Flow\\PostgreSql\\Schema\\CatalogProvider')
+            ->end()
+            ->variableNode('catalog')
+            ->defaultNull()
+            ->info('Inline catalog definition matching Catalog::fromArray() shape')
+            ->end()
+            ->end()
+            ->end()
+            ->end()
             ->end();
     }
 
@@ -243,7 +341,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      * @param array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
      */
     #[\Override]
-    public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container) : void
+    public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
     {
         $isFirst = true;
         $connectionNames = \array_keys($config['connections']);
@@ -284,7 +382,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      * @param array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>} $cacheConfig
      * @param list<string> $connectionNames
      */
-    private function registerCache(array $cacheConfig, array $connectionNames, ContainerBuilder $container) : void
+    private function registerCache(array $cacheConfig, array $connectionNames, ContainerBuilder $container): void
     {
         if (!\class_exists(FlowPostgreSqlCacheAdapter::class)) {
             return;
@@ -305,8 +403,12 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      * @param array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool} $poolConfig
      * @param list<string> $connectionNames
      */
-    private function registerCachePool(string $name, array $poolConfig, array $connectionNames, ContainerBuilder $container) : void
-    {
+    private function registerCachePool(
+        string $name,
+        array $poolConfig,
+        array $connectionNames,
+        ContainerBuilder $container,
+    ): void {
         $connectionName = $poolConfig['connection'] ?? $connectionNames[0];
 
         if (!\in_array($connectionName, $connectionNames, true)) {
@@ -329,7 +431,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $catalogDef->addTag('flow.postgresql.catalog_provider');
         $container->setDefinition("flow.postgresql.cache.pool.{$name}.catalog_provider", $catalogDef);
 
-        $connectionRef = ($poolConfig['share_connection'] ?? false)
+        $connectionRef = $poolConfig['share_connection'] ?? false
             ? new Reference("flow.postgresql.{$connectionName}.client")
             : new Reference("flow.postgresql.{$connectionName}.connection_parameters");
 
@@ -345,9 +447,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
                 'db_lifetime_col' => $poolConfig['lifetime_col'],
                 'db_time_col' => $poolConfig['time_col'],
             ],
-            $poolConfig['marshaller_service_id'] !== null
-                ? new Reference($poolConfig['marshaller_service_id'])
-                : null,
+            $poolConfig['marshaller_service_id'] !== null ? new Reference($poolConfig['marshaller_service_id']) : null,
         ]);
         $adapterDef->setPublic(true);
         $container->setDefinition("flow.postgresql.cache.pool.{$name}", $adapterDef);
@@ -356,7 +456,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     /**
      * @param list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}> $catalogProviders
      */
-    private function registerCatalogProviders(array $catalogProviders, ContainerBuilder $container) : void
+    private function registerCatalogProviders(array $catalogProviders, ContainerBuilder $container): void
     {
         $configProviderServiceIds = [];
 
@@ -365,7 +465,10 @@ final class FlowPostgreSqlBundle extends AbstractBundle
                 $providerDef = new Definition(ArrayCatalogProvider::class, [$providerConfig['catalog']]);
                 $providerDef->addTag('flow.postgresql.catalog_provider');
                 $container->setDefinition("flow.postgresql.catalog_provider.{$i}", $providerDef);
-            } elseif (\array_key_exists('catalog_provider_id', $providerConfig) && $providerConfig['catalog_provider_id'] !== null) {
+            } elseif (
+                \array_key_exists('catalog_provider_id', $providerConfig)
+                && $providerConfig['catalog_provider_id'] !== null
+            ) {
                 $configProviderServiceIds[] = type_string()->assert($providerConfig['catalog_provider_id']);
             }
         }
@@ -378,8 +481,12 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     /**
      * @param array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
      */
-    private function registerConnection(string $name, array $connectionConfig, ContainerBuilder $container, bool $isFirst) : void
-    {
+    private function registerConnection(
+        string $name,
+        array $connectionConfig,
+        ContainerBuilder $container,
+        bool $isFirst,
+    ): void {
         $parserDef = new Definition(DsnParser::class);
         $container->setDefinition("flow.postgresql.{$name}.dsn_parser", $parserDef);
 
@@ -427,8 +534,11 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      * @param array{enabled: bool, table_name: string, schema: string} $messengerConfig
      * @param list<string> $connectionNames
      */
-    private function registerMessenger(array $messengerConfig, array $connectionNames, ContainerBuilder $container) : void
-    {
+    private function registerMessenger(
+        array $messengerConfig,
+        array $connectionNames,
+        ContainerBuilder $container,
+    ): void {
         if (!\class_exists(FlowPostgreSqlTransportFactory::class)) {
             return;
         }
@@ -464,7 +574,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     /**
      * @param array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool} $mc
      */
-    private function registerMigrations(string $name, array $mc, ContainerBuilder $container, bool $isFirst) : void
+    private function registerMigrations(string $name, array $mc, ContainerBuilder $container, bool $isFirst): void
     {
         $catalogProviderRef = new Reference('flow.postgresql.catalog_provider');
 
@@ -520,7 +630,10 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $container->setDefinition("flow.postgresql.{$name}.migrations.executor", $executorDef);
 
         $resolverDef = new Definition(VersionResolver::class);
-        $resolverDef->setFactory([new Reference("flow.postgresql.{$name}.migrations.factory"), 'createVersionResolver']);
+        $resolverDef->setFactory([
+            new Reference("flow.postgresql.{$name}.migrations.factory"),
+            'createVersionResolver',
+        ]);
         $resolverDef->setPublic(true);
         $container->setDefinition("flow.postgresql.{$name}.migrations.version_resolver", $resolverDef);
 
@@ -569,7 +682,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      * @param array{enabled?: bool, connection?: ?string, table_name?: string, schema?: string, id_col?: string, data_col?: string, lifetime_col?: string, time_col?: string, lock_mode?: string, ttl?: ?int, share_connection?: bool} $sessionConfig
      * @param list<string> $connectionNames
      */
-    private function registerSession(array $sessionConfig, array $connectionNames, ContainerBuilder $container) : void
+    private function registerSession(array $sessionConfig, array $connectionNames, ContainerBuilder $container): void
     {
         if (!\class_exists(FlowPostgreSqlSessionHandler::class)) {
             return;
@@ -613,7 +726,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             default => FlowPostgreSqlSessionHandler::LOCK_TRANSACTIONAL,
         };
 
-        $connectionRef = ($sessionConfig['share_connection'] ?? false)
+        $connectionRef = $sessionConfig['share_connection'] ?? false
             ? new Reference("flow.postgresql.{$connectionName}.client")
             : new Reference("flow.postgresql.{$connectionName}.connection_parameters");
 
@@ -640,7 +753,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $container->setDefinition('flow.postgresql.session.purge_command', $commandDef);
     }
 
-    private function registerStaticConnection(string $name, ContainerBuilder $container) : void
+    private function registerStaticConnection(string $name, ContainerBuilder $container): void
     {
         if (!\class_exists(StaticClient::class)) {
             throw new \LogicException(\sprintf(
@@ -649,14 +762,13 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ));
         }
 
-        $container->getDefinition("flow.postgresql.{$name}.client")
-            ->setFactory([StaticClient::class, 'connect']);
+        $container->getDefinition("flow.postgresql.{$name}.client")->setFactory([StaticClient::class, 'connect']);
     }
 
     /**
      * @param array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int} $telemetryConfig
      */
-    private function registerTelemetry(string $name, array $telemetryConfig, ContainerBuilder $container) : void
+    private function registerTelemetry(string $name, array $telemetryConfig, ContainerBuilder $container): void
     {
         $optionsDef = new Definition(PostgreSqlTelemetryOptions::class, [
             $telemetryConfig['trace_queries'],

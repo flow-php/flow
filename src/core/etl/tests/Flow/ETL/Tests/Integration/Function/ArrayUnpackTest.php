@@ -4,36 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, ref, rename_replace, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\rename_replace;
+use function Flow\ETL\DSL\to_memory;
+
 final class ArrayUnpackTest extends FlowTestCase
 {
-    public function test_array_unpack() : void
+    public function test_array_unpack(): void
     {
-        (data_frame())
-            ->read(
-                from_array(
-                    [
-                        ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
-                        ['id' => 2, 'array' => []],
-                    ]
-                )
-            )
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
+                ['id' => 2, 'array' => []],
+            ]))
             ->withEntry('array', ref('array')->unpack())
             ->renameEach(rename_replace('array.', ''))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['id' => 1, 'a' => 1, 'b' => 2, 'c' => 3],
                 ['id' => 2],
             ],
-            $memory->dump()
+            $memory->dump(),
         );
     }
 }

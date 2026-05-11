@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterMaterializedView;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\AlterTableCmd;
+use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
+use Flow\PostgreSql\Protobuf\AST\AlterTableType;
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterMatViewTablespaceBuilder implements AlterMatViewTablespaceFinalStep
@@ -16,15 +22,14 @@ final readonly class AlterMatViewTablespaceBuilder implements AlterMatViewTables
         private ?string $schema,
         private string $tablespace,
         private bool $ifExists,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $view, ?string $schema, string $tablespace, bool $ifExists) : self
+    public static function create(string $view, ?string $schema, string $tablespace, bool $ifExists): self
     {
         return new self($view, $schema, $tablespace, $ifExists);
     }
 
-    public function toAst() : AlterTableStmt
+    public function toAst(): AlterTableStmt
     {
         $stmt = new AlterTableStmt();
         $stmt->setObjtype(ObjectType::OBJECT_MATVIEW);

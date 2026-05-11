@@ -6,5 +6,5 @@ namespace Flow\ETL;
 
 interface Loader
 {
-    public function load(Rows $rows, FlowContext $context) : void;
+    public function load(Rows $rows, FlowContext $context): void;
 }

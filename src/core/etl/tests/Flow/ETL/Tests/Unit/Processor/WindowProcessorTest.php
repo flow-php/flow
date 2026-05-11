@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, rank, ref, row, rows, str_entry, window};
 use Flow\ETL\Processor\WindowProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\rank;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\window;
+
 final class WindowProcessorTest extends FlowTestCase
 {
-    public function test_applies_window_function() : void
+    public function test_applies_window_function(): void
     {
         $windowFunction = rank()->over(window()->partitionBy(ref('category'))->orderBy(ref('amount')->desc()));
 
@@ -33,11 +41,11 @@ final class WindowProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(3, $allRows);
-        self::assertArrayHasKey('rank', $allRows[0]);
+        static::assertCount(3, $allRows);
+        static::assertArrayHasKey('rank', $allRows[0]);
     }
 
-    public function test_handles_empty_input() : void
+    public function test_handles_empty_input(): void
     {
         $windowFunction = rank()->over(window()->orderBy(ref('amount')));
 
@@ -49,21 +57,17 @@ final class WindowProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(0, $result);
+        static::assertCount(0, $result);
     }
 
-    public function test_handles_single_partition() : void
+    public function test_handles_single_partition(): void
     {
         $windowFunction = rank()->over(window()->orderBy(ref('amount')->desc()));
 
         $processor = new WindowProcessor('rank', $windowFunction);
 
         $generator = (static function () {
-            yield rows(
-                row(int_entry('amount', 300)),
-                row(int_entry('amount', 100)),
-                row(int_entry('amount', 200)),
-            );
+            yield rows(row(int_entry('amount', 300)), row(int_entry('amount', 100)), row(int_entry('amount', 200)));
         })();
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -75,11 +79,11 @@ final class WindowProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(3, $allRows);
-        self::assertContainsOnly('int', array_column($allRows, 'rank'));
+        static::assertCount(3, $allRows);
+        static::assertContainsOnly('int', array_column($allRows, 'rank'));
     }
 
-    public function test_processes_multiple_partitions() : void
+    public function test_processes_multiple_partitions(): void
     {
         $windowFunction = rank()->over(window()->partitionBy(ref('group'))->orderBy(ref('value')));
 
@@ -103,12 +107,12 @@ final class WindowProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(4, $allRows);
+        static::assertCount(4, $allRows);
 
-        $groupA = array_filter($allRows, static fn ($r) => $r['group'] === 'a');
-        $groupB = array_filter($allRows, static fn ($r) => $r['group'] === 'b');
+        $groupA = array_filter($allRows, static fn($r) => $r['group'] === 'a');
+        $groupB = array_filter($allRows, static fn($r) => $r['group'] === 'b');
 
-        self::assertCount(2, $groupA);
-        self::assertCount(2, $groupB);
+        static::assertCount(2, $groupA);
+        static::assertCount(2, $groupB);
     }
 }

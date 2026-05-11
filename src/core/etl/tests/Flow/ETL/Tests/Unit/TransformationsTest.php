@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{df, from_array};
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\{Transformation, Transformations};
+use Flow\ETL\Transformation;
+use Flow\ETL\Transformations;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
 
 final class TransformationsTest extends FlowTestCase
 {
-    public function test_transformations() : void
+    public function test_transformations(): void
     {
         $transformation1 = $this->createMock(Transformation::class);
         $transformation2 = $this->createMock(Transformation::class);

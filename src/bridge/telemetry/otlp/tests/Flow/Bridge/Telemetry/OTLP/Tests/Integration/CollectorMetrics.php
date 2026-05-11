@@ -22,20 +22,19 @@ final readonly class CollectorMetrics
         private ClientInterface $httpClient,
         private RequestFactoryInterface $requestFactory,
         private string $metricsEndpoint = 'http://localhost:8888/metrics',
-    ) {
-    }
+    ) {}
 
-    public function getAcceptedLogRecords() : int
+    public function getAcceptedLogRecords(): int
     {
         return $this->getMetricValue('otelcol_exporter_sent_log_records_total');
     }
 
-    public function getAcceptedMetricPoints() : int
+    public function getAcceptedMetricPoints(): int
     {
         return $this->getMetricValue('otelcol_exporter_sent_metric_points_total');
     }
 
-    public function getAcceptedSpans() : int
+    public function getAcceptedSpans(): int
     {
         return $this->getMetricValue('otelcol_exporter_sent_spans_total');
     }
@@ -47,7 +46,7 @@ final readonly class CollectorMetrics
      * @param int $timeoutMs Maximum wait time in milliseconds (default: 500ms)
      * @param int $pollIntervalMs Poll interval in milliseconds (default: 10ms)
      */
-    public function waitForLogRecords(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10) : int
+    public function waitForLogRecords(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10): int
     {
         return $this->waitForMetric('otelcol_exporter_sent_log_records_total', $threshold, $timeoutMs, $pollIntervalMs);
     }
@@ -59,9 +58,14 @@ final readonly class CollectorMetrics
      * @param int $timeoutMs Maximum wait time in milliseconds (default: 500ms)
      * @param int $pollIntervalMs Poll interval in milliseconds (default: 10ms)
      */
-    public function waitForMetricPoints(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10) : int
+    public function waitForMetricPoints(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10): int
     {
-        return $this->waitForMetric('otelcol_exporter_sent_metric_points_total', $threshold, $timeoutMs, $pollIntervalMs);
+        return $this->waitForMetric(
+            'otelcol_exporter_sent_metric_points_total',
+            $threshold,
+            $timeoutMs,
+            $pollIntervalMs,
+        );
     }
 
     /**
@@ -71,12 +75,12 @@ final readonly class CollectorMetrics
      * @param int $timeoutMs Maximum wait time in milliseconds (default: 500ms)
      * @param int $pollIntervalMs Poll interval in milliseconds (default: 10ms)
      */
-    public function waitForSpans(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10) : int
+    public function waitForSpans(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10): int
     {
         return $this->waitForMetric('otelcol_exporter_sent_spans_total', $threshold, $timeoutMs, $pollIntervalMs);
     }
 
-    private function getMetricValue(string $metricName) : int
+    private function getMetricValue(string $metricName): int
     {
         $request = $this->requestFactory->createRequest('GET', $this->metricsEndpoint);
         $response = $this->httpClient->sendRequest($request);
@@ -93,7 +97,7 @@ final readonly class CollectorMetrics
         return $total;
     }
 
-    private function waitForMetric(string $metricName, int $threshold, int $timeoutMs, int $pollIntervalMs) : int
+    private function waitForMetric(string $metricName, int $threshold, int $timeoutMs, int $pollIntervalMs): int
     {
         $startTime = HighResolutionTime::now();
         $timeoutSeconds = $timeoutMs / 1000;

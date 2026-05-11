@@ -15,26 +15,22 @@ final readonly class PrimaryKey
     public function __construct(
         public array $columns,
         public ?string $name = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param PrimaryKeyShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        return new self(
-            columns: $data['columns'],
-            name: $data['name'] ?? null,
-        );
+        return new self(columns: $data['columns'], name: $data['name'] ?? null);
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
     }
 
-    public function isEqualStructure(self $other) : bool
+    public function isEqualStructure(self $other): bool
     {
         $aCols = $this->columns;
         $bCols = $other->columns;
@@ -47,7 +43,7 @@ final readonly class PrimaryKey
     /**
      * @return PrimaryKeyShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'columns' => $this->columns,

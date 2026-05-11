@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context;
 
-use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
 
 final readonly class FilesystemContext
 {
@@ -18,20 +20,23 @@ final readonly class FilesystemContext
     {
         $this->filesystem = native_local_filesystem();
         $this->workDir = path(\dirname(__DIR__, 7) . '/var/tests/' . $prefix . \bin2hex(\random_bytes(4)));
-        $this->filesystem->writeTo(path($this->workDir->path() . '/.keep'))->append('')->close();
+        $this->filesystem
+            ->writeTo(path($this->workDir->path() . '/.keep'))
+            ->append('')
+            ->close();
     }
 
-    public function cleanup() : void
+    public function cleanup(): void
     {
         $this->filesystem->rm($this->workDir);
     }
 
-    public function filesystem() : NativeLocalFilesystem
+    public function filesystem(): NativeLocalFilesystem
     {
         return $this->filesystem;
     }
 
-    public function path(string $relative = '') : Path
+    public function path(string $relative = ''): Path
     {
         if ($relative === '') {
             return $this->workDir;
@@ -40,12 +45,12 @@ final readonly class FilesystemContext
         return path($this->workDir->path() . '/' . \ltrim($relative, '/'));
     }
 
-    public function readFile(string $relative) : string
+    public function readFile(string $relative): string
     {
         return $this->filesystem->readFrom($this->path($relative))->content();
     }
 
-    public function writeFile(string $relative, string $content) : Path
+    public function writeFile(string $relative, string $content): Path
     {
         $path = $this->path($relative);
         $this->filesystem->writeTo($path)->append($content)->close();

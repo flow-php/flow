@@ -9,14 +9,14 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class DumpLoggerTest extends FlowTestCase
 {
-    public function test_logger() : void
+    public function test_logger(): void
     {
         if (\extension_loaded('xdebug')) {
-            self::markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
+            static::markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
         }
 
         if (\class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
-            self::markTestSkipped('Symfony VarDumper is loaded and it will affect DumpLogger output format');
+            static::markTestSkipped('Symfony VarDumper is loaded and it will affect DumpLogger output format');
         }
 
         $logger = new DumpLogger();
@@ -27,20 +27,17 @@ final class DumpLoggerTest extends FlowTestCase
         \ob_end_clean();
 
         if ($output === false) {
-            self::fail('Failed to get output buffer contents');
+            static::fail('Failed to get output buffer contents');
         }
 
-        self::assertStringContainsString(
-            <<<'OUTPUT'
-array(1) {
-  ["error"]=>
-  array(1) {
-    ["id"]=>
-    int(1)
-  }
-}
-OUTPUT,
-            $output
-        );
+        static::assertStringContainsString(<<<'OUTPUT'
+            array(1) {
+              ["error"]=>
+              array(1) {
+                ["id"]=>
+                int(1)
+              }
+            }
+            OUTPUT, $output);
     }
 }

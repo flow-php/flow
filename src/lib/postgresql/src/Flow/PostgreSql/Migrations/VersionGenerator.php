@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\Migrations;
 
 interface VersionGenerator
 {
-    public function generate() : Version;
+    public function generate(): Version;
 }

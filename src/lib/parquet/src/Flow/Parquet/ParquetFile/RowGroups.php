@@ -9,14 +9,14 @@ final class RowGroups
     /**
      * @param array<RowGroup> $rowGroups
      */
-    public function __construct(private array $rowGroups)
-    {
-    }
+    public function __construct(
+        private array $rowGroups,
+    ) {}
 
     /**
      * @param array<\Flow\Parquet\ThriftModel\RowGroup> $rowGroups
      */
-    public static function fromThrift(array $rowGroups) : self
+    public static function fromThrift(array $rowGroups): self
     {
         $groups = [];
 
@@ -27,7 +27,7 @@ final class RowGroups
         return new self($groups);
     }
 
-    public function add(RowGroup $rowGroup) : void
+    public function add(RowGroup $rowGroup): void
     {
         $this->rowGroups[] = $rowGroup;
     }
@@ -35,12 +35,12 @@ final class RowGroups
     /**
      * @return array<RowGroup>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->rowGroups;
     }
 
-    public function rowsCount() : int
+    public function rowsCount(): int
     {
         $rowsCount = 0;
 
@@ -54,7 +54,7 @@ final class RowGroups
     /**
      * @return array<\Flow\Parquet\ThriftModel\RowGroup>
      */
-    public function toThrift() : array
+    public function toThrift(): array
     {
         $groups = [];
 

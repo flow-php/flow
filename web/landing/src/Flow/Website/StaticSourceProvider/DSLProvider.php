@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Flow\Website\StaticSourceProvider;
 
 use Flow\Website\Service\Documentation\DSLDefinitions;
-use NorbertTech\StaticContentGeneratorBundle\Content\{Source, SourceProvider};
+use NorbertTech\StaticContentGeneratorBundle\Content\Source;
+use NorbertTech\StaticContentGeneratorBundle\Content\SourceProvider;
 
 final readonly class DSLProvider implements SourceProvider
 {
-    public function __construct(private DSLDefinitions $dslDefinitions)
-    {
-    }
+    public function __construct(
+        private DSLDefinitions $dslDefinitions,
+    ) {}
 
-    public function all() : array
+    public function all(): array
     {
         $sources = [];
 
@@ -23,10 +24,15 @@ final readonly class DSLProvider implements SourceProvider
 
         foreach ($this->dslDefinitions->all() as $definition) {
             if ($definition->module() === null) {
-                throw new \RuntimeException('Module is required for DSL definition, non given for: ' . $definition->path());
+                throw new \RuntimeException(
+                    'Module is required for DSL definition, non given for: ' . $definition->path(),
+                );
             }
 
-            $sources[] = new Source('documentation_dsl_function', ['module' => mb_strtolower($definition->module()->name), 'function' => $definition->slug()]);
+            $sources[] = new Source('documentation_dsl_function', [
+                'module' => mb_strtolower($definition->module()->name),
+                'function' => $definition->slug(),
+            ]);
         }
 
         return $sources;

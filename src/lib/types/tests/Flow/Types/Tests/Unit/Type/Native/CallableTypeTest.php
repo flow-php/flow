@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_callable, type_from_array};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_callable;
+use function Flow\Types\DSL\type_from_array;
+
 final class CallableTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid callable function name' => [
             'value' => 'printf',
@@ -24,7 +27,7 @@ final class CallableTypeTest extends TestCase
         ];
 
         yield 'valid callable closure' => [
-            'value' => static function () : void {},
+            'value' => static function (): void {},
             'exceptionClass' => null,
         ];
 
@@ -44,7 +47,7 @@ final class CallableTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'callable function name' => [
             'value' => 'printf',
@@ -53,7 +56,7 @@ final class CallableTypeTest extends TestCase
         ];
 
         yield 'callable closure' => [
-            'value' => $closure = static function () : void {},
+            'value' => $closure = static function (): void {},
             'expected' => $closure,
             'exceptionClass' => null,
         ];
@@ -71,7 +74,7 @@ final class CallableTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid callable function name' => [
             'value' => 'printf',
@@ -79,7 +82,7 @@ final class CallableTypeTest extends TestCase
         ];
 
         yield 'valid callable closure' => [
-            'value' => static function () : void {},
+            'value' => static function (): void {},
             'expected' => true,
         ];
 
@@ -100,47 +103,44 @@ final class CallableTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_callable()->assert($value);
         } else {
-            self::assertIsCallable(type_callable()->assert($value));
+            static::assertIsCallable(type_callable()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_callable()->cast($value);
         } else {
-            self::assertSame($expected, type_callable()->cast($value));
+            static::assertSame($expected, type_callable()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_callable()->isValid($value));
+        static::assertSame($expected, type_callable()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_callable();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'callable',
-            type_callable()->toString()
-        );
+        static::assertSame('callable', type_callable()->toString());
     }
 }

@@ -4,37 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{any, flow_context, lit, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\any;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class AnyTest extends FlowTestCase
 {
-    public function test_any_expression_on_boolean_false_value() : void
+    public function test_any_expression_on_boolean_false_value(): void
     {
-        self::assertFalse(
-            any(lit(false))->eval(row(), flow_context())
-        );
+        static::assertFalse(any(lit(false))->eval(row(), flow_context()));
     }
 
-    public function test_any_expression_on_boolean_true_value() : void
+    public function test_any_expression_on_boolean_true_value(): void
     {
-        self::assertTrue(
-            any(lit(true))->eval(row(), flow_context())
-        );
+        static::assertTrue(any(lit(true))->eval(row(), flow_context()));
     }
 
-    public function test_any_expression_on_is_null_expression() : void
+    public function test_any_expression_on_is_null_expression(): void
     {
-        self::assertTrue(
-            any(ref('value')->isNull())->eval(row(str_entry('value', null)), flow_context())
-        );
+        static::assertTrue(any(ref('value')->isNull())->eval(row(str_entry('value', null)), flow_context()));
     }
 
-    public function test_any_expression_on_multiple_boolean_values() : void
+    public function test_any_expression_on_multiple_boolean_values(): void
     {
-        self::assertTrue(
-            any(lit(false), lit(true), lit(false))->eval(row(), flow_context())
-        );
+        static::assertTrue(any(lit(false), lit(true), lit(false))->eval(row(), flow_context()));
     }
 }

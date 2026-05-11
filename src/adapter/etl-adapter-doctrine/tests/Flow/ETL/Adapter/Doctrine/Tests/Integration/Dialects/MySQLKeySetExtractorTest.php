@@ -4,76 +4,79 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
-use function Flow\ETL\Adapter\Doctrine\{from_dbal_key_set_qb,
-    pagination_key_asc,
-    pagination_key_desc,
-    pagination_key_set,
-    to_dbal_schema_table};
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{datetime_schema, df, int_schema, json_schema, map_schema, schema, str_schema};
-use function Flow\Types\DSL\{type_integer, type_map, type_string};
 use Flow\Clock\FakeClock;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
+use function Flow\ETL\Adapter\Doctrine\from_dbal_key_set_qb;
+use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
+use function Flow\ETL\Adapter\Doctrine\pagination_key_desc;
+use function Flow\ETL\Adapter\Doctrine\pagination_key_set;
+use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+
 final class MySQLKeySetExtractorTest extends IntegrationTestCase
 {
-    public function test_extracting_empty_table() : void
+    public function test_extracting_empty_table(): void
     {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                ),
-                $table = 'flow_key_set_extractor_test',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+            ),
+            $table = 'flow_key_set_extractor_test',
+        ));
 
         $rows = data_frame()
-            ->extract(
-                from_dbal_key_set_qb(
-                    $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
-                        ->from($table)
-                        ->select('*'),
-                    pagination_key_set(pagination_key_asc('id'))
-                )
-            )
+            ->extract(from_dbal_key_set_qb(
+                $this->mysqlDatabaseContext->connection(),
+                $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                pagination_key_set(pagination_key_asc('id')),
+            ))
             ->fetch()
             ->toArray();
 
-        self::assertEmpty($rows);
+        static::assertEmpty($rows);
     }
 
-    public function test_extracting_entire_table() : void
+    public function test_extracting_entire_table(): void
     {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                    str_schema('description', metadata: DbalMetadata::length(255)),
-                ),
-                $table = 'flow_key_set_extractor_with_a_very_long_table_name_test',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+                str_schema('description', metadata: DbalMetadata::length(255)),
+            ),
+            $table = 'flow_key_set_extractor_with_a_very_long_table_name_test',
+        ));
 
         for ($i = 1; $i <= 8; $i++) {
-            $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'description' => 'description_' . $i]);
+            $this->mysqlDatabaseContext->insert($table, [
+                'id' => $i,
+                'name' => 'name_' . $i,
+                'description' => 'description_' . $i,
+            ]);
         }
 
         $data = df()
             ->read(from_dbal_key_set_qb(
                 $this->mysqlDatabaseContext->connection(),
-                $this->mysqlDatabaseContext->connection()->createQueryBuilder()
-                    ->from($table)
-                    ->select('*'),
+                $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
                 pagination_key_set(pagination_key_asc('flow_key_set_extractor_with_a_very_long_table_name_test.id')),
             ))
             ->fetch();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
                 ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
@@ -84,167 +87,181 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
                 ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
                 ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
             ],
-            $data->toArray()
+            $data->toArray(),
         );
     }
 
-    public function test_extracting_entire_table_by_multiple_keys() : void
+    public function test_extracting_entire_table_by_multiple_keys(): void
     {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    datetime_schema('created_at'),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                    json_schema('tags'),
-                ),
-                $table = 'flow_key_set_extractor_test',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                datetime_schema('created_at'),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+                json_schema('tags'),
+            ),
+            $table = 'flow_key_set_extractor_test',
+        ));
 
         $clock = new FakeClock();
         $clock->set(new \DateTimeImmutable('2025-01-01 00:00:00 UTC'));
 
         for ($i = 1; $i <= 25; $i++) {
             $clock->modify('+1 hour');
-            $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'created_at' => $clock->now()->format('Y-m-d H:i:s'), 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
+            $this->mysqlDatabaseContext->insert($table, [
+                'id' => $i,
+                'created_at' => $clock->now()->format('Y-m-d H:i:s'),
+                'name' => 'name_' . $i,
+                'tags' => '{"a": 1, "b": 2 }',
+            ]);
         }
 
         $this->mysqlDatabaseContext->resetSelectQueryCounter();
-
-        $rows = (data_frame())
-            ->extract(
-                from_dbal_key_set_qb(
-                    $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
-                        ->from($table)
-                        ->select('*'),
-                    pagination_key_set(pagination_key_asc('id'), pagination_key_desc('created_at')),
-                )->withSchema(schema(
-                    int_schema('id'),
-                    str_schema('name'),
-                    datetime_schema('created_at'),
-                    map_schema('tags', type_map(type_string(), type_integer()))
-                ))->withMaximum(5)->withPageSize(1)
-            )->fetch()->toArray();
-
-        self::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
-        self::assertCount(5, $rows);
-        self::assertSame(25, $rows[0]['id']);
-    }
-
-    public function test_extracting_entire_table_using_qb_with_maximum_set_on_extractor() : void
-    {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                    json_schema('tags'),
-                ),
-                $table = 'flow_key_set_extractor_test',
-            )
-        );
-
-        for ($i = 1; $i <= 25; $i++) {
-            $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
-        }
-
-        $this->mysqlDatabaseContext->resetSelectQueryCounter();
-
-        $rows = (data_frame())
-            ->extract(
-                from_dbal_key_set_qb(
-                    $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
-                        ->from($table)
-                        ->select('*'),
-                    pagination_key_set(pagination_key_asc('id')),
-                )->withSchema(schema(
-                    int_schema('id'),
-                    str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_integer()))
-                ))->withMaximum(5)->withPageSize(1)
-            )->fetch()->toArray();
-
-        self::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
-        self::assertCount(5, $rows);
-        self::assertSame(1, $rows[0]['id']);
-    }
-
-    public function test_extracting_entire_table_using_qb_with_maximum_set_on_extractor_with_descending_sort() : void
-    {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                    json_schema('tags'),
-                ),
-                $table = 'flow_key_set_extractor_test',
-            )
-        );
-
-        for ($i = 1; $i <= 25; $i++) {
-            $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
-        }
-
-        $this->mysqlDatabaseContext->resetSelectQueryCounter();
-
-        $rows = (data_frame())
-            ->extract(
-                from_dbal_key_set_qb(
-                    $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
-                        ->from($table)
-                        ->select('*'),
-                    pagination_key_set(pagination_key_desc('id')),
-                )->withSchema(schema(
-                    int_schema('id'),
-                    str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_integer()))
-                ))->withMaximum(5)->withPageSize(1)
-            )->fetch()->toArray();
-
-        self::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
-        self::assertCount(5, $rows);
-        self::assertSame(25, $rows[0]['id']);
-    }
-
-    public function test_extracting_with_duplicate_key_values_and_tiebreaker() : void
-    {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    datetime_schema('created_at'),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                ),
-                $table = 'flow_key_set_extractor_test',
-            )
-        );
-
-        $createdAt = '2025-01-01 12:00:00';
-
-        for ($i = 1; $i <= 5; $i++) {
-            $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'created_at' => $createdAt, 'name' => 'name_' . $i]);
-        }
 
         $rows = data_frame()
             ->extract(
                 from_dbal_key_set_qb(
                     $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
-                        ->from($table)
-                        ->select('*'),
-                    pagination_key_set(pagination_key_asc('created_at'), pagination_key_asc('id'))
-                )->withPageSize(2)
+                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                    pagination_key_set(pagination_key_asc('id'), pagination_key_desc('created_at')),
+                )
+                    ->withSchema(schema(
+                        int_schema('id'),
+                        str_schema('name'),
+                        datetime_schema('created_at'),
+                        map_schema('tags', type_map(type_string(), type_integer())),
+                    ))
+                    ->withMaximum(5)
+                    ->withPageSize(1),
             )
             ->fetch()
             ->toArray();
 
-        self::assertCount(5, $rows);
-        self::assertSame(
+        static::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
+        static::assertCount(5, $rows);
+        static::assertSame(25, $rows[0]['id']);
+    }
+
+    public function test_extracting_entire_table_using_qb_with_maximum_set_on_extractor(): void
+    {
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+                json_schema('tags'),
+            ),
+            $table = 'flow_key_set_extractor_test',
+        ));
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->mysqlDatabaseContext->insert($table, [
+                'id' => $i,
+                'name' => 'name_' . $i,
+                'tags' => '{"a": 1, "b": 2 }',
+            ]);
+        }
+
+        $this->mysqlDatabaseContext->resetSelectQueryCounter();
+
+        $rows = data_frame()
+            ->extract(
+                from_dbal_key_set_qb(
+                    $this->mysqlDatabaseContext->connection(),
+                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                    pagination_key_set(pagination_key_asc('id')),
+                )
+                    ->withSchema(schema(
+                        int_schema('id'),
+                        str_schema('name'),
+                        map_schema('tags', type_map(type_string(), type_integer())),
+                    ))
+                    ->withMaximum(5)
+                    ->withPageSize(1),
+            )
+            ->fetch()
+            ->toArray();
+
+        static::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
+        static::assertCount(5, $rows);
+        static::assertSame(1, $rows[0]['id']);
+    }
+
+    public function test_extracting_entire_table_using_qb_with_maximum_set_on_extractor_with_descending_sort(): void
+    {
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+                json_schema('tags'),
+            ),
+            $table = 'flow_key_set_extractor_test',
+        ));
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->mysqlDatabaseContext->insert($table, [
+                'id' => $i,
+                'name' => 'name_' . $i,
+                'tags' => '{"a": 1, "b": 2 }',
+            ]);
+        }
+
+        $this->mysqlDatabaseContext->resetSelectQueryCounter();
+
+        $rows = data_frame()
+            ->extract(
+                from_dbal_key_set_qb(
+                    $this->mysqlDatabaseContext->connection(),
+                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                    pagination_key_set(pagination_key_desc('id')),
+                )
+                    ->withSchema(schema(
+                        int_schema('id'),
+                        str_schema('name'),
+                        map_schema('tags', type_map(type_string(), type_integer())),
+                    ))
+                    ->withMaximum(5)
+                    ->withPageSize(1),
+            )
+            ->fetch()
+            ->toArray();
+
+        static::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
+        static::assertCount(5, $rows);
+        static::assertSame(25, $rows[0]['id']);
+    }
+
+    public function test_extracting_with_duplicate_key_values_and_tiebreaker(): void
+    {
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                datetime_schema('created_at'),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+            ),
+            $table = 'flow_key_set_extractor_test',
+        ));
+
+        $createdAt = '2025-01-01 12:00:00';
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->mysqlDatabaseContext->insert($table, [
+                'id' => $i,
+                'created_at' => $createdAt,
+                'name' => 'name_' . $i,
+            ]);
+        }
+
+        $rows = data_frame()
+            ->extract(from_dbal_key_set_qb(
+                $this->mysqlDatabaseContext->connection(),
+                $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('*'),
+                pagination_key_set(pagination_key_asc('created_at'), pagination_key_asc('id')),
+            )->withPageSize(2))
+            ->fetch()
+            ->toArray();
+
+        static::assertCount(5, $rows);
+        static::assertSame(
             [
                 ['id' => 1, 'created_at' => $createdAt, 'name' => 'name_1'],
                 ['id' => 2, 'created_at' => $createdAt, 'name' => 'name_2'],
@@ -252,128 +269,138 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
                 ['id' => 4, 'created_at' => $createdAt, 'name' => 'name_4'],
                 ['id' => 5, 'created_at' => $createdAt, 'name' => 'name_5'],
             ],
-            $rows
+            $rows,
         );
     }
 
-    public function test_extraction_when_key_is_ambiguous_column() : void
+    public function test_extraction_when_key_is_ambiguous_column(): void
     {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                ),
-                $table = 'flow_key_set_extractor_test_01',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+            ),
+            $table = 'flow_key_set_extractor_test_01',
+        ));
 
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    int_schema('id_01'),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                ),
-                'flow_key_set_extractor_test_02',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                int_schema('id_01'),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+            ),
+            'flow_key_set_extractor_test_02',
+        ));
 
         for ($i = 1; $i <= 25; $i++) {
             $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i]);
 
-            $this->mysqlDatabaseContext->insert('flow_key_set_extractor_test_02', ['id' => $i, 'id_01' => $i, 'name' => 'name_' . $i]);
+            $this->mysqlDatabaseContext->insert('flow_key_set_extractor_test_02', [
+                'id' => $i,
+                'id_01' => $i,
+                'name' => 'name_' . $i,
+            ]);
         }
 
         $rows = data_frame()
             ->extract(
                 from_dbal_key_set_qb(
                     $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
+                    $this->mysqlDatabaseContext
+                        ->connection()
+                        ->createQueryBuilder()
                         ->from($table)
                         ->select('flow_key_set_extractor_test_01.id as id')
                         ->leftJoin(
                             'flow_key_set_extractor_test_01',
                             'flow_key_set_extractor_test_02',
                             'flow_key_set_extractor_test_02',
-                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01'
+                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01',
                         ),
-                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id'))
+                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
                 )
-                ->withSchema(schema(int_schema('id')))
-                ->withPageSize(5)
-                ->withMaximum(5)
+                    ->withSchema(schema(int_schema('id')))
+                    ->withPageSize(5)
+                    ->withMaximum(5),
             )
             ->fetch()
             ->toArray();
 
-        self::assertSame([
-            ['id' => 25],
-            ['id' => 24],
-            ['id' => 23],
-            ['id' => 22],
-            ['id' => 21],
-        ], $rows);
+        static::assertSame(
+            [
+                ['id' => 25],
+                ['id' => 24],
+                ['id' => 23],
+                ['id' => 22],
+                ['id' => 21],
+            ],
+            $rows,
+        );
     }
 
-    public function test_extraction_when_key_is_ambiguous_column_with_custom_key_column_alias_suffix() : void
+    public function test_extraction_when_key_is_ambiguous_column_with_custom_key_column_alias_suffix(): void
     {
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                ),
-                $table = 'flow_key_set_extractor_test_01',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+            ),
+            $table = 'flow_key_set_extractor_test_01',
+        ));
 
-        $this->mysqlDatabaseContext->createTable(
-            to_dbal_schema_table(
-                schema(
-                    int_schema('id', metadata: DbalMetadata::primaryKey()),
-                    int_schema('id_01'),
-                    str_schema('name', metadata: DbalMetadata::length(255)),
-                ),
-                'flow_key_set_extractor_test_02',
-            )
-        );
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                int_schema('id_01'),
+                str_schema('name', metadata: DbalMetadata::length(255)),
+            ),
+            'flow_key_set_extractor_test_02',
+        ));
 
         for ($i = 1; $i <= 25; $i++) {
             $this->mysqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i]);
 
-            $this->mysqlDatabaseContext->insert('flow_key_set_extractor_test_02', ['id' => $i, 'id_01' => $i, 'name' => 'name_' . $i]);
+            $this->mysqlDatabaseContext->insert('flow_key_set_extractor_test_02', [
+                'id' => $i,
+                'id_01' => $i,
+                'name' => 'name_' . $i,
+            ]);
         }
 
         $rows = data_frame()
             ->extract(
                 from_dbal_key_set_qb(
                     $this->mysqlDatabaseContext->connection(),
-                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
+                    $this->mysqlDatabaseContext
+                        ->connection()
+                        ->createQueryBuilder()
                         ->from($table)
                         ->select('flow_key_set_extractor_test_01.id as id')
                         ->leftJoin(
                             'flow_key_set_extractor_test_01',
                             'flow_key_set_extractor_test_02',
                             'flow_key_set_extractor_test_02',
-                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01'
+                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01',
                         ),
-                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id'))
+                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id')),
                 )
                     ->withKeyAliasSuffix('_something_custom')
                     ->withSchema(schema(int_schema('id')))
                     ->withPageSize(5)
-                    ->withMaximum(5)
+                    ->withMaximum(5),
             )
             ->fetch()
             ->toArray();
 
-        self::assertSame([
-            ['id' => 25],
-            ['id' => 24],
-            ['id' => 23],
-            ['id' => 22],
-            ['id' => 21],
-        ], $rows);
+        static::assertSame(
+            [
+                ['id' => 25],
+                ['id' => 24],
+                ['id' => 23],
+                ['id' => 22],
+                ['id' => 21],
+            ],
+            $rows,
+        );
     }
 }

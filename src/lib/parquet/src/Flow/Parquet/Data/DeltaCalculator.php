@@ -6,7 +6,7 @@ namespace Flow\Parquet\Data;
 
 final readonly class DeltaCalculator
 {
-    public function calculateDelta(int $previous, int $current) : int
+    public function calculateDelta(int $previous, int $current): int
     {
         // Check if simple subtraction would overflow to float
         $result = $current - $previous;
@@ -52,7 +52,7 @@ final readonly class DeltaCalculator
      *
      * @return array<int>
      */
-    public function calculateDeltas(array $values) : array
+    public function calculateDeltas(array $values): array
     {
         $deltas = [];
         $valuesCount = count($values);
@@ -64,7 +64,7 @@ final readonly class DeltaCalculator
         return $deltas;
     }
 
-    public function calculateRelativeDelta(int $delta, int $minDelta) : int
+    public function calculateRelativeDelta(int $delta, int $minDelta): int
     {
         // Check if simple subtraction would overflow to float
         $result = $delta - $minDelta;
@@ -110,7 +110,7 @@ final readonly class DeltaCalculator
      *
      * @return array<int>
      */
-    public function reconstructValues(int $firstValue, array $deltas) : array
+    public function reconstructValues(int $firstValue, array $deltas): array
     {
         $values = [$firstValue];
         $currentValue = $firstValue;

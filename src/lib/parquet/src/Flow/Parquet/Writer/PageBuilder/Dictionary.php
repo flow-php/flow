@@ -13,6 +13,5 @@ final readonly class Dictionary
     public function __construct(
         public array $dictionary,
         public array $indices,
-    ) {
-    }
+    ) {}
 }

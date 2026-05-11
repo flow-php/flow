@@ -37,13 +37,12 @@ final readonly class CompositePropagator implements Propagator
      */
     public function __construct(
         private array $propagators,
-    ) {
-    }
+    ) {}
 
     /**
      * @param Carrier<mixed> $carrier
      */
-    public function extract(Carrier $carrier) : PropagationContext
+    public function extract(Carrier $carrier): PropagationContext
     {
         $result = new PropagationContext();
 
@@ -57,7 +56,7 @@ final readonly class CompositePropagator implements Propagator
     /**
      * @return array<string>
      */
-    public function fields() : array
+    public function fields(): array
     {
         $fields = [];
 
@@ -71,7 +70,7 @@ final readonly class CompositePropagator implements Propagator
     /**
      * @param Carrier<mixed> $carrier
      */
-    public function inject(PropagationContext $context, Carrier $carrier) : void
+    public function inject(PropagationContext $context, Carrier $carrier): void
     {
         foreach ($this->propagators as $propagator) {
             $propagator->inject($context, $carrier);

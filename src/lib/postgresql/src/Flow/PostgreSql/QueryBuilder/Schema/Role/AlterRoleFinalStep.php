@@ -9,41 +9,41 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AlterRoleFinalStep extends Sql
 {
-    public function bypassRls() : self;
+    public function bypassRls(): self;
 
-    public function connectionLimit(int $limit) : self;
+    public function connectionLimit(int $limit): self;
 
-    public function createDb() : self;
+    public function createDb(): self;
 
-    public function createRole() : self;
+    public function createRole(): self;
 
-    public function inherit() : self;
+    public function inherit(): self;
 
-    public function login() : self;
+    public function login(): self;
 
-    public function noBypassRls() : self;
+    public function noBypassRls(): self;
 
-    public function noCreateDb() : self;
+    public function noCreateDb(): self;
 
-    public function noCreateRole() : self;
+    public function noCreateRole(): self;
 
-    public function noInherit() : self;
+    public function noInherit(): self;
 
-    public function noLogin() : self;
+    public function noLogin(): self;
 
-    public function noReplication() : self;
+    public function noReplication(): self;
 
-    public function noSuperuser() : self;
+    public function noSuperuser(): self;
 
-    public function replication() : self;
+    public function replication(): self;
 
-    public function superuser() : self;
+    public function superuser(): self;
 
-    public function toAst() : AlterRoleStmt;
+    public function toAst(): AlterRoleStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function validUntil(string $timestamp) : self;
+    public function validUntil(string $timestamp): self;
 
-    public function withPassword(string $password) : self;
+    public function withPassword(#[\SensitiveParameter] string $password): self;
 }

@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateRuleFinalStep extends Sql
 {
-    public function toAst() : RuleStmt;
+    public function toAst(): RuleStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

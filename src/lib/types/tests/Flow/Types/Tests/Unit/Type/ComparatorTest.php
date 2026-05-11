@@ -4,31 +4,38 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{type_array,
-    type_boolean,
-    type_equals,
-    type_float,
-    type_integer,
-    type_is,
-    type_is_any,
-    type_json,
-    type_list,
-    type_map,
-    type_null,
-    type_optional,
-    type_string,
-    type_structure,
-    type_union};
 use Flow\Types\Type;
 use Flow\Types\Type\Comparator;
-use Flow\Types\Type\Logical\{MapType, OptionalType};
-use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, ResourceType, StringType, UnionType};
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\ResourceType;
+use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\Native\UnionType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_is;
+use function Flow\Types\DSL\type_is_any;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_union;
+
 final class ComparatorTest extends TestCase
 {
-    public static function type_comparable_data_provider() : \Generator
+    public static function type_comparable_data_provider(): \Generator
     {
         yield [type_integer(), type_integer()];
         yield [type_json(), type_string()];
@@ -52,7 +59,7 @@ final class ComparatorTest extends TestCase
         yield [type_structure(['id' => type_integer()]), type_array()];
     }
 
-    public static function type_comparison_data_provider() : \Generator
+    public static function type_comparison_data_provider(): \Generator
     {
         yield [type_integer(), type_float(), false];
         yield [type_integer(), type_string(), false];
@@ -68,14 +75,34 @@ final class ComparatorTest extends TestCase
         yield [type_list(type_string()), type_list(type_string()), true];
         yield [type_list(type_string()), type_list(type_integer()), false];
         yield [type_list(type_integer()), type_list(type_optional(type_integer())), false];
-        yield [type_structure(['id' => type_integer(), 'name' => type_string()]), type_structure(['id' => type_integer(), 'name' => type_string()]), true];
-        yield [type_structure(['id' => type_integer(), 'name' => type_string()]), type_structure(['id' => type_integer(), 'name' => type_optional(type_string())]), false];
-        yield [type_structure(['name' => type_string()]), type_structure(['id' => type_integer(), 'name' => type_string()]), false];
-        yield [type_structure(['id' => type_integer(), 'name' => type_string()]), type_structure(['name' => type_string()]), false];
-        yield [type_structure(['id' => type_integer(), 'name' => type_string()]), type_structure(['id' => type_integer(), 'name' => type_string(), 'active' => type_boolean()]), false];
+        yield [
+            type_structure(['id' => type_integer(), 'name' => type_string()]),
+            type_structure(['id' => type_integer(), 'name' => type_string()]),
+            true,
+        ];
+        yield [
+            type_structure(['id' => type_integer(), 'name' => type_string()]),
+            type_structure(['id' => type_integer(), 'name' => type_optional(type_string())]),
+            false,
+        ];
+        yield [
+            type_structure(['name' => type_string()]),
+            type_structure(['id' => type_integer(), 'name' => type_string()]),
+            false,
+        ];
+        yield [
+            type_structure(['id' => type_integer(), 'name' => type_string()]),
+            type_structure(['name' => type_string()]),
+            false,
+        ];
+        yield [
+            type_structure(['id' => type_integer(), 'name' => type_string()]),
+            type_structure(['id' => type_integer(), 'name' => type_string(), 'active' => type_boolean()]),
+            false,
+        ];
     }
 
-    public static function type_not_comparable_data_provider() : \Generator
+    public static function type_not_comparable_data_provider(): \Generator
     {
         yield [type_integer(), type_union(type_float(), type_integer())];
         yield [type_integer(), type_boolean()];
@@ -90,12 +117,12 @@ final class ComparatorTest extends TestCase
      * @param Type<mixed> $right
      */
     #[DataProvider('type_comparison_data_provider')]
-    public function test_comparing_types(Type $left, Type $right, bool $equals) : void
+    public function test_comparing_types(Type $left, Type $right, bool $equals): void
     {
         if ($equals === true) {
-            self::assertTrue(type_equals($left, $right));
+            static::assertTrue(type_equals($left, $right));
         } else {
-            self::assertFalse(type_equals($left, $right));
+            static::assertFalse(type_equals($left, $right));
         }
     }
 
@@ -104,65 +131,65 @@ final class ComparatorTest extends TestCase
      * @param Type<mixed> $right
      */
     #[DataProvider('type_comparable_data_provider')]
-    public function test_type_comparable(Type $left, Type $right) : void
+    public function test_type_comparable(Type $left, Type $right): void
     {
-        self::assertTrue((new Comparator())->comparable($left, $right));
+        static::assertTrue((new Comparator())->comparable($left, $right));
     }
 
-    public function test_type_is() : void
+    public function test_type_is(): void
     {
         $type = type_string();
 
-        self::assertTrue(type_is($type, StringType::class));
-        self::assertFalse(type_is($type, IntegerType::class));
+        static::assertTrue(type_is($type, StringType::class));
+        static::assertFalse(type_is($type, IntegerType::class));
     }
 
-    public function test_type_is_any() : void
+    public function test_type_is_any(): void
     {
         $type = type_string();
 
-        self::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
-        self::assertFalse(type_is_any($type, IntegerType::class, FloatType::class));
+        static::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
+        static::assertFalse(type_is_any($type, IntegerType::class, FloatType::class));
     }
 
-    public function test_type_is_any_on_optional_type() : void
+    public function test_type_is_any_on_optional_type(): void
     {
         $type = type_optional(type_string());
 
-        self::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
-        self::assertTrue(type_is_any($type, OptionalType::class, ResourceType::class));
-        self::assertFalse(type_is_any($type, IntegerType::class));
+        static::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
+        static::assertTrue(type_is_any($type, OptionalType::class, ResourceType::class));
+        static::assertFalse(type_is_any($type, IntegerType::class));
     }
 
-    public function test_type_is_any_on_union_type() : void
+    public function test_type_is_any_on_union_type(): void
     {
         $type = type_union(type_integer(), type_boolean(), type_string());
 
-        self::assertTrue(type_is_any($type, UnionType::class, OptionalType::class));
-        self::assertTrue(type_is_any($type, IntegerType::class, StringType::class));
-        self::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
-        self::assertTrue(type_is_any($type, BooleanType::class, IntegerType::class));
-        self::assertFalse(type_is_any($type, FloatType::class, MapType::class));
+        static::assertTrue(type_is_any($type, UnionType::class, OptionalType::class));
+        static::assertTrue(type_is_any($type, IntegerType::class, StringType::class));
+        static::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
+        static::assertTrue(type_is_any($type, BooleanType::class, IntegerType::class));
+        static::assertFalse(type_is_any($type, FloatType::class, MapType::class));
     }
 
-    public function test_type_is_on_optional_type() : void
+    public function test_type_is_on_optional_type(): void
     {
         $type = type_optional(type_string());
 
-        self::assertTrue(type_is($type, StringType::class));
-        self::assertTrue(type_is($type, OptionalType::class));
-        self::assertFalse(type_is($type, IntegerType::class));
+        static::assertTrue(type_is($type, StringType::class));
+        static::assertTrue(type_is($type, OptionalType::class));
+        static::assertFalse(type_is($type, IntegerType::class));
     }
 
-    public function test_type_is_on_union_type() : void
+    public function test_type_is_on_union_type(): void
     {
         $type = type_union(type_integer(), type_boolean(), type_string());
 
-        self::assertTrue(type_is($type, UnionType::class));
-        self::assertTrue(type_is($type, IntegerType::class));
-        self::assertTrue(type_is($type, StringType::class));
-        self::assertTrue(type_is($type, BooleanType::class));
-        self::assertFalse(type_is($type, FloatType::class));
+        static::assertTrue(type_is($type, UnionType::class));
+        static::assertTrue(type_is($type, IntegerType::class));
+        static::assertTrue(type_is($type, StringType::class));
+        static::assertTrue(type_is($type, BooleanType::class));
+        static::assertFalse(type_is($type, FloatType::class));
     }
 
     /**
@@ -170,8 +197,8 @@ final class ComparatorTest extends TestCase
      * @param Type<mixed> $right
      */
     #[DataProvider('type_not_comparable_data_provider')]
-    public function test_type_not_comparable(Type $left, Type $right) : void
+    public function test_type_not_comparable(Type $left, Type $right): void
     {
-        self::assertFalse((new Comparator())->comparable($left, $right));
+        static::assertFalse((new Comparator())->comparable($left, $right));
     }
 }

@@ -9,22 +9,15 @@ final readonly class FilesystemTelemetryOptions
     public function __construct(
         public bool $traceStreams = true,
         public bool $collectMetrics = true,
-    ) {
+    ) {}
+
+    public function collectMetrics(bool $collect = true): self
+    {
+        return new self($this->traceStreams, $collect);
     }
 
-    public function collectMetrics(bool $collect = true) : self
+    public function traceStreams(bool $trace = true): self
     {
-        return new self(
-            $this->traceStreams,
-            $collect,
-        );
-    }
-
-    public function traceStreams(bool $trace = true) : self
-    {
-        return new self(
-            $trace,
-            $this->collectMetrics,
-        );
+        return new self($trace, $this->collectMetrics);
     }
 }

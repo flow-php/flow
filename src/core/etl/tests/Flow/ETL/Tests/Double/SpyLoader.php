@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
 
 final class SpyLoader implements Loader
 {
@@ -15,13 +17,13 @@ final class SpyLoader implements Loader
 
     public int $loadsCount = 0;
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $this->loadedRows[] = $rows;
         $this->loadsCount++;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->loadedRows = [];
         $this->loadsCount = 0;

@@ -9,19 +9,20 @@ use Psr\Http\Message\ResponseInterface;
 
 final readonly class BlobContent
 {
-    public function __construct(private ResponseInterface $response)
-    {
+    public function __construct(
+        private ResponseInterface $response,
+    ) {
         if ($this->response->getStatusCode() < 200 || $this->response->getStatusCode() >= 300) {
             throw new \RuntimeException('Blob content could not be fetched');
         }
     }
 
-    public function content() : string
+    public function content(): string
     {
         return $this->response->getBody()->getContents();
     }
 
-    public function length() : int
+    public function length(): int
     {
         return (int) $this->response->getHeaderLine('Content-Length');
     }

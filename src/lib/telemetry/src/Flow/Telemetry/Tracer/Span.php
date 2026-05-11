@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\AttributeLimitsEnforcer;
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\Scope;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
 
 /**
  * Represents a single operation within a trace.
@@ -91,7 +94,7 @@ final class Span
      *     isRecording: bool
      * } $data Normalized Span data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $span = new self(
             $data['name'],
@@ -135,7 +138,7 @@ final class Span
      *
      * @return $this
      */
-    public function addLink(SpanLink $link) : self
+    public function addLink(SpanLink $link): self
     {
         if (\count($this->links) >= $this->limits->linkCountLimit) {
             $this->droppedLinksCount++;
@@ -143,7 +146,10 @@ final class Span
             return $this;
         }
 
-        if ($link->attributes->count() > $this->limits->attributePerLinkCountLimit || $this->limits->attributeValueLengthLimit !== null) {
+        if (
+            $link->attributes->count() > $this->limits->attributePerLinkCountLimit
+            || $this->limits->attributeValueLengthLimit !== null
+        ) {
             $enforcer = new AttributeLimitsEnforcer();
             $result = $enforcer->enforce(
                 $link->attributes,
@@ -164,7 +170,7 @@ final class Span
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    public function attributes() : array
+    public function attributes(): array
     {
         return $this->attributes->normalize();
     }
@@ -172,7 +178,7 @@ final class Span
     /**
      * Get the span attributes as an Attributes object.
      */
-    public function attributesObject() : Attributes
+    public function attributesObject(): Attributes
     {
         return $this->attributes;
     }
@@ -180,7 +186,7 @@ final class Span
     /**
      * Get the span context.
      */
-    public function context() : SpanContext
+    public function context(): SpanContext
     {
         return $this->context;
     }
@@ -188,7 +194,7 @@ final class Span
     /**
      * Get the context scope for this span.
      */
-    public function contextScope() : ?Scope
+    public function contextScope(): ?Scope
     {
         return $this->contextScope;
     }
@@ -196,7 +202,7 @@ final class Span
     /**
      * Get the count of attributes that were dropped due to limits.
      */
-    public function droppedAttributeCount() : int
+    public function droppedAttributeCount(): int
     {
         return $this->droppedAttributeCount;
     }
@@ -204,7 +210,7 @@ final class Span
     /**
      * Get the count of events that were dropped due to limits.
      */
-    public function droppedEventsCount() : int
+    public function droppedEventsCount(): int
     {
         return $this->droppedEventsCount;
     }
@@ -212,7 +218,7 @@ final class Span
     /**
      * Get the count of links that were dropped due to limits.
      */
-    public function droppedLinksCount() : int
+    public function droppedLinksCount(): int
     {
         return $this->droppedLinksCount;
     }
@@ -222,7 +228,7 @@ final class Span
      *
      * Returns null if the span has not ended yet.
      */
-    public function duration() : ?float
+    public function duration(): ?float
     {
         if ($this->endTime === null) {
             return null;
@@ -241,7 +247,7 @@ final class Span
      *
      * @return $this
      */
-    public function end(?\DateTimeImmutable $endTime = null) : self
+    public function end(?\DateTimeImmutable $endTime = null): self
     {
         if ($this->endTime === null) {
             $this->endTime = $endTime ?? new \DateTimeImmutable();
@@ -253,7 +259,7 @@ final class Span
     /**
      * Get the span end time, if ended.
      */
-    public function endTime() : ?\DateTimeImmutable
+    public function endTime(): ?\DateTimeImmutable
     {
         return $this->endTime;
     }
@@ -263,7 +269,7 @@ final class Span
      *
      * @return array<SpanEvent>
      */
-    public function events() : array
+    public function events(): array
     {
         return $this->events;
     }
@@ -271,7 +277,7 @@ final class Span
     /**
      * Check if the span has ended.
      */
-    public function isEnded() : bool
+    public function isEnded(): bool
     {
         return $this->endTime !== null;
     }
@@ -283,7 +289,7 @@ final class Span
      * the span should not be exported. Non-recording spans still propagate
      * context but don't record any data.
      */
-    public function isRecording() : bool
+    public function isRecording(): bool
     {
         return $this->isRecording;
     }
@@ -291,7 +297,7 @@ final class Span
     /**
      * Get the span kind.
      */
-    public function kind() : SpanKind
+    public function kind(): SpanKind
     {
         return $this->kind;
     }
@@ -301,7 +307,7 @@ final class Span
      *
      * @return array<SpanLink>
      */
-    public function links() : array
+    public function links(): array
     {
         return $this->links;
     }
@@ -309,7 +315,7 @@ final class Span
     /**
      * Get the span name.
      */
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
@@ -335,7 +341,7 @@ final class Span
      *     isRecording: bool
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         $events = [];
 
@@ -376,7 +382,7 @@ final class Span
      *
      * @return $this
      */
-    public function recordEvent(SpanEvent $event) : self
+    public function recordEvent(SpanEvent $event): self
     {
         if (\count($this->events) >= $this->limits->eventCountLimit) {
             $this->droppedEventsCount++;
@@ -384,7 +390,10 @@ final class Span
             return $this;
         }
 
-        if ($event->attributesObject()->count() > $this->limits->attributePerEventCountLimit || $this->limits->attributeValueLengthLimit !== null) {
+        if (
+            $event->attributesObject()->count() > $this->limits->attributePerEventCountLimit
+            || $this->limits->attributeValueLengthLimit !== null
+        ) {
             $enforcer = new AttributeLimitsEnforcer();
             $result = $enforcer->enforce(
                 $event->attributesObject(),
@@ -416,8 +425,11 @@ final class Span
      *
      * @return $this
      */
-    public function recordException(\Throwable $exception, \DateTimeImmutable $timestamp, Attributes|array $attributes = []) : self
-    {
+    public function recordException(
+        \Throwable $exception,
+        \DateTimeImmutable $timestamp,
+        Attributes|array $attributes = [],
+    ): self {
         $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
         $eventAttributes = Attributes::create([
             'exception.type' => $exception::class,
@@ -435,7 +447,7 @@ final class Span
      *
      * @return $this
      */
-    public function rename(string $name) : self
+    public function rename(string $name): self
     {
         $this->name = $name;
 
@@ -445,7 +457,7 @@ final class Span
     /**
      * Get the resource describing the entity producing telemetry.
      */
-    public function resource() : Resource
+    public function resource(): Resource
     {
         return $this->resource;
     }
@@ -453,7 +465,7 @@ final class Span
     /**
      * Get the instrumentation scope that created this span.
      */
-    public function scope() : InstrumentationScope
+    public function scope(): InstrumentationScope
     {
         return $this->scope;
     }
@@ -468,7 +480,7 @@ final class Span
      *
      * @return $this
      */
-    public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : self
+    public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value): self
     {
         if (!$this->attributes->has($key) && $this->attributes->count() >= $this->limits->attributeCountLimit) {
             $this->droppedAttributeCount++;
@@ -491,13 +503,17 @@ final class Span
      *
      * @return $this
      */
-    public function setAttributes(Attributes|array $attributes) : self
+    public function setAttributes(Attributes|array $attributes): self
     {
         $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
         $enforcer = new AttributeLimitsEnforcer();
 
         $merged = $this->attributes->merge($attrs);
-        $result = $enforcer->enforce($merged, $this->limits->attributeCountLimit, $this->limits->attributeValueLengthLimit);
+        $result = $enforcer->enforce(
+            $merged,
+            $this->limits->attributeCountLimit,
+            $this->limits->attributeValueLengthLimit,
+        );
 
         $this->attributes = $result->attributes;
         $this->droppedAttributeCount += $result->droppedAttributeCount;
@@ -510,7 +526,7 @@ final class Span
      *
      * @return $this
      */
-    public function setContextScope(Scope $scope) : self
+    public function setContextScope(Scope $scope): self
     {
         $this->contextScope = $scope;
 
@@ -522,7 +538,7 @@ final class Span
      *
      * @return $this
      */
-    public function setStatus(SpanStatus $status) : self
+    public function setStatus(SpanStatus $status): self
     {
         $this->status = $status;
 
@@ -532,7 +548,7 @@ final class Span
     /**
      * Get the span start time.
      */
-    public function startTime() : \DateTimeImmutable
+    public function startTime(): \DateTimeImmutable
     {
         return $this->startTime;
     }
@@ -540,7 +556,7 @@ final class Span
     /**
      * Get the span status.
      */
-    public function status() : ?SpanStatus
+    public function status(): ?SpanStatus
     {
         return $this->status;
     }
@@ -552,7 +568,7 @@ final class Span
      *
      * @return TAttributeValue
      */
-    private function truncateValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : string|int|float|bool|\DateTimeInterface|\Throwable|array
+    private function truncateValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value): string|int|float|bool|\DateTimeInterface|\Throwable|array
     {
         if ($this->limits->attributeValueLengthLimit === null) {
             return $value;

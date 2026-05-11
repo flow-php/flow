@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTable;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateStmt, Node, OnCommitAction, PartitionElem, PartitionSpec, PartitionStrategy, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\CreateStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\OnCommitAction;
+use Flow\PostgreSql\Protobuf\AST\PartitionElem;
+use Flow\PostgreSql\Protobuf\AST\PartitionSpec;
+use Flow\PostgreSql\Protobuf\AST\PartitionStrategy;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
-final readonly class CreateTableBuilder implements CreateTableColumnsStep, CreateTableTemporaryStep, CreateTemporaryTableColumnsStep
+final readonly class CreateTableBuilder implements
+    CreateTableColumnsStep,
+    CreateTableTemporaryStep,
+    CreateTemporaryTableColumnsStep
 {
     use AstToSql;
 
@@ -32,20 +41,19 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         private array $partitionColumns = [],
         private ?string $tablespace = null,
         private ?int $onCommitAction = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $table, ?string $schema = null) : CreateTableColumnsStep
+    public static function create(string $table, ?string $schema = null): CreateTableColumnsStep
     {
         return new self($table, $schema);
     }
 
-    public static function createTemporary(string $table, ?string $schema = null) : CreateTemporaryTableColumnsStep
+    public static function createTemporary(string $table, ?string $schema = null): CreateTemporaryTableColumnsStep
     {
         return new self($table, $schema, temporary: true);
     }
 
-    public function column(ColumnDefinition $column) : self
+    public function column(ColumnDefinition $column): self
     {
         return new self(
             $this->table,
@@ -63,7 +71,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function constraint(TableConstraint $constraint) : CreateTableFinalStep
+    public function constraint(TableConstraint $constraint): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -81,7 +89,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function ifNotExists() : CreateTableFinalStep
+    public function ifNotExists(): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -99,7 +107,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function inherits(string ...$tables) : CreateTableFinalStep
+    public function inherits(string ...$tables): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -117,7 +125,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function onCommitDeleteRows() : CreateTableFinalStep
+    public function onCommitDeleteRows(): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -135,7 +143,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function onCommitDrop() : CreateTableFinalStep
+    public function onCommitDrop(): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -153,7 +161,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function onCommitPreserveRows() : CreateTableFinalStep
+    public function onCommitPreserveRows(): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -171,7 +179,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function partitionByHash(string ...$columns) : CreateTableFinalStep
+    public function partitionByHash(string ...$columns): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -189,7 +197,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function partitionByList(string ...$columns) : CreateTableFinalStep
+    public function partitionByList(string ...$columns): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -207,7 +215,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function partitionByRange(string ...$columns) : CreateTableFinalStep
+    public function partitionByRange(string ...$columns): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -225,7 +233,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function tablespace(string $tablespaceName) : CreateTableFinalStep
+    public function tablespace(string $tablespaceName): CreateTableFinalStep
     {
         return new self(
             $this->table,
@@ -243,7 +251,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function temporary() : CreateTableTemporaryStep
+    public function temporary(): CreateTableTemporaryStep
     {
         return new self(
             $this->table,
@@ -261,7 +269,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         );
     }
 
-    public function toAst() : CreateStmt
+    public function toAst(): CreateStmt
     {
         $createStmt = new CreateStmt();
 
@@ -352,7 +360,7 @@ final readonly class CreateTableBuilder implements CreateTableColumnsStep, Creat
         return $createStmt;
     }
 
-    public function unlogged() : CreateTableFinalStep
+    public function unlogged(): CreateTableFinalStep
     {
         return new self(
             $this->table,

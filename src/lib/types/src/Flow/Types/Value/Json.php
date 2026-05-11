@@ -25,7 +25,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
     /**
      * @param array<array-key, mixed> $value
      */
-    public static function fromArray(array $value, bool $asObject = false) : self
+    public static function fromArray(array $value, bool $asObject = false): self
     {
         if ($asObject && [] === $value) {
             return new self('{}');
@@ -34,12 +34,12 @@ final readonly class Json implements \JsonSerializable, \Stringable
         return new self(\json_encode($value, \JSON_THROW_ON_ERROR));
     }
 
-    public static function fromString(string $value) : self
+    public static function fromString(string $value): self
     {
         return new self($value);
     }
 
-    public static function isValid(string $value) : bool
+    public static function isValid(string $value): bool
     {
         if ($value === '') {
             return false;
@@ -59,12 +59,12 @@ final readonly class Json implements \JsonSerializable, \Stringable
         return \json_validate($value);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function isEqual(self $json) : bool
+    public function isEqual(self $json): bool
     {
         $a = $this->sortRecursive($this->toArray());
         $b = $this->sortRecursive($json->toArray());
@@ -72,7 +72,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
         return \json_encode($a, \JSON_THROW_ON_ERROR) === \json_encode($b, \JSON_THROW_ON_ERROR);
     }
 
-    public function isObject() : bool
+    public function isObject(): bool
     {
         return $this->isObject;
     }
@@ -80,7 +80,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
     /**
      * @return array<array-key, mixed>
      */
-    public function jsonSerialize() : array
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
@@ -88,12 +88,12 @@ final readonly class Json implements \JsonSerializable, \Stringable
     /**
      * @return array<array-key, mixed>
      */
-    public function toArray() : array
+    public function toArray(): array
     {
         return (array) \json_decode($this->value, true, flags: \JSON_THROW_ON_ERROR);
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return $this->value;
     }
@@ -103,7 +103,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
      *
      * @return array<array-key, mixed>
      */
-    private function sortRecursive(array $array) : array
+    private function sortRecursive(array $array): array
     {
         foreach ($array as $key => $value) {
             if (\is_array($value)) {
@@ -112,7 +112,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
         }
 
         if (\array_is_list($array)) {
-            \usort($array, static fn (mixed $a, mixed $b) : int => \serialize($a) <=> \serialize($b));
+            \usort($array, static fn(mixed $a, mixed $b): int => \serialize($a) <=> \serialize($b));
         } else {
             \ksort($array);
         }

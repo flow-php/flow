@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Ownership;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, ReassignOwnedStmt, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ReassignOwnedStmt;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, ReassignOwnedToStep
@@ -17,23 +20,19 @@ final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, Rea
     private function __construct(
         private array $roles,
         private ?string $newRole = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$roles) : ReassignOwnedToStep
+    public static function create(string ...$roles): ReassignOwnedToStep
     {
         return new self(\array_values($roles));
     }
 
-    public function to(string $newRole) : ReassignOwnedFinalStep
+    public function to(string $newRole): ReassignOwnedFinalStep
     {
-        return new self(
-            $this->roles,
-            $newRole,
-        );
+        return new self($this->roles, $newRole);
     }
 
-    public function toAst() : ReassignOwnedStmt
+    public function toAst(): ReassignOwnedStmt
     {
         $stmt = new ReassignOwnedStmt();
 

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Propagation;
 
-use Flow\Telemetry\Context\{SpanId, TraceFlags, TraceId, TraceState};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Context\TraceState;
 use Flow\Telemetry\Tracer\SpanContext;
 
 /**
@@ -45,7 +48,7 @@ final readonly class W3CTraceContext implements Propagator
     /**
      * @param Carrier<mixed> $carrier
      */
-    public function extract(Carrier $carrier) : PropagationContext
+    public function extract(Carrier $carrier): PropagationContext
     {
         $traceparent = $carrier->get(self::HEADER_TRACEPARENT);
 
@@ -99,21 +102,13 @@ final readonly class W3CTraceContext implements Propagator
             }
         }
 
-        return new PropagationContext(
-            SpanContext::createRemote(
-                $traceId,
-                $spanId,
-                null,
-                $traceFlags,
-                $traceState,
-            ),
-        );
+        return new PropagationContext(SpanContext::createRemote($traceId, $spanId, null, $traceFlags, $traceState));
     }
 
     /**
      * @return array<string>
      */
-    public function fields() : array
+    public function fields(): array
     {
         return [self::HEADER_TRACEPARENT, self::HEADER_TRACESTATE];
     }
@@ -121,7 +116,7 @@ final readonly class W3CTraceContext implements Propagator
     /**
      * @param Carrier<mixed> $carrier
      */
-    public function inject(PropagationContext $context, Carrier $carrier) : void
+    public function inject(PropagationContext $context, Carrier $carrier): void
     {
         if ($context->spanContext === null || !$context->spanContext->isValid()) {
             return;

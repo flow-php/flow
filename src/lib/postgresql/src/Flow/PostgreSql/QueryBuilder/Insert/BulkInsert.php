@@ -28,13 +28,12 @@ final readonly class BulkInsert implements Sql
         private ?ConflictTarget $conflictTarget = null,
         private bool $doNothing = false,
         private array $updateAssignments = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<string> $columns
      */
-    public static function into(string $table, array $columns, int $rowCount) : self
+    public static function into(string $table, array $columns, int $rowCount): self
     {
         if ($rowCount < 1) {
             throw new \InvalidArgumentException('Row count must be at least 1');
@@ -50,16 +49,9 @@ final readonly class BulkInsert implements Sql
     /**
      * ON CONFLICT DO NOTHING - skip rows that would cause conflicts.
      */
-    public function onConflictDoNothing(?ConflictTarget $target = null) : self
+    public function onConflictDoNothing(?ConflictTarget $target = null): self
     {
-        return new self(
-            $this->table,
-            $this->columns,
-            $this->rowCount,
-            $target,
-            true,
-            [],
-        );
+        return new self($this->table, $this->columns, $this->rowCount, $target, true, []);
     }
 
     /**
@@ -67,7 +59,7 @@ final readonly class BulkInsert implements Sql
      *
      * @param null|list<string> $updateColumns Columns to update. If null, updates all non-conflict columns.
      */
-    public function onConflictDoUpdate(ConflictTarget $target, ?array $updateColumns = null) : self
+    public function onConflictDoUpdate(ConflictTarget $target, ?array $updateColumns = null): self
     {
         $columnsToUpdate = $updateColumns ?? \array_diff($this->columns, $target->getColumns());
         $assignments = [];
@@ -76,23 +68,13 @@ final readonly class BulkInsert implements Sql
             $assignments[$column] = 'EXCLUDED."' . $column . '"';
         }
 
-        return new self(
-            $this->table,
-            $this->columns,
-            $this->rowCount,
-            $target,
-            false,
-            $assignments,
-        );
+        return new self($this->table, $this->columns, $this->rowCount, $target, false, $assignments);
     }
 
-    public function toSql() : string
+    public function toSql(): string
     {
         $columnCount = \count($this->columns);
-        $quotedColumns = \implode(', ', \array_map(
-            static fn (string $col) : string => '"' . $col . '"',
-            $this->columns
-        ));
+        $quotedColumns = \implode(', ', \array_map(static fn(string $col): string => '"' . $col . '"', $this->columns));
 
         $rows = [];
 
@@ -107,12 +89,7 @@ final readonly class BulkInsert implements Sql
             $rows[] = '(' . \implode(', ', $placeholders) . ')';
         }
 
-        $sql = \sprintf(
-            'INSERT INTO "%s" (%s) VALUES %s',
-            $this->table,
-            $quotedColumns,
-            \implode(', ', $rows)
-        );
+        $sql = \sprintf('INSERT INTO "%s" (%s) VALUES %s', $this->table, $quotedColumns, \implode(', ', $rows));
 
         if ($this->doNothing) {
             $sql .= ' ON CONFLICT';
@@ -141,7 +118,7 @@ final readonly class BulkInsert implements Sql
         return $sql;
     }
 
-    private function formatConflictTarget(ConflictTarget $target) : string
+    private function formatConflictTarget(ConflictTarget $target): string
     {
         $constraint = $target->getConstraint();
 
@@ -152,10 +129,7 @@ final readonly class BulkInsert implements Sql
         $columns = $target->getColumns();
 
         if ($columns !== []) {
-            $quotedColumns = \array_map(
-                static fn (string $col) : string => '"' . $col . '"',
-                $columns
-            );
+            $quotedColumns = \array_map(static fn(string $col): string => '"' . $col . '"', $columns);
 
             return '(' . \implode(', ', $quotedColumns) . ')';
         }

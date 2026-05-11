@@ -14,18 +14,17 @@ final readonly class Statements implements \Countable, \IteratorAggregate
      */
     public function __construct(
         private array $statements,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, Statement<mixed>>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->statements;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->statements);
     }
@@ -33,7 +32,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
     /**
      * @return null|Statement<mixed>
      */
-    public function first() : ?Statement
+    public function first(): ?Statement
     {
         return $this->statements[0] ?? null;
     }
@@ -41,7 +40,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
     /**
      * @return null|Statement<mixed>
      */
-    public function get(int $index) : ?Statement
+    public function get(int $index): ?Statement
     {
         return $this->statements[$index] ?? null;
     }
@@ -49,7 +48,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<int, Statement<mixed>>
      */
-    public function getIterator() : \Traversable
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->statements);
     }
@@ -58,7 +57,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
      * @phpstan-assert-if-false Statement<mixed> $this->first()
      * @phpstan-assert-if-false Statement<mixed> $this->last()
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return \count($this->statements) === 0;
     }
@@ -67,7 +66,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
      * @phpstan-assert-if-true Statement<mixed> $this->first()
      * @phpstan-assert-if-true Statement<mixed> $this->last()
      */
-    public function isSingle() : bool
+    public function isSingle(): bool
     {
         return \count($this->statements) === 1;
     }
@@ -75,7 +74,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
     /**
      * @return null|Statement<mixed>
      */
-    public function last() : ?Statement
+    public function last(): ?Statement
     {
         if (\count($this->statements) === 0) {
             return null;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterView;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterObjectSchemaStmt, ObjectType, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\AlterObjectSchemaStmt;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterViewSchemaBuilder implements AlterViewSchemaFinalStep
@@ -16,15 +18,14 @@ final readonly class AlterViewSchemaBuilder implements AlterViewSchemaFinalStep
         private ?string $schema,
         private string $newSchema,
         private bool $ifExists,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $view, ?string $schema, string $newSchema, bool $ifExists) : self
+    public static function create(string $view, ?string $schema, string $newSchema, bool $ifExists): self
     {
         return new self($view, $schema, $newSchema, $ifExists);
     }
 
-    public function toAst() : AlterObjectSchemaStmt
+    public function toAst(): AlterObjectSchemaStmt
     {
         $stmt = new AlterObjectSchemaStmt();
         $stmt->setObjectType(ObjectType::OBJECT_VIEW);

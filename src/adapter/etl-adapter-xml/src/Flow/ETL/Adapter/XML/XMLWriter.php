@@ -8,5 +8,5 @@ use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 
 interface XMLWriter
 {
-    public function write(XMLNode $node) : string;
+    public function write(XMLNode $node): string;
 }

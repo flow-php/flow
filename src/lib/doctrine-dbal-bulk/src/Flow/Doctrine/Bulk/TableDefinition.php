@@ -17,17 +17,20 @@ final class TableDefinition
      */
     private ?array $columns = null;
 
-    public function __construct(private readonly string $name, private readonly Connection $connection)
-    {
-    }
+    public function __construct(
+        private readonly string $name,
+        private readonly Connection $connection,
+    ) {}
 
     /**
      * @throws RuntimeException
      */
-    public function dbalColumn(string $columnName) : Column
+    public function dbalColumn(string $columnName): Column
     {
-
-        $dbColumnNames = \array_filter($this->getColumns(), static fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
+        $dbColumnNames = \array_filter(
+            $this->getColumns(),
+            static fn(Column $dbColumn): bool => $dbColumn->getName() === $columnName,
+        );
 
         if (\count($dbColumnNames) !== 1) {
             throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");
@@ -43,7 +46,7 @@ final class TableDefinition
      *
      * @return array<int<0, max>|string, string>
      */
-    public function dbalParameterTypes(BulkData $bulkData) : array
+    public function dbalParameterTypes(BulkData $bulkData): array
     {
         return match ($bulkData->parametersStyle()) {
             SQLParametersStyle::NAMED => $this->dbalTypes($bulkData),
@@ -54,7 +57,7 @@ final class TableDefinition
     /**
      * @return array<int<0, max>, string>
      */
-    public function dbalPositionalTypes(BulkData $bulkData) : array
+    public function dbalPositionalTypes(BulkData $bulkData): array
     {
         $types = [];
 
@@ -75,7 +78,7 @@ final class TableDefinition
      *
      * @return array<string, string>
      */
-    public function dbalTypes(BulkData $bulkData) : array
+    public function dbalTypes(BulkData $bulkData): array
     {
         $types = [];
 
@@ -93,12 +96,12 @@ final class TableDefinition
     /**
      * @return string
      */
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function platform() : AbstractPlatform
+    public function platform(): AbstractPlatform
     {
         return $this->connection->getDatabasePlatform();
     }
@@ -106,7 +109,7 @@ final class TableDefinition
     /**
      * @return array<Column>
      */
-    private function getColumns() : array
+    private function getColumns(): array
     {
         if ($this->columns !== null) {
             return $this->columns;

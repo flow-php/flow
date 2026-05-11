@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTableAs;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateTableAsStmt, IntoClause, Node, ObjectType, PBString, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\CreateTableAsStmt;
+use Flow\PostgreSql\Protobuf\AST\IntoClause;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
@@ -22,15 +27,14 @@ final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
         private array $columnNames = [],
         private bool $ifNotExists = false,
         private bool $withNoData = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $table, SelectFinalStep $query, ?string $schema = null) : CreateTableAsFinalStep
+    public static function create(string $table, SelectFinalStep $query, ?string $schema = null): CreateTableAsFinalStep
     {
         return new self($table, $schema, $query);
     }
 
-    public function columnNames(string ...$names) : CreateTableAsFinalStep
+    public function columnNames(string ...$names): CreateTableAsFinalStep
     {
         return new self(
             $this->table,
@@ -42,19 +46,12 @@ final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
         );
     }
 
-    public function ifNotExists() : CreateTableAsFinalStep
+    public function ifNotExists(): CreateTableAsFinalStep
     {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->query,
-            $this->columnNames,
-            true,
-            $this->withNoData,
-        );
+        return new self($this->table, $this->schema, $this->query, $this->columnNames, true, $this->withNoData);
     }
 
-    public function toAst() : CreateTableAsStmt
+    public function toAst(): CreateTableAsStmt
     {
         $stmt = new CreateTableAsStmt();
 
@@ -99,19 +96,12 @@ final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
         return $stmt;
     }
 
-    public function withNoData() : CreateTableAsFinalStep
+    public function withNoData(): CreateTableAsFinalStep
     {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->query,
-            $this->columnNames,
-            $this->ifNotExists,
-            true,
-        );
+        return new self($this->table, $this->schema, $this->query, $this->columnNames, $this->ifNotExists, true);
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);

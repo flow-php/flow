@@ -4,27 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{cast, config, flow_context, ref};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Value\{Json, Uuid};
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\cast;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
 
 final class CastTest extends FlowTestCase
 {
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function cast_provider() : array
+    public static function cast_provider(): array
     {
         $xml = new \DOMDocument();
         $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
 
         $fullXMLString = <<<'XML'
-<?xml version="1.0"?>
-<root><foo baz="buz">bar</foo></root>
+            <?xml version="1.0"?>
+            <root><foo baz="buz">bar</foo></root>
 
-XML;
+            XML;
 
         return [
             'invalid' => [null, 'int', null],
@@ -41,62 +46,95 @@ XML;
             'null' => ['1', 'null', null],
             'json' => [[1], 'json', new Json('[1]')],
             'json_pretty' => [[1], 'json_pretty', "[\n    1\n]"],
-            'xml_to_array' => [$xml, 'array', ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]]],
+            'xml_to_array' => [
+                $xml,
+                'array',
+                ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
+            ],
             'string_to_xml' => [$xmlString, 'xml', $xml],
             'xml_to_string' => [$xml, 'string', '<root><foo baz="buz">bar</foo></root>'],
             'full_xml_to_string' => [$fullXMLString, 'string', $fullXMLString],
             'datetime' => [new \DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
-            'datetime_to_date' => [new \DateTimeImmutable('2023-01-01 00:01:00 UTC'), 'date', new \DateTimeImmutable('2023-01-01T00:00:00+00:00')],
+            'datetime_to_date' => [
+                new \DateTimeImmutable('2023-01-01 00:01:00 UTC'),
+                'date',
+                new \DateTimeImmutable('2023-01-01T00:00:00+00:00'),
+            ],
             'string_to_timezone' => ['UTC', 'timezone', new \DateTimeZone('UTC')],
             'string_to_timezone_america' => ['America/New_York', 'timezone', new \DateTimeZone('America/New_York')],
-            'datetime_to_timezone' => [new \DateTimeImmutable('2023-01-01 00:00:00', new \DateTimeZone('Europe/London')), 'timezone', new \DateTimeZone('Europe/London')],
-            'uuid' => [Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'), 'string', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'],
+            'datetime_to_timezone' => [
+                new \DateTimeImmutable('2023-01-01 00:00:00', new \DateTimeZone('Europe/London')),
+                'timezone',
+                new \DateTimeZone('Europe/London'),
+            ],
+            'uuid' => [
+                Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
+                'string',
+                'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+            ],
             'bool_to_string' => [true, 'string', 'true'],
         ];
     }
 
     #[DataProvider('cast_provider')]
-    public function test_cast(mixed $from, string $to, mixed $expected) : void
+    public function test_cast(mixed $from, string $to, mixed $expected): void
     {
         $entryFactory = flow_context(config())->entryFactory();
 
-        $resultRefCast = ref('value')->cast($to)->eval(row($entryFactory->create('value', $from)), flow_context())?->value;
-        $resultCastRef = cast(ref('value'), $to)->eval(row($entryFactory->create('value', $from)), flow_context())?->value;
+        $resultRefCast = ref('value')
+            ->cast($to)
+            ->eval(row($entryFactory->create('value', $from)), flow_context())
+            ?->value;
+        $resultCastRef = cast(ref('value'), $to)->eval(
+            row($entryFactory->create('value', $from)),
+            flow_context(),
+        )?->value;
 
         if (\is_object($expected) || \is_object($from)) {
-            self::assertEquals($expected, $resultRefCast);
-            self::assertEquals($expected, $resultCastRef);
+            static::assertEquals($expected, $resultRefCast);
+            static::assertEquals($expected, $resultCastRef);
         } else {
-            self::assertSame($expected, $resultRefCast);
-            self::assertSame($expected, $resultCastRef);
+            static::assertSame($expected, $resultRefCast);
+            static::assertSame($expected, $resultCastRef);
         }
     }
 
-    public function test_casting_integer_to_timezone() : void
+    public function test_casting_integer_to_timezone(): void
     {
-        self::assertNull(
-            ref('value')->cast('timezone')->eval(row(flow_context(config())->entryFactory()->create('value', 123)), flow_context())
+        static::assertNull(
+            ref('value')
+                ->cast('timezone')
+                ->eval(row(flow_context(config())->entryFactory()->create('value', 123)), flow_context()),
         );
     }
 
-    public function test_casting_integer_to_xml() : void
+    public function test_casting_integer_to_xml(): void
     {
-        self::assertNull(
-            ref('value')->cast('xml')->eval(row(flow_context(config())->entryFactory()->create('value', 1)), flow_context())
+        static::assertNull(
+            ref('value')
+                ->cast('xml')
+                ->eval(row(flow_context(config())->entryFactory()->create('value', 1)), flow_context()),
         );
     }
 
-    public function test_casting_invalid_string_to_timezone() : void
+    public function test_casting_invalid_string_to_timezone(): void
     {
-        self::assertNull(
-            ref('value')->cast('timezone')->eval(row(flow_context(config())->entryFactory()->create('value', 'invalid-timezone')), flow_context())
+        static::assertNull(
+            ref('value')
+                ->cast('timezone')
+                ->eval(
+                    row(flow_context(config())->entryFactory()->create('value', 'invalid-timezone')),
+                    flow_context(),
+                ),
         );
     }
 
-    public function test_casting_non_xml_string_to_xml() : void
+    public function test_casting_non_xml_string_to_xml(): void
     {
-        self::assertNull(
-            ref('value')->cast('xml')->eval(row(flow_context(config())->entryFactory()->create('value', 'foo')), flow_context())
+        static::assertNull(
+            ref('value')
+                ->cast('xml')
+                ->eval(row(flow_context(config())->entryFactory()->create('value', 'foo')), flow_context()),
         );
     }
 }

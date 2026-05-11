@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\type_instance_of;
 use Dom\HTMlElement;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class DOMElementAttributesCount extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction|\DOMNode|HTMlElement $domElement)
-    {
-    }
+    public function __construct(
+        private readonly ScalarFunction|\DOMNode|HTMlElement $domElement,
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : ?int
+    public function eval(Row $row, FlowContext $context): ?int
     {
         $types = [
             type_instance_of(\DOMElement::class),
@@ -28,7 +30,9 @@ final class DOMElementAttributesCount extends ScalarFunctionChain
         $domElement = (new Parameter($this->domElement))->as($row, $context, ...$types);
 
         if ($domElement === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementAttributesCount requires non-null DOMElement'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('DOMElementAttributesCount requires non-null DOMElement'));
         }
 
         if (!$domElement->hasAttributes()) {

@@ -8,16 +8,17 @@ use Flow\ETL\Rows;
 
 final readonly class ASCIITable
 {
-    public function __construct(private Rows $rows)
-    {
-    }
+    public function __construct(
+        private Rows $rows,
+    ) {}
 
-    public function print(int|bool $truncate = 20) : string
+    public function print(int|bool $truncate = 20): string
     {
         $headers = new Headers($this->rows);
         $body = new Body($this->rows);
 
-        return (new ASCIIHeaders($headers, $body))->print($truncate)
-            . (new ASCIIBody($headers, $body))->print($truncate);
+        return (
+            (new ASCIIHeaders($headers, $body))->print($truncate) . (new ASCIIBody($headers, $body))->print($truncate)
+        );
     }
 }

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateEnumStmt, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CreateEnumStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class CreateEnumTypeBuilder implements CreateEnumTypeFinalStep, CreateEnumTypeLabelsStep
 {
@@ -18,26 +21,21 @@ final readonly class CreateEnumTypeBuilder implements CreateEnumTypeFinalStep, C
         private string $name,
         private ?string $schema = null,
         private array $labels = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateEnumTypeLabelsStep
+    public static function create(string $name): CreateEnumTypeLabelsStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function labels(string ...$labels) : CreateEnumTypeFinalStep
+    public function labels(string ...$labels): CreateEnumTypeFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            \array_values($labels),
-        );
+        return new self($this->name, $this->schema, \array_values($labels));
     }
 
-    public function toAst() : CreateEnumStmt
+    public function toAst(): CreateEnumStmt
     {
         $stmt = new CreateEnumStmt();
 

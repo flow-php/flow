@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
 interface RevokeOnStep
 {
-    public function onAllTablesInSchema(string ...$schemas) : RevokeFromStep;
+    public function onAllTablesInSchema(string ...$schemas): RevokeFromStep;
 
-    public function onTable(string ...$tables) : RevokeFromStep;
+    public function onTable(string ...$tables): RevokeFromStep;
 }

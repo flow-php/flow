@@ -14,7 +14,7 @@ final class CartesianProduct
      *
      * @return array<array-key, mixed>
      */
-    public function __invoke(array $input) : array
+    public function __invoke(array $input): array
     {
         $result = [[]];
 

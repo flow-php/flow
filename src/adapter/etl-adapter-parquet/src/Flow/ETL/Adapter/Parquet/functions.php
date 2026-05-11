@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\Filesystem\DSL\path_real;
-use Flow\ETL\{Attribute\DocumentationDSL,
-    Attribute\DocumentationExample,
-    Attribute\Module,
-    Attribute\Type as DSLType
-};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\DocumentationExample;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+
+use function Flow\Filesystem\DSL\path_real;
 
 /**
  * @param Path|string $path
@@ -31,7 +31,7 @@ function from_parquet(
     Options $options = new Options(),
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
-) : ParquetExtractor {
+): ParquetExtractor {
     $loader = (new ParquetExtractor(\is_string($path) ? path_real($path) : $path))
         ->withOptions($options)
         ->withByteOrder($byte_order);
@@ -60,9 +60,8 @@ function to_parquet(
     ?Options $options = null,
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
-) : ParquetLoader {
-    $loader = (new ParquetLoader(\is_string($path) ? path_real($path) : $path))
-        ->withCompressions($compressions);
+): ParquetLoader {
+    $loader = (new ParquetLoader(\is_string($path) ? path_real($path) : $path))->withCompressions($compressions);
 
     if ($options !== null) {
         $loader->withOptions($options);
@@ -83,7 +82,7 @@ function to_parquet(
  * @return \Generator<T>
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function array_to_generator(array $data) : \Generator
+function array_to_generator(array $data): \Generator
 {
     foreach ($data as $row) {
         yield $row;
@@ -91,19 +90,19 @@ function array_to_generator(array $data) : \Generator
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function empty_generator() : \Generator
+function empty_generator(): \Generator
 {
     yield from [];
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function schema_to_parquet(Schema $schema) : \Flow\Parquet\ParquetFile\Schema
+function schema_to_parquet(Schema $schema): \Flow\Parquet\ParquetFile\Schema
 {
     return (new SchemaConverter())->toParquet($schema);
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function schema_from_parquet(\Flow\Parquet\ParquetFile\Schema $schema) : Schema
+function schema_from_parquet(\Flow\Parquet\ParquetFile\Schema $schema): Schema
 {
     return (new SchemaConverter())->toFlow($schema);
 }

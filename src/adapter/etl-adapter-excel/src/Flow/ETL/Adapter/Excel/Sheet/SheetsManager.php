@@ -5,22 +5,23 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Sheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use OpenSpout\Reader\{SheetInterface, SheetIteratorInterface};
+use OpenSpout\Reader\SheetInterface;
+use OpenSpout\Reader\SheetIteratorInterface;
 
 final readonly class SheetsManager
 {
-    public function __construct(private SheetIteratorInterface $sheets)
-    {
-    }
+    public function __construct(
+        private SheetIteratorInterface $sheets,
+    ) {}
 
-    public function first() : SheetInterface
+    public function first(): SheetInterface
     {
         $this->sheets->rewind();
 
         return $this->sheets->current();
     }
 
-    public function get(string $sheetName) : SheetInterface
+    public function get(string $sheetName): SheetInterface
     {
         SheetNameAssertion::assert($sheetName);
 

@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class DropTriggerBuilder implements DropTriggerFinalStep, DropTriggerOnStep
 {
@@ -17,71 +23,40 @@ final readonly class DropTriggerBuilder implements DropTriggerFinalStep, DropTri
         private ?string $table = null,
         private ?string $schema = null,
         private int $behavior = DropBehavior::DROP_RESTRICT,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : DropTriggerOnStep
+    public static function create(string $name): DropTriggerOnStep
     {
         return new self($name);
     }
 
-    public function cascade() : DropTriggerFinalStep
+    public function cascade(): DropTriggerFinalStep
     {
-        return new self(
-            $this->name,
-            $this->ifExists,
-            $this->table,
-            $this->schema,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->name, $this->ifExists, $this->table, $this->schema, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropTriggerOnStep
+    public function ifExists(): DropTriggerOnStep
     {
-        return new self(
-            $this->name,
-            true,
-            $this->table,
-            $this->schema,
-            $this->behavior,
-        );
+        return new self($this->name, true, $this->table, $this->schema, $this->behavior);
     }
 
-    public function on(string $table, ?string $schema = null) : DropTriggerFinalStep
+    public function on(string $table, ?string $schema = null): DropTriggerFinalStep
     {
         if ($schema !== null) {
-            return new self(
-                $this->name,
-                $this->ifExists,
-                $table,
-                $schema,
-                $this->behavior,
-            );
+            return new self($this->name, $this->ifExists, $table, $schema, $this->behavior);
         }
 
         $identifier = QualifiedIdentifier::parse($table);
 
-        return new self(
-            $this->name,
-            $this->ifExists,
-            $identifier->name(),
-            $identifier->schema(),
-            $this->behavior,
-        );
+        return new self($this->name, $this->ifExists, $identifier->name(), $identifier->schema(), $this->behavior);
     }
 
-    public function restrict() : DropTriggerFinalStep
+    public function restrict(): DropTriggerFinalStep
     {
-        return new self(
-            $this->name,
-            $this->ifExists,
-            $this->table,
-            $this->schema,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->name, $this->ifExists, $this->table, $this->schema, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
 

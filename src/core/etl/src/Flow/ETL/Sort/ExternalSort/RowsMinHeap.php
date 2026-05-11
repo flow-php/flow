@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\{Reference, References, SortOrder};
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
+use Flow\ETL\Row\SortOrder;
 
 /**
  * @template HeapElement
@@ -21,7 +23,7 @@ final class RowsMinHeap extends \SplMinHeap
         $this->ref = References::init(...$refs);
     }
 
-    public function __debugInfo() : array
+    public function __debugInfo(): array
     {
         $clone = clone $this;
         $elements = [];
@@ -37,16 +39,18 @@ final class RowsMinHeap extends \SplMinHeap
     /**
      * @return BucketRow
      */
-    public function extract() : mixed
+    public function extract(): mixed
     {
         return parent::extract();
     }
 
     #[\ReturnTypeWillChange]
-    public function insert(mixed $value) : void
+    public function insert(mixed $value): void
     {
         if (!$value instanceof BucketRow) {
-            throw new InvalidArgumentException('Value inserted into RowsMinHeap must be an instance of Flow\\ETL\\ExternalSort\\CachedRow');
+            throw new InvalidArgumentException(
+                'Value inserted into RowsMinHeap must be an instance of Flow\\ETL\\ExternalSort\\CachedRow',
+            );
         }
 
         parent::insert($value);
@@ -56,7 +60,7 @@ final class RowsMinHeap extends \SplMinHeap
      * @param BucketRow $value1
      * @param BucketRow $value2
      */
-    protected function compare($value1, $value2) : int
+    protected function compare($value1, $value2): int
     {
         $leftValues = [];
         $rightValues = [];

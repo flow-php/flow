@@ -7,7 +7,7 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Attribute;
 #[\Attribute(\Attribute::TARGET_CLASS)]
 final readonly class AsFilesystemFactory
 {
-    public function __construct(public string $type)
-    {
-    }
+    public function __construct(
+        public string $type,
+    ) {}
 }

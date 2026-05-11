@@ -4,27 +4,95 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
-use function Flow\ETL\Adapter\ChartJS\{bar_chart, line_chart, pie_chart, to_chartjs, to_chartjs_file, to_chartjs_var};
-use function Flow\ETL\DSL\{df, first, from_array, lit, ref, refs, sum};
-use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\Adapter\ChartJS\bar_chart;
+use function Flow\ETL\Adapter\ChartJS\line_chart;
+use function Flow\ETL\Adapter\ChartJS\pie_chart;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs_file;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs_var;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\first;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\sum;
+use function Flow\Filesystem\DSL\path;
 
 final class ChartJSLoaderTest extends FlowTestCase
 {
-    public function test_loading_data_to_bar_chart() : void
+    public function test_loading_data_to_bar_chart(): void
     {
         $data = [
-            ['Date' => '2023-01-01', 'Revenue' => 10000.53, 'CM' => 5000.12, 'Ads Spends' => 2000.78, 'Storage Costs' => 1000.34, 'Shipping Costs' => 1500.45, 'Currency' => 'USD'],
-            ['Date' => '2023-01-02', 'Revenue' => 10234.56, 'CM' => 5102.23, 'Ads Spends' => 2050.12, 'Storage Costs' => 1050.78, 'Shipping Costs' => 1550.99, 'Currency' => 'USD'],
-            ['Date' => '2023-01-03', 'Revenue' => 11000.98, 'CM' => 5200.32, 'Ads Spends' => 2100.67, 'Storage Costs' => 1100.87, 'Shipping Costs' => 1600.34, 'Currency' => 'USD'],
-            ['Date' => '2023-01-04', 'Revenue' => 10890.34, 'CM' => 5300.98, 'Ads Spends' => 2150.56, 'Storage Costs' => 1150.67, 'Shipping Costs' => 1650.87, 'Currency' => 'USD'],
-            ['Date' => '2023-01-05', 'Revenue' => 13750.12, 'CM' => 5950.78, 'Ads Spends' => 2750.78, 'Storage Costs' => 1750.78, 'Shipping Costs' => 2250.12, 'Currency' => 'USD'],
-            ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
+            [
+                'Date' => '2023-01-01',
+                'Revenue' => 10000.53,
+                'CM' => 5000.12,
+                'Ads Spends' => 2000.78,
+                'Storage Costs' => 1000.34,
+                'Shipping Costs' => 1500.45,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-02',
+                'Revenue' => 10234.56,
+                'CM' => 5102.23,
+                'Ads Spends' => 2050.12,
+                'Storage Costs' => 1050.78,
+                'Shipping Costs' => 1550.99,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-03',
+                'Revenue' => 11000.98,
+                'CM' => 5200.32,
+                'Ads Spends' => 2100.67,
+                'Storage Costs' => 1100.87,
+                'Shipping Costs' => 1600.34,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-04',
+                'Revenue' => 10890.34,
+                'CM' => 5300.98,
+                'Ads Spends' => 2150.56,
+                'Storage Costs' => 1150.67,
+                'Shipping Costs' => 1650.87,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-05',
+                'Revenue' => 13750.12,
+                'CM' => 5950.78,
+                'Ads Spends' => 2750.78,
+                'Storage Costs' => 1750.78,
+                'Shipping Costs' => 2250.12,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-02-06',
+                'Revenue' => 14000.23,
+                'CM' => 6000.89,
+                'Ads Spends' => 2800.89,
+                'Storage Costs' => 1800.89,
+                'Shipping Costs' => 2300.23,
+                'Currency' => 'USD',
+            ],
         ];
 
         df()
             ->read(from_array($data))
-            ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
+            ->withEntry(
+                'Profit',
+                ref('Revenue')
+                    ->minus(ref('CM'))
+                    ->minus(ref('Ads Spends'))
+                    ->minus(ref('Storage Costs'))
+                    ->minus(ref('Shipping Costs'))
+                    ->round(lit(2)),
+            )
             ->write(
                 to_chartjs(
                     $chart = bar_chart(
@@ -36,13 +104,14 @@ final class ChartJSLoaderTest extends FlowTestCase
                             ref('Storage Costs'),
                             ref('Shipping Costs'),
                             ref('Profit'),
-                        )
+                        ),
                     ),
-                )->withOutputPath(path($output = __DIR__ . '/Output/bar_chart.html'))
+                )
+                    ->withOutputPath(path($output = __DIR__ . '/Output/bar_chart.html')),
             )
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 'type' => 'bar',
                 'data' => [
@@ -77,44 +146,98 @@ final class ChartJSLoaderTest extends FlowTestCase
             ],
             $chart->data(),
         );
-        self::assertFileExists($output);
+        static::assertFileExists($output);
     }
 
-    public function test_loading_data_to_bar_chart_output_variable() : void
+    public function test_loading_data_to_bar_chart_output_variable(): void
     {
         $data = [
-            ['Date' => '2023-01-01', 'Revenue' => 10000.53, 'CM' => 5000.12, 'Ads Spends' => 2000.78, 'Storage Costs' => 1000.34, 'Shipping Costs' => 1500.45, 'Currency' => 'USD'],
-            ['Date' => '2023-01-02', 'Revenue' => 10234.56, 'CM' => 5102.23, 'Ads Spends' => 2050.12, 'Storage Costs' => 1050.78, 'Shipping Costs' => 1550.99, 'Currency' => 'USD'],
-            ['Date' => '2023-01-03', 'Revenue' => 11000.98, 'CM' => 5200.32, 'Ads Spends' => 2100.67, 'Storage Costs' => 1100.87, 'Shipping Costs' => 1600.34, 'Currency' => 'USD'],
-            ['Date' => '2023-01-04', 'Revenue' => 10890.34, 'CM' => 5300.98, 'Ads Spends' => 2150.56, 'Storage Costs' => 1150.67, 'Shipping Costs' => 1650.87, 'Currency' => 'USD'],
-            ['Date' => '2023-01-05', 'Revenue' => 13750.12, 'CM' => 5950.78, 'Ads Spends' => 2750.78, 'Storage Costs' => 1750.78, 'Shipping Costs' => 2250.12, 'Currency' => 'USD'],
-            ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
+            [
+                'Date' => '2023-01-01',
+                'Revenue' => 10000.53,
+                'CM' => 5000.12,
+                'Ads Spends' => 2000.78,
+                'Storage Costs' => 1000.34,
+                'Shipping Costs' => 1500.45,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-02',
+                'Revenue' => 10234.56,
+                'CM' => 5102.23,
+                'Ads Spends' => 2050.12,
+                'Storage Costs' => 1050.78,
+                'Shipping Costs' => 1550.99,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-03',
+                'Revenue' => 11000.98,
+                'CM' => 5200.32,
+                'Ads Spends' => 2100.67,
+                'Storage Costs' => 1100.87,
+                'Shipping Costs' => 1600.34,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-04',
+                'Revenue' => 10890.34,
+                'CM' => 5300.98,
+                'Ads Spends' => 2150.56,
+                'Storage Costs' => 1150.67,
+                'Shipping Costs' => 1650.87,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-05',
+                'Revenue' => 13750.12,
+                'CM' => 5950.78,
+                'Ads Spends' => 2750.78,
+                'Storage Costs' => 1750.78,
+                'Shipping Costs' => 2250.12,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-02-06',
+                'Revenue' => 14000.23,
+                'CM' => 6000.89,
+                'Ads Spends' => 2800.89,
+                'Storage Costs' => 1800.89,
+                'Shipping Costs' => 2300.23,
+                'Currency' => 'USD',
+            ],
         ];
 
         $output = [];
 
         df()
             ->read(from_array($data))
-            ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
-            ->write(
-                to_chartjs_var(
-                    bar_chart(
-                        ref('Date'),
-                        refs(
-                            ref('Revenue'),
-                            ref('CM'),
-                            ref('Ads Spends'),
-                            ref('Storage Costs'),
-                            ref('Shipping Costs'),
-                            ref('Profit'),
-                        )
-                    ),
-                    $output
-                )
+            ->withEntry(
+                'Profit',
+                ref('Revenue')
+                    ->minus(ref('CM'))
+                    ->minus(ref('Ads Spends'))
+                    ->minus(ref('Storage Costs'))
+                    ->minus(ref('Shipping Costs'))
+                    ->round(lit(2)),
             )
+            ->write(to_chartjs_var(
+                bar_chart(
+                    ref('Date'),
+                    refs(
+                        ref('Revenue'),
+                        ref('CM'),
+                        ref('Ads Spends'),
+                        ref('Storage Costs'),
+                        ref('Shipping Costs'),
+                        ref('Profit'),
+                    ),
+                ),
+                $output,
+            ))
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 'type' => 'bar',
                 'data' => [
@@ -147,43 +270,97 @@ final class ChartJSLoaderTest extends FlowTestCase
                     ],
                 ],
             ],
-            $output
+            $output,
         );
     }
 
-    public function test_loading_data_to_line_chart() : void
+    public function test_loading_data_to_line_chart(): void
     {
         $data = [
-            ['Date' => '2023-01-01', 'Revenue' => 10000.53, 'CM' => 5000.12, 'Ads Spends' => 2000.78, 'Storage Costs' => 1000.34, 'Shipping Costs' => 1500.45, 'Currency' => 'USD'],
-            ['Date' => '2023-01-02', 'Revenue' => 10234.56, 'CM' => 5102.23, 'Ads Spends' => 2050.12, 'Storage Costs' => 1050.78, 'Shipping Costs' => 1550.99, 'Currency' => 'USD'],
-            ['Date' => '2023-01-03', 'Revenue' => 11000.98, 'CM' => 5200.32, 'Ads Spends' => 2100.67, 'Storage Costs' => 1100.87, 'Shipping Costs' => 1600.34, 'Currency' => 'USD'],
-            ['Date' => '2023-01-04', 'Revenue' => 10890.34, 'CM' => 5300.98, 'Ads Spends' => 2150.56, 'Storage Costs' => 1150.67, 'Shipping Costs' => 1650.87, 'Currency' => 'USD'],
-            ['Date' => '2023-01-05', 'Revenue' => 13750.12, 'CM' => 5950.78, 'Ads Spends' => 2750.78, 'Storage Costs' => 1750.78, 'Shipping Costs' => 2250.12, 'Currency' => 'USD'],
-            ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
+            [
+                'Date' => '2023-01-01',
+                'Revenue' => 10000.53,
+                'CM' => 5000.12,
+                'Ads Spends' => 2000.78,
+                'Storage Costs' => 1000.34,
+                'Shipping Costs' => 1500.45,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-02',
+                'Revenue' => 10234.56,
+                'CM' => 5102.23,
+                'Ads Spends' => 2050.12,
+                'Storage Costs' => 1050.78,
+                'Shipping Costs' => 1550.99,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-03',
+                'Revenue' => 11000.98,
+                'CM' => 5200.32,
+                'Ads Spends' => 2100.67,
+                'Storage Costs' => 1100.87,
+                'Shipping Costs' => 1600.34,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-04',
+                'Revenue' => 10890.34,
+                'CM' => 5300.98,
+                'Ads Spends' => 2150.56,
+                'Storage Costs' => 1150.67,
+                'Shipping Costs' => 1650.87,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-05',
+                'Revenue' => 13750.12,
+                'CM' => 5950.78,
+                'Ads Spends' => 2750.78,
+                'Storage Costs' => 1750.78,
+                'Shipping Costs' => 2250.12,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-02-06',
+                'Revenue' => 14000.23,
+                'CM' => 6000.89,
+                'Ads Spends' => 2800.89,
+                'Storage Costs' => 1800.89,
+                'Shipping Costs' => 2300.23,
+                'Currency' => 'USD',
+            ],
         ];
 
         df()
             ->read(from_array($data))
-            ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
-            ->write(
-                to_chartjs_file(
-                    $chart = line_chart(
-                        ref('Date'),
-                        refs(
-                            ref('Revenue'),
-                            ref('CM'),
-                            ref('Ads Spends'),
-                            ref('Storage Costs'),
-                            ref('Shipping Costs'),
-                            ref('Profit'),
-                        )
-                    ),
-                    $output = __DIR__ . '/Output/line_chart.html'
-                )
+            ->withEntry(
+                'Profit',
+                ref('Revenue')
+                    ->minus(ref('CM'))
+                    ->minus(ref('Ads Spends'))
+                    ->minus(ref('Storage Costs'))
+                    ->minus(ref('Shipping Costs'))
+                    ->round(lit(2)),
             )
+            ->write(to_chartjs_file(
+                $chart = line_chart(
+                    ref('Date'),
+                    refs(
+                        ref('Revenue'),
+                        ref('CM'),
+                        ref('Ads Spends'),
+                        ref('Storage Costs'),
+                        ref('Shipping Costs'),
+                        ref('Profit'),
+                    ),
+                ),
+                $output = __DIR__ . '/Output/line_chart.html',
+            ))
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 'type' => 'line',
                 'data' => [
@@ -218,18 +395,66 @@ final class ChartJSLoaderTest extends FlowTestCase
             ],
             $chart->data(),
         );
-        self::assertFileExists($output);
+        static::assertFileExists($output);
     }
 
-    public function test_loading_data_to_pie_chart() : void
+    public function test_loading_data_to_pie_chart(): void
     {
         $data = [
-            ['Date' => '2023-01-01', 'Revenue' => 10000.53, 'CM' => 5000.12, 'Ads Spends' => 2000.78, 'Storage Costs' => 1000.34, 'Shipping Costs' => 1500.45, 'Currency' => 'USD'],
-            ['Date' => '2023-01-02', 'Revenue' => 10234.56, 'CM' => 5102.23, 'Ads Spends' => 2050.12, 'Storage Costs' => 1050.78, 'Shipping Costs' => 1550.99, 'Currency' => 'USD'],
-            ['Date' => '2023-01-03', 'Revenue' => 11000.98, 'CM' => 5200.32, 'Ads Spends' => 2100.67, 'Storage Costs' => 1100.87, 'Shipping Costs' => 1600.34, 'Currency' => 'USD'],
-            ['Date' => '2023-01-04', 'Revenue' => 10890.34, 'CM' => 5300.98, 'Ads Spends' => 2150.56, 'Storage Costs' => 1150.67, 'Shipping Costs' => 1650.87, 'Currency' => 'USD'],
-            ['Date' => '2023-01-05', 'Revenue' => 13750.12, 'CM' => 5950.78, 'Ads Spends' => 2750.78, 'Storage Costs' => 1750.78, 'Shipping Costs' => 2250.12, 'Currency' => 'USD'],
-            ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
+            [
+                'Date' => '2023-01-01',
+                'Revenue' => 10000.53,
+                'CM' => 5000.12,
+                'Ads Spends' => 2000.78,
+                'Storage Costs' => 1000.34,
+                'Shipping Costs' => 1500.45,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-02',
+                'Revenue' => 10234.56,
+                'CM' => 5102.23,
+                'Ads Spends' => 2050.12,
+                'Storage Costs' => 1050.78,
+                'Shipping Costs' => 1550.99,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-03',
+                'Revenue' => 11000.98,
+                'CM' => 5200.32,
+                'Ads Spends' => 2100.67,
+                'Storage Costs' => 1100.87,
+                'Shipping Costs' => 1600.34,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-04',
+                'Revenue' => 10890.34,
+                'CM' => 5300.98,
+                'Ads Spends' => 2150.56,
+                'Storage Costs' => 1150.67,
+                'Shipping Costs' => 1650.87,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-01-05',
+                'Revenue' => 13750.12,
+                'CM' => 5950.78,
+                'Ads Spends' => 2750.78,
+                'Storage Costs' => 1750.78,
+                'Shipping Costs' => 2250.12,
+                'Currency' => 'USD',
+            ],
+            [
+                'Date' => '2023-02-06',
+                'Revenue' => 14000.23,
+                'CM' => 6000.89,
+                'Ads Spends' => 2800.89,
+                'Storage Costs' => 1800.89,
+                'Shipping Costs' => 2300.23,
+                'Currency' => 'USD',
+            ],
         ];
 
         $chart = pie_chart(
@@ -241,13 +466,20 @@ final class ChartJSLoaderTest extends FlowTestCase
                 ref('Storage Costs'),
                 ref('Shipping Costs'),
                 ref('Profit'),
-            )
-        )
-            ->setOptions(['label' => 'PnL']);
+            ),
+        )->setOptions(['label' => 'PnL']);
 
         df()
             ->read(from_array($data))
-            ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
+            ->withEntry(
+                'Profit',
+                ref('Revenue')
+                    ->minus(ref('CM'))
+                    ->minus(ref('Ads Spends'))
+                    ->minus(ref('Storage Costs'))
+                    ->minus(ref('Shipping Costs'))
+                    ->round(lit(2)),
+            )
             ->aggregate(
                 first(ref('Date')->as('Date')),
                 sum(ref('Revenue')->as('Revenue')),
@@ -257,15 +489,10 @@ final class ChartJSLoaderTest extends FlowTestCase
                 sum(ref('Shipping Costs')->as('Shipping Costs')),
                 sum(ref('Profit')->as('Profit')),
             )
-            ->write(
-                to_chartjs_file(
-                    $chart,
-                    $output = __DIR__ . '/Output/pie_chart.html'
-                )
-            )
+            ->write(to_chartjs_file($chart, $output = __DIR__ . '/Output/pie_chart.html'))
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 'type' => 'pie',
                 'data' => [
@@ -290,6 +517,6 @@ final class ChartJSLoaderTest extends FlowTestCase
             ],
             $chart->data(),
         );
-        self::assertFileExists($output);
+        static::assertFileExists($output);
     }
 }

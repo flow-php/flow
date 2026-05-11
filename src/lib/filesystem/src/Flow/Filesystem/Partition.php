@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
-use function Flow\Types\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\{
-    DateTimeEntry,
-    JsonEntry,
-    ListEntry,
-    MapEntry,
-    StructureEntry,
-    XMLElementEntry,
-    XMLEntry};
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Row\{EntryReference, Reference};
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
+
+use function Flow\Types\DSL\type_string;
 
 final class Partition
 {
@@ -25,8 +26,10 @@ final class Partition
      */
     private static array $forbiddenCharacters = ['/', '\\', '=', ':', '>', '<', '|', '"', '?', '*'];
 
-    public function __construct(public readonly string $name, public readonly string $value)
-    {
+    public function __construct(
+        public readonly string $name,
+        public readonly string $value,
+    ) {
         if ('' === $this->name) {
             throw new InvalidArgumentException("Partition name can't be empty");
         }
@@ -38,11 +41,19 @@ final class Partition
         $regex = '/^([^\/\\\=:><|"?*]+)$/';
 
         if (!\preg_match($regex, $this->name)) {
-            throw new InvalidArgumentException("Partition name contains one of forbidden characters: ['" . \implode("', '", self::$forbiddenCharacters) . "']");
+            throw new InvalidArgumentException(
+                "Partition name contains one of forbidden characters: ['"
+                . \implode("', '", self::$forbiddenCharacters)
+                . "']",
+            );
         }
 
         if (!\preg_match($regex, $this->value)) {
-            throw new InvalidArgumentException("Partition value contains one of forbidden characters: ['" . \implode("', '", self::$forbiddenCharacters) . "']");
+            throw new InvalidArgumentException(
+                "Partition value contains one of forbidden characters: ['"
+                . \implode("', '", self::$forbiddenCharacters)
+                . "']",
+            );
         }
     }
 
@@ -51,7 +62,7 @@ final class Partition
      *
      * @return array<Partition>
      */
-    public static function fromArray(array $data) : array
+    public static function fromArray(array $data): array
     {
         $partitions = [];
 
@@ -62,13 +73,13 @@ final class Partition
         return $partitions;
     }
 
-    public static function fromUri(string $uri) : Partitions
+    public static function fromUri(string $uri): Partitions
     {
         $regex = '/^([^\/\\\=:><|"?*]+)=([^\/\\\=:><|"?*]+)$/';
 
         $partitions = [];
 
-        foreach (\array_filter(\explode('/', $uri), static fn (string $s) : bool => (bool) \strlen($s)) as $uriPart) {
+        foreach (\array_filter(\explode('/', $uri), static fn(string $s): bool => (bool) \strlen($s)) as $uriPart) {
             if (\preg_match($regex, $uriPart, $matches)) {
                 $partitions[] = new self($matches[1], $matches[2]);
             }
@@ -77,23 +88,30 @@ final class Partition
         return new Partitions(...$partitions);
     }
 
-    public static function valueFromRow(Reference $ref, Row $row) : mixed
+    public static function valueFromRow(Reference $ref, Row $row): mixed
     {
         $entry = $row->get($ref);
 
         return match ($entry::class) {
             DateTimeEntry::class => $entry->value()?->format('Y-m-d'),
-            HTMLEntry::class, XMLEntry::class, XMLElementEntry::class, JsonEntry::class, ListEntry::class, StructureEntry::class, MapEntry::class => throw new InvalidArgumentException($entry::class . ' can\'t be used as a partition'),
+            HTMLEntry::class,
+            XMLEntry::class,
+            XMLElementEntry::class,
+            JsonEntry::class,
+            ListEntry::class,
+            StructureEntry::class,
+            MapEntry::class,
+                => throw new InvalidArgumentException($entry::class . ' can\'t be used as a partition'),
             default => $entry->toString(),
         };
     }
 
-    public function id() : string
+    public function id(): string
     {
         return $this->name . '|' . $this->value;
     }
 
-    public function reference() : Reference
+    public function reference(): Reference
     {
         return new EntryReference($this->name);
     }

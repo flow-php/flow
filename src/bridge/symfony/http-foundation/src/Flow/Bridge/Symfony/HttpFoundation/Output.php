@@ -10,7 +10,7 @@ use Flow\Filesystem\Path;
 
 interface Output
 {
-    public function loader(Path $path) : Loader;
+    public function loader(Path $path): Loader;
 
-    public function type() : Type;
+    public function type(): Type;
 }

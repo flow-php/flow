@@ -8,15 +8,14 @@ final readonly class CheckDefinitionParser
 {
     public function __construct(
         private ExpressionParser $expressionParser,
-    ) {
-    }
+    ) {}
 
-    public function parse(string $definition) : string
+    public function parse(string $definition): string
     {
         return $this->expressionParser->normalize($this->stripWrapper($definition));
     }
 
-    private function stripWrapper(string $definition) : string
+    private function stripWrapper(string $definition): string
     {
         $trimmed = \ltrim($definition);
 

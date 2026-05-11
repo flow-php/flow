@@ -4,11 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, FunctionParameterMode, Integer, Node, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\CreateFunctionStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\FunctionParameter;
+use Flow\PostgreSql\Protobuf\AST\FunctionParameterMode;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
-final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, CreateFunctionFinalStep, CreateFunctionOptionsStep, CreateFunctionReturnsStep
+final readonly class CreateFunctionBuilder implements
+    CreateFunctionArgsStep,
+    CreateFunctionFinalStep,
+    CreateFunctionOptionsStep,
+    CreateFunctionReturnsStep
 {
     use AstToSql;
 
@@ -26,17 +39,16 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         private bool $setof = false,
         private ?array $tableColumns = null,
         private array $options = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateFunctionArgsStep
+    public static function create(string $name): CreateFunctionArgsStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function arguments(FunctionArgument ...$args) : CreateFunctionReturnsStep
+    public function arguments(FunctionArgument ...$args): CreateFunctionReturnsStep
     {
         return new self(
             $this->name,
@@ -50,37 +62,37 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function as(string $definition) : CreateFunctionFinalStep
+    public function as(string $definition): CreateFunctionFinalStep
     {
         return $this->withListOption('as', $definition);
     }
 
-    public function calledOnNullInput() : CreateFunctionOptionsStep
+    public function calledOnNullInput(): CreateFunctionOptionsStep
     {
         return $this->withBooleanOption('strict', false);
     }
 
-    public function cost(int $cost) : CreateFunctionOptionsStep
+    public function cost(int $cost): CreateFunctionOptionsStep
     {
         return $this->withIntegerOption('cost', $cost);
     }
 
-    public function immutable() : CreateFunctionOptionsStep
+    public function immutable(): CreateFunctionOptionsStep
     {
         return $this->withStringOption('volatility', 'immutable');
     }
 
-    public function language(string $language) : CreateFunctionOptionsStep
+    public function language(string $language): CreateFunctionOptionsStep
     {
         return $this->withStringOption('language', $language);
     }
 
-    public function leakproof(bool $value = true) : CreateFunctionOptionsStep
+    public function leakproof(bool $value = true): CreateFunctionOptionsStep
     {
         return $this->withBooleanOption('leakproof', $value);
     }
 
-    public function orReplace() : CreateFunctionArgsStep
+    public function orReplace(): CreateFunctionArgsStep
     {
         return new self(
             $this->name,
@@ -94,12 +106,12 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function parallel(ParallelSafety $safety) : CreateFunctionOptionsStep
+    public function parallel(ParallelSafety $safety): CreateFunctionOptionsStep
     {
         return $this->withStringOption('parallel', $safety->value);
     }
 
-    public function returns(ColumnType $type) : CreateFunctionOptionsStep
+    public function returns(ColumnType $type): CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
@@ -113,7 +125,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function returnsSetOf(ColumnType $type) : CreateFunctionOptionsStep
+    public function returnsSetOf(ColumnType $type): CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
@@ -130,7 +142,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
     /**
      * @param array<string, ColumnType> $columns
      */
-    public function returnsTable(array $columns) : CreateFunctionOptionsStep
+    public function returnsTable(array $columns): CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
@@ -144,7 +156,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function returnsVoid() : CreateFunctionOptionsStep
+    public function returnsVoid(): CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
@@ -158,22 +170,22 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function rows(int $rows) : CreateFunctionOptionsStep
+    public function rows(int $rows): CreateFunctionOptionsStep
     {
         return $this->withIntegerOption('rows', $rows);
     }
 
-    public function securityDefiner() : CreateFunctionOptionsStep
+    public function securityDefiner(): CreateFunctionOptionsStep
     {
         return $this->withBooleanOption('security_definer', true);
     }
 
-    public function securityInvoker() : CreateFunctionOptionsStep
+    public function securityInvoker(): CreateFunctionOptionsStep
     {
         return $this->withBooleanOption('security_definer', false);
     }
 
-    public function set(string $parameter, string $value) : CreateFunctionOptionsStep
+    public function set(string $parameter, string $value): CreateFunctionOptionsStep
     {
         $defElem = new DefElem();
         $defElem->setDefname($parameter);
@@ -207,17 +219,17 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function stable() : CreateFunctionOptionsStep
+    public function stable(): CreateFunctionOptionsStep
     {
         return $this->withStringOption('volatility', 'stable');
     }
 
-    public function strict() : CreateFunctionOptionsStep
+    public function strict(): CreateFunctionOptionsStep
     {
         return $this->withBooleanOption('strict', true);
     }
 
-    public function toAst() : CreateFunctionStmt
+    public function toAst(): CreateFunctionStmt
     {
         $stmt = new CreateFunctionStmt();
         $stmt->setIsProcedure(false);
@@ -322,12 +334,12 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $stmt;
     }
 
-    public function volatile() : CreateFunctionOptionsStep
+    public function volatile(): CreateFunctionOptionsStep
     {
         return $this->withStringOption('volatility', 'volatile');
     }
 
-    private function createDefaultExpr(string $default) : Node
+    private function createDefaultExpr(string $default): Node
     {
         $str = new PBString();
         $str->setSval($default);
@@ -341,7 +353,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $node;
     }
 
-    private function withBooleanOption(string $name, bool $value) : self
+    private function withBooleanOption(string $name, bool $value): self
     {
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
@@ -353,7 +365,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $this->withOption($name, $argNode);
     }
 
-    private function withIntegerOption(string $name, int $value) : self
+    private function withIntegerOption(string $name, int $value): self
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -368,7 +380,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $this->withOption($name, $argNode);
     }
 
-    private function withListOption(string $name, string $value) : self
+    private function withListOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);
@@ -385,7 +397,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
@@ -402,7 +414,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    private function withStringOption(string $name, string $value) : self
+    private function withStringOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);

@@ -8,5 +8,5 @@ use Flow\PostgreSql\Protobuf\AST\Constraint;
 
 interface TableConstraint
 {
-    public function toAst() : Constraint;
+    public function toAst(): Constraint;
 }

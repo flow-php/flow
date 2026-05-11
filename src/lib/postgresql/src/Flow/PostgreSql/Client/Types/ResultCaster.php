@@ -22,7 +22,7 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
  */
 final readonly class ResultCaster
 {
-    public function cast(string $value, ?string $typeName) : bool|float|int|string
+    public function cast(string $value, ?string $typeName): bool|float|int|string
     {
         return match ($typeName) {
             'bool' => $value === 't',
@@ -34,7 +34,7 @@ final readonly class ResultCaster
         };
     }
 
-    private function castBytea(string $value) : string
+    private function castBytea(string $value): string
     {
         $decoded = \hex2bin(\substr($value, 2));
 
@@ -45,7 +45,7 @@ final readonly class ResultCaster
         return $decoded;
     }
 
-    private function castFloat(string $value) : float
+    private function castFloat(string $value): float
     {
         return match ($value) {
             'Infinity' => \INF,

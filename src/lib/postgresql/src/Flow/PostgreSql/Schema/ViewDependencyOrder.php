@@ -13,9 +13,9 @@ use Flow\PostgreSql\Schema\Exception\SchemaException;
  */
 final readonly class ViewDependencyOrder implements ExecutionOrderStrategy
 {
-    public function __construct(private Parser $parser)
-    {
-    }
+    public function __construct(
+        private Parser $parser,
+    ) {}
 
     /**
      * @param list<View> $items
@@ -24,7 +24,7 @@ final readonly class ViewDependencyOrder implements ExecutionOrderStrategy
      *
      * @return list<View>
      */
-    public function order(array $items) : array
+    public function order(array $items): array
     {
         if (\count($items) <= 1) {
             return $items;
@@ -78,7 +78,7 @@ final readonly class ViewDependencyOrder implements ExecutionOrderStrategy
                 if (\in_array($current, $dependsOn[$name], true)) {
                     $dependsOn[$name] = \array_values(\array_filter(
                         $dependsOn[$name],
-                        static fn (string $dep) : bool => $dep !== $current,
+                        static fn(string $dep): bool => $dep !== $current,
                     ));
                     $inDegree[$name]--;
 
@@ -90,15 +90,15 @@ final readonly class ViewDependencyOrder implements ExecutionOrderStrategy
         }
 
         if (\count($sorted) !== \count($viewsByName)) {
-            $unsorted = \array_diff(\array_keys($viewsByName), \array_map(
-                static fn (View $v) : string => $v->name,
-                $sorted,
-            ));
+            $unsorted = \array_diff(
+                \array_keys($viewsByName),
+                \array_map(static fn(View $v): string => $v->name, $sorted),
+            );
 
-            throw new SchemaException(\sprintf(
-                'Circular view dependency detected between views: %s.',
-                \implode(', ', $unsorted),
-            ));
+            throw new SchemaException(\sprintf('Circular view dependency detected between views: %s.', \implode(
+                ', ',
+                $unsorted,
+            )));
         }
 
         return $sorted;
@@ -107,7 +107,7 @@ final readonly class ViewDependencyOrder implements ExecutionOrderStrategy
     /**
      * @return list<string>
      */
-    private function extractReferencedNames(string $definition) : array
+    private function extractReferencedNames(string $definition): array
     {
         $tables = (new Tables($this->parser->parse($definition)))->all();
         $names = [];

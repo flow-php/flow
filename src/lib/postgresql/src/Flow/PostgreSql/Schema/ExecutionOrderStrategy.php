@@ -14,5 +14,5 @@ interface ExecutionOrderStrategy
      *
      * @return list<T>
      */
-    public function order(array $items) : array;
+    public function order(array $items): array;
 }

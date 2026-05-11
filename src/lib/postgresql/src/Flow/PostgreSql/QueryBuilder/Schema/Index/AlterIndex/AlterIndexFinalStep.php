@@ -6,9 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Index\AlterIndex;
 
 interface AlterIndexFinalStep
 {
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function renameTo(string $newName) : RenameIndexFinalStep;
+    public function renameTo(string $newName): RenameIndexFinalStep;
 
-    public function setTablespace(string $tablespace) : AlterTablespaceIndexFinalStep;
+    public function setTablespace(string $tablespace): AlterTablespaceIndexFinalStep;
 }

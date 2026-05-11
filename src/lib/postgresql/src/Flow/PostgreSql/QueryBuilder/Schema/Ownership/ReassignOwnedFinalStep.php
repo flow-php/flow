@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface ReassignOwnedFinalStep extends Sql
 {
-    public function toAst() : ReassignOwnedStmt;
+    public function toAst(): ReassignOwnedStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

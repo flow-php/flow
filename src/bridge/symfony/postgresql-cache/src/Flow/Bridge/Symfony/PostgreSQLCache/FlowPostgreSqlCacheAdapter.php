@@ -4,15 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLCache;
 
-use function Flow\PostgreSql\DSL\{and_, binary_expr, case_when, col, conflict_columns, delete, eq, gt, in_, insert, is_null, le, like, literal, on_conflict_update, or_, param, pgsql_client, select, table, truncate_table, typed, when};
-
 use Flow\Bridge\Symfony\PostgreSQLCache\Exception\CacheException;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
-use Symfony\Component\Cache\Marshaller\{DefaultMarshaller, MarshallerInterface};
+use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
+use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 use Symfony\Component\Cache\PruneableInterface;
+
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\binary_expr;
+use function Flow\PostgreSql\DSL\case_when;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\conflict_columns;
+use function Flow\PostgreSql\DSL\delete;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\gt;
+use function Flow\PostgreSql\DSL\in_;
+use function Flow\PostgreSql\DSL\insert;
+use function Flow\PostgreSql\DSL\is_null;
+use function Flow\PostgreSql\DSL\le;
+use function Flow\PostgreSql\DSL\like;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\on_conflict_update;
+use function Flow\PostgreSql\DSL\or_;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\pgsql_client;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\truncate_table;
+use function Flow\PostgreSql\DSL\typed;
+use function Flow\PostgreSql\DSL\when;
 
 final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInterface
 {
@@ -53,7 +77,10 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         ?\Closure $clientFactory = null,
     ) {
         if (isset($namespace[0]) && \preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
-            throw new InvalidArgumentException(\sprintf('Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.', $match[0]));
+            throw new InvalidArgumentException(\sprintf(
+                'Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.',
+                $match[0],
+            ));
         }
 
         if ($connection instanceof Client) {
@@ -73,12 +100,13 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         $this->lifetimeCol = $options['db_lifetime_col'] ?? 'item_lifetime';
         $this->timeCol = $options['db_time_col'] ?? 'item_time';
         $this->marshaller = $marshaller ?? new DefaultMarshaller();
-        $this->clientFactory = $clientFactory ?? static fn (ConnectionParameters $params) : Client => pgsql_client($params);
+        $this->clientFactory =
+            $clientFactory ?? static fn(ConnectionParameters $params): Client => pgsql_client($params);
 
         parent::__construct($namespace, $defaultLifetime);
     }
 
-    public function prune() : bool
+    public function prune(): bool
     {
         $conditions = [
             is_null(col($this->lifetimeCol), not: true),
@@ -92,16 +120,14 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         }
 
         $this->client()->execute(
-            delete()
-                ->from(table($this->table, $this->schema))
-                ->where(and_(...$conditions)),
+            delete()->from(table($this->table, $this->schema))->where(and_(...$conditions)),
             $parameters,
         );
 
         return true;
     }
 
-    protected function doClear(string $namespace) : bool
+    protected function doClear(string $namespace): bool
     {
         if ($namespace === '') {
             $this->client()->execute(truncate_table($this->schema . '.' . $this->table));
@@ -110,9 +136,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         }
 
         $this->client()->execute(
-            delete()
-                ->from(table($this->table, $this->schema))
-                ->where(like(col($this->idCol), param(1))),
+            delete()->from(table($this->table, $this->schema))->where(like(col($this->idCol), param(1))),
             [$namespace . '%'],
         );
 
@@ -122,7 +146,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
     /**
      * @param array<int, string> $ids
      */
-    protected function doDelete(array $ids) : bool
+    protected function doDelete(array $ids): bool
     {
         if ($ids === []) {
             return true;
@@ -137,9 +161,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         }
 
         $this->client()->execute(
-            delete()
-                ->from(table($this->table, $this->schema))
-                ->where(in_(col($this->idCol), $placeholders)),
+            delete()->from(table($this->table, $this->schema))->where(in_(col($this->idCol), $placeholders)),
             $values,
         );
 
@@ -151,7 +173,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
      *
      * @return iterable<string, mixed>
      */
-    protected function doFetch(array $ids) : iterable
+    protected function doFetch(array $ids): iterable
     {
         if ($ids === []) {
             return;
@@ -167,18 +189,15 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             $placeholders[] = param($position++);
         }
 
-        $dataExpression = case_when(
-            [
-                when(
-                    or_(
-                        is_null(col($this->lifetimeCol)),
-                        gt(binary_expr(col($this->lifetimeCol), '+', col($this->timeCol)), param(1)),
-                    ),
-                    col($this->dataCol),
+        $dataExpression = case_when([
+            when(
+                or_(
+                    is_null(col($this->lifetimeCol)),
+                    gt(binary_expr(col($this->lifetimeCol), '+', col($this->timeCol)), param(1)),
                 ),
-            ],
-            elseResult: literal(null),
-        );
+                col($this->dataCol),
+            ),
+        ], elseResult: literal(null));
 
         $rows = $this->client()->fetchAll(
             select(col($this->idCol), $dataExpression->as($this->dataCol))
@@ -215,7 +234,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         }
     }
 
-    protected function doHave(string $id) : bool
+    protected function doHave(string $id): bool
     {
         $row = $this->client()->fetch(
             select(literal(1))
@@ -239,7 +258,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
      *
      * @return array<int, string>
      */
-    protected function doSave(array $values, int $lifetime) : array
+    protected function doSave(array $values, int $lifetime): array
     {
         $failed = [];
         $marshalled = $this->marshaller->marshall($values, $failed);
@@ -248,7 +267,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             return $failed ?? [];
         }
 
-        $this->client()->transaction(function (Client $client) use ($marshalled, $lifetime) : void {
+        $this->client()->transaction(function (Client $client) use ($marshalled, $lifetime): void {
             $now = \time();
             $expiry = $lifetime > 0 ? $lifetime : null;
 
@@ -258,14 +277,11 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
                         ->into(table($this->table, $this->schema))
                         ->columns($this->idCol, $this->dataCol, $this->lifetimeCol, $this->timeCol)
                         ->values(param(1), param(2), param(3), param(4))
-                        ->onConflict(on_conflict_update(
-                            conflict_columns([$this->idCol]),
-                            [
-                                $this->dataCol => col($this->dataCol, 'excluded'),
-                                $this->lifetimeCol => col($this->lifetimeCol, 'excluded'),
-                                $this->timeCol => col($this->timeCol, 'excluded'),
-                            ],
-                        )),
+                        ->onConflict(on_conflict_update(conflict_columns([$this->idCol]), [
+                            $this->dataCol => col($this->dataCol, 'excluded'),
+                            $this->lifetimeCol => col($this->lifetimeCol, 'excluded'),
+                            $this->timeCol => col($this->timeCol, 'excluded'),
+                        ])),
                     [
                         (string) $id,
                         typed($data, ValueType::BYTEA),
@@ -279,7 +295,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         return $failed ?? [];
     }
 
-    private function client() : Client
+    private function client(): Client
     {
         if ($this->client !== null) {
             return $this->client;

@@ -10,14 +10,14 @@ use PHPUnit\Framework\TestCase;
 
 final class XMLConverterTest extends TestCase
 {
-    public function test_delegates_string_to_next_converter() : void
+    public function test_delegates_string_to_next_converter(): void
     {
         $converter = new XMLConverter();
 
-        self::assertSame('plain string', $converter->toDatabase('plain string'));
+        static::assertSame('plain string', $converter->toDatabase('plain string'));
     }
 
-    public function test_dom_document_returns_xml_string() : void
+    public function test_dom_document_returns_xml_string(): void
     {
         $converter = new XMLConverter();
 
@@ -26,11 +26,11 @@ final class XMLConverterTest extends TestCase
 
         $result = $converter->toDatabase($doc);
 
-        self::assertIsString($result);
-        self::assertStringContainsString('<root><item>test</item></root>', $result);
+        static::assertIsString($result);
+        static::assertStringContainsString('<root><item>test</item></root>', $result);
     }
 
-    public function test_dom_element_returns_xml_string() : void
+    public function test_dom_element_returns_xml_string(): void
     {
         $converter = new XMLConverter();
 
@@ -38,25 +38,25 @@ final class XMLConverterTest extends TestCase
         $doc->loadXML('<root><item id="test">Hello</item></root>');
         $element = $doc->getElementsByTagName('item')->item(0);
 
-        self::assertInstanceOf(\DOMElement::class, $element);
+        static::assertInstanceOf(\DOMElement::class, $element);
 
         $result = $converter->toDatabase($element);
 
-        self::assertIsString($result);
-        self::assertStringContainsString('<item id="test">Hello</item>', $result);
+        static::assertIsString($result);
+        static::assertStringContainsString('<item id="test">Hello</item>', $result);
     }
 
-    public function test_null_returns_null() : void
+    public function test_null_returns_null(): void
     {
         $converter = new XMLConverter();
 
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types_returns_xml() : void
+    public function test_supported_types_returns_xml(): void
     {
         $converter = new XMLConverter();
 
-        self::assertSame([ValueType::XML], $converter->supportedTypes());
+        static::assertSame([ValueType::XML], $converter->supportedTypes());
     }
 }

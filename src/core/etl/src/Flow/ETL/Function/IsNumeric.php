@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 
 final class IsNumeric extends ScalarFunctionChain
 {
     public function __construct(
         private readonly mixed $value,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : bool
+    public function eval(Row $row, FlowContext $context): bool
     {
         return (new Parameter($this->value))->asNumber($row, $context) !== null;
     }

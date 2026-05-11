@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
-use function Flow\Types\DSL\type_enum;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 
+use function Flow\Types\DSL\type_enum;
+
 final class ContentTypeDetector
 {
-    public function from(Path $path) : string
+    public function from(Path $path): string
     {
         if ($path->hasOption(Option::CONTENT_TYPE->value)) {
             $contentTypeOption = $path->getOption(Option::CONTENT_TYPE->value);

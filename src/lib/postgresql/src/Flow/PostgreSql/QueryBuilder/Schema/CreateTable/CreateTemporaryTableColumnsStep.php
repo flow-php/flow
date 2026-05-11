@@ -10,6 +10,4 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\CreateTable;
  * This interface combines CreateTableColumnsStep for adding columns and
  * CreateTableTemporaryStep for specifying ON COMMIT behavior.
  */
-interface CreateTemporaryTableColumnsStep extends CreateTableColumnsStep, CreateTableTemporaryStep
-{
-}
+interface CreateTemporaryTableColumnsStep extends CreateTableColumnsStep, CreateTableTemporaryStep {}

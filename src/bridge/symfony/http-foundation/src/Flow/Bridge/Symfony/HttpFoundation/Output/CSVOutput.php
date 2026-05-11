@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
-use function Flow\ETL\Adapter\CSV\to_csv;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 use Flow\Filesystem\Path;
 
+use function Flow\ETL\Adapter\CSV\to_csv;
+
 if (!function_exists('Flow\ETL\Adapter\CSV\to_csv')) {
-    throw new \RuntimeException('Flow\ETL\Adapter\CSV\to_csv function is not available. Make sure that composer require flow-php/etl-adapter-csv dependency is present in your composer.json.');
+    throw new \RuntimeException(
+        'Flow\ETL\Adapter\CSV\to_csv function is not available. Make sure that composer require flow-php/etl-adapter-csv dependency is present in your composer.json.',
+    );
 }
 
 final readonly class CSVOutput implements Output
@@ -22,11 +25,9 @@ final readonly class CSVOutput implements Output
         private string $escape = '\\',
         private string $newLineSeparator = PHP_EOL,
         private string $datetimeFormat = \DateTimeInterface::ATOM,
-    ) {
+    ) {}
 
-    }
-
-    public function loader(Path $path) : Loader
+    public function loader(Path $path): Loader
     {
         return to_csv($path)
             ->withHeader($this->withHeader)
@@ -37,7 +38,7 @@ final readonly class CSVOutput implements Output
             ->withDateTimeFormat($this->datetimeFormat);
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return Type::CSV;
     }

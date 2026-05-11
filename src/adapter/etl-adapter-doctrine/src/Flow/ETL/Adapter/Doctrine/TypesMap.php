@@ -4,24 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\Types\{BigIntType, BlobType, DateImmutableType, DateTimeImmutableType, DateTimeTzImmutableType, DateTimeTzType, DecimalType, GuidType, SmallFloatType, SmallIntType, TextType, TimeImmutableType};
+use Doctrine\DBAL\Types\BigIntType;
+use Doctrine\DBAL\Types\BlobType;
+use Doctrine\DBAL\Types\DateImmutableType;
+use Doctrine\DBAL\Types\DateTimeImmutableType;
+use Doctrine\DBAL\Types\DateTimeTzImmutableType;
+use Doctrine\DBAL\Types\DateTimeTzType;
+use Doctrine\DBAL\Types\DecimalType;
+use Doctrine\DBAL\Types\GuidType;
+use Doctrine\DBAL\Types\SmallFloatType;
+use Doctrine\DBAL\Types\SmallIntType;
+use Doctrine\DBAL\Types\TextType;
+use Doctrine\DBAL\Types\TimeImmutableType;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\Types\Type as FlowType;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    HTMLElementType,
-    HTMLType,
-    JsonType,
-    ListType,
-    MapType,
-    StructureType,
-    TimeType,
-    UuidType,
-    XMLElementType,
-    XMLType};
-use Flow\Types\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\HTMLElementType;
+use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
 
 final class TypesMap
 {
@@ -106,7 +121,7 @@ final class TypesMap
      *
      * @return array<string, DbalType> Column name => DBAL Type instance
      */
-    public function flowRowTypes(Row $row) : array
+    public function flowRowTypes(Row $row): array
     {
         $types = [];
         $typeClassToName = \array_flip(DbalType::getTypesMap());
@@ -129,7 +144,7 @@ final class TypesMap
      *
      * @return class-string<DbalType>
      */
-    public function toDbalType(string $flowType) : string
+    public function toDbalType(string $flowType): string
     {
         if (!\array_key_exists($flowType, $this->map)) {
             throw new \InvalidArgumentException(\sprintf('"%s" is not a valid type.', $flowType));
@@ -143,7 +158,7 @@ final class TypesMap
      *
      * @return FlowType<mixed>
      */
-    public function toFlowType(string $dbalType) : FlowType
+    public function toFlowType(string $dbalType): FlowType
     {
         if (!\array_key_exists($dbalType, self::DBAL_TYPES)) {
             throw new \InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
@@ -151,6 +166,6 @@ final class TypesMap
 
         $type = self::DBAL_TYPES[$dbalType];
 
-        return new $type;
+        return new $type();
     }
 }

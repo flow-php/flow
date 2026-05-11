@@ -9,6 +9,5 @@ final readonly class WithDateTime
     public function __construct(
         public int $id,
         public \DateTimeImmutable $createdAt,
-    ) {
-    }
+    ) {}
 }

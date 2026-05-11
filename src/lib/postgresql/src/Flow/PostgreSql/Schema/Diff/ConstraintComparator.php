@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, ForeignKey, UniqueConstraint};
+use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
+use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
+use Flow\PostgreSql\Schema\Constraint\ForeignKey;
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 
 final readonly class ConstraintComparator
 {
@@ -14,13 +17,13 @@ final readonly class ConstraintComparator
      *
      * @return ChangeSet<CheckConstraint, mixed>
      */
-    public function diffCheckConstraints(array $sourceCcs, array $targetCcs) : ChangeSet
+    public function diffCheckConstraints(array $sourceCcs, array $targetCcs): ChangeSet
     {
         return $this->diffConstraints(
             $sourceCcs,
             $targetCcs,
-            static fn (CheckConstraint $cc) : string => $cc->name ?? $cc->expression,
-            static fn (CheckConstraint $a, CheckConstraint $b) : bool => $a->isEqualStructure($b),
+            static fn(CheckConstraint $cc): string => $cc->name ?? $cc->expression,
+            static fn(CheckConstraint $a, CheckConstraint $b): bool => $a->isEqualStructure($b),
         );
     }
 
@@ -30,13 +33,13 @@ final readonly class ConstraintComparator
      *
      * @return ChangeSet<ExcludeConstraint, mixed>
      */
-    public function diffExcludeConstraints(array $sourceEcs, array $targetEcs) : ChangeSet
+    public function diffExcludeConstraints(array $sourceEcs, array $targetEcs): ChangeSet
     {
         return $this->diffConstraints(
             $sourceEcs,
             $targetEcs,
-            static fn (ExcludeConstraint $ec) : string => $ec->name ?? $ec->definition,
-            static fn (ExcludeConstraint $a, ExcludeConstraint $b) : bool => $a->isEqualStructure($b),
+            static fn(ExcludeConstraint $ec): string => $ec->name ?? $ec->definition,
+            static fn(ExcludeConstraint $a, ExcludeConstraint $b): bool => $a->isEqualStructure($b),
         );
     }
 
@@ -46,13 +49,23 @@ final readonly class ConstraintComparator
      *
      * @return ChangeSet<ForeignKey, mixed>
      */
-    public function diffForeignKeys(array $sourceFks, array $targetFks) : ChangeSet
+    public function diffForeignKeys(array $sourceFks, array $targetFks): ChangeSet
     {
         return $this->diffConstraints(
             $sourceFks,
             $targetFks,
-            static fn (ForeignKey $fk) : string => $fk->name ?? \implode(',', $fk->columns) . '=>' . $fk->referenceSchema . '.' . $fk->referenceTable . '(' . \implode(',', $fk->referenceColumns) . ')',
-            static fn (ForeignKey $a, ForeignKey $b) : bool => $a->isEqualStructure($b),
+            static fn(ForeignKey $fk): string => (
+                $fk->name
+                ?? \implode(',', $fk->columns)
+                . '=>'
+                . $fk->referenceSchema
+                . '.'
+                . $fk->referenceTable
+                . '('
+                . \implode(',', $fk->referenceColumns)
+                . ')'
+            ),
+            static fn(ForeignKey $a, ForeignKey $b): bool => $a->isEqualStructure($b),
         );
     }
 
@@ -62,12 +75,12 @@ final readonly class ConstraintComparator
      *
      * @return ChangeSet<UniqueConstraint, mixed>
      */
-    public function diffUniqueConstraints(array $sourceUcs, array $targetUcs) : ChangeSet
+    public function diffUniqueConstraints(array $sourceUcs, array $targetUcs): ChangeSet
     {
         return $this->diffConstraints(
             $sourceUcs,
             $targetUcs,
-            static function (UniqueConstraint $uc) : string {
+            static function (UniqueConstraint $uc): string {
                 if ($uc->name !== null) {
                     return $uc->name;
                 }
@@ -77,7 +90,7 @@ final readonly class ConstraintComparator
 
                 return \implode(',', $cols);
             },
-            static fn (UniqueConstraint $a, UniqueConstraint $b) : bool => $a->isEqualStructure($b),
+            static fn(UniqueConstraint $a, UniqueConstraint $b): bool => $a->isEqualStructure($b),
         );
     }
 
@@ -91,8 +104,12 @@ final readonly class ConstraintComparator
      *
      * @return ChangeSet<T, mixed>
      */
-    private function diffConstraints(array $sourceList, array $targetList, callable $identityFn, callable $equalsFn) : ChangeSet
-    {
+    private function diffConstraints(
+        array $sourceList,
+        array $targetList,
+        callable $identityFn,
+        callable $equalsFn,
+    ): ChangeSet {
         $sourceMap = [];
 
         foreach ($sourceList as $item) {

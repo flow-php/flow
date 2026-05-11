@@ -9,13 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 final class SkippedMethodTestCase extends TestCase
 {
-    public function test_normal() : void
+    public function test_normal(): void
     {
         $this->addToAssertionCount(1);
     }
 
     #[SkipTransactionRollback]
-    public function test_something() : void
+    public function test_something(): void
     {
         $this->addToAssertionCount(1);
     }

@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use function Flow\ETL\DSL\{df, flow_context, from_rows, int_entry, row, rows, str_entry};
-use Flow\ETL\Join\{Expression, Join};
+use Flow\ETL\Join\Expression;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+
 final class HashJoinProcessorTest extends FlowTestCase
 {
-    public function test_handles_empty_left_side() : void
+    public function test_handles_empty_left_side(): void
     {
-        $rightDf = df()->read(from_rows(rows(
-            row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-        )));
+        $rightDf = df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))));
 
-        $processor = new HashJoinProcessor(
-            $rightDf,
-            Expression::on(['id' => 'user_id']),
-            Join::inner
-        );
+        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
 
         $generator = (static function () {
             yield from [];
@@ -29,23 +31,17 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(0, $result);
+        static::assertCount(0, $result);
     }
 
-    public function test_handles_empty_right_side() : void
+    public function test_handles_empty_right_side(): void
     {
         $rightDf = df()->read(from_rows(rows()));
 
-        $processor = new HashJoinProcessor(
-            $rightDf,
-            Expression::on(['id' => 'user_id']),
-            Join::inner
-        );
+        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
 
         $generator = (static function () {
-            yield rows(
-                row(int_entry('id', 1), int_entry('amount', 100)),
-            );
+            yield rows(row(int_entry('id', 1), int_entry('amount', 100)));
         })();
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -57,21 +53,17 @@ final class HashJoinProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(0, $allRows);
+        static::assertCount(0, $allRows);
     }
 
-    public function test_inner_join() : void
+    public function test_inner_join(): void
     {
         $rightDf = df()->read(from_rows(rows(
             row(int_entry('user_id', 1), str_entry('name', 'Alice')),
             row(int_entry('user_id', 2), str_entry('name', 'Bob')),
         )));
 
-        $processor = new HashJoinProcessor(
-            $rightDf,
-            Expression::on(['id' => 'user_id']),
-            Join::inner
-        );
+        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::inner);
 
         $generator = (static function () {
             yield rows(
@@ -90,24 +82,18 @@ final class HashJoinProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(2, $allRows);
-        self::assertEquals(1, $allRows[0]['id']);
-        self::assertEquals('Alice', $allRows[0]['name']);
-        self::assertEquals(2, $allRows[1]['id']);
-        self::assertEquals('Bob', $allRows[1]['name']);
+        static::assertCount(2, $allRows);
+        static::assertEquals(1, $allRows[0]['id']);
+        static::assertEquals('Alice', $allRows[0]['name']);
+        static::assertEquals(2, $allRows[1]['id']);
+        static::assertEquals('Bob', $allRows[1]['name']);
     }
 
-    public function test_left_join() : void
+    public function test_left_join(): void
     {
-        $rightDf = df()->read(from_rows(rows(
-            row(int_entry('user_id', 1), str_entry('name', 'Alice')),
-        )));
+        $rightDf = df()->read(from_rows(rows(row(int_entry('user_id', 1), str_entry('name', 'Alice')))));
 
-        $processor = new HashJoinProcessor(
-            $rightDf,
-            Expression::on(['id' => 'user_id']),
-            Join::left
-        );
+        $processor = new HashJoinProcessor($rightDf, Expression::on(['id' => 'user_id']), Join::left);
 
         $generator = (static function () {
             yield rows(
@@ -125,8 +111,8 @@ final class HashJoinProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertCount(2, $allRows);
-        self::assertEquals('Alice', $allRows[0]['name']);
-        self::assertNull($allRows[1]['name']);
+        static::assertCount(2, $allRows);
+        static::assertEquals('Alice', $allRows[0]['name']);
+        static::assertNull($allRows[1]['name']);
     }
 }

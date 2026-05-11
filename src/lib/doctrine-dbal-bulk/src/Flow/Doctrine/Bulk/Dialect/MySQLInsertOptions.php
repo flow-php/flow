@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
-use function Flow\Types\DSL\{type_boolean, type_list, type_optional, type_string, type_structure};
 use Flow\Doctrine\Bulk\InsertOptions;
+
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class MySQLInsertOptions implements InsertOptions
 {
@@ -19,20 +24,16 @@ final readonly class MySQLInsertOptions implements InsertOptions
         public ?bool $upsert = null,
         public array $updateColumns = [],
         public ?bool $preserveExistingValues = null,
-    ) {
-    }
+    ) {}
 
-    public static function fromArray(array $options) : InsertOptions
+    public static function fromArray(array $options): InsertOptions
     {
-        $options = type_structure(
-            [],
-            [
-                'skip_conflicts' => type_optional(type_boolean()),
-                'upsert' => type_optional(type_boolean()),
-                'update_columns' => type_list(type_string()),
-                'preserve_existing_values' => type_optional(type_boolean()),
-            ]
-        )->assert($options);
+        $options = type_structure([], [
+            'skip_conflicts' => type_optional(type_boolean()),
+            'upsert' => type_optional(type_boolean()),
+            'update_columns' => type_list(type_string()),
+            'preserve_existing_values' => type_optional(type_boolean()),
+        ])->assert($options);
 
         return new self(
             $options['skip_conflicts'] ?? null,
@@ -42,12 +43,12 @@ final readonly class MySQLInsertOptions implements InsertOptions
         );
     }
 
-    public static function new() : self
+    public static function new(): self
     {
         return new self();
     }
 
-    public function skipConflicts(bool $skip = true) : self
+    public function skipConflicts(bool $skip = true): self
     {
         return new self($skip, $this->upsert, $this->updateColumns);
     }
@@ -55,12 +56,12 @@ final readonly class MySQLInsertOptions implements InsertOptions
     /**
      * @param array<string> $updateColumns
      */
-    public function updateColumns(array $updateColumns, ?bool $preserveExistingValues = null) : self
+    public function updateColumns(array $updateColumns, ?bool $preserveExistingValues = null): self
     {
         return new self($this->skipConflicts, $this->upsert, $updateColumns, $preserveExistingValues);
     }
 
-    public function upsert(bool $upsert = true) : self
+    public function upsert(bool $upsert = true): self
     {
         return new self($this->skipConflicts, $upsert, $this->updateColumns);
     }

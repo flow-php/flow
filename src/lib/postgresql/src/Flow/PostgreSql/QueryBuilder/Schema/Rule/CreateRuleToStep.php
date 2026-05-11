@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Rule;
 
 interface CreateRuleToStep
 {
-    public function to(string $table, ?string $schema = null) : CreateRuleWhereStep;
+    public function to(string $table, ?string $schema = null): CreateRuleWhereStep;
 }

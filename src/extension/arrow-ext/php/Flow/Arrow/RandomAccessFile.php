@@ -10,7 +10,7 @@ if (\extension_loaded('arrow')) {
 
 interface RandomAccessFile
 {
-    public function read(int $length, int $offset) : string;
+    public function read(int $length, int $offset): string;
 
-    public function size() : ?int;
+    public function size(): ?int;
 }

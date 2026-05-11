@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use function fopen;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\{FlowContext, Formatter, Loader, Loader\StreamLoader\Type, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
+use Flow\ETL\Loader;
 use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Loader\StreamLoader\Type;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\Filesystem\Stream\Mode;
+
+use function fopen;
 
 final class StreamLoader implements Closure, Loader
 {
@@ -39,44 +44,59 @@ final class StreamLoader implements Closure, Loader
         $this->stream = null;
     }
 
-    public static function output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
-    {
+    public static function output(
+        int|bool $truncate = 20,
+        Output $output = Output::rows,
+        Formatter $formatter = new AsciiTableFormatter(),
+        SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter(),
+    ): self {
         return new self('php://output', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::output);
     }
 
-    public static function stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
-    {
+    public static function stderr(
+        int|bool $truncate = 20,
+        Output $output = Output::rows,
+        Formatter $formatter = new AsciiTableFormatter(),
+        SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter(),
+    ): self {
         return new self('php://stderr', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stderr);
     }
 
-    public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
-    {
+    public static function stdout(
+        int|bool $truncate = 20,
+        Output $output = Output::rows,
+        Formatter $formatter = new AsciiTableFormatter(),
+        SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter(),
+    ): self {
         return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stdout);
     }
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         $this->closeStream();
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this, [TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->url]);
 
         try {
             $stream = $this->getStream();
 
-            \fwrite(
-                $stream,
-                match ($this->output) {
-                    Output::rows_count => 'Rows: ' . $rows->count() . "\n",
-                    Output::column_count => 'Columns: ' . $rows->schema()->count() . "\n",
-                    Output::rows_and_column_count => 'Rows: ' . $rows->count() . ', Columns: ' . $rows->schema()->count() . "\n",
-                    Output::rows => $this->formatter->format($rows, $this->truncate),
-                    Output::schema => $this->schemaFormatter->format($rows->schema()),
-                    Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema()),
-                }
-            );
+            \fwrite($stream, match ($this->output) {
+                Output::rows_count => 'Rows: ' . $rows->count() . "\n",
+                Output::column_count => 'Columns: ' . $rows->schema()->count() . "\n",
+                Output::rows_and_column_count => 'Rows: '
+                    . $rows->count()
+                    . ', Columns: '
+                    . $rows->schema()->count()
+                    . "\n",
+                Output::rows => $this->formatter->format($rows, $this->truncate),
+                Output::schema => $this->schemaFormatter->format($rows->schema()),
+                Output::rows_and_schema => $this->formatter->format($rows, $this->truncate)
+                    . "\n"
+                    . $this->schemaFormatter->format($rows->schema()),
+            });
 
             match ($this->type) {
                 Type::output => $this->closeStream(),
@@ -93,7 +113,7 @@ final class StreamLoader implements Closure, Loader
         }
     }
 
-    private function closeStream() : void
+    private function closeStream(): void
     {
         if ($this->stream !== null) {
             \fclose($this->stream);
@@ -114,7 +134,11 @@ final class StreamLoader implements Closure, Loader
             /** @phpstan-ignore-next-line */
             $this->stream = @\fopen($this->url, $this->mode->value);
         } catch (\Throwable $e) {
-            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(), (int) $e->getCode(), $e);
+            throw new RuntimeException(
+                "Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(),
+                (int) $e->getCode(),
+                $e,
+            );
         }
 
         if ($this->stream === false) {

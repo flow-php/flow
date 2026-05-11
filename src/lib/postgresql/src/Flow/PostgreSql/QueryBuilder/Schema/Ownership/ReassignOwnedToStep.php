@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Ownership;
 
 interface ReassignOwnedToStep
 {
-    public function to(string $newRole) : ReassignOwnedFinalStep;
+    public function to(string $newRole): ReassignOwnedFinalStep;
 }

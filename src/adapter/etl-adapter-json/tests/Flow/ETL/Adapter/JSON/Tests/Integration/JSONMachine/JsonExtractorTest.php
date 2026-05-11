@@ -4,23 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\DSL\{data_frame, flow_context};
-use function Flow\ETL\DSL\{df, schema_to_ascii};
-use function Flow\Filesystem\DSL\{path, path_real};
-use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema_to_ascii;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\path_real;
 
 final class JsonExtractorTest extends FlowTestCase
 {
-    public function test_extracting_json_from_local_file_stream() : void
+    public function test_extracting_json_from_local_file_stream(): void
     {
-        $rows = (data_frame(Config::builder()->putInputIntoRows()))
+        $rows = data_frame(Config::builder()->putInputIntoRows())
             ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))
             ->fetch();
 
         foreach ($rows as $row) {
-            self::assertSame(
+            static::assertSame(
                 [
                     'timezones',
                     'latlng',
@@ -29,38 +36,37 @@ final class JsonExtractorTest extends FlowTestCase
                     'capital',
                     '_input_file_uri',
                 ],
-                \array_keys($row->toArray())
+                \array_keys($row->toArray()),
             );
         }
 
-        self::assertSame(247, $rows->count());
+        static::assertSame(247, $rows->count());
     }
 
-    public function test_extracting_json_from_local_file_stream_using_pointer() : void
+    public function test_extracting_json_from_local_file_stream_using_pointer(): void
     {
-        $rows = (data_frame())
+        $rows = data_frame()
             ->read(from_json(__DIR__ . '/../../Fixtures/nested_timezones.json')->withPointer('/timezones', true))
             ->fetch();
 
         foreach ($rows as $row) {
             $value = $row->get('/timezones')->value();
-            self::assertSame(
+            static::assertSame(
                 [
                     'timezones',
                     'latlng',
                     'name',
                     'country_code',
                     'capital',
-
                 ],
-                \is_array($value) ? \array_keys($value) : []
+                \is_array($value) ? \array_keys($value) : [],
             );
         }
 
-        self::assertSame(247, $rows->count());
+        static::assertSame(247, $rows->count());
     }
 
-    public function test_extracting_json_from_local_file_stream_with_schema() : void
+    public function test_extracting_json_from_local_file_stream_with_schema(): void
     {
         $rows = df()
             ->read(from_json(
@@ -68,12 +74,12 @@ final class JsonExtractorTest extends FlowTestCase
                 schema: $schema = df()
                     ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))
                     ->autoCast()
-                    ->schema()
+                    ->schema(),
             ))
             ->fetch();
 
         foreach ($rows as $row) {
-            self::assertSame(
+            static::assertSame(
                 [
                     'timezones',
                     'latlng',
@@ -81,28 +87,24 @@ final class JsonExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                \array_keys($row->toArray())
+                \array_keys($row->toArray()),
             );
         }
 
-        self::assertSame(247, $rows->count());
-        self::assertEquals($schema, $rows->schema());
-        self::assertSame(
-            <<<'SCHEMA'
-schema
-|-- timezones: list<string>
-|-- latlng: list<float>
-|-- name: string
-|-- country_code: string
-|-- capital: ?string
+        static::assertSame(247, $rows->count());
+        static::assertEquals($schema, $rows->schema());
+        static::assertSame(<<<'SCHEMA'
+            schema
+            |-- timezones: list<string>
+            |-- latlng: list<float>
+            |-- name: string
+            |-- country_code: string
+            |-- capital: ?string
 
-SCHEMA
-            ,
-            schema_to_ascii($schema)
-        );
+            SCHEMA, schema_to_ascii($schema));
     }
 
-    public function test_extracting_json_from_local_file_string_uri() : void
+    public function test_extracting_json_from_local_file_string_uri(): void
     {
         $extractor = from_json(path_real(__DIR__ . '/../../Fixtures/timezones.json'));
 
@@ -110,7 +112,7 @@ SCHEMA
 
         /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
-            $rows->each(function (Row $row) : void {
+            $rows->each(function (Row $row): void {
                 $this->assertSame(
                     [
                         'timezones',
@@ -118,40 +120,36 @@ SCHEMA
                         'name',
                         'country_code',
                         'capital',
-
                     ],
-                    \array_keys($row->toArray())
+                    \array_keys($row->toArray()),
                 );
             });
             $total += $rows->count();
         }
 
-        self::assertSame(247, $total);
+        static::assertSame(247, $total);
     }
 
-    public function test_limit() : void
+    public function test_limit(): void
     {
         $extractor = from_json(path(__DIR__ . '/../../Fixtures/timezones.json'));
         $extractor->changeLimit(2);
 
-        self::assertCount(
-            2,
-            \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
-        );
+        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))));
     }
 
-    public function test_signal_stop() : void
+    public function test_signal_stop(): void
     {
         $extractor = from_json(path(__DIR__ . '/../../Fixtures/timezones.json'));
 
         $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        self::assertFalse($generator->valid());
+        static::assertFalse($generator->valid());
     }
 }

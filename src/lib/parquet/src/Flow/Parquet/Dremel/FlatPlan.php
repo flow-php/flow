@@ -18,6 +18,5 @@ final readonly class FlatPlan
         public bool $isRequired,
         public ?Converter $converter,
         public WriteFlatColumnValues $target,
-    ) {
-    }
+    ) {}
 }

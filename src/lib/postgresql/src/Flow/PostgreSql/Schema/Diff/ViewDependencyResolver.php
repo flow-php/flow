@@ -11,5 +11,5 @@ interface ViewDependencyResolver
     /**
      * @param list<string> $modifiedTableQualifiedNames
      */
-    public function resolve(Catalog $catalog, array $modifiedTableQualifiedNames) : DependentViews;
+    public function resolve(Catalog $catalog, array $modifiedTableQualifiedNames): DependentViews;
 }

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use Flow\ETL\{Constraint, FlowContext, Processor, Rows};
-use Flow\ETL\Exception\{ConstraintViolationException, InvalidArgumentException};
+use Flow\ETL\Constraint;
+use Flow\ETL\Exception\ConstraintViolationException;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Processor;
+use Flow\ETL\Rows;
 
 /**
  * Validates constraints on each row.
@@ -21,8 +25,9 @@ final class ConstrainedProcessor implements Processor
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly array $constraints = [])
-    {
+    public function __construct(
+        private readonly array $constraints = [],
+    ) {
         foreach ($constraints as $constraint) {
             if (!$constraint instanceof Constraint) {
                 throw new InvalidArgumentException('Pipeline constraints must be of type Flow\ETL\Constraint');
@@ -30,7 +35,7 @@ final class ConstrainedProcessor implements Processor
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         /** @var Rows $batch */
         foreach ($rows as $batch) {
@@ -40,7 +45,7 @@ final class ConstrainedProcessor implements Processor
                         throw new ConstraintViolationException(
                             $constraint->toString(),
                             $constraint->violation($row),
-                            $this->rowIndex
+                            $this->rowIndex,
                         );
                     }
                 }

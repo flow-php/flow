@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
-use function Flow\ETL\DSL\df;
-use function Flow\Filesystem\DSL\path;
-use Flow\Bridge\Symfony\HttpFoundation\{Output, StreamClosure};
+use Flow\Bridge\Symfony\HttpFoundation\Output;
+use Flow\Bridge\Symfony\HttpFoundation\StreamClosure;
+use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\{Config, Extractor, Transformation};
+use Flow\ETL\Extractor;
+use Flow\ETL\Transformation;
 use Flow\ETL\Transformations;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+
+use function Flow\ETL\DSL\df;
+use function Flow\Filesystem\DSL\path;
 
 class FlowStreamedResponse extends StreamedResponse
 {
@@ -38,7 +42,7 @@ class FlowStreamedResponse extends StreamedResponse
         }
     }
 
-    private function stream() : void
+    private function stream(): void
     {
         $stdoutPath = path($this->filesystem . '://' . \bin2hex(\random_bytes(16)) . '.stdout', ['stream' => 'output']);
 

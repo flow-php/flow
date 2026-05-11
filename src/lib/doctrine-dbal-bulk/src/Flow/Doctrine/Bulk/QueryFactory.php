@@ -15,7 +15,7 @@ interface QueryFactory
      *
      * @return string
      */
-    public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData) : string;
+    public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData): string;
 
     /**
      * @param AbstractPlatform $platform
@@ -24,7 +24,12 @@ interface QueryFactory
      *
      * @return string
      */
-    public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string;
+    public function insert(
+        AbstractPlatform $platform,
+        TableDefinition $table,
+        BulkData $bulkData,
+        ?InsertOptions $options = null,
+    ): string;
 
     /**
      * @param AbstractPlatform $platform
@@ -33,5 +38,10 @@ interface QueryFactory
      *
      * @return string
      */
-    public function update(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string;
+    public function update(
+        AbstractPlatform $platform,
+        TableDefinition $table,
+        BulkData $bulkData,
+        ?UpdateOptions $options = null,
+    ): string;
 }

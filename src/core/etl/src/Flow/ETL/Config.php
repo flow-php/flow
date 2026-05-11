@@ -36,70 +36,69 @@ final readonly class Config
         public SortConfig $sort,
         private ?Analyze $analyze,
         public TelemetryConfig $telemetry,
-    ) {
-    }
+    ) {}
 
-    public static function builder() : ConfigBuilder
+    public static function builder(): ConfigBuilder
     {
         return new ConfigBuilder();
     }
 
-    public static function default() : self
+    public static function default(): self
     {
         return self::builder()->build();
     }
 
-    public function analyze() : ?Analyze
+    public function analyze(): ?Analyze
     {
         return $this->analyze;
     }
 
-    public function clock() : ClockInterface
+    public function clock(): ClockInterface
     {
         return $this->clock;
     }
 
-    public function entryFactory() : EntryFactory
+    public function entryFactory(): EntryFactory
     {
         return $this->entryFactory;
     }
 
-    public function filesystemStreams() : FilesystemStreams
+    public function filesystemStreams(): FilesystemStreams
     {
         return $this->filesystemStreams;
     }
 
-    public function fstab() : FilesystemTable
+    public function fstab(): FilesystemTable
     {
         return $this->filesystemTable;
     }
 
-    public function id() : string
+    public function id(): string
     {
         return $this->id;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function optimizer() : Optimizer
+    public function optimizer(): Optimizer
     {
         return $this->optimizer;
     }
 
-    public function serializer() : Serializer
+    public function serializer(): Serializer
     {
         return $this->serializer;
     }
 
-    public function shouldPutInputIntoRows() : bool
+    public function shouldPutInputIntoRows(): bool
     {
         return $this->putInputIntoRows;
     }
 
-    public function version() : string
+    public function version(): string
     {
         return $this->version;
     }

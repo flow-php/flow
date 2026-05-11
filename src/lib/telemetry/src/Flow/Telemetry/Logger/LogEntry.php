@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-use Flow\Telemetry\{InstrumentationScope, Resource};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 
 /**
@@ -27,8 +28,7 @@ final readonly class LogEntry
         public \DateTimeImmutable $timestamp,
         public ?SpanContext $spanContext = null,
         public int $droppedAttributeCount = 0,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a LogEntry from a normalized array representation.
@@ -42,7 +42,7 @@ final readonly class LogEntry
      *     droppedAttributeCount?: int
      * } $data Normalized LogEntry data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             LogRecord::fromArray($data['record']),
@@ -66,7 +66,7 @@ final readonly class LogEntry
      *     droppedAttributeCount: int
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'record' => $this->record->normalize(),

@@ -11,10 +11,9 @@ final readonly class RenameCaseEntryStrategy implements RenameEntryStrategy
 {
     public function __construct(
         private StringStyles $style,
-    ) {
-    }
+    ) {}
 
-    public function rename(Row $row) : Row
+    public function rename(Row $row): Row
     {
         $renames = [];
 

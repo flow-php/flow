@@ -10,10 +10,9 @@ final readonly class Column
 {
     public function __construct(
         private ColumnRef $columnRef,
-    ) {
-    }
+    ) {}
 
-    public function name() : ?string
+    public function name(): ?string
     {
         $fields = $this->columnRef->getFields();
 
@@ -39,12 +38,12 @@ final readonly class Column
         return null;
     }
 
-    public function raw() : ColumnRef
+    public function raw(): ColumnRef
     {
         return $this->columnRef;
     }
 
-    public function table() : ?string
+    public function table(): ?string
     {
         $fields = $this->columnRef->getFields();
 

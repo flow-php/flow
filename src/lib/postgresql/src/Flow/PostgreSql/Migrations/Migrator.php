@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations;
 
 use Flow\PostgreSql\Client\Client;
-use Flow\PostgreSql\Migrations\Executor\{ExecutionResult, MigrationExecutor};
+use Flow\PostgreSql\Migrations\Executor\ExecutionResult;
+use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 
@@ -17,10 +18,9 @@ final readonly class Migrator
         private MigrationExecutor $executor,
         private Client $client,
         private Configuration $configuration,
-    ) {
-    }
+    ) {}
 
-    public function executeVersion(Version $version, Direction $direction, bool $dryRun = false) : ExecutionResult
+    public function executeVersion(Version $version, Direction $direction, bool $dryRun = false): ExecutionResult
     {
         $this->store->initialize();
 
@@ -53,7 +53,7 @@ final readonly class Migrator
     /**
      * @return list<ExecutionResult>
      */
-    public function migrate(?Version $to = null, bool $dryRun = false, ?bool $allOrNothing = null) : array
+    public function migrate(?Version $to = null, bool $dryRun = false, ?bool $allOrNothing = null): array
     {
         $this->store->initialize();
 
@@ -83,7 +83,12 @@ final readonly class Migrator
                 : $available->after($latestExecuted->version)->upTo($target);
 
             foreach ($pending as $migration) {
-                $plans[] = new MigrationPlan($migration->version, $migration->migration, $migration->rollback, Direction::UP);
+                $plans[] = new MigrationPlan(
+                    $migration->version,
+                    $migration->migration,
+                    $migration->rollback,
+                    Direction::UP,
+                );
             }
         } elseif ($latestExecuted->version->isAfter($target)) {
             $toRollback = [];
@@ -98,7 +103,12 @@ final readonly class Migrator
 
             foreach ($toRollback as $em) {
                 $migration = $this->repository->get($em->version);
-                $plans[] = new MigrationPlan($migration->version, $migration->migration, $migration->rollback, Direction::DOWN);
+                $plans[] = new MigrationPlan(
+                    $migration->version,
+                    $migration->migration,
+                    $migration->rollback,
+                    Direction::DOWN,
+                );
             }
         }
 
@@ -117,7 +127,7 @@ final readonly class Migrator
         return $this->executePlans($plans);
     }
 
-    public function status() : MigrationStatusList
+    public function status(): MigrationStatusList
     {
         $this->store->initialize();
 
@@ -128,7 +138,12 @@ final readonly class Migrator
         foreach ($available as $migration) {
             if ($executed->has($migration->version)) {
                 $em = $executed->get($migration->version);
-                $statuses[] = new MigrationStatus($migration->version, $migration->name, MigrationState::EXECUTED, $em->executedAt);
+                $statuses[] = new MigrationStatus(
+                    $migration->version,
+                    $migration->name,
+                    MigrationState::EXECUTED,
+                    $em->executedAt,
+                );
             } else {
                 $statuses[] = new MigrationStatus($migration->version, $migration->name, MigrationState::PENDING, null);
             }
@@ -136,7 +151,12 @@ final readonly class Migrator
 
         foreach ($executed as $em) {
             if (!$available->has($em->version)) {
-                $statuses[] = new MigrationStatus($em->version, (string) $em->version, MigrationState::UNAVAILABLE, $em->executedAt);
+                $statuses[] = new MigrationStatus(
+                    $em->version,
+                    (string) $em->version,
+                    MigrationState::UNAVAILABLE,
+                    $em->executedAt,
+                );
             }
         }
 
@@ -148,12 +168,12 @@ final readonly class Migrator
      *
      * @return list<ExecutionResult>
      */
-    private function executeAllOrNothing(array $plans) : array
+    private function executeAllOrNothing(array $plans): array
     {
         /** @var list<ExecutionResult> $results */
         $results = [];
 
-        $this->client->transaction(function () use ($plans, &$results) : void {
+        $this->client->transaction(function () use ($plans, &$results): void {
             $context = new MigrationContext($this->client);
 
             foreach ($plans as $plan) {
@@ -179,7 +199,7 @@ final readonly class Migrator
      *
      * @return list<ExecutionResult>
      */
-    private function executePlans(array $plans) : array
+    private function executePlans(array $plans): array
     {
         $context = new MigrationContext($this->client);
         $results = [];
@@ -206,7 +226,7 @@ final readonly class Migrator
      *
      * @return list<ExecutionResult>
      */
-    private function executeWithDryRun(array $plans) : array
+    private function executeWithDryRun(array $plans): array
     {
         $this->client->beginTransaction();
 

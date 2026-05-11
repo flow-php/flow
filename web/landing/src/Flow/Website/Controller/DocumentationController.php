@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
-use Flow\Website\Model\Documentation\{Module, Page};
-use Flow\Website\Service\Documentation\{DSLDefinitions, Pages};
+use Flow\Website\Model\Documentation\Module;
+use Flow\Website\Model\Documentation\Page;
+use Flow\Website\Service\Documentation\DSLDefinitions;
+use Flow\Website\Service\Documentation\Pages;
 use Flow\Website\Service\Examples;
 use Flow\Website\Service\Manifest\PackageMeta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,11 +21,10 @@ final class DocumentationController extends AbstractController
         private readonly DSLDefinitions $dslDefinitions,
         private readonly Examples $examples,
         private readonly PackageMeta $packageMeta,
-    ) {
-    }
+    ) {}
 
     #[Route('/documentation/api/{page}', name: 'documentation_api', requirements: ['page' => '.*'])]
-    public function apiPage(string $page) : Response
+    public function apiPage(string $page): Response
     {
         $projectDir = $this->getParameter('kernel.project_dir');
         $docsDir = $projectDir . '/build/documentation/api';
@@ -46,7 +47,11 @@ final class DocumentationController extends AbstractController
             $body = \file_get_contents($docsDir . '/' . $page);
 
             if ($extension === 'html' && $body !== false) {
-                $body = \str_replace('</head>', '<link rel="stylesheet" href="/styles/api-overrides.css"></head>', $body);
+                $body = \str_replace(
+                    '</head>',
+                    '<link rel="stylesheet" href="/styles/api-overrides.css"></head>',
+                    $body,
+                );
             }
 
             return new Response($body, 200, [
@@ -58,7 +63,7 @@ final class DocumentationController extends AbstractController
     }
 
     #[Route('/documentation/dsl/{module}/{function}', name: 'documentation_dsl_function')]
-    public function dslFunction(string $module, string $function) : Response
+    public function dslFunction(string $module, string $function): Response
     {
         $modules = $this->dslDefinitions->modules();
 
@@ -85,7 +90,7 @@ final class DocumentationController extends AbstractController
     }
 
     #[Route('/documentation/dsl/{module}', name: 'documentation_dsl')]
-    public function dslModule(string $module = 'core') : Response
+    public function dslModule(string $module = 'core'): Response
     {
         $modules = $this->dslDefinitions->modules();
 
@@ -99,7 +104,7 @@ final class DocumentationController extends AbstractController
     }
 
     #[Route('/documentation/example/{topic}/{example}/', name: 'documentation_example', priority: -90)]
-    public function example(string $topic, string $example) : Response
+    public function example(string $topic, string $example): Response
     {
         $topics = $this->examples->topics();
         $currentTopic = $topic;
@@ -120,7 +125,7 @@ final class DocumentationController extends AbstractController
     }
 
     #[Route('/documentation', name: 'documentation', options: ['sitemap' => true])]
-    public function index() : Response
+    public function index(): Response
     {
         $page = $this->pages->get('introduction.md');
 
@@ -130,7 +135,7 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    public function navigationLeft(string $currentPath = '') : Response
+    public function navigationLeft(string $currentPath = ''): Response
     {
         $modules = $this->dslDefinitions->modules();
 
@@ -142,7 +147,7 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    public function navigationRight(string $currentPath = '') : Response
+    public function navigationRight(string $currentPath = ''): Response
     {
         return $this->render('documentation/navigation_right.html.twig', [
             'currentPath' => $currentPath,
@@ -150,7 +155,7 @@ final class DocumentationController extends AbstractController
     }
 
     #[Route('/documentation/{path}', name: 'documentation_page', requirements: ['path' => '.*'], priority: -100)]
-    public function page(string $path) : Response
+    public function page(string $path): Response
     {
         $page = $this->pages->get($path);
 
@@ -163,7 +168,7 @@ final class DocumentationController extends AbstractController
     /**
      * @return array{type?: string, component?: string}
      */
-    private function dslFacets(string $module) : array
+    private function dslFacets(string $module): array
     {
         $facets = ['type' => 'DSL'];
 
@@ -179,7 +184,7 @@ final class DocumentationController extends AbstractController
     /**
      * @return array{type?: string, component?: string}
      */
-    private function pageFacets(Page $page) : array
+    private function pageFacets(Page $page): array
     {
         $packageName = $page->package();
 

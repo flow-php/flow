@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -16,10 +19,9 @@ final readonly class BinaryExpression implements Expression
         private Expression $left,
         private string $operator,
         private Expression $right,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aExpr = $node->getAExpr();
 
@@ -58,31 +60,31 @@ final readonly class BinaryExpression implements Expression
         return new self(
             ExpressionFactory::fromAst($lexpr),
             $operatorString->getSval(),
-            ExpressionFactory::fromAst($rexpr)
+            ExpressionFactory::fromAst($rexpr),
         );
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function left() : Expression
+    public function left(): Expression
     {
         return $this->left;
     }
 
-    public function operator() : string
+    public function operator(): string
     {
         return $this->operator;
     }
 
-    public function right() : Expression
+    public function right(): Expression
     {
         return $this->right;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $operatorNode = new Node();
         $operatorString = new PBString();

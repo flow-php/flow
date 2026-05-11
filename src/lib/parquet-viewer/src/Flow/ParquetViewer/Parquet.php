@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer;
 
-use Flow\ParquetViewer\Command\{ReadDDLCommand, ReadDataCommand, ReadMetadataCommand};
+use Flow\ParquetViewer\Command\ReadDataCommand;
+use Flow\ParquetViewer\Command\ReadDDLCommand;
+use Flow\ParquetViewer\Command\ReadMetadataCommand;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Command\{CompleteCommand, DumpCompletionCommand, HelpCommand, ListCommand};
+use Symfony\Component\Console\Command\CompleteCommand;
+use Symfony\Component\Console\Command\DumpCompletionCommand;
+use Symfony\Component\Console\Command\HelpCommand;
+use Symfony\Component\Console\Command\ListCommand;
 
 final class Parquet extends Application
 {
     #[\Override]
-    protected function getDefaultCommands() : array
+    protected function getDefaultCommands(): array
     {
         return [
             new HelpCommand(),

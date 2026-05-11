@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateCompositeTypeFinalStep extends Sql
 {
-    public function toAst() : CompositeTypeStmt;
+    public function toAst(): CompositeTypeStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

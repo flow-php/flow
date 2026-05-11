@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_class_string, type_from_array};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_class_string;
+use function Flow\Types\DSL\type_from_array;
+
 final class ClassStringTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid DateTimeImmutable class string for DateTimeInterface class' => [
             'value' => \DateTimeImmutable::class,
@@ -104,7 +107,7 @@ final class ClassStringTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'valid stdClass class string' => [
             'value' => \stdClass::class,
@@ -198,7 +201,7 @@ final class ClassStringTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid stdClass class string for stdClass class' => [
             'value' => \stdClass::class,
@@ -301,18 +304,18 @@ final class ClassStringTypeTest extends TestCase
      * @param null|class-string $class
      */
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $class, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $class, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_class_string($class)->assert($value);
         } else {
             $result = type_class_string($class)->assert($value);
-            self::assertIsString($result);
-            self::assertTrue(\class_exists($result) || \interface_exists($result));
+            static::assertIsString($result);
+            static::assertTrue(\class_exists($result) || \interface_exists($result));
 
             if ($class !== null) {
-                self::assertTrue(\is_a($result, $class, true));
+                static::assertTrue(\is_a($result, $class, true));
             }
         }
     }
@@ -321,19 +324,19 @@ final class ClassStringTypeTest extends TestCase
      * @param null|class-string $class
      */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, ?string $class, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, ?string $class, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_class_string($class)->cast($value);
         } else {
             $result = type_class_string($class)->cast($value);
-            self::assertSame($expected, $result);
-            self::assertIsString($result);
-            self::assertTrue(\class_exists($result) || \interface_exists($result));
+            static::assertSame($expected, $result);
+            static::assertIsString($result);
+            static::assertTrue(\class_exists($result) || \interface_exists($result));
 
             if ($class !== null) {
-                self::assertTrue(\is_a($result, $class, true));
+                static::assertTrue(\is_a($result, $class, true));
             }
         }
     }
@@ -342,44 +345,35 @@ final class ClassStringTypeTest extends TestCase
      * @param null|class-string $class
      */
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, ?string $class, bool $expected) : void
+    public function test_is_valid(mixed $value, ?string $class, bool $expected): void
     {
-        self::assertSame($expected, type_class_string($class)->isValid($value));
+        static::assertSame($expected, type_class_string($class)->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_class_string(\DateTimeImmutable::class);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_normalization_without_class() : void
+    public function test_normalization_without_class(): void
     {
         $type = type_class_string();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'class-string<DateTimeImmutable>',
-            type_class_string(\DateTimeImmutable::class)->toString()
-        );
+        static::assertSame('class-string<DateTimeImmutable>', type_class_string(\DateTimeImmutable::class)->toString());
 
-        self::assertSame(
-            'class-string<DateTimeInterface>',
-            type_class_string(\DateTimeInterface::class)->toString()
-        );
+        static::assertSame('class-string<DateTimeInterface>', type_class_string(\DateTimeInterface::class)->toString());
 
-        self::assertSame(
-            'class-string',
-            type_class_string()->toString()
-        );
+        static::assertSame('class-string', type_class_string()->toString());
     }
 }

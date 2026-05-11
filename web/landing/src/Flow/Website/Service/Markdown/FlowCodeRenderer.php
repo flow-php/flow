@@ -6,7 +6,8 @@ namespace Flow\Website\Service\Markdown;
 
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
 use League\CommonMark\Node\Node;
-use League\CommonMark\Renderer\{ChildNodeRendererInterface, NodeRendererInterface};
+use League\CommonMark\Renderer\ChildNodeRendererInterface;
+use League\CommonMark\Renderer\NodeRendererInterface;
 use League\CommonMark\Util\HtmlElement;
 
 class FlowCodeRenderer implements NodeRendererInterface

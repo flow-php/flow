@@ -13,7 +13,7 @@ trait CommandOutputNormalizer
      * @param string $actual The actual command output
      * @param string $message Optional failure message
      */
-    protected static function assertCommandOutputContains(string $expected, string $actual, string $message = '') : void
+    protected static function assertCommandOutputContains(string $expected, string $actual, string $message = ''): void
     {
         self::assertStringContainsString($expected, self::normalizeCommandOutput($actual), $message);
     }
@@ -25,7 +25,7 @@ trait CommandOutputNormalizer
      * @param string $actual The actual command output
      * @param string $message Optional failure message
      */
-    protected static function assertCommandOutputEquals(string $expected, string $actual, string $message = '') : void
+    protected static function assertCommandOutputEquals(string $expected, string $actual, string $message = ''): void
     {
         self::assertEquals($expected, self::normalizeCommandOutput($actual), $message);
     }
@@ -37,7 +37,7 @@ trait CommandOutputNormalizer
      * @param string $actual The actual command output
      * @param string $message Optional failure message
      */
-    protected static function assertCommandOutputIdentical(string $expected, string $actual, string $message = '') : void
+    protected static function assertCommandOutputIdentical(string $expected, string $actual, string $message = ''): void
     {
         self::assertSame($expected, self::normalizeCommandOutput($actual), $message);
     }
@@ -49,7 +49,7 @@ trait CommandOutputNormalizer
      *
      * @return string The normalized output with Unix line endings and no ANSI codes
      */
-    protected static function normalizeCommandOutput(string $output) : string
+    protected static function normalizeCommandOutput(string $output): string
     {
         $output = \str_replace("\r\n", "\n", $output);
 

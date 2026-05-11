@@ -8,15 +8,15 @@ use Symfony\Component\Console\Command\Command;
 
 final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCommandTestCase
 {
-    public function test_command_executes_successfully() : void
+    public function test_command_executes_successfully(): void
     {
         $commandTester = $this->executeCommand('app:generate:scalar-function-chain-completer');
 
-        self::assertSame(Command::SUCCESS, $commandTester->getStatusCode());
-        self::assertStringContainsString('Generated ScalarFunctionChain completer', $commandTester->getDisplay());
+        static::assertSame(Command::SUCCESS, $commandTester->getStatusCode());
+        static::assertStringContainsString('Generated ScalarFunctionChain completer', $commandTester->getDisplay());
     }
 
-    public function test_generated_js_contains_core_chain_methods() : void
+    public function test_generated_js_contains_core_chain_methods(): void
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
@@ -25,30 +25,42 @@ final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCom
         $coreMethods = ['equals', 'isNull', 'isNotNull', 'cast', 'trim', 'lower', 'upper'];
 
         foreach ($coreMethods as $method) {
-            self::assertStringContainsString('label: "' . $method . '"', $content, "Missing core ScalarFunctionChain method: {$method}");
+            static::assertStringContainsString(
+                'label: "' . $method . '"',
+                $content,
+                "Missing core ScalarFunctionChain method: {$method}",
+            );
         }
     }
 
-    public function test_generated_js_contains_required_structure() : void
+    public function test_generated_js_contains_required_structure(): void
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
         $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
 
-        self::assertStringContainsString('CodeMirror Completer', $content);
-        self::assertStringContainsString('scalarFunctionChainMethods', $content);
-        self::assertStringContainsString('import { CompletionContext, snippet }', $content);
-        self::assertStringContainsString('export function', $content);
+        static::assertStringContainsString('CodeMirror Completer', $content);
+        static::assertStringContainsString('scalarFunctionChainMethods', $content);
+        static::assertStringContainsString('import { CompletionContext, snippet }', $content);
+        static::assertStringContainsString('export function', $content);
     }
 
-    public function test_generated_js_has_valid_completion_structure() : void
+    public function test_generated_js_has_valid_completion_structure(): void
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
         $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
 
-        self::assertMatchesRegularExpression('/label:\s*"[a-zA-Z]+"/i', $content, 'Completions should have label property');
-        self::assertMatchesRegularExpression('/type:\s*"method"/i', $content, 'Completions should have type: method');
-        self::assertStringContainsString('ScalarFunctionChain"', $content, 'Completions should reference ScalarFunctionChain class');
+        static::assertMatchesRegularExpression(
+            '/label:\s*"[a-zA-Z]+"/i',
+            $content,
+            'Completions should have label property',
+        );
+        static::assertMatchesRegularExpression('/type:\s*"method"/i', $content, 'Completions should have type: method');
+        static::assertStringContainsString(
+            'ScalarFunctionChain"',
+            $content,
+            'Completions should reference ScalarFunctionChain class',
+        );
     }
 }

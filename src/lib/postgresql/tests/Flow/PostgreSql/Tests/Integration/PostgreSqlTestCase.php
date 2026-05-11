@@ -10,7 +10,7 @@ abstract class PostgreSqlTestCase extends TestCase
 {
     private ?PostgreSqlContext $pgsqlContext = null;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
@@ -23,7 +23,7 @@ abstract class PostgreSqlTestCase extends TestCase
         $this->pgsqlContext = new PostgreSqlContext();
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         if ($this->pgsqlContext !== null) {
             $this->pgsqlContext->close();
@@ -31,7 +31,7 @@ abstract class PostgreSqlTestCase extends TestCase
         }
     }
 
-    protected function pgsqlContext() : PostgreSqlContext
+    protected function pgsqlContext(): PostgreSqlContext
     {
         if ($this->pgsqlContext === null) {
             static::fail('PostgreSqlContext not initialized. Ensure setUp() was called.');

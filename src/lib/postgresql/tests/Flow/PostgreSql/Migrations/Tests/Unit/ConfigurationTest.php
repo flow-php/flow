@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations\Tests\Unit;
 
 use Flow\PostgreSql\Migrations\Configuration;
-use Flow\PostgreSql\Migrations\Tests\Double\{FakeCatalogProvider, SpyClient};
+use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
+use Flow\PostgreSql\Migrations\Tests\Double\SpyClient;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigurationTest extends TestCase
 {
-    public function test_custom_values() : void
+    public function test_custom_values(): void
     {
         $client = new SpyClient();
         $catalog = new FakeCatalogProvider(new Catalog([]));
@@ -27,17 +28,17 @@ final class ConfigurationTest extends TestCase
             generateRollback: false,
         );
 
-        self::assertSame($client, $config->client);
-        self::assertSame($catalog, $config->targetCatalogProvider);
-        self::assertSame('/app/migrations', $config->migrationsDirectory);
-        self::assertSame('App\\Migrations', $config->migrationsNamespace);
-        self::assertSame('custom_migrations', $config->tableName);
-        self::assertSame('app', $config->tableSchema);
-        self::assertFalse($config->allOrNothing);
-        self::assertFalse($config->generateRollback);
+        static::assertSame($client, $config->client);
+        static::assertSame($catalog, $config->targetCatalogProvider);
+        static::assertSame('/app/migrations', $config->migrationsDirectory);
+        static::assertSame('App\\Migrations', $config->migrationsNamespace);
+        static::assertSame('custom_migrations', $config->tableName);
+        static::assertSame('app', $config->tableSchema);
+        static::assertFalse($config->allOrNothing);
+        static::assertFalse($config->generateRollback);
     }
 
-    public function test_default_values() : void
+    public function test_default_values(): void
     {
         $config = new Configuration(
             client: new SpyClient(),
@@ -46,9 +47,9 @@ final class ConfigurationTest extends TestCase
             migrationsNamespace: 'App\\Migrations',
         );
 
-        self::assertSame('flow_migrations', $config->tableName);
-        self::assertSame('public', $config->tableSchema);
-        self::assertFalse($config->allOrNothing);
-        self::assertTrue($config->generateRollback);
+        static::assertSame('flow_migrations', $config->tableName);
+        static::assertSame('public', $config->tableSchema);
+        static::assertFalse($config->allOrNothing);
+        static::assertTrue($config->generateRollback);
     }
 }

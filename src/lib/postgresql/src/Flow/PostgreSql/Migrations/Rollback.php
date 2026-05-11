@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Migrations;
 
 interface Rollback
 {
-    public function rollback(MigrationContext $context) : void;
+    public function rollback(MigrationContext $context): void;
 
-    public function transactional() : bool;
+    public function transactional(): bool;
 }

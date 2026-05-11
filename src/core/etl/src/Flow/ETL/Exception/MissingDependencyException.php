@@ -10,7 +10,7 @@ final class MissingDependencyException extends RuntimeException
     {
         parent::__construct(
             "Missing {$name} dependency, please run 'composer require {$package}'",
-            previous: $previous
+            previous: $previous,
         );
     }
 }

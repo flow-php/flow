@@ -5,69 +5,71 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\FunctionParameterMode;
-use Flow\PostgreSql\QueryBuilder\Schema\Function\{ArgumentMode, FunctionVolatility, ParallelSafety};
+use Flow\PostgreSql\QueryBuilder\Schema\Function\ArgumentMode;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\FunctionVolatility;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class EnumsTest extends TestCase
 {
     #[Test]
-    public function test_argument_mode_in() : void
+    public function test_argument_mode_in(): void
     {
-        self::assertSame(FunctionParameterMode::FUNC_PARAM_IN, ArgumentMode::IN->value);
+        static::assertSame(FunctionParameterMode::FUNC_PARAM_IN, ArgumentMode::IN->value);
     }
 
     #[Test]
-    public function test_argument_mode_inout() : void
+    public function test_argument_mode_inout(): void
     {
-        self::assertSame(FunctionParameterMode::FUNC_PARAM_INOUT, ArgumentMode::INOUT->value);
+        static::assertSame(FunctionParameterMode::FUNC_PARAM_INOUT, ArgumentMode::INOUT->value);
     }
 
     #[Test]
-    public function test_argument_mode_out() : void
+    public function test_argument_mode_out(): void
     {
-        self::assertSame(FunctionParameterMode::FUNC_PARAM_OUT, ArgumentMode::OUT->value);
+        static::assertSame(FunctionParameterMode::FUNC_PARAM_OUT, ArgumentMode::OUT->value);
     }
 
     #[Test]
-    public function test_argument_mode_variadic() : void
+    public function test_argument_mode_variadic(): void
     {
-        self::assertSame(FunctionParameterMode::FUNC_PARAM_VARIADIC, ArgumentMode::VARIADIC->value);
+        static::assertSame(FunctionParameterMode::FUNC_PARAM_VARIADIC, ArgumentMode::VARIADIC->value);
     }
 
     #[Test]
-    public function test_function_volatility_immutable() : void
+    public function test_function_volatility_immutable(): void
     {
-        self::assertSame('immutable', FunctionVolatility::IMMUTABLE->value);
+        static::assertSame('immutable', FunctionVolatility::IMMUTABLE->value);
     }
 
     #[Test]
-    public function test_function_volatility_stable() : void
+    public function test_function_volatility_stable(): void
     {
-        self::assertSame('stable', FunctionVolatility::STABLE->value);
+        static::assertSame('stable', FunctionVolatility::STABLE->value);
     }
 
     #[Test]
-    public function test_function_volatility_volatile() : void
+    public function test_function_volatility_volatile(): void
     {
-        self::assertSame('volatile', FunctionVolatility::VOLATILE->value);
+        static::assertSame('volatile', FunctionVolatility::VOLATILE->value);
     }
 
     #[Test]
-    public function test_parallel_safety_restricted() : void
+    public function test_parallel_safety_restricted(): void
     {
-        self::assertSame('restricted', ParallelSafety::RESTRICTED->value);
+        static::assertSame('restricted', ParallelSafety::RESTRICTED->value);
     }
 
     #[Test]
-    public function test_parallel_safety_safe() : void
+    public function test_parallel_safety_safe(): void
     {
-        self::assertSame('safe', ParallelSafety::SAFE->value);
+        static::assertSame('safe', ParallelSafety::SAFE->value);
     }
 
     #[Test]
-    public function test_parallel_safety_unsafe() : void
+    public function test_parallel_safety_unsafe(): void
     {
-        self::assertSame('unsafe', ParallelSafety::UNSAFE->value);
+        static::assertSame('unsafe', ParallelSafety::UNSAFE->value);
     }
 }

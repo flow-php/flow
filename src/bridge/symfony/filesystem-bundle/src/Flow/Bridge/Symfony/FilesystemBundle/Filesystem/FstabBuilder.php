@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem;
 
-use Flow\Bridge\Symfony\FilesystemBundle\Exception\{InvalidArgumentException, LogicException};
+use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
+use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 
@@ -18,7 +19,7 @@ final class FstabBuilder
         string $fstabName,
         array $filesystems,
         ?FilesystemTelemetryConfig $telemetryConfig = null,
-    ) : FilesystemTable {
+    ): FilesystemTable {
         $table = new FilesystemTable();
 
         if ($telemetryConfig !== null) {
@@ -34,12 +35,11 @@ final class FstabBuilder
                 $factory = $registry->get($type);
                 $filesystem = $factory->create($protocol, $options);
             } catch (InvalidArgumentException|\Flow\ETL\Exception\InvalidArgumentException $e) {
-                throw new LogicException(\sprintf(
-                    'Fstab "%s" mount "%s": %s',
-                    $fstabName,
-                    $protocol,
-                    $e->getMessage(),
-                ), 0, $e);
+                throw new LogicException(
+                    \sprintf('Fstab "%s" mount "%s": %s', $fstabName, $protocol, $e->getMessage()),
+                    0,
+                    $e,
+                );
             }
 
             $table->mount($filesystem);

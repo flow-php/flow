@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Analyzer;
 
-enum InsightType : string
+enum InsightType: string
 {
     case DISK_READ = 'disk_read';
     case ESTIMATE_MISMATCH = 'estimate_mismatch';

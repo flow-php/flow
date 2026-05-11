@@ -4,30 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{df, from_array, from_rows, integer_entry, list_entry, ref};
-use function Flow\ETL\DSL\row;
-use function Flow\Types\DSL\{type_integer, type_list, type_structure};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_structure;
 
 final class OffsetTest extends FlowIntegrationTestCase
 {
-    public function test_limit_with_offset() : void
+    public function test_limit_with_offset(): void
     {
         $rows = df()
-            ->read(from_array(
-                \array_map(
-                    static fn (int $id) : array => ['id' => $id],
-                    \range(1, 20)
-                )
-            ))
+            ->read(from_array(\array_map(static fn(int $id): array => ['id' => $id], \range(1, 20))))
             ->limit(10)
             ->offset(5)
             ->fetch();
 
-        self::assertCount(5, $rows);
-        self::assertSame(
+        static::assertCount(5, $rows);
+        static::assertSame(
             [
                 ['id' => 6],
                 ['id' => 7],
@@ -35,11 +40,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 ['id' => 9],
                 ['id' => 10],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_constructor_with_negative_offset() : void
+    public function test_offset_constructor_with_negative_offset(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0, given: -1');
@@ -48,22 +53,17 @@ final class OffsetTest extends FlowIntegrationTestCase
         df()->read(from_rows(\Flow\ETL\DSL\rows()))->offset(-1);
     }
 
-    public function test_offset_null() : void
+    public function test_offset_null(): void
     {
         $rows = df()
-            ->read(from_array(
-                \array_map(
-                    static fn (int $id) : array => ['id' => $id],
-                    \range(1, 10)
-                )
-            ))
+            ->read(from_array(\array_map(static fn(int $id): array => ['id' => $id], \range(1, 10))))
             ->offset(null)
             ->fetch();
 
-        self::assertCount(10, $rows);
+        static::assertCount(10, $rows);
     }
 
-    public function test_offset_skipping_all_rows() : void
+    public function test_offset_skipping_all_rows(): void
     {
         $rows = df()
             ->read(from_array([
@@ -74,10 +74,10 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(3)
             ->fetch();
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_offset_skipping_more_rows_than_available() : void
+    public function test_offset_skipping_more_rows_than_available(): void
     {
         $rows = df()
             ->read(from_array([
@@ -87,10 +87,10 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(5)
             ->fetch();
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_offset_skipping_some_rows() : void
+    public function test_offset_skipping_some_rows(): void
     {
         $rows = df()
             ->read(from_array([
@@ -103,18 +103,18 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(2)
             ->fetch();
 
-        self::assertCount(3, $rows);
-        self::assertSame(
+        static::assertCount(3, $rows);
+        static::assertSame(
             [
                 ['id' => 3],
                 ['id' => 4],
                 ['id' => 5],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_with_batch_size() : void
+    public function test_offset_with_batch_size(): void
     {
         $rows = df()
             ->read(new class implements Extractor {
@@ -123,7 +123,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context) : \Generator
+                public function extract(FlowContext $context): \Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
                         yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i + 1)));
@@ -134,8 +134,8 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(4)
             ->fetch();
 
-        self::assertCount(6, $rows);
-        self::assertSame(
+        static::assertCount(6, $rows);
+        static::assertSame(
             [
                 ['id' => 5],
                 ['id' => 6],
@@ -144,11 +144,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 ['id' => 9],
                 ['id' => 10],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_with_collect() : void
+    public function test_offset_with_collect(): void
     {
         $rows = df()
             ->read(new class implements Extractor {
@@ -157,7 +157,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context) : \Generator
+                public function extract(FlowContext $context): \Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i + 1)));
@@ -168,18 +168,18 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->collect()
             ->fetch();
 
-        self::assertCount(3, $rows);
-        self::assertSame(
+        static::assertCount(3, $rows);
+        static::assertSame(
             [
                 ['id' => 3],
                 ['id' => 4],
                 ['id' => 5],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_with_expanding_transformations() : void
+    public function test_offset_with_expanding_transformations(): void
     {
         $rows = df()
             ->read(new class implements Extractor {
@@ -188,18 +188,20 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context) : \Generator
+                public function extract(FlowContext $context): \Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
-                        yield \Flow\ETL\DSL\rows(row(list_entry('ids', [
-                            ['id' => $i + 1],
-                            ['id' => $i + 2],
-                            ['id' => $i + 3],
-                        ], type_list(
-                            type_structure([
+                        yield \Flow\ETL\DSL\rows(row(list_entry(
+                            'ids',
+                            [
+                                ['id' => $i + 1],
+                                ['id' => $i + 2],
+                                ['id' => $i + 3],
+                            ],
+                            type_list(type_structure([
                                 'id' => type_integer(),
-                            ])
-                        ))));
+                            ])),
+                        )));
                     }
                 }
             })
@@ -213,24 +215,19 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->limit(3)
             ->fetch();
 
-        self::assertCount(3, $rows);
+        static::assertCount(3, $rows);
     }
 
-    public function test_offset_with_limit() : void
+    public function test_offset_with_limit(): void
     {
         $rows = df()
-            ->read(from_array(
-                \array_map(
-                    static fn (int $id) : array => ['id' => $id],
-                    \range(1, 20)
-                )
-            ))
+            ->read(from_array(\array_map(static fn(int $id): array => ['id' => $id], \range(1, 20))))
             ->offset(5)
             ->limit(10)
             ->fetch();
 
-        self::assertCount(10, $rows);
-        self::assertSame(
+        static::assertCount(10, $rows);
+        static::assertSame(
             [
                 ['id' => 6],
                 ['id' => 7],
@@ -243,11 +240,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 ['id' => 14],
                 ['id' => 15],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_with_multiple_batches() : void
+    public function test_offset_with_multiple_batches(): void
     {
         $rows = df()
             ->read(new class implements Extractor {
@@ -256,7 +253,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context) : \Generator
+                public function extract(FlowContext $context): \Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
                         yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i + 1)));
@@ -266,8 +263,8 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(4)
             ->fetch();
 
-        self::assertCount(6, $rows);
-        self::assertSame(
+        static::assertCount(6, $rows);
+        static::assertSame(
             [
                 ['id' => 5],
                 ['id' => 6],
@@ -276,25 +273,23 @@ final class OffsetTest extends FlowIntegrationTestCase
                 ['id' => 9],
                 ['id' => 10],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_with_transformations() : void
+    public function test_offset_with_transformations(): void
     {
         $rows = df()
-            ->read(from_array(
-                \array_map(
-                    static fn (int $id) : array => ['id' => $id, 'value' => $id * 2],
-                    \range(1, 10)
-                )
-            ))
+            ->read(from_array(\array_map(
+                static fn(int $id): array => ['id' => $id, 'value' => $id * 2],
+                \range(1, 10),
+            )))
             ->withEntry('sum', ref('id')->plus(ref('value')))
             ->offset(3)
             ->fetch();
 
-        self::assertCount(7, $rows);
-        self::assertSame(
+        static::assertCount(7, $rows);
+        static::assertSame(
             [
                 ['id' => 4, 'value' => 8, 'sum' => 12],
                 ['id' => 5, 'value' => 10, 'sum' => 15],
@@ -304,11 +299,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 ['id' => 9, 'value' => 18, 'sum' => 27],
                 ['id' => 10, 'value' => 20, 'sum' => 30],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_offset_with_zero() : void
+    public function test_offset_with_zero(): void
     {
         $rows = df()
             ->read(from_array([
@@ -319,42 +314,31 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(0)
             ->fetch();
 
-        self::assertCount(3, $rows);
-        self::assertSame(
+        static::assertCount(3, $rows);
+        static::assertSame(
             [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_pagination_scenario() : void
+    public function test_pagination_scenario(): void
     {
-        $data = \array_map(
-            static fn (int $id) : array => ['id' => $id, 'name' => 'Item ' . $id],
-            \range(1, 100)
-        );
+        $data = \array_map(static fn(int $id): array => ['id' => $id, 'name' => 'Item ' . $id], \range(1, 100));
 
-        $page1 = df()
-            ->read(from_array($data))
-            ->offset(0)
-            ->limit(10)
-            ->fetch();
+        $page1 = df()->read(from_array($data))->offset(0)->limit(10)->fetch();
 
-        self::assertCount(10, $page1);
-        self::assertSame(1, $page1->first()->valueOf('id'));
-        self::assertSame(10, $page1->all()[9]->valueOf('id'));
+        static::assertCount(10, $page1);
+        static::assertSame(1, $page1->first()->valueOf('id'));
+        static::assertSame(10, $page1->all()[9]->valueOf('id'));
 
-        $page3 = df()
-            ->read(from_array($data))
-            ->offset(20)
-            ->limit(10)
-            ->fetch();
+        $page3 = df()->read(from_array($data))->offset(20)->limit(10)->fetch();
 
-        self::assertCount(10, $page3);
-        self::assertSame(21, $page3->first()->valueOf('id'));
-        self::assertSame(30, $page3->all()[9]->valueOf('id'));
+        static::assertCount(10, $page3);
+        static::assertSame(21, $page3->first()->valueOf('id'));
+        static::assertSame(30, $page3->all()[9]->valueOf('id'));
     }
 }

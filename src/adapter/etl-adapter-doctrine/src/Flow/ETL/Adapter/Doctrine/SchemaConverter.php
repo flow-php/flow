@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use function Flow\ETL\DSL\definition_from_type;
-use function Flow\Types\DSL\type_string;
-use Doctrine\DBAL\Schema\{Column, Index, Table};
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\type_string;
 
 final readonly class SchemaConverter
 {
@@ -28,12 +32,17 @@ final readonly class SchemaConverter
     /**
      * @param array<array-key, mixed> $tableOptions
      */
-    public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
+    public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []): Table
     {
         $columns = [];
 
         foreach ($schema->definitions() as $definition) {
-            $column = $this->flowToColumn($definition->entry()->name(), $definition->type(), $definition->isNullable(), $definition->metadata());
+            $column = $this->flowToColumn(
+                $definition->entry()->name(),
+                $definition->type(),
+                $definition->isNullable(),
+                $definition->metadata(),
+            );
             $columns[$column->getName()] = $column;
         }
 
@@ -43,7 +52,7 @@ final readonly class SchemaConverter
         return $table;
     }
 
-    public function toFlowSchema(Table $table) : Schema
+    public function toFlowSchema(Table $table): Schema
     {
         $definitions = [];
 
@@ -57,7 +66,7 @@ final readonly class SchemaConverter
     /**
      * @return Definition<mixed>
      */
-    private function columnToFlow(Column $column, Table $table) : Definition
+    private function columnToFlow(Column $column, Table $table): Definition
     {
         $type = $this->typesMap->toFlowType($column->getType()::class);
 
@@ -114,11 +123,19 @@ final readonly class SchemaConverter
         }
 
         foreach ($table->getIndexes() as $index) {
-            if ($index->isUnique() && !$index->isPrimary() && \in_array($column->getName(), $index->getColumns(), true)) {
+            if (
+                $index->isUnique()
+                && !$index->isPrimary()
+                && \in_array($column->getName(), $index->getColumns(), true)
+            ) {
                 $metadata = $metadata->merge(DbalMetadata::indexUnique($index->getName()));
             }
 
-            if (!$index->isUnique() && !$index->isPrimary() && \in_array($column->getName(), $index->getColumns(), true)) {
+            if (
+                !$index->isUnique()
+                && !$index->isPrimary()
+                && \in_array($column->getName(), $index->getColumns(), true)
+            ) {
                 $metadata = $metadata->merge(DbalMetadata::index($index->getName()));
             }
         }
@@ -129,7 +146,7 @@ final readonly class SchemaConverter
     /**
      * @param \Flow\Types\Type<mixed> $type
      */
-    private function flowToColumn(string $name, Type $type, bool $nullable, ?Metadata $metadata = null) : Column
+    private function flowToColumn(string $name, Type $type, bool $nullable, ?Metadata $metadata = null): Column
     {
         $dbalTypeClass = $this->typesMap->toDbalType($type::class);
 
@@ -201,7 +218,7 @@ final readonly class SchemaConverter
     /**
      * @return array<Index>
      */
-    private function updateIndexes(Schema $schema, Table $table) : array
+    private function updateIndexes(Schema $schema, Table $table): array
     {
         $indexesData = [];
         $uniqueIndexesData = [];
@@ -219,7 +236,10 @@ final readonly class SchemaConverter
             }
 
             if ($definition->metadata()->has(DbalMetadata::INDEX_UNIQUE->value)) {
-                $uniqueIndex = (string) $definition->metadata()->getAs(DbalMetadata::INDEX_UNIQUE->value, type_string());
+                $uniqueIndex = (string) $definition->metadata()->getAs(
+                    DbalMetadata::INDEX_UNIQUE->value,
+                    type_string(),
+                );
 
                 if (!\array_key_exists($uniqueIndex, $uniqueIndexesData)) {
                     $uniqueIndexesData[$uniqueIndex] = [];
@@ -229,11 +249,17 @@ final readonly class SchemaConverter
             }
 
             if ($definition->metadata()->has(DbalMetadata::PRIMARY_KEY->value)) {
-                $primaryKeyName = (string) $definition->metadata()->getAs(DbalMetadata::PRIMARY_KEY->value, type_string());
+                $primaryKeyName = (string) $definition->metadata()->getAs(
+                    DbalMetadata::PRIMARY_KEY->value,
+                    type_string(),
+                );
                 $primaryKey[$primaryKeyName][] = $definition->entry()->name();
 
                 if (\count($primaryKey) > 1) {
-                    throw new InvalidArgumentException('Each table can have only one primary key, provided: ' . \implode(', ', \array_keys($primaryKey)));
+                    throw new InvalidArgumentException(
+                        'Each table can have only one primary key, provided: '
+                            . \implode(', ', \array_keys($primaryKey)),
+                    );
                 }
             }
         }

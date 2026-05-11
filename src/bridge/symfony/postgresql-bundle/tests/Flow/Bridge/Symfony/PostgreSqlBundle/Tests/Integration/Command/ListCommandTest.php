@@ -9,7 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class ListCommandTest extends CommandTestCase
 {
-    public function test_lists_pending_migration() : void
+    public function test_lists_pending_migration(): void
     {
         $this->context->generateDiffMigration();
 
@@ -18,8 +18,8 @@ final class ListCommandTest extends CommandTestCase
         $tester = new CommandTester($command);
         $tester->execute([]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('PENDING', $tester->getDisplay());
-        self::assertStringContainsString('create_test_users', $tester->getDisplay());
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString('PENDING', $tester->getDisplay());
+        static::assertStringContainsString('create_test_users', $tester->getDisplay());
     }
 }

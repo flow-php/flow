@@ -19,12 +19,11 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private string $connectionName,
         private bool $logSql = true,
         private int $maxSqlLength = 1000,
-    ) {
-    }
+    ) {}
 
-    public function wrap(DriverInterface $driver) : DriverInterface
+    public function wrap(DriverInterface $driver): DriverInterface
     {
-        return new ($this->driverClass)(
+        return new $this->driverClass(
             $this->telemetry,
             $driver,
             $this->connectionName,

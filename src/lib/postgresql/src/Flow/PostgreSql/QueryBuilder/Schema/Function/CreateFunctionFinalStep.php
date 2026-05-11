@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateFunctionFinalStep extends Sql
 {
-    public function toAst() : CreateFunctionStmt;
+    public function toAst(): CreateFunctionStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, list_entry, ref, row, struct_entry};
-use function Flow\Types\DSL\{type_integer, type_optional};
-use function Flow\Types\DSL\{type_list, type_string, type_structure};
 use Flow\ETL\Function\StructureSelect;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 final class StructureSelectTest extends FlowTestCase
 {
-    public function test_selecting_multiple_values_from_structure() : void
+    public function test_selecting_multiple_values_from_structure(): void
     {
         $structure = struct_entry(
             'struct',
@@ -23,17 +31,16 @@ final class StructureSelectTest extends FlowTestCase
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
-            ])
+            ]),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             ['id' => 1, 'name' => 'test'],
-            (new StructureSelect(ref('struct'), ref('id'), ref('name')))
-                ->eval(row($structure), flow_context())
+            (new StructureSelect(ref('struct'), ref('id'), ref('name')))->eval(row($structure), flow_context()),
         );
     }
 
-    public function test_selecting_single_value_from_structure() : void
+    public function test_selecting_single_value_from_structure(): void
     {
         $structure = struct_entry(
             'struct',
@@ -44,17 +51,16 @@ final class StructureSelectTest extends FlowTestCase
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
-            ])
+            ]),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             ['id' => 1],
-            (new StructureSelect(ref('struct'), 'id'))
-                ->eval(row($structure), flow_context())
+            (new StructureSelect(ref('struct'), 'id'))->eval(row($structure), flow_context()),
         );
     }
 
-    public function test_selecting_single_value_from_structure_with_alias() : void
+    public function test_selecting_single_value_from_structure_with_alias(): void
     {
         $structure = struct_entry(
             'struct',
@@ -65,17 +71,16 @@ final class StructureSelectTest extends FlowTestCase
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
-            ])
+            ]),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             ['new_id' => 1],
-            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))
-                ->eval(row($structure), flow_context())
+            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))->eval(row($structure), flow_context()),
         );
     }
 
-    public function test_selecting_values_from_empty_structure() : void
+    public function test_selecting_values_from_empty_structure(): void
     {
         $structure = struct_entry(
             'struct',
@@ -88,17 +93,16 @@ final class StructureSelectTest extends FlowTestCase
                 'id' => type_optional(type_integer()),
                 'email' => type_string(),
                 'name' => type_optional(type_string()),
-            ])
+            ]),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             ['new_id' => null],
-            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))
-                ->eval(row($structure), flow_context())
+            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))->eval(row($structure), flow_context()),
         );
     }
 
-    public function test_selecting_values_from_list() : void
+    public function test_selecting_values_from_list(): void
     {
         $list = list_entry(
             'list',
@@ -106,16 +110,12 @@ final class StructureSelectTest extends FlowTestCase
                 ['id' => 1, 'name' => 'test'],
                 ['id' => 2, 'name' => 'test2'],
             ],
-            type_list(
-                type_structure([
-                    'id' => type_integer(),
-                    'name' => type_string(),
-                ])
-            )
+            type_list(type_structure([
+                'id' => type_integer(),
+                'name' => type_string(),
+            ])),
         );
 
-        self::assertNull(
-            (new StructureSelect(ref('list'), ref('id')))->eval(row($list), flow_context())
-        );
+        static::assertNull((new StructureSelect(ref('list'), ref('id')))->eval(row($list), flow_context()));
     }
 }

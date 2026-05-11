@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
-use Flow\PostgreSql\Protobuf\AST\{CollateClause, ColumnDef, CompositeTypeStmt, Node, PBString, RangeVar};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CollateClause;
+use Flow\PostgreSql\Protobuf\AST\ColumnDef;
+use Flow\PostgreSql\Protobuf\AST\CompositeTypeStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
-final readonly class CreateCompositeTypeBuilder implements CreateCompositeTypeAttributesStep, CreateCompositeTypeFinalStep
+final readonly class CreateCompositeTypeBuilder implements
+    CreateCompositeTypeAttributesStep,
+    CreateCompositeTypeFinalStep
 {
     use AstToSql;
 
@@ -18,26 +26,21 @@ final readonly class CreateCompositeTypeBuilder implements CreateCompositeTypeAt
         private string $name,
         private ?string $schema = null,
         private array $attributes = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateCompositeTypeAttributesStep
+    public static function create(string $name): CreateCompositeTypeAttributesStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function attributes(TypeAttribute ...$attributes) : CreateCompositeTypeFinalStep
+    public function attributes(TypeAttribute ...$attributes): CreateCompositeTypeFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            \array_values($attributes),
-        );
+        return new self($this->name, $this->schema, \array_values($attributes));
     }
 
-    public function toAst() : CompositeTypeStmt
+    public function toAst(): CompositeTypeStmt
     {
         $stmt = new CompositeTypeStmt();
 

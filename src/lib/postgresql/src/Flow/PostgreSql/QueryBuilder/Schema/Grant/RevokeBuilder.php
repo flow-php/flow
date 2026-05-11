@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
-use Flow\PostgreSql\Protobuf\AST\{AccessPriv, DropBehavior, GrantStmt, GrantTargetType, Node, ObjectType, PBString, RangeVar, RoleSpec, RoleSpecType};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\AccessPriv;
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\GrantStmt;
+use Flow\PostgreSql\Protobuf\AST\GrantTargetType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, RevokeOnStep
 {
@@ -23,20 +33,18 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         private array $objects = [],
         private array $grantees = [],
         private int $behavior = DropBehavior::DROP_RESTRICT,
-    ) {
-    }
+    ) {}
 
-    public static function create(TablePrivilege|string ...$privileges) : RevokeOnStep
+    public static function create(TablePrivilege|string ...$privileges): RevokeOnStep
     {
-        $privs = \array_map(
-            static fn (TablePrivilege|string $p) : string => $p instanceof TablePrivilege ? $p->value : $p,
-            $privileges,
-        );
+        $privs = \array_map(static fn(TablePrivilege|string $p): string => $p instanceof TablePrivilege
+            ? $p->value
+            : $p, $privileges);
 
         return new self(\array_values($privs));
     }
 
-    public function cascade() : RevokeFinalStep
+    public function cascade(): RevokeFinalStep
     {
         return new self(
             $this->privileges,
@@ -48,7 +56,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         );
     }
 
-    public function from(string ...$roles) : RevokeFinalStep
+    public function from(string ...$roles): RevokeFinalStep
     {
         return new self(
             $this->privileges,
@@ -60,12 +68,12 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         );
     }
 
-    public function fromPublic() : RevokeFinalStep
+    public function fromPublic(): RevokeFinalStep
     {
         return $this->from('public');
     }
 
-    public function onAllTablesInSchema(string ...$schemas) : RevokeFromStep
+    public function onAllTablesInSchema(string ...$schemas): RevokeFromStep
     {
         return new self(
             $this->privileges,
@@ -77,7 +85,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         );
     }
 
-    public function onTable(string ...$tables) : RevokeFromStep
+    public function onTable(string ...$tables): RevokeFromStep
     {
         return new self(
             $this->privileges,
@@ -89,7 +97,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         );
     }
 
-    public function restrict() : RevokeFinalStep
+    public function restrict(): RevokeFinalStep
     {
         return new self(
             $this->privileges,
@@ -101,7 +109,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         );
     }
 
-    public function toAst() : GrantStmt
+    public function toAst(): GrantStmt
     {
         $stmt = new GrantStmt();
         $stmt->setIsGrant(false);

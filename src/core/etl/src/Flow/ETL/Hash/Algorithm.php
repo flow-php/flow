@@ -6,5 +6,5 @@ namespace Flow\ETL\Hash;
 
 interface Algorithm
 {
-    public function hash(string $value) : string;
+    public function hash(string $value): string;
 }

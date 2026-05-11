@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier};
+use Flow\PostgreSql\AST\ModificationContext;
+use Flow\PostgreSql\AST\NodeModifier;
 use Flow\PostgreSql\Exception\PaginationException;
-use Flow\PostgreSql\Protobuf\AST\{
-    A_Const,
-    A_Star,
-    Alias,
-    ColumnRef,
-    Integer,
-    LimitOption,
-    Node,
-    RangeSubselect,
-    ResTarget,
-    SelectStmt,
-    SetOperation
-};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\A_Star;
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\LimitOption;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\Protobuf\AST\SetOperation;
 
 /**
  * Modifies SELECT queries to add LIMIT/OFFSET pagination.
@@ -34,15 +33,14 @@ final readonly class PaginationModifier implements NodeModifier
 {
     public function __construct(
         private PaginationConfig $config,
-    ) {
-    }
+    ) {}
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [SelectStmt::class];
     }
 
-    public function modify(object $node, ModificationContext $context) : int|object|null
+    public function modify(object $node, ModificationContext $context): int|object|null
     {
         /** @var SelectStmt $node */
         if (!$context->isTopLevel()) {
@@ -50,9 +48,7 @@ final readonly class PaginationModifier implements NodeModifier
         }
 
         if ($this->config->offset > 0 && !$this->hasOrderBy($node)) {
-            throw new PaginationException(
-                'OFFSET without ORDER BY produces non-deterministic results'
-            );
+            throw new PaginationException('OFFSET without ORDER BY produces non-deterministic results');
         }
 
         if ($this->isSetOperation($node)) {
@@ -64,7 +60,7 @@ final readonly class PaginationModifier implements NodeModifier
         return NodeModifier::DONT_TRAVERSE_CHILDREN;
     }
 
-    private function applyPagination(SelectStmt $stmt) : void
+    private function applyPagination(SelectStmt $stmt): void
     {
         $stmt->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
         $stmt->setLimitCount($this->createIntegerNode($this->config->limit));
@@ -76,7 +72,7 @@ final readonly class PaginationModifier implements NodeModifier
         }
     }
 
-    private function createIntegerNode(int $value) : Node
+    private function createIntegerNode(int $value): Node
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -91,20 +87,19 @@ final readonly class PaginationModifier implements NodeModifier
         return $node;
     }
 
-    private function hasOrderBy(SelectStmt $stmt) : bool
+    private function hasOrderBy(SelectStmt $stmt): bool
     {
         return \count($stmt->getSortClause() ?? []) > 0;
     }
 
-    private function isSetOperation(SelectStmt $stmt) : bool
+    private function isSetOperation(SelectStmt $stmt): bool
     {
         $op = $stmt->getOp();
 
-        return $op !== SetOperation::SETOP_NONE
-            && $op !== SetOperation::SET_OPERATION_UNDEFINED;
+        return $op !== SetOperation::SETOP_NONE && $op !== SetOperation::SET_OPERATION_UNDEFINED;
     }
 
-    private function wrapSetOperationWithPagination(SelectStmt $stmt) : Node
+    private function wrapSetOperationWithPagination(SelectStmt $stmt): Node
     {
         $innerNode = new Node();
         $innerNode->setSelectStmt($stmt);

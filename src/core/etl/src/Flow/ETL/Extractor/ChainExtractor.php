@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 
 final readonly class ChainExtractor implements Extractor, OverridingExtractor
 {
@@ -21,7 +23,7 @@ final readonly class ChainExtractor implements Extractor, OverridingExtractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($this->extractors as $extractor) {
             foreach ($extractor->extract($context) as $rows) {
@@ -34,7 +36,7 @@ final readonly class ChainExtractor implements Extractor, OverridingExtractor
         }
     }
 
-    public function extractors() : array
+    public function extractors(): array
     {
         return $this->extractors;
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Fixtures;
 
-enum SomeEnum : string
+enum SomeEnum: string
 {
     case A = 'a';
     case B = 'b';

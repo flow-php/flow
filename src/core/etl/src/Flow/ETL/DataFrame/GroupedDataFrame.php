@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DataFrame;
 
-use Flow\ETL\{DataFrame, GroupBy};
+use Flow\ETL\DataFrame;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\GroupBy;
 use Flow\ETL\Processor\GroupByProcessor;
 use Flow\ETL\Row\Reference;
 
 final readonly class GroupedDataFrame
 {
-    public function __construct(private DataFrame $df, private GroupBy $groupBy)
-    {
-    }
+    public function __construct(
+        private DataFrame $df,
+        private GroupBy $groupBy,
+    ) {}
 
-    public function aggregate(AggregatingFunction ...$aggregations) : DataFrame
+    public function aggregate(AggregatingFunction ...$aggregations): DataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        $pipelineAdder = function (GroupBy $groupBy) : void {
+        $pipelineAdder = function (GroupBy $groupBy): void {
             /**
              * @phpstan-ignore-next-line
              */
@@ -31,7 +33,7 @@ final readonly class GroupedDataFrame
         return $this->df;
     }
 
-    public function pivot(Reference $ref) : self
+    public function pivot(Reference $ref): self
     {
         $this->groupBy->pivot($ref);
 

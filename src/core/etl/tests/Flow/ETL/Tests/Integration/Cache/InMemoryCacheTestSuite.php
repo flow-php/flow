@@ -9,7 +9,7 @@ use Flow\ETL\Cache\Implementation\InMemoryCache;
 
 final class InMemoryCacheTestSuite extends CacheBaseTestSuite
 {
-    protected function cache() : Cache
+    protected function cache(): Cache
     {
         return new InMemoryCache();
     }

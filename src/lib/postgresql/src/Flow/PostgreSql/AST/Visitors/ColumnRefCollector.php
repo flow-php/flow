@@ -17,12 +17,12 @@ final class ColumnRefCollector implements NodeVisitor
      */
     private array $columnRefs = [];
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [ColumnRef::class];
     }
 
-    public function enter(object $node) : ?int
+    public function enter(object $node): ?int
     {
         /** @var ColumnRef $node */
         $this->columnRefs[] = $node;
@@ -33,17 +33,17 @@ final class ColumnRefCollector implements NodeVisitor
     /**
      * @return array<ColumnRef>
      */
-    public function getColumnRefs() : array
+    public function getColumnRefs(): array
     {
         return $this->columnRefs;
     }
 
-    public function leave(object $node) : ?int
+    public function leave(object $node): ?int
     {
         return null;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->columnRefs = [];
     }

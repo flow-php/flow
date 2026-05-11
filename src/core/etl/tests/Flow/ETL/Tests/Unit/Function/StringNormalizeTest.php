@@ -4,83 +4,60 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class StringNormalizeTest extends FlowTestCase
 {
-    public function test_normalize_already_normalized() : void
+    public function test_normalize_already_normalized(): void
     {
-        self::assertSame(
-            'hello',
-            ref('str')->stringNormalize(\Normalizer::NFC)->eval(
-                row(str_entry('str', 'hello')),
-                flow_context()
-            )
-        );
+        static::assertSame('hello', ref('str')
+            ->stringNormalize(\Normalizer::NFC)
+            ->eval(row(str_entry('str', 'hello')), flow_context()));
     }
 
-    public function test_normalize_empty_string() : void
+    public function test_normalize_empty_string(): void
     {
-        self::assertSame(
-            '',
-            ref('str')->stringNormalize()->eval(
-                row(str_entry('str', '')),
-                flow_context()
-            )
-        );
+        static::assertSame('', ref('str')->stringNormalize()->eval(row(str_entry('str', '')), flow_context()));
     }
 
-    public function test_normalize_nfc_default() : void
+    public function test_normalize_nfc_default(): void
     {
-        self::assertSame(
-            'é',
-            ref('str')->stringNormalize()->eval(
-                row(str_entry('str', "e\u{0301}")),
-                flow_context()
-            )
-        );
+        static::assertSame('é', ref('str')
+            ->stringNormalize()
+            ->eval(row(str_entry('str', "e\u{0301}")), flow_context()));
     }
 
-    public function test_normalize_nfc_explicit() : void
+    public function test_normalize_nfc_explicit(): void
     {
-        self::assertSame(
-            'é',
-            ref('str')->stringNormalize(\Normalizer::NFC)->eval(
-                row(str_entry('str', "e\u{0301}")),
-                flow_context()
-            )
-        );
+        static::assertSame('é', ref('str')
+            ->stringNormalize(\Normalizer::NFC)
+            ->eval(row(str_entry('str', "e\u{0301}")), flow_context()));
     }
 
-    public function test_normalize_nfd() : void
+    public function test_normalize_nfd(): void
     {
-        self::assertSame(
-            "e\u{0301}",
-            ref('str')->stringNormalize(\Normalizer::NFD)->eval(
-                row(str_entry('str', 'é')),
-                flow_context()
-            )
-        );
+        static::assertSame("e\u{0301}", ref('str')
+            ->stringNormalize(\Normalizer::NFD)
+            ->eval(row(str_entry('str', 'é')), flow_context()));
     }
 
-    public function test_normalize_returns_null_for_null_input() : void
+    public function test_normalize_returns_null_for_null_input(): void
     {
-        self::assertNull(
-            ref('str')->stringNormalize()->eval(
-                row(str_entry('str', null)),
-                flow_context()
-            )
-        );
+        static::assertNull(ref('str')->stringNormalize()->eval(row(str_entry('str', null)), flow_context()));
     }
 
-    public function test_normalize_with_scalar_function_form() : void
+    public function test_normalize_with_scalar_function_form(): void
     {
-        $normalized = ref('str')->stringNormalize(ref('form'))->eval(
-            row(str_entry('str', "e\u{0301}"), int_entry('form', \Normalizer::NFC)),
-            flow_context()
-        );
+        $normalized = ref('str')
+            ->stringNormalize(ref('form'))
+            ->eval(row(str_entry('str', "e\u{0301}"), int_entry('form', \Normalizer::NFC)), flow_context());
 
-        self::assertSame('é', $normalized);
+        static::assertSame('é', $normalized);
     }
 }

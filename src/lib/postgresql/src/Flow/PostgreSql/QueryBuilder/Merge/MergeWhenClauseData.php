@@ -24,6 +24,5 @@ final readonly class MergeWhenClauseData
         public array $assignments = [],
         public array $insertColumns = [],
         public array $insertValues = [],
-    ) {
-    }
+    ) {}
 }

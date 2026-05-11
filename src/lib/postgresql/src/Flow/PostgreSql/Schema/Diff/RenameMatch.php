@@ -9,6 +9,5 @@ final readonly class RenameMatch
     public function __construct(
         public string $addedName,
         public string $removedName,
-    ) {
-    }
+    ) {}
 }

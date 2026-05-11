@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-enum ResponseType : string
+enum ResponseType: string
 {
     case HTML = 'html';
     case JSON = 'json';

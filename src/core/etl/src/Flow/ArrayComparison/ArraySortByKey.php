@@ -11,12 +11,9 @@ final class ArraySortByKey
      *
      * @return array<mixed>
      */
-    public function __invoke(array $array) : array
+    public function __invoke(array $array): array
     {
-        $array = \array_map(
-            static fn ($value) => \is_array($value) ? (new self)($value) : $value,
-            $array
-        );
+        $array = \array_map(static fn($value) => \is_array($value) ? (new self())($value) : $value, $array);
 
         if (\array_is_list($array)) {
             \sort($array);

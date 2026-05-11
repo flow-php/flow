@@ -14,7 +14,7 @@ final class FlowExtension extends AbstractExtension
      * Formats a base64-encoded doc comment into HTML.
      * Strips /** and * / markers, removes leading asterisks, converts newlines to <br>.
      */
-    public function formatDocComment(?string $docComment) : string
+    public function formatDocComment(?string $docComment): string
     {
         if ($docComment === null || $docComment === '') {
             return '';
@@ -28,8 +28,11 @@ final class FlowExtension extends AbstractExtension
 
         $stripped = \preg_replace('/^\/\*\*|\*\/$/', '', $decoded);
         $lines = \explode("\n", (string) $stripped);
-        $lines = \array_map(static fn (string $line) : string => (string) \preg_replace('/^\s*\*\s?/', '', $line), $lines);
-        $lines = \array_filter($lines, static fn (string $line) : bool => \trim($line) !== '');
+        $lines = \array_map(
+            static fn(string $line): string => (string) \preg_replace('/^\s*\*\s?/', '', $line),
+            $lines,
+        );
+        $lines = \array_filter($lines, static fn(string $line): bool => \trim($line) !== '');
 
         return \implode('<br>', $lines);
     }
@@ -39,15 +42,15 @@ final class FlowExtension extends AbstractExtension
      *
      * @param array<array{name: string}>|Json|string $types
      */
-    public function formatType(array|Json|string $types) : string
+    public function formatType(array|Json|string $types): string
     {
         $types = $this->toArray($types);
 
-        return \implode('|', \array_map(static fn (array $t) : string => $t['name'], $types));
+        return \implode('|', \array_map(static fn(array $t): string => $t['name'], $types));
     }
 
     #[\Override]
-    public function getFilters() : array
+    public function getFilters(): array
     {
         return [
             new TwigFilter('strpad', $this->strpad(...), ['is_safe' => ['html']]),
@@ -57,8 +60,12 @@ final class FlowExtension extends AbstractExtension
         ];
     }
 
-    public function strpad(string|int|float $input, int $length, string $padString = '', string|int $padType = 'left') : string
-    {
+    public function strpad(
+        string|int|float $input,
+        int $length,
+        string $padString = '',
+        string|int $padType = 'left',
+    ): string {
         if (!\is_string($input)) {
             $input = (string) $input;
         }
@@ -81,7 +88,7 @@ final class FlowExtension extends AbstractExtension
      *
      * @return array<mixed>
      */
-    public function toArray(array|Json|string $value) : array
+    public function toArray(array|Json|string $value): array
     {
         if ($value instanceof Json) {
             return $value->toArray();

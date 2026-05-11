@@ -6,11 +6,11 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Extension;
 
 interface CreateExtensionOptionsStep extends CreateExtensionFinalStep
 {
-    public function cascade() : self;
+    public function cascade(): self;
 
-    public function ifNotExists() : self;
+    public function ifNotExists(): self;
 
-    public function schema(string $schema) : self;
+    public function schema(string $schema): self;
 
-    public function version(string $version) : self;
+    public function version(string $version): self;
 }

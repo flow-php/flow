@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type;
 use Google\Client;
 use Google\Service\Sheets;
 
@@ -24,7 +26,7 @@ function from_google_sheet(
     bool $with_header = true,
     int $rows_per_page = 1000,
     array $options = [],
-) : GoogleSheetExtractor {
+): GoogleSheetExtractor {
     if ($auth_config instanceof Sheets) {
         $sheets = $auth_config;
     } else {
@@ -34,11 +36,8 @@ function from_google_sheet(
         $sheets = new Sheets($client);
     }
 
-    return (new GoogleSheetExtractor(
-        $sheets,
-        $spreadsheet_id,
-        new Columns($sheet_name, 'A', 'Z'),
-    ))->withHeader($with_header)
+    return (new GoogleSheetExtractor($sheets, $spreadsheet_id, new Columns($sheet_name, 'A', 'Z')))
+        ->withHeader($with_header)
         ->withRowsPerPage($rows_per_page)
         ->withOptions($options);
 }
@@ -63,7 +62,7 @@ function from_google_sheet_columns(
     bool $with_header = true,
     int $rows_per_page = 1000,
     array $options = [],
-) : GoogleSheetExtractor {
+): GoogleSheetExtractor {
     if ($auth_config instanceof Sheets) {
         $sheets = $auth_config;
     } else {
@@ -77,7 +76,8 @@ function from_google_sheet_columns(
         $sheets,
         $spreadsheet_id,
         new Columns($sheet_name, $start_range_column, $end_range_column),
-    ))->withHeader($with_header)
+    ))
+        ->withHeader($with_header)
         ->withRowsPerPage($rows_per_page)
         ->withOptions($options);
 }

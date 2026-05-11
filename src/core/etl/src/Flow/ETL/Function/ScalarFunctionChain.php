@@ -4,30 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\lit;
 use Flow\Calculator\Rounding;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Hash\{Algorithm, NativePHPHash};
+use Flow\ETL\Hash\Algorithm;
+use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\String\StringStyles;
 use Flow\Types\Type;
 
+use function Flow\ETL\DSL\lit;
+
 abstract class ScalarFunctionChain implements ScalarFunction
 {
-    public function and(ScalarFunction $function) : All
+    public function and(ScalarFunction $function): All
     {
         return new All($this, $function);
     }
 
-    public function andNot(ScalarFunction $function) : All
+    public function andNot(ScalarFunction $function): All
     {
         return new All($this, new Not($function));
     }
 
-    public function append(ScalarFunction|string $suffix) : Append
+    public function append(ScalarFunction|string $suffix): Append
     {
         return new Append($this, $suffix);
     }
@@ -40,12 +42,12 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *    - map
      *    - structure.
      */
-    public function arrayFilter(mixed $value) : ArrayFilter
+    public function arrayFilter(mixed $value): ArrayFilter
     {
         return new ArrayFilter($this, $value);
     }
 
-    public function arrayGet(ScalarFunction|string $path) : ArrayGet
+    public function arrayGet(ScalarFunction|string $path): ArrayGet
     {
         return new ArrayGet($this, $path);
     }
@@ -53,12 +55,12 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param array<array-key, mixed> $keys
      */
-    public function arrayGetCollection(ScalarFunction|array $keys) : ArrayGetCollection
+    public function arrayGetCollection(ScalarFunction|array $keys): ArrayGetCollection
     {
         return new ArrayGetCollection($this, $keys);
     }
 
-    public function arrayGetCollectionFirst(string ...$keys) : ArrayGetCollection
+    public function arrayGetCollectionFirst(string ...$keys): ArrayGetCollection
     {
         return ArrayGetCollection::fromFirst($this, $keys);
     }
@@ -71,7 +73,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   - map
      *   - structure.
      */
-    public function arrayKeep(mixed $value) : ArrayKeep
+    public function arrayKeep(mixed $value): ArrayKeep
     {
         return new ArrayKeep($this, $value);
     }
@@ -84,7 +86,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   - map
      *   - structure.
      */
-    public function arrayKeys() : ArrayKeys
+    public function arrayKeys(): ArrayKeys
     {
         return new ArrayKeys($this);
     }
@@ -92,28 +94,31 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param array<array-key, mixed> $ref
      */
-    public function arrayMerge(ScalarFunction|array $ref) : ArrayMerge
+    public function arrayMerge(ScalarFunction|array $ref): ArrayMerge
     {
         return new ArrayMerge($this, $ref);
     }
 
-    public function arrayMergeCollection() : ArrayMergeCollection
+    public function arrayMergeCollection(): ArrayMergeCollection
     {
         return new ArrayMergeCollection($this);
     }
 
-    public function arrayPathExists(ScalarFunction|string $path) : ArrayPathExists
+    public function arrayPathExists(ScalarFunction|string $path): ArrayPathExists
     {
         return new ArrayPathExists($this, $path);
     }
 
-    public function arrayReverse(ScalarFunction|bool $preserveKeys = false) : ArrayReverse
+    public function arrayReverse(ScalarFunction|bool $preserveKeys = false): ArrayReverse
     {
         return new ArrayReverse($this, $preserveKeys);
     }
 
-    public function arraySort(ScalarFunction|Sort|null $sortFunction = null, ScalarFunction|int|null $flags = null, ScalarFunction|bool $recursive = true) : ArraySort
-    {
+    public function arraySort(
+        ScalarFunction|Sort|null $sortFunction = null,
+        ScalarFunction|int|null $flags = null,
+        ScalarFunction|bool $recursive = true,
+    ): ArraySort {
         return new ArraySort($this, $sortFunction ?? Sort::sort, $flags, $recursive);
     }
 
@@ -125,12 +130,12 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   - map
      *   - structure.
      */
-    public function arrayValues() : ArrayValues
+    public function arrayValues(): ArrayValues
     {
         return new ArrayValues($this);
     }
 
-    public function ascii() : Ascii
+    public function ascii(): Ascii
     {
         return new Ascii($this);
     }
@@ -140,12 +145,15 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * @param mixed|ScalarFunction $upperBoundRef
      * @param Boundary|ScalarFunction $boundary
      */
-    public function between(mixed $lowerBoundRef, mixed $upperBoundRef, ScalarFunction|Boundary $boundary = Boundary::LEFT_INCLUSIVE) : Between
-    {
+    public function between(
+        mixed $lowerBoundRef,
+        mixed $upperBoundRef,
+        ScalarFunction|Boundary $boundary = Boundary::LEFT_INCLUSIVE,
+    ): Between {
         return new Between($this, $lowerBoundRef, $upperBoundRef, $boundary);
     }
 
-    public function binaryLength() : BinaryLength
+    public function binaryLength(): BinaryLength
     {
         return new BinaryLength($this);
     }
@@ -154,12 +162,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * @param array<array-key, mixed> $arguments
      * @param Type<mixed> $returnType
      */
-    public function call(ScalarFunction|callable $callable, array $arguments = [], string|int $refAlias = 0, ?Type $returnType = null) : CallUserFunc
-    {
+    public function call(
+        ScalarFunction|callable $callable,
+        array $arguments = [],
+        string|int $refAlias = 0,
+        ?Type $returnType = null,
+    ): CallUserFunc {
         return new CallUserFunc($callable, array_merge($arguments, [$refAlias => $this]), $returnType);
     }
 
-    public function capitalize() : Capitalize
+    public function capitalize(): Capitalize
     {
         return new Capitalize($this);
     }
@@ -167,112 +179,117 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param string|Type<mixed> $type
      */
-    public function cast(string|Type $type) : Cast
+    public function cast(string|Type $type): Cast
     {
         return new Cast($this, $type);
     }
 
-    public function chunk(ScalarFunction|int $size) : Chunk
+    public function chunk(ScalarFunction|int $size): Chunk
     {
         return new Chunk($this, $size);
     }
 
-    public function coalesce(ScalarFunction ...$params) : Coalesce
+    public function coalesce(ScalarFunction ...$params): Coalesce
     {
         return new Coalesce($this, ...$params);
     }
 
-    public function codePointLength() : CodePointLength
+    public function codePointLength(): CodePointLength
     {
         return new CodePointLength($this);
     }
 
-    public function collapseWhitespace() : CollapseWhitespace
+    public function collapseWhitespace(): CollapseWhitespace
     {
         return new CollapseWhitespace($this);
     }
 
-    public function concat(ScalarFunction|string ...$params) : Concat
+    public function concat(ScalarFunction|string ...$params): Concat
     {
         return new Concat($this, ...$params);
     }
 
-    public function concatWithSeparator(ScalarFunction|string $separator, ScalarFunction|string ...$params) : ConcatWithSeparator
-    {
+    public function concatWithSeparator(
+        ScalarFunction|string $separator,
+        ScalarFunction|string ...$params,
+    ): ConcatWithSeparator {
         return new ConcatWithSeparator($separator, $this, ...$params);
     }
 
-    public function contains(ScalarFunction|string $needle) : Contains
+    public function contains(ScalarFunction|string $needle): Contains
     {
         return new Contains($this, $needle);
     }
 
-    public function dateFormat(string $format = 'Y-m-d') : DateTimeFormat
+    public function dateFormat(string $format = 'Y-m-d'): DateTimeFormat
     {
         return new DateTimeFormat($this, $format);
     }
 
-    public function dateTimeFormat(string $format = 'Y-m-d H:i:s') : DateTimeFormat
+    public function dateTimeFormat(string $format = 'Y-m-d H:i:s'): DateTimeFormat
     {
         return new DateTimeFormat($this, $format);
     }
 
-    public function divide(ScalarFunction|int|float|string $value, ScalarFunction|int|null $scale = null, ScalarFunction|Rounding|null $rounding = null) : Divide
-    {
+    public function divide(
+        ScalarFunction|int|float|string $value,
+        ScalarFunction|int|null $scale = null,
+        ScalarFunction|Rounding|null $rounding = null,
+    ): Divide {
         return new Divide($this, $value, $scale, $rounding);
     }
 
-    public function domElementAttributesCount() : DOMElementAttributesCount
+    public function domElementAttributesCount(): DOMElementAttributesCount
     {
         return new DOMElementAttributesCount($this);
     }
 
-    public function domElementAttributeValue(ScalarFunction|string $attribute) : DOMElementAttributeValue
+    public function domElementAttributeValue(ScalarFunction|string $attribute): DOMElementAttributeValue
     {
         return new DOMElementAttributeValue($this, $attribute);
     }
 
-    public function domElementNextSibling(bool $allowOnlyElement = false) : DOMElementNextSibling
+    public function domElementNextSibling(bool $allowOnlyElement = false): DOMElementNextSibling
     {
         return new DOMElementNextSibling($this, $allowOnlyElement);
     }
 
-    public function domElementParent() : DOMElementParent
+    public function domElementParent(): DOMElementParent
     {
         return new DOMElementParent($this);
     }
 
-    public function domElementPreviousSibling(bool $allowOnlyElement = false) : DOMElementPreviousSibling
+    public function domElementPreviousSibling(bool $allowOnlyElement = false): DOMElementPreviousSibling
     {
         return new DOMElementPreviousSibling($this, $allowOnlyElement);
     }
 
-    public function domElementValue() : DOMElementValue
+    public function domElementValue(): DOMElementValue
     {
         return new DOMElementValue($this);
     }
 
-    public function endsWith(ScalarFunction|string $needle) : EndsWith
+    public function endsWith(ScalarFunction|string $needle): EndsWith
     {
         return new EndsWith($this, $needle);
     }
 
-    public function ensureEnd(ScalarFunction|string $suffix) : EnsureEnd
+    public function ensureEnd(ScalarFunction|string $suffix): EnsureEnd
     {
         return new EnsureEnd($this, $suffix);
     }
 
-    public function ensureStart(ScalarFunction|string $prefix) : EnsureStart
+    public function ensureStart(ScalarFunction|string $prefix): EnsureStart
     {
         return new EnsureStart($this, $prefix);
     }
 
-    public function equals(mixed $ref) : Equals
+    public function equals(mixed $ref): Equals
     {
         return new Equals($this, $ref);
     }
 
-    public function exists() : Exists
+    public function exists(): Exists
     {
         return new Exists($this);
     }
@@ -297,32 +314,32 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   | 1|       3|
      *   +--+--------+
      */
-    public function expand(ArrayExpand $expand = ArrayExpand::VALUES) : Function\ArrayExpand
+    public function expand(ArrayExpand $expand = ArrayExpand::VALUES): Function\ArrayExpand
     {
         return new Function\ArrayExpand($this, $expand);
     }
 
-    public function greaterThan(mixed $ref) : GreaterThan
+    public function greaterThan(mixed $ref): GreaterThan
     {
         return new GreaterThan($this, $ref);
     }
 
-    public function greaterThanEqual(mixed $ref) : GreaterThanEqual
+    public function greaterThanEqual(mixed $ref): GreaterThanEqual
     {
         return new GreaterThanEqual($this, $ref);
     }
 
-    public function hash(Algorithm $algorithm = new NativePHPHash()) : Hash
+    public function hash(Algorithm $algorithm = new NativePHPHash()): Hash
     {
         return new Hash($this, $algorithm);
     }
 
-    public function htmlQuerySelector(ScalarFunction|string $path) : HTMLQuerySelector
+    public function htmlQuerySelector(ScalarFunction|string $path): HTMLQuerySelector
     {
         return new HTMLQuerySelector($this, $path);
     }
 
-    public function htmlQuerySelectorAll(ScalarFunction|string $path) : HTMLQuerySelectorAll
+    public function htmlQuerySelectorAll(ScalarFunction|string $path): HTMLQuerySelectorAll
     {
         return new HTMLQuerySelectorAll($this, $path);
     }
@@ -330,30 +347,36 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * Returns the index of given $needle in string.
      */
-    public function indexOf(ScalarFunction|string $needle, ScalarFunction|bool $ignoreCase = false, ScalarFunction|int $offset = 0) : IndexOf
-    {
+    public function indexOf(
+        ScalarFunction|string $needle,
+        ScalarFunction|bool $ignoreCase = false,
+        ScalarFunction|int $offset = 0,
+    ): IndexOf {
         return new IndexOf($this, $needle, $ignoreCase, $offset);
     }
 
     /**
      * Returns the last index of given $needle in string.
      */
-    public function indexOfLast(ScalarFunction|string $needle, ScalarFunction|bool $ignoreCase = false, ScalarFunction|int $offset = 0) : IndexOfLast
-    {
+    public function indexOfLast(
+        ScalarFunction|string $needle,
+        ScalarFunction|bool $ignoreCase = false,
+        ScalarFunction|int $offset = 0,
+    ): IndexOfLast {
         return new IndexOfLast($this, $needle, $ignoreCase, $offset);
     }
 
-    public function isEmpty() : IsEmpty
+    public function isEmpty(): IsEmpty
     {
         return new IsEmpty($this);
     }
 
-    public function isEven() : Equals
+    public function isEven(): Equals
     {
         return new Equals(new Mod($this, lit(2)), lit(0));
     }
 
-    public function isFalse() : Same
+    public function isFalse(): Same
     {
         return new Same($this, lit(false));
     }
@@ -361,37 +384,37 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param array<array-key, mixed> $haystack
      */
-    public function isIn(ScalarFunction|array $haystack) : IsIn
+    public function isIn(ScalarFunction|array $haystack): IsIn
     {
         return new IsIn($haystack, $this);
     }
 
-    public function isNotNull() : IsNotNull
+    public function isNotNull(): IsNotNull
     {
         return new IsNotNull($this);
     }
 
-    public function isNotNumeric() : IsNotNumeric
+    public function isNotNumeric(): IsNotNumeric
     {
         return new IsNotNumeric($this);
     }
 
-    public function isNull() : IsNull
+    public function isNull(): IsNull
     {
         return new IsNull($this);
     }
 
-    public function isNumeric() : IsNumeric
+    public function isNumeric(): IsNumeric
     {
         return new IsNumeric($this);
     }
 
-    public function isOdd() : NotEquals
+    public function isOdd(): NotEquals
     {
         return new NotEquals(new Mod($this, lit(2)), lit(0));
     }
 
-    public function isTrue() : Same
+    public function isTrue(): Same
     {
         return new Same($this, lit(true));
     }
@@ -399,7 +422,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param string|Type<mixed> $types
      */
-    public function isType(string|Type ...$types) : IsType
+    public function isType(string|Type ...$types): IsType
     {
         if ([] === $types) {
             throw new InvalidArgumentException('isType expression requires at least one type');
@@ -411,73 +434,76 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * Check string is utf8 and returns true or false.
      */
-    public function isUtf8() : IsUtf8
+    public function isUtf8(): IsUtf8
     {
         return new IsUtf8($this);
     }
 
-    public function jsonDecode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR) : JsonDecode
+    public function jsonDecode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR): JsonDecode
     {
         return new JsonDecode($this, $flags);
     }
 
-    public function jsonEncode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR) : JsonEncode
+    public function jsonEncode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR): JsonEncode
     {
         return new JsonEncode($this, $flags);
     }
 
-    public function lessThan(mixed $ref) : LessThan
+    public function lessThan(mixed $ref): LessThan
     {
         return new LessThan($this, $ref);
     }
 
-    public function lessThanEqual(ScalarFunction $ref) : LessThanEqual
+    public function lessThanEqual(ScalarFunction $ref): LessThanEqual
     {
         return new LessThanEqual($this, $ref);
     }
 
-    public function literal(mixed $value) : Literal
+    public function literal(mixed $value): Literal
     {
         return new Literal($value);
     }
 
-    public function lower() : ToLower
+    public function lower(): ToLower
     {
         return new ToLower($this);
     }
 
-    public function minus(ScalarFunction|int|float $ref) : Minus
+    public function minus(ScalarFunction|int|float $ref): Minus
     {
         return new Minus($this, $ref);
     }
 
-    public function mod(ScalarFunction|int $value) : Mod
+    public function mod(ScalarFunction|int $value): Mod
     {
         return new Mod($this, $value);
     }
 
-    public function modifyDateTime(string|ScalarFunction $modifier) : ModifyDateTime
+    public function modifyDateTime(string|ScalarFunction $modifier): ModifyDateTime
     {
         return new ModifyDateTime($this, $modifier);
     }
 
-    public function multiply(ScalarFunction|int|float $value) : Multiply
+    public function multiply(ScalarFunction|int|float $value): Multiply
     {
         return new Multiply($this, $value);
     }
 
-    public function notEquals(mixed $value) : NotEquals
+    public function notEquals(mixed $value): NotEquals
     {
         return new NotEquals($this, $value);
     }
 
-    public function notSame(mixed $value) : NotSame
+    public function notSame(mixed $value): NotSame
     {
         return new NotSame($this, $value);
     }
 
-    public function numberFormat(ScalarFunction|int $decimals = 2, ScalarFunction|string $decimalSeparator = '.', ScalarFunction|string $thousandsSeparator = ',') : NumberFormat
-    {
+    public function numberFormat(
+        ScalarFunction|int $decimals = 2,
+        ScalarFunction|string $decimalSeparator = '.',
+        ScalarFunction|string $thousandsSeparator = ',',
+    ): NumberFormat {
         return new NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
@@ -487,87 +513,104 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *
      * Example: $df->withEntry('array', ref('array')->onEach(ref('element')->cast(type_string())))
      */
-    public function onEach(ScalarFunction $function, ScalarFunction|bool $preserveKeys = true) : OnEach
+    public function onEach(ScalarFunction $function, ScalarFunction|bool $preserveKeys = true): OnEach
     {
         return new OnEach($this, $function, $preserveKeys);
     }
 
-    public function or(ScalarFunction $function) : Any
+    public function or(ScalarFunction $function): Any
     {
         return new Any($this, $function);
     }
 
-    public function orNot(ScalarFunction $function) : Any
+    public function orNot(ScalarFunction $function): Any
     {
         return new Any($this, new Not($function));
     }
 
-    public function plus(ScalarFunction|int|float $ref) : Plus
+    public function plus(ScalarFunction|int|float $ref): Plus
     {
         return new Plus($this, $ref);
     }
 
-    public function power(ScalarFunction|int $value) : Power
+    public function power(ScalarFunction|int $value): Power
     {
         return new Power($this, $value);
     }
 
-    public function prepend(ScalarFunction|string $prefix) : Prepend
+    public function prepend(ScalarFunction|string $prefix): Prepend
     {
         return new Prepend($this, $prefix);
     }
 
-    public function regex(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : Regex
-    {
+    public function regex(
+        ScalarFunction|string $pattern,
+        ScalarFunction|int $flags = 0,
+        ScalarFunction|int $offset = 0,
+    ): Regex {
         return new Regex($pattern, $this, $flags, $offset);
     }
 
-    public function regexAll(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : RegexAll
-    {
+    public function regexAll(
+        ScalarFunction|string $pattern,
+        ScalarFunction|int $flags = 0,
+        ScalarFunction|int $offset = 0,
+    ): RegexAll {
         return new RegexAll($pattern, $this, $flags, $offset);
     }
 
-    public function regexMatch(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : RegexMatch
-    {
+    public function regexMatch(
+        ScalarFunction|string $pattern,
+        ScalarFunction|int $flags = 0,
+        ScalarFunction|int $offset = 0,
+    ): RegexMatch {
         return new RegexMatch($pattern, $this, $flags, $offset);
     }
 
-    public function regexMatchAll(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : RegexMatchAll
-    {
+    public function regexMatchAll(
+        ScalarFunction|string $pattern,
+        ScalarFunction|int $flags = 0,
+        ScalarFunction|int $offset = 0,
+    ): RegexMatchAll {
         return new RegexMatchAll($pattern, $this, $flags, $offset);
     }
 
-    public function regexReplace(ScalarFunction|string $pattern, ScalarFunction|string $replacement, ScalarFunction|int|null $limit = null) : RegexReplace
-    {
+    public function regexReplace(
+        ScalarFunction|string $pattern,
+        ScalarFunction|string $replacement,
+        ScalarFunction|int|null $limit = null,
+    ): RegexReplace {
         return new RegexReplace($pattern, $replacement, $this, $limit);
     }
 
-    public function repeat(ScalarFunction|int $times) : Repeat
+    public function repeat(ScalarFunction|int $times): Repeat
     {
         return new Repeat($this, $times);
     }
 
-    public function reverse() : Reverse
+    public function reverse(): Reverse
     {
         return new Reverse($this);
     }
 
-    public function round(ScalarFunction|int $precision = 2, ScalarFunction|int $mode = PHP_ROUND_HALF_UP) : Round
+    public function round(ScalarFunction|int $precision = 2, ScalarFunction|int $mode = PHP_ROUND_HALF_UP): Round
     {
         return new Round($this, $precision, $mode);
     }
 
-    public function same(mixed $value) : Same
+    public function same(mixed $value): Same
     {
         return new Same($this, $value);
     }
 
-    public function sanitize(ScalarFunction|string $placeholder = '*', ScalarFunction|int|null $skipCharacters = null) : Sanitize
-    {
+    public function sanitize(
+        ScalarFunction|string $placeholder = '*',
+        ScalarFunction|int|null $skipCharacters = null,
+    ): Sanitize {
         return new Sanitize($this, $placeholder, $skipCharacters);
     }
 
-    public function size() : Size
+    public function size(): Size
     {
         return new Size($this);
     }
@@ -575,22 +618,25 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param null|array<array-key, mixed> $symbolsMap
      */
-    public function slug(ScalarFunction|string $separator = '-', ScalarFunction|string|null $locale = null, ScalarFunction|array|null $symbolsMap = null) : Slug
-    {
+    public function slug(
+        ScalarFunction|string $separator = '-',
+        ScalarFunction|string|null $locale = null,
+        ScalarFunction|array|null $symbolsMap = null,
+    ): Slug {
         return new Slug($this, $separator, $locale, $symbolsMap);
     }
 
-    public function split(ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX) : Split
+    public function split(ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX): Split
     {
         return new Split($this, $separator, $limit);
     }
 
-    public function sprintf(ScalarFunction|float|int|string|null ...$params) : Sprintf
+    public function sprintf(ScalarFunction|float|int|string|null ...$params): Sprintf
     {
         return new Sprintf($this, ...$params);
     }
 
-    public function startsWith(ScalarFunction|string $needle) : StartsWith
+    public function startsWith(ScalarFunction|string $needle): StartsWith
     {
         return new StartsWith($this, $needle);
     }
@@ -598,7 +644,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * Returns the contents found after the first occurrence of the given string.
      */
-    public function stringAfter(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : StringAfter
+    public function stringAfter(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false): StringAfter
     {
         return new StringAfter($this, $needle, $includeNeedle);
     }
@@ -606,36 +652,42 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * Returns the contents found after the last occurrence of the given string.
      */
-    public function stringAfterLast(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : StringAfterLast
-    {
+    public function stringAfterLast(
+        ScalarFunction|string $needle,
+        ScalarFunction|bool $includeNeedle = false,
+    ): StringAfterLast {
         return new StringAfterLast($this, $needle, $includeNeedle);
     }
 
     /**
      * Returns the contents found before the first occurrence of the given string.
      */
-    public function stringBefore(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : StringBefore
-    {
+    public function stringBefore(
+        ScalarFunction|string $needle,
+        ScalarFunction|bool $includeNeedle = false,
+    ): StringBefore {
         return new StringBefore($this, $needle, $includeNeedle);
     }
 
     /**
      * Returns the contents found before the last occurrence of the given string.
      */
-    public function stringBeforeLast(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : StringBeforeLast
-    {
+    public function stringBeforeLast(
+        ScalarFunction|string $needle,
+        ScalarFunction|bool $includeNeedle = false,
+    ): StringBeforeLast {
         return new StringBeforeLast($this, $needle, $includeNeedle);
     }
 
     /**
      * @param array<string>|ScalarFunction $needles
      */
-    public function stringContainsAny(ScalarFunction|array $needles) : StringContainsAny
+    public function stringContainsAny(ScalarFunction|array $needles): StringContainsAny
     {
         return new StringContainsAny($this, $needles);
     }
 
-    public function stringEqualsTo(ScalarFunction|string $string) : StringEqualsTo
+    public function stringEqualsTo(ScalarFunction|string $string): StringEqualsTo
     {
         return new StringEqualsTo($this, $string);
     }
@@ -643,22 +695,22 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * Returns a string that you can use in case-insensitive comparisons.
      */
-    public function stringFold() : StringFold
+    public function stringFold(): StringFold
     {
         return new StringFold($this);
     }
 
-    public function stringMatch(ScalarFunction|string $pattern) : StringMatch
+    public function stringMatch(ScalarFunction|string $pattern): StringMatch
     {
         return new StringMatch($this, $pattern);
     }
 
-    public function stringMatchAll(ScalarFunction|string $pattern) : StringMatchAll
+    public function stringMatchAll(ScalarFunction|string $pattern): StringMatchAll
     {
         return new StringMatchAll($this, $pattern);
     }
 
-    public function stringNormalize(ScalarFunction|int $form = \Normalizer::NFC) : StringNormalize
+    public function stringNormalize(ScalarFunction|int $form = \Normalizer::NFC): StringNormalize
     {
         return new StringNormalize($this, $form);
     }
@@ -667,7 +719,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * Covert string to a style from enum list, passed in parameter.
      * Can be string "upper" or StringStyles::UPPER for Upper (example).
      */
-    public function stringStyle(ScalarFunction|string|StringStyles $style) : StringStyle
+    public function stringStyle(ScalarFunction|string|StringStyles $style): StringStyle
     {
         return new StringStyle($this, $style);
     }
@@ -675,32 +727,32 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * Changes all graphemes/code points to "title case".
      */
-    public function stringTitle(ScalarFunction|bool $allWords = false) : StringTitle
+    public function stringTitle(ScalarFunction|bool $allWords = false): StringTitle
     {
         return new StringTitle($this, $allWords);
     }
 
-    public function stringWidth() : StringWidth
+    public function stringWidth(): StringWidth
     {
         return new StringWidth($this);
     }
 
-    public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : StrPad
+    public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT): StrPad
     {
         return new StrPad($this, $length, $pad_string, $type);
     }
 
-    public function strPadBoth(int $length, string $pad_string = ' ') : StrPad
+    public function strPadBoth(int $length, string $pad_string = ' '): StrPad
     {
         return new StrPad($this, $length, $pad_string, STR_PAD_BOTH);
     }
 
-    public function strPadLeft(int $length, string $pad_string = ' ') : StrPad
+    public function strPadLeft(int $length, string $pad_string = ' '): StrPad
     {
         return new StrPad($this, $length, $pad_string, STR_PAD_LEFT);
     }
 
-    public function strPadRight(int $length, string $pad_string = ' ') : StrPad
+    public function strPadRight(int $length, string $pad_string = ' '): StrPad
     {
         return new StrPad($this, $length, $pad_string, STR_PAD_RIGHT);
     }
@@ -709,7 +761,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * @param array<string>|ScalarFunction|string $search
      * @param array<string>|ScalarFunction|string $replace
      */
-    public function strReplace(ScalarFunction|string|array $search, ScalarFunction|string|array $replace) : StrReplace
+    public function strReplace(ScalarFunction|string|array $search, ScalarFunction|string|array $replace): StrReplace
     {
         return new StrReplace($this, $search, $replace);
     }
@@ -717,8 +769,10 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param ScalarFunction|string $format - current format of the date that will be used to create DateTimeImmutable instance
      */
-    public function toDate(ScalarFunction|string $format = \DateTimeInterface::RFC3339, ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ToDate
-    {
+    public function toDate(
+        ScalarFunction|string $format = \DateTimeInterface::RFC3339,
+        ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
+    ): ToDate {
         return new ToDate($this, $format, $timeZone);
     }
 
@@ -726,22 +780,24 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * @param ScalarFunction|string $format - current format of the date that will be used to create DateTimeImmutable instance
      * @param \DateTimeZone|ScalarFunction $timeZone
      */
-    public function toDateTime(ScalarFunction|string $format = 'Y-m-d H:i:s', ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ToDateTime
-    {
+    public function toDateTime(
+        ScalarFunction|string $format = 'Y-m-d H:i:s',
+        ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
+    ): ToDateTime {
         return new ToDateTime($this, $format, $timeZone);
     }
 
-    public function trim(Trim\Type $type = Trim\Type::BOTH, string $characters = " \t\n\r\0\x0B") : Trim
+    public function trim(Trim\Type $type = Trim\Type::BOTH, string $characters = " \t\n\r\0\x0B"): Trim
     {
         return new Trim($this, $type, $characters);
     }
 
-    public function truncate(ScalarFunction|int $length, ScalarFunction|string $ellipsis = '...') : Truncate
+    public function truncate(ScalarFunction|int $length, ScalarFunction|string $ellipsis = '...'): Truncate
     {
         return new Truncate($this, $length, $ellipsis);
     }
 
-    public function unicodeLength() : UnicodeLength
+    public function unicodeLength(): UnicodeLength
     {
         return new UnicodeLength($this);
     }
@@ -768,22 +824,27 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param array<array-key, mixed> $skipKeys
      */
-    public function unpack(ScalarFunction|array $skipKeys = [], ScalarFunction|string|null $entryPrefix = null) : ArrayUnpack
-    {
+    public function unpack(
+        ScalarFunction|array $skipKeys = [],
+        ScalarFunction|string|null $entryPrefix = null,
+    ): ArrayUnpack {
         return new ArrayUnpack($this, $skipKeys, $entryPrefix);
     }
 
-    public function upper() : ToUpper
+    public function upper(): ToUpper
     {
         return new ToUpper($this);
     }
 
-    public function wordwrap(ScalarFunction|int $width, ScalarFunction|string $break = "\n", ScalarFunction|bool $cut = false) : Wordwrap
-    {
+    public function wordwrap(
+        ScalarFunction|int $width,
+        ScalarFunction|string $break = "\n",
+        ScalarFunction|bool $cut = false,
+    ): Wordwrap {
         return new Wordwrap($this, $width, $break, $cut);
     }
 
-    public function xpath(string $string) : XPath
+    public function xpath(string $string): XPath
     {
         return new XPath($this, $string);
     }

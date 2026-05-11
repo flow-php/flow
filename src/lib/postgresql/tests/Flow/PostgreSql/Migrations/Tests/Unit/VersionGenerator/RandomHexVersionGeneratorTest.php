@@ -9,24 +9,24 @@ use PHPUnit\Framework\TestCase;
 
 final class RandomHexVersionGeneratorTest extends TestCase
 {
-    public function test_generates_hex_string_of_correct_length() : void
+    public function test_generates_hex_string_of_correct_length(): void
     {
         $generator = new RandomHexVersionGenerator(12);
 
-        self::assertMatchesRegularExpression('/^[a-f0-9]{12}$/', (string) $generator->generate());
+        static::assertMatchesRegularExpression('/^[a-f0-9]{12}$/', (string) $generator->generate());
     }
 
-    public function test_generates_hex_string_with_custom_length() : void
+    public function test_generates_hex_string_with_custom_length(): void
     {
         $generator = new RandomHexVersionGenerator(8);
 
-        self::assertMatchesRegularExpression('/^[a-f0-9]{8}$/', (string) $generator->generate());
+        static::assertMatchesRegularExpression('/^[a-f0-9]{8}$/', (string) $generator->generate());
     }
 
-    public function test_generates_unique_values() : void
+    public function test_generates_unique_values(): void
     {
         $generator = new RandomHexVersionGenerator();
 
-        self::assertNotSame((string) $generator->generate(), (string) $generator->generate());
+        static::assertNotSame((string) $generator->generate(), (string) $generator->generate());
     }
 }

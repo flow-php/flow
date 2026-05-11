@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\DSL\{df, lit, ref};
-use function Flow\Filesystem\DSL\path;
 use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -15,9 +12,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\Filesystem\DSL\path;
+
 #[AsCommand(
     name: 'app:generate:scalar-function-chain-completer',
-    description: 'Generate CodeMirror completer for ScalarFunctionChain methods'
+    description: 'Generate CodeMirror completer for ScalarFunctionChain methods',
 )]
 final class GenerateScalarFunctionChainCompleterCommand extends Command
 {
@@ -29,7 +32,7 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
         parent::__construct();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -59,7 +62,10 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
             ->fetch()
             ->reduceToArray('name');
 
-        $io->info(\sprintf('Found %d DSL functions with scalar_function_chain flag', \count($scalarFunctionChainFunctions)));
+        $io->info(\sprintf(
+            'Found %d DSL functions with scalar_function_chain flag',
+            \count($scalarFunctionChainFunctions),
+        ));
 
         $methodsData = df($this->configFactory->configBuilder('scalar_function_chain_completer'))
             ->read(from_json($apiJsonPath))

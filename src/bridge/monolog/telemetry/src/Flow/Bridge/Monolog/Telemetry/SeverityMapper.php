@@ -48,7 +48,7 @@ final readonly class SeverityMapper
      *
      * @return array<int, Severity>
      */
-    public static function defaultMapping() : array
+    public static function defaultMapping(): array
     {
         return [
             Level::Debug->value => Severity::DEBUG,
@@ -71,7 +71,7 @@ final readonly class SeverityMapper
      *
      * @return Severity The corresponding Telemetry severity
      */
-    public function map(Level $level) : Severity
+    public function map(Level $level): Severity
     {
         if (!isset($this->mapping[$level->value])) {
             throw new InvalidArgumentException("No mapping defined for Monolog level: {$level->name}");

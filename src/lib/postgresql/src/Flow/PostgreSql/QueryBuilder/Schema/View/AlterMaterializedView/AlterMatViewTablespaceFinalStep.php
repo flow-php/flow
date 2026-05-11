@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AlterMatViewTablespaceFinalStep extends Sql
 {
-    public function toAst() : AlterTableStmt;
+    public function toAst(): AlterTableStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

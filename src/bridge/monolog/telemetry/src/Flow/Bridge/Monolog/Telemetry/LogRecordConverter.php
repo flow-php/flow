@@ -19,10 +19,9 @@ final readonly class LogRecordConverter
     public function __construct(
         private SeverityMapper $severityMapper = new SeverityMapper(),
         private ValueNormalizer $valueNormalizer = new ValueNormalizer(),
-    ) {
-    }
+    ) {}
 
-    public function convert(LogRecord $record) : TelemetryLogRecord
+    public function convert(LogRecord $record): TelemetryLogRecord
     {
         $telemetryRecord = new TelemetryLogRecord(
             severity: $this->severityMapper->map($record->level),
@@ -32,11 +31,12 @@ final readonly class LogRecordConverter
         return $this->applyAttributes($telemetryRecord, $record);
     }
 
-    private function applyAttributes(TelemetryLogRecord $telemetryRecord, LogRecord $record) : TelemetryLogRecord
+    private function applyAttributes(TelemetryLogRecord $telemetryRecord, LogRecord $record): TelemetryLogRecord
     {
-        $telemetryRecord = $telemetryRecord
-            ->setAttribute('monolog.channel', $record->channel)
-            ->setAttribute('monolog.level_name', $record->level->name);
+        $telemetryRecord = $telemetryRecord->setAttribute('monolog.channel', $record->channel)->setAttribute(
+            'monolog.level_name',
+            $record->level->name,
+        );
 
         foreach ($record->context as $key => $value) {
             if ($value instanceof \Throwable) {
@@ -45,11 +45,17 @@ final readonly class LogRecordConverter
                 continue;
             }
 
-            $telemetryRecord = $telemetryRecord->setAttribute("context.{$key}", $this->valueNormalizer->normalize($value));
+            $telemetryRecord = $telemetryRecord->setAttribute(
+                "context.{$key}",
+                $this->valueNormalizer->normalize($value),
+            );
         }
 
         foreach ($record->extra as $key => $value) {
-            $telemetryRecord = $telemetryRecord->setAttribute("extra.{$key}", $this->valueNormalizer->normalize($value));
+            $telemetryRecord = $telemetryRecord->setAttribute(
+                "extra.{$key}",
+                $this->valueNormalizer->normalize($value),
+            );
         }
 
         return $telemetryRecord;

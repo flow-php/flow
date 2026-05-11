@@ -9,13 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\SortByNulls;
 /**
  * Nulls position enum for ORDER BY.
  */
-enum NullsPosition : string
+enum NullsPosition: string
 {
     case DEFAULT = 'DEFAULT';
     case FIRST = 'FIRST';
     case LAST = 'LAST';
 
-    public static function fromProtobuf(int $sortByNulls) : self
+    public static function fromProtobuf(int $sortByNulls): self
     {
         return match ($sortByNulls) {
             SortByNulls::SORTBY_NULLS_FIRST => self::FIRST,
@@ -24,7 +24,7 @@ enum NullsPosition : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::FIRST => SortByNulls::SORTBY_NULLS_FIRST,

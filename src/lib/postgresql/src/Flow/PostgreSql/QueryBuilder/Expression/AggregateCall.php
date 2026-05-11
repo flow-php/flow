@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{FuncCall, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 /**
  * Represents an aggregate function call with optional DISTINCT, ORDER BY, and FILTER clauses.
@@ -39,7 +42,7 @@ final readonly class AggregateCall implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $funcCall = $node->getFuncCall();
 
@@ -104,7 +107,7 @@ final readonly class AggregateCall implements Expression
         return new self($funcName, $args, $star, $distinct, $orderBy, $filter);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
@@ -112,12 +115,12 @@ final readonly class AggregateCall implements Expression
     /**
      * @return list<Expression>
      */
-    public function getArgs() : array
+    public function getArgs(): array
     {
         return $this->args;
     }
 
-    public function getFilter() : ?Expression
+    public function getFilter(): ?Expression
     {
         return $this->filter;
     }
@@ -125,7 +128,7 @@ final readonly class AggregateCall implements Expression
     /**
      * @return non-empty-list<string>
      */
-    public function getFuncName() : array
+    public function getFuncName(): array
     {
         return $this->funcName;
     }
@@ -133,22 +136,22 @@ final readonly class AggregateCall implements Expression
     /**
      * @return list<OrderBy>
      */
-    public function getOrderBy() : array
+    public function getOrderBy(): array
     {
         return $this->orderBy;
     }
 
-    public function isDistinct() : bool
+    public function isDistinct(): bool
     {
         return $this->distinct;
     }
 
-    public function isStar() : bool
+    public function isStar(): bool
     {
         return $this->star;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $funcCall = new FuncCall();
         $funcNameNodes = [];
@@ -201,18 +204,25 @@ final readonly class AggregateCall implements Expression
         return $node;
     }
 
-    public function withDistinct(bool $distinct = true) : self
+    public function withDistinct(bool $distinct = true): self
     {
         return new self($this->funcName, $this->args, $this->star, $distinct, $this->orderBy, $this->filter);
     }
 
-    public function withFilter(Expression $filter) : self
+    public function withFilter(Expression $filter): self
     {
         return new self($this->funcName, $this->args, $this->star, $this->distinct, $this->orderBy, $filter);
     }
 
-    public function withOrderBy(OrderBy ...$orderBy) : self
+    public function withOrderBy(OrderBy ...$orderBy): self
     {
-        return new self($this->funcName, $this->args, $this->star, $this->distinct, \array_values($orderBy), $this->filter);
+        return new self(
+            $this->funcName,
+            $this->args,
+            $this->star,
+            $this->distinct,
+            \array_values($orderBy),
+            $this->filter,
+        );
     }
 }

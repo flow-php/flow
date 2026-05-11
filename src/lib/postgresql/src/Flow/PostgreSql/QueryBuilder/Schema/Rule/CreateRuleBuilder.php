@@ -5,12 +5,20 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Schema\Rule;
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Protobuf\AST\{Node, RangeVar, RuleStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RuleStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
-final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEventStep, CreateRuleFinalStep, CreateRuleToStep, CreateRuleWhereStep
+final readonly class CreateRuleBuilder implements
+    CreateRuleDoStep,
+    CreateRuleEventStep,
+    CreateRuleFinalStep,
+    CreateRuleToStep,
+    CreateRuleWhereStep
 {
     use AstToSql;
 
@@ -26,15 +34,14 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         private ?Condition $whereCondition = null,
         private bool $instead = false,
         private array $actions = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateRuleEventStep
+    public static function create(string $name): CreateRuleEventStep
     {
         return new self($name);
     }
 
-    public function asOnDelete() : CreateRuleToStep
+    public function asOnDelete(): CreateRuleToStep
     {
         return new self(
             $this->name,
@@ -48,7 +55,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function asOnInsert() : CreateRuleToStep
+    public function asOnInsert(): CreateRuleToStep
     {
         return new self(
             $this->name,
@@ -62,7 +69,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function asOnSelect() : CreateRuleToStep
+    public function asOnSelect(): CreateRuleToStep
     {
         return new self(
             $this->name,
@@ -76,7 +83,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function asOnUpdate() : CreateRuleToStep
+    public function asOnUpdate(): CreateRuleToStep
     {
         return new self(
             $this->name,
@@ -90,7 +97,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function doAlso(string $command) : CreateRuleFinalStep
+    public function doAlso(string $command): CreateRuleFinalStep
     {
         return new self(
             $this->name,
@@ -104,7 +111,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function doInstead(string $command) : CreateRuleFinalStep
+    public function doInstead(string $command): CreateRuleFinalStep
     {
         return new self(
             $this->name,
@@ -118,7 +125,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function doNothing() : CreateRuleFinalStep
+    public function doNothing(): CreateRuleFinalStep
     {
         return new self(
             $this->name,
@@ -132,7 +139,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function orReplace() : CreateRuleEventStep
+    public function orReplace(): CreateRuleEventStep
     {
         return new self(
             $this->name,
@@ -146,7 +153,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function to(string $table, ?string $schema = null) : CreateRuleWhereStep
+    public function to(string $table, ?string $schema = null): CreateRuleWhereStep
     {
         $identifier = QualifiedIdentifier::parse($table);
 
@@ -162,7 +169,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    public function toAst() : RuleStmt
+    public function toAst(): RuleStmt
     {
         $stmt = new RuleStmt();
 
@@ -202,7 +209,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         return $stmt;
     }
 
-    public function where(Condition $condition) : CreateRuleDoStep
+    public function where(Condition $condition): CreateRuleDoStep
     {
         return new self(
             $this->name,
@@ -216,7 +223,7 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
         );
     }
 
-    private function parseCommand(string $command) : Node
+    private function parseCommand(string $command): Node
     {
         $parser = new Parser();
         $parsed = $parser->parse($command);

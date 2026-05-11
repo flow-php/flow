@@ -19,19 +19,19 @@ final class BlockList
     /**
      * @return array<Block>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->blocks;
     }
 
-    public function append(Block $block) : self
+    public function append(Block $block): self
     {
         $this->blocks[] = $block;
 
         return $this;
     }
 
-    public function last() : ?Block
+    public function last(): ?Block
     {
         if (!\count($this->blocks)) {
             return null;

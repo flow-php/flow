@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache\Implementation;
 
+use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\{Cache, Row, Rows};
 use Flow\ETL\Exception\KeyNotInCacheException;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 
 final class InMemoryCache implements Cache
 {
@@ -15,16 +17,14 @@ final class InMemoryCache implements Cache
      */
     private array $cache = [];
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    public function clear() : void
+    public function clear(): void
     {
         $this->cache = [];
     }
 
-    public function delete(string $key) : void
+    public function delete(string $key): void
     {
         if (!$this->has($key)) {
             return;
@@ -36,7 +36,7 @@ final class InMemoryCache implements Cache
     /**
      * @throws KeyNotInCacheException
      */
-    public function get(string $key) : Row|Rows|CacheIndex
+    public function get(string $key): Row|Rows|CacheIndex
     {
         if (!\array_key_exists($key, $this->cache)) {
             throw new KeyNotInCacheException($key);
@@ -45,12 +45,12 @@ final class InMemoryCache implements Cache
         return $this->cache[$key];
     }
 
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return \array_key_exists($key, $this->cache);
     }
 
-    public function set(string $key, CacheIndex|Rows|Row $value) : void
+    public function set(string $key, CacheIndex|Rows|Row $value): void
     {
         $this->cache[$key] = $value;
     }

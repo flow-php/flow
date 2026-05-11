@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Context;
 
-use function Flow\Types\DSL\type_instance_of;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Telemetry\Telemetry;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, ContainerInterface};
-
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class SymfonyContext
 {
@@ -18,7 +19,7 @@ final class SymfonyContext
     /**
      * @param array{config?: callable(TestKernel): void} $options
      */
-    public function bootKernel(array $options = []) : TestKernel
+    public function bootKernel(array $options = []): TestKernel
     {
         if ($this->kernel !== null) {
             $this->shutdown();
@@ -35,7 +36,7 @@ final class SymfonyContext
         return $this->kernel;
     }
 
-    public function getContainer() : ContainerInterface
+    public function getContainer(): ContainerInterface
     {
         if ($this->kernel === null) {
             throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
@@ -44,7 +45,7 @@ final class SymfonyContext
         return $this->kernel->getContainer();
     }
 
-    public function getKernel() : TestKernel
+    public function getKernel(): TestKernel
     {
         if ($this->kernel === null) {
             throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
@@ -60,14 +61,14 @@ final class SymfonyContext
      *
      * @return T
      */
-    public function getService(string $serviceId, string $typeClass) : object
+    public function getService(string $serviceId, string $typeClass): object
     {
         $service = $this->getContainer()->get($serviceId);
 
         return type_instance_of($typeClass)->assert($service);
     }
 
-    public function makeFlowServicesPublic(ContainerBuilder $container) : void
+    public function makeFlowServicesPublic(ContainerBuilder $container): void
     {
         foreach ($container->getDefinitions() as $id => $definition) {
             if (\str_starts_with($id, 'flow.telemetry')) {
@@ -82,7 +83,7 @@ final class SymfonyContext
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->kernel === null) {
             return;

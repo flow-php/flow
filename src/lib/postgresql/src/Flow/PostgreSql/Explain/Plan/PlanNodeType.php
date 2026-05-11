@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
-enum PlanNodeType : string
+enum PlanNodeType: string
 {
     case AGGREGATE = 'Aggregate';
     case APPEND = 'Append';
@@ -47,7 +47,7 @@ enum PlanNodeType : string
     case WINDOW_AGG = 'WindowAgg';
     case WORK_TABLE_SCAN = 'WorkTable Scan';
 
-    public static function fromString(string $nodeType) : self
+    public static function fromString(string $nodeType): self
     {
         foreach (self::cases() as $case) {
             if (\strcasecmp($case->value, $nodeType) === 0) {
@@ -58,50 +58,66 @@ enum PlanNodeType : string
         return self::UNKNOWN;
     }
 
-    public function isAggregate() : bool
+    public function isAggregate(): bool
     {
-        return \in_array($this, [
-            self::AGGREGATE,
-            self::GROUP_AGGREGATE,
-            self::HASH_AGGREGATE,
-            self::MIXED_AGGREGATE,
-        ], true);
+        return \in_array(
+            $this,
+            [
+                self::AGGREGATE,
+                self::GROUP_AGGREGATE,
+                self::HASH_AGGREGATE,
+                self::MIXED_AGGREGATE,
+            ],
+            true,
+        );
     }
 
-    public function isJoin() : bool
+    public function isJoin(): bool
     {
-        return \in_array($this, [
-            self::NESTED_LOOP,
-            self::MERGE_JOIN,
-            self::HASH_JOIN,
-        ], true);
+        return \in_array(
+            $this,
+            [
+                self::NESTED_LOOP,
+                self::MERGE_JOIN,
+                self::HASH_JOIN,
+            ],
+            true,
+        );
     }
 
-    public function isScan() : bool
+    public function isScan(): bool
     {
-        return \in_array($this, [
-            self::SEQ_SCAN,
-            self::INDEX_SCAN,
-            self::INDEX_ONLY_SCAN,
-            self::BITMAP_HEAP_SCAN,
-            self::BITMAP_INDEX_SCAN,
-            self::TID_SCAN,
-            self::SUBQUERY_SCAN,
-            self::FUNCTION_SCAN,
-            self::VALUES_SCAN,
-            self::CTE_SCAN,
-            self::WORK_TABLE_SCAN,
-            self::FOREIGN_SCAN,
-            self::CUSTOM_SCAN,
-            self::SAMPLE_SCAN,
-        ], true);
+        return \in_array(
+            $this,
+            [
+                self::SEQ_SCAN,
+                self::INDEX_SCAN,
+                self::INDEX_ONLY_SCAN,
+                self::BITMAP_HEAP_SCAN,
+                self::BITMAP_INDEX_SCAN,
+                self::TID_SCAN,
+                self::SUBQUERY_SCAN,
+                self::FUNCTION_SCAN,
+                self::VALUES_SCAN,
+                self::CTE_SCAN,
+                self::WORK_TABLE_SCAN,
+                self::FOREIGN_SCAN,
+                self::CUSTOM_SCAN,
+                self::SAMPLE_SCAN,
+            ],
+            true,
+        );
     }
 
-    public function isSort() : bool
+    public function isSort(): bool
     {
-        return \in_array($this, [
-            self::SORT,
-            self::INCREMENTAL_SORT,
-        ], true);
+        return \in_array(
+            $this,
+            [
+                self::SORT,
+                self::INCREMENTAL_SORT,
+            ],
+            true,
+        );
     }
 }

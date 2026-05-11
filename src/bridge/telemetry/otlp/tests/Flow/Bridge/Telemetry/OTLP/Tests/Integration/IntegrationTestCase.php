@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
-use Flow\Bridge\Telemetry\OTLP\Tests\Context\{OtelContext, TransportConfiguration};
+use Flow\Bridge\Telemetry\OTLP\Tests\Context\OtelContext;
+use Flow\Bridge\Telemetry\OTLP\Tests\Context\TransportConfiguration;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,14 +23,14 @@ abstract class IntegrationTestCase extends TestCase
      *
      * Configurations are automatically skipped if required extensions are not available.
      */
-    public static function transportProvider() : \Generator
+    public static function transportProvider(): \Generator
     {
         foreach (TransportConfiguration::available() as $config) {
             yield $config->name => [$config];
         }
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->otelContext = OtelContext::instance();
     }

@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\CreateSequence;
 
 interface CreateSequenceNameStep
 {
-    public function sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep;
+    public function sequence(string $name, ?string $schema = null): CreateSequenceOptionsStep;
 }

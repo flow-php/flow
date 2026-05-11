@@ -8,13 +8,13 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface CreateViewOptionsStep extends CreateViewFinalStep
 {
-    public function as(SelectFinalStep $query) : CreateViewCheckOptionStep;
+    public function as(SelectFinalStep $query): CreateViewCheckOptionStep;
 
-    public function columns(string ...$columns) : CreateViewAsStep;
+    public function columns(string ...$columns): CreateViewAsStep;
 
-    public function orReplace() : self;
+    public function orReplace(): self;
 
-    public function recursive() : self;
+    public function recursive(): self;
 
-    public function temporary() : self;
+    public function temporary(): self;
 }

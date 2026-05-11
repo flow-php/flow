@@ -48,7 +48,7 @@ final readonly class SamplingResult
     /**
      * Create a result indicating the span should be dropped.
      */
-    public static function drop() : self
+    public static function drop(): self
     {
         return new self(SamplingDecision::DROP);
     }
@@ -58,7 +58,7 @@ final readonly class SamplingResult
      *
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public static function recordAndSample(array|Attributes $attributes = [], ?TraceState $traceState = null) : self
+    public static function recordAndSample(array|Attributes $attributes = [], ?TraceState $traceState = null): self
     {
         return new self(SamplingDecision::RECORD_AND_SAMPLE, $attributes, $traceState);
     }
@@ -68,7 +68,7 @@ final readonly class SamplingResult
      *
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public static function recordOnly(array|Attributes $attributes = [], ?TraceState $traceState = null) : self
+    public static function recordOnly(array|Attributes $attributes = [], ?TraceState $traceState = null): self
     {
         return new self(SamplingDecision::RECORD_ONLY, $attributes, $traceState);
     }

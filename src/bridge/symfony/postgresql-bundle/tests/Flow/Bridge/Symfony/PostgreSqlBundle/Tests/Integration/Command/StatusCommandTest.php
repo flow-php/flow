@@ -9,7 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class StatusCommandTest extends CommandTestCase
 {
-    public function test_shows_migration_status() : void
+    public function test_shows_migration_status(): void
     {
         $this->context->generateDiffMigration();
 
@@ -18,10 +18,10 @@ final class StatusCommandTest extends CommandTestCase
         $tester = new CommandTester($command);
         $tester->execute([]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
         $display = $tester->getDisplay();
-        self::assertStringContainsString('Total migrations', $display);
-        self::assertStringContainsString('Pending', $display);
-        self::assertStringContainsString('pending', $display);
+        static::assertStringContainsString('Total migrations', $display);
+        static::assertStringContainsString('Pending', $display);
+        static::assertStringContainsString('pending', $display);
     }
 }

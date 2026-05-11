@@ -6,11 +6,11 @@ namespace Flow\PostgreSql\QueryBuilder\Copy;
 
 interface CopyFromSourceStep
 {
-    public function columns(string ...$columns) : self;
+    public function columns(string ...$columns): self;
 
-    public function file(string $filename) : CopyFromOptionsStep;
+    public function file(string $filename): CopyFromOptionsStep;
 
-    public function program(string $command) : CopyFromOptionsStep;
+    public function program(string $command): CopyFromOptionsStep;
 
-    public function stdin() : CopyFromOptionsStep;
+    public function stdin(): CopyFromOptionsStep;
 }

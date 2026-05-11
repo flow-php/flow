@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_enum, type_from_array};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
-use Flow\Types\Tests\Unit\Type\Fixtures\{AnotherEnum, SomeEnum};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Tests\Unit\Type\Fixtures\AnotherEnum;
 use Flow\Types\Tests\Unit\Type\Fixtures\ColorsEnum;
+use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_enum;
+use function Flow\Types\DSL\type_from_array;
+
 final class EnumTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid enum value' => [
             'value' => SomeEnum::A,
@@ -52,7 +56,7 @@ final class EnumTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'valid string to enum' => [
             'value' => 'red',
@@ -83,7 +87,7 @@ final class EnumTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid enum value' => [
             'value' => SomeEnum::A,
@@ -120,13 +124,13 @@ final class EnumTypeTest extends TestCase
      * @param class-string<\UnitEnum> $class
      */
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, string $class, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, string $class, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_enum($class)->assert($value);
         } else {
-            self::assertInstanceOf($class, type_enum($class)->assert($value));
+            static::assertInstanceOf($class, type_enum($class)->assert($value));
         }
     }
 
@@ -134,13 +138,13 @@ final class EnumTypeTest extends TestCase
      * @param class-string<\UnitEnum> $class
      */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_enum($class)->cast($value);
         } else {
-            self::assertSame($expected, type_enum($class)->cast($value));
+            static::assertSame($expected, type_enum($class)->cast($value));
         }
     }
 
@@ -148,25 +152,25 @@ final class EnumTypeTest extends TestCase
      * @param class-string<\UnitEnum> $class
      */
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, string $class, bool $expected) : void
+    public function test_is_valid(mixed $value, string $class, bool $expected): void
     {
-        self::assertSame($expected, type_enum($class)->isValid($value));
+        static::assertSame($expected, type_enum($class)->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_enum(SomeEnum::class);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
+        static::assertSame(
             'enum<Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum>',
-            type_enum(SomeEnum::class)->toString()
+            type_enum(SomeEnum::class)->toString(),
         );
     }
 }

@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
-use function Flow\Filesystem\DSL\path_real;
-use Flow\ETL\{Adapter\XML\Loader\XMLLoader,
-    Adapter\XML\XMLWriter\DOMDocumentWriter,
-    Attribute\DocumentationDSL,
-    Attribute\DocumentationExample,
-    Attribute\Module,
-    Attribute\Type as DSLType};
+use Flow\ETL\Adapter\XML\Loader\XMLLoader;
+use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\DocumentationExample;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\Filesystem\Path;
+
+use function Flow\Filesystem\DSL\path_real;
 
 /**
  *  In order to iterate only over <element> nodes use `from_xml($file)->withXMLNodePath('root/elements/element')`.
@@ -31,10 +32,8 @@ use Flow\Filesystem\Path;
  */
 #[DocumentationDSL(module: Module::XML, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'xml')]
-function from_xml(
-    Path|string $path,
-    string $xml_node_path = '',
-) : XMLParserExtractor {
+function from_xml(Path|string $path, string $xml_node_path = ''): XMLParserExtractor
+{
     return (new XMLParserExtractor(\is_string($path) ? path_real($path) : $path))->withXMLNodePath($xml_node_path);
 }
 
@@ -54,11 +53,8 @@ function to_xml(
     string $attribute_prefix = '_',
     string $date_time_format = 'Y-m-d\TH:i:s.uP',
     XMLWriter $xml_writer = new DOMDocumentWriter(),
-) : XMLLoader {
-    return (new XMLLoader(
-        \is_string($path) ? path_real($path) : $path,
-        $xml_writer
-    ))
+): XMLLoader {
+    return (new XMLLoader(\is_string($path) ? path_real($path) : $path, $xml_writer))
         ->withRootElementName($root_element_name)
         ->withRowElementName($row_element_name)
         ->withAttributePrefix($attribute_prefix)

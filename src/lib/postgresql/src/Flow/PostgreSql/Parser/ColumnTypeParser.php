@@ -10,7 +10,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class ColumnTypeParser
 {
-    public function parse(string $typeName) : ColumnType
+    public function parse(string $typeName): ColumnType
     {
         if ($typeName === '') {
             throw new \InvalidArgumentException('Type name cannot be empty');

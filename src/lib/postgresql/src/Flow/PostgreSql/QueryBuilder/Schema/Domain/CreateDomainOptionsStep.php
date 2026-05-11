@@ -9,15 +9,15 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 interface CreateDomainOptionsStep extends CreateDomainFinalStep
 {
-    public function check(Condition $condition) : self;
+    public function check(Condition $condition): self;
 
-    public function collate(string $collation) : self;
+    public function collate(string $collation): self;
 
-    public function constraint(string $name) : self;
+    public function constraint(string $name): self;
 
-    public function default(Expression $expression) : self;
+    public function default(Expression $expression): self;
 
-    public function notNull() : self;
+    public function notNull(): self;
 
-    public function null() : self;
+    public function null(): self;
 }

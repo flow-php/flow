@@ -8,7 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 interface InsertReturningStep extends InsertFinalStep
 {
-    public function returning(Expression ...$expressions) : InsertFinalStep;
+    public function returning(Expression ...$expressions): InsertFinalStep;
 
-    public function returningAll() : InsertFinalStep;
+    public function returningAll(): InsertFinalStep;
 }

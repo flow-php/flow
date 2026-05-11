@@ -23,5 +23,5 @@ interface RowMapper
      *
      * @return T
      */
-    public function map(array $row, Context $context) : mixed;
+    public function map(array $row, Context $context): mixed;
 }

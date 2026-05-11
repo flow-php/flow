@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
-use function Flow\Types\DSL\{type_instance_of, type_string};
-
-use Flow\PostgreSql\Migrations\{Configuration as MigrationsConfiguration, Direction, MigrationState, Migrator, VersionResolver};
+use Flow\PostgreSql\Migrations\Configuration as MigrationsConfiguration;
+use Flow\PostgreSql\Migrations\Direction;
+use Flow\PostgreSql\Migrations\MigrationState;
+use Flow\PostgreSql\Migrations\Migrator;
+use Flow\PostgreSql\Migrations\VersionResolver;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
 
 #[AsCommand(name: 'flow:migrations:migrate', description: 'Execute migrations')]
 final class MigrateCommand extends Command
@@ -25,22 +31,33 @@ final class MigrateCommand extends Command
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
-            ->addArgument('version', InputArgument::OPTIONAL, 'The version to migrate to (first, prev, next, latest, or version string)', 'latest')
+            ->addArgument(
+                'version',
+                InputArgument::OPTIONAL,
+                'The version to migrate to (first, prev, next, latest, or version string)',
+                'latest',
+            )
             ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Execute migration as a dry run')
             ->addOption('all-or-nothing', null, InputOption::VALUE_NONE, 'Wrap the entire migration in a transaction');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
-        $migrator = type_instance_of(Migrator::class)->assert($this->container->get("flow.postgresql.{$connection}.migrations.migrator"));
-        $resolver = type_instance_of(VersionResolver::class)->assert($this->container->get("flow.postgresql.{$connection}.migrations.version_resolver"));
-        $configuration = type_instance_of(MigrationsConfiguration::class)->assert($this->container->get("flow.postgresql.{$connection}.migrations.configuration"));
+        $migrator = type_instance_of(Migrator::class)->assert($this->container->get(
+            "flow.postgresql.{$connection}.migrations.migrator",
+        ));
+        $resolver = type_instance_of(VersionResolver::class)->assert($this->container->get(
+            "flow.postgresql.{$connection}.migrations.version_resolver",
+        ));
+        $configuration = type_instance_of(MigrationsConfiguration::class)->assert($this->container->get(
+            "flow.postgresql.{$connection}.migrations.configuration",
+        ));
         $versionAlias = type_string()->assert($input->getArgument('version'));
         $dryRun = (bool) $input->getOption('dry-run');
         $allOrNothing = $input->getOption('all-or-nothing') ? true : null;
@@ -55,7 +72,7 @@ final class MigrateCommand extends Command
 
         $statuses = $migrator->status();
         $pendingCount = \count($statuses->pending());
-        $executedCount = \count($statuses->executed());
+        \count($statuses->executed());
 
         if (\count($statuses) === 0) {
             $io->success('No migrations found.');

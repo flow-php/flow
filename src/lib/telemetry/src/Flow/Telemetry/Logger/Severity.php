@@ -21,7 +21,7 @@ namespace Flow\Telemetry\Logger;
  * }
  * ```
  */
-enum Severity : int
+enum Severity: int
 {
     /**
      * Debugging information.
@@ -85,7 +85,7 @@ enum Severity : int
      *
      * @return bool True if this severity is greater than or equal to $other
      */
-    public function isAtLeast(Severity $other) : bool
+    public function isAtLeast(Severity $other): bool
     {
         return $this->value >= $other->value;
     }
@@ -95,7 +95,7 @@ enum Severity : int
      *
      * @return string The severity level name (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
      */
-    public function name() : string
+    public function name(): string
     {
         return match ($this) {
             self::TRACE => 'TRACE',

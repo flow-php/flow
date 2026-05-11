@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class FloatConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'boolean true' => [true];
         yield 'boolean false' => [false];
@@ -20,7 +20,7 @@ final class FloatConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'positive float' => [3.14159, '3.14159'];
         yield 'negative float' => [-123.456, '-123.456'];
@@ -40,33 +40,33 @@ final class FloatConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new FloatConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new FloatConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new FloatConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::FLOAT4, $types);
-        self::assertContains(ValueType::FLOAT8, $types);
-        self::assertCount(2, $types);
+        static::assertContains(ValueType::FLOAT4, $types);
+        static::assertContains(ValueType::FLOAT8, $types);
+        static::assertCount(2, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(mixed $input, string $expected) : void
+    public function test_to_database(mixed $input, string $expected): void
     {
         $converter = new FloatConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

@@ -18,5 +18,5 @@ interface DeleteFromStep
      * @param string|Table $table Table name, "schema.table" string, or Table reference
      * @param null|string $alias Optional table alias
      */
-    public function from(string|Table $table, ?string $alias = null) : DeleteUsingStep;
+    public function from(string|Table $table, ?string $alias = null): DeleteUsingStep;
 }

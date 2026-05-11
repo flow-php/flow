@@ -4,18 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\{Adapter\Excel\Sheet\SheetNameAssertion,
-    Adapter\Excel\Sheet\SheetsManager,
-    Exception\InvalidArgumentException,
-    Extractor,
-    FlowContext,
-    Schema};
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
-use Flow\Filesystem\{Path, SourceStream};
-use OpenSpout\Common\Entity\{Cell, Row};
+use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
+use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
+use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\ODS\Reader as OdsReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -34,18 +41,21 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     private bool $withHeader = true;
 
-    public function __construct(private readonly Path $path)
-    {
+    public function __construct(
+        private readonly Path $path,
+    ) {
         if (!$this->path->isLocal()) {
             // We can't use resources (returned by \fopen) since they are not supported by the OpenSpout library.
             // They are not supported because OpenSpout library uses php built in ZipArchive library, which doesn't support resources, only local paths.
-            throw new InvalidArgumentException('Only local filesystem paths are supported by ExcelExtractor due to the limitation of underlying library.');
+            throw new InvalidArgumentException(
+                'Only local filesystem paths are supported by ExcelExtractor due to the limitation of underlying library.',
+            );
         }
 
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $headers = [];
 
@@ -55,7 +65,12 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
                 // Ensure $row is an array before passing to array_to_rows
-                $signal = yield array_to_rows(\is_array($row) ? $row : [], $context->entryFactory(), $stream->path()->partitions(), schema: $this->schema);
+                $signal = yield array_to_rows(
+                    \is_array($row) ? $row : [],
+                    $context->entryFactory(),
+                    $stream->path()->partitions(),
+                    schema: $this->schema,
+                );
 
                 $this->incrementReturnedRows();
 
@@ -70,26 +85,26 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }
 
-    public function withConvertEmptyToNull(bool $convertEmptyToNull) : self
+    public function withConvertEmptyToNull(bool $convertEmptyToNull): self
     {
         $this->convertEmptyToNull = $convertEmptyToNull;
 
         return $this;
     }
 
-    public function withHeader(bool $withHeader) : self
+    public function withHeader(bool $withHeader): self
     {
         $this->withHeader = $withHeader;
 
         return $this;
     }
 
-    public function withOffset(int $offset) : self
+    public function withOffset(int $offset): self
     {
         if ($offset < 1) {
             throw new InvalidArgumentException('Offset must be greater or equal to 1');
@@ -100,7 +115,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         return $this;
     }
 
-    public function withReader(ExcelReader $reader) : self
+    public function withReader(ExcelReader $reader): self
     {
         $this->reader = match ($reader) {
             ExcelReader::XLSX => new XlsxReader(),
@@ -110,14 +125,14 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    public function withSheetName(string $sheetName) : self
+    public function withSheetName(string $sheetName): self
     {
         SheetNameAssertion::assert($sheetName);
 
@@ -129,12 +144,12 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     /**
      * @return array<int, mixed>
      */
-    private function createRowsFromCells(Row $row, int $previousRowDataCount = 0) : array
+    private function createRowsFromCells(Row $row, int $previousRowDataCount = 0): array
     {
         $rowData = \array_map(
             // Convert empty values to nullables if allowed
-            fn (Cell $cell) => $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
-            $row->cells
+            fn(Cell $cell) => $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
+            $row->cells,
         );
 
         // Expand columns to the size of the previous row
@@ -148,7 +163,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     /**
      * @param array<int, string> $headers
      */
-    private function extractRows(SourceStream $stream, array $headers, int $offset) : \Generator
+    private function extractRows(SourceStream $stream, array $headers, int $offset): \Generator
     {
         $reader = $this->reader($stream);
 
@@ -165,10 +180,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 if (1 === $rowIndex && $this->withHeader) {
                     $headersRaw = $this->createRowsFromCells($sheetRow);
                     // Convert headers to strings for array_combine compatibility
-                    $headers = \array_map(
-                        static fn ($header) => \is_scalar($header) ? (string) $header : '',
-                        $headersRaw
-                    );
+                    $headers = \array_map(static fn($header) => \is_scalar($header)
+                        ? (string) $header
+                        : '', $headersRaw);
 
                     continue;
                 }
@@ -195,7 +209,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         }
     }
 
-    private function reader(SourceStream $stream) : XlsxReader|OdsReader
+    private function reader(SourceStream $stream): XlsxReader|OdsReader
     {
         if (null === $this->reader) {
             $this->reader = match ($stream->path()->extension()) {
@@ -230,7 +244,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             }
 
             if (!$this->reader) {
-                throw new InvalidArgumentException('Unsupported file format: ' . ($stream->path()->extension() ?: 'n/a'));
+                throw new InvalidArgumentException(
+                    'Unsupported file format: ' . ($stream->path()->extension() ?: 'n/a'),
+                );
             }
         }
 

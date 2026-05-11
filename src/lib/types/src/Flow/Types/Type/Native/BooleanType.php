@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 /**
@@ -12,7 +13,7 @@ use Flow\Types\Type;
  */
 final readonly class BooleanType implements Type
 {
-    public function assert(mixed $value) : bool
+    public function assert(mixed $value): bool
     {
         if ($this->isValid($value)) {
             return $value;
@@ -21,7 +22,7 @@ final readonly class BooleanType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : bool
+    public function cast(mixed $value): bool
     {
         if ($this->isValid($value)) {
             return $value;
@@ -48,19 +49,19 @@ final readonly class BooleanType implements Type
         }
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_bool($value);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'boolean',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'boolean';
     }

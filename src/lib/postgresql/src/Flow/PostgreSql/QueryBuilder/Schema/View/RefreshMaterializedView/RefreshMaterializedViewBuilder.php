@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView;
 
-use Flow\PostgreSql\Protobuf\AST\{RangeVar, RefreshMatViewStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RefreshMatViewStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFinalStep, RefreshMatViewOptionsStep
 {
@@ -17,10 +19,9 @@ final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFin
         private ?string $schema = null,
         private bool $concurrent = false,
         private ?bool $skipData = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
+    public static function create(string $name, ?string $schema = null): RefreshMatViewOptionsStep
     {
         if ($schema !== null) {
             return new self($name, $schema);
@@ -31,17 +32,12 @@ final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFin
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function concurrently() : RefreshMatViewFinalStep
+    public function concurrently(): RefreshMatViewFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            true,
-            $this->skipData,
-        );
+        return new self($this->name, $this->schema, true, $this->skipData);
     }
 
-    public function toAst() : RefreshMatViewStmt
+    public function toAst(): RefreshMatViewStmt
     {
         if ($this->name === null || $this->name === '') {
             throw InvalidExpressionException::invalidValue('materialized view name', 'null or empty');
@@ -71,23 +67,13 @@ final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFin
         return $stmt;
     }
 
-    public function withData() : RefreshMatViewFinalStep
+    public function withData(): RefreshMatViewFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->concurrent,
-            false,
-        );
+        return new self($this->name, $this->schema, $this->concurrent, false);
     }
 
-    public function withNoData() : RefreshMatViewFinalStep
+    public function withNoData(): RefreshMatViewFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->concurrent,
-            true,
-        );
+        return new self($this->name, $this->schema, $this->concurrent, true);
     }
 }

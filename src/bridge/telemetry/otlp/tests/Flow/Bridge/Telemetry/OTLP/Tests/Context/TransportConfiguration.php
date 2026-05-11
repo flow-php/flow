@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_grpc_transport, otlp_json_serializer, otlp_protobuf_serializer};
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Google\Protobuf\Internal\Message;
+
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_transport;
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_protobuf_serializer;
 
 final readonly class TransportConfiguration
 {
@@ -14,13 +18,12 @@ final readonly class TransportConfiguration
         public string $name,
         public string $transport,
         public string $serializer,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<self>
      */
-    public static function all() : array
+    public static function all(): array
     {
         return [
             self::curlJson(),
@@ -32,43 +35,40 @@ final readonly class TransportConfiguration
     /**
      * @return list<self>
      */
-    public static function available() : array
+    public static function available(): array
     {
-        return \array_values(\array_filter(self::all(), static fn (self $config) => $config->isAvailable()));
+        return \array_values(\array_filter(self::all(), static fn(self $config) => $config->isAvailable()));
     }
 
-    public static function curlJson() : self
+    public static function curlJson(): self
     {
         return new self('curl-json', 'curl', 'json');
     }
 
-    public static function curlProtobuf() : self
+    public static function curlProtobuf(): self
     {
         return new self('curl-protobuf', 'curl', 'protobuf');
     }
 
-    public static function grpcProtobuf() : self
+    public static function grpcProtobuf(): self
     {
         return new self('grpc-protobuf', 'grpc', 'protobuf');
     }
 
-    public function createTransport(OtelContext $ctx) : Transport
+    public function createTransport(OtelContext $ctx): Transport
     {
         return match ($this->transport) {
-            'curl' => otlp_curl_transport(
-                $ctx->httpEndpoint(),
-                match ($this->serializer) {
-                    'json' => otlp_json_serializer(),
-                    'protobuf' => otlp_protobuf_serializer(),
-                    default => throw new \InvalidArgumentException(\sprintf('Unknown serializer: %s', $this->serializer)),
-                },
-            ),
+            'curl' => otlp_curl_transport($ctx->httpEndpoint(), match ($this->serializer) {
+                'json' => otlp_json_serializer(),
+                'protobuf' => otlp_protobuf_serializer(),
+                default => throw new \InvalidArgumentException(\sprintf('Unknown serializer: %s', $this->serializer)),
+            }),
             'grpc' => otlp_grpc_transport($ctx->grpcEndpoint()),
             default => throw new \InvalidArgumentException(\sprintf('Unknown transport: %s', $this->transport)),
         };
     }
 
-    public function isAvailable() : bool
+    public function isAvailable(): bool
     {
         if ($this->transport === 'grpc') {
             return \extension_loaded('grpc') && \class_exists(Message::class);

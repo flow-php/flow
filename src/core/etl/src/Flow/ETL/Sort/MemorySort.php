@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{Dataset\Memory\Configuration,
-    Dataset\Memory\Consumption,
-    Dataset\Memory\Unit,
-    Exception\OutOfMemoryException,
-    FlowContext,
-    Row\References,
-    Rows};
+use Flow\ETL\Dataset\Memory\Configuration;
+use Flow\ETL\Dataset\Memory\Consumption;
+use Flow\ETL\Dataset\Memory\Unit;
+use Flow\ETL\Exception\OutOfMemoryException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row\References;
+use Flow\ETL\Rows;
 
 final class MemorySort implements SortingAlgorithm
 {
@@ -29,7 +29,7 @@ final class MemorySort implements SortingAlgorithm
         }
     }
 
-    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs) : \Generator
+    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs): \Generator
     {
         $memoryConsumption = new Consumption();
         $mergedRows = new Rows();

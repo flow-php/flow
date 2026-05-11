@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_from_array, type_mixed};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_mixed;
+
 final class MixedTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'null' => [
             'value' => null,
@@ -78,7 +80,7 @@ final class MixedTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'null' => [
             'value' => null,
@@ -159,7 +161,7 @@ final class MixedTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'null' => [
             'value' => null,
@@ -228,44 +230,44 @@ final class MixedTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_mixed()->assert($value);
         } else {
-            self::assertEquals($value, type_mixed()->assert($value));
+            static::assertEquals($value, type_mixed()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_mixed()->cast($value);
         } else {
-            self::assertEquals($expected, type_mixed()->cast($value));
+            static::assertEquals($expected, type_mixed()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_mixed()->isValid($value));
+        static::assertSame($expected, type_mixed()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_mixed();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertEquals('mixed', type_mixed()->toString());
+        static::assertEquals('mixed', type_mixed()->toString());
     }
 }

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Extension;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateExtensionStmt, DefElem, Integer, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\CreateExtensionStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class CreateExtensionBuilder implements CreateExtensionOptionsStep
@@ -18,34 +22,29 @@ final readonly class CreateExtensionBuilder implements CreateExtensionOptionsSte
         private string $name,
         private bool $ifNotExists = false,
         private array $options = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateExtensionOptionsStep
+    public static function create(string $name): CreateExtensionOptionsStep
     {
         return new self($name);
     }
 
-    public function cascade() : CreateExtensionOptionsStep
+    public function cascade(): CreateExtensionOptionsStep
     {
         return $this->withBooleanOption('cascade', true);
     }
 
-    public function ifNotExists() : CreateExtensionOptionsStep
+    public function ifNotExists(): CreateExtensionOptionsStep
     {
-        return new self(
-            $this->name,
-            true,
-            $this->options,
-        );
+        return new self($this->name, true, $this->options);
     }
 
-    public function schema(string $schema) : CreateExtensionOptionsStep
+    public function schema(string $schema): CreateExtensionOptionsStep
     {
         return $this->withStringOption('schema', $schema);
     }
 
-    public function toAst() : CreateExtensionStmt
+    public function toAst(): CreateExtensionStmt
     {
         $stmt = new CreateExtensionStmt();
         $stmt->setExtname($this->name);
@@ -73,12 +72,12 @@ final readonly class CreateExtensionBuilder implements CreateExtensionOptionsSte
         return $stmt;
     }
 
-    public function version(string $version) : CreateExtensionOptionsStep
+    public function version(string $version): CreateExtensionOptionsStep
     {
         return $this->withStringOption('new_version', $version);
     }
 
-    private function withBooleanOption(string $name, bool $value) : self
+    private function withBooleanOption(string $name, bool $value): self
     {
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
@@ -90,19 +89,15 @@ final readonly class CreateExtensionBuilder implements CreateExtensionOptionsSte
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->ifNotExists,
-            $newOptions,
-        );
+        return new self($this->name, $this->ifNotExists, $newOptions);
     }
 
-    private function withStringOption(string $name, string $value) : self
+    private function withStringOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);

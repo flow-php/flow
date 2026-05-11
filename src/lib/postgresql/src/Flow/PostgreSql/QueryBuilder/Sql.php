@@ -15,5 +15,5 @@ interface Sql
     /**
      * Convert this query to a SQL string.
      */
-    public function toSql() : string;
+    public function toSql(): string;
 }

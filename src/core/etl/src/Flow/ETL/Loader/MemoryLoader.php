@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
+use Flow\ETL\Rows;
 
 final readonly class MemoryLoader implements Loader
 {
-    public function __construct(private Memory $memory)
-    {
-    }
+    public function __construct(
+        private Memory $memory,
+    ) {}
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this);
 

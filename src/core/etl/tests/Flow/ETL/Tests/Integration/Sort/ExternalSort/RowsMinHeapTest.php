@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
-use function Flow\ETL\DSL\{int_entry, ref, row, str_entry};
-use Flow\ETL\Sort\{ExternalSort\BucketRow, ExternalSort\RowsMinHeap};
+use Flow\ETL\Sort\ExternalSort\BucketRow;
+use Flow\ETL\Sort\ExternalSort\RowsMinHeap;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class RowsMinHeapTest extends FlowTestCase
 {
-    public function test_min_heap() : void
+    public function test_min_heap(): void
     {
         $minHeap = new RowsMinHeap(ref('id')->asc());
 
@@ -21,7 +26,7 @@ final class RowsMinHeapTest extends FlowTestCase
         $minHeap->insert(new BucketRow(row(int_entry('id', 5)), 'cache_id'));
         $minHeap->insert(new BucketRow(row(int_entry('id', 6)), 'cache_id'));
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1],
                 ['id' => 2],
@@ -30,14 +35,11 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 5],
                 ['id' => 6],
             ],
-            \array_map(
-                static fn () => $minHeap->extract()->row->toArray(),
-                \range(1, \count($minHeap))
-            )
+            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
         );
     }
 
-    public function test_min_heap_desc() : void
+    public function test_min_heap_desc(): void
     {
         $minHeap = new RowsMinHeap(ref('id')->desc());
 
@@ -48,7 +50,7 @@ final class RowsMinHeapTest extends FlowTestCase
         $minHeap->insert(new BucketRow(row(int_entry('id', 5)), 'cache_id'));
         $minHeap->insert(new BucketRow(row(int_entry('id', 6)), 'cache_id'));
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 6],
                 ['id' => 5],
@@ -57,14 +59,11 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 2],
                 ['id' => 1],
             ],
-            \array_map(
-                static fn () => $minHeap->extract()->row->toArray(),
-                \range(1, \count($minHeap))
-            )
+            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
         );
     }
 
-    public function test_min_heap_on_non_numeric_values() : void
+    public function test_min_heap_on_non_numeric_values(): void
     {
         $minHeap = new RowsMinHeap(ref('id')->asc());
 
@@ -75,7 +74,7 @@ final class RowsMinHeapTest extends FlowTestCase
         $minHeap->insert(new BucketRow(row(str_entry('id', 'e')), 'cache_id'));
         $minHeap->insert(new BucketRow(row(str_entry('id', 'f')), 'cache_id'));
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 'a'],
                 ['id' => 'b'],
@@ -84,14 +83,11 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 'e'],
                 ['id' => 'f'],
             ],
-            \array_map(
-                static fn () => $minHeap->extract()->row->toArray(),
-                \range(1, \count($minHeap))
-            )
+            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
         );
     }
 
-    public function test_min_heap_on_non_numeric_values_desc() : void
+    public function test_min_heap_on_non_numeric_values_desc(): void
     {
         $minHeap = new RowsMinHeap(ref('id')->desc());
 
@@ -102,7 +98,7 @@ final class RowsMinHeapTest extends FlowTestCase
         $minHeap->insert(new BucketRow(row(str_entry('id', 'e')), 'cache_id'));
         $minHeap->insert(new BucketRow(row(str_entry('id', 'f')), 'cache_id'));
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 'f'],
                 ['id' => 'e'],
@@ -111,10 +107,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 'b'],
                 ['id' => 'a'],
             ],
-            \array_map(
-                static fn () => $minHeap->extract()->row->toArray(),
-                \range(1, \count($minHeap))
-            )
+            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
         );
     }
 }

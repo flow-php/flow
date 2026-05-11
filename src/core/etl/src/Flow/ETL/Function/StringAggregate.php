@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\SortOrder;
+
 use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\{FlowContext, Row};
-use Flow\ETL\Row\{Entry, EntryFactory};
-use Flow\ETL\Row\{Reference, SortOrder};
 
 final class StringAggregate implements AggregatingFunction
 {
@@ -16,11 +20,13 @@ final class StringAggregate implements AggregatingFunction
      */
     private array $values = [];
 
-    public function __construct(private readonly Reference $ref, private readonly string $separator, private readonly ?SortOrder $sort = null)
-    {
-    }
+    public function __construct(
+        private readonly Reference $ref,
+        private readonly string $separator,
+        private readonly ?SortOrder $sort = null,
+    ) {}
 
-    public function aggregate(Row $row, FlowContext $context) : void
+    public function aggregate(Row $row, FlowContext $context): void
     {
         $stringValue = $row->valueOf($this->ref->to());
 
@@ -32,7 +38,7 @@ final class StringAggregate implements AggregatingFunction
     /**
      * @return Row\Entry<?string>
      */
-    public function result(EntryFactory $entryFactory) : Entry
+    public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_str_agg');
@@ -43,9 +49,7 @@ final class StringAggregate implements AggregatingFunction
         }
 
         if ($this->sort) {
-            $this->sort === SortOrder::ASC ?
-                \sort($this->values)
-                : \rsort($this->values);
+            $this->sort === SortOrder::ASC ? \sort($this->values) : \rsort($this->values);
         }
 
         return str_entry($this->ref->name(), \implode($this->separator, $this->values));

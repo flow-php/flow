@@ -26,15 +26,14 @@ final readonly class Baggage implements \Countable
      */
     public function __construct(
         private array $entries = [],
-    ) {
-    }
+    ) {}
 
     /**
      * Create a Baggage from a normalized array representation.
      *
      * @param array{entries: array<string, string>} $data Normalized Baggage data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self($data['entries']);
     }
@@ -44,7 +43,7 @@ final readonly class Baggage implements \Countable
      *
      * @return array<string, string>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->entries;
     }
@@ -52,7 +51,7 @@ final readonly class Baggage implements \Countable
     /**
      * Get the number of entries.
      */
-    public function count() : int
+    public function count(): int
     {
         return \count($this->entries);
     }
@@ -64,7 +63,7 @@ final readonly class Baggage implements \Countable
      *
      * @return null|string The entry value, or null if not found
      */
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         return $this->entries[$key] ?? null;
     }
@@ -74,7 +73,7 @@ final readonly class Baggage implements \Countable
      *
      * @param string $key Entry key
      */
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return \array_key_exists($key, $this->entries);
     }
@@ -82,7 +81,7 @@ final readonly class Baggage implements \Countable
     /**
      * Check if the baggage is empty.
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return \count($this->entries) === 0;
     }
@@ -92,7 +91,7 @@ final readonly class Baggage implements \Countable
      *
      * @return array{entries: array<string, string>}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return ['entries' => $this->entries];
     }
@@ -107,7 +106,7 @@ final readonly class Baggage implements \Countable
      *
      * @return self New Baggage instance with the added entry
      */
-    public function with(string $key, string $value) : self
+    public function with(string $key, string $value): self
     {
         return new self(\array_merge($this->entries, [$key => $value]));
     }
@@ -119,7 +118,7 @@ final readonly class Baggage implements \Countable
      *
      * @return self New Baggage instance without the entry
      */
-    public function without(string $key) : self
+    public function without(string $key): self
     {
         $entries = $this->entries;
         unset($entries[$key]);

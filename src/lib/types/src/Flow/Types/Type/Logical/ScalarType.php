@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string, type_union};
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 /**
  * @implements Type<bool|float|int|string>
@@ -19,20 +24,15 @@ final readonly class ScalarType implements Type
 
     public function __construct()
     {
-        $this->innerType = type_union(
-            type_string(),
-            type_integer(),
-            type_boolean(),
-            type_float()
-        );
+        $this->innerType = type_union(type_string(), type_integer(), type_boolean(), type_float());
     }
 
-    public function assert(mixed $value) : string|int|bool|float
+    public function assert(mixed $value): string|int|bool|float
     {
         return $this->innerType->assert($value);
     }
 
-    public function cast(mixed $value) : int|float|string|bool
+    public function cast(mixed $value): int|float|string|bool
     {
         if ($this->isValid($value)) {
             return $value;
@@ -41,19 +41,19 @@ final readonly class ScalarType implements Type
         return $this->innerType->cast($value);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $this->innerType->isValid($value);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'scalar',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'scalar';
     }

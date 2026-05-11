@@ -9,11 +9,11 @@ use Symfony\Component\Console\Input\InputInterface;
 
 final readonly class TypedArgument
 {
-    public function __construct(private string $name)
-    {
-    }
+    public function __construct(
+        private string $name,
+    ) {}
 
-    public function asInt(InputInterface $input) : int
+    public function asInt(InputInterface $input): int
     {
         $option = $this->asIntNullable($input);
 
@@ -24,7 +24,7 @@ final readonly class TypedArgument
         return $option;
     }
 
-    public function asIntNullable(InputInterface $input) : ?int
+    public function asIntNullable(InputInterface $input): ?int
     {
         $option = $input->getArgument($this->name);
 
@@ -39,7 +39,7 @@ final readonly class TypedArgument
         return $option;
     }
 
-    public function asString(InputInterface $input) : string
+    public function asString(InputInterface $input): string
     {
         $option = $this->asStringNullable($input);
 
@@ -50,7 +50,7 @@ final readonly class TypedArgument
         return $option;
     }
 
-    public function asStringNullable(InputInterface $input) : ?string
+    public function asStringNullable(InputInterface $input): ?string
     {
         $option = $input->getArgument($this->name);
 

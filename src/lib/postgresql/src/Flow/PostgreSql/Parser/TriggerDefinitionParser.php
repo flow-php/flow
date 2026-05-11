@@ -10,10 +10,9 @@ final readonly class TriggerDefinitionParser
 {
     public function __construct(
         private ExpressionParser $expressionParser,
-    ) {
-    }
+    ) {}
 
-    public function parseWhenClause(string $triggerDef) : ?string
+    public function parseWhenClause(string $triggerDef): ?string
     {
         $parsed = $this->expressionParser->parseStatement($triggerDef);
         $stmts = $parsed->raw()->getStmts()[0] ?? null;

@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, Boolean as PBBoolean, ColumnDef, ConstrType, Constraint, Integer as PBInteger, Node, PBFloat, PBString, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\Boolean as PBBoolean;
+use Flow\PostgreSql\Protobuf\AST\ColumnDef;
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Integer as PBInteger;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBFloat;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\Schema\IdentityGeneration;
@@ -22,15 +31,14 @@ final readonly class ColumnDefinition
         private ?IdentityGeneration $identity = null,
         private ?Node $generatedExpression = null,
         private array $constraints = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name, ColumnType $type) : self
+    public static function create(string $name, ColumnType $type): self
     {
         return new self($name, $type);
     }
 
-    public function check(Condition $condition) : self
+    public function check(Condition $condition): self
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
@@ -47,11 +55,9 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function default(bool|float|int|string|Expression|null $value) : self
+    public function default(bool|float|int|string|Expression|null $value): self
     {
-        $node = $value instanceof Expression
-            ? $value->toAst()
-            : $this->createLiteralNode($value);
+        $node = $value instanceof Expression ? $value->toAst() : $this->createLiteralNode($value);
 
         return new self(
             $this->name,
@@ -64,7 +70,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function defaultRaw(Expression $expression) : self
+    public function defaultRaw(Expression $expression): self
     {
         return new self(
             $this->name,
@@ -77,7 +83,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function generatedAs(Expression $expression) : self
+    public function generatedAs(Expression $expression): self
     {
         return new self(
             $this->name,
@@ -90,7 +96,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function identity(IdentityGeneration $type = IdentityGeneration::ALWAYS) : self
+    public function identity(IdentityGeneration $type = IdentityGeneration::ALWAYS): self
     {
         return new self(
             $this->name,
@@ -103,7 +109,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function notNull() : self
+    public function notNull(): self
     {
         return new self(
             $this->name,
@@ -116,7 +122,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function nullable() : self
+    public function nullable(): self
     {
         return new self(
             $this->name,
@@ -129,7 +135,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function primaryKey() : self
+    public function primaryKey(): self
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_PRIMARY);
@@ -145,7 +151,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function references(string $table, ?string $column = null, ?string $schema = null) : self
+    public function references(string $table, ?string $column = null, ?string $schema = null): self
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_FOREIGN);
@@ -174,7 +180,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    public function toAst() : ColumnDef
+    public function toAst(): ColumnDef
     {
         $columnDef = new ColumnDef();
         $columnDef->setColname($this->name);
@@ -233,7 +239,7 @@ final readonly class ColumnDefinition
         return $columnDef;
     }
 
-    public function unique() : self
+    public function unique(): self
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_UNIQUE);
@@ -249,7 +255,7 @@ final readonly class ColumnDefinition
         );
     }
 
-    private function createLiteralNode(bool|float|int|string|null $value) : Node
+    private function createLiteralNode(bool|float|int|string|null $value): Node
     {
         $aConst = new A_Const();
 
@@ -273,7 +279,7 @@ final readonly class ColumnDefinition
         return $node;
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);

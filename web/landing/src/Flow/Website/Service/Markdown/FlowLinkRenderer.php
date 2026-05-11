@@ -6,14 +6,13 @@ namespace Flow\Website\Service\Markdown;
 
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Node\Node;
-use League\CommonMark\Renderer\{ChildNodeRendererInterface, NodeRendererInterface};
+use League\CommonMark\Renderer\ChildNodeRendererInterface;
+use League\CommonMark\Renderer\NodeRendererInterface;
 use League\CommonMark\Util\HtmlElement;
 
 class FlowLinkRenderer implements NodeRendererInterface
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function render(Node $node, ChildNodeRendererInterface $childRenderer)
     {

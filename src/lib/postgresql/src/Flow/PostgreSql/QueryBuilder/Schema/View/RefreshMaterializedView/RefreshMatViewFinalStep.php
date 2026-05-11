@@ -9,11 +9,11 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface RefreshMatViewFinalStep extends Sql
 {
-    public function toAst() : RefreshMatViewStmt;
+    public function toAst(): RefreshMatViewStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function withData() : self;
+    public function withData(): self;
 
-    public function withNoData() : self;
+    public function withNoData(): self;
 }

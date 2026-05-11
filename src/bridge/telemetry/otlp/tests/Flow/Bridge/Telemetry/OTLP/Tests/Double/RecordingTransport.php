@@ -18,7 +18,7 @@ final class RecordingTransport implements Transport
 
     public ?\Throwable $shutdownException = null;
 
-    public function send(Signals $signal) : void
+    public function send(Signals $signal): void
     {
         $this->sent[] = $signal;
 
@@ -27,7 +27,7 @@ final class RecordingTransport implements Transport
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         $this->shutdownCalls++;
 

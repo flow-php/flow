@@ -11,13 +11,41 @@ final readonly class Options
     /**
      * @param array<Option> $options
      */
-    public function __construct(private array $options)
-    {
-    }
+    public function __construct(
+        private array $options,
+    ) {}
 
-    public static function all() : self
+    public static function all(): self
     {
-        $separators = [',', "\t", ';', '|', ' ', '_', '-', ':', '~', '@', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=', '?', '!', '\\', '/', '.', '>', '<'];
+        $separators = [
+            ',',
+            "\t",
+            ';',
+            '|',
+            ' ',
+            '_',
+            '-',
+            ':',
+            '~',
+            '@',
+            '#',
+            '$',
+            '%',
+            '^',
+            '&',
+            '*',
+            '(',
+            ')',
+            '+',
+            '=',
+            '?',
+            '!',
+            '\\',
+            '/',
+            '.',
+            '>',
+            '<',
+        ];
         $enclosures = ['"', "'"];
 
         $options = [];
@@ -31,7 +59,7 @@ final readonly class Options
         return new self($options);
     }
 
-    public function best() : Option
+    public function best(): Option
     {
         $best = null;
 
@@ -54,19 +82,19 @@ final readonly class Options
         return $best;
     }
 
-    public function onlyValid() : self
+    public function onlyValid(): self
     {
-        return new self(\array_filter($this->options, static fn (Option $option) : bool => $option->isValid()));
+        return new self(\array_filter($this->options, static fn(Option $option): bool => $option->isValid()));
     }
 
-    public function parse(string $line) : void
+    public function parse(string $line): void
     {
         foreach ($this->options as $option) {
             $option->parse($line);
         }
     }
 
-    public function reset() : self
+    public function reset(): self
     {
         $options = [];
 

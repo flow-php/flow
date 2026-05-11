@@ -10,64 +10,64 @@ use PHPUnit\Framework\TestCase;
 
 final class ClusterBuilderTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
 
-    public function test_basic_cluster_all() : void
+    public function test_basic_cluster_all(): void
     {
         $builder = ClusterBuilder::all();
 
         $ast = $builder->toAst();
 
-        self::assertInstanceOf(ClusterStmt::class, $ast);
-        self::assertNull($ast->getRelation());
+        static::assertInstanceOf(ClusterStmt::class, $ast);
+        static::assertNull($ast->getRelation());
     }
 
-    public function test_cluster_table() : void
+    public function test_cluster_table(): void
     {
         $builder = ClusterBuilder::create()->table('users');
 
         $ast = $builder->toAst();
 
-        self::assertNotNull($ast->getRelation());
-        self::assertSame('users', $ast->getRelation()->getRelname());
+        static::assertNotNull($ast->getRelation());
+        static::assertSame('users', $ast->getRelation()->getRelname());
     }
 
-    public function test_cluster_table_using_index() : void
+    public function test_cluster_table_using_index(): void
     {
         $builder = ClusterBuilder::create()->table('users')->using('idx_users_pkey');
 
         $ast = $builder->toAst();
 
-        self::assertSame('users', $ast->getRelation()?->getRelname());
-        self::assertSame('idx_users_pkey', $ast->getIndexname());
+        static::assertSame('users', $ast->getRelation()?->getRelname());
+        static::assertSame('idx_users_pkey', $ast->getIndexname());
     }
 
-    public function test_cluster_table_with_schema() : void
+    public function test_cluster_table_with_schema(): void
     {
         $builder = ClusterBuilder::create()->table('public.users');
 
         $ast = $builder->toAst();
 
-        self::assertSame('public', $ast->getRelation()?->getSchemaname());
-        self::assertSame('users', $ast->getRelation()?->getRelname());
+        static::assertSame('public', $ast->getRelation()?->getSchemaname());
+        static::assertSame('users', $ast->getRelation()?->getRelname());
     }
 
-    public function test_cluster_verbose() : void
+    public function test_cluster_verbose(): void
     {
         $builder = ClusterBuilder::create()->verbose()->table('users');
 
         $ast = $builder->toAst();
 
-        self::assertCount(1, $ast->getParams());
-        self::assertSame('verbose', $ast->getParams()[0]->getDefElem()?->getDefname());
+        static::assertCount(1, $ast->getParams());
+        static::assertSame('verbose', $ast->getParams()[0]->getDefElem()?->getDefname());
     }
 
-    public function test_immutability() : void
+    public function test_immutability(): void
     {
         $original = ClusterBuilder::create();
         $modified = $original->table('users');
@@ -75,7 +75,7 @@ final class ClusterBuilderTest extends TestCase
         $originalAst = $original->toAst();
         $modifiedAst = $modified->toAst();
 
-        self::assertNull($originalAst->getRelation());
-        self::assertNotNull($modifiedAst->getRelation());
+        static::assertNull($originalAst->getRelation());
+        static::assertNotNull($modifiedAst->getRelation());
     }
 }

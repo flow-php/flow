@@ -4,25 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{and_, col, eq, param, update};
-use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\UpdateOptions};
+use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
-use Flow\ETL\{Row, Row\Entry};
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\update;
 
 final readonly class UpdateQueryBuilder
 {
     public function __construct(
         private string $table,
         private EntryTypesMap $typesMap,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{null|Sql, list<null|TypedValue>}
      */
-    public function build(Row $row, UpdateOptions $options) : array
+    public function build(Row $row, UpdateOptions $options): array
     {
         $primaryKeys = $options->primaryKeys;
 
@@ -56,17 +62,11 @@ final readonly class UpdateQueryBuilder
 
             $entry = $row->get($key);
 
-            $conditions[] = eq(
-                col($key),
-                param($paramIndex++)
-            );
+            $conditions[] = eq(col($key), param($paramIndex++));
             $params[] = $this->mapEntryToParameter($entry);
         }
 
-        $query = update()
-            ->update($this->table)
-            ->setAll($assignments)
-            ->where(and_(...$conditions));
+        $query = update()->update($this->table)->setAll($assignments)->where(and_(...$conditions));
 
         return [$query, $params];
     }
@@ -74,7 +74,7 @@ final readonly class UpdateQueryBuilder
     /**
      * @param Entry<mixed> $entry
      */
-    private function mapEntryToParameter(Entry $entry) : ?TypedValue
+    private function mapEntryToParameter(Entry $entry): ?TypedValue
     {
         return $this->typesMap->mapEntry($entry);
     }

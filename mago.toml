@@ -20,6 +20,13 @@ enable-short-tags = false
 
 [linter]
 integrations = ["symfony", "phpunit"]
+excludes = [
+    "**/Flow/Parquet/ThriftModel/**",
+    "**/Flow/Parquet/Thrift/**",
+    "**/otlp/src/Opentelemetry/**",
+    "**/otlp/src/GPBMetadata/**",
+    "**/lib/postgresql/src/Flow/PostgreSql/Protobuf/**",
+]
 
 [linter.rules]
 cyclomatic-complexity = { enabled = false }
@@ -66,6 +73,29 @@ use-specific-assertions = { enabled = false }
 prefer-first-class-callable = { enabled = false }
 final-controller = { enabled = false }
 prefer-interface = { enabled = false }
+no-shorthand-ternary = { enabled = false }
+no-error-control-operator = { enabled = false }
+no-literal-password = { enabled = false }
+no-ini-set = { enabled = false }
+instanceof-stringable = { enabled = false }
+no-redundant-file = { enabled = false }
+no-sprintf-concat = { enabled = false }
+no-global = { enabled = false }
+no-redundant-method-override = { enabled = false }
 no-redundant-else = { enabled = true, level = "warning" }
-no-redundant-variable = { enabled = true, level = "warning" }
+# Bug in Mago 1.26 - revisit when resolved
+no-redundant-variable = { enabled = true, level = "warning", exclude = [
+    "**/Flow/ETL/Function/ScalarFunctionChain.php",
+    "**/Flow/ETL/DataFrame.php",
+    "**/Flow/ETL/Row/EntryReference.php",
+    "**/Flow/ETL/Sort/SortAlgorithms.php",
+    "**/Flow/PostgreSql/QueryBuilder/**",
+    "**/Flow/PostgreSql/Tests/Unit/QueryBuilder/Expression/MockExpression.php",
+    "**/Flow/PostgreSql/Explain/Plan/PlanNodeType.php",
+    "**/Flow/Filesystem/Path.php",
+    "**/CacheSpyClient.php",
+    "**/Tests/Unit/ObjectExtractorTest.php",
+    "**/array-dot/src/Flow/ArrayDot/array_dot.php",
+    "**/TracableHttpClientTest.php",
+] }
 strict-types = { enabled = true, level = "error" }

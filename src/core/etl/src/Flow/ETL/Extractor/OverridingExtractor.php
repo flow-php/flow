@@ -17,5 +17,5 @@ interface OverridingExtractor
     /**
      * @return array<Extractor>
      */
-    public function extractors() : array;
+    public function extractors(): array;
 }

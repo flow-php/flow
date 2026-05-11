@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Processor, Row, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Processor;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 
 /**
  * Groups rows into batches by column value.
@@ -32,7 +35,7 @@ final readonly class BatchingByProcessor implements Processor
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         /** @var array<Row> $buffer */
         $buffer = [];

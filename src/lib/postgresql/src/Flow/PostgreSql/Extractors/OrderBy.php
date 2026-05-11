@@ -10,25 +10,22 @@ use Flow\PostgreSql\QueryBuilder\Clause\OrderBy as OrderByClause;
 
 final readonly class OrderBy
 {
-    public function __construct(private ParsedQuery $query)
-    {
-    }
+    public function __construct(
+        private ParsedQuery $query,
+    ) {}
 
     /**
      * @return array<OrderByClause>
      */
-    public function all() : array
+    public function all(): array
     {
         $collector = new SortByCollector();
         $this->query->traverse($collector);
 
-        return \array_map(
-            static fn ($sortBy) => OrderByClause::fromAst($sortBy),
-            $collector->getSortByClauses()
-        );
+        return \array_map(static fn($sortBy) => OrderByClause::fromAst($sortBy), $collector->getSortByClauses());
     }
 
-    public function hasOrderBy() : bool
+    public function hasOrderBy(): bool
     {
         $collector = new SortByCollector();
         $this->query->traverse($collector);

@@ -16,7 +16,7 @@ final readonly class ChainCatalogProvider implements CatalogProvider
         $this->providers = \array_values($providers);
     }
 
-    public function get() : Catalog
+    public function get(): Catalog
     {
         $catalog = new Catalog([]);
 

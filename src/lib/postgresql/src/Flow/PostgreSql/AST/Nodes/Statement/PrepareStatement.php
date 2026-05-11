@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\PrepareStmt;
 
 /**
@@ -16,10 +17,9 @@ final readonly class PrepareStatement implements Statement
 
     public function __construct(
         private PrepareStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : PrepareStmt
+    public function raw(): PrepareStmt
     {
         return $this->stmt;
     }

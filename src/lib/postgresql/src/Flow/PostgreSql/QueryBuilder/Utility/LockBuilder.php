@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-use Flow\PostgreSql\Protobuf\AST\{LockStmt, Node, RangeVar};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\LockStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class LockBuilder implements LockFinalStep
 {
@@ -18,65 +21,64 @@ final readonly class LockBuilder implements LockFinalStep
         private array $tables,
         private LockMode $mode = LockMode::ACCESS_EXCLUSIVE,
         private bool $nowait = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$tables) : LockFinalStep
+    public static function create(string ...$tables): LockFinalStep
     {
         return new self($tables);
     }
 
-    public function accessExclusive() : LockFinalStep
+    public function accessExclusive(): LockFinalStep
     {
         return new self($this->tables, LockMode::ACCESS_EXCLUSIVE, $this->nowait);
     }
 
-    public function accessShare() : LockFinalStep
+    public function accessShare(): LockFinalStep
     {
         return new self($this->tables, LockMode::ACCESS_SHARE, $this->nowait);
     }
 
-    public function exclusive() : LockFinalStep
+    public function exclusive(): LockFinalStep
     {
         return new self($this->tables, LockMode::EXCLUSIVE, $this->nowait);
     }
 
-    public function inMode(LockMode $mode) : LockFinalStep
+    public function inMode(LockMode $mode): LockFinalStep
     {
         return new self($this->tables, $mode, $this->nowait);
     }
 
-    public function nowait() : LockFinalStep
+    public function nowait(): LockFinalStep
     {
         return new self($this->tables, $this->mode, true);
     }
 
-    public function rowExclusive() : LockFinalStep
+    public function rowExclusive(): LockFinalStep
     {
         return new self($this->tables, LockMode::ROW_EXCLUSIVE, $this->nowait);
     }
 
-    public function rowShare() : LockFinalStep
+    public function rowShare(): LockFinalStep
     {
         return new self($this->tables, LockMode::ROW_SHARE, $this->nowait);
     }
 
-    public function share() : LockFinalStep
+    public function share(): LockFinalStep
     {
         return new self($this->tables, LockMode::SHARE, $this->nowait);
     }
 
-    public function shareRowExclusive() : LockFinalStep
+    public function shareRowExclusive(): LockFinalStep
     {
         return new self($this->tables, LockMode::SHARE_ROW_EXCLUSIVE, $this->nowait);
     }
 
-    public function shareUpdateExclusive() : LockFinalStep
+    public function shareUpdateExclusive(): LockFinalStep
     {
         return new self($this->tables, LockMode::SHARE_UPDATE_EXCLUSIVE, $this->nowait);
     }
 
-    public function toAst() : LockStmt
+    public function toAst(): LockStmt
     {
         $stmt = new LockStmt();
         $stmt->setMode($this->mode->value);

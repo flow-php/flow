@@ -16,5 +16,5 @@ namespace Flow\Telemetry\ErrorHandler;
  */
 interface ErrorHandler
 {
-    public function handle(\Throwable $error) : void;
+    public function handle(\Throwable $error): void;
 }

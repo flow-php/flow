@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Propagation;
 
-use Flow\Telemetry\Context\{SpanId, TraceFlags, TraceId, TraceState};
-use Flow\Telemetry\Propagation\{ArrayCarrier, PropagationContext, W3CTraceContext};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Context\TraceState;
+use Flow\Telemetry\Propagation\ArrayCarrier;
+use Flow\Telemetry\Propagation\PropagationContext;
+use Flow\Telemetry\Propagation\W3CTraceContext;
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class W3CTraceContextTest extends TestCase
 {
-    public static function provideInvalidTraceparentHeaders() : \Generator
+    public static function provideInvalidTraceparentHeaders(): \Generator
     {
         yield 'wrong version' => ['01-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01'];
         yield 'missing parts' => ['00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7'];
@@ -30,7 +35,7 @@ final class W3CTraceContextTest extends TestCase
         yield 'all zeros span id' => ['00-0af7651916cd43dd8448eb211c80319c-0000000000000000-01'];
     }
 
-    public static function provideValidTraceparentHeaders() : \Generator
+    public static function provideValidTraceparentHeaders(): \Generator
     {
         yield 'sampled' => [
             '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01',
@@ -52,7 +57,7 @@ final class W3CTraceContextTest extends TestCase
         ];
     }
 
-    public function test_extract_handles_invalid_tracestate_gracefully() : void
+    public function test_extract_handles_invalid_tracestate_gracefully(): void
     {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier([
@@ -62,11 +67,11 @@ final class W3CTraceContextTest extends TestCase
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNotNull($ctx->spanContext);
-        self::assertTrue($ctx->spanContext->traceState->isEmpty());
+        static::assertNotNull($ctx->spanContext);
+        static::assertTrue($ctx->spanContext->traceState->isEmpty());
     }
 
-    public function test_extract_parses_tracestate_header() : void
+    public function test_extract_parses_tracestate_header(): void
     {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier([
@@ -76,9 +81,9 @@ final class W3CTraceContextTest extends TestCase
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNotNull($ctx->spanContext);
-        self::assertSame('00f067aa0ba902b7', $ctx->spanContext->traceState->get('rojo'));
-        self::assertSame('t61rcWkgMzE', $ctx->spanContext->traceState->get('congo'));
+        static::assertNotNull($ctx->spanContext);
+        static::assertSame('00f067aa0ba902b7', $ctx->spanContext->traceState->get('rojo'));
+        static::assertSame('t61rcWkgMzE', $ctx->spanContext->traceState->get('congo'));
     }
 
     #[DataProvider('provideValidTraceparentHeaders')]
@@ -87,41 +92,41 @@ final class W3CTraceContextTest extends TestCase
         string $expectedTraceId,
         string $expectedSpanId,
         bool $expectedSampled,
-    ) : void {
+    ): void {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier(['traceparent' => $traceparent]);
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNotNull($ctx->spanContext);
-        self::assertSame($expectedTraceId, $ctx->spanContext->traceId->toHex());
-        self::assertSame($expectedSpanId, $ctx->spanContext->spanId->toHex());
-        self::assertSame($expectedSampled, $ctx->spanContext->traceFlags->isSampled());
-        self::assertTrue($ctx->spanContext->isRemote);
+        static::assertNotNull($ctx->spanContext);
+        static::assertSame($expectedTraceId, $ctx->spanContext->traceId->toHex());
+        static::assertSame($expectedSpanId, $ctx->spanContext->spanId->toHex());
+        static::assertSame($expectedSampled, $ctx->spanContext->traceFlags->isSampled());
+        static::assertTrue($ctx->spanContext->isRemote);
     }
 
     #[DataProvider('provideInvalidTraceparentHeaders')]
-    public function test_extract_returns_empty_context_for_invalid_traceparent(string $traceparent) : void
+    public function test_extract_returns_empty_context_for_invalid_traceparent(string $traceparent): void
     {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier(['traceparent' => $traceparent]);
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNull($ctx->spanContext);
+        static::assertNull($ctx->spanContext);
     }
 
-    public function test_extract_returns_empty_context_for_missing_header() : void
+    public function test_extract_returns_empty_context_for_missing_header(): void
     {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier([]);
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNull($ctx->spanContext);
+        static::assertNull($ctx->spanContext);
     }
 
-    public function test_extract_returns_propagation_context_without_baggage() : void
+    public function test_extract_returns_propagation_context_without_baggage(): void
     {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier([
@@ -130,11 +135,11 @@ final class W3CTraceContextTest extends TestCase
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNotNull($ctx->spanContext);
-        self::assertNull($ctx->baggage);
+        static::assertNotNull($ctx->spanContext);
+        static::assertNull($ctx->baggage);
     }
 
-    public function test_extract_with_case_insensitive_headers() : void
+    public function test_extract_with_case_insensitive_headers(): void
     {
         $propagator = new W3CTraceContext();
         $carrier = new ArrayCarrier([
@@ -144,19 +149,19 @@ final class W3CTraceContextTest extends TestCase
 
         $ctx = $propagator->extract($carrier);
 
-        self::assertNotNull($ctx->spanContext);
-        self::assertSame('0af7651916cd43dd8448eb211c80319c', $ctx->spanContext->traceId->toHex());
-        self::assertSame('value', $ctx->spanContext->traceState->get('rojo'));
+        static::assertNotNull($ctx->spanContext);
+        static::assertSame('0af7651916cd43dd8448eb211c80319c', $ctx->spanContext->traceId->toHex());
+        static::assertSame('value', $ctx->spanContext->traceState->get('rojo'));
     }
 
-    public function test_fields_returns_correct_header_names() : void
+    public function test_fields_returns_correct_header_names(): void
     {
         $propagator = new W3CTraceContext();
 
-        self::assertSame(['traceparent', 'tracestate'], $propagator->fields());
+        static::assertSame(['traceparent', 'tracestate'], $propagator->fields());
     }
 
-    public function test_inject_does_not_set_tracestate_when_empty() : void
+    public function test_inject_does_not_set_tracestate_when_empty(): void
     {
         $propagator = new W3CTraceContext();
         $spanContext = SpanContext::create(
@@ -169,11 +174,11 @@ final class W3CTraceContextTest extends TestCase
         $propagator->inject($ctx, $carrier);
 
         $headers = $carrier->unwrap();
-        self::assertArrayHasKey('traceparent', $headers);
-        self::assertArrayNotHasKey('tracestate', $headers);
+        static::assertArrayHasKey('traceparent', $headers);
+        static::assertArrayNotHasKey('tracestate', $headers);
     }
 
-    public function test_inject_does_nothing_for_null_span_context() : void
+    public function test_inject_does_nothing_for_null_span_context(): void
     {
         $propagator = new W3CTraceContext();
         $ctx = new PropagationContext();
@@ -181,10 +186,10 @@ final class W3CTraceContextTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertEmpty($carrier->unwrap());
+        static::assertEmpty($carrier->unwrap());
     }
 
-    public function test_inject_sets_traceparent_header() : void
+    public function test_inject_sets_traceparent_header(): void
     {
         $propagator = new W3CTraceContext();
         $spanContext = SpanContext::create(
@@ -198,13 +203,13 @@ final class W3CTraceContextTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertSame(
+        static::assertSame(
             '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01',
             $carrier->unwrap()['traceparent'],
         );
     }
 
-    public function test_inject_sets_tracestate_header_when_not_empty() : void
+    public function test_inject_sets_tracestate_header_when_not_empty(): void
     {
         $propagator = new W3CTraceContext();
         $spanContext = SpanContext::create(
@@ -219,10 +224,10 @@ final class W3CTraceContextTest extends TestCase
 
         $propagator->inject($ctx, $carrier);
 
-        self::assertSame('rojo=value', $carrier->unwrap()['tracestate']);
+        static::assertSame('rojo=value', $carrier->unwrap()['tracestate']);
     }
 
-    public function test_round_trip_preserves_context() : void
+    public function test_round_trip_preserves_context(): void
     {
         $propagator = new W3CTraceContext();
         $original = SpanContext::create(
@@ -238,10 +243,10 @@ final class W3CTraceContextTest extends TestCase
         $propagator->inject($ctx, $carrier);
         $restored = $propagator->extract(new ArrayCarrier($carrier->unwrap()));
 
-        self::assertNotNull($restored->spanContext);
-        self::assertSame($original->traceId->toHex(), $restored->spanContext->traceId->toHex());
-        self::assertSame($original->spanId->toHex(), $restored->spanContext->spanId->toHex());
-        self::assertSame($original->traceFlags->isSampled(), $restored->spanContext->traceFlags->isSampled());
-        self::assertSame($original->traceState->get('vendor'), $restored->spanContext->traceState->get('vendor'));
+        static::assertNotNull($restored->spanContext);
+        static::assertSame($original->traceId->toHex(), $restored->spanContext->traceId->toHex());
+        static::assertSame($original->spanId->toHex(), $restored->spanContext->spanId->toHex());
+        static::assertSame($original->traceFlags->isSampled(), $restored->spanContext->traceFlags->isSampled());
+        static::assertSame($original->traceState->get('vendor'), $restored->spanContext->traceState->get('vendor'));
     }
 }

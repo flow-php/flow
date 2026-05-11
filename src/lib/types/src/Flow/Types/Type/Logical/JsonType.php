@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
 
@@ -13,7 +14,7 @@ use Flow\Types\Value\Json;
  */
 final readonly class JsonType implements Type
 {
-    public function assert(mixed $value) : Json
+    public function assert(mixed $value): Json
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,7 +23,7 @@ final readonly class JsonType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : Json
+    public function cast(mixed $value): Json
     {
         if ($this->isValid($value)) {
             return $value;
@@ -55,19 +56,19 @@ final readonly class JsonType implements Type
         }
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof Json;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'json',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'json';
     }

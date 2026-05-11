@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Manifest;
 
-enum Type : string
+enum Type: string
 {
     case ADAPTER = 'adapter';
     case BRIDGE = 'bridge';

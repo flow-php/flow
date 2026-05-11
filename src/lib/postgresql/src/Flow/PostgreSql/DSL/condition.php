@@ -4,36 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\PostgreSql\Protobuf\AST\Node;
-use Flow\PostgreSql\QueryBuilder\Condition\{
-    All,
-    AndCondition,
-    Any,
-    Between,
-    BooleanCondition,
-    Comparison,
-    ComparisonOperator,
-    Condition,
-    ConditionBuilder,
-    Exists,
-    In,
-    IsDistinctFrom,
-    IsNull,
-    Like,
-    NotCondition,
-    OperatorCondition,
-    OrCondition,
-    SimilarTo
-};
-use Flow\PostgreSql\QueryBuilder\Expression\{BinaryExpression, Expression};
+use Flow\PostgreSql\QueryBuilder\Condition\All;
+use Flow\PostgreSql\QueryBuilder\Condition\AndCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\Any;
+use Flow\PostgreSql\QueryBuilder\Condition\Between;
+use Flow\PostgreSql\QueryBuilder\Condition\BooleanCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionBuilder;
+use Flow\PostgreSql\QueryBuilder\Condition\Exists;
+use Flow\PostgreSql\QueryBuilder\Condition\In;
+use Flow\PostgreSql\QueryBuilder\Condition\IsDistinctFrom;
+use Flow\PostgreSql\QueryBuilder\Condition\IsNull;
+use Flow\PostgreSql\QueryBuilder\Condition\Like;
+use Flow\PostgreSql\QueryBuilder\Condition\NotCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\OperatorCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\SimilarTo;
+use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 /**
  * Create an equality comparison (column = value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function eq(string|Expression $left, string|Expression $right) : Comparison
+function eq(string|Expression $left, string|Expression $right): Comparison
 {
     return new Comparison(
         $left instanceof Expression ? $left : col($left),
@@ -46,7 +47,7 @@ function eq(string|Expression $left, string|Expression $right) : Comparison
  * Create a not-equal comparison (column != value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ne(string|Expression $left, string|Expression $right) : Comparison
+function ne(string|Expression $left, string|Expression $right): Comparison
 {
     return new Comparison(
         $left instanceof Expression ? $left : col($left),
@@ -59,7 +60,7 @@ function ne(string|Expression $left, string|Expression $right) : Comparison
  * Create a less-than comparison (column < value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function lt(string|Expression $left, string|Expression $right) : Comparison
+function lt(string|Expression $left, string|Expression $right): Comparison
 {
     return new Comparison(
         $left instanceof Expression ? $left : col($left),
@@ -72,7 +73,7 @@ function lt(string|Expression $left, string|Expression $right) : Comparison
  * Create a less-than-or-equal comparison (column <= value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function le(string|Expression $left, string|Expression $right) : Comparison
+function le(string|Expression $left, string|Expression $right): Comparison
 {
     return new Comparison(
         $left instanceof Expression ? $left : col($left),
@@ -85,7 +86,7 @@ function le(string|Expression $left, string|Expression $right) : Comparison
  * Create a greater-than comparison (column > value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function gt(string|Expression $left, string|Expression $right) : Comparison
+function gt(string|Expression $left, string|Expression $right): Comparison
 {
     return new Comparison(
         $left instanceof Expression ? $left : col($left),
@@ -98,7 +99,7 @@ function gt(string|Expression $left, string|Expression $right) : Comparison
  * Create a greater-than-or-equal comparison (column >= value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ge(string|Expression $left, string|Expression $right) : Comparison
+function ge(string|Expression $left, string|Expression $right): Comparison
 {
     return new Comparison(
         $left instanceof Expression ? $left : col($left),
@@ -111,7 +112,7 @@ function ge(string|Expression $left, string|Expression $right) : Comparison
  * Create a BETWEEN condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function between(string|Expression $expr, string|Expression $low, string|Expression $high, bool $not = false) : Between
+function between(string|Expression $expr, string|Expression $low, string|Expression $high, bool $not = false): Between
 {
     return new Between(
         $expr instanceof Expression ? $expr : col($expr),
@@ -130,7 +131,7 @@ function between(string|Expression $expr, string|Expression $low, string|Express
  * @throws \InvalidArgumentException when values array is empty
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function in_(string|Expression $expr, array $values) : In
+function in_(string|Expression $expr, array $values): In
 {
     return new In($expr instanceof Expression ? $expr : col($expr), \array_values($values));
 }
@@ -139,7 +140,7 @@ function in_(string|Expression $expr, array $values) : In
  * Create an IS NULL condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function is_null(string|Expression $expr, bool $not = false) : IsNull
+function is_null(string|Expression $expr, bool $not = false): IsNull
 {
     return new IsNull($expr instanceof Expression ? $expr : col($expr), $not);
 }
@@ -148,8 +149,12 @@ function is_null(string|Expression $expr, bool $not = false) : IsNull
  * Create a LIKE condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function like(string|Expression $expr, string|Expression $pattern, bool $caseInsensitive = false, bool $negated = false) : Like
-{
+function like(
+    string|Expression $expr,
+    string|Expression $pattern,
+    bool $caseInsensitive = false,
+    bool $negated = false,
+): Like {
     return new Like(
         $expr instanceof Expression ? $expr : col($expr),
         $pattern instanceof Expression ? $pattern : col($pattern),
@@ -162,7 +167,7 @@ function like(string|Expression $expr, string|Expression $pattern, bool $caseIns
  * Create a SIMILAR TO condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function similar_to(string|Expression $expr, string|Expression $pattern) : SimilarTo
+function similar_to(string|Expression $expr, string|Expression $pattern): SimilarTo
 {
     return new SimilarTo(
         $expr instanceof Expression ? $expr : col($expr),
@@ -174,7 +179,7 @@ function similar_to(string|Expression $expr, string|Expression $pattern) : Simil
  * Create an IS DISTINCT FROM condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function distinct_from(string|Expression $left, string|Expression $right, bool $not = false) : IsDistinctFrom
+function distinct_from(string|Expression $left, string|Expression $right, bool $not = false): IsDistinctFrom
 {
     return new IsDistinctFrom(
         $left instanceof Expression ? $left : col($left),
@@ -187,7 +192,7 @@ function distinct_from(string|Expression $left, string|Expression $right, bool $
  * Create an EXISTS condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function exists(SelectFinalStep $subquery) : Exists
+function exists(SelectFinalStep $subquery): Exists
 {
     $node = new Node();
     $node->setSelectStmt($subquery->toAst());
@@ -202,7 +207,7 @@ function exists(SelectFinalStep $subquery) : Exists
  * Example: any_(col('attnum', 'a'), ComparisonOperator::EQ, col('conkey', 'con'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function any_(string|Expression $left, ComparisonOperator $operator, Expression|SelectFinalStep $arrayOrSubquery) : Any
+function any_(string|Expression $left, ComparisonOperator $operator, Expression|SelectFinalStep $arrayOrSubquery): Any
 {
     $left = $left instanceof Expression ? $left : col($left);
 
@@ -223,7 +228,7 @@ function any_(string|Expression $left, ComparisonOperator $operator, Expression|
  * Example: all_(col('value'), ComparisonOperator::GT, col('thresholds'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function all_(string|Expression $left, ComparisonOperator $operator, Expression|SelectFinalStep $arrayOrSubquery) : All
+function all_(string|Expression $left, ComparisonOperator $operator, Expression|SelectFinalStep $arrayOrSubquery): All
 {
     $left = $left instanceof Expression ? $left : col($left);
 
@@ -243,7 +248,7 @@ function all_(string|Expression $left, ComparisonOperator $operator, Expression|
  * Example: is_true(col('is_active')) — uses a boolean column in WHERE clause.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function is_true(string|Expression $expr) : BooleanCondition
+function is_true(string|Expression $expr): BooleanCondition
 {
     return new BooleanCondition($expr instanceof Expression ? $expr : col($expr));
 }
@@ -255,7 +260,7 @@ function is_true(string|Expression $expr) : BooleanCondition
  * Produces: name NOT LIKE 'pg_%'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function not_like(string|Expression $expr, string|Expression $pattern, bool $caseInsensitive = false) : Like
+function not_like(string|Expression $expr, string|Expression $pattern, bool $caseInsensitive = false): Like
 {
     return new Like(
         $expr instanceof Expression ? $expr : col($expr),
@@ -283,7 +288,7 @@ function not_like(string|Expression $expr, string|Expression $pattern, bool $cas
  * ```
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function conditions() : ConditionBuilder
+function conditions(): ConditionBuilder
 {
     return ConditionBuilder::create();
 }
@@ -294,7 +299,7 @@ function conditions() : ConditionBuilder
  * @param Condition ...$conditions Conditions to combine
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function and_(Condition ...$conditions) : AndCondition
+function and_(Condition ...$conditions): AndCondition
 {
     return new AndCondition(...$conditions);
 }
@@ -305,7 +310,7 @@ function and_(Condition ...$conditions) : AndCondition
  * @param Condition ...$conditions Conditions to combine
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function or_(Condition ...$conditions) : OrCondition
+function or_(Condition ...$conditions): OrCondition
 {
     return new OrCondition(...$conditions);
 }
@@ -317,7 +322,7 @@ function or_(Condition ...$conditions) : OrCondition
  * Can be used in WHERE clauses and SELECT lists (via ->as('alias')).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function not_(string|Expression $expression) : NotCondition
+function not_(string|Expression $expression): NotCondition
 {
     return new NotCondition($expression instanceof Expression ? $expression : col($expression));
 }
@@ -329,7 +334,7 @@ function not_(string|Expression $expression) : NotCondition
  * Produces: metadata @> '{"category": "electronics"}'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_contains(string|Expression $left, string|Expression $right) : OperatorCondition
+function json_contains(string|Expression $left, string|Expression $right): OperatorCondition
 {
     return new OperatorCondition(
         $left instanceof Expression ? $left : col($left),
@@ -345,7 +350,7 @@ function json_contains(string|Expression $left, string|Expression $right) : Oper
  * Produces: metadata <@ '{"category": "electronics", "price": 100}'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_contained_by(string|Expression $left, string|Expression $right) : OperatorCondition
+function json_contained_by(string|Expression $left, string|Expression $right): OperatorCondition
 {
     return new OperatorCondition(
         $left instanceof Expression ? $left : col($left),
@@ -362,7 +367,7 @@ function json_contained_by(string|Expression $left, string|Expression $right) : 
  * Produces: metadata -> 'category'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_get(string|Expression $expr, string|Expression $key) : BinaryExpression
+function json_get(string|Expression $expr, string|Expression $key): BinaryExpression
 {
     return new BinaryExpression(
         $expr instanceof Expression ? $expr : col($expr),
@@ -379,7 +384,7 @@ function json_get(string|Expression $expr, string|Expression $key) : BinaryExpre
  * Produces: metadata ->> 'name'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_get_text(string|Expression $expr, string|Expression $key) : BinaryExpression
+function json_get_text(string|Expression $expr, string|Expression $key): BinaryExpression
 {
     return new BinaryExpression(
         $expr instanceof Expression ? $expr : col($expr),
@@ -396,7 +401,7 @@ function json_get_text(string|Expression $expr, string|Expression $key) : Binary
  * Produces: metadata #> '{category,name}'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_path(string|Expression $expr, string|Expression $path) : BinaryExpression
+function json_path(string|Expression $expr, string|Expression $path): BinaryExpression
 {
     return new BinaryExpression(
         $expr instanceof Expression ? $expr : col($expr),
@@ -413,7 +418,7 @@ function json_path(string|Expression $expr, string|Expression $path) : BinaryExp
  * Produces: metadata #>> '{category,name}'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_path_text(string|Expression $expr, string|Expression $path) : BinaryExpression
+function json_path_text(string|Expression $expr, string|Expression $path): BinaryExpression
 {
     return new BinaryExpression(
         $expr instanceof Expression ? $expr : col($expr),
@@ -429,7 +434,7 @@ function json_path_text(string|Expression $expr, string|Expression $path) : Bina
  * Produces: metadata ? 'category'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_exists(string|Expression $expr, string|Expression $key) : OperatorCondition
+function json_exists(string|Expression $expr, string|Expression $key): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -445,7 +450,7 @@ function json_exists(string|Expression $expr, string|Expression $key) : Operator
  * Produces: metadata ?| array['category', 'name']
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_exists_any(string|Expression $expr, string|Expression $keys) : OperatorCondition
+function json_exists_any(string|Expression $expr, string|Expression $keys): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -461,7 +466,7 @@ function json_exists_any(string|Expression $expr, string|Expression $keys) : Ope
  * Produces: metadata ?& array['category', 'name']
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function json_exists_all(string|Expression $expr, string|Expression $keys) : OperatorCondition
+function json_exists_all(string|Expression $expr, string|Expression $keys): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -477,7 +482,7 @@ function json_exists_all(string|Expression $expr, string|Expression $keys) : Ope
  * Produces: tags @> ARRAY['sale']
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function array_contains(string|Expression $left, string|Expression $right) : OperatorCondition
+function array_contains(string|Expression $left, string|Expression $right): OperatorCondition
 {
     return new OperatorCondition(
         $left instanceof Expression ? $left : col($left),
@@ -493,7 +498,7 @@ function array_contains(string|Expression $left, string|Expression $right) : Ope
  * Produces: tags <@ ARRAY['sale', 'featured', 'new']
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function array_contained_by(string|Expression $left, string|Expression $right) : OperatorCondition
+function array_contained_by(string|Expression $left, string|Expression $right): OperatorCondition
 {
     return new OperatorCondition(
         $left instanceof Expression ? $left : col($left),
@@ -509,7 +514,7 @@ function array_contained_by(string|Expression $left, string|Expression $right) :
  * Produces: tags && ARRAY['sale', 'featured']
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function array_overlap(string|Expression $left, string|Expression $right) : OperatorCondition
+function array_overlap(string|Expression $left, string|Expression $right): OperatorCondition
 {
     return new OperatorCondition(
         $left instanceof Expression ? $left : col($left),
@@ -527,7 +532,7 @@ function array_overlap(string|Expression $left, string|Expression $right) : Oper
  * Produces: email ~ '.*@gmail\.com'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function regex_match(string|Expression $expr, string|Expression $pattern) : OperatorCondition
+function regex_match(string|Expression $expr, string|Expression $pattern): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -545,7 +550,7 @@ function regex_match(string|Expression $expr, string|Expression $pattern) : Oper
  * Produces: email ~* '.*@gmail\.com'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function regex_imatch(string|Expression $expr, string|Expression $pattern) : OperatorCondition
+function regex_imatch(string|Expression $expr, string|Expression $pattern): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -563,7 +568,7 @@ function regex_imatch(string|Expression $expr, string|Expression $pattern) : Ope
  * Produces: email !~ '.*@spam\.com'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function not_regex_match(string|Expression $expr, string|Expression $pattern) : OperatorCondition
+function not_regex_match(string|Expression $expr, string|Expression $pattern): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -581,7 +586,7 @@ function not_regex_match(string|Expression $expr, string|Expression $pattern) : 
  * Produces: email !~* '.*@spam\.com'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function not_regex_imatch(string|Expression $expr, string|Expression $pattern) : OperatorCondition
+function not_regex_imatch(string|Expression $expr, string|Expression $pattern): OperatorCondition
 {
     return new OperatorCondition(
         $expr instanceof Expression ? $expr : col($expr),
@@ -597,7 +602,7 @@ function not_regex_imatch(string|Expression $expr, string|Expression $pattern) :
  * Produces: document @@ to_tsquery('english', 'hello & world')
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function text_search_match(string|Expression $document, string|Expression $query) : OperatorCondition
+function text_search_match(string|Expression $document, string|Expression $query): OperatorCondition
 {
     return new OperatorCondition(
         $document instanceof Expression ? $document : col($document),

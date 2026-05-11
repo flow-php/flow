@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Elastic\Elasticsearch\Response\Elasticsearch;
+use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\{Row, Rows};
+use Flow\ETL\Rows;
 
 final readonly class SearchResults
 {
@@ -20,10 +21,10 @@ final readonly class SearchResults
      */
     public function __construct(array|Elasticsearch $results)
     {
-        $this->results = (\is_array($results)) ? $results : $results->asArray();
+        $this->results = \is_array($results) ? $results : $results->asArray();
     }
 
-    public function lastHitSort() : ?array
+    public function lastHitSort(): ?array
     {
         if (!$this->size()) {
             return null;
@@ -36,7 +37,7 @@ final readonly class SearchResults
         return \array_key_exists('sort', $lastHit) ? $lastHit['sort'] : null;
     }
 
-    public function pages() : int
+    public function pages(): int
     {
         if ($this->size() === 0) {
             return 0;
@@ -45,12 +46,12 @@ final readonly class SearchResults
         return (int) \ceil($this->total() / $this->size());
     }
 
-    public function size() : int
+    public function size(): int
     {
         return \count($this->results['hits']['hits']);
     }
 
-    public function toRows(EntryFactory $entryFactory) : Rows
+    public function toRows(EntryFactory $entryFactory): Rows
     {
         /** @var array<Row\Entry> $entries */
         $entries = [];
@@ -62,7 +63,7 @@ final readonly class SearchResults
         return new Rows(Row::create(...$entries));
     }
 
-    public function total() : int
+    public function total(): int
     {
         return (int) $this->results['hits']['total']['value'];
     }

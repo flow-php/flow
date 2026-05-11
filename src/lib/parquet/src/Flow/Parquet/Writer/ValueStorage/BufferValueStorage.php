@@ -22,7 +22,7 @@ final class BufferValueStorage implements ValueStorage
         $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
     }
 
-    public function addValues(FlatColumn $column, array $values) : void
+    public function addValues(FlatColumn $column, array $values): void
     {
         $localBuffer = '';
         (new PlainValuesPacker(new BinaryBufferWriter($localBuffer), $this->byteOrder))->packValues($column, $values);
@@ -30,23 +30,23 @@ final class BufferValueStorage implements ValueStorage
         $this->size += \strlen($localBuffer);
     }
 
-    public function getBuffer() : string
+    public function getBuffer(): string
     {
         return $this->buffer;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->buffer === '';
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->buffer = '';
         $this->size = 0;
     }
 
-    public function size() : int
+    public function size(): int
     {
         return $this->size;
     }

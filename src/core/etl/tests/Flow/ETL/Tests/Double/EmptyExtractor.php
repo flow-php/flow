@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+
 use function Flow\ETL\DSL\rows;
-use Flow\ETL\{Extractor, FlowContext};
 
 final class EmptyExtractor implements Extractor
 {
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         yield rows();
     }

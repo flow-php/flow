@@ -11,6 +11,5 @@ final readonly class StreamErrorHandlerConfig
         public int $filePermissions,
         public bool $createDirectories,
         public string $messagePrefix,
-    ) {
-    }
+    ) {}
 }

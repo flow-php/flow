@@ -19,7 +19,7 @@ final readonly class MigrationPlanList implements \Countable, \IteratorAggregate
         $this->plans = \array_values($plans);
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->plans);
     }
@@ -27,12 +27,12 @@ final readonly class MigrationPlanList implements \Countable, \IteratorAggregate
     /**
      * @return \ArrayIterator<int, MigrationPlan>
      */
-    public function getIterator() : \ArrayIterator
+    public function getIterator(): \ArrayIterator
     {
         return new \ArrayIterator($this->plans);
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->plans === [];
     }

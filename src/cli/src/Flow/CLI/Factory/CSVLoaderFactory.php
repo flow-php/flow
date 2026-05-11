@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_bool_nullable, option_string_nullable};
-use function Flow\ETL\Adapter\CSV\to_csv;
 use Flow\ETL\Adapter\CSV\CSVLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_bool_nullable;
+use function Flow\CLI\option_string_nullable;
+use function Flow\ETL\Adapter\CSV\to_csv;
 
 final readonly class CSVLoaderFactory
 {
@@ -20,10 +22,9 @@ final readonly class CSVLoaderFactory
         private string $escapeOption = 'output-csv-escape',
         private string $newLineSeparatorOption = 'output-csv-new-line-separator',
         private string $dateTimeFormat = 'output-csv-date-time-format',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : CSVLoader
+    public function get(InputInterface $input): CSVLoader
     {
         $extractor = to_csv($this->path);
 

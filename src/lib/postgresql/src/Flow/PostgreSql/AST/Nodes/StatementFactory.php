@@ -4,7 +4,49 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes;
 
-use Flow\PostgreSql\AST\Nodes\Statement\{AlterStatement, CallStatement, CheckpointStatement, CloseStatement, ClusterStatement, CommentStatement, CopyStatement, CreateStatement, DeallocateStatement, DeclareStatement, DeleteStatement, DiscardStatement, DoStatement, DropStatement, ExecuteStatement, ExplainStatement, FetchStatement, GrantStatement, ImportStatement, IndexStatement, InsertStatement, ListenStatement, LoadStatement, LockStatement, MergeStatement, NotifyStatement, PrepareStatement, ReassignStatement, RefreshStatement, ReindexStatement, RevokeStatement, RuleStatement, SecurityLabelStatement, SelectStatement, SetStatement, ShowStatement, TransactionStatement, TruncateStatement, UnknownStatement, UnlistenStatement, UpdateStatement, VacuumStatement, ViewStatement};
+use Flow\PostgreSql\AST\Nodes\Statement\AlterStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\CallStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\CheckpointStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\CloseStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ClusterStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\CommentStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\CopyStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\CreateStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\DeallocateStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\DeclareStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\DeleteStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\DiscardStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\DoStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\DropStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ExecuteStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ExplainStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\FetchStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\GrantStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ImportStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\IndexStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\InsertStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ListenStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\LoadStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\LockStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\MergeStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\NotifyStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\PrepareStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ReassignStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\RefreshStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ReindexStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\RevokeStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\RuleStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\SecurityLabelStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\SelectStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\SetStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ShowStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\TransactionStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\TruncateStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\UnknownStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\UnlistenStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\UpdateStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\VacuumStatement;
+use Flow\PostgreSql\AST\Nodes\Statement\ViewStatement;
 use Flow\PostgreSql\Protobuf\AST\Node;
 
 final class StatementFactory
@@ -12,7 +54,7 @@ final class StatementFactory
     /**
      * @return Statement<mixed>
      */
-    public static function fromNode(Node $node) : Statement
+    public static function fromNode(Node $node): Statement
     {
         return match (true) {
             $node->getSelectStmt() !== null => new SelectStatement($node->getSelectStmt()),
@@ -20,9 +62,7 @@ final class StatementFactory
             $node->getUpdateStmt() !== null => new UpdateStatement($node->getUpdateStmt()),
             $node->getDeleteStmt() !== null => new DeleteStatement($node->getDeleteStmt()),
             $node->getMergeStmt() !== null => new MergeStatement($node->getMergeStmt()),
-
             $node->getTransactionStmt() !== null => new TransactionStatement($node->getTransactionStmt()),
-
             $node->getCreateStmt() !== null => new CreateStatement($node->getCreateStmt()),
             $node->getCreateSchemaStmt() !== null => new CreateStatement($node->getCreateSchemaStmt()),
             $node->getCreateSeqStmt() !== null => new CreateStatement($node->getCreateSeqStmt()),
@@ -53,7 +93,6 @@ final class StatementFactory
             $node->getCreateEventTrigStmt() !== null => new CreateStatement($node->getCreateEventTrigStmt()),
             $node->getCreatedbStmt() !== null => new CreateStatement($node->getCreatedbStmt()),
             $node->getCompositeTypeStmt() !== null => new CreateStatement($node->getCompositeTypeStmt()),
-
             $node->getAlterTableStmt() !== null => new AlterStatement($node->getAlterTableStmt()),
             $node->getAlterDomainStmt() !== null => new AlterStatement($node->getAlterDomainStmt()),
             $node->getAlterFunctionStmt() !== null => new AlterStatement($node->getAlterFunctionStmt()),
@@ -61,22 +100,30 @@ final class StatementFactory
             $node->getAlterRoleSetStmt() !== null => new AlterStatement($node->getAlterRoleSetStmt()),
             $node->getAlterDatabaseStmt() !== null => new AlterStatement($node->getAlterDatabaseStmt()),
             $node->getAlterDatabaseSetStmt() !== null => new AlterStatement($node->getAlterDatabaseSetStmt()),
-            $node->getAlterDatabaseRefreshCollStmt() !== null => new AlterStatement($node->getAlterDatabaseRefreshCollStmt()),
+            $node->getAlterDatabaseRefreshCollStmt() !== null => new AlterStatement(
+                $node->getAlterDatabaseRefreshCollStmt(),
+            ),
             $node->getAlterSeqStmt() !== null => new AlterStatement($node->getAlterSeqStmt()),
             $node->getAlterOwnerStmt() !== null => new AlterStatement($node->getAlterOwnerStmt()),
             $node->getAlterObjectSchemaStmt() !== null => new AlterStatement($node->getAlterObjectSchemaStmt()),
             $node->getAlterObjectDependsStmt() !== null => new AlterStatement($node->getAlterObjectDependsStmt()),
             $node->getAlterExtensionStmt() !== null => new AlterStatement($node->getAlterExtensionStmt()),
-            $node->getAlterExtensionContentsStmt() !== null => new AlterStatement($node->getAlterExtensionContentsStmt()),
+            $node->getAlterExtensionContentsStmt() !== null => new AlterStatement(
+                $node->getAlterExtensionContentsStmt(),
+            ),
             $node->getAlterFdwStmt() !== null => new AlterStatement($node->getAlterFdwStmt()),
             $node->getAlterForeignServerStmt() !== null => new AlterStatement($node->getAlterForeignServerStmt()),
             $node->getAlterUserMappingStmt() !== null => new AlterStatement($node->getAlterUserMappingStmt()),
-            $node->getAlterTableSpaceOptionsStmt() !== null => new AlterStatement($node->getAlterTableSpaceOptionsStmt()),
+            $node->getAlterTableSpaceOptionsStmt() !== null => new AlterStatement(
+                $node->getAlterTableSpaceOptionsStmt(),
+            ),
             $node->getAlterTableMoveAllStmt() !== null => new AlterStatement($node->getAlterTableMoveAllStmt()),
             $node->getAlterPolicyStmt() !== null => new AlterStatement($node->getAlterPolicyStmt()),
             $node->getAlterPublicationStmt() !== null => new AlterStatement($node->getAlterPublicationStmt()),
             $node->getAlterSubscriptionStmt() !== null => new AlterStatement($node->getAlterSubscriptionStmt()),
-            $node->getAlterDefaultPrivilegesStmt() !== null => new AlterStatement($node->getAlterDefaultPrivilegesStmt()),
+            $node->getAlterDefaultPrivilegesStmt() !== null => new AlterStatement(
+                $node->getAlterDefaultPrivilegesStmt(),
+            ),
             $node->getAlterCollationStmt() !== null => new AlterStatement($node->getAlterCollationStmt()),
             $node->getAlterEnumStmt() !== null => new AlterStatement($node->getAlterEnumStmt()),
             $node->getAlterOperatorStmt() !== null => new AlterStatement($node->getAlterOperatorStmt()),
@@ -86,7 +133,6 @@ final class StatementFactory
             $node->getAlterEventTrigStmt() !== null => new AlterStatement($node->getAlterEventTrigStmt()),
             $node->getAlterStatsStmt() !== null => new AlterStatement($node->getAlterStatsStmt()),
             $node->getRenameStmt() !== null => new AlterStatement($node->getRenameStmt()),
-
             $node->getDropStmt() !== null => new DropStatement($node->getDropStmt()),
             $node->getDropRoleStmt() !== null => new DropStatement($node->getDropRoleStmt()),
             $node->getDropdbStmt() !== null => new DropStatement($node->getDropdbStmt()),
@@ -94,12 +140,10 @@ final class StatementFactory
             $node->getDropUserMappingStmt() !== null => new DropStatement($node->getDropUserMappingStmt()),
             $node->getDropOwnedStmt() !== null => new DropStatement($node->getDropOwnedStmt()),
             $node->getDropSubscriptionStmt() !== null => new DropStatement($node->getDropSubscriptionStmt()),
-
             $node->getTruncateStmt() !== null => new TruncateStatement($node->getTruncateStmt()),
             $node->getIndexStmt() !== null => new IndexStatement($node->getIndexStmt()),
             $node->getViewStmt() !== null => new ViewStatement($node->getViewStmt()),
             $node->getRuleStmt() !== null => new RuleStatement($node->getRuleStmt()),
-
             $node->getCopyStmt() !== null => new CopyStatement($node->getCopyStmt()),
             $node->getExplainStmt() !== null => new ExplainStatement($node->getExplainStmt()),
             $node->getVacuumStmt() !== null => new VacuumStatement($node->getVacuumStmt()),
@@ -114,31 +158,23 @@ final class StatementFactory
             $node->getRefreshMatViewStmt() !== null => new RefreshStatement($node->getRefreshMatViewStmt()),
             $node->getReassignOwnedStmt() !== null => new ReassignStatement($node->getReassignOwnedStmt()),
             $node->getImportForeignSchemaStmt() !== null => new ImportStatement($node->getImportForeignSchemaStmt()),
-
             $node->getGrantStmt() !== null => self::createGrantOrRevokeStatement($node),
             $node->getGrantRoleStmt() !== null => self::createGrantRoleStatement($node),
-
             $node->getPrepareStmt() !== null => new PrepareStatement($node->getPrepareStmt()),
             $node->getExecuteStmt() !== null => new ExecuteStatement($node->getExecuteStmt()),
             $node->getDeallocateStmt() !== null => new DeallocateStatement($node->getDeallocateStmt()),
-
             $node->getDeclareCursorStmt() !== null => new DeclareStatement($node->getDeclareCursorStmt()),
             $node->getFetchStmt() !== null => new FetchStatement($node->getFetchStmt()),
             $node->getClosePortalStmt() !== null => new CloseStatement($node->getClosePortalStmt()),
-
             $node->getListenStmt() !== null => new ListenStatement($node->getListenStmt()),
             $node->getUnlistenStmt() !== null => new UnlistenStatement($node->getUnlistenStmt()),
             $node->getNotifyStmt() !== null => new NotifyStatement($node->getNotifyStmt()),
-
             $node->getVariableSetStmt() !== null => new SetStatement($node->getVariableSetStmt()),
             $node->getVariableShowStmt() !== null => new ShowStatement($node->getVariableShowStmt()),
             $node->getConstraintsSetStmt() !== null => new SetStatement($node->getConstraintsSetStmt()),
-
             $node->getSecLabelStmt() !== null => new SecurityLabelStatement($node->getSecLabelStmt()),
             $node->getCommentStmt() !== null => new CommentStatement($node->getCommentStmt()),
-
             $node->getDefineStmt() !== null => new CreateStatement($node->getDefineStmt()),
-
             default => new UnknownStatement($node),
         };
     }
@@ -146,7 +182,7 @@ final class StatementFactory
     /**
      * @return Statement<mixed>
      */
-    private static function createGrantOrRevokeStatement(Node $node) : Statement
+    private static function createGrantOrRevokeStatement(Node $node): Statement
     {
         $grantStmt = $node->getGrantStmt();
 
@@ -164,7 +200,7 @@ final class StatementFactory
     /**
      * @return Statement<mixed>
      */
-    private static function createGrantRoleStatement(Node $node) : Statement
+    private static function createGrantRoleStatement(Node $node): Statement
     {
         $grantRoleStmt = $node->getGrantRoleStmt();
 

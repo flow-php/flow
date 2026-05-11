@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, RangeSubselect};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidTableException};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidTableException;
 
 /**
  * Represents a LATERAL subquery or function reference.
@@ -18,10 +20,9 @@ final readonly class Lateral implements TableReference
      */
     public function __construct(
         private TableReference $reference,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeSubselect = $node->getRangeSubselect();
         $rangeFunction = $node->getRangeFunction();
@@ -57,17 +58,17 @@ final readonly class Lateral implements TableReference
         throw InvalidAstException::unexpectedNodeType('RangeSubselect or RangeFunction with lateral=true', 'unknown');
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function getReference() : TableReference
+    public function getReference(): TableReference
     {
         return $this->reference;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $referenceNode = $this->reference->toAst();
 
@@ -87,6 +88,9 @@ final readonly class Lateral implements TableReference
             return $referenceNode;
         }
 
-        throw InvalidTableException::invalidType('SubqueryReference or TableFunction', \get_debug_type($this->reference));
+        throw InvalidTableException::invalidType(
+            'SubqueryReference or TableFunction',
+            \get_debug_type($this->reference),
+        );
     }
 }

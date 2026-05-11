@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-use Flow\Telemetry\Context\{SpanId, TraceId};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
 
 /**
  * Represents a sample measurement with trace context.
@@ -39,8 +40,7 @@ final readonly class Exemplar
         public TraceId $traceId,
         public SpanId $spanId,
         public array $filteredAttributes = [],
-    ) {
-    }
+    ) {}
 
     /**
      * Create an Exemplar from a normalized array representation.
@@ -53,7 +53,7 @@ final readonly class Exemplar
      *     filteredAttributes: array<string, bool|float|int|string>
      * } $data Normalized Exemplar data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             $data['value'],
@@ -75,7 +75,7 @@ final readonly class Exemplar
      *     filteredAttributes: array<string, bool|float|int|string>
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'value' => $this->value,

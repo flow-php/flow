@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Command;
 
-use function Flow\CLI\option_bool;
-use function Flow\ETL\DSL\{schema_from_json, schema_to_json};
 use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\ConfigOptions;
 use Flow\CLI\Options\ConfigOption;
-use Flow\ETL\{Config, Row\Formatter\ASCIISchemaFormatter, Schema\Formatter\PHPSchemaFormatter};
+use Flow\ETL\Config;
+use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function Flow\CLI\option_bool;
+use function Flow\ETL\DSL\schema_from_json;
+use function Flow\ETL\DSL\schema_to_json;
 
 final class SchemaFormatCommand extends Command
 {
@@ -24,7 +30,7 @@ final class SchemaFormatCommand extends Command
 
     private ?Path $schemaPath = null;
 
-    public function configure() : void
+    public function configure(): void
     {
         $this
             ->setName('schema:format')
@@ -37,11 +43,13 @@ final class SchemaFormatCommand extends Command
         $this->addConfigOptions($this);
     }
 
-    public function execute(InputInterface $input, OutputInterface $output) : int
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
 
-        $schema = schema_from_json($this->flowConfig->fstab()->for($this->schemaPath)->readFrom($this->schemaPath)->content());
+        $schema = schema_from_json(
+            $this->flowConfig->fstab()->for($this->schemaPath)->readFrom($this->schemaPath)->content(),
+        );
 
         if (option_bool('output-ascii', $input)) {
             $style->write((new ASCIISchemaFormatter())->format($schema));
@@ -66,7 +74,7 @@ final class SchemaFormatCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output) : void
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
         $this->schemaPath = (new FilePathArgument('input-schema-file'))->getExisting($input, $this->flowConfig);

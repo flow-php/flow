@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Processor, Row, Rows};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\WindowFunction;
+use Flow\ETL\Processor;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
 
 /**
@@ -22,10 +25,9 @@ final readonly class WindowProcessor implements Processor
     public function __construct(
         private string|Definition $entry,
         private WindowFunction $function,
-    ) {
-    }
+    ) {}
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         $currentPartitionKey = null;
         /** @var array<Row> $partitionRows */
@@ -60,7 +62,7 @@ final readonly class WindowProcessor implements Processor
         }
     }
 
-    private function extractPartitionKey(Row $row) : string
+    private function extractPartitionKey(Row $row): string
     {
         $partitions = $this->function->window()->partitions();
 
@@ -84,7 +86,7 @@ final readonly class WindowProcessor implements Processor
     /**
      * @param array<Row> $rows
      */
-    private function processPartition(array $rows, FlowContext $context) : Rows
+    private function processPartition(array $rows, FlowContext $context): Rows
     {
         if ([] === $rows) {
             return new Rows();
@@ -103,17 +105,13 @@ final readonly class WindowProcessor implements Processor
         foreach ($partitionRows as $row) {
             $value = $this->function->apply($row, $partitionRows, $context);
 
-            $entryName = $this->entry instanceof Definition
-                ? $this->entry->entry()->name()
-                : $this->entry;
+            $entryName = $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
 
-            $newRow = $row->add(
-                $context->entryFactory()->create(
-                    $entryName,
-                    $value,
-                    $this->entry instanceof Definition ? $this->entry : null
-                )
-            );
+            $newRow = $row->add($context->entryFactory()->create(
+                $entryName,
+                $value,
+                $this->entry instanceof Definition ? $this->entry : null,
+            ));
 
             $processedRows[] = $newRow;
         }

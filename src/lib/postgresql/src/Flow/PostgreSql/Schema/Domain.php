@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use function Flow\PostgreSql\DSL\create;
-
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
+
+use function Flow\PostgreSql\DSL\create;
 
 /**
  * @phpstan-import-type ColumnTypeShape from ColumnType
@@ -30,8 +31,7 @@ final readonly class Domain
         public bool $nullable = true,
         public ?string $default = null,
         public array $checkConstraints = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<CheckConstraint> $checkConstraints
@@ -42,7 +42,7 @@ final readonly class Domain
         bool $nullable = true,
         bool|float|int|string|Expression|null $default = null,
         array $checkConstraints = [],
-    ) : self {
+    ): self {
         return new self(
             $name,
             $baseType,
@@ -55,24 +55,23 @@ final readonly class Domain
     /**
      * @param DomainShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
             baseType: ColumnType::fromArray($data['base_type']),
             nullable: $data['nullable'] ?? true,
             default: $data['default'] ?? null,
-            checkConstraints: \array_map(
-                static fn (array $cc) : CheckConstraint => CheckConstraint::fromArray($cc),
-                $data['check_constraints'] ?? [],
-            ),
+            checkConstraints: \array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
+                $cc,
+            ), $data['check_constraints'] ?? []),
         );
     }
 
     /**
      * @return DomainShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -80,13 +79,13 @@ final readonly class Domain
             'nullable' => $this->nullable,
             'default' => $this->default,
             'check_constraints' => \array_map(
-                static fn (CheckConstraint $cc) : array => $cc->normalize(),
+                static fn(CheckConstraint $cc): array => $cc->normalize(),
                 $this->checkConstraints,
             ),
         ];
     }
 
-    public function toSql() : Sql
+    public function toSql(): Sql
     {
         $builder = create()->domain($this->name)->as($this->baseType);
 

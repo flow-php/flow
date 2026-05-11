@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-enum TriggerTiming : string
+enum TriggerTiming: string
 {
     case AFTER = 'AFTER';
     case BEFORE = 'BEFORE';

@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterRoleStmt, DefElem, Integer, Node, PBString, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\AlterRoleStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleFinalStep
@@ -17,100 +23,99 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
     private function __construct(
         private string $name,
         private array $options = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : AlterRoleActionStep
+    public static function create(string $name): AlterRoleActionStep
     {
         return new self($name);
     }
 
-    public function bypassRls() : AlterRoleFinalStep
+    public function bypassRls(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::BYPASSRLS->value, true);
     }
 
-    public function connectionLimit(int $limit) : AlterRoleFinalStep
+    public function connectionLimit(int $limit): AlterRoleFinalStep
     {
         return $this->withIntegerOption('connectionlimit', $limit);
     }
 
-    public function createDb() : AlterRoleFinalStep
+    public function createDb(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::CREATEDB->value, true);
     }
 
-    public function createRole() : AlterRoleFinalStep
+    public function createRole(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::CREATEROLE->value, true);
     }
 
-    public function inherit() : AlterRoleFinalStep
+    public function inherit(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::INHERIT->value, true);
     }
 
-    public function login() : AlterRoleFinalStep
+    public function login(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::LOGIN->value, true);
     }
 
-    public function noBypassRls() : AlterRoleFinalStep
+    public function noBypassRls(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::BYPASSRLS->value, false);
     }
 
-    public function noCreateDb() : AlterRoleFinalStep
+    public function noCreateDb(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::CREATEDB->value, false);
     }
 
-    public function noCreateRole() : AlterRoleFinalStep
+    public function noCreateRole(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::CREATEROLE->value, false);
     }
 
-    public function noInherit() : AlterRoleFinalStep
+    public function noInherit(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::INHERIT->value, false);
     }
 
-    public function noLogin() : AlterRoleFinalStep
+    public function noLogin(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::LOGIN->value, false);
     }
 
-    public function noReplication() : AlterRoleFinalStep
+    public function noReplication(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::REPLICATION->value, false);
     }
 
-    public function noSuperuser() : AlterRoleFinalStep
+    public function noSuperuser(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::SUPERUSER->value, false);
     }
 
-    public function renameTo(string $newName) : AlterRoleRenameFinalStep
+    public function renameTo(string $newName): AlterRoleRenameFinalStep
     {
         return AlterRoleRenameBuilder::create($this->name, $newName);
     }
 
-    public function replication() : AlterRoleFinalStep
+    public function replication(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::REPLICATION->value, true);
     }
 
-    public function set() : AlterRoleFinalStep
+    public function set(): AlterRoleFinalStep
     {
         return $this;
     }
 
-    public function superuser() : AlterRoleFinalStep
+    public function superuser(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::SUPERUSER->value, true);
     }
 
-    public function toAst() : AlterRoleStmt
+    public function toAst(): AlterRoleStmt
     {
         $stmt = new AlterRoleStmt();
 
@@ -143,17 +148,17 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
         return $stmt;
     }
 
-    public function validUntil(string $timestamp) : AlterRoleFinalStep
+    public function validUntil(string $timestamp): AlterRoleFinalStep
     {
         return $this->withStringOption('validUntil', $timestamp);
     }
 
-    public function withPassword(string $password) : AlterRoleFinalStep
+    public function withPassword(#[\SensitiveParameter] string $password): AlterRoleFinalStep
     {
         return $this->withStringOption('password', $password);
     }
 
-    private function withBooleanOption(string $name, bool $value) : self
+    private function withBooleanOption(string $name, bool $value): self
     {
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
@@ -165,7 +170,7 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
         return $this->withOption($name, $argNode);
     }
 
-    private function withIntegerOption(string $name, int $value) : self
+    private function withIntegerOption(string $name, int $value): self
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -177,18 +182,15 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $newOptions,
-        );
+        return new self($this->name, $newOptions);
     }
 
-    private function withStringOption(string $name, string $value) : self
+    private function withStringOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);

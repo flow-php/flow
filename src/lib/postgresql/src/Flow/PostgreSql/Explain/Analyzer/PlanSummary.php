@@ -26,8 +26,7 @@ final readonly class PlanSummary
         public bool $hasTempSpill,
         public int $estimatedRows,
         public ?int $actualRows,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array{
@@ -52,7 +51,7 @@ final readonly class PlanSummary
      *     actual_rows: ?int
      * } $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             totalCost: $data['total_cost'],
@@ -100,7 +99,7 @@ final readonly class PlanSummary
      *     actual_rows: ?int
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'total_cost' => $this->totalCost,

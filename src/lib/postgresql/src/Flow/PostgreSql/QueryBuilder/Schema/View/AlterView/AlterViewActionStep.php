@@ -6,11 +6,11 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterView;
 
 interface AlterViewActionStep
 {
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function ownerTo(string $owner) : AlterViewOwnerFinalStep;
+    public function ownerTo(string $owner): AlterViewOwnerFinalStep;
 
-    public function renameTo(string $newName) : RenameViewFinalStep;
+    public function renameTo(string $newName): RenameViewFinalStep;
 
-    public function setSchema(string $schema) : AlterViewSchemaFinalStep;
+    public function setSchema(string $schema): AlterViewSchemaFinalStep;
 }

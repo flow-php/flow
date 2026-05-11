@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql;
 
-use Flow\PostgreSql\AST\{NodeModifier, NodeVisitor, Traverser};
-use Flow\PostgreSql\AST\Nodes\{StatementFactory, Statements};
+use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\AST\Nodes\StatementFactory;
+use Flow\PostgreSql\AST\Nodes\Statements;
+use Flow\PostgreSql\AST\NodeVisitor;
+use Flow\PostgreSql\AST\Traverser;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 
 final readonly class ParsedQuery
 {
     public function __construct(
         private ParseResult $parseResult,
-    ) {
-    }
+    ) {}
 
     /**
      * Convert the parsed AST back to SQL string.
@@ -23,7 +25,7 @@ final readonly class ParsedQuery
      *
      * @throws \RuntimeException if deparsing fails
      */
-    public function deparse(?DeparseOptions $options = null) : string
+    public function deparse(?DeparseOptions $options = null): string
     {
         if ($options === null) {
             return \pg_query_deparse($this->parseResult->serializeToString());
@@ -35,16 +37,16 @@ final readonly class ParsedQuery
             $options->getIndentSize(),
             $options->getMaxLineLength(),
             $options->hasTrailingNewline(),
-            $options->commasAtStartOfLine()
+            $options->commasAtStartOfLine(),
         );
     }
 
-    public function raw() : ParseResult
+    public function raw(): ParseResult
     {
         return $this->parseResult;
     }
 
-    public function statements() : Statements
+    public function statements(): Statements
     {
         $statements = [];
 
@@ -65,7 +67,7 @@ final readonly class ParsedQuery
      * Visitors collect information (read-only), modifiers mutate nodes.
      * Returns $this to allow method chaining.
      */
-    public function traverse(NodeVisitor|NodeModifier ...$handlers) : self
+    public function traverse(NodeVisitor|NodeModifier ...$handlers): self
     {
         $traverser = new Traverser(...$handlers);
         $traverser->traverse($this->parseResult);

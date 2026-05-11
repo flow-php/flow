@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateRangeTypeFinalStep extends Sql
 {
-    public function toAst() : CreateRangeStmt;
+    public function toAst(): CreateRangeStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

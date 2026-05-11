@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_int_nullable, option_string_nullable};
-use function Flow\ETL\Adapter\XML\from_xml;
 use Flow\ETL\Adapter\XML\XMLParserExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_int_nullable;
+use function Flow\CLI\option_string_nullable;
+use function Flow\ETL\Adapter\XML\from_xml;
 
 final readonly class XMLExtractorFactory
 {
@@ -16,10 +18,9 @@ final readonly class XMLExtractorFactory
         private Path $path,
         private string $nodePathOption = 'input-xml-node-path',
         private string $bufferSizeOption = 'input-xml-buffer-size',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : XMLParserExtractor
+    public function get(InputInterface $input): XMLParserExtractor
     {
         $extractor = from_xml($this->path);
 

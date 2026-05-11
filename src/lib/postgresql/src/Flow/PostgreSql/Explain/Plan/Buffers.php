@@ -20,13 +20,12 @@ final readonly class Buffers
         private int $localWritten,
         private int $tempRead,
         private int $tempWritten,
-    ) {
-    }
+    ) {}
 
     /**
      * @param BuffersShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             sharedHit: $data['shared_hit'],
@@ -42,34 +41,34 @@ final readonly class Buffers
         );
     }
 
-    public function hasDiskSpill() : bool
+    public function hasDiskSpill(): bool
     {
         return $this->tempRead > 0 || $this->tempWritten > 0;
     }
 
-    public function hitRatio() : float
+    public function hitRatio(): float
     {
         $total = $this->totalSharedBlocks();
 
         return $total > 0 ? $this->sharedHit / $total : 1.0;
     }
 
-    public function localDirtied() : int
+    public function localDirtied(): int
     {
         return $this->localDirtied;
     }
 
-    public function localHit() : int
+    public function localHit(): int
     {
         return $this->localHit;
     }
 
-    public function localRead() : int
+    public function localRead(): int
     {
         return $this->localRead;
     }
 
-    public function localWritten() : int
+    public function localWritten(): int
     {
         return $this->localWritten;
     }
@@ -77,7 +76,7 @@ final readonly class Buffers
     /**
      * @return BuffersShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'shared_hit' => $this->sharedHit,
@@ -93,42 +92,42 @@ final readonly class Buffers
         ];
     }
 
-    public function sharedDirtied() : int
+    public function sharedDirtied(): int
     {
         return $this->sharedDirtied;
     }
 
-    public function sharedHit() : int
+    public function sharedHit(): int
     {
         return $this->sharedHit;
     }
 
-    public function sharedRead() : int
+    public function sharedRead(): int
     {
         return $this->sharedRead;
     }
 
-    public function sharedWritten() : int
+    public function sharedWritten(): int
     {
         return $this->sharedWritten;
     }
 
-    public function tempBlocks() : int
+    public function tempBlocks(): int
     {
         return $this->tempRead + $this->tempWritten;
     }
 
-    public function tempRead() : int
+    public function tempRead(): int
     {
         return $this->tempRead;
     }
 
-    public function tempWritten() : int
+    public function tempWritten(): int
     {
         return $this->tempWritten;
     }
 
-    public function totalSharedBlocks() : int
+    public function totalSharedBlocks(): int
     {
         return $this->sharedHit + $this->sharedRead;
     }

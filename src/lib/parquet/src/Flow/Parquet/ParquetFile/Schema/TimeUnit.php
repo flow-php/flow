@@ -8,5 +8,6 @@ enum TimeUnit
 {
     // case MILLISECONDS; Not Implemented yet
     case MICROSECONDS;
+
     // case NANOSECONDS; PHP Does not support nanoseconds
 }

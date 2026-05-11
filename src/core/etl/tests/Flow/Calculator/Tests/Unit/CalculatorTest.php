@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Calculator\Tests\Unit;
 
-use Flow\Calculator\{Calculator, Rounding};
+use Flow\Calculator\Calculator;
+use Flow\Calculator\Rounding;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -13,11 +14,9 @@ final class CalculatorTest extends TestCase
     #[TestWith(['1', '1', 2])]
     #[TestWith([1, 1, 2])]
     #[TestWith([1.0, 1.0, 2])]
-
     #[TestWith([1.1, 1.1, 2.2])]
     #[TestWith([1.1, 1.1, 2.2])]
     #[TestWith([1.1, '1.1', 2.2])]
-
     #[TestWith([1.123456, 1.123456, 2.246912])]
     #[TestWith(['3.23E-5', '3.23E-5', 0.0000646])]
     #[TestWith(['3.23E-5', '3.23e-5', 0.0000646])]
@@ -27,7 +26,7 @@ final class CalculatorTest extends TestCase
      * @param float|int|numeric-string $b
      * @param float|int $output
      */
-    public function test_add(string|int|float $a, string|int|float $b, int|float $output) : void
+    public function test_add(string|int|float $a, string|int|float $b, int|float $output): void
     {
         if (is_string($a)) {
             assert(is_numeric($a), 'String parameter $a must be numeric');
@@ -37,7 +36,7 @@ final class CalculatorTest extends TestCase
             assert(is_numeric($b), 'String parameter $b must be numeric');
         }
 
-        self::assertSame($output, (new Calculator())->add($a, $b));
+        static::assertSame($output, (new Calculator())->add($a, $b));
     }
 
     #[TestWith(['1', '1', 1])]
@@ -55,7 +54,7 @@ final class CalculatorTest extends TestCase
      * @param float|int|numeric-string $b
      * @param float|int $output
      */
-    public function test_divide(string|int|float $a, string|int|float $b, int|float $output) : void
+    public function test_divide(string|int|float $a, string|int|float $b, int|float $output): void
     {
         if (is_string($a)) {
             assert(is_numeric($a), 'String parameter $a must be numeric');
@@ -65,10 +64,10 @@ final class CalculatorTest extends TestCase
             assert(is_numeric($b), 'String parameter $b must be numeric');
         }
 
-        self::assertSame($output, (new Calculator())->divide($a, $b, rounding: Rounding::HALF_UP));
+        static::assertSame($output, (new Calculator())->divide($a, $b, rounding: Rounding::HALF_UP));
     }
 
-    public function test_divide_by_zero() : void
+    public function test_divide_by_zero(): void
     {
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
@@ -76,7 +75,7 @@ final class CalculatorTest extends TestCase
         (new Calculator())->divide(1, 0);
     }
 
-    public function test_divide_by_zero_as_float() : void
+    public function test_divide_by_zero_as_float(): void
     {
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
@@ -84,7 +83,7 @@ final class CalculatorTest extends TestCase
         (new Calculator())->divide(1, 0.0);
     }
 
-    public function test_divide_by_zero_as_string() : void
+    public function test_divide_by_zero_as_string(): void
     {
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
@@ -99,7 +98,7 @@ final class CalculatorTest extends TestCase
      * @param int|numeric-string $b
      * @param float|int $output
      */
-    public function test_modulus(string|int $a, string|int $b, int|float $output) : void
+    public function test_modulus(string|int $a, string|int $b, int|float $output): void
     {
         if (is_string($a)) {
             assert(is_numeric($a), 'String parameter $a must be numeric');
@@ -109,7 +108,7 @@ final class CalculatorTest extends TestCase
             assert(is_numeric($b), 'String parameter $b must be numeric');
         }
 
-        self::assertSame($output, (new Calculator())->modulus($a, $b));
+        static::assertSame($output, (new Calculator())->modulus($a, $b));
     }
 
     #[TestWith(['1', '1', 1])]
@@ -123,7 +122,7 @@ final class CalculatorTest extends TestCase
      * @param int|numeric-string $b
      * @param float|int $output
      */
-    public function test_power(string|int|float $a, string|int $b, int|float $output) : void
+    public function test_power(string|int|float $a, string|int $b, int|float $output): void
     {
         if (is_string($a)) {
             assert(is_numeric($a), 'String parameter $a must be numeric');
@@ -133,7 +132,7 @@ final class CalculatorTest extends TestCase
             assert(is_numeric($b), 'String parameter $b must be numeric');
         }
 
-        self::assertSame($output, (new Calculator())->power($a, $b));
+        static::assertSame($output, (new Calculator())->power($a, $b));
     }
 
     #[TestWith(['1', '1', 0, 0])]
@@ -153,7 +152,7 @@ final class CalculatorTest extends TestCase
      * @param int $scale
      * @param float|int $output
      */
-    public function test_subtract(string|int|float $a, string|int|float $b, int $scale, int|float $output) : void
+    public function test_subtract(string|int|float $a, string|int|float $b, int $scale, int|float $output): void
     {
         if (is_string($a)) {
             assert(is_numeric($a), 'String parameter $a must be numeric');
@@ -163,6 +162,6 @@ final class CalculatorTest extends TestCase
             assert(is_numeric($b), 'String parameter $b must be numeric');
         }
 
-        self::assertSame($output, (new Calculator())->subtract($a, $b));
+        static::assertSame($output, (new Calculator())->subtract($a, $b));
     }
 }

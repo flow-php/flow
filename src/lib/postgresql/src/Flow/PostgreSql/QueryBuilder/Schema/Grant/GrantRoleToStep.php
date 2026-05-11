@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
 interface GrantRoleToStep
 {
-    public function to(string ...$roles) : GrantRoleFinalStep;
+    public function to(string ...$roles): GrantRoleFinalStep;
 }

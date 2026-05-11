@@ -11,29 +11,29 @@ use Flow\Types\Type;
  */
 final class MixedType implements Type
 {
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value): mixed
     {
         return $value;
     }
 
-    public function cast(mixed $value) : mixed
+    public function cast(mixed $value): mixed
     {
         return $value;
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return true;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'mixed',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'mixed';
     }

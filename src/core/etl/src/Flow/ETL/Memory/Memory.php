@@ -9,14 +9,14 @@ interface Memory
     /**
      * @return array<self>
      */
-    public function chunks(int $size) : array;
+    public function chunks(int $size): array;
 
-    public function count() : int;
+    public function count(): int;
 
     /**
      * @return array<array<string, mixed>>
      */
-    public function dump() : array;
+    public function dump(): array;
 
     /**
      * This method is a combination of array_map and array_values functions.
@@ -26,17 +26,17 @@ interface Memory
      *
      * @return array<mixed>
      */
-    public function flatValues() : array;
+    public function flatValues(): array;
 
     /**
      * @param callable(array<string, mixed>) : mixed $callback
      *
      * @return array<mixed>
      */
-    public function map(callable $callback) : array;
+    public function map(callable $callback): array;
 
     /**
      * @param array<array<string, mixed>> $data
      */
-    public function save(array $data) : void;
+    public function save(array $data): void;
 }

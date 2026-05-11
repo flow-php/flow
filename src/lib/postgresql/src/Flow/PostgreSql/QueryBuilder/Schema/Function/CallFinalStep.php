@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CallFinalStep extends Sql
 {
-    public function toAst() : CallStmt;
+    public function toAst(): CallStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function with(mixed ...$args) : self;
+    public function with(mixed ...$args): self;
 }

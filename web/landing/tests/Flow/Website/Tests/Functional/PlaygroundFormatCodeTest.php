@@ -6,7 +6,7 @@ namespace Flow\Website\Tests\Functional;
 
 final class PlaygroundFormatCodeTest extends EndToEndTestCase
 {
-    public function test_format_unformatted_code() : void
+    public function test_format_unformatted_code(): void
     {
         $client = self::navigateWithRetry('/playground');
 
@@ -17,7 +17,7 @@ final class PlaygroundFormatCodeTest extends EndToEndTestCase
         $client->executeScript('document.getElementById("action-format").click();');
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'formatted', 10);
 
-        self::assertStringContainsString("'id' => 1", $this->getPlaygroundCode($client));
-        self::assertStringNotContainsString("'id'=>1", $this->getPlaygroundCode($client));
+        static::assertStringContainsString("'id' => 1", $this->getPlaygroundCode($client));
+        static::assertStringNotContainsString("'id'=>1", $this->getPlaygroundCode($client));
     }
 }

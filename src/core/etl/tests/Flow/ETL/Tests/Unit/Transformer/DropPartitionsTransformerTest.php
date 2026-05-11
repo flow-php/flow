@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{array_to_rows, config, flow_context, ref};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DropPartitionsTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+
 final class DropPartitionsTransformerTest extends FlowTestCase
 {
-    public function test_dropping_partitions() : void
+    public function test_dropping_partitions(): void
     {
         $partitioned = array_to_rows([
             ['id' => 1, 'name' => 'one', 'category' => 'a'],
@@ -26,15 +30,15 @@ final class DropPartitionsTransformerTest extends FlowTestCase
         ], flow_context(config())->entryFactory())->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
-            self::assertTrue($rows->isPartitioned());
+            static::assertTrue($rows->isPartitioned());
 
             $notPartitioned = (new DropPartitionsTransformer())->transform($rows, flow_context());
 
-            self::assertFalse($notPartitioned->isPartitioned());
+            static::assertFalse($notPartitioned->isPartitioned());
         }
     }
 
-    public function test_dropping_partitions_with_columns() : void
+    public function test_dropping_partitions_with_columns(): void
     {
         $partitioned = array_to_rows([
             ['id' => 1, 'name' => 'one', 'category' => 'a'],
@@ -50,16 +54,16 @@ final class DropPartitionsTransformerTest extends FlowTestCase
         ], flow_context(config())->entryFactory())->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
-            self::assertTrue($rows->isPartitioned());
+            static::assertTrue($rows->isPartitioned());
 
             $notPartitioned = (new DropPartitionsTransformer(true))->transform($rows, flow_context());
 
-            self::assertFalse($notPartitioned->isPartitioned());
-            self::assertFalse($notPartitioned->first()->has('category'));
+            static::assertFalse($notPartitioned->isPartitioned());
+            static::assertFalse($notPartitioned->first()->has('category'));
         }
     }
 
-    public function test_transforming_not_partitioned_rows() : void
+    public function test_transforming_not_partitioned_rows(): void
     {
         $rows = array_to_rows([
             ['id' => 1, 'name' => 'one', 'category' => 'a'],
@@ -74,9 +78,6 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
         ], flow_context(config())->entryFactory());
 
-        self::assertSame(
-            $rows,
-            (new DropPartitionsTransformer())->transform($rows, flow_context())
-        );
+        static::assertSame($rows, (new DropPartitionsTransformer())->transform($rows, flow_context()));
     }
 }

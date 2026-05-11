@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\Schema;
 
 interface CatalogProvider
 {
-    public function get() : Catalog;
+    public function get(): Catalog;
 }

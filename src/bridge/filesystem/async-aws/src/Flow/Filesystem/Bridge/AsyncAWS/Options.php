@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
-use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
+
+use function Flow\Filesystem\DSL\path;
 
 final class Options
 {
@@ -26,29 +27,29 @@ final class Options
         $this->tmpDir = path('aws-s3://_$azure_flow_tmp$/');
     }
 
-    public function blockFactory() : BlockFactory
+    public function blockFactory(): BlockFactory
     {
         return $this->blockFactory;
     }
 
-    public function fileFastPath() : bool
+    public function fileFastPath(): bool
     {
         return $this->fileFastPath;
     }
 
-    public function partSize() : int
+    public function partSize(): int
     {
         return $this->partSize;
     }
 
-    public function tmpDir() : Path
+    public function tmpDir(): Path
     {
         return $this->tmpDir;
     }
 
-    public function withBlockSize(int $bytes) : self
+    public function withBlockSize(int $bytes): self
     {
-        if ($bytes <= 1024 * 1024 * 5) {
+        if ($bytes <= (1024 * 1024 * 5)) {
             throw new InvalidArgumentException('Block size must be greater than 5Mb');
         }
 
@@ -63,7 +64,7 @@ final class Options
      * This avoids the s3:ListBucket permission requirement and an extra round-trip when reading single files.
      * Disable if your workloads typically pass folder/prefix paths to list(), to skip the (failing) HEAD.
      */
-    public function withFileFastPath(bool $enabled = true) : self
+    public function withFileFastPath(bool $enabled = true): self
     {
         $this->fileFastPath = $enabled;
 

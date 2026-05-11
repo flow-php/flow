@@ -30,5 +30,5 @@ interface ExemplarFilter extends \Stringable
      * @param float|int $value The measurement value
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes The measurement attributes
      */
-    public function shouldSample(?SpanContext $context, int|float $value, array $attributes) : bool;
+    public function shouldSample(?SpanContext $context, int|float $value, array $attributes): bool;
 }

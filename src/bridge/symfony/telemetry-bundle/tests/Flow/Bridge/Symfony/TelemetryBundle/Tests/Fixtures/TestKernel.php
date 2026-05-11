@@ -38,12 +38,12 @@ final class TestKernel extends Kernel
     /**
      * @param class-string<BundleInterface> $bundleClass
      */
-    public function addTestBundle(string $bundleClass) : void
+    public function addTestBundle(string $bundleClass): void
     {
         $this->testBundles[] = $bundleClass;
     }
 
-    public function addTestConfig(string $configPath) : void
+    public function addTestConfig(string $configPath): void
     {
         $this->testConfigs[] = $configPath;
     }
@@ -51,7 +51,7 @@ final class TestKernel extends Kernel
     /**
      * @param callable(ContainerBuilder): void $configurator
      */
-    public function addTestContainerConfigurator(callable $configurator) : void
+    public function addTestContainerConfigurator(callable $configurator): void
     {
         $this->testContainerConfigurators[] = $configurator;
     }
@@ -59,33 +59,44 @@ final class TestKernel extends Kernel
     /**
      * @param array<string, mixed> $config
      */
-    public function addTestExtensionConfig(string $extension, array $config) : void
+    public function addTestExtensionConfig(string $extension, array $config): void
     {
-        $this->testExtensionConfigs[$extension] = \array_merge(
-            $this->testExtensionConfigs[$extension] ?? [],
-            $config
+        $this->testExtensionConfigs[$extension] = \array_merge($this->testExtensionConfigs[$extension] ?? [], $config);
+    }
+
+    #[\Override]
+    public function getCacheDir(): string
+    {
+        return (
+            __DIR__
+            . '/../../../../../../../var/flow_telemetry_bundle_test/'
+            . $this->environment
+            . '/'
+            . $this->testId
+            . '/cache'
         );
     }
 
     #[\Override]
-    public function getCacheDir() : string
+    public function getLogDir(): string
     {
-        return __DIR__ . '/../../../../../../../var/flow_telemetry_bundle_test/' . $this->environment . '/' . $this->testId . '/cache';
+        return (
+            __DIR__
+            . '/../../../../../../../var/flow_telemetry_bundle_test/'
+            . $this->environment
+            . '/'
+            . $this->testId
+            . '/log'
+        );
     }
 
     #[\Override]
-    public function getLogDir() : string
-    {
-        return __DIR__ . '/../../../../../../../var/flow_telemetry_bundle_test/' . $this->environment . '/' . $this->testId . '/log';
-    }
-
-    #[\Override]
-    public function getProjectDir() : string
+    public function getProjectDir(): string
     {
         return __DIR__ . '/..';
     }
 
-    public function registerBundles() : iterable
+    public function registerBundles(): iterable
     {
         yield new FlowTelemetryBundle();
 
@@ -94,13 +105,13 @@ final class TestKernel extends Kernel
         }
     }
 
-    public function registerContainerConfiguration(LoaderInterface $loader) : void
+    public function registerContainerConfiguration(LoaderInterface $loader): void
     {
         foreach ($this->testConfigs as $configPath) {
             $loader->load($configPath);
         }
 
-        $loader->load(function (ContainerBuilder $container) : void {
+        $loader->load(function (ContainerBuilder $container): void {
             foreach ($this->testExtensionConfigs as $extension => $config) {
                 $container->loadFromExtension($extension, $config);
             }
@@ -113,15 +124,20 @@ final class TestKernel extends Kernel
         });
     }
 
-    protected function build(ContainerBuilder $container) : void
+    protected function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
         $container->addCompilerPass(new class implements CompilerPassInterface {
-            public function process(ContainerBuilder $container) : void
+            public function process(ContainerBuilder $container): void
             {
                 foreach ($container->getDefinitions() as $id => $definition) {
-                    if (\str_starts_with($id, 'flow.telemetry') || \str_ends_with($id, '.flow_telemetry') || \str_starts_with($id, 'test.') || \str_starts_with($id, 'cache.flow_telemetry')) {
+                    if (
+                        \str_starts_with($id, 'flow.telemetry')
+                        || \str_ends_with($id, '.flow_telemetry')
+                        || \str_starts_with($id, 'test.')
+                        || \str_starts_with($id, 'cache.flow_telemetry')
+                    ) {
                         $definition->setPublic(true);
                     }
                 }

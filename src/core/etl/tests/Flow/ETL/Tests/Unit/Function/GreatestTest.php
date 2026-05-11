@@ -4,52 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, greatest, int_entry, ref, row};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\greatest;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
 
 final class GreatestTest extends FlowTestCase
 {
-    public function test_greatest_value() : void
+    public function test_greatest_value(): void
     {
-        $greatest = greatest(
-            10,
-            20,
-            ref('int'),
-            40
-        );
+        $greatest = greatest(10, 20, ref('int'), 40);
 
-        self::assertSame(
-            55,
-            $greatest->eval(row(int_entry('int', 55)), flow_context())
-        );
+        static::assertSame(55, $greatest->eval(row(int_entry('int', 55)), flow_context()));
     }
 
-    public function test_greatest_with_non_comparable_values() : void
+    public function test_greatest_with_non_comparable_values(): void
     {
-        $greatest = greatest(
-            null,
-            20,
-            ref('int'),
-            new \DateTimeImmutable('now')
-        );
+        $greatest = greatest(null, 20, ref('int'), new \DateTimeImmutable('now'));
 
         $this->expectExceptionMessage("Can't compare '(datetime > integer)' due to data type mismatch.");
 
         $greatest->eval(row(int_entry('int', 55)), flow_context());
     }
 
-    public function test_greatest_with_null() : void
+    public function test_greatest_with_null(): void
     {
-        $greatest = greatest(
-            null,
-            20,
-            ref('int'),
-            1257
-        );
+        $greatest = greatest(null, 20, ref('int'), 1257);
 
-        self::assertSame(
-            1257,
-            $greatest->eval(row(int_entry('int', 55)), flow_context())
-        );
+        static::assertSame(1257, $greatest->eval(row(int_entry('int', 55)), flow_context()));
     }
 }

@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Clause;
 /**
  * Window frame mode enum.
  */
-enum FrameMode : string
+enum FrameMode: string
 {
     case GROUPS = 'GROUPS';
     case RANGE = 'RANGE';

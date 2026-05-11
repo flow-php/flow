@@ -12,5 +12,5 @@ use Flow\ETL\FlowContext;
  */
 interface Closure
 {
-    public function closure(FlowContext $context) : void;
+    public function closure(FlowContext $context): void;
 }

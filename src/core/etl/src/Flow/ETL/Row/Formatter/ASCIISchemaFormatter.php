@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Formatter;
 
-use function Flow\ETL\DSL\{df, from_array, ref, rename_replace, to_output};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\{Definition, SchemaFormatter};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\SchemaFormatter;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\rename_replace;
+use function Flow\ETL\DSL\to_output;
+
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
-    public function __construct(private bool $asTable = false, private bool $withMetadata = true)
-    {
-    }
+    public function __construct(
+        private bool $asTable = false,
+        private bool $withMetadata = true,
+    ) {}
 
-    public function format(Schema $schema) : string
+    public function format(Schema $schema): string
     {
         if ($this->asTable) {
             ob_start();
@@ -33,8 +40,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
                 $df->drop('metadata');
             }
 
-            $df->write(to_output(false))
-                ->run();
+            $df->write(to_output(false))->run();
 
             $content = ob_get_clean();
 
@@ -66,7 +72,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
      *
      * @return array<string>
      */
-    private function formatEntry(Definition $definition, array $buffer) : array
+    private function formatEntry(Definition $definition, array $buffer): array
     {
         $entry = $definition->entry()->name();
 
@@ -86,7 +92,13 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             $buffer = \array_merge($buffer, $fields);
         } else {
-            $buffer[] = $indention . '|-- ' . $entry . ': ' . ($definition->isNullable() ? '?' : '') . $definition->type()->toString();
+            $buffer[] =
+                $indention
+                . '|-- '
+                . $entry
+                . ': '
+                . ($definition->isNullable() ? '?' : '')
+                . $definition->type()->toString();
         }
 
         return $buffer;
@@ -98,9 +110,8 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
      *
      * @return array<int, string>
      */
-    private function formatStructureElement(string $name, Type $structureType, array $buffer, int $level) : array
+    private function formatStructureElement(string $name, Type $structureType, array $buffer, int $level): array
     {
-
         $indention = \str_repeat('    ', $level);
 
         if ($indention !== '') {

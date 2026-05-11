@@ -10,6 +10,5 @@ final readonly class SimpleDto
         public int $id,
         public string $name,
         public string $email,
-    ) {
-    }
+    ) {}
 }

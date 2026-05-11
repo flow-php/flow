@@ -11,16 +11,14 @@ final readonly class Report
     public function __construct(
         private ?Schema $schema,
         private Statistics $statistics,
-    ) {
+    ) {}
 
-    }
-
-    public function schema() : ?Schema
+    public function schema(): ?Schema
     {
         return $this->schema;
     }
 
-    public function statistics() : Statistics
+    public function statistics(): Statistics
     {
         return $this->statistics;
     }

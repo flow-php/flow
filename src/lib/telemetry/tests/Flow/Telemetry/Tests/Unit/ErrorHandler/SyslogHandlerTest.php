@@ -9,14 +9,14 @@ use PHPUnit\Framework\TestCase;
 
 final class SyslogHandlerTest extends TestCase
 {
-    public function test_constructs_with_defaults() : void
+    public function test_constructs_with_defaults(): void
     {
         $handler = new SyslogHandler();
 
-        self::assertInstanceOf(SyslogHandler::class, $handler);
+        static::assertInstanceOf(SyslogHandler::class, $handler);
     }
 
-    public function test_throws_on_empty_ident() : void
+    public function test_throws_on_empty_ident(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 

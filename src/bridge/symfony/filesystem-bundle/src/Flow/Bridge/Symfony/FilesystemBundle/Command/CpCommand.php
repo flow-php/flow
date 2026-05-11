@@ -4,24 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
-use function Flow\Filesystem\DSL\file_copy;
-use function Flow\Types\DSL\{type_null, type_string, type_union};
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function Flow\Filesystem\DSL\file_copy;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 #[AsCommand(name: 'flow:filesystem:cp', description: 'Copy a file between two URIs.', aliases: ['flow:fs:cp'])]
 final class CpCommand extends Command
 {
-    public function __construct(private readonly FstabResolver $resolver)
-    {
+    public function __construct(
+        private readonly FstabResolver $resolver,
+    ) {
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('source', InputArgument::REQUIRED, 'Source file URI')
@@ -34,7 +40,7 @@ final class CpCommand extends Command
                 HELP);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -51,13 +57,21 @@ final class CpCommand extends Command
             try {
                 $sourceFs = $table->for($source);
             } catch (\Throwable $e) {
-                throw new InvalidArgumentException(\sprintf('in fstab "%s": source: %s', $activeFstab, $e->getMessage()), 0, $e);
+                throw new InvalidArgumentException(
+                    \sprintf('in fstab "%s": source: %s', $activeFstab, $e->getMessage()),
+                    0,
+                    $e,
+                );
             }
 
             try {
                 $table->for($dest);
             } catch (\Throwable $e) {
-                throw new InvalidArgumentException(\sprintf('in fstab "%s": destination: %s', $activeFstab, $e->getMessage()), 0, $e);
+                throw new InvalidArgumentException(
+                    \sprintf('in fstab "%s": destination: %s', $activeFstab, $e->getMessage()),
+                    0,
+                    $e,
+                );
             }
 
             $sourceStatus = $sourceFs->status($source);

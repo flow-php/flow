@@ -7,20 +7,22 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit\DependencyInjection\Co
 use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\BuildFstabsPass;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Context\BuildFstabsPassContext;
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions};
+use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
+use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\{Definition, Reference};
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class BuildFstabsPassTelemetryTest extends TestCase
 {
     private BuildFstabsPassContext $context;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->context = new BuildFstabsPassContext();
     }
 
-    public function test_creates_telemetry_config_definition_when_enabled() : void
+    public function test_creates_telemetry_config_definition_when_enabled(): void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',
@@ -41,25 +43,25 @@ final class BuildFstabsPassTelemetryTest extends TestCase
 
         (new BuildFstabsPass())->process($container);
 
-        self::assertTrue($container->hasDefinition('.flow.filesystem.telemetry_config.default'));
+        static::assertTrue($container->hasDefinition('.flow.filesystem.telemetry_config.default'));
         $configDefinition = $container->getDefinition('.flow.filesystem.telemetry_config.default');
-        self::assertSame(FilesystemTelemetryConfig::class, $configDefinition->getClass());
+        static::assertSame(FilesystemTelemetryConfig::class, $configDefinition->getClass());
 
         $configArgs = $configDefinition->getArguments();
-        self::assertInstanceOf(Reference::class, $configArgs[0]);
-        self::assertSame('app.telemetry', (string) $configArgs[0]);
-        self::assertInstanceOf(Reference::class, $configArgs[1]);
-        self::assertSame('app.clock', (string) $configArgs[1]);
-        self::assertInstanceOf(Definition::class, $configArgs[2]);
-        self::assertSame(FilesystemTelemetryOptions::class, $configArgs[2]->getClass());
-        self::assertSame([false, true], $configArgs[2]->getArguments());
+        static::assertInstanceOf(Reference::class, $configArgs[0]);
+        static::assertSame('app.telemetry', (string) $configArgs[0]);
+        static::assertInstanceOf(Reference::class, $configArgs[1]);
+        static::assertSame('app.clock', (string) $configArgs[1]);
+        static::assertInstanceOf(Definition::class, $configArgs[2]);
+        static::assertSame(FilesystemTelemetryOptions::class, $configArgs[2]->getClass());
+        static::assertSame([false, true], $configArgs[2]->getArguments());
 
         $fstabArgs = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
-        self::assertInstanceOf(Reference::class, $fstabArgs[3]);
-        self::assertSame('.flow.filesystem.telemetry_config.default', (string) $fstabArgs[3]);
+        static::assertInstanceOf(Reference::class, $fstabArgs[3]);
+        static::assertSame('.flow.filesystem.telemetry_config.default', (string) $fstabArgs[3]);
     }
 
-    public function test_passes_null_telemetry_when_disabled() : void
+    public function test_passes_null_telemetry_when_disabled(): void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',
@@ -76,10 +78,10 @@ final class BuildFstabsPassTelemetryTest extends TestCase
         (new BuildFstabsPass())->process($container);
 
         $arguments = $container->getDefinition('.flow.filesystem.fstab.default')->getArguments();
-        self::assertNull($arguments[3]);
+        static::assertNull($arguments[3]);
     }
 
-    public function test_throws_when_telemetry_enabled_without_clock_service_id() : void
+    public function test_throws_when_telemetry_enabled_without_clock_service_id(): void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',
@@ -102,7 +104,7 @@ final class BuildFstabsPassTelemetryTest extends TestCase
         (new BuildFstabsPass())->process($container);
     }
 
-    public function test_throws_when_telemetry_enabled_without_telemetry_service_id() : void
+    public function test_throws_when_telemetry_enabled_without_telemetry_service_id(): void
     {
         $container = $this->context->containerWithConfig([
             'default_fstab' => 'default',

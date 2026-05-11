@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Command;
 
-use function Flow\Filesystem\DSL\{native_local_filesystem, path};
-
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\SymfonyContext;
-use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\{SimpleTestCatalogProvider, TestKernel};
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\SimpleTestCatalogProvider;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, ContainerInterface};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
 
 final class CommandTestContext
 {
@@ -39,12 +42,12 @@ final class CommandTestContext
         $client->close();
     }
 
-    public function bootForDatabaseManagement(string $targetDatabase) : void
+    public function bootForDatabaseManagement(string $targetDatabase): void
     {
         $targetDsn = \preg_replace('#/[^/?]+(\?|$)#', '/' . $targetDatabase . '$1', $this->testDsn);
 
         $this->symfonyContext->bootKernel([
-            'config' => static function (TestKernel $kernel) use ($targetDsn) : void {
+            'config' => static function (TestKernel $kernel) use ($targetDsn): void {
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
                         'default' => [
@@ -56,13 +59,12 @@ final class CommandTestContext
         ]);
     }
 
-    public function bootWithMigrations() : void
+    public function bootWithMigrations(): void
     {
         $this->symfonyContext->bootKernel([
-            'config' => function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.catalog_provider', SimpleTestCatalogProvider::class)
-                        ->setPublic(true);
+            'config' => function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.catalog_provider', SimpleTestCatalogProvider::class)->setPublic(true);
                 });
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
@@ -84,15 +86,14 @@ final class CommandTestContext
         ]);
     }
 
-    public function bootWithMigrationsForDatabase(string $database) : void
+    public function bootWithMigrationsForDatabase(string $database): void
     {
         $targetDsn = \preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
 
         $this->symfonyContext->bootKernel([
-            'config' => function (TestKernel $kernel) use ($targetDsn) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.catalog_provider', SimpleTestCatalogProvider::class)
-                        ->setPublic(true);
+            'config' => function (TestKernel $kernel) use ($targetDsn): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.catalog_provider', SimpleTestCatalogProvider::class)->setPublic(true);
                 });
                 $kernel->addTestExtensionConfig('flow_postgresql', [
                     'connections' => [
@@ -114,54 +115,66 @@ final class CommandTestContext
         ]);
     }
 
-    public function command(string $serviceId) : Command
+    public function command(string $serviceId): Command
     {
         /** @var Command $command */
-        $command = $this->container()->get($serviceId);
-
-        return $command;
+        return $this->container()->get($serviceId);
     }
 
-    public function container() : ContainerInterface
+    public function container(): ContainerInterface
     {
         return $this->symfonyContext->getContainer();
     }
 
-    public function createDatabase(string $name) : void
+    public function createDatabase(string $name): void
     {
-        $client = PgSqlClient::connect((new DsnParser())->parse($this->testDsn)->withDatabase('postgres'));
+        $client = PgSqlClient::connect(
+            (new DsnParser())
+                ->parse($this->testDsn)
+                ->withDatabase('postgres'),
+        );
         $client->execute("CREATE DATABASE \"{$name}\"");
         $client->close();
     }
 
-    public function databaseExists(string $name) : bool
+    public function databaseExists(string $name): bool
     {
-        $client = PgSqlClient::connect((new DsnParser())->parse($this->testDsn)->withDatabase('postgres'));
+        $client = PgSqlClient::connect(
+            (new DsnParser())
+                ->parse($this->testDsn)
+                ->withDatabase('postgres'),
+        );
         $count = $client->fetchScalarInt('SELECT COUNT(*) FROM pg_database WHERE datname = $1', [$name]);
         $client->close();
 
         return $count > 0;
     }
 
-    public function dropDatabase(string $name) : void
+    public function dropDatabase(string $name): void
     {
-        $client = PgSqlClient::connect((new DsnParser())->parse($this->testDsn)->withDatabase('postgres'));
-        $client->execute('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()', [$name]);
+        $client = PgSqlClient::connect(
+            (new DsnParser())
+                ->parse($this->testDsn)
+                ->withDatabase('postgres'),
+        );
+        $client->execute('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()', [
+            $name,
+        ]);
         $client->execute("DROP DATABASE IF EXISTS \"{$name}\"");
         $client->close();
     }
 
-    public function fileContent(string $filePath) : string
+    public function fileContent(string $filePath): string
     {
         return $this->filesystem->readFrom(path($filePath))->content();
     }
 
-    public function fileExists(string $filePath) : bool
+    public function fileExists(string $filePath): bool
     {
         return $this->filesystem->status(path($filePath)) !== null;
     }
 
-    public function generateDiffMigration() : string
+    public function generateDiffMigration(): string
     {
         /** @var Command $command */
         $command = $this->container()->get('flow.postgresql.command.diff');
@@ -173,7 +186,7 @@ final class CommandTestContext
         return $matches[1];
     }
 
-    public function migrationDirs(string $pattern) : array
+    public function migrationDirs(string $pattern): array
     {
         $dirs = [];
 
@@ -186,7 +199,7 @@ final class CommandTestContext
         return $dirs;
     }
 
-    public function runMigrate() : void
+    public function runMigrate(): void
     {
         /** @var Command $command */
         $command = $this->container()->get('flow.postgresql.command.migrate');
@@ -195,7 +208,7 @@ final class CommandTestContext
         $tester->execute([]);
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         $this->symfonyContext->shutdown();
 
@@ -206,20 +219,26 @@ final class CommandTestContext
         $this->filesystem->rm(path($this->migrationsDir));
     }
 
-    public function tableExists(string $table, string $schema = 'public') : bool
+    public function tableExists(string $table, string $schema = 'public'): bool
     {
         $client = PgSqlClient::connect((new DsnParser())->parse($this->testDsn));
-        $result = $client->fetch('SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2', [$schema, $table]);
+        $result = $client->fetch('SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2', [
+            $schema,
+            $table,
+        ]);
         $client->close();
 
         return $result !== null;
     }
 
-    public function tableExistsInDatabase(string $database, string $table, string $schema = 'public') : bool
+    public function tableExistsInDatabase(string $database, string $table, string $schema = 'public'): bool
     {
         $targetDsn = \preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
         $client = PgSqlClient::connect((new DsnParser())->parse($targetDsn));
-        $result = $client->fetch('SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2', [$schema, $table]);
+        $result = $client->fetch('SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2', [
+            $schema,
+            $table,
+        ]);
         $client->close();
 
         return $result !== null;

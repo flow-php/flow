@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
-use function Flow\ETL\DSL\{int_entry, string_schema, xml_entry, xml_schema};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Schema\Definition\{BooleanDefinition, XMLDefinition};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Definition\XMLDefinition;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\xml_schema;
+
 final class XMLDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases() : \Generator
+    public static function provideIsCompatibleCases(): \Generator
     {
         yield 'same type and name' => [
             xml_schema('document'),
@@ -40,7 +46,7 @@ final class XMLDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases() : \Generator
+    public static function provideMergeCases(): \Generator
     {
         yield 'same type' => [
             xml_schema('document'),
@@ -61,28 +67,28 @@ final class XMLDefinitionTest extends FlowTestCase
         ];
     }
 
-    public function test_add_metadata() : void
+    public function test_add_metadata(): void
     {
         $def = xml_schema('document');
 
         $withMeta = $def->addMetadata('key', 'value');
 
-        self::assertTrue($withMeta->metadata()->has('key'));
-        self::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertTrue($withMeta->metadata()->has('key'));
+        static::assertSame('value', $withMeta->metadata()->get('key'));
     }
 
-    public function test_does_not_match_entry_with_different_name() : void
+    public function test_does_not_match_entry_with_different_name(): void
     {
         $def = xml_schema('document');
 
-        self::assertFalse($def->matches(xml_entry('other', '<?xml version="1.0"?><root></root>')));
+        static::assertFalse($def->matches(xml_entry('other', '<?xml version="1.0"?><root></root>')));
     }
 
-    public function test_does_not_match_entry_with_different_type() : void
+    public function test_does_not_match_entry_with_different_type(): void
     {
         $def = xml_schema('col');
 
-        self::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(int_entry('col', 1)));
     }
 
     /**
@@ -90,58 +96,58 @@ final class XMLDefinitionTest extends FlowTestCase
      * @param Definition<mixed> $other
      */
     #[DataProvider('provideIsCompatibleCases')]
-    public function test_is_compatible(Definition $definition, Definition $other, bool $expected) : void
+    public function test_is_compatible(Definition $definition, Definition $other, bool $expected): void
     {
-        self::assertSame($expected, $definition->isCompatible($other));
+        static::assertSame($expected, $definition->isCompatible($other));
     }
 
-    public function test_is_same_with_different_metadata() : void
+    public function test_is_same_with_different_metadata(): void
     {
         $def = xml_schema('document', false, Metadata::with('key', 'value1'));
         $other = xml_schema('document', false, Metadata::with('key', 'value2'));
 
-        self::assertFalse($def->isSame($other));
+        static::assertFalse($def->isSame($other));
     }
 
-    public function test_is_same_with_different_nullability() : void
+    public function test_is_same_with_different_nullability(): void
     {
         $def = xml_schema('document', true);
         $other = xml_schema('document', false);
 
-        self::assertFalse($def->isSame($other));
+        static::assertFalse($def->isSame($other));
     }
 
-    public function test_is_same_with_different_type() : void
+    public function test_is_same_with_different_type(): void
     {
         $def = xml_schema('document');
         $other = string_schema('document');
 
-        self::assertFalse($def->isSame($other));
+        static::assertFalse($def->isSame($other));
     }
 
-    public function test_is_same_with_identical_definition() : void
+    public function test_is_same_with_identical_definition(): void
     {
         $def = xml_schema('document', true, Metadata::with('key', 'value'));
         $other = xml_schema('document', true, Metadata::with('key', 'value'));
 
-        self::assertTrue($def->isSame($other));
+        static::assertTrue($def->isSame($other));
     }
 
-    public function test_make_nullable() : void
+    public function test_make_nullable(): void
     {
         $def = xml_schema('document', false);
 
         $nullable = $def->makeNullable();
 
-        self::assertTrue($nullable->isNullable());
-        self::assertFalse($def->isNullable());
+        static::assertTrue($nullable->isNullable());
+        static::assertFalse($def->isNullable());
     }
 
-    public function test_matches_entry_with_same_name_and_type() : void
+    public function test_matches_entry_with_same_name_and_type(): void
     {
         $def = xml_schema('document');
 
-        self::assertTrue($def->matches(xml_entry('document', '<?xml version="1.0"?><root></root>')));
+        static::assertTrue($def->matches(xml_entry('document', '<?xml version="1.0"?><root></root>')));
     }
 
     /**
@@ -150,47 +156,47 @@ final class XMLDefinitionTest extends FlowTestCase
      * @param Definition<mixed> $expected
      */
     #[DataProvider('provideMergeCases')]
-    public function test_merge(Definition $definition, Definition $other, Definition $expected) : void
+    public function test_merge(Definition $definition, Definition $other, Definition $expected): void
     {
-        self::assertEquals($expected, $definition->merge($other));
+        static::assertEquals($expected, $definition->merge($other));
     }
 
-    public function test_merge_when_both_are_from_null() : void
+    public function test_merge_when_both_are_from_null(): void
     {
         $def1 = xml_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
         $def2 = xml_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
 
         $merged = $def1->merge($def2);
 
-        self::assertInstanceOf(XMLDefinition::class, $merged);
-        self::assertTrue($merged->isNullable());
-        self::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
+        static::assertInstanceOf(XMLDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
+        static::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_when_this_is_from_null() : void
+    public function test_merge_when_this_is_from_null(): void
     {
         $nullDef = xml_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
         $def = xml_schema('col', false);
 
         $merged = $nullDef->merge($def);
 
-        self::assertInstanceOf(XMLDefinition::class, $merged);
-        self::assertTrue($merged->isNullable());
-        self::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
+        static::assertInstanceOf(XMLDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
+        static::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_with_assumed_null_keeps_original_type() : void
+    public function test_merge_with_assumed_null_keeps_original_type(): void
     {
         $def = xml_schema('col', false);
         $nullDef = string_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
 
         $merged = $def->merge($nullDef);
 
-        self::assertInstanceOf(XMLDefinition::class, $merged);
-        self::assertTrue($merged->isNullable());
+        static::assertInstanceOf(XMLDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
     }
 
-    public function test_merge_with_different_entry_name_throws_exception() : void
+    public function test_merge_with_different_entry_name_throws_exception(): void
     {
         $def = xml_schema('document');
 
@@ -200,7 +206,7 @@ final class XMLDefinitionTest extends FlowTestCase
         $def->merge(xml_schema('other'));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception() : void
+    public function test_merge_with_incompatible_type_throws_exception(): void
     {
         $def = xml_schema('col');
 
@@ -209,49 +215,49 @@ final class XMLDefinitionTest extends FlowTestCase
         $def->merge(new BooleanDefinition('col'));
     }
 
-    public function test_normalize() : void
+    public function test_normalize(): void
     {
         $def = xml_schema('document', true, Metadata::with('key', 'value'));
 
         $normalized = $def->normalize();
 
-        self::assertSame('document', $normalized['ref']);
-        self::assertTrue($normalized['nullable']);
-        self::assertArrayHasKey('type', $normalized);
-        self::assertArrayHasKey('metadata', $normalized);
+        static::assertSame('document', $normalized['ref']);
+        static::assertTrue($normalized['nullable']);
+        static::assertArrayHasKey('type', $normalized);
+        static::assertArrayHasKey('metadata', $normalized);
     }
 
-    public function test_nullable_matches_any_entry_with_same_name() : void
+    public function test_nullable_matches_any_entry_with_same_name(): void
     {
         $def = xml_schema('col', true);
 
-        self::assertTrue($def->matches(xml_entry('col', null)));
+        static::assertTrue($def->matches(xml_entry('col', null)));
     }
 
-    public function test_rename() : void
+    public function test_rename(): void
     {
         $def = xml_schema('document');
 
         $renamed = $def->rename('new_document');
 
-        self::assertSame('new_document', $renamed->entry()->name());
-        self::assertSame('document', $def->entry()->name());
+        static::assertSame('new_document', $renamed->entry()->name());
+        static::assertSame('document', $def->entry()->name());
     }
 
-    public function test_set_metadata() : void
+    public function test_set_metadata(): void
     {
         $def = xml_schema('document');
         $metadata = Metadata::with('key', 'value');
 
         $withMeta = $def->setMetadata($metadata);
 
-        self::assertTrue($withMeta->metadata()->isEqual($metadata));
+        static::assertTrue($withMeta->metadata()->isEqual($metadata));
     }
 
-    public function test_type_returns_xml_type() : void
+    public function test_type_returns_xml_type(): void
     {
         $def = xml_schema('document');
 
-        self::assertSame('xml', $def->type()->toString());
+        static::assertSame('xml', $def->type()->toString());
     }
 }

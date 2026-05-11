@@ -19,7 +19,7 @@ final readonly class Filters implements Filter
         $this->filters = $filters;
     }
 
-    public function accept(FileStatus $status) : bool
+    public function accept(FileStatus $status): bool
     {
         foreach ($this->filters as $filter) {
             if (!$filter->accept($status)) {
@@ -30,7 +30,7 @@ final readonly class Filters implements Filter
         return true;
     }
 
-    public function add(Filter $filter) : self
+    public function add(Filter $filter): self
     {
         return new self(...\array_merge($this->filters, [$filter]));
     }

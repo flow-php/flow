@@ -19,15 +19,15 @@ final readonly class DeltaBinaryPackedEncoder
         private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
         private ZigZag $zigzag = new ZigZag(),
     ) {
-        if ($this->blockSize % 128 !== 0) {
+        if (($this->blockSize % 128) !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
         }
 
-        if ($this->miniblockSize % 32 !== 0) {
+        if (($this->miniblockSize % 32) !== 0) {
             throw new InvalidArgumentException('Miniblock size must be a multiple of 32');
         }
 
-        if ($this->blockSize % $this->miniblockSize !== 0) {
+        if (($this->blockSize % $this->miniblockSize) !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of miniblock size');
         }
     }
@@ -35,7 +35,7 @@ final readonly class DeltaBinaryPackedEncoder
     /**
      * @param array<int> $values
      */
-    public function encode(array $values) : string
+    public function encode(array $values): string
     {
         if (!\count($values)) {
             return '';
@@ -43,7 +43,10 @@ final readonly class DeltaBinaryPackedEncoder
 
         foreach ($values as $index => $value) {
             if (!is_int($value)) {
-                throw new InvalidArgumentException('Delta encoding requires integer values, got ' . gettype($value) . " at index {$index}: " . var_export($value, true));
+                throw new InvalidArgumentException(
+                    'Delta encoding requires integer values, got ' . gettype($value) . " at index {$index}: "
+                        . var_export($value, true),
+                );
             }
         }
 
@@ -59,7 +62,7 @@ final readonly class DeltaBinaryPackedEncoder
     /**
      * @param array<int> $values
      */
-    private function packMiniblock(array $values, int $bitWidth) : string
+    private function packMiniblock(array $values, int $bitWidth): string
     {
         if ($bitWidth === 0) {
             return str_repeat("\x00", (int) ceil($this->miniblockSize / 8));
@@ -78,7 +81,7 @@ final readonly class DeltaBinaryPackedEncoder
         $bitsInByte = 0;
 
         foreach ($values as $value) {
-            $currentByte |= ($value << $bitsInByte);
+            $currentByte |= $value << $bitsInByte;
             $bitsInByte += $bitWidth;
 
             while ($bitsInByte >= 8) {
@@ -107,7 +110,7 @@ final readonly class DeltaBinaryPackedEncoder
      *
      * @param array<int> $values
      */
-    private function packMiniblockSafe(array $values, int $bitWidth, BinaryBufferWriter $writer) : string
+    private function packMiniblockSafe(array $values, int $bitWidth, BinaryBufferWriter $writer): string
     {
         $expectedByteCount = (int) ceil(($this->miniblockSize * $bitWidth) / 8);
         $bytes = array_fill(0, $expectedByteCount, 0);
@@ -124,7 +127,7 @@ final readonly class DeltaBinaryPackedEncoder
                     $bitIndex = $globalBitOffset % 8;
 
                     if ($byteIndex < $expectedByteCount) {
-                        $bytes[$byteIndex] |= (1 << $bitIndex);
+                        $bytes[$byteIndex] |= 1 << $bitIndex;
                     }
                 }
 
@@ -141,7 +144,7 @@ final readonly class DeltaBinaryPackedEncoder
      *
      * @return array<int>
      */
-    private function padMiniblock(array $miniblockDeltas) : array
+    private function padMiniblock(array $miniblockDeltas): array
     {
         $padded = $miniblockDeltas;
 
@@ -155,7 +158,7 @@ final readonly class DeltaBinaryPackedEncoder
     /**
      * @param array<int> $blockDeltas
      */
-    private function writeBlock(BinaryBufferWriter $writer, array $blockDeltas) : void
+    private function writeBlock(BinaryBufferWriter $writer, array $blockDeltas): void
     {
         if (!\count($blockDeltas)) {
             return;
@@ -164,7 +167,10 @@ final readonly class DeltaBinaryPackedEncoder
         $minDelta = min($blockDeltas);
         $this->writeSignedLEB128($writer, $minDelta);
 
-        $relativeDeltas = array_map(fn ($delta) => $this->deltaCalculator->calculateRelativeDelta($delta, $minDelta), $blockDeltas);
+        $relativeDeltas = array_map(fn($delta) => $this->deltaCalculator->calculateRelativeDelta(
+            $delta,
+            $minDelta,
+        ), $blockDeltas);
         $miniblockCount = (int) ceil(count($relativeDeltas) / $this->miniblockSize);
 
         $bitWidths = [];
@@ -192,7 +198,7 @@ final readonly class DeltaBinaryPackedEncoder
     /**
      * @param array<int> $values
      */
-    private function writeBlocks(BinaryBufferWriter $writer, array $values) : void
+    private function writeBlocks(BinaryBufferWriter $writer, array $values): void
     {
         if (count($values) <= 1) {
             return;
@@ -213,7 +219,7 @@ final readonly class DeltaBinaryPackedEncoder
     /**
      * @param array<int> $values
      */
-    private function writeHeader(BinaryBufferWriter $writer, array $values) : void
+    private function writeHeader(BinaryBufferWriter $writer, array $values): void
     {
         $miniblockCount = $this->blockSize / $this->miniblockSize;
 
@@ -223,12 +229,12 @@ final readonly class DeltaBinaryPackedEncoder
         $this->writeSignedLEB128($writer, $values[0]);
     }
 
-    private function writeSignedLEB128(BinaryBufferWriter $writer, int $value) : void
+    private function writeSignedLEB128(BinaryBufferWriter $writer, int $value): void
     {
         $writer->writeVarInts([$this->zigzag->encode($value)]);
     }
 
-    private function writeULEB128(BinaryBufferWriter $writer, int $value) : void
+    private function writeULEB128(BinaryBufferWriter $writer, int $value): void
     {
         $writer->writeVarInts([$value]);
     }

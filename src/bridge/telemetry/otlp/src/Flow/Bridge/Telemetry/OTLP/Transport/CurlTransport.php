@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
-use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Telemetry\Signal\{SignalType, Signals};
+use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
+use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
 
 /**
  * Asynchronous HTTP transport for OTLP using curl_multi for non-blocking I/O.
@@ -43,11 +45,15 @@ final class CurlTransport implements Transport
         $this->multiHandle = \curl_multi_init();
     }
 
-    public function send(Signals $signal) : void
+    public function send(Signals $signal): void
     {
         [$path, $body, $signalName] = match ($signal->type) {
             SignalType::LOGS => ['/v1/logs', $this->serializer->serializeLogs($signal->allLogs()), 'logs'],
-            SignalType::METRICS => ['/v1/metrics', $this->serializer->serializeMetrics($signal->allMetrics()), 'metrics'],
+            SignalType::METRICS => [
+                '/v1/metrics',
+                $this->serializer->serializeMetrics($signal->allMetrics()),
+                'metrics',
+            ],
             SignalType::TRACES => ['/v1/traces', $this->serializer->serializeSpans($signal->allSpans()), 'traces'],
         };
 
@@ -65,7 +71,7 @@ final class CurlTransport implements Transport
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;
@@ -135,7 +141,7 @@ final class CurlTransport implements Transport
     /**
      * @return list<string>
      */
-    private function buildHeaders() : array
+    private function buildHeaders(): array
     {
         $headers = [
             'Content-Type: ' . match (true) {
@@ -151,7 +157,7 @@ final class CurlTransport implements Transport
         return $headers;
     }
 
-    private function buildShutdownTimeoutError() : TransportException
+    private function buildShutdownTimeoutError(): TransportException
     {
         return new TransportException(\sprintf(
             'OTLP curl shutdown: request still pending when configured shutdown_timeout=%dms expired',
@@ -159,7 +165,7 @@ final class CurlTransport implements Transport
         ));
     }
 
-    private function dispatch(string $path, string $body, string $signalName, ?Signals $signalsToRetain) : void
+    private function dispatch(string $path, string $body, string $signalName, ?Signals $signalsToRetain): void
     {
         if ($this->isShutdown) {
             throw new TransportException('Cannot send after shutdown');
@@ -180,7 +186,11 @@ final class CurlTransport implements Transport
         if ($result !== CURLM_OK) {
             \curl_close($ch);
 
-            throw new TransportException(\sprintf('Failed to add curl handle for %s: %s', $signalName, \curl_multi_strerror($result)));
+            throw new TransportException(\sprintf(
+                'Failed to add curl handle for %s: %s',
+                $signalName,
+                \curl_multi_strerror($result),
+            ));
         }
 
         $this->pending[(int) $ch] = ['handle' => $ch, 'signals' => $signalsToRetain];
@@ -190,7 +200,7 @@ final class CurlTransport implements Transport
         }
     }
 
-    private function drainCompleted() : void
+    private function drainCompleted(): void
     {
         foreach ($this->iterateCompleted() as $item) {
             if ($item['primaryError'] === null) {
@@ -211,7 +221,7 @@ final class CurlTransport implements Transport
         }
     }
 
-    private function forwardStillPendingAsShutdownTimedOut() : void
+    private function forwardStillPendingAsShutdownTimedOut(): void
     {
         if ($this->failover === null) {
             return;
@@ -235,7 +245,7 @@ final class CurlTransport implements Transport
     /**
      * @return \Generator<int, array{primaryError: ?TransportException, entry: ?array{handle: \CurlHandle, signals: ?Signals}}>
      */
-    private function iterateCompleted() : \Generator
+    private function iterateCompleted(): \Generator
     {
         $running = 0;
         \curl_multi_exec($this->multiHandle, $running);
@@ -287,7 +297,7 @@ final class CurlTransport implements Transport
     /**
      * @return \Generator<int, array{primaryError: TransportException, entry: array{handle: \CurlHandle, signals: ?Signals}}>
      */
-    private function iterateStillPending() : \Generator
+    private function iterateStillPending(): \Generator
     {
         foreach ($this->pending as $id => $entry) {
             \curl_multi_remove_handle($this->multiHandle, $entry['handle']);
@@ -298,14 +308,14 @@ final class CurlTransport implements Transport
         }
     }
 
-    private function markStillPendingAsShutdownTimedOut() : void
+    private function markStillPendingAsShutdownTimedOut(): void
     {
         foreach ($this->iterateStillPending() as $item) {
             $this->failures[] = $item['primaryError'];
         }
     }
 
-    private function processCompleted() : void
+    private function processCompleted(): void
     {
         foreach ($this->iterateCompleted() as $item) {
             if ($item['primaryError'] !== null) {
@@ -314,7 +324,7 @@ final class CurlTransport implements Transport
         }
     }
 
-    private function waitForCompletion(?float $deadlineMicrotime = null) : void
+    private function waitForCompletion(?float $deadlineMicrotime = null): void
     {
         if (\count($this->pending) === 0) {
             return;

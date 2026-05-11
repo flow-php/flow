@@ -17,18 +17,17 @@ final readonly class Context
     public function __construct(
         private ?Catalog $catalog = null,
         private array $data = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->data;
     }
 
-    public function catalog() : ?Catalog
+    public function catalog(): ?Catalog
     {
         return $this->catalog;
     }
@@ -43,7 +42,7 @@ final readonly class Context
      *
      * @return T
      */
-    public function get(string $key, Type $type) : mixed
+    public function get(string $key, Type $type): mixed
     {
         if (!\array_key_exists($key, $this->data)) {
             throw ContextException::keyNotFound($key);
@@ -52,27 +51,21 @@ final readonly class Context
         return $type->assert($this->data[$key]);
     }
 
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return \array_key_exists($key, $this->data);
     }
 
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
-        return new self(
-            catalog: $other->catalog ?? $this->catalog,
-            data: \array_replace($this->data, $other->data),
-        );
+        return new self(catalog: $other->catalog ?? $this->catalog, data: \array_replace($this->data, $other->data));
     }
 
-    public function with(string $key, mixed $value) : self
+    public function with(string $key, mixed $value): self
     {
         $data = $this->data;
         $data[$key] = $value;
 
-        return new self(
-            catalog: $this->catalog,
-            data: $data,
-        );
+        return new self(catalog: $this->catalog, data: $data);
     }
 }

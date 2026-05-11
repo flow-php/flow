@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
-use Flow\ETL\Row\{Entry, EntryReference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
 
 final class Columns
 {
@@ -13,14 +14,12 @@ final class Columns
      */
     private array $columns = [];
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @param Entry<mixed> $entry
      */
-    public function add(Entry $entry) : void
+    public function add(Entry $entry): void
     {
         if (!\array_key_exists($entry->name(), $this->columns)) {
             $this->columns[$entry->name()] = new Column($entry);
@@ -34,12 +33,12 @@ final class Columns
     /**
      * @return array<Column>
      */
-    public function all() : array
+    public function all(): array
     {
         return \array_values($this->columns);
     }
 
-    public function get(string|EntryReference $ref) : Column
+    public function get(string|EntryReference $ref): Column
     {
         if ($ref instanceof EntryReference) {
             $ref = $ref->name();

@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
-use Flow\ETL\Adapter\PostgreSql\LoaderOptions\{DeleteOptions, InsertOptions, UpdateOptions};
-use Flow\ETL\Adapter\PostgreSql\QueryBuilder\{DeleteQueryBuilder, InsertQueryBuilder, UpdateQueryBuilder};
-use Flow\ETL\Adapter\PostgreSql\ValueConverter\{EnumConverter, XMLConverter};
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\DeleteOptions;
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
+use Flow\ETL\Adapter\PostgreSql\QueryBuilder\DeleteQueryBuilder;
+use Flow\ETL\Adapter\PostgreSql\QueryBuilder\InsertQueryBuilder;
+use Flow\ETL\Adapter\PostgreSql\QueryBuilder\UpdateQueryBuilder;
+use Flow\ETL\Adapter\PostgreSql\ValueConverter\EnumConverter;
+use Flow\ETL\Adapter\PostgreSql\ValueConverter\XMLConverter;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
 use Flow\PostgreSql\Client\Client;
 
 /**
@@ -36,7 +43,7 @@ final class PostgreSqlLoader implements Loader
         $this->client->converters()->register(new XMLConverter());
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if ($rows->count() === 0) {
             return;
@@ -59,42 +66,42 @@ final class PostgreSqlLoader implements Loader
         }
     }
 
-    public function withDeleteOptions(DeleteOptions $options) : self
+    public function withDeleteOptions(DeleteOptions $options): self
     {
         $this->deleteOptions = $options;
 
         return $this;
     }
 
-    public function withInsertOptions(InsertOptions $options) : self
+    public function withInsertOptions(InsertOptions $options): self
     {
         $this->insertOptions = $options;
 
         return $this;
     }
 
-    public function withOperation(Operation $operation) : self
+    public function withOperation(Operation $operation): self
     {
         $this->operation = $operation;
 
         return $this;
     }
 
-    public function withTypesMap(EntryTypesMap $typesMap) : self
+    public function withTypesMap(EntryTypesMap $typesMap): self
     {
         $this->typesMap = $typesMap;
 
         return $this;
     }
 
-    public function withUpdateOptions(UpdateOptions $options) : self
+    public function withUpdateOptions(UpdateOptions $options): self
     {
         $this->updateOptions = $options;
 
         return $this;
     }
 
-    private function deleteRows(Rows $rows) : void
+    private function deleteRows(Rows $rows): void
     {
         if ($this->deleteOptions === null) {
             throw new RuntimeException('DeleteOptions must be set for DELETE operation');
@@ -108,14 +115,14 @@ final class PostgreSqlLoader implements Loader
         }
     }
 
-    private function insertRows(Rows $rows) : void
+    private function insertRows(Rows $rows): void
     {
         $builder = new InsertQueryBuilder($this->table, $this->typesMap);
         [$query, $params] = $builder->build($rows, $this->insertOptions);
         $this->client->execute($query, $params);
     }
 
-    private function updateRows(Rows $rows) : void
+    private function updateRows(Rows $rows): void
     {
         if ($this->updateOptions === null) {
             throw new RuntimeException('UpdateOptions must be set for UPDATE operation');

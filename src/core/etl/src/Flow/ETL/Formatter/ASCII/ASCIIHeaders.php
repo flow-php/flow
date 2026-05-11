@@ -6,11 +6,12 @@ namespace Flow\ETL\Formatter\ASCII;
 
 final readonly class ASCIIHeaders
 {
-    public function __construct(private Headers $headers, private Body $body)
-    {
-    }
+    public function __construct(
+        private Headers $headers,
+        private Body $body,
+    ) {}
 
-    public function print(int|bool $truncate = 20) : string
+    public function print(int|bool $truncate = 20): string
     {
         $buffer = '+';
 

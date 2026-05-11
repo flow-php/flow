@@ -12,12 +12,12 @@ final class ConfigurationTest extends TestCase
 {
     private ConfigurationContext $context;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->context = new ConfigurationContext();
     }
 
-    public function test_cache_pool_connection_can_be_null() : void
+    public function test_cache_pool_connection_can_be_null(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -30,10 +30,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertNull($config['cache']['pools']['app']['connection']);
+        static::assertNull($config['cache']['pools']['app']['connection']);
     }
 
-    public function test_cache_pool_share_connection_can_be_enabled() : void
+    public function test_cache_pool_share_connection_can_be_enabled(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -46,10 +46,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertTrue($config['cache']['pools']['app']['share_connection']);
+        static::assertTrue($config['cache']['pools']['app']['share_connection']);
     }
 
-    public function test_cache_pools_custom_columns_and_namespace() : void
+    public function test_cache_pools_custom_columns_and_namespace(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -74,19 +74,19 @@ final class ConfigurationTest extends TestCase
         ]);
 
         $pool = $config['cache']['pools']['sessions'];
-        self::assertSame('default', $pool['connection']);
-        self::assertSame('app_cache', $pool['table_name']);
-        self::assertSame('caching', $pool['schema']);
-        self::assertSame('k', $pool['id_col']);
-        self::assertSame('v', $pool['data_col']);
-        self::assertSame('ttl', $pool['lifetime_col']);
-        self::assertSame('ts', $pool['time_col']);
-        self::assertSame('sess.', $pool['namespace']);
-        self::assertSame(3600, $pool['default_lifetime']);
-        self::assertSame('app.marshaller', $pool['marshaller_service_id']);
+        static::assertSame('default', $pool['connection']);
+        static::assertSame('app_cache', $pool['table_name']);
+        static::assertSame('caching', $pool['schema']);
+        static::assertSame('k', $pool['id_col']);
+        static::assertSame('v', $pool['data_col']);
+        static::assertSame('ttl', $pool['lifetime_col']);
+        static::assertSame('ts', $pool['time_col']);
+        static::assertSame('sess.', $pool['namespace']);
+        static::assertSame(3600, $pool['default_lifetime']);
+        static::assertSame('app.marshaller', $pool['marshaller_service_id']);
     }
 
-    public function test_cache_pools_default_table_and_schema() : void
+    public function test_cache_pools_default_table_and_schema(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -100,19 +100,19 @@ final class ConfigurationTest extends TestCase
         ]);
 
         $pool = $config['cache']['pools']['app'];
-        self::assertSame('cache_items', $pool['table_name']);
-        self::assertSame('public', $pool['schema']);
-        self::assertSame('item_id', $pool['id_col']);
-        self::assertSame('item_data', $pool['data_col']);
-        self::assertSame('item_lifetime', $pool['lifetime_col']);
-        self::assertSame('item_time', $pool['time_col']);
-        self::assertSame('', $pool['namespace']);
-        self::assertSame(0, $pool['default_lifetime']);
-        self::assertNull($pool['marshaller_service_id']);
-        self::assertFalse($pool['share_connection']);
+        static::assertSame('cache_items', $pool['table_name']);
+        static::assertSame('public', $pool['schema']);
+        static::assertSame('item_id', $pool['id_col']);
+        static::assertSame('item_data', $pool['data_col']);
+        static::assertSame('item_lifetime', $pool['lifetime_col']);
+        static::assertSame('item_time', $pool['time_col']);
+        static::assertSame('', $pool['namespace']);
+        static::assertSame(0, $pool['default_lifetime']);
+        static::assertNull($pool['marshaller_service_id']);
+        static::assertFalse($pool['share_connection']);
     }
 
-    public function test_cache_section_can_be_omitted() : void
+    public function test_cache_section_can_be_omitted(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -120,10 +120,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertSame([], $config['cache']['pools']);
+        static::assertSame([], $config['cache']['pools']);
     }
 
-    public function test_catalog_providers_at_top_level_with_inline_catalog() : void
+    public function test_catalog_providers_at_top_level_with_inline_catalog(): void
     {
         $catalogData = [
             'schemas' => [
@@ -133,7 +133,11 @@ final class ConfigurationTest extends TestCase
                         [
                             'name' => 'users',
                             'columns' => [
-                                ['name' => 'id', 'type' => ['name' => 'int4', 'schema' => 'pg_catalog'], 'nullable' => false],
+                                [
+                                    'name' => 'id',
+                                    'type' => ['name' => 'int4', 'schema' => 'pg_catalog'],
+                                    'nullable' => false,
+                                ],
                             ],
                         ],
                     ],
@@ -155,11 +159,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertCount(1, $config['catalog_providers']);
-        self::assertSame($catalogData, $config['catalog_providers'][0]['catalog']);
+        static::assertCount(1, $config['catalog_providers']);
+        static::assertSame($catalogData, $config['catalog_providers'][0]['catalog']);
     }
 
-    public function test_catalog_providers_at_top_level_with_service_reference() : void
+    public function test_catalog_providers_at_top_level_with_service_reference(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -179,14 +183,14 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertSame('app.catalog_provider', $config['catalog_providers'][0]['catalog_provider_id']);
-        self::assertSame('/custom/migrations', $config['migrations']['directory']);
-        self::assertSame('Custom\\Migrations', $config['migrations']['namespace']);
-        self::assertSame('custom_migrations', $config['migrations']['table_name']);
-        self::assertSame('custom', $config['migrations']['table_schema']);
+        static::assertSame('app.catalog_provider', $config['catalog_providers'][0]['catalog_provider_id']);
+        static::assertSame('/custom/migrations', $config['migrations']['directory']);
+        static::assertSame('Custom\\Migrations', $config['migrations']['namespace']);
+        static::assertSame('custom_migrations', $config['migrations']['table_name']);
+        static::assertSame('custom', $config['migrations']['table_schema']);
     }
 
-    public function test_catalog_providers_multiple_entries() : void
+    public function test_catalog_providers_multiple_entries(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -200,11 +204,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertCount(2, $config['catalog_providers']);
-        self::assertSame('app.second_provider', $config['catalog_providers'][1]['catalog_provider_id']);
+        static::assertCount(2, $config['catalog_providers']);
+        static::assertSame('app.second_provider', $config['catalog_providers'][1]['catalog_provider_id']);
     }
 
-    public function test_connections_requires_at_least_one_element() : void
+    public function test_connections_requires_at_least_one_element(): void
     {
         $this->expectException(InvalidConfigurationException::class);
 
@@ -213,7 +217,7 @@ final class ConfigurationTest extends TestCase
         ]);
     }
 
-    public function test_context_accepts_arbitrary_variables() : void
+    public function test_context_accepts_arbitrary_variables(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -230,16 +234,19 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertSame([
-            'tenant_id' => 42,
-            'logger' => '@my.logger',
-            'ttl' => '%cache.ttl%',
-            'db_url' => '%env(DATABASE_URL)%',
-            'tags' => ['a', 'b'],
-        ], $config['connections']['default']['context']);
+        static::assertSame(
+            [
+                'tenant_id' => 42,
+                'logger' => '@my.logger',
+                'ttl' => '%cache.ttl%',
+                'db_url' => '%env(DATABASE_URL)%',
+                'tags' => ['a', 'b'],
+            ],
+            $config['connections']['default']['context'],
+        );
     }
 
-    public function test_context_defaults_to_empty() : void
+    public function test_context_defaults_to_empty(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -249,10 +256,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertSame([], $config['connections']['default']['context']);
+        static::assertSame([], $config['connections']['default']['context']);
     }
 
-    public function test_dsn_is_required() : void
+    public function test_dsn_is_required(): void
     {
         $this->expectException(InvalidConfigurationException::class);
 
@@ -263,7 +270,7 @@ final class ConfigurationTest extends TestCase
         ]);
     }
 
-    public function test_messenger_custom_table_and_schema() : void
+    public function test_messenger_custom_table_and_schema(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -276,12 +283,12 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertTrue($config['messenger']['enabled']);
-        self::assertSame('custom_queue', $config['messenger']['table_name']);
-        self::assertSame('app', $config['messenger']['schema']);
+        static::assertTrue($config['messenger']['enabled']);
+        static::assertSame('custom_queue', $config['messenger']['table_name']);
+        static::assertSame('app', $config['messenger']['schema']);
     }
 
-    public function test_messenger_defaults() : void
+    public function test_messenger_defaults(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -292,12 +299,12 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertTrue($config['messenger']['enabled']);
-        self::assertSame('messenger_messages', $config['messenger']['table_name']);
-        self::assertSame('public', $config['messenger']['schema']);
+        static::assertTrue($config['messenger']['enabled']);
+        static::assertSame('messenger_messages', $config['messenger']['table_name']);
+        static::assertSame('public', $config['messenger']['schema']);
     }
 
-    public function test_messenger_disabled_by_default() : void
+    public function test_messenger_disabled_by_default(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -305,10 +312,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertFalse($config['messenger']['enabled']);
+        static::assertFalse($config['messenger']['enabled']);
     }
 
-    public function test_migrations_default_values() : void
+    public function test_migrations_default_values(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -321,15 +328,15 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertSame('%kernel.project_dir%/migrations', $config['migrations']['directory']);
-        self::assertSame('App\\Migrations', $config['migrations']['namespace']);
-        self::assertSame('flow_migrations', $config['migrations']['table_name']);
-        self::assertSame('public', $config['migrations']['table_schema']);
-        self::assertFalse($config['migrations']['all_or_nothing']);
-        self::assertTrue($config['migrations']['generate_rollback']);
+        static::assertSame('%kernel.project_dir%/migrations', $config['migrations']['directory']);
+        static::assertSame('App\\Migrations', $config['migrations']['namespace']);
+        static::assertSame('flow_migrations', $config['migrations']['table_name']);
+        static::assertSame('public', $config['migrations']['table_schema']);
+        static::assertFalse($config['migrations']['all_or_nothing']);
+        static::assertTrue($config['migrations']['generate_rollback']);
     }
 
-    public function test_migrations_enabled_without_catalog_providers_is_valid_at_config_level() : void
+    public function test_migrations_enabled_without_catalog_providers_is_valid_at_config_level(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -342,10 +349,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertTrue($config['migrations']['enabled']);
+        static::assertTrue($config['migrations']['enabled']);
     }
 
-    public function test_multiple_connections() : void
+    public function test_multiple_connections(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -358,13 +365,13 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertArrayHasKey('default', $config['connections']);
-        self::assertArrayHasKey('analytics', $config['connections']);
-        self::assertSame('postgresql://user:pass@localhost:5432/db1', $config['connections']['default']['dsn']);
-        self::assertSame('postgresql://user:pass@localhost:5432/db2', $config['connections']['analytics']['dsn']);
+        static::assertArrayHasKey('default', $config['connections']);
+        static::assertArrayHasKey('analytics', $config['connections']);
+        static::assertSame('postgresql://user:pass@localhost:5432/db1', $config['connections']['default']['dsn']);
+        static::assertSame('postgresql://user:pass@localhost:5432/db2', $config['connections']['analytics']['dsn']);
     }
 
-    public function test_session_default_disabled() : void
+    public function test_session_default_disabled(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -372,10 +379,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertFalse($config['session']['enabled']);
+        static::assertFalse($config['session']['enabled']);
     }
 
-    public function test_session_defaults_when_enabled() : void
+    public function test_session_defaults_when_enabled(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -387,20 +394,20 @@ final class ConfigurationTest extends TestCase
         ]);
 
         $session = $config['session'];
-        self::assertTrue($session['enabled']);
-        self::assertNull($session['connection']);
-        self::assertSame('sessions', $session['table_name']);
-        self::assertSame('public', $session['schema']);
-        self::assertSame('sess_id', $session['id_col']);
-        self::assertSame('sess_data', $session['data_col']);
-        self::assertSame('sess_lifetime', $session['lifetime_col']);
-        self::assertSame('sess_time', $session['time_col']);
-        self::assertSame('transactional', $session['lock_mode']);
-        self::assertNull($session['ttl']);
-        self::assertFalse($session['share_connection']);
+        static::assertTrue($session['enabled']);
+        static::assertNull($session['connection']);
+        static::assertSame('sessions', $session['table_name']);
+        static::assertSame('public', $session['schema']);
+        static::assertSame('sess_id', $session['id_col']);
+        static::assertSame('sess_data', $session['data_col']);
+        static::assertSame('sess_lifetime', $session['lifetime_col']);
+        static::assertSame('sess_time', $session['time_col']);
+        static::assertSame('transactional', $session['lock_mode']);
+        static::assertNull($session['ttl']);
+        static::assertFalse($session['share_connection']);
     }
 
-    public function test_session_lock_mode_rejects_invalid_value() : void
+    public function test_session_lock_mode_rejects_invalid_value(): void
     {
         $this->expectException(InvalidConfigurationException::class);
 
@@ -415,7 +422,7 @@ final class ConfigurationTest extends TestCase
         ]);
     }
 
-    public function test_session_overrides() : void
+    public function test_session_overrides(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -436,18 +443,18 @@ final class ConfigurationTest extends TestCase
         ]);
 
         $session = $config['session'];
-        self::assertSame('default', $session['connection']);
-        self::assertSame('app_sessions', $session['table_name']);
-        self::assertSame('sess', $session['schema']);
-        self::assertSame('sid', $session['id_col']);
-        self::assertSame('sdata', $session['data_col']);
-        self::assertSame('sttl', $session['lifetime_col']);
-        self::assertSame('sts', $session['time_col']);
-        self::assertSame('advisory', $session['lock_mode']);
-        self::assertSame(7200, $session['ttl']);
+        static::assertSame('default', $session['connection']);
+        static::assertSame('app_sessions', $session['table_name']);
+        static::assertSame('sess', $session['schema']);
+        static::assertSame('sid', $session['id_col']);
+        static::assertSame('sdata', $session['data_col']);
+        static::assertSame('sttl', $session['lifetime_col']);
+        static::assertSame('sts', $session['time_col']);
+        static::assertSame('advisory', $session['lock_mode']);
+        static::assertSame(7200, $session['ttl']);
     }
 
-    public function test_session_share_connection_can_be_enabled() : void
+    public function test_session_share_connection_can_be_enabled(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -459,10 +466,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertTrue($config['session']['share_connection']);
+        static::assertTrue($config['session']['share_connection']);
     }
 
-    public function test_session_ttl_rejects_negative() : void
+    public function test_session_ttl_rejects_negative(): void
     {
         $this->expectException(InvalidConfigurationException::class);
 
@@ -477,7 +484,7 @@ final class ConfigurationTest extends TestCase
         ]);
     }
 
-    public function test_single_connection_with_defaults() : void
+    public function test_single_connection_with_defaults(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -487,11 +494,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertSame('postgresql://user:pass@localhost:5432/db', $config['connections']['default']['dsn']);
-        self::assertFalse($config['migrations']['enabled']);
+        static::assertSame('postgresql://user:pass@localhost:5432/db', $config['connections']['default']['dsn']);
+        static::assertFalse($config['migrations']['enabled']);
     }
 
-    public function test_telemetry_not_present_by_default() : void
+    public function test_telemetry_not_present_by_default(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -501,10 +508,10 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        self::assertArrayNotHasKey('telemetry', $config['connections']['default']);
+        static::assertArrayNotHasKey('telemetry', $config['connections']['default']);
     }
 
-    public function test_telemetry_requires_service_id() : void
+    public function test_telemetry_requires_service_id(): void
     {
         $this->expectException(InvalidConfigurationException::class);
 
@@ -518,7 +525,7 @@ final class ConfigurationTest extends TestCase
         ]);
     }
 
-    public function test_telemetry_with_custom_options() : void
+    public function test_telemetry_with_custom_options(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -541,19 +548,19 @@ final class ConfigurationTest extends TestCase
         ]);
 
         $telemetry = $config['connections']['default']['telemetry'];
-        self::assertSame('my.telemetry', $telemetry['service_id']);
-        self::assertSame('my.clock', $telemetry['clock_service_id']);
-        self::assertFalse($telemetry['trace_queries']);
-        self::assertFalse($telemetry['trace_transactions']);
-        self::assertFalse($telemetry['collect_metrics']);
-        self::assertTrue($telemetry['log_queries']);
-        self::assertSame(500, $telemetry['max_query_length']);
-        self::assertTrue($telemetry['include_parameters']);
-        self::assertSame(5, $telemetry['max_parameters']);
-        self::assertSame(50, $telemetry['max_parameter_length']);
+        static::assertSame('my.telemetry', $telemetry['service_id']);
+        static::assertSame('my.clock', $telemetry['clock_service_id']);
+        static::assertFalse($telemetry['trace_queries']);
+        static::assertFalse($telemetry['trace_transactions']);
+        static::assertFalse($telemetry['collect_metrics']);
+        static::assertTrue($telemetry['log_queries']);
+        static::assertSame(500, $telemetry['max_query_length']);
+        static::assertTrue($telemetry['include_parameters']);
+        static::assertSame(5, $telemetry['max_parameters']);
+        static::assertSame(50, $telemetry['max_parameter_length']);
     }
 
-    public function test_telemetry_with_defaults() : void
+    public function test_telemetry_with_defaults(): void
     {
         $config = $this->context->processConfig([
             'connections' => [
@@ -567,15 +574,15 @@ final class ConfigurationTest extends TestCase
         ]);
 
         $telemetry = $config['connections']['default']['telemetry'];
-        self::assertSame('flow.telemetry', $telemetry['service_id']);
-        self::assertNull($telemetry['clock_service_id']);
-        self::assertTrue($telemetry['trace_queries']);
-        self::assertTrue($telemetry['trace_transactions']);
-        self::assertTrue($telemetry['collect_metrics']);
-        self::assertFalse($telemetry['log_queries']);
-        self::assertSame(1000, $telemetry['max_query_length']);
-        self::assertFalse($telemetry['include_parameters']);
-        self::assertSame(10, $telemetry['max_parameters']);
-        self::assertSame(100, $telemetry['max_parameter_length']);
+        static::assertSame('flow.telemetry', $telemetry['service_id']);
+        static::assertNull($telemetry['clock_service_id']);
+        static::assertTrue($telemetry['trace_queries']);
+        static::assertTrue($telemetry['trace_transactions']);
+        static::assertTrue($telemetry['collect_metrics']);
+        static::assertFalse($telemetry['log_queries']);
+        static::assertSame(1000, $telemetry['max_query_length']);
+        static::assertFalse($telemetry['include_parameters']);
+        static::assertSame(10, $telemetry['max_parameters']);
+        static::assertSame(100, $telemetry['max_parameter_length']);
     }
 }

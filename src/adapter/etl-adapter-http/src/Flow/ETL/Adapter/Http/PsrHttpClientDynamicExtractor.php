@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-use function Flow\ETL\DSL\{json_entry, str_entry};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Row, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\str_entry;
 
 final class PsrHttpClientDynamicExtractor implements Extractor
 {
@@ -26,10 +32,9 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     public function __construct(
         private readonly ClientInterface $client,
         private readonly NextRequestFactory $requestFactory,
-    ) {
-    }
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $responseFactory = new ResponseEntriesFactory();
         $requestFactory = new RequestEntriesFactory();
@@ -50,23 +55,20 @@ final class PsrHttpClientDynamicExtractor implements Extractor
             }
 
             if ($shouldPutInputIntoRows) {
-                $signal = yield new Rows(
-                    Row::create(
-                        ...\array_merge(
-                            $responseFactory->create($response)->all(),
-                            $requestFactory->create($nextRequest)->all(),
-                            [
-                                str_entry('request_uri', (string) $nextRequest->getUri()),
-                                str_entry('request_method', $nextRequest->getMethod()),
-                                json_entry('request_headers', $nextRequest->getHeaders()),
-                            ]
-                        )
-                    )
-                );
+                $signal = yield new Rows(Row::create(...\array_merge(
+                    $responseFactory->create($response)->all(),
+                    $requestFactory->create($nextRequest)->all(),
+                    [
+                        str_entry('request_uri', (string) $nextRequest->getUri()),
+                        str_entry('request_method', $nextRequest->getMethod()),
+                        json_entry('request_headers', $nextRequest->getHeaders()),
+                    ],
+                )));
             } else {
-                $signal = yield new Rows(
-                    Row::create(...\array_merge($responseFactory->create($response)->all(), $requestFactory->create($nextRequest)->all()))
-                );
+                $signal = yield new Rows(Row::create(...\array_merge(
+                    $responseFactory->create($response)->all(),
+                    $requestFactory->create($nextRequest)->all(),
+                )));
             }
 
             if ($signal === Signal::STOP) {
@@ -80,7 +82,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     /**
      * @param callable(RequestInterface, ResponseInterface) : void $postRequest
      */
-    public function withPostRequest(callable $postRequest) : self
+    public function withPostRequest(callable $postRequest): self
     {
         $this->postRequest = $postRequest;
 
@@ -90,7 +92,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     /**
      * @param callable(RequestInterface) : void $preRequest
      */
-    public function withPreRequest(callable $preRequest) : self
+    public function withPreRequest(callable $preRequest): self
     {
         $this->preRequest = $preRequest;
 

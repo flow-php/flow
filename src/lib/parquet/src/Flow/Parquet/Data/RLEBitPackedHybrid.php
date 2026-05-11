@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
-use Flow\Parquet\{BinaryReader, BinaryWriter};
+use Flow\Parquet\BinaryReader;
+use Flow\Parquet\BinaryWriter;
 
 final class RLEBitPackedHybrid
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * $output is passed by reference as a performance optimization, otherwise we would need to return the array and merge
@@ -18,8 +17,13 @@ final class RLEBitPackedHybrid
      *
      * @param array<int> $output
      */
-    public function decodeBitPacked(BinaryReader $reader, int $bitWidth, int $varInt, int $maxItems, array &$output) : void
-    {
+    public function decodeBitPacked(
+        BinaryReader $reader,
+        int $bitWidth,
+        int $varInt,
+        int $maxItems,
+        array &$output,
+    ): void {
         $numGroups = $varInt >> 1;
 
         if ($numGroups === 0) {
@@ -57,15 +61,15 @@ final class RLEBitPackedHybrid
                 $bitsReadFromByte -= 8;
                 $bitsLeftInByte -= 8;
                 $currentByte >>= 8;
-            } elseif ($bitsLeftInByte - $bitsReadFromByte >= $bitWidth) {
-                $decodedValue = (($currentByte >> $bitsReadFromByte) & $bitMask);
+            } elseif (($bitsLeftInByte - $bitsReadFromByte) >= $bitWidth) {
+                $decodedValue = ($currentByte >> $bitsReadFromByte) & $bitMask;
                 $totalBits -= $bitWidth;
                 $bitsReadFromByte += $bitWidth;
                 $resultIndex++;
                 $output[] = $decodedValue;
-            } elseif ($byteIndex + 1 < $actualByteCount) {
+            } elseif (($byteIndex + 1) < $actualByteCount) {
                 $byteIndex++;
-                $currentByte |= (\ord($readRaw[$byteIndex]) << $bitsLeftInByte);
+                $currentByte |= \ord($readRaw[$byteIndex]) << $bitsLeftInByte;
                 $bitsLeftInByte += 8;
             }
         }
@@ -74,7 +78,7 @@ final class RLEBitPackedHybrid
     /**
      * @return array<int>
      */
-    public function decodeHybrid(BinaryReader $reader, int $bitWidth, int $maxItems) : array
+    public function decodeHybrid(BinaryReader $reader, int $bitWidth, int $maxItems): array
     {
         /** @var array<int> $output */
         $output = [];
@@ -96,7 +100,7 @@ final class RLEBitPackedHybrid
     /**
      * @param array<int> $output
      */
-    public function decodeRLE(BinaryReader $reader, int $bitWidth, int $intVar, int $maxItems, array &$output) : void
+    public function decodeRLE(BinaryReader $reader, int $bitWidth, int $intVar, int $maxItems, array &$output): void
     {
         $isLiteralRun = $intVar & 1;
         $runLength = $intVar >> 1;
@@ -115,7 +119,7 @@ final class RLEBitPackedHybrid
             $value = 0;
 
             for ($i = 0; $i < $width; $i++) {
-                $value |= (\ord($raw[$i]) << ($i * 8));
+                $value |= \ord($raw[$i]) << ($i * 8);
             }
         } else {
             $value = 0;
@@ -136,7 +140,7 @@ final class RLEBitPackedHybrid
     /**
      * @param array<int> $values
      */
-    public function encodeBitPacked(BinaryWriter $writer, int $bitWidth, array $values) : void
+    public function encodeBitPacked(BinaryWriter $writer, int $bitWidth, array $values): void
     {
         $count = \count($values);
         $numGroups = ($count + 7) >> 3;
@@ -156,7 +160,7 @@ final class RLEBitPackedHybrid
         $bytes = [];
 
         foreach ($values as $value) {
-            $buffer |= ($value << $bitsInBuffer);
+            $buffer |= $value << $bitsInBuffer;
             $bitsInBuffer += $bitWidth;
 
             while ($bitsInBuffer >= 8) {
@@ -170,7 +174,7 @@ final class RLEBitPackedHybrid
             $bytes[] = $buffer & 0xFF;
         }
 
-        $expectedBytesCount = (int) ((($numGroups * 8) * $bitWidth) / 8);
+        $expectedBytesCount = (int) (($numGroups * 8 * $bitWidth) / 8);
         $byteCount = \count($bytes);
 
         if ($byteCount < $expectedBytesCount) {
@@ -183,14 +187,14 @@ final class RLEBitPackedHybrid
     /**
      * @param array<int> $values
      */
-    public function encodeHybrid(BinaryWriter $writer, int $bitWidth, array $values) : void
+    public function encodeHybrid(BinaryWriter $writer, int $bitWidth, array $values): void
     {
         $rleBuffer = [];
         $bitPackedBuffer = [];
 
         $previousValue = null;
 
-        foreach ($values as $i => $value) {
+        foreach ($values as $value) {
             if ($previousValue === null) {
                 $previousValue = $value;
                 $rleBuffer[] = $value;
@@ -205,7 +209,7 @@ final class RLEBitPackedHybrid
                 continue;
             }
 
-            if (\count($bitPackedBuffer) && \count($bitPackedBuffer) % 8 === 0) {
+            if (\count($bitPackedBuffer) && (\count($bitPackedBuffer) % 8) === 0) {
                 $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
                 $bitPackedBuffer = [];
             }
@@ -253,10 +257,10 @@ final class RLEBitPackedHybrid
     /**
      * @param array<int> $values
      */
-    public function encodeRLE(BinaryWriter $writer, int $bitWidth, array $values) : void
+    public function encodeRLE(BinaryWriter $writer, int $bitWidth, array $values): void
     {
         $repeatCount = \count($values);
-        $intVar = ($repeatCount << 1);
+        $intVar = $repeatCount << 1;
 
         $value = $values[0];
 

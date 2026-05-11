@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class IntArrayConverterTest extends TestCase
 {
-    public static function provide_non_array_values() : \Generator
+    public static function provide_non_array_values(): \Generator
     {
         yield 'string' => ['not an array', '{}'];
         yield 'integer' => [12345, '{}'];
@@ -22,7 +22,7 @@ final class IntArrayConverterTest extends TestCase
         yield 'object' => [new \stdClass(), '{}'];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'integer array' => [[1, 2, 3], '{1,2,3}'];
         yield 'empty array' => [[], '{}'];
@@ -38,7 +38,7 @@ final class IntArrayConverterTest extends TestCase
         yield 'mixed positive negative' => [[-5, 0, 5], '{-5,0,5}'];
     }
 
-    public function test_invalid_element_throws_exception() : void
+    public function test_invalid_element_throws_exception(): void
     {
         $converter = new IntArrayConverter();
         $this->expectException(ValueConversionException::class);
@@ -46,33 +46,33 @@ final class IntArrayConverterTest extends TestCase
     }
 
     #[DataProvider('provide_non_array_values')]
-    public function test_non_array_returns_empty_braces(mixed $input, string $expected) : void
+    public function test_non_array_returns_empty_braces(mixed $input, string $expected): void
     {
         $converter = new IntArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new IntArrayConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new IntArrayConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::INT2_ARRAY, $types);
-        self::assertContains(ValueType::INT4_ARRAY, $types);
-        self::assertContains(ValueType::INT8_ARRAY, $types);
-        self::assertCount(3, $types);
+        static::assertContains(ValueType::INT2_ARRAY, $types);
+        static::assertContains(ValueType::INT4_ARRAY, $types);
+        static::assertContains(ValueType::INT8_ARRAY, $types);
+        static::assertCount(3, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(array $input, string $expected) : void
+    public function test_to_database(array $input, string $expected): void
     {
         $converter = new IntArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

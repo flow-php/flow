@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
-use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
-use function Flow\ETL\DSL\{config, flow_context};
-use Elasticsearch\{Client, ClientBuilder};
-use Elasticsearch\Common\Exceptions\{BadRequest400Exception, Missing404Exception};
+use Elasticsearch\Client;
+use Elasticsearch\ClientBuilder;
+use Elasticsearch\Common\Exceptions\BadRequest400Exception;
+use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Rows;
+
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
 
 final class Elasticsearch7Context implements ElasticsearchContext
 {
     private ?Client $client = null;
 
-    public function __construct(private readonly array $hosts)
-    {
-    }
+    public function __construct(
+        private readonly array $hosts,
+    ) {}
 
-    public function client() : Client
+    public function client(): Client
     {
         if ($this->client === null) {
             $this->client = ClientBuilder::fromConfig($this->clientConfig());
@@ -28,14 +32,14 @@ final class Elasticsearch7Context implements ElasticsearchContext
         return $this->client;
     }
 
-    public function clientConfig() : array
+    public function clientConfig(): array
     {
         return [
             'hosts' => $this->hosts,
         ];
     }
 
-    public function createIndex(string $name) : void
+    public function createIndex(string $name): void
     {
         try {
             $params = [
@@ -48,34 +52,30 @@ final class Elasticsearch7Context implements ElasticsearchContext
                 ],
             ];
 
-            $response = $this->client()->indices()->create($params);
+            $this->client()->indices()->create($params);
         } catch (BadRequest400Exception) {
         }
     }
 
-    public function deleteIndex(string $name) : void
+    public function deleteIndex(string $name): void
     {
         try {
             $deleteParams = [
                 'index' => $name,
             ];
-            $response = $this->client()->indices()->delete($deleteParams);
+            $this->client()->indices()->delete($deleteParams);
         } catch (Missing404Exception) {
         }
     }
 
-    public function loadRows(Rows $rows, string $index, IdFactory $idFactory) : void
+    public function loadRows(Rows $rows, string $index, IdFactory $idFactory): void
     {
-        to_es_bulk_index(
-            $this->clientConfig(),
-            $index,
-            $idFactory,
-            ['refresh' => true]
-        )
-            ->load($rows, flow_context(config()));
+        to_es_bulk_index($this->clientConfig(), $index, $idFactory, [
+            'refresh' => true,
+        ])->load($rows, flow_context(config()));
     }
 
-    public function version() : int
+    public function version(): int
     {
         return 7;
     }

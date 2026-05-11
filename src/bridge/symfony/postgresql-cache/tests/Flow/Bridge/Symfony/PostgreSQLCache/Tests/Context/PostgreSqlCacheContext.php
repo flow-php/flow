@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSQLCache\Tests\Context;
 
 use Flow\Bridge\Symfony\PostgreSQLCache\FlowPostgreSqlCacheAdapter;
-use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit\Double\{SpyClient, SpyMarshaller};
+use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit\Double\SpyClient;
+use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit\Double\SpyMarshaller;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 
 final class PostgreSqlCacheContext
@@ -25,7 +26,7 @@ final class PostgreSqlCacheContext
         int $defaultLifetime = 0,
         array $options = [],
         ?MarshallerInterface $marshaller = null,
-    ) : FlowPostgreSqlCacheAdapter {
+    ): FlowPostgreSqlCacheAdapter {
         return new FlowPostgreSqlCacheAdapter($this->client, $namespace, $defaultLifetime, $options, $marshaller);
     }
 
@@ -36,7 +37,7 @@ final class PostgreSqlCacheContext
      *
      * @return list<array{sql: string, parameters: array<int, mixed>}>
      */
-    public function onlyInsertQueries(callable $action) : array
+    public function onlyInsertQueries(callable $action): array
     {
         $before = \count($this->client->executedQueries);
         $action();
@@ -52,7 +53,7 @@ final class PostgreSqlCacheContext
         return $inserts;
     }
 
-    public function spyMarshaller(string ...$failKeys) : SpyMarshaller
+    public function spyMarshaller(string ...$failKeys): SpyMarshaller
     {
         return new SpyMarshaller(\array_values($failKeys));
     }

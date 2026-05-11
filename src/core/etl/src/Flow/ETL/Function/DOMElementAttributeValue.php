@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_instance_of, type_list};
 use Dom\HTMLElement;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_list;
 
 final class DOMElementAttributeValue extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|\DOMNode|HTMLElement $domElement,
         private readonly ScalarFunction|string $attribute,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : ?string
+    public function eval(Row $row, FlowContext $context): ?string
     {
         $types = [
             type_instance_of(\DOMNode::class),
@@ -29,11 +31,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
             $types[] = type_list(type_instance_of(HTMLElement::class));
         }
 
-        $node = (new Parameter($this->domElement))->as(
-            $row,
-            $context,
-            ...$types
-        );
+        $node = (new Parameter($this->domElement))->as($row, $context, ...$types);
 
         if ($node instanceof \DOMDocument) {
             $node = $node->documentElement;
@@ -46,18 +44,24 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
         $attributeName = (new Parameter($this->attribute))->asString($row, $context);
 
         if ($node === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode'));
         }
 
         if ($attributeName === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name'));
+            return $context
+                ->functions()
+                ->invalidResult(
+                    new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name'),
+                );
         }
 
-        if ((!$node instanceof \DOMNode && !$node instanceof HTMLElement) || !$node->hasAttributes()) {
+        if (!$node instanceof \DOMNode && !$node instanceof HTMLElement || !$node->hasAttributes()) {
             return null;
         }
 
-        if (!$namedItem = $node->attributes->getNamedItem($attributeName)) {
+        if (!($namedItem = $node->attributes->getNamedItem($attributeName))) {
             return null;
         }
 

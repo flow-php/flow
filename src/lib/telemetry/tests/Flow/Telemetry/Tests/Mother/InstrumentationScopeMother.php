@@ -8,12 +8,12 @@ use Flow\Telemetry\InstrumentationScope;
 
 final class InstrumentationScopeMother
 {
-    public static function default() : InstrumentationScope
+    public static function default(): InstrumentationScope
     {
         return new InstrumentationScope('test-instrumentation', '1.0.0');
     }
 
-    public static function named(string $name, string $version = '1.0.0') : InstrumentationScope
+    public static function named(string $name, string $version = '1.0.0'): InstrumentationScope
     {
         return new InstrumentationScope($name, $version);
     }

@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class Int64DateTimeConverterTest extends TestCase
 {
-    public function test_converting_date_times() : void
+    public function test_converting_date_times(): void
     {
         $date = (new \DateTimeImmutable('2021-01-01'))
             ->setTimezone(new \DateTimeZone('UTC'))
@@ -17,9 +17,6 @@ final class Int64DateTimeConverterTest extends TestCase
 
         $converter = new Int64DateTimeConverter();
 
-        self::assertEquals(
-            $date,
-            $converter->fromParquetType($converter->toParquetType($date))
-        );
+        static::assertEquals($date, $converter->fromParquetType($converter->toParquetType($date)));
     }
 }

@@ -10,23 +10,24 @@ final readonly class HighResolutionTime implements \Stringable
      * @param int $seconds
      * @param int $nanoseconds
      */
-    public function __construct(public int $seconds, public int $nanoseconds)
-    {
-    }
+    public function __construct(
+        public int $seconds,
+        public int $nanoseconds,
+    ) {}
 
-    public static function now() : self
+    public static function now(): self
     {
         $timeParts = \hrtime(as_number: false);
 
         return new self($timeParts[0], $timeParts[1]);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function diff(self $other) : self
+    public function diff(self $other): self
     {
         $diffSeconds = $other->seconds - $this->seconds;
         $diffNanoseconds = $other->nanoseconds - $this->nanoseconds;
@@ -43,22 +44,22 @@ final readonly class HighResolutionTime implements \Stringable
     /**
      * @return array<int>
      */
-    public function toArray() : array
+    public function toArray(): array
     {
         return [$this->seconds, $this->nanoseconds];
     }
 
-    public function toNanoseconds() : int
+    public function toNanoseconds(): int
     {
         return ($this->seconds * 1_000_000_000) + $this->nanoseconds;
     }
 
-    public function toSeconds() : float
+    public function toSeconds(): float
     {
-        return $this->seconds + $this->nanoseconds / 1_000_000_000;
+        return $this->seconds + ($this->nanoseconds / 1_000_000_000);
     }
 
-    public function toString(int $precision = 9) : string
+    public function toString(int $precision = 9): string
     {
         $formatted = number_format($this->toSeconds(), $precision, '.', '');
         $formatted = rtrim($formatted, '0');

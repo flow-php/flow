@@ -13,20 +13,19 @@ final readonly class UnlistenBuilder implements UnlistenFinalStep
 
     private function __construct(
         private string $channel,
-    ) {
-    }
+    ) {}
 
     /**
      * Does not support the unquoted `UNLISTEN *` wildcard. libpg_query treats
      * `conditionname = "*"` as a literal channel name and emits `UNLISTEN "*"`.
      * Pass a specific channel name instead.
      */
-    public static function create(string $channel) : UnlistenFinalStep
+    public static function create(string $channel): UnlistenFinalStep
     {
         return new self($channel);
     }
 
-    public function toAst() : UnlistenStmt
+    public function toAst(): UnlistenStmt
     {
         return (new UnlistenStmt())->setConditionname($this->channel);
     }

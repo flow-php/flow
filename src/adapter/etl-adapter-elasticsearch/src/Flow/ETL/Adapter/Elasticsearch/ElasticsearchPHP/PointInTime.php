@@ -21,7 +21,7 @@ final class PointInTime
         $this->pit = \is_array($pit) ? $pit : $pit->asArray();
     }
 
-    public function id() : string
+    public function id(): string
     {
         return $this->pit['id'];
     }

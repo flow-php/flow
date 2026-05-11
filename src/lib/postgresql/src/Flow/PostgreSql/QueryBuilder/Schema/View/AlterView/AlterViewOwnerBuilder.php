@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterView;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\AlterTableCmd;
+use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
+use Flow\PostgreSql\Protobuf\AST\AlterTableType;
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterViewOwnerBuilder implements AlterViewOwnerFinalStep
@@ -15,15 +23,14 @@ final readonly class AlterViewOwnerBuilder implements AlterViewOwnerFinalStep
         private string $view,
         private ?string $schema,
         private string $owner,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $view, ?string $schema, string $owner) : self
+    public static function create(string $view, ?string $schema, string $owner): self
     {
         return new self($view, $schema, $owner);
     }
 
-    public function toAst() : AlterTableStmt
+    public function toAst(): AlterTableStmt
     {
         $stmt = new AlterTableStmt();
         $stmt->setObjtype(ObjectType::OBJECT_VIEW);

@@ -37,7 +37,7 @@ interface NodeVisitor
      *
      * @return list<class-string<Message>> The node classes this visitor is registered for
      */
-    public static function nodeClasses() : array;
+    public static function nodeClasses(): array;
 
     /**
      * Called when entering a node of the registered type.
@@ -49,7 +49,7 @@ interface NodeVisitor
      *                  - DONT_TRAVERSE_CHILDREN: Don't traverse children
      *                  - STOP_TRAVERSAL: Stop entire traversal
      */
-    public function enter(object $node) : ?int;
+    public function enter(object $node): ?int;
 
     /**
      * Called when leaving a node of the registered type.
@@ -61,5 +61,5 @@ interface NodeVisitor
      *                  - REMOVE_NODE: Remove node from parent
      *                  - STOP_TRAVERSAL: Stop entire traversal
      */
-    public function leave(object $node) : ?int;
+    public function leave(object $node): ?int;
 }

@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_json};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Value\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_json;
+
 final class JsonTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid Json instance' => [
             'value' => new Json('{"foo": "bar"}'),
@@ -55,7 +58,7 @@ final class JsonTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'array to Json' => [
             'value' => ['items' => ['item' => 1]],
@@ -94,7 +97,7 @@ final class JsonTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid Json instance' => [
             'value' => new Json('{"foo": "bar"}'),
@@ -123,49 +126,46 @@ final class JsonTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_json()->assert($value);
         } else {
-            self::assertInstanceOf(Json::class, type_json()->assert($value));
+            static::assertInstanceOf(Json::class, type_json()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_json()->cast($value);
         } else {
             $result = type_json()->cast($value);
-            self::assertInstanceOf(Json::class, $result);
-            self::assertSame($expected, $result->toString());
+            static::assertInstanceOf(Json::class, $result);
+            static::assertSame($expected, $result->toString());
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_json()->isValid($value));
+        static::assertSame($expected, type_json()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_json();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'json',
-            type_json()->toString()
-        );
+        static::assertSame('json', type_json()->toString());
     }
 }

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\{FlowContext, Row, Rows, Window};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Window;
 
 final class RowNumber implements WindowFunction
 {
@@ -16,7 +19,7 @@ final class RowNumber implements WindowFunction
         $this->window = null;
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
     {
         $number = 1;
 
@@ -31,19 +34,19 @@ final class RowNumber implements WindowFunction
         return null;
     }
 
-    public function over(Window $window) : WindowFunction
+    public function over(Window $window): WindowFunction
     {
         $this->window = $window;
 
         return $this;
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'row_number()';
     }
 
-    public function window() : Window
+    public function window(): Window
     {
         if ($this->window === null) {
             throw new RuntimeException('Window function "' . $this->toString() . '" requires an OVER clause.');

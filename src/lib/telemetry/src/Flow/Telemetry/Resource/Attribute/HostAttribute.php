@@ -12,7 +12,7 @@ namespace Flow\Telemetry\Resource\Attribute;
  *
  * @see https://opentelemetry.io/docs/specs/semconv/resource/host/
  */
-enum HostAttribute : string
+enum HostAttribute: string
 {
     /**
      * The CPU architecture the host system is running on.

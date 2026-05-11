@@ -8,15 +8,17 @@ use Flow\ETL\Exception\RuntimeException;
 
 final readonly class CompressingSerializer implements Serializer
 {
-    public function __construct(private Serializer $serializer, private int $compressionLevel = 9)
-    {
-    }
+    public function __construct(
+        private Serializer $serializer,
+        private int $compressionLevel = 9,
+    ) {}
 
-    public function serialize(object $serializable) : string
+    public function serialize(object $serializable): string
     {
         if (!\function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
             throw new RuntimeException("'ext-zlib' is missing in, compression impossible due to lack of gzcompress.");
+
             // @codeCoverageIgnoreEnd
         }
 
@@ -25,17 +27,21 @@ final readonly class CompressingSerializer implements Serializer
         if (false === $content) {
             // @codeCoverageIgnoreStart
             throw new \RuntimeException('Unable to compress serialized data.');
+
             // @codeCoverageIgnoreEnd
         }
 
         return $content;
     }
 
-    public function unserialize(string $serialized, array $classes) : object
+    public function unserialize(string $serialized, array $classes): object
     {
         if (!\function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
-            throw new RuntimeException("'ext-zlib' is missing in, decompression impossible due to lack of gzuncompress.");
+            throw new RuntimeException(
+                "'ext-zlib' is missing in, decompression impossible due to lack of gzuncompress.",
+            );
+
             // @codeCoverageIgnoreEnd
         }
 
@@ -44,6 +50,7 @@ final readonly class CompressingSerializer implements Serializer
         if (false === $content) {
             // @codeCoverageIgnoreStart
             throw new \RuntimeException('Unable to decompress unserialized data.');
+
             // @codeCoverageIgnoreEnd
         }
 

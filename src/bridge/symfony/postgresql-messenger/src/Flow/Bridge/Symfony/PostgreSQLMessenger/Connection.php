@@ -4,12 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger;
 
-use function Flow\PostgreSql\DSL\{and_, col, count_all, delete, eq, insert, is_null, le, or_, order_by, param, select, star, table, typed, update};
-
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\QueryBuilder\Clause\SortDirection;
+
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\count_all;
+use function Flow\PostgreSql\DSL\delete;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\insert;
+use function Flow\PostgreSql\DSL\is_null;
+use function Flow\PostgreSql\DSL\le;
+use function Flow\PostgreSql\DSL\or_;
+use function Flow\PostgreSql\DSL\order_by;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\star;
+use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\typed;
+use function Flow\PostgreSql\DSL\update;
 
 final readonly class Connection
 {
@@ -19,15 +34,12 @@ final readonly class Connection
         private string $schemaName = 'public',
         private string $queueName = 'default',
         private int $redeliverTimeout = 3600,
-    ) {
-    }
+    ) {}
 
-    public function ack(string $id) : bool
+    public function ack(string $id): bool
     {
         return $this->client->execute(
-            delete()
-                ->from(table($this->tableName, $this->schemaName))
-                ->where(eq(col('id'), param(1))),
+            delete()->from(table($this->tableName, $this->schemaName))->where(eq(col('id'), param(1))),
             [(int) $id],
         ) > 0;
     }
@@ -35,15 +47,12 @@ final readonly class Connection
     /**
      * @return null|array<string, mixed>
      */
-    public function find(int|string $id) : ?array
+    public function find(int|string $id): ?array
     {
         return $this->client->fetch(
             select(star())
                 ->from(table($this->tableName, $this->schemaName))
-                ->where(and_(
-                    eq(col('id'), param(1)),
-                    eq(col('queue_name'), param(2)),
-                )),
+                ->where(and_(eq(col('id'), param(1)), eq(col('queue_name'), param(2)))),
             [(int) $id, $this->queueName],
         );
     }
@@ -51,7 +60,7 @@ final readonly class Connection
     /**
      * @return list<array<string, mixed>>
      */
-    public function findAll(?int $limit = null) : array
+    public function findAll(?int $limit = null): array
     {
         $query = select(star())
             ->from(table($this->tableName, $this->schemaName))
@@ -68,9 +77,9 @@ final readonly class Connection
     /**
      * @return null|array<string, mixed>
      */
-    public function get() : ?array
+    public function get(): ?array
     {
-        return $this->client->transaction(function (Client $client) : ?array {
+        return $this->client->transaction(function (Client $client): ?array {
             $now = new \DateTimeImmutable('now');
             $redeliverCutoff = $now->sub(new \DateInterval('PT' . $this->redeliverTimeout . 'S'));
 
@@ -80,10 +89,7 @@ final readonly class Connection
                     ->where(and_(
                         eq(col('queue_name'), param(1)),
                         le(col('available_at'), param(2)),
-                        or_(
-                            is_null(col('delivered_at')),
-                            le(col('delivered_at'), param(3)),
-                        ),
+                        or_(is_null(col('delivered_at')), le(col('delivered_at'), param(3))),
                     ))
                     ->orderBy(order_by(col('available_at'), SortDirection::ASC))
                     ->limit(1)
@@ -120,7 +126,7 @@ final readonly class Connection
         });
     }
 
-    public function getMessageCount() : int
+    public function getMessageCount(): int
     {
         $now = new \DateTimeImmutable('now');
 
@@ -139,7 +145,7 @@ final readonly class Connection
         );
     }
 
-    public function keepalive(string $id, ?int $seconds = null) : void
+    public function keepalive(string $id, ?int $seconds = null): void
     {
         if ($seconds !== null && $this->redeliverTimeout < $seconds) {
             throw new TransportException(\sprintf(
@@ -161,7 +167,7 @@ final readonly class Connection
         );
     }
 
-    public function reject(string $id) : bool
+    public function reject(string $id): bool
     {
         return $this->ack($id);
     }
@@ -169,12 +175,10 @@ final readonly class Connection
     /**
      * @param array<string, mixed> $headers
      */
-    public function send(string $body, array $headers, int $delay = 0) : string
+    public function send(string $body, array $headers, int $delay = 0): string
     {
         $now = new \DateTimeImmutable('now');
-        $availableAt = $delay > 0
-            ? $now->modify(\sprintf('%+d seconds', (int) ($delay / 1000)))
-            : $now;
+        $availableAt = $delay > 0 ? $now->modify(\sprintf('%+d seconds', (int) ($delay / 1000))) : $now;
 
         $row = $this->client->fetchSingle(
             insert()

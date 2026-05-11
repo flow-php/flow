@@ -9,14 +9,14 @@ final class Manifest
     /** @var null|array<string, array<string, mixed>> */
     private ?array $byName = null;
 
-    public function __construct(private readonly string $manifestPath)
-    {
-    }
+    public function __construct(
+        private readonly string $manifestPath,
+    ) {}
 
     /**
      * @return array<string, array<string, mixed>>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->load();
     }
@@ -24,7 +24,7 @@ final class Manifest
     /**
      * @return null|array<string, mixed>
      */
-    public function byName(string $packageName) : ?array
+    public function byName(string $packageName): ?array
     {
         return $this->load()[$packageName] ?? null;
     }
@@ -32,7 +32,7 @@ final class Manifest
     /**
      * @return array<string, array<string, mixed>>
      */
-    private function load() : array
+    private function load(): array
     {
         if ($this->byName !== null) {
             return $this->byName;

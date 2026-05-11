@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Join;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Join\Comparison\{All, Equal};
+use Flow\ETL\Join\Comparison\All;
+use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
@@ -14,13 +15,12 @@ final readonly class Expression
     public function __construct(
         private Comparison $comparison,
         private string $joinPrefix = '',
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<Comparison>|array<string, string>|Comparison $comparison
      */
-    public static function on(array|Comparison $comparison, string $joinPrefix = '') : self
+    public static function on(array|Comparison $comparison, string $joinPrefix = ''): self
     {
         if (\is_array($comparison)) {
             /** @var array<Comparison> $comparisons */
@@ -34,11 +34,15 @@ final readonly class Expression
                 }
 
                 if (!\is_string($left)) {
-                    throw new RuntimeException('Expected left entry name to be string, got ' . \gettype($left) . ". Example: ['id' => 'id']");
+                    throw new RuntimeException(
+                        'Expected left entry name to be string, got ' . \gettype($left) . ". Example: ['id' => 'id']",
+                    );
                 }
 
                 if (!\is_string($right)) {
-                    throw new RuntimeException('Expected right entry name to be string, got ' . \gettype($right) . ". Example: ['id' => 'id']");
+                    throw new RuntimeException(
+                        'Expected right entry name to be string, got ' . \gettype($right) . ". Example: ['id' => 'id']",
+                    );
                 }
 
                 $comparisons[] = new Equal($left, $right);
@@ -50,7 +54,7 @@ final readonly class Expression
         return new self($comparison, $joinPrefix);
     }
 
-    public function dropDuplicateLeftEntries(Row $left) : Row
+    public function dropDuplicateLeftEntries(Row $left): Row
     {
         if ($this->joinPrefix !== '') {
             return $left;
@@ -71,7 +75,7 @@ final readonly class Expression
         return $left->remove(...$dropLeft);
     }
 
-    public function dropDuplicateRightEntries(Row $right) : Row
+    public function dropDuplicateRightEntries(Row $right): Row
     {
         if ($this->joinPrefix !== '') {
             return $right;
@@ -95,17 +99,17 @@ final readonly class Expression
     /**
      * @return array<Reference>
      */
-    public function left() : array
+    public function left(): array
     {
         return $this->comparison->left();
     }
 
-    public function meet(Row $left, Row $right) : bool
+    public function meet(Row $left, Row $right): bool
     {
         return $this->comparison->compare($left, $right);
     }
 
-    public function prefix() : string
+    public function prefix(): string
     {
         return $this->joinPrefix;
     }
@@ -113,7 +117,7 @@ final readonly class Expression
     /**
      * @return array<Reference>
      */
-    public function right() : array
+    public function right(): array
     {
         return $this->comparison->right();
     }

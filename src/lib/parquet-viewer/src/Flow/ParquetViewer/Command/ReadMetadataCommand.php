@@ -4,22 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Command;
 
-use function Flow\Types\DSL\{type_optional, type_scalar, type_string};
 use Coduo\PHPHumanizer\StringHumanizer;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn};
+use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\{TableCell, TableSeparator};
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Helper\TableSeparator;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_scalar;
+use function Flow\Types\DSL\type_string;
 
 #[AsCommand(name: 'read:metadata', description: 'Read metadata from parquet file')]
 final class ReadMetadataCommand extends Command
 {
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('file', InputArgument::REQUIRED, 'path to parquet file')
@@ -30,7 +37,7 @@ final class ReadMetadataCommand extends Command
             ->addOption('page-headers', null, InputOption::VALUE_NONE, 'Display page headers details');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
         $filePath = $input->getArgument('file');
@@ -53,7 +60,7 @@ final class ReadMetadataCommand extends Command
 
         try {
             $metadata = $parquetFile->metadata();
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $_e) {
             $style->error(\sprintf('File "%s" is not a valid parquet file', $filePath));
 
             return Command::FAILURE;
@@ -81,12 +88,20 @@ final class ReadMetadataCommand extends Command
             $columnsTable = $style->createTable();
             $columnsTable->setStyle('box');
             $columnsTable->setHeaderTitle('Columns');
-            $columnsTable->setHeaders(['path', 'type', 'logical type', 'repetition', 'max repetition', 'max definition']);
+            $columnsTable->setHeaders([
+                'path',
+                'type',
+                'logical type',
+                'repetition',
+                'max repetition',
+                'max definition',
+            ]);
 
             foreach ($parquetFile->schema()->columnsFlat() as $column) {
                 $columnsTable->addRow([
                     $column->flatPath(),
-                    ($column->type() ? $column->type()->name : 'group') . ($column->typeLength() ? '(' . $column->typeLength() . ')' : ''),
+                    ($column->type() ? $column->type()->name : 'group')
+                        . ($column->typeLength() ? '(' . $column->typeLength() . ')' : ''),
                     $column->logicalType() ? $column->logicalType()->name() : '-',
                     $column->repetition()?->name ?: 'N/A',
                     $column->maxRepetitionsLevel(),
@@ -123,7 +138,16 @@ final class ReadMetadataCommand extends Command
             $chunksTable = $style->createTable();
             $chunksTable->setStyle('box');
             $chunksTable->setHeaderTitle('Column Chunks');
-            $chunksTable->setHeaders(['path', 'encodings', 'compression', 'file offset', 'num values', 'rows_count', 'dictionary page offset', 'data page offset']);
+            $chunksTable->setHeaders([
+                'path',
+                'encodings',
+                'compression',
+                'file offset',
+                'num values',
+                'rows_count',
+                'dictionary page offset',
+                'data page offset',
+            ]);
             $totalChunks = 0;
 
             foreach ($metadata->rowGroups()->all() as $rowGroup) {
@@ -131,14 +155,15 @@ final class ReadMetadataCommand extends Command
                     $totalChunks++;
                     $chunksTable->addRow([
                         $columnChunk->flatPath(),
-                        '[' . \implode(',', \array_map(static fn ($e) => $e->name, $columnChunk->encodings())) . ']',
+                        '[' . \implode(',', \array_map(static fn($e) => $e->name, $columnChunk->encodings())) . ']',
                         $columnChunk->codec()->name,
                         \number_format($columnChunk->fileOffset()),
                         \number_format($columnChunk->valuesCount()),
-                        $columnChunk->dictionaryPageOffset() ? \number_format($columnChunk->dictionaryPageOffset()) : '-',
+                        $columnChunk->dictionaryPageOffset()
+                            ? \number_format($columnChunk->dictionaryPageOffset())
+                            : '-',
                         $columnChunk->dataPageOffset() ? \number_format($columnChunk->dataPageOffset()) : '-',
                     ]);
-
                 }
             }
             $chunksTable->setFooterTitle('Total: ' . \number_format($totalChunks));
@@ -150,7 +175,15 @@ final class ReadMetadataCommand extends Command
             $statisticsTable = $style->createTable();
             $statisticsTable->setStyle('box');
             $statisticsTable->setHeaderTitle('Column Chunks Statistics');
-            $statisticsTable->setHeaders(['path', 'min [deprecated]', 'max [deprecated]', 'min value', 'max value', 'null count', 'distinct count']);
+            $statisticsTable->setHeaders([
+                'path',
+                'min [deprecated]',
+                'max [deprecated]',
+                'min value',
+                'max value',
+                'null count',
+                'distinct count',
+            ]);
             $totalChunks = 0;
 
             foreach ($metadata->rowGroups()->all() as $rowGroupIndex => $rowGroup) {
@@ -176,10 +209,14 @@ final class ReadMetadataCommand extends Command
                             $max = $maxVal ? StringHumanizer::truncate((string) $maxVal, 20, '...') : '-';
                             $minValueVal = $statistics->minValue($column);
                             $minValueVal = type_optional(type_scalar())->assert($minValueVal);
-                            $minValue = $minValueVal ? StringHumanizer::truncate((string) $minValueVal, 20, '...') : '-';
+                            $minValue = $minValueVal
+                                ? StringHumanizer::truncate((string) $minValueVal, 20, '...')
+                                : '-';
                             $maxValueVal = $statistics->maxValue($column);
                             $maxValueVal = type_optional(type_scalar())->assert($maxValueVal);
-                            $maxValue = $maxValueVal ? StringHumanizer::truncate((string) $maxValueVal, 20, '...') : '-';
+                            $maxValue = $maxValueVal
+                                ? StringHumanizer::truncate((string) $maxValueVal, 20, '...')
+                                : '-';
                         } else {
                             $min = $statistics->min($column) ?? '-';
                             $max = $statistics->max($column) ?? '-';
@@ -188,9 +225,19 @@ final class ReadMetadataCommand extends Command
                         }
 
                         $nullCount = $statistics->nullCount() ? \number_format($statistics->nullCount()) : '-';
-                        $distinctCount = $statistics->distinctCount() ? \number_format($statistics->distinctCount()) : '-';
+                        $distinctCount = $statistics->distinctCount()
+                            ? \number_format($statistics->distinctCount())
+                            : '-';
 
-                        $statisticsTable->addRow([$columnChunk->flatPath(), $min, $max, $minValue, $maxValue, $nullCount, $distinctCount]);
+                        $statisticsTable->addRow([
+                            $columnChunk->flatPath(),
+                            $min,
+                            $max,
+                            $minValue,
+                            $maxValue,
+                            $nullCount,
+                            $distinctCount,
+                        ]);
                     } else {
                         $statisticsTable->addRow([
                             $columnChunk->flatPath(),
@@ -213,7 +260,15 @@ final class ReadMetadataCommand extends Command
             $pageHeadersTable = $style->createTable();
             $pageHeadersTable->setStyle('box');
             $pageHeadersTable->setHeaderTitle('Page Headers');
-            $pageHeadersTable->setHeaders(['path', 'type', 'encoding', 'compressed size', 'uncompressed size', 'dictionary num values', 'data num values']);
+            $pageHeadersTable->setHeaders([
+                'path',
+                'type',
+                'encoding',
+                'compressed size',
+                'uncompressed size',
+                'dictionary num values',
+                'data num values',
+            ]);
             $totalPageHeaders = 0;
 
             foreach ($parquetFile->pageHeaders() as $columnPageHeader) {
@@ -224,8 +279,12 @@ final class ReadMetadataCommand extends Command
                     $columnPageHeader->pageHeader->encoding()->name,
                     \number_format($columnPageHeader->pageHeader->compressedPageSize()),
                     \number_format($columnPageHeader->pageHeader->uncompressedPageSize()),
-                    $columnPageHeader->pageHeader->dictionaryValuesCount() ? \number_format($columnPageHeader->pageHeader->dictionaryValuesCount()) : '-',
-                    $columnPageHeader->pageHeader->dataValuesCount() ? \number_format($columnPageHeader->pageHeader->dataValuesCount()) : '-',
+                    $columnPageHeader->pageHeader->dictionaryValuesCount()
+                        ? \number_format($columnPageHeader->pageHeader->dictionaryValuesCount())
+                        : '-',
+                    $columnPageHeader->pageHeader->dataValuesCount()
+                        ? \number_format($columnPageHeader->pageHeader->dataValuesCount())
+                        : '-',
                 ]);
             }
 

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
-use function Flow\Filesystem\DSL\traceable_filesystem;
 use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, TraceableFilesystem};
+use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
+use Flow\Filesystem\Telemetry\TraceableFilesystem;
+
+use function Flow\Filesystem\DSL\traceable_filesystem;
 
 final class FilesystemTable
 {
@@ -27,12 +29,12 @@ final class FilesystemTable
     /**
      * @return array<Filesystem>
      */
-    public function filesystems() : array
+    public function filesystems(): array
     {
         return \array_values($this->mounts);
     }
 
-    public function for(Path|string $protocol) : Filesystem
+    public function for(Path|string $protocol): Filesystem
     {
         $name = $protocol instanceof Path ? $protocol->protocol() : $protocol;
 
@@ -43,7 +45,7 @@ final class FilesystemTable
         return $this->mounts[$name];
     }
 
-    public function mount(Filesystem $filesystem) : void
+    public function mount(Filesystem $filesystem): void
     {
         $protocol = $filesystem->mount()->protocol;
 
@@ -56,7 +58,7 @@ final class FilesystemTable
             : $filesystem;
     }
 
-    public function unmount(Filesystem $filesystem) : void
+    public function unmount(Filesystem $filesystem): void
     {
         $protocol = $filesystem->mount()->protocol;
 
@@ -67,7 +69,7 @@ final class FilesystemTable
         unset($this->mounts[$protocol]);
     }
 
-    public function withTelemetry(FilesystemTelemetryConfig $config) : self
+    public function withTelemetry(FilesystemTelemetryConfig $config): self
     {
         $this->telemetryConfig = $config;
 

@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder;
 
 use Flow\PostgreSql\ParsedQuery;
-use Flow\PostgreSql\Protobuf\AST\{Node, ParseResult, RawStmt};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
 
 trait AstToSql
 {
-    public function toSql() : string
+    public function toSql(): string
     {
         return self::deparseAst($this->toAst());
     }
 
-    private static function deparseAst(object $ast) : string
+    private static function deparseAst(object $ast): string
     {
         $nodeKey = self::getNodeKeyForAst($ast);
         $node = new Node([$nodeKey => $ast]);
@@ -26,7 +28,7 @@ trait AstToSql
         return (new ParsedQuery($parseResult))->deparse();
     }
 
-    private static function getNodeKeyForAst(object $ast) : string
+    private static function getNodeKeyForAst(object $ast): string
     {
         $className = $ast::class;
         $shortName = \substr($className, (int) \strrpos($className, '\\') + 1);

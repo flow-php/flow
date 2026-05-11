@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class OsDetectorTest extends TestCase
 {
-    public function test_detect_returns_expected_os_type_for_current_platform() : void
+    public function test_detect_returns_expected_os_type_for_current_platform(): void
     {
         $detector = new OsDetector();
         $resource = $detector->detect();
@@ -27,62 +27,62 @@ final class OsDetectorTest extends TestCase
         };
 
         if ($expectedType !== null) {
-            self::assertSame($expectedType, $osType);
+            static::assertSame($expectedType, $osType);
         } else {
-            self::assertNotNull($osType);
+            static::assertNotNull($osType);
         }
     }
 
-    public function test_detect_returns_non_empty_os_description() : void
+    public function test_detect_returns_non_empty_os_description(): void
     {
         $detector = new OsDetector();
         $resource = $detector->detect();
 
         $osDescription = $resource->get(OsAttribute::DESCRIPTION->value);
 
-        self::assertIsString($osDescription);
-        self::assertNotEmpty($osDescription);
+        static::assertIsString($osDescription);
+        static::assertNotEmpty($osDescription);
     }
 
-    public function test_detect_returns_non_empty_os_name() : void
+    public function test_detect_returns_non_empty_os_name(): void
     {
         $detector = new OsDetector();
         $resource = $detector->detect();
 
         $osName = $resource->get(OsAttribute::NAME->value);
 
-        self::assertIsString($osName);
-        self::assertNotEmpty($osName);
+        static::assertIsString($osName);
+        static::assertNotEmpty($osName);
     }
 
-    public function test_detect_returns_non_empty_os_version() : void
+    public function test_detect_returns_non_empty_os_version(): void
     {
         $detector = new OsDetector();
         $resource = $detector->detect();
 
         $osVersion = $resource->get(OsAttribute::VERSION->value);
 
-        self::assertIsString($osVersion);
-        self::assertNotEmpty($osVersion);
+        static::assertIsString($osVersion);
+        static::assertNotEmpty($osVersion);
     }
 
-    public function test_detect_returns_os_attributes() : void
+    public function test_detect_returns_os_attributes(): void
     {
         $detector = new OsDetector();
         $resource = $detector->detect();
 
-        self::assertTrue($resource->has(OsAttribute::TYPE->value));
-        self::assertTrue($resource->has(OsAttribute::NAME->value));
-        self::assertTrue($resource->has(OsAttribute::VERSION->value));
-        self::assertTrue($resource->has(OsAttribute::DESCRIPTION->value));
+        static::assertTrue($resource->has(OsAttribute::TYPE->value));
+        static::assertTrue($resource->has(OsAttribute::NAME->value));
+        static::assertTrue($resource->has(OsAttribute::VERSION->value));
+        static::assertTrue($resource->has(OsAttribute::DESCRIPTION->value));
     }
 
-    public function test_detected_resource_is_not_empty() : void
+    public function test_detected_resource_is_not_empty(): void
     {
         $detector = new OsDetector();
         $resource = $detector->detect();
 
-        self::assertFalse($resource->isEmpty());
-        self::assertGreaterThanOrEqual(4, $resource->count());
+        static::assertFalse($resource->isEmpty());
+        static::assertGreaterThanOrEqual(4, $resource->count());
     }
 }

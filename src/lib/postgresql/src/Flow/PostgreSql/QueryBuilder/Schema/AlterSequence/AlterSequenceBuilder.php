@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterSequence;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterSeqStmt, Boolean, DefElem, Integer, Node, PBList, PBString, RangeVar, TypeName};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\AlterSeqStmt;
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\TypeName;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, AlterSequenceOptionsStep
 {
@@ -19,20 +28,19 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         private ?string $schema = null,
         private bool $ifExists = false,
         private array $options = [],
-    ) {
-    }
+    ) {}
 
-    public static function create() : AlterSequenceNameStep
+    public static function create(): AlterSequenceNameStep
     {
         return new self();
     }
 
-    public static function ifExists() : AlterSequenceNameStep
+    public static function ifExists(): AlterSequenceNameStep
     {
         return new self(ifExists: true);
     }
 
-    public function asType(string $dataType) : AlterSequenceOptionsStep
+    public function asType(string $dataType): AlterSequenceOptionsStep
     {
         $typeMap = [
             'smallint' => 'int2',
@@ -69,47 +77,47 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $this->withOption('as', $argNode);
     }
 
-    public function cache(int $cache) : AlterSequenceOptionsStep
+    public function cache(int $cache): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('cache', $cache);
     }
 
-    public function cycle() : AlterSequenceOptionsStep
+    public function cycle(): AlterSequenceOptionsStep
     {
         return $this->withBooleanOption('cycle', true);
     }
 
-    public function incrementBy(int $increment) : AlterSequenceOptionsStep
+    public function incrementBy(int $increment): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('increment', $increment);
     }
 
-    public function maxValue(int $maxValue) : AlterSequenceOptionsStep
+    public function maxValue(int $maxValue): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('maxvalue', $maxValue);
     }
 
-    public function minValue(int $minValue) : AlterSequenceOptionsStep
+    public function minValue(int $minValue): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('minvalue', $minValue);
     }
 
-    public function noCycle() : AlterSequenceOptionsStep
+    public function noCycle(): AlterSequenceOptionsStep
     {
         return $this->withBooleanOption('cycle', false);
     }
 
-    public function noMaxValue() : AlterSequenceOptionsStep
+    public function noMaxValue(): AlterSequenceOptionsStep
     {
         return $this->withOption('maxvalue', null);
     }
 
-    public function noMinValue() : AlterSequenceOptionsStep
+    public function noMinValue(): AlterSequenceOptionsStep
     {
         return $this->withOption('minvalue', null);
     }
 
-    public function ownedBy(string $table, string $column) : AlterSequenceOptionsStep
+    public function ownedBy(string $table, string $column): AlterSequenceOptionsStep
     {
         $list = new PBList();
         $items = [];
@@ -138,7 +146,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $this->withOption('owned_by', $argNode);
     }
 
-    public function ownedByNone() : AlterSequenceOptionsStep
+    public function ownedByNone(): AlterSequenceOptionsStep
     {
         $list = new PBList();
         $items = [];
@@ -157,57 +165,52 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $this->withOption('owned_by', $argNode);
     }
 
-    public function ownerTo(string $owner) : AlterSequenceOwnerFinalStep
+    public function ownerTo(string $owner): AlterSequenceOwnerFinalStep
     {
         return AlterSequenceOwnerBuilder::create($this->name ?? '', $this->schema, $owner, $this->ifExists);
     }
 
-    public function renameTo(string $newName) : RenameSequenceFinalStep
+    public function renameTo(string $newName): RenameSequenceFinalStep
     {
         return RenameSequenceBuilder::create($this->name ?? '', $this->schema, $newName, $this->ifExists);
     }
 
-    public function restart() : AlterSequenceOptionsStep
+    public function restart(): AlterSequenceOptionsStep
     {
         return $this->withOption('restart', null);
     }
 
-    public function restartWith(int $restart) : AlterSequenceOptionsStep
+    public function restartWith(int $restart): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('restart', $restart);
     }
 
-    public function sequence(string $name, ?string $schema = null) : AlterSequenceOptionsStep
+    public function sequence(string $name, ?string $schema = null): AlterSequenceOptionsStep
     {
-        return new self(
-            $name,
-            $schema,
-            $this->ifExists,
-            $this->options,
-        );
+        return new self($name, $schema, $this->ifExists, $this->options);
     }
 
-    public function setLogged() : AlterSequenceLoggingFinalStep
+    public function setLogged(): AlterSequenceLoggingFinalStep
     {
         return AlterSequenceLoggingBuilder::createLogged($this->name ?? '', $this->schema, $this->ifExists);
     }
 
-    public function setSchema(string $schema) : AlterSequenceSchemaFinalStep
+    public function setSchema(string $schema): AlterSequenceSchemaFinalStep
     {
         return AlterSequenceSchemaBuilder::create($this->name ?? '', $this->schema, $schema, $this->ifExists);
     }
 
-    public function setUnlogged() : AlterSequenceLoggingFinalStep
+    public function setUnlogged(): AlterSequenceLoggingFinalStep
     {
         return AlterSequenceLoggingBuilder::createUnlogged($this->name ?? '', $this->schema, $this->ifExists);
     }
 
-    public function startWith(int $start) : AlterSequenceOptionsStep
+    public function startWith(int $start): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('start', $start);
     }
 
-    public function toAst() : AlterSeqStmt
+    public function toAst(): AlterSeqStmt
     {
         $stmt = new AlterSeqStmt();
 
@@ -248,17 +251,12 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $stmt;
     }
 
-    public function withIfExists() : self
+    public function withIfExists(): self
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            true,
-            $this->options,
-        );
+        return new self($this->name, $this->schema, true, $this->options);
     }
 
-    private function withBooleanOption(string $name, bool $value) : self
+    private function withBooleanOption(string $name, bool $value): self
     {
         $boolean = new Boolean();
         $boolean->setBoolval($value);
@@ -270,7 +268,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $this->withOption($name, $argNode);
     }
 
-    private function withIntegerOption(string $name, int $value) : self
+    private function withIntegerOption(string $name, int $value): self
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -282,16 +280,11 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->ifExists,
-            $newOptions,
-        );
+        return new self($this->name, $this->schema, $this->ifExists, $newOptions);
     }
 }

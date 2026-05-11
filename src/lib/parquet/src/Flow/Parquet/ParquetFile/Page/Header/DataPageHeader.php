@@ -13,35 +13,34 @@ final readonly class DataPageHeader
         private Encodings $repetitionLevelEncoding,
         private Encodings $definitionLevelEncoding,
         private int $valuesCount,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeader $thrift) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeader $thrift): self
     {
         return new self(
             Encodings::from($thrift->encoding),
             Encodings::from($thrift->repetition_level_encoding),
             Encodings::from($thrift->definition_level_encoding),
-            (int) $thrift->num_values
+            (int) $thrift->num_values,
         );
     }
 
-    public function definitionLevelEncoding() : Encodings
+    public function definitionLevelEncoding(): Encodings
     {
         return $this->definitionLevelEncoding;
     }
 
-    public function encoding() : Encodings
+    public function encoding(): Encodings
     {
         return $this->encoding;
     }
 
-    public function repetitionLevelEncoding() : Encodings
+    public function repetitionLevelEncoding(): Encodings
     {
         return $this->repetitionLevelEncoding;
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\DataPageHeader
+    public function toThrift(): \Flow\Parquet\ThriftModel\DataPageHeader
     {
         return new \Flow\Parquet\ThriftModel\DataPageHeader([
             'num_values' => $this->valuesCount,
@@ -51,7 +50,7 @@ final readonly class DataPageHeader
         ]);
     }
 
-    public function valuesCount() : int
+    public function valuesCount(): int
     {
         return $this->valuesCount;
     }

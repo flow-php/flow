@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use Flow\ETL\{FlowContext, GroupBy, Processor, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\GroupBy;
+use Flow\ETL\Processor;
+use Flow\ETL\Rows;
 
 /**
  * Groups all rows and applies aggregation functions.
@@ -13,11 +16,11 @@ use Flow\ETL\{FlowContext, GroupBy, Processor, Rows};
  */
 final readonly class GroupByProcessor implements Processor
 {
-    public function __construct(public GroupBy $groupBy)
-    {
-    }
+    public function __construct(
+        public GroupBy $groupBy,
+    ) {}
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         foreach ($rows as $batch) {
             /** @var Rows $batch */

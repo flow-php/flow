@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
-use Flow\ETL\{Adapter\JSON\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
+use Flow\ETL\Adapter\JSON\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Loader\{Closure, FileLoader};
-use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 
 final class JsonLoader implements Closure, FileLoader, Loader
 {
@@ -30,9 +38,8 @@ final class JsonLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::JSON);
     }
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
-
         foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
             $stream->append($this->putRowsInNewLines ? "\n]" : ']');
         }
@@ -40,12 +47,12 @@ final class JsonLoader implements Closure, FileLoader, Loader
         $context->streams()->closeStreams($this->path);
     }
 
-    public function destination() : Path
+    public function destination(): Path
     {
         return $this->path;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this, [
             TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
@@ -68,21 +75,21 @@ final class JsonLoader implements Closure, FileLoader, Loader
         }
     }
 
-    public function withDateTimeFormat(string $dateTimeFormat) : self
+    public function withDateTimeFormat(string $dateTimeFormat): self
     {
         $this->dateTimeFormat = $dateTimeFormat;
 
         return $this;
     }
 
-    public function withFlags(int $flags) : self
+    public function withFlags(int $flags): self
     {
         $this->flags = $flags;
 
         return $this;
     }
 
-    public function withRowsInNewLines(bool $putRowsInNewLines) : self
+    public function withRowsInNewLines(bool $putRowsInNewLines): self
     {
         $this->putRowsInNewLines = $putRowsInNewLines;
 
@@ -92,7 +99,7 @@ final class JsonLoader implements Closure, FileLoader, Loader
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $partitions, FlowContext $context) : void
+    public function write(Rows $nextRows, array $partitions, FlowContext $context): void
     {
         $streams = $context->streams();
         $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
@@ -119,7 +126,7 @@ final class JsonLoader implements Closure, FileLoader, Loader
      * @throws RuntimeException
      * @throws \JsonException
      */
-    private function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer) : void
+    private function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer): void
     {
         if (!\count($rows)) {
             return;
@@ -138,7 +145,7 @@ final class JsonLoader implements Closure, FileLoader, Loader
                 throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
             }
 
-            $json = ($this->writes[$stream->path()->path()] > 0) ? ($separator . $json) : $json;
+            $json = $this->writes[$stream->path()->path()] > 0 ? $separator . $json : $json;
 
             $stream->append($json);
 

@@ -10,7 +10,7 @@ abstract class SessionIntegrationTestCase extends TestCase
 {
     private ?SessionTestContext $context = null;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
@@ -21,7 +21,7 @@ abstract class SessionIntegrationTestCase extends TestCase
         $this->context->createSessionTable('sessions');
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         if ($this->context !== null) {
             $this->context->dropSessionTable('sessions');
@@ -30,7 +30,7 @@ abstract class SessionIntegrationTestCase extends TestCase
         }
     }
 
-    protected function sessionContext() : SessionTestContext
+    protected function sessionContext(): SessionTestContext
     {
         if ($this->context === null) {
             static::fail('SessionTestContext not initialized. Ensure setUp() was called.');

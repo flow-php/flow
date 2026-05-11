@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\Memory;
 
-use Flow\Filesystem\{DestinationStream, Exception\InvalidArgumentException, Exception\RuntimeException, Path, SourceStream};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 
 final class MemoryStream implements DestinationStream, SourceStream
 {
     /**
      * @param resource $handle
      */
-    public function __construct(private $handle, private readonly Path $path)
-    {
+    public function __construct(
+        private $handle,
+        private readonly Path $path,
+    ) {
         if (!\is_resource($this->handle)) {
             throw new InvalidArgumentException('Invalid memory stream handle');
         }
@@ -25,12 +31,17 @@ final class MemoryStream implements DestinationStream, SourceStream
         }
     }
 
-    public function append(string $data) : DestinationStream
+    public function append(string $data): DestinationStream
     {
         $written = \fwrite($this->handle, $data);
 
         if ($written === false || $written !== \strlen($data)) {
-            throw new RuntimeException('Failed to write all bytes to stream, expected ' . \strlen($data) . ' bytes, written: ' . ($written === false ? '0' : $written));
+            throw new RuntimeException(
+                'Failed to write all bytes to stream, expected '
+                . \strlen($data)
+                . ' bytes, written: '
+                . ($written === false ? '0' : $written),
+            );
         }
 
         return $this;
@@ -39,11 +50,9 @@ final class MemoryStream implements DestinationStream, SourceStream
     /**
      * We are not closing memory streams, in order to cleanup memory use rm on Memory Filesystem.
      */
-    public function close() : void
-    {
-    }
+    public function close(): void {}
 
-    public function content() : string
+    public function content(): string
     {
         \fseek($this->handle, 0);
 
@@ -56,19 +65,19 @@ final class MemoryStream implements DestinationStream, SourceStream
         return $content;
     }
 
-    public function fromResource($resource) : DestinationStream
+    public function fromResource($resource): DestinationStream
     {
         stream_copy_to_stream($resource, $this->handle);
 
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return true;
     }
 
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         \fseek($this->handle, 0);
 
@@ -77,19 +86,19 @@ final class MemoryStream implements DestinationStream, SourceStream
         }
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }
 
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         \fseek($this->handle, $offset);
 
         return (string) \fread($this->handle, $length);
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         \fseek($this->handle, 0);
 
@@ -98,7 +107,7 @@ final class MemoryStream implements DestinationStream, SourceStream
         }
     }
 
-    public function size() : ?int
+    public function size(): ?int
     {
         $stat = \fstat($this->handle);
 

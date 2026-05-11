@@ -9,16 +9,16 @@ use Flow\ETL\Exception\KeyNotInCacheException;
 
 interface Cache
 {
-    public function clear() : void;
+    public function clear(): void;
 
-    public function delete(string $key) : void;
+    public function delete(string $key): void;
 
     /**
      * @throws KeyNotInCacheException
      */
-    public function get(string $key) : Row|Rows|CacheIndex;
+    public function get(string $key): Row|Rows|CacheIndex;
 
-    public function has(string $key) : bool;
+    public function has(string $key): bool;
 
-    public function set(string $key, Row|Rows|CacheIndex $value) : void;
+    public function set(string $key, Row|Rows|CacheIndex $value): void;
 }

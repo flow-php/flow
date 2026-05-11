@@ -17,14 +17,14 @@ final class SortConfigBuilder
 
     private ?Unit $sortMemoryLimit = null;
 
-    public function algorithm(SortAlgorithms $algorithm) : self
+    public function algorithm(SortAlgorithms $algorithm): self
     {
         $this->algorithm = $algorithm;
 
         return $this;
     }
 
-    public function build() : SortConfig
+    public function build(): SortConfig
     {
         if ($this->sortMemoryLimit === null) {
             $sortMemory = \getenv(SortConfig::SORT_MAX_MEMORY_ENV);
@@ -37,26 +37,24 @@ final class SortConfigBuilder
                 if ($memoryLimit === '-1') {
                     $this->sortMemoryLimit = Unit::fromBytes(\PHP_INT_MAX);
                 } else {
-                    $this->sortMemoryLimit = Unit::fromString($memoryLimit)->percentage(self::DEFAULT_SORT_MEMORY_PERCENTAGE);
+                    $this->sortMemoryLimit = Unit::fromString(
+                        $memoryLimit,
+                    )->percentage(self::DEFAULT_SORT_MEMORY_PERCENTAGE);
                 }
             }
         }
 
-        return new SortConfig(
-            $this->algorithm,
-            $this->sortMemoryLimit,
-            $this->filesystemProtocol,
-        );
+        return new SortConfig($this->algorithm, $this->sortMemoryLimit, $this->filesystemProtocol);
     }
 
-    public function filesystemProtocol(string $protocol) : self
+    public function filesystemProtocol(string $protocol): self
     {
         $this->filesystemProtocol = $protocol;
 
         return $this;
     }
 
-    public function sortMemoryLimit(Unit $sortMemoryLimit) : self
+    public function sortMemoryLimit(Unit $sortMemoryLimit): self
     {
         $this->sortMemoryLimit = $sortMemoryLimit;
 

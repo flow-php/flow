@@ -12,7 +12,7 @@ namespace Flow\Telemetry\Resource\Attribute;
  *
  * @see https://opentelemetry.io/docs/specs/semconv/resource/os/
  */
-enum OsAttribute : string
+enum OsAttribute: string
 {
     /**
      * Unique identifier for a particular build of the operating system.

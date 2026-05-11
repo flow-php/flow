@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, CoercionForm, FuncCall, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\CoercionForm;
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 final readonly class SimilarTo implements Condition
 {
@@ -14,10 +21,9 @@ final readonly class SimilarTo implements Condition
         public Expression $expression,
         public Expression $pattern,
         public ?Expression $escape = null,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aExpr = $node->getAExpr();
 
@@ -28,7 +34,11 @@ final readonly class SimilarTo implements Condition
         $kind = $aExpr->getKind();
 
         if ($kind !== A_Expr_Kind::AEXPR_SIMILAR) {
-            throw InvalidAstException::invalidFieldValue('kind', 'A_Expr', 'Expected AEXPR_SIMILAR for SimilarTo condition');
+            throw InvalidAstException::invalidFieldValue(
+                'kind',
+                'A_Expr',
+                'Expected AEXPR_SIMILAR for SimilarTo condition',
+            );
         }
 
         $lexpr = $aExpr->getLexpr();
@@ -65,34 +75,30 @@ final readonly class SimilarTo implements Condition
             throw InvalidAstException::missingRequiredField('pattern', 'SimilarTo');
         }
 
-        return new self(
-            ExpressionFactory::fromAst($lexpr),
-            $pattern,
-            $escape
-        );
+        return new self(ExpressionFactory::fromAst($lexpr), $pattern, $escape);
     }
 
-    public function and(Condition $other) : AndCondition
+    public function and(Condition $other): AndCondition
     {
         return new AndCondition($this, $other);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : NotCondition
+    public function not(): NotCondition
     {
         return new NotCondition($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $operatorString = new PBString(['sval' => '~']);
         $operatorNode = new Node(['string' => $operatorString]);

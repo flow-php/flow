@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\DropIndex;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBList;
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class DropIndexBuilder implements DropIndexFinalStep
 {
@@ -20,55 +25,34 @@ final readonly class DropIndexBuilder implements DropIndexFinalStep
         private bool $ifExists = false,
         private bool $concurrent = false,
         private int $behavior = DropBehavior::DROP_BEHAVIOR_UNDEFINED,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$indexes) : DropIndexFinalStep
+    public static function create(string ...$indexes): DropIndexFinalStep
     {
         return new self(\array_values($indexes));
     }
 
-    public function cascade() : DropIndexFinalStep
+    public function cascade(): DropIndexFinalStep
     {
-        return new self(
-            $this->indexes,
-            $this->ifExists,
-            $this->concurrent,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->indexes, $this->ifExists, $this->concurrent, DropBehavior::DROP_CASCADE);
     }
 
-    public function concurrently() : DropIndexFinalStep
+    public function concurrently(): DropIndexFinalStep
     {
-        return new self(
-            $this->indexes,
-            $this->ifExists,
-            true,
-            $this->behavior,
-        );
+        return new self($this->indexes, $this->ifExists, true, $this->behavior);
     }
 
-    public function ifExists() : DropIndexFinalStep
+    public function ifExists(): DropIndexFinalStep
     {
-        return new self(
-            $this->indexes,
-            true,
-            $this->concurrent,
-            $this->behavior,
-        );
+        return new self($this->indexes, true, $this->concurrent, $this->behavior);
     }
 
-    public function restrict() : DropIndexFinalStep
+    public function restrict(): DropIndexFinalStep
     {
-        return new self(
-            $this->indexes,
-            $this->ifExists,
-            $this->concurrent,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->indexes, $this->ifExists, $this->concurrent, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_INDEX);
@@ -96,7 +80,7 @@ final readonly class DropIndexBuilder implements DropIndexFinalStep
         return $stmt;
     }
 
-    private function createIndexListNode(string $index) : Node
+    private function createIndexListNode(string $index): Node
     {
         $identifier = QualifiedIdentifier::parse($index);
         $listItems = [];

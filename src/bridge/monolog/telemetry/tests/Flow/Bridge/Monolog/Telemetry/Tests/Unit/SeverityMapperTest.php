@@ -8,7 +8,8 @@ use Flow\Bridge\Monolog\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Telemetry\Logger\Severity;
 use Monolog\Level;
-use PHPUnit\Framework\Attributes\{CoversClass, DataProvider};
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(SeverityMapper::class)]
@@ -17,7 +18,7 @@ final class SeverityMapperTest extends TestCase
     /**
      * @return \Generator<string, array{Level, Severity}>
      */
-    public static function defaultMappingProvider() : \Generator
+    public static function defaultMappingProvider(): \Generator
     {
         yield 'DEBUG → DEBUG' => [Level::Debug, Severity::DEBUG];
         yield 'INFO → INFO' => [Level::Info, Severity::INFO];
@@ -29,7 +30,7 @@ final class SeverityMapperTest extends TestCase
         yield 'EMERGENCY → FATAL' => [Level::Emergency, Severity::FATAL];
     }
 
-    public function test_custom_mapping_overrides_default() : void
+    public function test_custom_mapping_overrides_default(): void
     {
         $customMapping = [
             Level::Debug->value => Severity::TRACE,
@@ -44,33 +45,33 @@ final class SeverityMapperTest extends TestCase
 
         $mapper = new SeverityMapper($customMapping);
 
-        self::assertSame(Severity::TRACE, $mapper->map(Level::Debug));
-        self::assertSame(Severity::WARN, $mapper->map(Level::Notice));
+        static::assertSame(Severity::TRACE, $mapper->map(Level::Debug));
+        static::assertSame(Severity::WARN, $mapper->map(Level::Notice));
     }
 
     #[DataProvider('defaultMappingProvider')]
-    public function test_default_mapping(Level $monologLevel, Severity $expectedSeverity) : void
+    public function test_default_mapping(Level $monologLevel, Severity $expectedSeverity): void
     {
         $mapper = new SeverityMapper();
 
-        self::assertSame($expectedSeverity, $mapper->map($monologLevel));
+        static::assertSame($expectedSeverity, $mapper->map($monologLevel));
     }
 
-    public function test_default_mapping_returns_all_monolog_levels() : void
+    public function test_default_mapping_returns_all_monolog_levels(): void
     {
         $mapping = SeverityMapper::defaultMapping();
 
-        self::assertArrayHasKey(Level::Debug->value, $mapping);
-        self::assertArrayHasKey(Level::Info->value, $mapping);
-        self::assertArrayHasKey(Level::Notice->value, $mapping);
-        self::assertArrayHasKey(Level::Warning->value, $mapping);
-        self::assertArrayHasKey(Level::Error->value, $mapping);
-        self::assertArrayHasKey(Level::Critical->value, $mapping);
-        self::assertArrayHasKey(Level::Alert->value, $mapping);
-        self::assertArrayHasKey(Level::Emergency->value, $mapping);
+        static::assertArrayHasKey(Level::Debug->value, $mapping);
+        static::assertArrayHasKey(Level::Info->value, $mapping);
+        static::assertArrayHasKey(Level::Notice->value, $mapping);
+        static::assertArrayHasKey(Level::Warning->value, $mapping);
+        static::assertArrayHasKey(Level::Error->value, $mapping);
+        static::assertArrayHasKey(Level::Critical->value, $mapping);
+        static::assertArrayHasKey(Level::Alert->value, $mapping);
+        static::assertArrayHasKey(Level::Emergency->value, $mapping);
     }
 
-    public function test_partial_custom_mapping_throws_on_missing_level() : void
+    public function test_partial_custom_mapping_throws_on_missing_level(): void
     {
         $customMapping = [
             Level::Debug->value => Severity::DEBUG,

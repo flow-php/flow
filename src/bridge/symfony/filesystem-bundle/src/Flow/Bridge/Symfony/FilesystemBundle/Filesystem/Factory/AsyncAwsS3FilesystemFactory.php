@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory;
 
-use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};
 use AsyncAws\S3\S3Client;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
@@ -13,9 +12,12 @@ use Flow\Filesystem\Filesystem;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
+
 final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 {
-    public function create(string $protocol, array $config) : Filesystem
+    public function create(string $protocol, array $config): Filesystem
     {
         $allowed = ['bucket', 'client', 'options'];
         $unknown = \array_diff(\array_keys($config), $allowed);
@@ -29,13 +31,17 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         }
 
         if (!\is_string($config['bucket'] ?? null) || $config['bucket'] === '') {
-            throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" requires a non-empty `bucket` option.');
+            throw new InvalidArgumentException(
+                'Filesystem factory for backend "aws_s3" requires a non-empty `bucket` option.',
+            );
         }
 
         $bucket = $config['bucket'];
 
         if (!\array_key_exists('client', $config) || $config['client'] === null) {
-            throw new InvalidArgumentException('Filesystem factory for backend "aws_s3" requires exactly one of `client_service_id` or `client`.');
+            throw new InvalidArgumentException(
+                'Filesystem factory for backend "aws_s3" requires exactly one of `client_service_id` or `client`.',
+            );
         }
 
         $client = $config['client'];
@@ -46,7 +52,11 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             /** @var array<string, mixed> $client */
             $resolvedClient = $this->buildClient($client);
         } else {
-            throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "aws_s3" `client` must be an array or %s instance, got %s.', S3Client::class, \get_debug_type($client)));
+            throw new InvalidArgumentException(\sprintf(
+                'Filesystem factory for backend "aws_s3" `client` must be an array or %s instance, got %s.',
+                S3Client::class,
+                \get_debug_type($client),
+            ));
         }
 
         $options = $this->buildOptions($config['options'] ?? null);
@@ -54,7 +64,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         return aws_s3_filesystem($bucket, $resolvedClient, $options, $protocol);
     }
 
-    public function type() : string
+    public function type(): string
     {
         return 'aws_s3';
     }
@@ -62,9 +72,22 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
     /**
      * @param array<string, mixed> $clientConfig
      */
-    private function buildClient(array $clientConfig) : S3Client
+    private function buildClient(array $clientConfig): S3Client
     {
-        $allowed = ['region', 'access_key_id', 'access_key_secret', 'session_token', 'endpoint', 'path_style_endpoint', 'shared_credentials_file', 'shared_config_file', 'profile', 'debug', 'http_client', 'logger'];
+        $allowed = [
+            'region',
+            'access_key_id',
+            'access_key_secret',
+            'session_token',
+            'endpoint',
+            'path_style_endpoint',
+            'shared_credentials_file',
+            'shared_config_file',
+            'profile',
+            'debug',
+            'http_client',
+            'logger',
+        ];
         $unknown = \array_diff(\array_keys($clientConfig), $allowed);
 
         if ($unknown !== []) {
@@ -80,7 +103,10 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 
         if (\array_key_exists('http_client', $clientConfig) && $clientConfig['http_client'] !== null) {
             if (!$clientConfig['http_client'] instanceof HttpClientInterface) {
-                throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "aws_s3" `client.http_client_service_id` must reference a service implementing %s.', HttpClientInterface::class));
+                throw new InvalidArgumentException(\sprintf(
+                    'Filesystem factory for backend "aws_s3" `client.http_client_service_id` must reference a service implementing %s.',
+                    HttpClientInterface::class,
+                ));
             }
             $httpClient = $clientConfig['http_client'];
             unset($clientConfig['http_client']);
@@ -88,7 +114,10 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
 
         if (\array_key_exists('logger', $clientConfig) && $clientConfig['logger'] !== null) {
             if (!$clientConfig['logger'] instanceof LoggerInterface) {
-                throw new InvalidArgumentException(\sprintf('Filesystem factory for backend "aws_s3" `client.logger_service_id` must reference a service implementing %s.', LoggerInterface::class));
+                throw new InvalidArgumentException(\sprintf(
+                    'Filesystem factory for backend "aws_s3" `client.logger_service_id` must reference a service implementing %s.',
+                    LoggerInterface::class,
+                ));
             }
             $logger = $clientConfig['logger'];
             unset($clientConfig['logger']);
@@ -125,7 +154,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         return $client;
     }
 
-    private function buildOptions(mixed $optionsConfig) : Options
+    private function buildOptions(mixed $optionsConfig): Options
     {
         $options = new Options();
 

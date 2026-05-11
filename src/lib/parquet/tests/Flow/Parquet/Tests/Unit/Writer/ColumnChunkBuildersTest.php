@@ -5,16 +5,29 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\{Compressions, Encodings, Schema};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, LogicalType, MapKey, MapValue, NestedColumn, PhysicalType};
-use Flow\Parquet\Writer\ColumnChunkBuilder\{DeltaBinaryPackedColumnChunkBuilder, PlainFlatColumnChunkBuilder, RLEDictionaryChunkBuilder};
-use Flow\Parquet\Writer\{ColumnChunkBuilder, ColumnChunkBuilders, ColumnChunkContainer};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\MapKey;
+use Flow\Parquet\ParquetFile\Schema\MapValue;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\Writer\ColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilders;
+use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\TestCase;
 
 final class ColumnChunkBuildersTest extends TestCase
 {
-    public function test_add_multiple_times_with_same_column() : void
+    public function test_add_multiple_times_with_same_column(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -30,10 +43,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues1);
         $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues2);
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_add_with_column_data_calls_correct_builder() : void
+    public function test_add_with_column_data_calls_correct_builder(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -47,10 +60,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues);
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_add_with_flat_column() : void
+    public function test_add_with_flat_column(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -63,10 +76,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $columnValues = new WriteFlatColumnValues($flatColumn);
         $builders->addColumnByFlatPath($flatColumn->flatPath(), $columnValues);
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_add_with_nested_column() : void
+    public function test_add_with_nested_column(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -82,10 +95,10 @@ final class ColumnChunkBuildersTest extends TestCase
             $builders->addColumnByFlatPath($flatChild->flatPath(), $columnValues);
         }
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_close_pages_before_flush() : void
+    public function test_close_pages_before_flush(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -98,12 +111,12 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders->closePages();
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_close_pages_with_empty_builders() : void
+    public function test_close_pages_with_empty_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -114,10 +127,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders->closePages();
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_close_pages_with_multiple_builders() : void
+    public function test_close_pages_with_multiple_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -130,10 +143,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders->closePages();
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_close_pages_with_nested_columns() : void
+    public function test_close_pages_with_nested_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -147,10 +160,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders->closePages();
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_close_pages_with_single_builder() : void
+    public function test_close_pages_with_single_builder(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -162,10 +175,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders->closePages();
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_complex_nested_flat_paths_encoding_selection() : void
+    public function test_complex_nested_flat_paths_encoding_selection(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'struct_nested.struct_flat.list_of_ints.list.element' => Encodings::DELTA_BINARY_PACKED,
@@ -187,25 +200,25 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Verify the builders were created successfully (complex assertion would require deep reflection)
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_constructor_with_builders_array() : void
+    public function test_constructor_with_builders_array(): void
     {
         $mockBuilder = $this->createMock(ColumnChunkBuilder::class);
         $builders = new ColumnChunkBuilders(['test' => $mockBuilder]);
 
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_constructor_with_empty_builders() : void
+    public function test_constructor_with_empty_builders(): void
     {
         $builders = new ColumnChunkBuilders([]);
 
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_custom_encoding_mixed_with_default_selection() : void
+    public function test_custom_encoding_mixed_with_default_selection(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'user_id' => Encodings::DELTA_BINARY_PACKED,
@@ -215,7 +228,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $userIdColumn = new FlatColumn('user_id', PhysicalType::INT32);
         $statusColumn = new FlatColumn('status', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $descriptionColumn = new FlatColumn('description', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
+        $descriptionColumn = new FlatColumn(
+            'description',
+            PhysicalType::BYTE_ARRAY,
+            logicalType: LogicalType::string(),
+        );
         $schema = Schema::with($userIdColumn, $statusColumn, $descriptionColumn);
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
@@ -226,21 +243,19 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Verify custom encodings
-        self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
+        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
 
         // Verify default encoding is used for description (not specified in custom encodings)
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
     }
 
-    public function test_custom_encoding_overrides_automatic_delta_selection() : void
+    public function test_custom_encoding_overrides_automatic_delta_selection(): void
     {
         // Writer version 2 would normally select DELTA_BINARY_PACKED for INT32/INT64
-        $options = Options::default()
-            ->set(Option::WRITER_VERSION, 2)
-            ->set(Option::COLUMNS_ENCODINGS, [
-                'user_id' => Encodings::PLAIN,  // Override automatic DELTA selection
-            ]);
+        $options = Options::default()->set(Option::WRITER_VERSION, 2)->set(Option::COLUMNS_ENCODINGS, [
+            'user_id' => Encodings::PLAIN, // Override automatic DELTA selection
+        ]);
         $compressions = Compressions::UNCOMPRESSED;
 
         $flatColumn = new FlatColumn('user_id', PhysicalType::INT32);
@@ -253,10 +268,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersProperty = $reflection->getProperty('builders');
         $buildersArray = $buildersProperty->getValue($builders);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
     }
 
-    public function test_custom_encoding_selection_in_options() : void
+    public function test_custom_encoding_selection_in_options(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'col1' => Encodings::PLAIN,
@@ -277,14 +292,14 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersProperty = $reflection->getProperty('builders');
         $buildersArray = $buildersProperty->getValue($builders);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
-        self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['col3']);
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
+        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['col3']);
     }
 
     // Custom encoding selection tests
 
-    public function test_custom_encoding_selection_with_delta_binary_packed() : void
+    public function test_custom_encoding_selection_with_delta_binary_packed(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'user_id' => Encodings::DELTA_BINARY_PACKED,
@@ -301,10 +316,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersProperty = $reflection->getProperty('builders');
         $buildersArray = $buildersProperty->getValue($builders);
 
-        self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
     }
 
-    public function test_custom_encoding_selection_with_nested_columns() : void
+    public function test_custom_encoding_selection_with_nested_columns(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'user.id' => Encodings::DELTA_BINARY_PACKED,
@@ -335,11 +350,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         // Verify the correct encoding builders were created
         // Order: [0] = user.id (DELTA_BINARY_PACKED), [1] = user.name (RLE_DICTIONARY)
-        self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $childBuilderValues[0]);
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $childBuilderValues[1]);
+        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $childBuilderValues[0]);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $childBuilderValues[1]);
     }
 
-    public function test_custom_encoding_selection_with_plain() : void
+    public function test_custom_encoding_selection_with_plain(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'description' => Encodings::PLAIN,
@@ -356,10 +371,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersProperty = $reflection->getProperty('builders');
         $buildersArray = $buildersProperty->getValue($builders);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
     }
 
-    public function test_custom_encoding_selection_with_rle_dictionary() : void
+    public function test_custom_encoding_selection_with_rle_dictionary(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
             'status' => Encodings::RLE_DICTIONARY,
@@ -376,10 +391,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersProperty = $reflection->getProperty('builders');
         $buildersArray = $buildersProperty->getValue($builders);
 
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
     }
 
-    public function test_different_compression_types() : void
+    public function test_different_compression_types(): void
     {
         $options = new Options();
 
@@ -397,13 +412,13 @@ final class ColumnChunkBuildersTest extends TestCase
 
             $containers = $builders->flush(0);
 
-            self::assertIsArray($containers);
-            self::assertCount(1, $containers);
-            self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+            static::assertIsArray($containers);
+            static::assertCount(1, $containers);
+            static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
         }
     }
 
-    public function test_different_physical_types() : void
+    public function test_different_physical_types(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -421,15 +436,15 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(6, $containers);
+        static::assertIsArray($containers);
+        static::assertCount(6, $containers);
 
         foreach ($containers as $container) {
-            self::assertInstanceOf(ColumnChunkContainer::class, $container);
+            static::assertInstanceOf(ColumnChunkContainer::class, $container);
         }
     }
 
-    public function test_edge_case_large_file_offset() : void
+    public function test_edge_case_large_file_offset(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -442,12 +457,12 @@ final class ColumnChunkBuildersTest extends TestCase
         $largeOffset = 1000000;
         $containers = $builders->flush($largeOffset);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame($largeOffset, $containers[0]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame($largeOffset, $containers[0]->columnChunk->fileOffset());
     }
 
-    public function test_edge_case_zero_file_offset() : void
+    public function test_edge_case_zero_file_offset(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -459,12 +474,12 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(0, $containers[0]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(0, $containers[0]->columnChunk->fileOffset());
     }
 
-    public function test_empty_columns_encodings_option() : void
+    public function test_empty_columns_encodings_option(): void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, []);
         $compressions = Compressions::UNCOMPRESSED;
@@ -480,10 +495,10 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Should use default PLAIN encoding since no custom encoding specified
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
     }
 
-    public function test_flush_calculates_offset_correctly() : void
+    public function test_flush_calculates_offset_correctly(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -496,15 +511,15 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(100);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
 
         $expectedOffset = 100 + strlen($containers[0]->binaryBuffer);
-        self::assertGreaterThanOrEqual(100, $containers[0]->columnChunk->fileOffset());
-        self::assertGreaterThanOrEqual($expectedOffset, $containers[1]->columnChunk->fileOffset());
+        static::assertGreaterThanOrEqual(100, $containers[0]->columnChunk->fileOffset());
+        static::assertGreaterThanOrEqual($expectedOffset, $containers[1]->columnChunk->fileOffset());
     }
 
-    public function test_flush_with_different_file_offset() : void
+    public function test_flush_with_different_file_offset(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -516,12 +531,12 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(1000);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_flush_with_empty_builders() : void
+    public function test_flush_with_empty_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -532,11 +547,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertEmpty($containers);
+        static::assertIsArray($containers);
+        static::assertEmpty($containers);
     }
 
-    public function test_flush_with_multiple_builders() : void
+    public function test_flush_with_multiple_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -549,13 +564,13 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
     }
 
-    public function test_flush_with_nested_columns() : void
+    public function test_flush_with_nested_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -569,13 +584,13 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
     }
 
-    public function test_flush_with_single_builder() : void
+    public function test_flush_with_single_builder(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -587,12 +602,12 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_initialize_with_empty_schema() : void
+    public function test_initialize_with_empty_schema(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -601,10 +616,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_initialize_with_flat_columns() : void
+    public function test_initialize_with_flat_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -616,10 +631,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_initialize_with_mixed_columns() : void
+    public function test_initialize_with_mixed_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -632,10 +647,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_initialize_with_nested_columns() : void
+    public function test_initialize_with_nested_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -648,10 +663,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
-        self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
+        static::assertInstanceOf(ColumnChunkBuilders::class, $builders);
     }
 
-    public function test_is_any_page_full_with_empty_builders() : void
+    public function test_is_any_page_full_with_empty_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -662,10 +677,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $result = $builders->isAnyPageFull();
 
-        self::assertFalse($result);
+        static::assertFalse($result);
     }
 
-    public function test_is_any_page_full_with_multiple_builders() : void
+    public function test_is_any_page_full_with_multiple_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -678,10 +693,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $result = $builders->isAnyPageFull();
 
-        self::assertFalse($result);
+        static::assertFalse($result);
     }
 
-    public function test_is_any_page_full_with_nested_columns() : void
+    public function test_is_any_page_full_with_nested_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -695,10 +710,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $result = $builders->isAnyPageFull();
 
-        self::assertFalse($result);
+        static::assertFalse($result);
     }
 
-    public function test_is_any_page_full_with_single_builder() : void
+    public function test_is_any_page_full_with_single_builder(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -710,10 +725,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $result = $builders->isAnyPageFull();
 
-        self::assertFalse($result);
+        static::assertFalse($result);
     }
 
-    public function test_multiple_close_pages_calls() : void
+    public function test_multiple_close_pages_calls(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -729,12 +744,12 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_multiple_flush_calls() : void
+    public function test_multiple_flush_calls(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -747,13 +762,13 @@ final class ColumnChunkBuildersTest extends TestCase
         $containers1 = $builders->flush(0);
         $containers2 = $builders->flush(100);
 
-        self::assertIsArray($containers1);
-        self::assertIsArray($containers2);
-        self::assertCount(1, $containers1);
-        self::assertCount(1, $containers2);
+        static::assertIsArray($containers1);
+        static::assertIsArray($containers2);
+        static::assertCount(1, $containers1);
+        static::assertCount(1, $containers2);
     }
 
-    public function test_uncompressed_size_is_cumulative() : void
+    public function test_uncompressed_size_is_cumulative(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -766,11 +781,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $totalSize = $builders->uncompressedSize();
 
-        self::assertIsInt($totalSize);
-        self::assertGreaterThanOrEqual(0, $totalSize);
+        static::assertIsInt($totalSize);
+        static::assertGreaterThanOrEqual(0, $totalSize);
     }
 
-    public function test_uncompressed_size_with_empty_builders() : void
+    public function test_uncompressed_size_with_empty_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -781,10 +796,10 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $size = $builders->uncompressedSize();
 
-        self::assertSame(0, $size);
+        static::assertSame(0, $size);
     }
 
-    public function test_uncompressed_size_with_multiple_builders() : void
+    public function test_uncompressed_size_with_multiple_builders(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -797,11 +812,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $size = $builders->uncompressedSize();
 
-        self::assertIsInt($size);
-        self::assertGreaterThanOrEqual(0, $size);
+        static::assertIsInt($size);
+        static::assertGreaterThanOrEqual(0, $size);
     }
 
-    public function test_uncompressed_size_with_nested_columns() : void
+    public function test_uncompressed_size_with_nested_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -815,11 +830,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $size = $builders->uncompressedSize();
 
-        self::assertIsInt($size);
-        self::assertGreaterThanOrEqual(0, $size);
+        static::assertIsInt($size);
+        static::assertGreaterThanOrEqual(0, $size);
     }
 
-    public function test_uncompressed_size_with_single_builder() : void
+    public function test_uncompressed_size_with_single_builder(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -831,11 +846,11 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $size = $builders->uncompressedSize();
 
-        self::assertIsInt($size);
-        self::assertGreaterThanOrEqual(0, $size);
+        static::assertIsInt($size);
+        static::assertGreaterThanOrEqual(0, $size);
     }
 
-    public function test_workflow_initialize_add_close_flush() : void
+    public function test_workflow_initialize_add_close_flush(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -852,12 +867,12 @@ final class ColumnChunkBuildersTest extends TestCase
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_workflow_with_multiple_columns() : void
+    public function test_workflow_with_multiple_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -874,19 +889,19 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders->addColumnByFlatPath($flatColumn1->flatPath(), $columnValues1);
         $builders->addColumnByFlatPath($flatColumn2->flatPath(), $columnValues2);
 
-        self::assertFalse($builders->isAnyPageFull());
+        static::assertFalse($builders->isAnyPageFull());
 
         $builders->closePages();
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
     }
 
-    public function test_workflow_with_nested_columns() : void
+    public function test_workflow_with_nested_columns(): void
     {
         $options = new Options();
         $compressions = Compressions::UNCOMPRESSED;
@@ -903,15 +918,15 @@ final class ColumnChunkBuildersTest extends TestCase
             $builders->addColumnByFlatPath($flatChild->flatPath(), $columnValues);
         }
 
-        self::assertFalse($builders->isAnyPageFull());
+        static::assertFalse($builders->isAnyPageFull());
 
         $builders->closePages();
 
         $containers = $builders->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
     }
 }

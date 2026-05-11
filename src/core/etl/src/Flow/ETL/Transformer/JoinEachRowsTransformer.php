@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{DataFrameFactory, Exception\InvalidArgumentException, FlowContext, Rows, Transformer};
-use Flow\ETL\Join\{Expression, Join};
+use Flow\ETL\DataFrameFactory;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Join\Expression;
+use Flow\ETL\Join\Join;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final readonly class JoinEachRowsTransformer implements Transformer
 {
@@ -14,25 +19,24 @@ final readonly class JoinEachRowsTransformer implements Transformer
         private DataFrameFactory $factory,
         private Expression $expression,
         private Join $type,
-    ) {
-    }
+    ) {}
 
-    public static function inner(DataFrameFactory $right, Expression $condition) : self
+    public static function inner(DataFrameFactory $right, Expression $condition): self
     {
         return new self($right, $condition, Join::inner);
     }
 
-    public static function left(DataFrameFactory $right, Expression $condition) : self
+    public static function left(DataFrameFactory $right, Expression $condition): self
     {
         return new self($right, $condition, Join::left);
     }
 
-    public static function leftAnti(DataFrameFactory $right, Expression $condition) : self
+    public static function leftAnti(DataFrameFactory $right, Expression $condition): self
     {
         return new self($right, $condition, Join::left_anti);
     }
 
-    public static function right(DataFrameFactory $right, Expression $condition) : self
+    public static function right(DataFrameFactory $right, Expression $condition): self
     {
         return new self($right, $condition, Join::right);
     }
@@ -40,7 +44,7 @@ final readonly class JoinEachRowsTransformer implements Transformer
     /**
      * @throws InvalidArgumentException
      */
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this, ['join.type' => $this->type->value]);
 

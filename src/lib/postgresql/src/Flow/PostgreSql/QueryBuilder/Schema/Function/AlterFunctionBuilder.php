@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, AlterFunctionStmt, DefElem, Integer, Node, ObjectType, ObjectWithArgs, PBString, RenameStmt};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\AlterFunctionStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RenameStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 
@@ -21,50 +29,39 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         private array $arguments = [],
         private array $actions = [],
         private ?string $renameTo = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : AlterFunctionArgsStep
+    public static function create(string $name): AlterFunctionArgsStep
     {
         return new self($name);
     }
 
-    public function arguments(FunctionArgument ...$args) : AlterFunctionFinalStep
+    public function arguments(FunctionArgument ...$args): AlterFunctionFinalStep
     {
-        return new self(
-            $this->name,
-            \array_values($args),
-            $this->actions,
-            $this->renameTo,
-        );
+        return new self($this->name, \array_values($args), $this->actions, $this->renameTo);
     }
 
-    public function cost(int $cost) : AlterFunctionFinalStep
+    public function cost(int $cost): AlterFunctionFinalStep
     {
         return $this->withIntegerOption('cost', $cost);
     }
 
-    public function immutable() : AlterFunctionFinalStep
+    public function immutable(): AlterFunctionFinalStep
     {
         return $this->withStringOption('volatility', 'immutable');
     }
 
-    public function parallel(ParallelSafety $safety) : AlterFunctionFinalStep
+    public function parallel(ParallelSafety $safety): AlterFunctionFinalStep
     {
         return $this->withStringOption('parallel', $safety->value);
     }
 
-    public function renameTo(string $newName) : AlterFunctionFinalStep
+    public function renameTo(string $newName): AlterFunctionFinalStep
     {
-        return new self(
-            $this->name,
-            $this->arguments,
-            $this->actions,
-            $newName,
-        );
+        return new self($this->name, $this->arguments, $this->actions, $newName);
     }
 
-    public function reset(string $parameter) : AlterFunctionFinalStep
+    public function reset(string $parameter): AlterFunctionFinalStep
     {
         $defElem = new DefElem();
         $defElem->setDefname($parameter);
@@ -75,17 +72,17 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         return $this->withAction('reset', $node);
     }
 
-    public function resetAll() : AlterFunctionFinalStep
+    public function resetAll(): AlterFunctionFinalStep
     {
         return $this->withAction('resetall', null);
     }
 
-    public function rows(int $rows) : AlterFunctionFinalStep
+    public function rows(int $rows): AlterFunctionFinalStep
     {
         return $this->withIntegerOption('rows', $rows);
     }
 
-    public function set(string $parameter, string $value) : AlterFunctionFinalStep
+    public function set(string $parameter, string $value): AlterFunctionFinalStep
     {
         $defElem = new DefElem();
         $defElem->setDefname($parameter);
@@ -107,12 +104,12 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         return $this->withAction('set', $node);
     }
 
-    public function stable() : AlterFunctionFinalStep
+    public function stable(): AlterFunctionFinalStep
     {
         return $this->withStringOption('volatility', 'stable');
     }
 
-    public function toAst() : AlterFunctionStmt|RenameStmt
+    public function toAst(): AlterFunctionStmt|RenameStmt
     {
         if ($this->renameTo !== null && $this->actions !== []) {
             throw InvalidBuilderStateException::mutuallyExclusiveOptions('RENAME TO', 'other alterations');
@@ -125,12 +122,12 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         return $this->buildAlterAst();
     }
 
-    public function volatile() : AlterFunctionFinalStep
+    public function volatile(): AlterFunctionFinalStep
     {
         return $this->withStringOption('volatility', 'volatile');
     }
 
-    private function buildAlterAst() : AlterFunctionStmt
+    private function buildAlterAst(): AlterFunctionStmt
     {
         $stmt = new AlterFunctionStmt();
         $stmt->setObjtype(ObjectType::OBJECT_FUNCTION);
@@ -183,7 +180,7 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         return $stmt;
     }
 
-    private function buildRenameAst() : RenameStmt
+    private function buildRenameAst(): RenameStmt
     {
         $stmt = new RenameStmt();
         $stmt->setRenameType(ObjectType::OBJECT_FUNCTION);
@@ -223,20 +220,15 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         return $stmt;
     }
 
-    private function withAction(string $name, ?Node $arg) : self
+    private function withAction(string $name, ?Node $arg): self
     {
         $newActions = $this->actions;
         $newActions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->arguments,
-            $newActions,
-            $this->renameTo,
-        );
+        return new self($this->name, $this->arguments, $newActions, $this->renameTo);
     }
 
-    private function withIntegerOption(string $name, int $value) : self
+    private function withIntegerOption(string $name, int $value): self
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -258,7 +250,7 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         return $this->withAction($name, $node);
     }
 
-    private function withStringOption(string $name, string $value) : self
+    private function withStringOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);

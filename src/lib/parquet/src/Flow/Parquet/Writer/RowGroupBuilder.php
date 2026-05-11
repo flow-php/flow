@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer;
 
-use Flow\Parquet\Dremel\{DremelShredder, RowGroupContainer};
-use Flow\Parquet\{Option, Options, ParquetFile\Compressions, ParquetFile\RowGroup, ParquetFile\Schema};
+use Flow\Parquet\Dremel\DremelShredder;
+use Flow\Parquet\Dremel\RowGroupContainer;
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\RowGroup;
+use Flow\Parquet\ParquetFile\Schema;
 
 final class RowGroupBuilder
 {
@@ -30,14 +35,14 @@ final class RowGroupBuilder
     /**
      * @param array<string, mixed> $row
      */
-    public function addRow(array $row) : void
+    public function addRow(array $row): void
     {
         $this->rowBuffer[] = $row;
         $this->rowsCount++;
 
         $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
 
-        if ($this->rowsCount % $interval === 0) {
+        if (($this->rowsCount % $interval) === 0) {
             $this->flushBuffer();
         }
     }
@@ -45,7 +50,7 @@ final class RowGroupBuilder
     /**
      * @param array<array<string, mixed>> $rows
      */
-    public function addRows(array $rows) : void
+    public function addRows(array $rows): void
     {
         /** @var int<1, max> $interval */
         $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
@@ -65,7 +70,7 @@ final class RowGroupBuilder
         }
     }
 
-    public function flush(int $fileOffset) : RowGroupContainer
+    public function flush(int $fileOffset): RowGroupContainer
     {
         $this->flushBuffer();
 
@@ -83,22 +88,22 @@ final class RowGroupBuilder
         return new RowGroupContainer($buffer, new RowGroup($chunks, $rowsCount));
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->rowsCount() === 0;
     }
 
-    public function isFull() : bool
+    public function isFull(): bool
     {
         return $this->columnChunkBuilders->uncompressedSize() >= $this->options->getInt(Option::ROW_GROUP_SIZE_BYTES);
     }
 
-    public function rowsCount() : int
+    public function rowsCount(): int
     {
         return $this->rowsCount;
     }
 
-    private function flushBuffer() : void
+    private function flushBuffer(): void
     {
         if (\count($this->rowBuffer) === 0) {
             return;

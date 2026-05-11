@@ -13,7 +13,7 @@ use Flow\ETL\Extractor;
  */
 interface LimitableExtractor extends Extractor
 {
-    public function changeLimit(int $limit) : void;
+    public function changeLimit(int $limit): void;
 
-    public function isLimited() : bool;
+    public function isLimited(): bool;
 }

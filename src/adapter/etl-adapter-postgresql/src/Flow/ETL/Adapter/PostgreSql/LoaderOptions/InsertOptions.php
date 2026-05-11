@@ -22,13 +22,12 @@ final readonly class InsertOptions
         public array $conflictColumns = [],
         public ?string $conflictConstraint = null,
         public array $updateColumns = [],
-    ) {
-    }
+    ) {}
 
     /**
      * Create options for skipping conflicting rows (ON CONFLICT DO NOTHING).
      */
-    public static function skipConflicts() : self
+    public static function skipConflicts(): self
     {
         return new self(skipConflicts: true);
     }
@@ -39,7 +38,7 @@ final readonly class InsertOptions
      * @param list<string> $columns Columns to detect conflicts on
      * @param list<string> $updateColumns Columns to update on conflict (empty = all non-key columns)
      */
-    public static function upsertOnColumns(array $columns, array $updateColumns = []) : self
+    public static function upsertOnColumns(array $columns, array $updateColumns = []): self
     {
         return new self(conflictColumns: $columns, updateColumns: $updateColumns);
     }
@@ -50,12 +49,12 @@ final readonly class InsertOptions
      * @param string $constraintName Name of the constraint to detect conflicts on
      * @param list<string> $updateColumns Columns to update on conflict (empty = all non-key columns)
      */
-    public static function upsertOnConstraint(string $constraintName, array $updateColumns = []) : self
+    public static function upsertOnConstraint(string $constraintName, array $updateColumns = []): self
     {
         return new self(conflictConstraint: $constraintName, updateColumns: $updateColumns);
     }
 
-    public function hasConflictHandling() : bool
+    public function hasConflictHandling(): bool
     {
         return $this->skipConflicts || $this->conflictColumns !== [] || $this->conflictConstraint !== null;
     }

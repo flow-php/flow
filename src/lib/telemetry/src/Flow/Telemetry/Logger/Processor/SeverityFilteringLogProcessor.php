@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\Logger\{LogEntry, LogProcessor, Severity};
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\Severity;
 
 /**
  * Filters log entries based on minimum severity level.
@@ -18,22 +20,21 @@ final readonly class SeverityFilteringLogProcessor implements LogProcessor
     public function __construct(
         private LogProcessor $processor,
         private Severity $minimumSeverity,
-    ) {
-    }
+    ) {}
 
-    public function flush() : bool
+    public function flush(): bool
     {
         return $this->processor->flush();
     }
 
-    public function process(LogEntry $entry) : void
+    public function process(LogEntry $entry): void
     {
         if ($entry->record->severity->isAtLeast($this->minimumSeverity)) {
             $this->processor->process($entry);
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         $this->processor->shutdown();
     }

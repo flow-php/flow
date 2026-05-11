@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateRangeStmt, DefElem, Node, PBString, TypeName};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CreateRangeStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\TypeName;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsStep, CreateRangeTypeSubtypeStep
 {
@@ -18,47 +23,46 @@ final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsSte
         private string $name,
         private ?string $schema = null,
         private array $params = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateRangeTypeSubtypeStep
+    public static function create(string $name): CreateRangeTypeSubtypeStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function canonical(string $function) : CreateRangeTypeOptionsStep
+    public function canonical(string $function): CreateRangeTypeOptionsStep
     {
         return $this->withStringParam('canonical', $function);
     }
 
-    public function collation(string $collation) : CreateRangeTypeOptionsStep
+    public function collation(string $collation): CreateRangeTypeOptionsStep
     {
         return $this->withStringParam('collation', $collation);
     }
 
-    public function multirangeTypeName(string $name) : CreateRangeTypeOptionsStep
+    public function multirangeTypeName(string $name): CreateRangeTypeOptionsStep
     {
         return $this->withStringParam('multirange_type_name', $name);
     }
 
-    public function subtype(string $type) : CreateRangeTypeOptionsStep
+    public function subtype(string $type): CreateRangeTypeOptionsStep
     {
         return $this->withTypeNameParam('subtype', $type);
     }
 
-    public function subtypeDiff(string $function) : CreateRangeTypeOptionsStep
+    public function subtypeDiff(string $function): CreateRangeTypeOptionsStep
     {
         return $this->withStringParam('subtype_diff', $function);
     }
 
-    public function subtypeOpclass(string $opclass) : CreateRangeTypeOptionsStep
+    public function subtypeOpclass(string $opclass): CreateRangeTypeOptionsStep
     {
         return $this->withStringParam('subtype_opclass', $opclass);
     }
 
-    public function toAst() : CreateRangeStmt
+    public function toAst(): CreateRangeStmt
     {
         $stmt = new CreateRangeStmt();
 
@@ -99,19 +103,15 @@ final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsSte
         return $stmt;
     }
 
-    private function withParam(string $name, Node $arg) : self
+    private function withParam(string $name, Node $arg): self
     {
         $newParams = $this->params;
         $newParams[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $newParams,
-        );
+        return new self($this->name, $this->schema, $newParams);
     }
 
-    private function withStringParam(string $name, string $value) : self
+    private function withStringParam(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);
@@ -122,7 +122,7 @@ final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsSte
         return $this->withParam($name, $argNode);
     }
 
-    private function withTypeNameParam(string $name, string $type) : self
+    private function withTypeNameParam(string $name, string $type): self
     {
         $typeName = new TypeName();
 

@@ -9,35 +9,35 @@ use PHPUnit\Framework\TestCase;
 
 final class QueryAttributesTest extends TestCase
 {
-    public function test_create_with_both_values() : void
+    public function test_create_with_both_values(): void
     {
         $attrs = new QueryAttributes('SELECT', 'users');
 
-        self::assertSame('SELECT', $attrs->operation);
-        self::assertSame('users', $attrs->target);
+        static::assertSame('SELECT', $attrs->operation);
+        static::assertSame('users', $attrs->target);
     }
 
-    public function test_create_with_null_operation() : void
+    public function test_create_with_null_operation(): void
     {
         $attrs = new QueryAttributes(null, 'users');
 
-        self::assertNull($attrs->operation);
-        self::assertSame('users', $attrs->target);
+        static::assertNull($attrs->operation);
+        static::assertSame('users', $attrs->target);
     }
 
-    public function test_create_with_null_target() : void
+    public function test_create_with_null_target(): void
     {
         $attrs = new QueryAttributes('SELECT', null);
 
-        self::assertSame('SELECT', $attrs->operation);
-        self::assertNull($attrs->target);
+        static::assertSame('SELECT', $attrs->operation);
+        static::assertNull($attrs->target);
     }
 
-    public function test_create_with_null_values() : void
+    public function test_create_with_null_values(): void
     {
         $attrs = new QueryAttributes(null, null);
 
-        self::assertNull($attrs->operation);
-        self::assertNull($attrs->target);
+        static::assertNull($attrs->operation);
+        static::assertNull($attrs->target);
     }
 }

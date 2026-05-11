@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient;
 
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus};
-use Symfony\Contracts\HttpClient\{HttpClientInterface, ResponseInterface, ResponseStreamInterface};
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+use Symfony\Contracts\HttpClient\ResponseStreamInterface;
 
 final readonly class TracableHttpClient implements HttpClientInterface
 {
@@ -14,13 +18,12 @@ final readonly class TracableHttpClient implements HttpClientInterface
         private HttpClientInterface $client,
         private Telemetry $telemetry,
         private string $clientName,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $options
      */
-    public function request(string $method, string $url, array $options = []) : ResponseInterface
+    public function request(string $method, string $url, array $options = []): ResponseInterface
     {
         $parsedUrl = \parse_url($url);
         $scheme = $parsedUrl['scheme'] ?? 'http';
@@ -41,11 +44,7 @@ final readonly class TracableHttpClient implements HttpClientInterface
             $attributes['server.port'] = $port;
         }
 
-        $span = $tracer->span(
-            "{$method} {$host}",
-            SpanKind::CLIENT,
-            $attributes
-        );
+        $span = $tracer->span("{$method} {$host}", SpanKind::CLIENT, $attributes);
 
         try {
             $response = $this->client->request($method, $url, $options);
@@ -70,7 +69,7 @@ final readonly class TracableHttpClient implements HttpClientInterface
         }
     }
 
-    public function stream(ResponseInterface|iterable $responses, ?float $timeout = null) : ResponseStreamInterface
+    public function stream(ResponseInterface|iterable $responses, ?float $timeout = null): ResponseStreamInterface
     {
         return $this->client->stream($responses, $timeout);
     }
@@ -78,12 +77,8 @@ final readonly class TracableHttpClient implements HttpClientInterface
     /**
      * @param array<string, mixed> $options
      */
-    public function withOptions(array $options) : static
+    public function withOptions(array $options): static
     {
-        return new self(
-            $this->client->withOptions($options),
-            $this->telemetry,
-            $this->clientName
-        );
+        return new self($this->client->withOptions($options), $this->telemetry, $this->clientName);
     }
 }

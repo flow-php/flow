@@ -6,7 +6,7 @@ namespace Flow\ETL\Function\ArraySort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-enum Sort : string
+enum Sort: string
 {
     case arsort = 'arsort';
     case asort = 'asort';
@@ -18,7 +18,7 @@ enum Sort : string
     case shuffle = 'shuffle';
     case sort = 'sort';
 
-    public static function fromString(string $value) : self
+    public static function fromString(string $value): self
     {
         $value = \strtolower($value);
 

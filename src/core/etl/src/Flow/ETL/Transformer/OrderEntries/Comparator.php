@@ -14,5 +14,5 @@ interface Comparator
      *
      * @return int
      */
-    public function compare(Entry $left, Entry $right) : int;
+    public function compare(Entry $left, Entry $right): int;
 }

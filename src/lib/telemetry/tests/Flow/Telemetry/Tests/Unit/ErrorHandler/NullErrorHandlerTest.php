@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class NullErrorHandlerTest extends TestCase
 {
-    public function test_does_nothing_when_invoked() : void
+    public function test_does_nothing_when_invoked(): void
     {
         $this->expectNotToPerformAssertions();
 

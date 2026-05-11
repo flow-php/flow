@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
-use Flow\PostgreSql\Protobuf\AST\{AccessPriv, GrantStmt, GrantTargetType, Node, ObjectType, PBString, RangeVar, RoleSpec, RoleSpecType};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\AccessPriv;
+use Flow\PostgreSql\Protobuf\AST\GrantStmt;
+use Flow\PostgreSql\Protobuf\AST\GrantTargetType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantToStep
 {
@@ -23,20 +32,18 @@ final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantT
         private array $objects = [],
         private array $grantees = [],
         private bool $grantOption = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(TablePrivilege|string ...$privileges) : GrantOnStep
+    public static function create(TablePrivilege|string ...$privileges): GrantOnStep
     {
-        $privs = \array_map(
-            static fn (TablePrivilege|string $p) : string => $p instanceof TablePrivilege ? $p->value : $p,
-            $privileges,
-        );
+        $privs = \array_map(static fn(TablePrivilege|string $p): string => $p instanceof TablePrivilege
+            ? $p->value
+            : $p, $privileges);
 
         return new self(\array_values($privs));
     }
 
-    public function onAllTablesInSchema(string ...$schemas) : GrantToStep
+    public function onAllTablesInSchema(string ...$schemas): GrantToStep
     {
         return new self(
             $this->privileges,
@@ -48,7 +55,7 @@ final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantT
         );
     }
 
-    public function onTable(string ...$tables) : GrantToStep
+    public function onTable(string ...$tables): GrantToStep
     {
         return new self(
             $this->privileges,
@@ -60,7 +67,7 @@ final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantT
         );
     }
 
-    public function to(string ...$roles) : GrantFinalStep
+    public function to(string ...$roles): GrantFinalStep
     {
         return new self(
             $this->privileges,
@@ -72,7 +79,7 @@ final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantT
         );
     }
 
-    public function toAst() : GrantStmt
+    public function toAst(): GrantStmt
     {
         $stmt = new GrantStmt();
         $stmt->setIsGrant(true);
@@ -154,20 +161,13 @@ final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantT
         return $stmt;
     }
 
-    public function toPublic() : GrantFinalStep
+    public function toPublic(): GrantFinalStep
     {
         return $this->to('public');
     }
 
-    public function withGrantOption() : GrantFinalStep
+    public function withGrantOption(): GrantFinalStep
     {
-        return new self(
-            $this->privileges,
-            $this->targetType,
-            $this->objectType,
-            $this->objects,
-            $this->grantees,
-            true,
-        );
+        return new self($this->privileges, $this->targetType, $this->objectType, $this->objects, $this->grantees, true);
     }
 }

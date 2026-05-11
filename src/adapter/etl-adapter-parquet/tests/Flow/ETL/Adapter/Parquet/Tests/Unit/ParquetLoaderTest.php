@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\Parquet\ParquetLoader;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Filesystem\DSL\path;
+
 final class ParquetLoaderTest extends TestCase
 {
-    public function test_setting_content_type_on_path() : void
+    public function test_setting_content_type_on_path(): void
     {
         $loader = new ParquetLoader(path(__DIR__ . '/file.parquet'));
 
-        self::assertEquals($loader->destination()->getOption(Option::CONTENT_TYPE), ContentType::PARQUET);
+        static::assertEquals($loader->destination()->getOption(Option::CONTENT_TYPE), ContentType::PARQUET);
     }
 }

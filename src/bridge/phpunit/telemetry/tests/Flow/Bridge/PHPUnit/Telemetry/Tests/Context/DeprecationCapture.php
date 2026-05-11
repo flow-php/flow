@@ -13,12 +13,12 @@ final class DeprecationCapture
      *
      * @return array{result: T, message: null|string}
      */
-    public static function around(callable $callback) : array
+    public static function around(callable $callback): array
     {
         $captured = null;
 
         \set_error_handler(
-            static function (int $type, string $message) use (&$captured) : bool {
+            static function (int $type, string $message) use (&$captured): bool {
                 if ($type === \E_USER_DEPRECATED) {
                     $captured = $message;
 
@@ -39,12 +39,9 @@ final class DeprecationCapture
         return ['result' => $result, 'message' => $captured];
     }
 
-    public static function silence(callable $callback) : void
+    public static function silence(callable $callback): void
     {
-        \set_error_handler(
-            static fn () : bool => true,
-            \E_USER_DEPRECATED,
-        );
+        \set_error_handler(static fn(): bool => true, \E_USER_DEPRECATED);
 
         try {
             $callback();

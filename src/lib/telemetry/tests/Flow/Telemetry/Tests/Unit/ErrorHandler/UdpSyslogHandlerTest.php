@@ -14,9 +14,9 @@ final class UdpSyslogHandlerTest extends TestCase
     /** @var null|resource */
     private $receiver;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
-        $socket = \stream_socket_server('udp://127.0.0.1:0', $errno, $errstr, \STREAM_SERVER_BIND);
+        $socket = \stream_socket_server('udp://127.0.0.1:0', $_errno, $errstr, \STREAM_SERVER_BIND);
 
         if ($socket === false) {
             self::markTestSkipped('Could not bind UDP socket: ' . $errstr);
@@ -32,7 +32,7 @@ final class UdpSyslogHandlerTest extends TestCase
         $this->port = (int) \substr($name, (int) \strrpos($name, ':') + 1);
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         if (\is_resource($this->receiver)) {
             \fclose($this->receiver);
@@ -40,9 +40,9 @@ final class UdpSyslogHandlerTest extends TestCase
         }
     }
 
-    public function test_sends_a_syslog_frame_over_udp() : void
+    public function test_sends_a_syslog_frame_over_udp(): void
     {
-        self::assertIsResource($this->receiver);
+        static::assertIsResource($this->receiver);
 
         $handler = new UdpSyslogHandler('127.0.0.1', $this->port, ident: 'flow-test');
 
@@ -51,15 +51,15 @@ final class UdpSyslogHandlerTest extends TestCase
         \stream_set_timeout($this->receiver, 1);
         $datagram = \stream_socket_recvfrom($this->receiver, 65535);
 
-        self::assertIsString($datagram);
-        self::assertStringContainsString('flow-test', $datagram);
-        self::assertStringContainsString('RuntimeException', $datagram);
-        self::assertStringContainsString('udp boom', $datagram);
+        static::assertIsString($datagram);
+        static::assertStringContainsString('flow-test', $datagram);
+        static::assertStringContainsString('RuntimeException', $datagram);
+        static::assertStringContainsString('udp boom', $datagram);
     }
 
-    public function test_swallows_failures_after_receiver_closes() : void
+    public function test_swallows_failures_after_receiver_closes(): void
     {
-        self::assertIsResource($this->receiver);
+        static::assertIsResource($this->receiver);
 
         $handler = new UdpSyslogHandler('127.0.0.1', $this->port);
 
@@ -71,21 +71,21 @@ final class UdpSyslogHandlerTest extends TestCase
         $handler->handle(new \RuntimeException('second'));
     }
 
-    public function test_throws_on_empty_host() : void
+    public function test_throws_on_empty_host(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
         new UdpSyslogHandler('');
     }
 
-    public function test_throws_on_empty_ident() : void
+    public function test_throws_on_empty_ident(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
         new UdpSyslogHandler('127.0.0.1', 514, ident: '');
     }
 
-    public function test_throws_on_invalid_port() : void
+    public function test_throws_on_invalid_port(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 

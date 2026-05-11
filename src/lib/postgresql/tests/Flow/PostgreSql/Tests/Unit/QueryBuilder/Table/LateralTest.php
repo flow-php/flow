@@ -4,38 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, RangeFunction, RangeSubselect, SelectStmt};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeFunction;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
-use Flow\PostgreSql\QueryBuilder\Table\{AliasedTable, Lateral, SubqueryReference, TableFunction};
+use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
+use Flow\PostgreSql\QueryBuilder\Table\Lateral;
+use Flow\PostgreSql\QueryBuilder\Table\SubqueryReference;
+use Flow\PostgreSql\QueryBuilder\Table\TableFunction;
 use PHPUnit\Framework\TestCase;
 
 final class LateralTest extends TestCase
 {
-    public function test_as_method_returns_aliased_table() : void
+    public function test_as_method_returns_aliased_table(): void
     {
         $subquery = $this->createSubqueryNode();
         $lateral = new Lateral(new SubqueryReference($subquery));
 
         $aliased = $lateral->as('l');
 
-        self::assertInstanceOf(AliasedTable::class, $aliased);
-        self::assertSame('l', $aliased->alias);
+        static::assertInstanceOf(AliasedTable::class, $aliased);
+        static::assertSame('l', $aliased->alias);
     }
 
-    public function test_as_method_with_column_aliases_returns_aliased_table() : void
+    public function test_as_method_with_column_aliases_returns_aliased_table(): void
     {
         $subquery = $this->createSubqueryNode();
         $lateral = new Lateral(new SubqueryReference($subquery));
 
         $aliased = $lateral->as('l', ['col1', 'col2']);
 
-        self::assertInstanceOf(AliasedTable::class, $aliased);
-        self::assertSame('l', $aliased->alias);
-        self::assertSame(['col1', 'col2'], $aliased->columnAliases);
+        static::assertInstanceOf(AliasedTable::class, $aliased);
+        static::assertSame('l', $aliased->alias);
+        static::assertSame(['col1', 'col2'], $aliased->columnAliases);
     }
 
-    public function test_converts_lateral_function_to_ast() : void
+    public function test_converts_lateral_function_to_ast(): void
     {
         $func = new FunctionCall(['unnest'], []);
         $tableFunc = new TableFunction($func);
@@ -43,48 +49,48 @@ final class LateralTest extends TestCase
 
         $node = $lateral->toAst();
 
-        self::assertTrue($node->hasRangeFunction());
+        static::assertTrue($node->hasRangeFunction());
 
         $rangeFunction = $node->getRangeFunction();
-        self::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeFunction::class, $rangeFunction);
-        self::assertTrue($rangeFunction->getLateral());
-        self::assertFalse($rangeFunction->getOrdinality());
+        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeFunction::class, $rangeFunction);
+        static::assertTrue($rangeFunction->getLateral());
+        static::assertFalse($rangeFunction->getOrdinality());
     }
 
-    public function test_converts_lateral_subquery_to_ast() : void
+    public function test_converts_lateral_subquery_to_ast(): void
     {
         $subquery = $this->createSubqueryNode();
         $lateral = new Lateral(new SubqueryReference($subquery));
 
         $node = $lateral->toAst();
 
-        self::assertTrue($node->hasRangeSubselect());
+        static::assertTrue($node->hasRangeSubselect());
 
         $rangeSubselect = $node->getRangeSubselect();
-        self::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeSubselect::class, $rangeSubselect);
-        self::assertTrue($rangeSubselect->getLateral());
+        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeSubselect::class, $rangeSubselect);
+        static::assertTrue($rangeSubselect->getLateral());
         $subqueryNode = $rangeSubselect->getSubquery();
-        self::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $subqueryNode);
+        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $subqueryNode);
     }
 
-    public function test_creates_lateral_with_function() : void
+    public function test_creates_lateral_with_function(): void
     {
         $func = new FunctionCall(['generate_series'], []);
         $tableFunc = new TableFunction($func);
         $lateral = new Lateral($tableFunc);
 
-        self::assertInstanceOf(TableFunction::class, $lateral->getReference());
+        static::assertInstanceOf(TableFunction::class, $lateral->getReference());
     }
 
-    public function test_creates_lateral_with_subquery() : void
+    public function test_creates_lateral_with_subquery(): void
     {
         $subquery = $this->createSubqueryNode();
         $lateral = new Lateral(new SubqueryReference($subquery));
 
-        self::assertInstanceOf(SubqueryReference::class, $lateral->getReference());
+        static::assertInstanceOf(SubqueryReference::class, $lateral->getReference());
     }
 
-    public function test_reconstructs_lateral_function_from_ast() : void
+    public function test_reconstructs_lateral_function_from_ast(): void
     {
         $func = new FunctionCall(['unnest'], []);
         $tableFunc = new TableFunction($func);
@@ -93,10 +99,10 @@ final class LateralTest extends TestCase
         $node = $original->toAst();
         $reconstructed = Lateral::fromAst($node);
 
-        self::assertInstanceOf(TableFunction::class, $reconstructed->getReference());
+        static::assertInstanceOf(TableFunction::class, $reconstructed->getReference());
     }
 
-    public function test_reconstructs_lateral_subquery_from_ast() : void
+    public function test_reconstructs_lateral_subquery_from_ast(): void
     {
         $subquery = $this->createSubqueryNode();
         $original = new Lateral(new SubqueryReference($subquery));
@@ -104,10 +110,10 @@ final class LateralTest extends TestCase
         $node = $original->toAst();
         $reconstructed = Lateral::fromAst($node);
 
-        self::assertInstanceOf(SubqueryReference::class, $reconstructed->getReference());
+        static::assertInstanceOf(SubqueryReference::class, $reconstructed->getReference());
     }
 
-    public function test_round_trip_conversion_with_function() : void
+    public function test_round_trip_conversion_with_function(): void
     {
         $func = new FunctionCall(['generate_series'], []);
         $tableFunc = new TableFunction($func);
@@ -116,11 +122,11 @@ final class LateralTest extends TestCase
         $node = $lateral->toAst();
         $restored = Lateral::fromAst($node);
 
-        self::assertTrue($node->hasRangeFunction());
-        self::assertInstanceOf(TableFunction::class, $restored->getReference());
+        static::assertTrue($node->hasRangeFunction());
+        static::assertInstanceOf(TableFunction::class, $restored->getReference());
     }
 
-    public function test_round_trip_conversion_with_subquery() : void
+    public function test_round_trip_conversion_with_subquery(): void
     {
         $subquery = $this->createSubqueryNode();
         $lateral = new Lateral(new SubqueryReference($subquery));
@@ -128,11 +134,11 @@ final class LateralTest extends TestCase
         $node = $lateral->toAst();
         $restored = Lateral::fromAst($node);
 
-        self::assertTrue($node->hasRangeSubselect());
-        self::assertInstanceOf(SubqueryReference::class, $restored->getReference());
+        static::assertTrue($node->hasRangeSubselect());
+        static::assertInstanceOf(SubqueryReference::class, $restored->getReference());
     }
 
-    public function test_throws_exception_when_reconstructing_from_invalid_node_type() : void
+    public function test_throws_exception_when_reconstructing_from_invalid_node_type(): void
     {
         $node = new Node();
 
@@ -141,7 +147,7 @@ final class LateralTest extends TestCase
         Lateral::fromAst($node);
     }
 
-    public function test_throws_exception_when_reconstructing_from_range_function_without_lateral() : void
+    public function test_throws_exception_when_reconstructing_from_range_function_without_lateral(): void
     {
         $rangeFunction = new RangeFunction();
         $rangeFunction->setLateral(false);
@@ -154,7 +160,7 @@ final class LateralTest extends TestCase
         Lateral::fromAst($node);
     }
 
-    public function test_throws_exception_when_reconstructing_from_range_subselect_without_lateral() : void
+    public function test_throws_exception_when_reconstructing_from_range_subselect_without_lateral(): void
     {
         $rangeSubselect = new RangeSubselect();
         $rangeSubselect->setLateral(false);
@@ -168,7 +174,7 @@ final class LateralTest extends TestCase
         Lateral::fromAst($node);
     }
 
-    private function createSubqueryNode() : Node
+    private function createSubqueryNode(): Node
     {
         $selectStmt = new SelectStmt();
 

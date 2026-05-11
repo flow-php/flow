@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-enum TimeUnit : string
+enum TimeUnit: string
 {
     case MICROSECONDS = 'µs';
     case MILLISECONDS = 'ms';
@@ -12,7 +12,7 @@ enum TimeUnit : string
     case NANOSECONDS = 'ns';
     case SECONDS = 'sec';
 
-    public function fromNanoseconds(int|float $nanoseconds) : float
+    public function fromNanoseconds(int|float $nanoseconds): float
     {
         return match ($this) {
             self::NANOSECONDS => (float) $nanoseconds,

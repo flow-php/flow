@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{IndexElem, InferClause, Node};
+use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\InferClause;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -21,23 +24,22 @@ final readonly class ConflictTarget implements AstConvertible
         private array $columns = [],
         private ?string $constraint = null,
         private ?Condition $whereClause = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<string> $columns
      */
-    public static function columns(array $columns) : self
+    public static function columns(array $columns): self
     {
         return new self($columns);
     }
 
-    public static function constraint(string $name) : self
+    public static function constraint(string $name): self
     {
         return new self([], $name);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $inferClause = $node->getInferClause();
 
@@ -81,17 +83,17 @@ final readonly class ConflictTarget implements AstConvertible
     /**
      * @return list<string>
      */
-    public function getColumns() : array
+    public function getColumns(): array
     {
         return $this->columns;
     }
 
-    public function getConstraint() : ?string
+    public function getConstraint(): ?string
     {
         return $this->constraint;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $inferClause = new InferClause();
 
@@ -125,12 +127,12 @@ final readonly class ConflictTarget implements AstConvertible
         return $node;
     }
 
-    public function where(Condition $condition) : self
+    public function where(Condition $condition): self
     {
         return new self($this->columns, $this->constraint, $condition);
     }
 
-    public function whereClause() : ?Condition
+    public function whereClause(): ?Condition
     {
         return $this->whereClause;
     }

@@ -15,6 +15,5 @@ final readonly class Bucket
     public function __construct(
         public string $id,
         public iterable $rows,
-    ) {
-    }
+    ) {}
 }

@@ -9,13 +9,15 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\Tracing
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingDriver as V4TracingDriver;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class DBALTelemetryPass implements CompilerPassInterface
 {
     private const string VERSION_AWARE_PLATFORM_DRIVER = 'Doctrine\\DBAL\\VersionAwarePlatformDriver';
 
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter('flow.telemetry.dbal.enabled')) {
             return;
@@ -63,7 +65,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
     /**
      * @return array<string>
      */
-    private function findConnectionNames(ContainerBuilder $container) : array
+    private function findConnectionNames(ContainerBuilder $container): array
     {
         $connectionNames = [];
 
@@ -86,7 +88,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
     /**
      * @param array<string> $patterns
      */
-    private function isExcluded(string $connectionName, array $patterns) : bool
+    private function isExcluded(string $connectionName, array $patterns): bool
     {
         foreach ($patterns as $pattern) {
             if ($this->matchesPattern($connectionName, $pattern)) {
@@ -97,7 +99,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
         return false;
     }
 
-    private function matchesPattern(string $connectionName, string $pattern) : bool
+    private function matchesPattern(string $connectionName, string $pattern): bool
     {
         $result = @\preg_match($pattern, $connectionName);
 
@@ -111,7 +113,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
     /**
      * @return class-string
      */
-    private function resolveDriverClass() : string
+    private function resolveDriverClass(): string
     {
         if (\interface_exists(self::VERSION_AWARE_PLATFORM_DRIVER)) {
             return V3TracingDriver::class;

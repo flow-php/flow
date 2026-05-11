@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Website\EventListener;
 
 use Flow\Website\Blog\Posts;
-use Flow\Website\Service\Documentation\{DSLDefinitions, Pages};
+use Flow\Website\Service\Documentation\DSLDefinitions;
+use Flow\Website\Service\Documentation\Pages;
 use Flow\Website\Service\Examples;
 use Presta\SitemapBundle\Event\SitemapPopulateEvent;
 use Presta\SitemapBundle\Sitemap\Url\UrlConcrete;
@@ -19,8 +20,7 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
         private Posts $posts,
         private DSLDefinitions $dslDefinitions,
         private Pages $pages,
-    ) {
-    }
+    ) {}
 
     public static function getSubscribedEvents()
     {
@@ -29,14 +29,14 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function populate(SitemapPopulateEvent $event) : void
+    public function populate(SitemapPopulateEvent $event): void
     {
         $this->populateExamples($event);
         $this->populateBlogPosts($event);
         $this->populateDocumentation($event);
     }
 
-    private function populateBlogPosts(SitemapPopulateEvent $event) : void
+    private function populateBlogPosts(SitemapPopulateEvent $event): void
     {
         $posts = $this->posts->all();
 
@@ -46,16 +46,16 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                     $event->getUrlGenerator()->generate(
                         'blog_post',
                         ['date' => $post->date->format('Y-m-d'), 'slug' => $post->slug],
-                        UrlGeneratorInterface::ABSOLUTE_URL
+                        UrlGeneratorInterface::ABSOLUTE_URL,
                     ),
-                    changefreq: 'weekly'
+                    changefreq: 'weekly',
                 ),
-                'blog'
+                'blog',
             );
         }
     }
 
-    private function populateDocumentation(SitemapPopulateEvent $event) : void
+    private function populateDocumentation(SitemapPopulateEvent $event): void
     {
         $modules = $this->dslDefinitions->modules();
 
@@ -65,11 +65,11 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                     $event->getUrlGenerator()->generate(
                         'documentation_dsl',
                         ['module' => \mb_strtolower($module->name)],
-                        UrlGeneratorInterface::ABSOLUTE_URL
+                        UrlGeneratorInterface::ABSOLUTE_URL,
                     ),
-                    changefreq: 'weekly'
+                    changefreq: 'weekly',
                 ),
-                'documentation'
+                'documentation',
             );
 
             foreach ($this->dslDefinitions->fromModule($module)->all() as $definition) {
@@ -78,11 +78,11 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                         $event->getUrlGenerator()->generate(
                             'documentation_dsl_function',
                             ['module' => \mb_strtolower($module->name), 'function' => $definition->slug()],
-                            UrlGeneratorInterface::ABSOLUTE_URL
+                            UrlGeneratorInterface::ABSOLUTE_URL,
                         ),
-                        changefreq: 'weekly'
+                        changefreq: 'weekly',
                     ),
-                    'documentation'
+                    'documentation',
                 );
             }
         }
@@ -93,16 +93,16 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                     $event->getUrlGenerator()->generate(
                         'documentation_page',
                         ['path' => $page->path],
-                        UrlGeneratorInterface::ABSOLUTE_URL
+                        UrlGeneratorInterface::ABSOLUTE_URL,
                     ),
-                    changefreq: 'weekly'
+                    changefreq: 'weekly',
                 ),
-                'documentation'
+                'documentation',
             );
         }
     }
 
-    private function populateExamples(SitemapPopulateEvent $event) : void
+    private function populateExamples(SitemapPopulateEvent $event): void
     {
         $topics = $this->examples->topics();
 
@@ -112,11 +112,11 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                     $event->getUrlGenerator()->generate(
                         'topic',
                         ['topic' => $topic],
-                        UrlGeneratorInterface::ABSOLUTE_URL
+                        UrlGeneratorInterface::ABSOLUTE_URL,
                     ),
-                    changefreq: 'weekly'
+                    changefreq: 'weekly',
                 ),
-                'examples'
+                'examples',
             );
 
             $examples = $this->examples->examples($topic);
@@ -127,11 +127,11 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                         $event->getUrlGenerator()->generate(
                             'example',
                             ['topic' => $topic, 'example' => $example],
-                            UrlGeneratorInterface::ABSOLUTE_URL
+                            UrlGeneratorInterface::ABSOLUTE_URL,
                         ),
-                        changefreq: 'weekly'
+                        changefreq: 'weekly',
                     ),
-                    'examples'
+                    'examples',
                 );
             }
         }

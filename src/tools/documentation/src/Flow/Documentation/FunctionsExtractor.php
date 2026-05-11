@@ -5,22 +5,23 @@ declare(strict_types=1);
 namespace Flow\Documentation;
 
 use Flow\Documentation\Models\FunctionModel;
-use PhpParser\{NodeTraverser, ParserFactory, PhpVersion};
+use PhpParser\NodeTraverser;
+use PhpParser\ParserFactory;
+use PhpParser\PhpVersion;
 
 final readonly class FunctionsExtractor
 {
     public function __construct(
         private string $repositoryRootPath,
         private FunctionCollector $functionCollector,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string> $paths
      *
      * @return \Generator<FunctionModel>
      */
-    public function extract(array $paths) : \Generator
+    public function extract(array $paths): \Generator
     {
         $parser = (new ParserFactory())->createForVersion(PhpVersion::fromComponents(8, 2));
 
@@ -50,12 +51,12 @@ final readonly class FunctionsExtractor
 
         foreach ($this->functionCollector->functions as $functionName) {
             $reflectionFunction = new \ReflectionFunction($functionName);
-            $repositoryPath = \ltrim(\str_replace($this->repositoryRootPath, '', (string) $reflectionFunction->getFileName()), '/');
-
-            yield FunctionModel::fromReflection(
-                $repositoryPath,
-                $reflectionFunction
+            $repositoryPath = \ltrim(
+                \str_replace($this->repositoryRootPath, '', (string) $reflectionFunction->getFileName()),
+                '/',
             );
+
+            yield FunctionModel::fromReflection($repositoryPath, $reflectionFunction);
         }
     }
 }

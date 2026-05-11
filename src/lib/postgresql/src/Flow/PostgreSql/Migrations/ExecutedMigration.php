@@ -10,6 +10,5 @@ final readonly class ExecutedMigration
         public Version $version,
         public \DateTimeImmutable $executedAt,
         public ?int $executionTimeMs,
-    ) {
-    }
+    ) {}
 }

@@ -14,18 +14,17 @@ final readonly class Query
     public function __construct(
         private Sql|string $sql,
         private array $parameters = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<mixed>
      */
-    public function parameters() : array
+    public function parameters(): array
     {
         return $this->parameters;
     }
 
-    public function sql() : Sql|string
+    public function sql(): Sql|string
     {
         return $this->sql;
     }

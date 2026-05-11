@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\is_type;
-use function Flow\Types\DSL\{type_list, type_optional, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
+use function Flow\ETL\DSL\is_type;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
 
 final class ConcatWithSeparator extends ScalarFunctionChain
 {
@@ -23,12 +27,16 @@ final class ConcatWithSeparator extends ScalarFunctionChain
         $this->refs = $refs;
     }
 
-    public function eval(Row $row, FlowContext $context) : mixed
+    public function eval(Row $row, FlowContext $context): mixed
     {
         $separator = (new Parameter($this->separator))->asString($row, $context);
 
         if (!\is_string($separator)) {
-            $context->functions()->invalidResult(new InvalidArgumentException('ConcatWithSeparator function requires non-null separator'));
+            $context
+                ->functions()
+                ->invalidResult(
+                    new InvalidArgumentException('ConcatWithSeparator function requires non-null separator'),
+                );
 
             return '';
         }

@@ -9,6 +9,5 @@ final readonly class OrderBy
     public function __construct(
         public string $column,
         public Order $order = Order::ASC,
-    ) {
-    }
+    ) {}
 }

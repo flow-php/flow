@@ -22,15 +22,14 @@ final readonly class QualifiedIdentifier
      */
     private function __construct(
         private array $parts,
-    ) {
-    }
+    ) {}
 
     /**
      * Create from explicit parts without parsing.
      *
      * @param non-empty-list<string> $parts
      */
-    public static function fromParts(array $parts) : self
+    public static function fromParts(array $parts): self
     {
         return new self($parts);
     }
@@ -38,7 +37,7 @@ final readonly class QualifiedIdentifier
     /**
      * Parse a qualified identifier string, respecting double-quoted parts.
      */
-    public static function parse(string $identifier) : self
+    public static function parse(string $identifier): self
     {
         if ($identifier === '') {
             return new self(['']);
@@ -54,7 +53,7 @@ final readonly class QualifiedIdentifier
      * For two-part identifiers (table.column), get the column part (last).
      * For single-part identifiers, get the only part.
      */
-    public function column() : string
+    public function column(): string
     {
         return $this->parts[\count($this->parts) - 1];
     }
@@ -62,7 +61,7 @@ final readonly class QualifiedIdentifier
     /**
      * Get the number of parts.
      */
-    public function count() : int
+    public function count(): int
     {
         return \count($this->parts);
     }
@@ -72,7 +71,7 @@ final readonly class QualifiedIdentifier
      *
      * @phpstan-assert-if-true !null $this->schema()
      */
-    public function hasSchema() : bool
+    public function hasSchema(): bool
     {
         return \count($this->parts) >= 2;
     }
@@ -80,7 +79,7 @@ final readonly class QualifiedIdentifier
     /**
      * Get the last part (typically the name/column).
      */
-    public function name() : string
+    public function name(): string
     {
         return $this->parts[\count($this->parts) - 1];
     }
@@ -90,7 +89,7 @@ final readonly class QualifiedIdentifier
      *
      * @return non-empty-list<string>
      */
-    public function parts() : array
+    public function parts(): array
     {
         return $this->parts;
     }
@@ -99,7 +98,7 @@ final readonly class QualifiedIdentifier
      * Get the schema part for a two-part identifier (schema.name).
      * Returns null if there's only one part.
      */
-    public function schema() : ?string
+    public function schema(): ?string
     {
         if (\count($this->parts) < 2) {
             return null;
@@ -113,7 +112,7 @@ final readonly class QualifiedIdentifier
      * For two-part identifiers (table.column), get the first part.
      * Returns null for single-part identifiers.
      */
-    public function table() : ?string
+    public function table(): ?string
     {
         if (\count($this->parts) === 3) {
             return $this->parts[1];
@@ -131,7 +130,7 @@ final readonly class QualifiedIdentifier
      *
      * @return non-empty-list<string>
      */
-    private static function splitRespectingQuotes(string $identifier) : array
+    private static function splitRespectingQuotes(string $identifier): array
     {
         if (\str_starts_with($identifier, '"') && \str_ends_with($identifier, '"')) {
             $inner = \substr($identifier, 1, -1);

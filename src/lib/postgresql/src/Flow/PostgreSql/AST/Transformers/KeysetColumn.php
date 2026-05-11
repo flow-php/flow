@@ -12,6 +12,5 @@ final readonly class KeysetColumn
     public function __construct(
         public string $column,
         public SortOrder $order = SortOrder::ASC,
-    ) {
-    }
+    ) {}
 }

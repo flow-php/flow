@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Rows, Transformer, WithEntry};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Parameter;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
+use Flow\ETL\WithEntry;
 
 final readonly class DuplicateRowTransformer implements Transformer
 {
@@ -26,7 +29,7 @@ final readonly class DuplicateRowTransformer implements Transformer
         $this->entries = $entries;
     }
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $inputRowCount = $rows->count();
 
@@ -42,7 +45,10 @@ final readonly class DuplicateRowTransformer implements Transformer
                     $duplicatedRow = \Flow\ETL\DSL\rows($row->duplicate());
 
                     foreach ($this->entries as $entry) {
-                        $duplicatedRow = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform($duplicatedRow, $context);
+                        $duplicatedRow = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform(
+                            $duplicatedRow,
+                            $context,
+                        );
                     }
 
                     $duplicatedRows = $duplicatedRows->merge($duplicatedRow);

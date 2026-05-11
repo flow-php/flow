@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use function Flow\ETL\DSL\{from_rows, rows};
-use Flow\ETL\{GroupBy, Loader, Pipeline, Tests\FlowTestCase, Transformer};
-use Flow\ETL\Processor\{CollectingProcessor, GroupByProcessor};
+use Flow\ETL\GroupBy;
+use Flow\ETL\Loader;
+use Flow\ETL\Pipeline;
+use Flow\ETL\Processor\CollectingProcessor;
+use Flow\ETL\Processor\GroupByProcessor;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Transformer;
+
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\rows;
 
 final class PipelineTest extends FlowTestCase
 {
-    public function test_getting_steps_from_pipeline() : void
+    public function test_getting_steps_from_pipeline(): void
     {
         $pipeline = new Pipeline(from_rows(rows()));
         $pipeline->add($transformer1 = $this->createMock(Transformer::class));
@@ -19,7 +26,7 @@ final class PipelineTest extends FlowTestCase
         $pipeline->add($collecting = new CollectingProcessor());
         $pipeline->add($loader = $this->createMock(Loader::class));
 
-        self::assertSame(
+        static::assertSame(
             [
                 $transformer1,
                 $groupBy,
@@ -27,7 +34,7 @@ final class PipelineTest extends FlowTestCase
                 $collecting,
                 $loader,
             ],
-            $pipeline->segments()->steps()
+            $pipeline->segments()->steps(),
         );
     }
 }

@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class PlanSummaryTest extends TestCase
 {
-    public function test_from_array_and_normalize_are_inverse() : void
+    public function test_from_array_and_normalize_are_inverse(): void
     {
         $original = new PlanSummary(
             totalCost: 150.5,
@@ -36,10 +36,10 @@ final class PlanSummaryTest extends TestCase
         $normalized = $original->normalize();
         $restored = PlanSummary::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
+        static::assertEquals($original, $restored);
     }
 
-    public function test_from_array_creates_instance() : void
+    public function test_from_array_creates_instance(): void
     {
         $data = [
             'total_cost' => 150.5,
@@ -65,28 +65,28 @@ final class PlanSummaryTest extends TestCase
 
         $summary = PlanSummary::fromArray($data);
 
-        self::assertSame(150.5, $summary->totalCost);
-        self::assertSame(25.0, $summary->executionTime);
-        self::assertSame(0.5, $summary->planningTime);
-        self::assertSame(5, $summary->nodeCount);
-        self::assertSame(2, $summary->sequentialScanCount);
-        self::assertSame(3, $summary->indexScanCount);
-        self::assertTrue($summary->hasExternalSort);
-        self::assertTrue($summary->hasDiskReads);
-        self::assertSame(0.95, $summary->overallCacheHitRatio);
-        self::assertSame(1024, $summary->memoryUsed);
-        self::assertSame(2048, $summary->memoryPeak);
-        self::assertSame(1, $summary->hashJoinCount);
-        self::assertSame(2, $summary->nestedLoopCount);
-        self::assertSame(0, $summary->mergeJoinCount);
-        self::assertSame(100, $summary->totalSharedHit);
-        self::assertSame(5, $summary->totalSharedRead);
-        self::assertFalse($summary->hasTempSpill);
-        self::assertSame(1000, $summary->estimatedRows);
-        self::assertSame(950, $summary->actualRows);
+        static::assertSame(150.5, $summary->totalCost);
+        static::assertSame(25.0, $summary->executionTime);
+        static::assertSame(0.5, $summary->planningTime);
+        static::assertSame(5, $summary->nodeCount);
+        static::assertSame(2, $summary->sequentialScanCount);
+        static::assertSame(3, $summary->indexScanCount);
+        static::assertTrue($summary->hasExternalSort);
+        static::assertTrue($summary->hasDiskReads);
+        static::assertSame(0.95, $summary->overallCacheHitRatio);
+        static::assertSame(1024, $summary->memoryUsed);
+        static::assertSame(2048, $summary->memoryPeak);
+        static::assertSame(1, $summary->hashJoinCount);
+        static::assertSame(2, $summary->nestedLoopCount);
+        static::assertSame(0, $summary->mergeJoinCount);
+        static::assertSame(100, $summary->totalSharedHit);
+        static::assertSame(5, $summary->totalSharedRead);
+        static::assertFalse($summary->hasTempSpill);
+        static::assertSame(1000, $summary->estimatedRows);
+        static::assertSame(950, $summary->actualRows);
     }
 
-    public function test_normalize_returns_all_fields() : void
+    public function test_normalize_returns_all_fields(): void
     {
         $summary = new PlanSummary(
             totalCost: 150.5,
@@ -112,28 +112,28 @@ final class PlanSummaryTest extends TestCase
 
         $normalized = $summary->normalize();
 
-        self::assertSame(150.5, $normalized['total_cost']);
-        self::assertSame(25.0, $normalized['execution_time']);
-        self::assertSame(0.5, $normalized['planning_time']);
-        self::assertSame(5, $normalized['node_count']);
-        self::assertSame(2, $normalized['sequential_scan_count']);
-        self::assertSame(3, $normalized['index_scan_count']);
-        self::assertTrue($normalized['has_external_sort']);
-        self::assertTrue($normalized['has_disk_reads']);
-        self::assertSame(0.95, $normalized['overall_cache_hit_ratio']);
-        self::assertSame(1024, $normalized['memory_used']);
-        self::assertSame(2048, $normalized['memory_peak']);
-        self::assertSame(1, $normalized['hash_join_count']);
-        self::assertSame(2, $normalized['nested_loop_count']);
-        self::assertSame(0, $normalized['merge_join_count']);
-        self::assertSame(100, $normalized['total_shared_hit']);
-        self::assertSame(5, $normalized['total_shared_read']);
-        self::assertFalse($normalized['has_temp_spill']);
-        self::assertSame(1000, $normalized['estimated_rows']);
-        self::assertSame(950, $normalized['actual_rows']);
+        static::assertSame(150.5, $normalized['total_cost']);
+        static::assertSame(25.0, $normalized['execution_time']);
+        static::assertSame(0.5, $normalized['planning_time']);
+        static::assertSame(5, $normalized['node_count']);
+        static::assertSame(2, $normalized['sequential_scan_count']);
+        static::assertSame(3, $normalized['index_scan_count']);
+        static::assertTrue($normalized['has_external_sort']);
+        static::assertTrue($normalized['has_disk_reads']);
+        static::assertSame(0.95, $normalized['overall_cache_hit_ratio']);
+        static::assertSame(1024, $normalized['memory_used']);
+        static::assertSame(2048, $normalized['memory_peak']);
+        static::assertSame(1, $normalized['hash_join_count']);
+        static::assertSame(2, $normalized['nested_loop_count']);
+        static::assertSame(0, $normalized['merge_join_count']);
+        static::assertSame(100, $normalized['total_shared_hit']);
+        static::assertSame(5, $normalized['total_shared_read']);
+        static::assertFalse($normalized['has_temp_spill']);
+        static::assertSame(1000, $normalized['estimated_rows']);
+        static::assertSame(950, $normalized['actual_rows']);
     }
 
-    public function test_normalize_returns_expected_keys() : void
+    public function test_normalize_returns_expected_keys(): void
     {
         $summary = new PlanSummary(
             totalCost: 50.0,
@@ -181,10 +181,10 @@ final class PlanSummaryTest extends TestCase
             'actual_rows',
         ];
 
-        self::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, \array_keys($normalized));
     }
 
-    public function test_normalize_with_null_values() : void
+    public function test_normalize_with_null_values(): void
     {
         $summary = new PlanSummary(
             totalCost: 100.0,
@@ -210,13 +210,13 @@ final class PlanSummaryTest extends TestCase
 
         $normalized = $summary->normalize();
 
-        self::assertSame(100.0, $normalized['total_cost']);
-        self::assertNull($normalized['execution_time']);
-        self::assertNull($normalized['planning_time']);
-        self::assertNull($normalized['overall_cache_hit_ratio']);
-        self::assertNull($normalized['memory_used']);
-        self::assertNull($normalized['memory_peak']);
-        self::assertSame(50, $normalized['estimated_rows']);
-        self::assertNull($normalized['actual_rows']);
+        static::assertSame(100.0, $normalized['total_cost']);
+        static::assertNull($normalized['execution_time']);
+        static::assertNull($normalized['planning_time']);
+        static::assertNull($normalized['overall_cache_hit_ratio']);
+        static::assertNull($normalized['memory_used']);
+        static::assertNull($normalized['memory_peak']);
+        static::assertSame(50, $normalized['estimated_rows']);
+        static::assertNull($normalized['actual_rows']);
     }
 }

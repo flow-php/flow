@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Mother;
 
-use Flow\Telemetry\Context\{SpanId, TraceId};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Tracer\{Span, SpanContext, SpanKind};
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanKind;
 
 final class SpanMother
 {
@@ -17,14 +20,10 @@ final class SpanMother
         ?SpanId $parentSpanId = null,
         SpanKind $kind = SpanKind::INTERNAL,
         ?\DateTimeImmutable $startTime = null,
-    ) : Span {
+    ): Span {
         return new Span(
             $name,
-            SpanContext::create(
-                $traceId ?? TraceId::generate(),
-                $spanId ?? SpanId::generate(),
-                $parentSpanId,
-            ),
+            SpanContext::create($traceId ?? TraceId::generate(), $spanId ?? SpanId::generate(), $parentSpanId),
             $kind,
             $startTime ?? new \DateTimeImmutable(),
             ResourceMother::default(),
@@ -32,10 +31,8 @@ final class SpanMother
         );
     }
 
-    public static function deterministic(
-        string $name = 'test-operation',
-        SpanKind $kind = SpanKind::SERVER,
-    ) : Span {
+    public static function deterministic(string $name = 'test-operation', SpanKind $kind = SpanKind::SERVER): Span
+    {
         return new Span(
             $name,
             SpanContext::create(
@@ -50,12 +47,12 @@ final class SpanMother
         );
     }
 
-    public static function withName(string $name) : Span
+    public static function withName(string $name): Span
     {
         return self::create($name);
     }
 
-    public static function withTraceId(TraceId $traceId) : Span
+    public static function withTraceId(TraceId $traceId): Span
     {
         return self::create('test-span', $traceId);
     }

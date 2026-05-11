@@ -4,79 +4,76 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry,
-    bool_schema,
-    datetime_entry,
-    datetime_schema,
-    enum_entry,
-    enum_schema,
-    float_entry,
-    float_schema,
-    html_entry,
-    html_schema,
-    int_entry,
-    int_schema,
-    json_entry,
-    json_schema,
-    list_entry,
-    list_schema,
-    map_entry,
-    map_schema,
-    null_entry,
-    row,
-    rows,
-    schema,
-    string_schema,
-    struct_entry,
-    structure_schema,
-    uuid_entry,
-    uuid_schema,
-    xml_entry,
-    xml_schema};
-use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\Parquet\RowsNormalizer;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\html_entry;
+use function Flow\ETL\DSL\html_schema;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\uuid_entry;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 final class RowsNormalizerTest extends FlowTestCase
 {
-    public function test_normalization_nullable_entries() : void
+    public function test_normalization_nullable_entries(): void
     {
-        $rows = rows(
-            row(
-                int_entry('int', null),
-                float_entry('float', null),
-                bool_entry('bool', null),
-                datetime_entry('datetime', null),
-                null_entry('null'),
-                uuid_entry('uuid', null),
-                json_entry('json', null),
-                list_entry('list', null, type_list(type_integer())),
-                list_entry('list_of_datetimes', null, type_list(type_datetime())),
-                map_entry(
-                    'map',
-                    null,
-                    type_map(type_integer(), type_string())
-                ),
-                struct_entry(
-                    'struct',
-                    null,
-                    type_structure([
-                        'street' => type_string(),
-                        'city' => type_string(),
-                        'zip' => type_string(),
-                        'country' => type_string(),
-                        'location' => type_structure([
-                            'lat' => type_float(),
-                            'lon' => type_float(),
-                        ]),
-                    ]),
-                ),
-                enum_entry('enum', null),
-                xml_entry('xml', null),
-                html_entry('html', null),
-            )
-        );
+        $rows = rows(row(
+            int_entry('int', null),
+            float_entry('float', null),
+            bool_entry('bool', null),
+            datetime_entry('datetime', null),
+            null_entry('null'),
+            uuid_entry('uuid', null),
+            json_entry('json', null),
+            list_entry('list', null, type_list(type_integer())),
+            list_entry('list_of_datetimes', null, type_list(type_datetime())),
+            map_entry('map', null, type_map(type_integer(), type_string())),
+            struct_entry('struct', null, type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+                'zip' => type_string(),
+                'country' => type_string(),
+                'location' => type_structure([
+                    'lat' => type_float(),
+                    'lon' => type_float(),
+                ]),
+            ])),
+            enum_entry('enum', null),
+            xml_entry('xml', null),
+            html_entry('html', null),
+        ));
         $schema = schema(
             int_schema('int', true),
             float_schema('float', true),
@@ -100,14 +97,14 @@ final class RowsNormalizerTest extends FlowTestCase
                         'lon' => type_float(),
                     ]),
                 ]),
-                true
+                true,
             ),
             enum_schema('enum', BackedStringEnum::class, true),
             xml_schema('xml', true),
             html_schema('html', true),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     'int' => null,
@@ -126,7 +123,7 @@ final class RowsNormalizerTest extends FlowTestCase
                     'html' => null,
                 ],
             ],
-            (new RowsNormalizer())->normalize($rows, $schema)
+            (new RowsNormalizer())->normalize($rows, $schema),
         );
     }
 }

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Reference;
+
+use function Flow\ETL\DSL\string_entry;
 
 final class Last implements AggregatingFunction
 {
@@ -17,12 +20,13 @@ final class Last implements AggregatingFunction
      */
     private ?Entry $last;
 
-    public function __construct(private readonly Reference $ref)
-    {
+    public function __construct(
+        private readonly Reference $ref,
+    ) {
         $this->last = null;
     }
 
-    public function aggregate(Row $row, FlowContext $context) : void
+    public function aggregate(Row $row, FlowContext $context): void
     {
         try {
             $this->last = $row->get($this->ref);
@@ -34,7 +38,7 @@ final class Last implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
-    public function result(EntryFactory $entryFactory) : Entry
+    public function result(EntryFactory $entryFactory): Entry
     {
         $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_last';
 

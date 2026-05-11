@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
 interface CreateTriggerOnStep
 {
-    public function on(string $table, ?string $schema = null) : CreateTriggerOptionsStep;
+    public function on(string $table, ?string $schema = null): CreateTriggerOptionsStep;
 }

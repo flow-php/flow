@@ -9,7 +9,5 @@ namespace Flow\Telemetry\ErrorHandler;
  */
 final readonly class NullErrorHandler implements ErrorHandler
 {
-    public function handle(\Throwable $error) : void
-    {
-    }
+    public function handle(\Throwable $error): void {}
 }

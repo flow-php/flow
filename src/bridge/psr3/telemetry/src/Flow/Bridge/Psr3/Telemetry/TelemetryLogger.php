@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\Bridge\Psr3\Telemetry;
 
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Logger\Logger;
-use Psr\Log\{AbstractLogger, InvalidArgumentException as PsrInvalidArgumentException};
+use Psr\Log\AbstractLogger;
+use Psr\Log\InvalidArgumentException as PsrInvalidArgumentException;
 
 final class TelemetryLogger extends AbstractLogger
 {
@@ -15,13 +17,12 @@ final class TelemetryLogger extends AbstractLogger
         private readonly Logger $logger,
         private readonly LogRecordConverter $converter = new LogRecordConverter(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<array-key, mixed> $context
      */
-    public function log($level, string|\Stringable $message, array $context = []) : void
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         if (!\is_string($level) && !$level instanceof \Stringable) {
             throw new InvalidArgumentException('PSR-3 log level must be a string or Stringable.');

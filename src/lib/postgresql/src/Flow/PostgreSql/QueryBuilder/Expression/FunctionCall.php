@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{FuncCall, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 /**
  * Represents a function call: func(args).
@@ -25,7 +28,7 @@ final readonly class FunctionCall implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $funcCall = $node->getFuncCall();
 
@@ -67,7 +70,7 @@ final readonly class FunctionCall implements Expression
         return new self($funcName, $args);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
@@ -75,7 +78,7 @@ final readonly class FunctionCall implements Expression
     /**
      * @return list<Expression>
      */
-    public function getArgs() : array
+    public function getArgs(): array
     {
         return $this->args;
     }
@@ -83,12 +86,12 @@ final readonly class FunctionCall implements Expression
     /**
      * @return non-empty-list<string>
      */
-    public function getFuncName() : array
+    public function getFuncName(): array
     {
         return $this->funcName;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $funcCall = new FuncCall();
         $funcNameNodes = [];
@@ -119,7 +122,7 @@ final readonly class FunctionCall implements Expression
         return $node;
     }
 
-    public function withArgs(Expression ...$args) : self
+    public function withArgs(Expression ...$args): self
     {
         return new self($this->funcName, \array_values($args));
     }

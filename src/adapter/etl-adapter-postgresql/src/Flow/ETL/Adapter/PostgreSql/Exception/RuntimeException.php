@@ -6,6 +6,4 @@ namespace Flow\ETL\Adapter\PostgreSql\Exception;
 
 use Flow\ETL\Exception\RuntimeException as BaseRuntimeException;
 
-class RuntimeException extends BaseRuntimeException
-{
-}
+class RuntimeException extends BaseRuntimeException {}

@@ -13,11 +13,11 @@ final class Headers implements \Countable
      */
     private ?array $names = null;
 
-    public function __construct(private readonly Rows $rows)
-    {
-    }
+    public function __construct(
+        private readonly Rows $rows,
+    ) {}
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->names());
     }
@@ -25,7 +25,7 @@ final class Headers implements \Countable
     /**
      * @return array<string>
      */
-    public function names() : array
+    public function names(): array
     {
         if ($this->names !== null) {
             return $this->names;

@@ -15,6 +15,5 @@ final readonly class EnforcedAttributes
     public function __construct(
         public Attributes $attributes,
         public int $droppedAttributeCount,
-    ) {
-    }
+    ) {}
 }

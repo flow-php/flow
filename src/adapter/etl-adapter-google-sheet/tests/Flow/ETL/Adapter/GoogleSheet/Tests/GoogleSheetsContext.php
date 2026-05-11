@@ -6,45 +6,41 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests;
 
 use Google\Client as GoogleClient;
 use Google\Service\Sheets;
-use GuzzleHttp\{Client as HttpClient, HandlerStack};
+use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 
 final readonly class GoogleSheetsContext
 {
     public function __construct(
         private GoogleClient $client = new GoogleClient(),
-    ) {
-    }
+    ) {}
 
-    public function sheets(string $fixtureFile) : Sheets
+    public function sheets(string $fixtureFile): Sheets
     {
         $this->client->setHttpClient($this->createHttpClient($fixtureFile));
 
         return new Sheets($this->client);
     }
 
-    private function createHttpClient(string $fixtureFile) : HttpClient
+    private function createHttpClient(string $fixtureFile): HttpClient
     {
-        return new HttpClient(
-            [
-                'handler' => HandlerStack::create(
-                    new MockHandler(
-                        [
-                            new Response(
-                                200,
-                                ['Content-Type' => 'application/json'],
-                                file_get_contents(__DIR__ . '/Fixtures/spreadsheet.json') ?: throw new \RuntimeException('Failed to read the spreadsheet fixture'),
-                            ),
-                            new Response(
-                                200,
-                                ['Content-Type' => 'application/json'],
-                                file_get_contents($fixtureFile) ?: throw new \RuntimeException('Failed to read file: ' . $fixtureFile)
-                            ),
-                        ]
-                    )
+        return new HttpClient([
+            'handler' => HandlerStack::create(new MockHandler([
+                new Response(
+                    200,
+                    ['Content-Type' => 'application/json'],
+                    file_get_contents(__DIR__ . '/Fixtures/spreadsheet.json')
+                    ?: throw new \RuntimeException('Failed to read the spreadsheet fixture'),
                 ),
-            ]
-        );
+                new Response(
+                    200,
+                    ['Content-Type' => 'application/json'],
+                    file_get_contents($fixtureFile)
+                    ?: throw new \RuntimeException('Failed to read file: ' . $fixtureFile),
+                ),
+            ])),
+        ]);
     }
 }

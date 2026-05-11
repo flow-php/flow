@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_literal};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_literal;
+
 final class LiteralTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid string literal' => [
             'literal' => 'hello',
@@ -92,7 +95,7 @@ final class LiteralTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'valid string literal' => [
             'literal' => 'hello',
@@ -151,7 +154,7 @@ final class LiteralTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid string literal' => [
             'literal' => 'hello',
@@ -244,7 +247,7 @@ final class LiteralTypeTest extends TestCase
         ];
     }
 
-    public static function to_string_data_provider() : \Generator
+    public static function to_string_data_provider(): \Generator
     {
         yield 'string literal' => [
             'literal' => 'hello',
@@ -288,72 +291,76 @@ final class LiteralTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(bool|float|int|string $literal, mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(bool|float|int|string $literal, mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_literal($literal)->assert($value);
         } else {
-            self::assertSame($literal, type_literal($literal)->assert($value));
+            static::assertSame($literal, type_literal($literal)->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(bool|float|int|string $literal, mixed $value, mixed $expected, ?string $exceptionClass) : void
-    {
+    public function test_cast(
+        bool|float|int|string $literal,
+        mixed $value,
+        mixed $expected,
+        ?string $exceptionClass,
+    ): void {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_literal($literal)->cast($value);
         } else {
-            self::assertSame($expected, type_literal($literal)->cast($value));
+            static::assertSame($expected, type_literal($literal)->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(bool|float|int|string $literal, mixed $value, bool $expected) : void
+    public function test_is_valid(bool|float|int|string $literal, mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_literal($literal)->isValid($value));
+        static::assertSame($expected, type_literal($literal)->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_literal('hello');
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_normalization_with_boolean() : void
+    public function test_normalization_with_boolean(): void
     {
         $type = type_literal(true);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_normalization_with_float() : void
+    public function test_normalization_with_float(): void
     {
         $type = type_literal(3.14);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_normalization_with_integer() : void
+    public function test_normalization_with_integer(): void
     {
         $type = type_literal(42);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
     #[DataProvider('to_string_data_provider')]
-    public function test_to_string(bool|float|int|string $literal, string $expected) : void
+    public function test_to_string(bool|float|int|string $literal, string $expected): void
     {
-        self::assertSame($expected, type_literal($literal)->toString());
+        static::assertSame($expected, type_literal($literal)->toString());
     }
 }

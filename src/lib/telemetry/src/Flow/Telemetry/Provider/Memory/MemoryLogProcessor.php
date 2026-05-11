@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Logger\{LogEntry, LogProcessor, Severity};
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Signal\Signals;
 
 /**
@@ -24,13 +27,12 @@ final class MemoryLogProcessor implements LogProcessor
     public function __construct(
         private readonly Exporter $logExporter,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Get the total number of recorded log entries.
      */
-    public function countLogs() : int
+    public function countLogs(): int
     {
         return \count($this->entries);
     }
@@ -40,7 +42,7 @@ final class MemoryLogProcessor implements LogProcessor
      *
      * @return array<LogEntry>
      */
-    public function entries() : array
+    public function entries(): array
     {
         return $this->entries;
     }
@@ -50,12 +52,12 @@ final class MemoryLogProcessor implements LogProcessor
      *
      * @return array<LogEntry>
      */
-    public function entriesContaining(string $substring) : array
+    public function entriesContaining(string $substring): array
     {
-        return \array_values(\array_filter(
-            $this->entries,
-            static fn (LogEntry $entry) : bool => \str_contains($entry->record->body, $substring)
-        ));
+        return \array_values(\array_filter($this->entries, static fn(LogEntry $entry): bool => \str_contains(
+            $entry->record->body,
+            $substring,
+        )));
     }
 
     /**
@@ -63,15 +65,15 @@ final class MemoryLogProcessor implements LogProcessor
      *
      * @return array<LogEntry>
      */
-    public function entriesWithSeverity(Severity $severity) : array
+    public function entriesWithSeverity(Severity $severity): array
     {
         return \array_values(\array_filter(
             $this->entries,
-            static fn (LogEntry $entry) : bool => $entry->record->severity === $severity
+            static fn(LogEntry $entry): bool => $entry->record->severity === $severity,
         ));
     }
 
-    public function flush() : bool
+    public function flush(): bool
     {
         if (\count($this->entries) === 0) {
             return true;
@@ -86,17 +88,17 @@ final class MemoryLogProcessor implements LogProcessor
         }
     }
 
-    public function process(LogEntry $entry) : void
+    public function process(LogEntry $entry): void
     {
         $this->entries[] = $entry;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->entries = [];
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;

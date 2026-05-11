@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Parser;
 
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, ParseResult};
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class ExcludeDefinitionParser
 {
     public function __construct(
         private ExpressionParser $expressionParser,
-    ) {
-    }
+    ) {}
 
-    public function parse(string $definition) : ParsedExcludeDefinition
+    public function parse(string $definition): ParsedExcludeDefinition
     {
         $trimmed = \ltrim($definition);
 
@@ -34,7 +36,7 @@ final readonly class ExcludeDefinitionParser
         );
     }
 
-    private function extractConstraint(ParseResult $parseResult) : Constraint
+    private function extractConstraint(ParseResult $parseResult): Constraint
     {
         $stmts = $parseResult->getStmts();
 
@@ -56,13 +58,17 @@ final readonly class ExcludeDefinitionParser
             }
         }
 
-        throw InvalidAstException::invalidFieldValue('tableElts', 'CreateStmt', 'no EXCLUDE constraint found in definition');
+        throw InvalidAstException::invalidFieldValue(
+            'tableElts',
+            'CreateStmt',
+            'no EXCLUDE constraint found in definition',
+        );
     }
 
     /**
      * @return list<array{expression: string, operator: string}>
      */
-    private function extractElements(Constraint $constraint) : array
+    private function extractElements(Constraint $constraint): array
     {
         $elements = [];
 
@@ -74,7 +80,11 @@ final readonly class ExcludeDefinitionParser
             }
 
             if ($pair->getItems()->count() !== 2) {
-                throw InvalidAstException::invalidFieldValue('items', 'List', 'expected exactly 2 items in exclusion pair');
+                throw InvalidAstException::invalidFieldValue(
+                    'items',
+                    'List',
+                    'expected exactly 2 items in exclusion pair',
+                );
             }
 
             $elements[] = [
@@ -86,7 +96,7 @@ final readonly class ExcludeDefinitionParser
         return $elements;
     }
 
-    private function extractPredicate(Constraint $constraint) : ?string
+    private function extractPredicate(Constraint $constraint): ?string
     {
         $where = $constraint->getWhereClause();
 
@@ -97,7 +107,7 @@ final readonly class ExcludeDefinitionParser
         return $this->expressionParser->normalizeNode($where);
     }
 
-    private function resolveElementExpression(Node $elementNode) : string
+    private function resolveElementExpression(Node $elementNode): string
     {
         $indexElem = $elementNode->getIndexElem();
 
@@ -114,13 +124,17 @@ final readonly class ExcludeDefinitionParser
         $expr = $indexElem->getExpr();
 
         if ($expr === null) {
-            throw InvalidAstException::invalidFieldValue('expr', 'IndexElem', 'element has neither name nor expression');
+            throw InvalidAstException::invalidFieldValue(
+                'expr',
+                'IndexElem',
+                'element has neither name nor expression',
+            );
         }
 
         return $this->expressionParser->normalizeNode($expr);
     }
 
-    private function resolveOperator(Node $operatorNode) : string
+    private function resolveOperator(Node $operatorNode): string
     {
         $list = $operatorNode->getList();
 

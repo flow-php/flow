@@ -4,25 +4,45 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification;
 
-use function Flow\ETL\DSL\definition_from_type;
-use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_list, type_map, type_string, type_structure, type_time, type_uuid, type_xml};
-use Flow\Bridge\OpenAPI\Specification\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Bridge\OpenAPI\Specification\Exception\InvalidArgumentException;
+use Flow\Bridge\OpenAPI\Specification\Exception\RuntimeException;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    HTMLElementType,
-    HTMLType,
-    JsonType,
-    ListType,
-    MapType,
-    StructureType,
-    TimeType,
-    UuidType,
-    XMLElementType,
-    XMLType};
-use Flow\Types\Type\Native\{ArrayType, BooleanType, EnumType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\HTMLElementType;
+use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
+
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\type_xml;
 
 /**
  * Bidirectional converter between Flow PHP schemas and OpenAPI 3.0 specifications.
@@ -60,7 +80,7 @@ final class OpenAPIConverter
      *
      * @throws InvalidArgumentException When the specification is invalid or unsupported
      */
-    public function fromOpenAPI(array $openApiSpec) : Schema
+    public function fromOpenAPI(array $openApiSpec): Schema
     {
         if (!isset($openApiSpec['type']) || $openApiSpec['type'] !== 'object') {
             throw new InvalidArgumentException('OpenAPI specification must have type "object"');
@@ -93,7 +113,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed> OpenAPI object specification with 'type' and 'properties'
      */
-    public function toOpenAPI(Schema $schema) : array
+    public function toOpenAPI(Schema $schema): array
     {
         $properties = [];
 
@@ -112,7 +132,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertArrayToOpenAPI(Type $type) : array
+    private function convertArrayToOpenAPI(Type $type): array
     {
         return [
             'type' => 'array',
@@ -127,7 +147,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertDefinitionToOpenAPI(Definition $definition) : array
+    private function convertDefinitionToOpenAPI(Definition $definition): array
     {
         $property = $this->convertTypeToOpenAPI($definition->type());
         $property['nullable'] = $definition->isNullable();
@@ -188,7 +208,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertEnumToOpenAPI(Type $type) : array
+    private function convertEnumToOpenAPI(Type $type): array
     {
         if (!$type instanceof EnumType) {
             return ['type' => 'string'];
@@ -198,10 +218,9 @@ final class OpenAPIConverter
         $values = [];
 
         if (\enum_exists($enumClass)) {
-            $values = \array_map(
-                static fn (\UnitEnum $case) => $case instanceof \BackedEnum ? $case->value : $case->name,
-                $enumClass::cases()
-            );
+            $values = \array_map(static fn(\UnitEnum $case) => $case instanceof \BackedEnum
+                ? $case->value
+                : $case->name, $enumClass::cases());
         }
 
         return [
@@ -215,7 +234,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertListToOpenAPI(Type $type) : array
+    private function convertListToOpenAPI(Type $type): array
     {
         if (!$type instanceof ListType) {
             return ['type' => 'array', 'items' => ['type' => 'string']];
@@ -232,7 +251,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertMapToOpenAPI(Type $type) : array
+    private function convertMapToOpenAPI(Type $type): array
     {
         if (!$type instanceof MapType) {
             return ['type' => 'object'];
@@ -251,7 +270,7 @@ final class OpenAPIConverter
      *
      * @return Type<mixed>
      */
-    private function convertOpenAPIArrayToFlowType(array $typeSpec) : Type
+    private function convertOpenAPIArrayToFlowType(array $typeSpec): Type
     {
         if (!isset($typeSpec['items'])) {
             return type_list(type_string());
@@ -275,7 +294,7 @@ final class OpenAPIConverter
      *
      * @return Type<mixed>
      */
-    private function convertOpenAPIObjectToFlowType(array $typeSpec) : Type
+    private function convertOpenAPIObjectToFlowType(array $typeSpec): Type
     {
         // If it has additionalProperties, it's a map
         if (isset($typeSpec['additionalProperties'])) {
@@ -323,20 +342,29 @@ final class OpenAPIConverter
      *
      * @return Definition<mixed>
      */
-    private function convertOpenAPIPropertyToDefinition(string $propertyName, array $propertySpec) : Definition
+    private function convertOpenAPIPropertyToDefinition(string $propertyName, array $propertySpec): Definition
     {
         if (!isset($propertySpec['type'])) {
             throw new InvalidArgumentException("Property '{$propertyName}' must have a type");
         }
 
-        $nullable = \is_bool($propertySpec['nullable'] ?? false) ? ($propertySpec['nullable'] ?? false) : false;
+        $nullable = \is_bool($propertySpec['nullable'] ?? false) ? $propertySpec['nullable'] ?? false : false;
         $metadata = Metadata::empty();
 
         if (isset($propertySpec['description']) && \is_string($propertySpec['description'])) {
             $metadata = $metadata->add('description', $propertySpec['description']);
         }
 
-        if (isset($propertySpec['example']) && (\is_string($propertySpec['example']) || \is_int($propertySpec['example']) || \is_float($propertySpec['example']) || \is_bool($propertySpec['example']) || \is_array($propertySpec['example']))) {
+        if (
+            isset($propertySpec['example'])
+            && (
+                \is_string($propertySpec['example'])
+                || \is_int($propertySpec['example'])
+                || \is_float($propertySpec['example'])
+                || \is_bool($propertySpec['example'])
+                || \is_array($propertySpec['example'])
+            )
+        ) {
             $metadata = $metadata->add('example', $propertySpec['example']);
         }
 
@@ -352,7 +380,7 @@ final class OpenAPIConverter
      *
      * @return Type<mixed>
      */
-    private function convertOpenAPIStringToFlowType(array $typeSpec) : Type
+    private function convertOpenAPIStringToFlowType(array $typeSpec): Type
     {
         $format = $typeSpec['format'] ?? null;
 
@@ -374,7 +402,7 @@ final class OpenAPIConverter
      *
      * @return Type<mixed>
      */
-    private function convertOpenAPITypeToFlowType(array $typeSpec) : Type
+    private function convertOpenAPITypeToFlowType(array $typeSpec): Type
     {
         if (!isset($typeSpec['type']) || !\is_string($typeSpec['type'])) {
             throw new InvalidArgumentException('OpenAPI type specification must have a string type');
@@ -398,7 +426,7 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertStructureToOpenAPI(Type $type) : array
+    private function convertStructureToOpenAPI(Type $type): array
     {
         if (!$type instanceof StructureType) {
             return ['type' => 'object'];
@@ -429,22 +457,19 @@ final class OpenAPIConverter
      *
      * @return array<string, mixed>
      */
-    private function convertTypeToOpenAPI(Type $type) : array
+    private function convertTypeToOpenAPI(Type $type): array
     {
         return match ($type::class) {
             BooleanType::class => ['type' => 'boolean'],
             IntegerType::class => ['type' => 'integer'],
             FloatType::class => ['type' => 'number'],
-            StringType::class,
-            HTMLType::class,
-            HTMLElementType::class => ['type' => 'string'],
+            StringType::class, HTMLType::class, HTMLElementType::class => ['type' => 'string'],
             DateType::class => ['type' => 'string', 'format' => 'date'],
             DateTimeType::class => ['type' => 'string', 'format' => 'date-time'],
             TimeType::class => ['type' => 'string', 'format' => 'time'],
             UuidType::class => ['type' => 'string', 'format' => 'uuid'],
             JsonType::class => ['type' => 'string', 'format' => 'json'],
-            XMLType::class,
-            XMLElementType::class => ['type' => 'string', 'format' => 'xml'],
+            XMLType::class, XMLElementType::class => ['type' => 'string', 'format' => 'xml'],
             EnumType::class => $this->convertEnumToOpenAPI($type),
             ArrayType::class => $this->convertArrayToOpenAPI($type),
             ListType::class => $this->convertListToOpenAPI($type),

@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_integer, type_optional, type_string, type_structure};
 use Flow\ETL\Function\ScalarFunctionChain;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class FunctionModel
 {
@@ -21,14 +27,12 @@ final readonly class FunctionModel
         public AttributesModel $attributes,
         public bool $scalarFunctionChain,
         public ?string $docComment = null,
-    ) {
-
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'repository_path' => type_string(),
@@ -60,11 +64,11 @@ final readonly class FunctionModel
             TypesModel::fromArray($returnType),
             AttributesModel::fromArray($attributes),
             $data['scalar_function_chain'],
-            $data['doc_comment']
+            $data['doc_comment'],
         );
     }
 
-    public static function fromReflection(string $relativePath, \ReflectionFunction $reflectionFunction) : self
+    public static function fromReflection(string $relativePath, \ReflectionFunction $reflectionFunction): self
     {
         $returnTypeReflection = $reflectionFunction->getReturnType();
 
@@ -75,7 +79,10 @@ final readonly class FunctionModel
         return new self(
             $relativePath,
             $reflectionFunction->getStartLine(),
-            (new AsciiSlugger())->slug($reflectionFunction->getShortName())->lower()->toString(),
+            (new AsciiSlugger())
+                ->slug($reflectionFunction->getShortName())
+                ->lower()
+                ->toString(),
             $reflectionFunction->getShortName(),
             $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
@@ -89,7 +96,7 @@ final readonly class FunctionModel
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'repository_path' => $this->repositoryPath,
@@ -105,7 +112,7 @@ final readonly class FunctionModel
         ];
     }
 
-    private static function isScalarFunctionChain(\ReflectionType $reflectionType) : bool
+    private static function isScalarFunctionChain(\ReflectionType $reflectionType): bool
     {
         if ($reflectionType instanceof \ReflectionNamedType) {
             $typeName = $reflectionType->getName();

@@ -4,25 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Command;
 
-use function Flow\CLI\{option_bool, option_int, option_int_nullable};
-use function Flow\ETL\DSL\{analyze, df};
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\{CSVOptions,
-    ConfigOptions,
-    ExcelOptions,
-    JSONOptions,
-    ParquetOptions,
-    StatisticsOptions,
-    XMLOptions};
+use Flow\CLI\Command\Traits\ConfigOptions;
+use Flow\CLI\Command\Traits\CSVOptions;
+use Flow\CLI\Command\Traits\ExcelOptions;
+use Flow\CLI\Command\Traits\JSONOptions;
+use Flow\CLI\Command\Traits\ParquetOptions;
+use Flow\CLI\Command\Traits\StatisticsOptions;
+use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Formatter\PipelineReportFormatter;
-use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
+use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\FileFormat;
+use Flow\CLI\Options\FileFormatOption;
 use Flow\CLI\Style\FlowStyle;
-use Flow\ETL\{Config, Rows};
+use Flow\ETL\Config;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function Flow\CLI\option_bool;
+use function Flow\CLI\option_int;
+use function Flow\CLI\option_int_nullable;
+use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\df;
 
 final class FileAnalyzeCommand extends Command
 {
@@ -42,17 +51,51 @@ final class FileAnalyzeCommand extends Command
 
     private ?Path $sourcePath = null;
 
-    public function configure() : void
+    public function configure(): void
     {
         $this
             ->setName('file:analyze')
             ->setDescription('Analyze a file.')
-            ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
-            ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from source file path extension', null)
-            ->addOption('input-file-batch-size', null, InputOption::VALUE_REQUIRED, 'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once', self::DEFAULT_BATCH_SIZE)
-            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
-            ->addOption('input-file-offset', null, InputOption::VALUE_REQUIRED, 'Number of rows to skip before starting to read data', null)
-            ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
+            ->addArgument(
+                'input-file',
+                InputArgument::REQUIRED,
+                'Path to a file from which schema should be extracted.',
+            )
+            ->addOption(
+                'input-file-format',
+                null,
+                InputArgument::OPTIONAL,
+                'File format. When not set file format is guessed from source file path extension',
+                null,
+            )
+            ->addOption(
+                'input-file-batch-size',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once',
+                self::DEFAULT_BATCH_SIZE,
+            )
+            ->addOption(
+                'input-file-limit',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed',
+                null,
+            )
+            ->addOption(
+                'input-file-offset',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Number of rows to skip before starting to read data',
+                null,
+            )
+            ->addOption(
+                'schema-auto-cast',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type',
+                false,
+            );
 
         $this->addConfigOptions($this);
         $this->addJSONInputOptions($this);
@@ -63,7 +106,7 @@ final class FileAnalyzeCommand extends Command
         $this->addStatisticsOptions($this);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new FlowStyle($input, $output);
 
@@ -111,12 +154,9 @@ final class FileAnalyzeCommand extends Command
             $analyze->withSchema()->withColumnStatistics();
         }
 
-        $report = $df->run(
-            static function (Rows $rows) use ($progress) : void {
-                $progress->advance($rows->count());
-            },
-            analyze: $analyze
-        );
+        $report = $df->run(static function (Rows $rows) use ($progress): void {
+            $progress->advance($rows->count());
+        }, analyze: $analyze);
 
         if ($report === null) {
             $style->error("Couldn't analyze given file.");
@@ -135,7 +175,7 @@ final class FileAnalyzeCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output) : void
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
         $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);

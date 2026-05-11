@@ -23,17 +23,17 @@ final class Reader
      */
     public function __construct(RandomAccessFile $source, array $options = [])
     {
-        throw new \RuntimeException('The arrow PHP extension is not loaded. Install ext-arrow to use Flow\Arrow\Parquet\Reader.');
+        throw new \RuntimeException(
+            'The arrow PHP extension is not loaded. Install ext-arrow to use Flow\Arrow\Parquet\Reader.',
+        );
     }
 
-    public function close() : void
-    {
-    }
+    public function close(): void {}
 
     /**
      * @return array<string, mixed>
      */
-    public function metadata() : array
+    public function metadata(): array
     {
         return [];
     }
@@ -43,7 +43,7 @@ final class Reader
      *
      * @return null|array<string, array<mixed>>
      */
-    public function readRowGroup(?array $columns = null) : ?array
+    public function readRowGroup(?array $columns = null): ?array
     {
         return null;
     }
@@ -51,7 +51,7 @@ final class Reader
     /**
      * @return array<array<string, mixed>>
      */
-    public function schema() : array
+    public function schema(): array
     {
         return [];
     }

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Dataset\Statistics;
 
-use function Flow\ETL\DSL\{integer_entry, string_entry};
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\string_entry;
+
 final class ColumnsTest extends FlowTestCase
 {
-    public function test_columns_statistics() : void
+    public function test_columns_statistics(): void
     {
         $columns = new Columns();
 
@@ -21,11 +23,11 @@ final class ColumnsTest extends FlowTestCase
         $columns->add(string_entry('b', 'some text'));
         $columns->add(string_entry('b', null));
 
-        self::assertCount(2, $columns->all());
-        self::assertSame(3, $columns->get('a')->distinctCount());
+        static::assertCount(2, $columns->all());
+        static::assertSame(3, $columns->get('a')->distinctCount());
     }
 
-    public function test_get_non_existing_column() : void
+    public function test_get_non_existing_column(): void
     {
         $columns = new Columns();
 

@@ -4,58 +4,46 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Copy;
 
-use function Flow\PostgreSql\DSL\{
-    col,
-    copy,
-    select
-};
-
-use Flow\PostgreSql\QueryBuilder\Copy\{CopyFormat, CopyOnError};
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyOnError;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\copy;
+use function Flow\PostgreSql\DSL\select;
+
 final class CopyBuilderTest extends TestCase
 {
-    public function test_copy_from_basic() : void
+    public function test_copy_from_basic(): void
     {
-        $query = copy()
-            ->from('users')
-            ->file('/tmp/users.csv');
+        $query = copy()->from('users')->file('/tmp/users.csv');
 
-        self::assertSame("COPY users FROM '/tmp/users.csv'", $query->toSql());
+        static::assertSame("COPY users FROM '/tmp/users.csv'", $query->toSql());
     }
 
-    public function test_copy_from_csv_with_header() : void
+    public function test_copy_from_csv_with_header(): void
     {
-        $query = copy()
-            ->from('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->withHeader();
+        $query = copy()->from('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->withHeader();
 
-        self::assertSame("COPY users FROM '/tmp/users.csv' WITH (FORMAT CSV, HEADER true)", $query->toSql());
+        static::assertSame("COPY users FROM '/tmp/users.csv' WITH (FORMAT CSV, HEADER true)", $query->toSql());
     }
 
-    public function test_copy_from_program() : void
+    public function test_copy_from_program(): void
     {
-        $query = copy()
-            ->from('logs')
-            ->program('gunzip -c /var/log/app.log.gz');
+        $query = copy()->from('logs')->program('gunzip -c /var/log/app.log.gz');
 
-        self::assertSame("COPY logs FROM PROGRAM 'gunzip -c /var/log/app.log.gz'", $query->toSql());
+        static::assertSame("COPY logs FROM PROGRAM 'gunzip -c /var/log/app.log.gz'", $query->toSql());
     }
 
-    public function test_copy_from_stdin() : void
+    public function test_copy_from_stdin(): void
     {
-        $query = copy()
-            ->from('users')
-            ->stdin()
-            ->format(CopyFormat::CSV);
+        $query = copy()->from('users')->stdin()->format(CopyFormat::CSV);
 
-        self::assertSame('COPY users FROM STDIN CSV', $query->toSql());
+        static::assertSame('COPY users FROM STDIN CSV', $query->toSql());
     }
 
-    public function test_copy_from_with_all_csv_options() : void
+    public function test_copy_from_with_all_csv_options(): void
     {
         $query = copy()
             ->from('data')
@@ -68,111 +56,86 @@ final class CopyBuilderTest extends TestCase
             ->escape('\\')
             ->encoding('UTF8');
 
-        self::assertSame("COPY data FROM '/tmp/data.csv' WITH (FORMAT CSV, DELIMITER ';', NULL 'NULL', HEADER true, QUOTE '''', ESCAPE E'\\\\', ENCODING 'UTF8')", $query->toSql());
+        static::assertSame(
+            "COPY data FROM '/tmp/data.csv' WITH (FORMAT CSV, DELIMITER ';', NULL 'NULL', HEADER true, QUOTE '''', ESCAPE E'\\\\', ENCODING 'UTF8')",
+            $query->toSql(),
+        );
     }
 
-    public function test_copy_from_with_columns() : void
+    public function test_copy_from_with_columns(): void
     {
-        $query = copy()
-            ->from('users')
-            ->columns('id', 'name', 'email')
-            ->file('/tmp/users.csv');
+        $query = copy()->from('users')->columns('id', 'name', 'email')->file('/tmp/users.csv');
 
-        self::assertSame("COPY users(id, name, email) FROM '/tmp/users.csv'", $query->toSql());
+        static::assertSame("COPY users(id, name, email) FROM '/tmp/users.csv'", $query->toSql());
     }
 
-    public function test_copy_from_with_force_not_null() : void
+    public function test_copy_from_with_force_not_null(): void
     {
-        $query = copy()
-            ->from('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->forceNotNull('name', 'email');
+        $query = copy()->from('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->forceNotNull('name', 'email');
 
-        self::assertSame("COPY users FROM '/tmp/users.csv' WITH (FORMAT CSV, FORCE_NOT_NULL (name, email))", $query->toSql());
+        static::assertSame(
+            "COPY users FROM '/tmp/users.csv' WITH (FORMAT CSV, FORCE_NOT_NULL (name, email))",
+            $query->toSql(),
+        );
     }
 
-    public function test_copy_from_with_on_error_ignore() : void
+    public function test_copy_from_with_on_error_ignore(): void
     {
-        $query = copy()
-            ->from('events')
-            ->file('/tmp/events.csv')
-            ->onError(CopyOnError::IGNORE);
+        $query = copy()->from('events')->file('/tmp/events.csv')->onError(CopyOnError::IGNORE);
 
-        self::assertSame("COPY events FROM '/tmp/events.csv' WITH (on_error ignore)", $query->toSql());
+        static::assertSame("COPY events FROM '/tmp/events.csv' WITH (on_error ignore)", $query->toSql());
     }
 
-    public function test_copy_to_basic() : void
+    public function test_copy_to_basic(): void
     {
-        $query = copy()
-            ->to('users')
-            ->file('/tmp/users.csv');
+        $query = copy()->to('users')->file('/tmp/users.csv');
 
-        self::assertSame("COPY users TO '/tmp/users.csv'", $query->toSql());
+        static::assertSame("COPY users TO '/tmp/users.csv'", $query->toSql());
     }
 
-    public function test_copy_to_binary_format() : void
+    public function test_copy_to_binary_format(): void
     {
-        $query = copy()
-            ->to('data')
-            ->file('/tmp/data.bin')
-            ->format(CopyFormat::BINARY);
+        $query = copy()->to('data')->file('/tmp/data.bin')->format(CopyFormat::BINARY);
 
-        self::assertSame("COPY data TO '/tmp/data.bin' WITH (FORMAT BINARY)", $query->toSql());
+        static::assertSame("COPY data TO '/tmp/data.bin' WITH (FORMAT BINARY)", $query->toSql());
     }
 
-    public function test_copy_to_csv_with_header() : void
+    public function test_copy_to_csv_with_header(): void
     {
-        $query = copy()
-            ->to('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->withHeader();
+        $query = copy()->to('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->withHeader();
 
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, HEADER true)", $query->toSql());
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, HEADER true)", $query->toSql());
     }
 
-    public function test_copy_to_program() : void
+    public function test_copy_to_program(): void
     {
-        $query = copy()
-            ->to('logs')
-            ->program('gzip > /tmp/logs.csv.gz');
+        $query = copy()->to('logs')->program('gzip > /tmp/logs.csv.gz');
 
-        self::assertSame("COPY logs TO PROGRAM 'gzip > /tmp/logs.csv.gz'", $query->toSql());
+        static::assertSame("COPY logs TO PROGRAM 'gzip > /tmp/logs.csv.gz'", $query->toSql());
     }
 
-    public function test_copy_to_stdout() : void
+    public function test_copy_to_stdout(): void
     {
-        $query = copy()
-            ->to('users')
-            ->stdout()
-            ->format(CopyFormat::CSV);
+        $query = copy()->to('users')->stdout()->format(CopyFormat::CSV);
 
-        self::assertSame('COPY users TO STDOUT CSV', $query->toSql());
+        static::assertSame('COPY users TO STDOUT CSV', $query->toSql());
     }
 
-    public function test_copy_to_with_columns() : void
+    public function test_copy_to_with_columns(): void
     {
-        $query = copy()
-            ->to('users')
-            ->columns('id', 'name', 'email')
-            ->file('/tmp/users.csv');
+        $query = copy()->to('users')->columns('id', 'name', 'email')->file('/tmp/users.csv');
 
-        self::assertSame("COPY users(id, name, email) TO '/tmp/users.csv'", $query->toSql());
+        static::assertSame("COPY users(id, name, email) TO '/tmp/users.csv'", $query->toSql());
     }
 
-    public function test_copy_to_with_force_quote_all() : void
+    public function test_copy_to_with_force_quote_all(): void
     {
-        $query = copy()
-            ->to('products')
-            ->file('/tmp/products.csv')
-            ->format(CopyFormat::CSV)
-            ->forceQuoteAll();
+        $query = copy()->to('products')->file('/tmp/products.csv')->format(CopyFormat::CSV)->forceQuoteAll();
 
-        self::assertSame("COPY products TO '/tmp/products.csv' WITH (FORMAT CSV, FORCE_QUOTE *)", $query->toSql());
+        static::assertSame("COPY products TO '/tmp/products.csv' WITH (FORMAT CSV, FORCE_QUOTE *)", $query->toSql());
     }
 
-    public function test_copy_to_with_force_quote_columns() : void
+    public function test_copy_to_with_force_quote_columns(): void
     {
         $query = copy()
             ->to('products')
@@ -180,29 +143,22 @@ final class CopyBuilderTest extends TestCase
             ->format(CopyFormat::CSV)
             ->forceQuote('name', 'description');
 
-        self::assertSame("COPY products TO '/tmp/products.csv' CSV FORCE QUOTE name, description", $query->toSql());
+        static::assertSame("COPY products TO '/tmp/products.csv' CSV FORCE QUOTE name, description", $query->toSql());
     }
 
-    public function test_copy_to_with_query() : void
+    public function test_copy_to_with_query(): void
     {
-        $selectQuery = select()
-            ->select(col('id'), col('name'))
-            ->from(new Table('users'));
+        $selectQuery = select()->select(col('id'), col('name'))->from(new Table('users'));
 
-        $query = copy()
-            ->toQuery($selectQuery)
-            ->file('/tmp/active_users.csv')
-            ->format(CopyFormat::CSV);
+        $query = copy()->toQuery($selectQuery)->file('/tmp/active_users.csv')->format(CopyFormat::CSV);
 
-        self::assertSame("COPY (SELECT id, name FROM users) TO '/tmp/active_users.csv' CSV", $query->toSql());
+        static::assertSame("COPY (SELECT id, name FROM users) TO '/tmp/active_users.csv' CSV", $query->toSql());
     }
 
-    public function test_copy_to_with_schema() : void
+    public function test_copy_to_with_schema(): void
     {
-        $query = copy()
-            ->to('analytics.events')
-            ->file('/tmp/events.csv');
+        $query = copy()->to('analytics.events')->file('/tmp/events.csv');
 
-        self::assertSame("COPY analytics.events TO '/tmp/events.csv'", $query->toSql());
+        static::assertSame("COPY analytics.events TO '/tmp/events.csv'", $query->toSql());
     }
 }

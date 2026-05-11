@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{Boolean, Node};
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Column, Expression, ExpressionFactory, Literal};
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 
 /**
  * Wraps an Expression as a Condition for use in WHERE/HAVING/JOIN ON clauses.
@@ -17,10 +22,9 @@ final readonly class BooleanCondition implements Condition
 {
     public function __construct(
         public Expression $expression,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         if ($node->hasColumnRef()) {
             return new self(Column::fromAst($node));
@@ -40,27 +44,27 @@ final readonly class BooleanCondition implements Condition
         return new self(ExpressionFactory::fromAst($node));
     }
 
-    public function and(Condition $other) : AndCondition
+    public function and(Condition $other): AndCondition
     {
         return new AndCondition($this, $other);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : NotCondition
+    public function not(): NotCondition
     {
         return new NotCondition($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         return $this->expression->toAst();
     }

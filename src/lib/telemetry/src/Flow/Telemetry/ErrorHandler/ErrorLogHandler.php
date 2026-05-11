@@ -16,10 +16,9 @@ final readonly class ErrorLogHandler implements ErrorHandler
         private ErrorLogMessageType $messageType = ErrorLogMessageType::OperatingSystem,
         private bool $expandNewlines = false,
         private string $messagePrefix = '[flow-telemetry]',
-    ) {
-    }
+    ) {}
 
-    public function handle(\Throwable $error) : void
+    public function handle(\Throwable $error): void
     {
         try {
             $message = \sprintf(

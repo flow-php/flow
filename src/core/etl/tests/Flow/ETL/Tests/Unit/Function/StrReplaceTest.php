@@ -4,25 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class StrReplaceTest extends FlowTestCase
 {
-    public function test_str_replace_on_valid_string() : void
+    public function test_str_replace_on_valid_string(): void
     {
-        self::assertSame(
-            '1',
-            ref('value')->strReplace('test', '1')->eval(row(str_entry('value', 'test')), flow_context()),
-        );
+        static::assertSame('1', ref('value')
+            ->strReplace('test', '1')
+            ->eval(row(str_entry('value', 'test')), flow_context()));
     }
 
-    public function test_str_replace_on_valid_string_with_array_of_replacements() : void
+    public function test_str_replace_on_valid_string_with_array_of_replacements(): void
     {
-        self::assertSame(
-            'test was successful',
-            ref('value')->strReplace(['is', 'broken'], ['was', 'successful'])->eval(row(str_entry('value', 'test is broken')), flow_context()),
-        );
+        static::assertSame('test was successful', ref('value')
+            ->strReplace(['is', 'broken'], ['was', 'successful'])
+            ->eval(row(str_entry('value', 'test is broken')), flow_context()));
     }
 }

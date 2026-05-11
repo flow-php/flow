@@ -9,11 +9,11 @@ use Twig\TwigFunction;
 
 final class DSLExtension extends AbstractExtension
 {
-    public function __construct(private readonly string $dslPath)
-    {
-    }
+    public function __construct(
+        private readonly string $dslPath,
+    ) {}
 
-    public function dsl() : string
+    public function dsl(): string
     {
         return file_get_contents($this->dslPath);
     }

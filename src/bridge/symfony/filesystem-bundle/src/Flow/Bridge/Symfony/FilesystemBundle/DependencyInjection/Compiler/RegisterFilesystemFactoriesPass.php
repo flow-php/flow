@@ -6,7 +6,8 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 {
@@ -14,7 +15,7 @@ final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 
     public const string TAG = 'flow.filesystem.factory';
 
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasDefinition(self::REGISTRY_SERVICE_ID)) {
             return;

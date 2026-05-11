@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 
 interface MergeOnStep
 {
-    public function on(Condition $condition) : MergeWhenStep;
+    public function on(Condition $condition): MergeWhenStep;
 }

@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Domain;
 
-use Flow\PostgreSql\Protobuf\AST\{CollateClause, ConstrType, Constraint, CreateDomainStmt, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CollateClause;
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\CreateDomainStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, CreateDomainTypeStep
@@ -24,17 +30,16 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         private ?string $collation = null,
         private array $constraints = [],
         private ?string $currentConstraintName = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateDomainTypeStep
+    public static function create(string $name): CreateDomainTypeStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function as(ColumnType $dataType) : CreateDomainOptionsStep
+    public function as(ColumnType $dataType): CreateDomainOptionsStep
     {
         return new self(
             $this->name,
@@ -46,7 +51,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         );
     }
 
-    public function check(Condition $condition) : CreateDomainOptionsStep
+    public function check(Condition $condition): CreateDomainOptionsStep
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
@@ -59,17 +64,10 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         $newConstraints = $this->constraints;
         $newConstraints[] = $constraint;
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->dataType,
-            $this->collation,
-            $newConstraints,
-            null,
-        );
+        return new self($this->name, $this->schema, $this->dataType, $this->collation, $newConstraints, null);
     }
 
-    public function collate(string $collation) : CreateDomainOptionsStep
+    public function collate(string $collation): CreateDomainOptionsStep
     {
         return new self(
             $this->name,
@@ -81,19 +79,12 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         );
     }
 
-    public function constraint(string $name) : CreateDomainOptionsStep
+    public function constraint(string $name): CreateDomainOptionsStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->dataType,
-            $this->collation,
-            $this->constraints,
-            $name,
-        );
+        return new self($this->name, $this->schema, $this->dataType, $this->collation, $this->constraints, $name);
     }
 
-    public function default(Expression $expression) : CreateDomainOptionsStep
+    public function default(Expression $expression): CreateDomainOptionsStep
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_DEFAULT);
@@ -112,7 +103,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         );
     }
 
-    public function notNull() : CreateDomainOptionsStep
+    public function notNull(): CreateDomainOptionsStep
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_NOTNULL);
@@ -124,17 +115,10 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         $newConstraints = $this->constraints;
         $newConstraints[] = $constraint;
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->dataType,
-            $this->collation,
-            $newConstraints,
-            null,
-        );
+        return new self($this->name, $this->schema, $this->dataType, $this->collation, $newConstraints, null);
     }
 
-    public function null() : CreateDomainOptionsStep
+    public function null(): CreateDomainOptionsStep
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_NULL);
@@ -152,7 +136,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         );
     }
 
-    public function toAst() : CreateDomainStmt
+    public function toAst(): CreateDomainStmt
     {
         $stmt = new CreateDomainStmt();
 

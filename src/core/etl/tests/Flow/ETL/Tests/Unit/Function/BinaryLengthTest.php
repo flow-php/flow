@@ -4,65 +4,41 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class BinaryLengthTest extends FlowTestCase
 {
-    public function test_binary_length_ascii_string() : void
+    public function test_binary_length_ascii_string(): void
     {
-        self::assertSame(
-            5,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'hello')),
-                flow_context()
-            )
-        );
+        static::assertSame(5, ref('str')->binaryLength()->eval(row(str_entry('str', 'hello')), flow_context()));
     }
 
-    public function test_binary_length_binary_data() : void
+    public function test_binary_length_binary_data(): void
     {
         $binaryData = "\x00\x01\x02\x03\xFF";
 
-        self::assertSame(
-            5,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', $binaryData)),
-                flow_context()
-            )
-        );
+        static::assertSame(5, ref('str')->binaryLength()->eval(row(str_entry('str', $binaryData)), flow_context()));
     }
 
-    public function test_binary_length_empty_string() : void
+    public function test_binary_length_empty_string(): void
     {
-        self::assertSame(
-            0,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', '')),
-                flow_context()
-            )
-        );
+        static::assertSame(0, ref('str')->binaryLength()->eval(row(str_entry('str', '')), flow_context()));
     }
 
-    public function test_binary_length_returns_null_for_null_input() : void
+    public function test_binary_length_returns_null_for_null_input(): void
     {
-        self::assertNull(
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', null)),
-                flow_context()
-            )
-        );
+        static::assertNull(ref('str')->binaryLength()->eval(row(str_entry('str', null)), flow_context()));
     }
 
-    public function test_binary_length_string_with_newlines_and_tabs() : void
+    public function test_binary_length_string_with_newlines_and_tabs(): void
     {
-        self::assertSame(
-            12,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', "hello\nworld\t")),
-                flow_context()
-            )
-        );
+        static::assertSame(12, ref('str')
+            ->binaryLength()
+            ->eval(row(str_entry('str', "hello\nworld\t")), flow_context()));
     }
 }

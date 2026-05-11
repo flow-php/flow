@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-use Flow\PostgreSql\Protobuf\AST\{DefElem, ExplainStmt, Integer, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\ExplainStmt;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertFinalStep;
@@ -27,15 +31,14 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         private ?bool $summary = null,
         private ?bool $memory = null,
         private ?ExplainFormat $format = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep $query) : ExplainFinalStep
+    public static function create(SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep $query): ExplainFinalStep
     {
         return new self($query);
     }
 
-    public function analyze() : ExplainFinalStep
+    public function analyze(): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -52,7 +55,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function buffers(bool $enabled = true) : ExplainFinalStep
+    public function buffers(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -69,7 +72,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function costs(bool $enabled = true) : ExplainFinalStep
+    public function costs(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -86,7 +89,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function format(ExplainFormat $format) : ExplainFinalStep
+    public function format(ExplainFormat $format): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -103,7 +106,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function memory(bool $enabled = true) : ExplainFinalStep
+    public function memory(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -120,7 +123,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function settings(bool $enabled = true) : ExplainFinalStep
+    public function settings(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -137,7 +140,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function summary(bool $enabled = true) : ExplainFinalStep
+    public function summary(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -154,7 +157,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function timing(bool $enabled = true) : ExplainFinalStep
+    public function timing(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -171,7 +174,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function toAst() : ExplainStmt
+    public function toAst(): ExplainStmt
     {
         $stmt = new ExplainStmt();
 
@@ -238,7 +241,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         return $stmt;
     }
 
-    public function verbose() : ExplainFinalStep
+    public function verbose(): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -255,7 +258,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    public function wal(bool $enabled = true) : ExplainFinalStep
+    public function wal(bool $enabled = true): ExplainFinalStep
     {
         return new self(
             $this->query,
@@ -272,7 +275,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         );
     }
 
-    private function createDefElemBool(string $name) : Node
+    private function createDefElemBool(string $name): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -283,7 +286,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         return $node;
     }
 
-    private function createDefElemInt(string $name, int $value) : Node
+    private function createDefElemInt(string $name, int $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -302,7 +305,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         return $node;
     }
 
-    private function createDefElemString(string $name, string $value) : Node
+    private function createDefElemString(string $name, string $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);

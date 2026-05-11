@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 
-use Flow\Telemetry\Context\{Context, ContextStorage};
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Propagation\{PropagationContext, Propagator};
-use Flow\Telemetry\Tracer\{SpanContext, SpanKind, SpanStatus};
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Propagation\PropagationContext;
+use Flow\Telemetry\Propagation\Propagator;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Middleware\{MiddlewareInterface, StackInterface};
-use Symfony\Component\Messenger\Stamp\{BusNameStamp, ReceivedStamp, TransportMessageIdStamp};
+use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
+use Symfony\Component\Messenger\Middleware\StackInterface;
+use Symfony\Component\Messenger\Stamp\BusNameStamp;
+use Symfony\Component\Messenger\Stamp\ReceivedStamp;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 final readonly class TracingMiddleware implements MiddlewareInterface
 {
@@ -18,10 +26,9 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private Telemetry $telemetry,
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
-    ) {
-    }
+    ) {}
 
-    public function handle(Envelope $envelope, StackInterface $stack) : Envelope
+    public function handle(Envelope $envelope, StackInterface $stack): Envelope
     {
         $tracer = $this->telemetry->tracer('flow.symfony.messenger', PackageVersion::get('symfony/messenger'));
 
@@ -82,7 +89,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
     }
 
-    private function extractContext(Envelope $envelope) : void
+    private function extractContext(Envelope $envelope): void
     {
         if ($this->contextStorage === null || $this->propagator === null) {
             return;
@@ -109,14 +116,14 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
     }
 
-    private function getShortClassName(string $className) : string
+    private function getShortClassName(string $className): string
     {
         $parts = \explode('\\', $className);
 
         return \end($parts);
     }
 
-    private function injectContext(Envelope $envelope) : Envelope
+    private function injectContext(Envelope $envelope): Envelope
     {
         if ($this->contextStorage === null || $this->propagator === null) {
             return $envelope;
@@ -129,10 +136,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             return $envelope;
         }
 
-        $spanContext = SpanContext::create(
-            $context->traceId,
-            $activeSpanId,
-        );
+        $spanContext = SpanContext::create($context->traceId, $activeSpanId);
 
         $propagationContext = new PropagationContext($spanContext, $context->baggage);
 

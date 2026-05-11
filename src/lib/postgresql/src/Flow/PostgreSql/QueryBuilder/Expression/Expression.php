@@ -14,5 +14,5 @@ interface Expression extends AstConvertible
     /**
      * Create an aliased expression: expr AS alias.
      */
-    public function as(string $alias) : AliasedExpression;
+    public function as(string $alias): AliasedExpression;
 }

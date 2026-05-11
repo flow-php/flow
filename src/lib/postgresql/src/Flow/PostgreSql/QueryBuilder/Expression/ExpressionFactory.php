@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr_Kind, MinMaxOp, Node};
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
 /**
@@ -12,7 +14,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
  */
 final class ExpressionFactory
 {
-    public static function fromAst(Node $node) : Expression
+    public static function fromAst(Node $node): Expression
     {
         if ($node->getAStar() !== null) {
             return Star::fromAst($node);
@@ -44,7 +46,12 @@ final class ExpressionFactory
                 return WindowFunction::fromAst($node);
             }
 
-            if ($funcCall->getAggStar() || $funcCall->getAggDistinct() || $funcCall->getAggOrder() !== null || $funcCall->getAggFilter() !== null) {
+            if (
+                $funcCall->getAggStar()
+                || $funcCall->getAggDistinct()
+                || $funcCall->getAggOrder() !== null
+                || $funcCall->getAggFilter() !== null
+            ) {
                 return AggregateCall::fromAst($node);
             }
 

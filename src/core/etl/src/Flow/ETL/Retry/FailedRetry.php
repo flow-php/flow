@@ -12,10 +12,9 @@ final readonly class FailedRetry
         public \DateTimeImmutable $timestamp,
         public \Throwable $exception,
         public int $attemptNumber,
-    ) {
-    }
+    ) {}
 
-    public static function create(ClockInterface $clock, \Throwable $exception, int $attemptNumber) : self
+    public static function create(ClockInterface $clock, \Throwable $exception, int $attemptNumber): self
     {
         return new self($clock->now(), $exception, $attemptNumber);
     }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, ParseResult};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 
 /**
  * AST Traverser for PostgreSQL parse trees.
@@ -58,7 +59,7 @@ final class Traverser
     /**
      * Traverse a ParseResult.
      */
-    public function traverse(ParseResult $parseResult) : void
+    public function traverse(ParseResult $parseResult): void
     {
         $this->stopTraversal = false;
         $this->ancestorStack = [];
@@ -89,7 +90,7 @@ final class Traverser
      *
      * @return array<object>
      */
-    private function extractInnerNodes(Node $node) : array
+    private function extractInnerNodes(Node $node): array
     {
         $nodes = [];
 
@@ -224,7 +225,7 @@ final class Traverser
         return $nodes;
     }
 
-    private function traverseNode(Node $node) : ?Node
+    private function traverseNode(Node $node): ?Node
     {
         if ($this->stopTraversal) {
             return null;
@@ -305,7 +306,7 @@ final class Traverser
         return $replacement;
     }
 
-    private function traverseNodeChildren(Node $node) : void
+    private function traverseNodeChildren(Node $node): void
     {
         if ($this->stopTraversal) {
             return;
@@ -601,7 +602,7 @@ final class Traverser
     /**
      * @param null|iterable<Node> $field
      */
-    private function traverseRepeatedField(?iterable $field) : void
+    private function traverseRepeatedField(?iterable $field): void
     {
         if ($field === null) {
             return;

@@ -20,7 +20,7 @@ final readonly class ParameterFormatter
      * Handles null, booleans, scalars, arrays, DateTimeInterface,
      * TypedValue objects, and objects with __toString.
      */
-    public function convertToString(mixed $value) : string
+    public function convertToString(mixed $value): string
     {
         if ($value === null) {
             return 'NULL';
@@ -62,7 +62,7 @@ final readonly class ParameterFormatter
      * @param mixed $value The value to format
      * @param null|int $maxLength Maximum length (null = unlimited)
      */
-    public function format(mixed $value, ?int $maxLength = null) : string
+    public function format(mixed $value, ?int $maxLength = null): string
     {
         $result = $this->convertToString($value);
 

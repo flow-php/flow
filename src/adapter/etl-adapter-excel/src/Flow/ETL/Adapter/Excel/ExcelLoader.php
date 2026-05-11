@@ -8,8 +8,12 @@ use Flow\ETL\Adapter\Excel\RowsNormalizer\ExcelRowsNormalizer;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Loader, Row, Rows};
-use Flow\ETL\Loader\{Closure, FileLoader};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
@@ -45,14 +49,14 @@ final class ExcelLoader implements Closure, FileLoader, Loader
     {
         if (!$path->isLocal()) {
             throw new InvalidArgumentException(
-                'Only local filesystem paths are supported by ExcelLoader due to OpenSpout limitations.'
+                'Only local filesystem paths are supported by ExcelLoader due to OpenSpout limitations.',
             );
         }
 
         $this->path = $path;
     }
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         if ($this->workbookManager !== null) {
             $this->workbookManager->close();
@@ -62,12 +66,12 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         $context->streams()->closeStreams($this->path);
     }
 
-    public function destination() : Path
+    public function destination(): Path
     {
         return $this->path;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if (!$rows->count()) {
             return;
@@ -114,45 +118,47 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         }
     }
 
-    public function withCellStyler(CellStyler $styler) : self
+    public function withCellStyler(CellStyler $styler): self
     {
         $this->cellStyler = $styler;
 
         return $this;
     }
 
-    public function withDateFormat(string $format) : self
+    public function withDateFormat(string $format): self
     {
         $this->dateFormat = $format;
 
         return $this;
     }
 
-    public function withDateTimeFormat(string $format) : self
+    public function withDateTimeFormat(string $format): self
     {
         $this->dateTimeFormat = $format;
 
         return $this;
     }
 
-    public function withHeader(bool $withHeader = true) : self
+    public function withHeader(bool $withHeader = true): self
     {
         $this->withHeader = $withHeader;
 
         return $this;
     }
 
-    public function withHeaderStyle(Style $style) : self
+    public function withHeaderStyle(Style $style): self
     {
         $this->headerStyle = $style;
 
         return $this;
     }
 
-    public function withSheetName(?string $sheetName) : self
+    public function withSheetName(?string $sheetName): self
     {
         if ($sheetName !== null && $this->sheetNameEntryName !== null) {
-            throw new InvalidArgumentException('Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.');
+            throw new InvalidArgumentException(
+                'Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.',
+            );
         }
 
         if ($sheetName !== null) {
@@ -164,10 +170,12 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         return $this;
     }
 
-    public function withSheetNameFromEntry(string $entryName) : self
+    public function withSheetNameFromEntry(string $entryName): self
     {
         if ($this->sheetName !== null) {
-            throw new InvalidArgumentException('Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.');
+            throw new InvalidArgumentException(
+                'Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.',
+            );
         }
 
         $this->sheetNameEntryName = $entryName;
@@ -175,28 +183,28 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         return $this;
     }
 
-    public function withTimeFormat(string $format) : self
+    public function withTimeFormat(string $format): self
     {
         $this->timeFormat = $format;
 
         return $this;
     }
 
-    public function withWriter(ExcelWriter $writer) : self
+    public function withWriter(ExcelWriter $writer): self
     {
         $this->writerType = $writer;
 
         return $this;
     }
 
-    public function withWriterOptions(OdsOptions|XlsxOptions $options) : self
+    public function withWriterOptions(OdsOptions|XlsxOptions $options): self
     {
         $this->writerOptions = $options;
 
         return $this;
     }
 
-    private function getWorkbookManager() : WorkbookManager
+    private function getWorkbookManager(): WorkbookManager
     {
         if ($this->workbookManager === null) {
             $this->workbookManager = new WorkbookManager(
@@ -211,7 +219,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
     /**
      * @return null|array<int, null|Style>
      */
-    private function resolveCellStyles(Row $row, int $rowIndex, string $sheetName) : ?array
+    private function resolveCellStyles(Row $row, int $rowIndex, string $sheetName): ?array
     {
         if ($this->cellStyler === null) {
             return null;
@@ -228,7 +236,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         return $styles;
     }
 
-    private function resolveSheetName(Row $row) : string
+    private function resolveSheetName(Row $row): string
     {
         if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
             $value = $row->get($this->sheetNameEntryName)->value();
@@ -243,7 +251,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         return $this->sheetName ?? 'Sheet1';
     }
 
-    private function resolveWriterType() : ExcelWriter
+    private function resolveWriterType(): ExcelWriter
     {
         if ($this->writerType !== null) {
             return $this->writerType;

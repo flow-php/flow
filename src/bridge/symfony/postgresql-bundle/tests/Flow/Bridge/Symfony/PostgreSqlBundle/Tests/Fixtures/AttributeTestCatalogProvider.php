@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures;
 
-use function Flow\PostgreSql\DSL\{schema, schema_column_integer, schema_table};
-
 use Flow\Bridge\Symfony\PostgreSqlBundle\Attribute\AsCatalogProvider;
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
+
+use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_table;
 
 #[AsCatalogProvider]
 final class AttributeTestCatalogProvider implements CatalogProvider
 {
-    public function get() : Catalog
+    public function get(): Catalog
     {
         return new Catalog([
             schema('public', [

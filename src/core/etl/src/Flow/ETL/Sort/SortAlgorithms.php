@@ -11,7 +11,7 @@ enum SortAlgorithms
     case MEMORY_SORT;
     case SQLITE_SORT;
 
-    public function useMemory() : bool
+    public function useMemory(): bool
     {
         return \in_array($this, [self::MEMORY_SORT, self::MEMORY_FALLBACK_EXTERNAL_SORT], true);
     }

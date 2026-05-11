@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{df, from_array, ref};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
 
 final class FilterTest extends FlowIntegrationTestCase
 {
-    public function test_multiple_filters() : void
+    public function test_multiple_filters(): void
     {
         $rows = df()
             ->read(from_array([
@@ -25,15 +28,15 @@ final class FilterTest extends FlowIntegrationTestCase
             ])
             ->fetch();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['id' => 4, 'name' => 'Smith', 'age' => 35],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_single_filter() : void
+    public function test_single_filter(): void
     {
         $rows = df()
             ->read(from_array([
@@ -46,13 +49,13 @@ final class FilterTest extends FlowIntegrationTestCase
             ->filter(ref('age')->greaterThanEqual(30))
             ->fetch();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['id' => 3, 'name' => 'Doe', 'age' => 30],
                 ['id' => 4, 'name' => 'Smith', 'age' => 35],
                 ['id' => 5, 'name' => 'Brown', 'age' => 40],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 }

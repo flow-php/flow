@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\Attributes;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
 
 /**
  * Represents a single metric measurement.
@@ -53,8 +55,7 @@ final readonly class Metric
         public AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         public array $exemplars = [],
         public ?\DateTimeImmutable $startTimestamp = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a Metric from a normalized array representation.
@@ -72,7 +73,7 @@ final readonly class Metric
      *     temporality?: int
      * } $data Normalized Metric data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             $data['name'],
@@ -84,7 +85,9 @@ final readonly class Metric
             InstrumentationScope::fromArray($data['scope']),
             $data['unit'],
             $data['description'],
-            isset($data['temporality']) ? AggregationTemporality::from($data['temporality']) : AggregationTemporality::CUMULATIVE,
+            isset($data['temporality'])
+                ? AggregationTemporality::from($data['temporality'])
+                : AggregationTemporality::CUMULATIVE,
         );
     }
 
@@ -104,7 +107,7 @@ final readonly class Metric
      *     temporality: int
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,

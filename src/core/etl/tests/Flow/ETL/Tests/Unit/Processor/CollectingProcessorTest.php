@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, row, rows};
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+
 final class CollectingProcessorTest extends FlowTestCase
 {
-    public function test_collects_all_rows_into_single_batch() : void
+    public function test_collects_all_rows_into_single_batch(): void
     {
         $processor = new CollectingProcessor();
 
@@ -22,9 +26,9 @@ final class CollectingProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(1, $result);
-        self::assertCount(5, $result[0]);
-        self::assertEquals(
+        static::assertCount(1, $result);
+        static::assertCount(5, $result[0]);
+        static::assertEquals(
             [
                 ['id' => 1],
                 ['id' => 2],
@@ -32,11 +36,11 @@ final class CollectingProcessorTest extends FlowTestCase
                 ['id' => 4],
                 ['id' => 5],
             ],
-            $result[0]->toArray()
+            $result[0]->toArray(),
         );
     }
 
-    public function test_handles_empty_input() : void
+    public function test_handles_empty_input(): void
     {
         $processor = new CollectingProcessor();
 
@@ -46,11 +50,11 @@ final class CollectingProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(1, $result);
-        self::assertCount(0, $result[0]);
+        static::assertCount(1, $result);
+        static::assertCount(0, $result[0]);
     }
 
-    public function test_handles_single_batch() : void
+    public function test_handles_single_batch(): void
     {
         $processor = new CollectingProcessor();
 
@@ -60,7 +64,7 @@ final class CollectingProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(1, $result);
-        self::assertCount(2, $result[0]);
+        static::assertCount(1, $result);
+        static::assertCount(2, $result[0]);
     }
 }

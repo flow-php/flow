@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Filesystem;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\Filesystem\{DestinationStream, Path, Path\Filter, SourceStream, Stream\VoidStream};
-use Flow\Filesystem\{FilesystemTable, Partition};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\VoidStream;
 
 /**
  * @implements \IteratorAggregate<array-key, DestinationStream>
@@ -22,11 +27,11 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     private array $writingStreams = [];
 
-    public function __construct(private readonly FilesystemTable $fstab)
-    {
-    }
+    public function __construct(
+        private readonly FilesystemTable $fstab,
+    ) {}
 
-    public function closeStreams(Path $path) : void
+    public function closeStreams(Path $path): void
     {
         $streams = [];
 
@@ -44,8 +49,9 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
                             $filename = \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->filename());
 
                             $partitionFilesPattern = \Flow\Filesystem\DSL\path(
-                                $fileStream->path()->parentDirectory()->uri() . '/' . $filename . '*.' . $fileStream->path()->extension(),
-                                $fileStream->path()->options()
+                                $fileStream->path()->parentDirectory()->uri() . '/' . $filename . '*.'
+                                    . $fileStream->path()->extension(),
+                                $fileStream->path()->options(),
                             );
 
                             foreach ($fs->list($partitionFilesPattern) as $partitionFile) {
@@ -57,13 +63,10 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
                             }
                         }
 
-                        $fs->mv(
-                            $fileStream->path(),
-                            \Flow\Filesystem\DSL\path(
-                                \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->uri()),
-                                $fileStream->path()->options()
-                            )
-                        );
+                        $fs->mv($fileStream->path(), \Flow\Filesystem\DSL\path(
+                            \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->uri()),
+                            $fileStream->path()->options(),
+                        ));
                     }
                 }
             } else {
@@ -74,7 +77,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $this->writingStreams = $streams;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->writingStreams);
     }
@@ -82,11 +85,9 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @param array<Partition> $partitions
      */
-    public function exists(Path $path, array $partitions = []) : bool
+    public function exists(Path $path, array $partitions = []): bool
     {
-        $destination = \count($partitions)
-            ? $path->addPartitions(...$partitions)
-            : $path;
+        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         return $this->fstab->for($path)->status($destination) !== null;
     }
@@ -94,7 +95,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<string, DestinationStream>
      */
-    public function getIterator() : \Traversable
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator(\array_merge(...\array_values($this->writingStreams)));
     }
@@ -102,15 +103,13 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @param array<Partition> $partitions
      */
-    public function isOpen(Path $path, array $partitions = []) : bool
+    public function isOpen(Path $path, array $partitions = []): bool
     {
         if (!\array_key_exists($path->uri(), $this->writingStreams)) {
             return false;
         }
 
-        $destination = \count($partitions)
-            ? $path->addPartitions(...$partitions)
-            : $path;
+        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         return \array_key_exists($destination->uri(), $this->writingStreams[$path->uri()]);
     }
@@ -118,7 +117,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @return \Generator<SourceStream>
      */
-    public function list(Path $path, Filter $pathFilter) : \Generator
+    public function list(Path $path, Filter $pathFilter): \Generator
     {
         $fs = $this->fstab->for($path);
 
@@ -130,7 +129,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @return \Generator<DestinationStream>
      */
-    public function listOpenStreams(Path $path) : \Generator
+    public function listOpenStreams(Path $path): \Generator
     {
         $uri = $path->uri();
 
@@ -148,15 +147,13 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @param array<Partition> $partitions
      */
-    public function read(Path $path, array $partitions = []) : SourceStream
+    public function read(Path $path, array $partitions = []): SourceStream
     {
         if ($path->isPattern()) {
             throw new RuntimeException("Path can't be pattern, given: " . $path->uri());
         }
 
-        $destination = \count($partitions)
-            ? $path->addPartitions(...$partitions)
-            : $path;
+        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         return $this->fstab->for($path)->readFrom($destination);
     }
@@ -165,11 +162,9 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      * @param Path $path
      * @param array<Partition> $partitions
      */
-    public function rm(Path $path, array $partitions = []) : void
+    public function rm(Path $path, array $partitions = []): void
     {
-        $destination = \count($partitions)
-            ? $path->addPartitions(...$partitions)
-            : $path;
+        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         $fs = $this->fstab->for($path);
 
@@ -178,7 +173,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         }
     }
 
-    public function setMode(SaveMode $saveMode) : self
+    public function setMode(SaveMode $saveMode): self
     {
         $this->saveMode = $saveMode;
 
@@ -188,7 +183,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @param array<Partition> $partitions
      */
-    public function writeTo(Path $path, array $partitions = []) : DestinationStream
+    public function writeTo(Path $path, array $partitions = []): DestinationStream
     {
         if (!$path->extension()) {
             throw new RuntimeException('Stream path must have an extension, given: ' . $path->uri());
@@ -204,9 +199,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             $this->writingStreams[$pathUri] = [];
         }
 
-        $destination = \count($partitions)
-            ? $path->addPartitions(...$partitions)
-            : $path;
+        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         $destinationPathUri = $destination->uri();
 
@@ -227,7 +220,11 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
             if ($this->saveMode === SaveMode::ExceptionIfExists) {
                 if ($fs->status($destination)) {
-                    throw new RuntimeException('Destination path "' . $destinationPathUri . '" already exists, please change path to different or set different SaveMode');
+                    throw new RuntimeException(
+                        'Destination path "'
+                        . $destinationPathUri
+                        . '" already exists, please change path to different or set different SaveMode',
+                    );
                 }
             }
 

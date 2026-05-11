@@ -13,7 +13,9 @@ final class Configuration
     public function __construct(int $safetyBufferPercentage)
     {
         if ($safetyBufferPercentage < 0 || $safetyBufferPercentage > 90) {
-            throw new InvalidArgumentException("Safety buffer can't be smaller than 0% and greater than 90%, {$safetyBufferPercentage}% given.");
+            throw new InvalidArgumentException(
+                "Safety buffer can't be smaller than 0% and greater than 90%, {$safetyBufferPercentage}% given.",
+            );
         }
 
         $limitConfig = \ini_get('memory_limit');
@@ -23,7 +25,7 @@ final class Configuration
         }
     }
 
-    public function isConsumptionBelow(Unit $unit, int $limitPercentage) : bool
+    public function isConsumptionBelow(Unit $unit, int $limitPercentage): bool
     {
         // if memory is unlimited then current consumption is always below certain threshold
         if ($this->limit === null) {
@@ -33,12 +35,12 @@ final class Configuration
         return (($unit->inBytes() / $this->limit->inBytes()) * 100) < $limitPercentage;
     }
 
-    public function isInfinite() : bool
+    public function isInfinite(): bool
     {
         return $this->limit === null;
     }
 
-    public function isLessThan(Unit $memory) : bool
+    public function isLessThan(Unit $memory): bool
     {
         if ($this->limit === null) {
             return false;
@@ -47,7 +49,7 @@ final class Configuration
         return $this->limit->inBytes() < $memory->inBytes();
     }
 
-    public function limit() : ?Unit
+    public function limit(): ?Unit
     {
         return $this->limit;
     }

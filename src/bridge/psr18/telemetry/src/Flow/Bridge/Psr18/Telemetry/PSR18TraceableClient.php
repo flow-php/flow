@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr18\Telemetry;
 
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 final readonly class PSR18TraceableClient implements ClientInterface
 {
@@ -23,7 +27,7 @@ final readonly class PSR18TraceableClient implements ClientInterface
         );
     }
 
-    public function sendRequest(RequestInterface $request) : ResponseInterface
+    public function sendRequest(RequestInterface $request): ResponseInterface
     {
         $uri = $request->getUri();
         $method = $request->getMethod();
@@ -43,11 +47,7 @@ final readonly class PSR18TraceableClient implements ClientInterface
             $attributes['server.port'] = $port;
         }
 
-        $span = $this->tracer->span(
-            "{$method} {$host}",
-            SpanKind::CLIENT,
-            $attributes
-        );
+        $span = $this->tracer->span("{$method} {$host}", SpanKind::CLIENT, $attributes);
 
         try {
             $response = $this->client->sendRequest($request);

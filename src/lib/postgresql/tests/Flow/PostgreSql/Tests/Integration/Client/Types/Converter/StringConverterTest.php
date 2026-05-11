@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
-use function Flow\PostgreSql\DSL\{cast, column_type_char, column_type_text, column_type_varchar, literal, param, select};
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\PostgreSql\DSL\cast;
+use function Flow\PostgreSql\DSL\column_type_char;
+use function Flow\PostgreSql\DSL\column_type_text;
+use function Flow\PostgreSql\DSL\column_type_varchar;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
 
 final class StringConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_char_values() : \Generator
+    public static function provide_char_values(): \Generator
     {
         yield 'padded' => ['test', 'test      '];
         yield 'exact length' => ['1234567890', '1234567890'];
@@ -22,7 +29,7 @@ final class StringConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_text_values() : \Generator
+    public static function provide_text_values(): \Generator
     {
         yield 'simple string' => ['hello world', 'hello world'];
         yield 'empty string' => ['', ''];
@@ -38,40 +45,52 @@ final class StringConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_varchar_values() : \Generator
+    public static function provide_varchar_values(): \Generator
     {
         yield 'simple' => ['test', 'test'];
         yield 'max length' => [\str_repeat('a', 255), \str_repeat('a', 255)];
     }
 
     #[DataProvider('provide_char_values')]
-    public function test_char_round_trip(string $input, string $expected) : void
+    public function test_char_round_trip(string $input, string $expected): void
     {
-        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
+        $result = $this
+            ->pgsqlContext()
+            ->client()
+            ->fetchScalar(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
 
-        self::assertSame($expected, $result);
+        static::assertSame($expected, $result);
     }
 
-    public function test_null_text() : void
+    public function test_null_text(): void
     {
-        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql());
+        $result = $this
+            ->pgsqlContext()
+            ->client()
+            ->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql());
 
-        self::assertNull($result);
+        static::assertNull($result);
     }
 
     #[DataProvider('provide_text_values')]
-    public function test_text_round_trip(string $input, string $expected) : void
+    public function test_text_round_trip(string $input, string $expected): void
     {
-        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
+        $result = $this
+            ->pgsqlContext()
+            ->client()
+            ->fetchScalar(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
 
-        self::assertSame($expected, $result);
+        static::assertSame($expected, $result);
     }
 
     #[DataProvider('provide_varchar_values')]
-    public function test_varchar_round_trip(string $input, string $expected) : void
+    public function test_varchar_round_trip(string $input, string $expected): void
     {
-        $result = $this->pgsqlContext()->client()->fetchScalar(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
+        $result = $this
+            ->pgsqlContext()
+            ->client()
+            ->fetchScalar(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
 
-        self::assertSame($expected, $result);
+        static::assertSame($expected, $result);
     }
 }

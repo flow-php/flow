@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
-use function Flow\Types\DSL\{type_instance_of, type_integer};
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
 
 final class TimeConverter implements Converter
 {
-    public function fromParquetType(mixed $data) : \DateInterval
+    public function fromParquetType(mixed $data): \DateInterval
     {
         return $this->toDateInterval(type_integer()->assert($data));
     }
 
-    public function isFor(FlatColumn $column, Options $options) : bool
+    public function isFor(FlatColumn $column, Options $options): bool
     {
         if ($column->type() === PhysicalType::INT64 && $column->logicalType()?->name() === LogicalType::TIME) {
             return true;
@@ -26,12 +30,12 @@ final class TimeConverter implements Converter
         return false;
     }
 
-    public function toParquetType(mixed $data) : int
+    public function toParquetType(mixed $data): int
     {
         return $this->toInt(type_instance_of(\DateInterval::class)->assert($data));
     }
 
-    private function toDateInterval(int $microseconds) : \DateInterval
+    private function toDateInterval(int $microseconds): \DateInterval
     {
         $seconds = (int) \floor($microseconds / 1000000);
         $remainingMicroseconds = $microseconds % 1000000;
@@ -44,30 +48,29 @@ final class TimeConverter implements Converter
 
         $remainingHours = $hours % 24;
 
-        $intervalSpec = \sprintf(
-            'PT%dH%dM%dS',
-            $remainingHours,
-            $remainingMinutes,
-            $remainingSeconds
-        );
+        $intervalSpec = \sprintf('PT%dH%dM%dS', $remainingHours, $remainingMinutes, $remainingSeconds);
 
         $interval = new \DateInterval($intervalSpec);
         $interval->y = 0;
         $interval->m = 0;
         $interval->d = 0;
-        $interval->f = ($remainingMicroseconds / 1000000);
+        $interval->f = $remainingMicroseconds / 1000000;
 
         return $interval;
     }
 
-    private function toInt(\DateInterval $interval) : int
+    private function toInt(\DateInterval $interval): int
     {
         if ($interval->y !== 0) {
-            throw new InvalidArgumentException('The DateInterval object contains years, cannot convert to microseconds to represent time.');
+            throw new InvalidArgumentException(
+                'The DateInterval object contains years, cannot convert to microseconds to represent time.',
+            );
         }
 
         if ($interval->m !== 0) {
-            throw new InvalidArgumentException('The DateInterval object contains months, cannot convert to microseconds to represent time.');
+            throw new InvalidArgumentException(
+                'The DateInterval object contains months, cannot convert to microseconds to represent time.',
+            );
         }
 
         $microseconds = 0;
@@ -78,7 +81,7 @@ final class TimeConverter implements Converter
         $microseconds += $interval->h * 60 * 60 * 1000000; // hours to microseconds
         $microseconds += $interval->i * 60 * 1000000; // minutes to microseconds
         $microseconds += $interval->s * 1000000; // seconds to microseconds
-        $microseconds += (int) (($interval->f) * 1000000); // microseconds
+        $microseconds += (int) ($interval->f * 1000000); // microseconds
 
         return $microseconds;
     }

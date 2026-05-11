@@ -21,7 +21,7 @@ final readonly class ForeignKeyDependencyOrder implements ExecutionOrderStrategy
      *
      * @return list<Table>
      */
-    public function order(array $items) : array
+    public function order(array $items): array
     {
         if (\count($items) <= 1) {
             return $items;
@@ -77,7 +77,7 @@ final readonly class ForeignKeyDependencyOrder implements ExecutionOrderStrategy
                 if (\in_array($current, $dependsOn[$name], true)) {
                     $dependsOn[$name] = \array_values(\array_filter(
                         $dependsOn[$name],
-                        static fn (string $dep) : bool => $dep !== $current,
+                        static fn(string $dep): bool => $dep !== $current,
                     ));
                     $inDegree[$name]--;
 
@@ -89,15 +89,15 @@ final readonly class ForeignKeyDependencyOrder implements ExecutionOrderStrategy
         }
 
         if (\count($sorted) !== \count($tablesByQualifiedName)) {
-            $unsorted = \array_diff(\array_keys($tablesByQualifiedName), \array_map(
-                static fn (Table $t) : string => $t->qualifiedName(),
-                $sorted,
-            ));
+            $unsorted = \array_diff(
+                \array_keys($tablesByQualifiedName),
+                \array_map(static fn(Table $t): string => $t->qualifiedName(), $sorted),
+            );
 
-            throw new SchemaException(\sprintf(
-                'Circular foreign key dependency detected between tables: %s. Use deferred constraints to handle circular references.',
-                \implode(', ', $unsorted),
-            ));
+            throw new SchemaException(\sprintf('Circular foreign key dependency detected between tables: %s. Use deferred constraints to handle circular references.', \implode(
+                ', ',
+                $unsorted,
+            )));
         }
 
         return $sorted;

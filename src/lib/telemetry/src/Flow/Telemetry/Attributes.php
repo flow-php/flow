@@ -36,7 +36,7 @@ final readonly class Attributes
      */
     public function __construct(array $values = [])
     {
-        $this->values = \array_filter($values, static fn ($v) => $v !== null);
+        $this->values = \array_filter($values, static fn($v) => $v !== null);
     }
 
     /**
@@ -44,7 +44,7 @@ final readonly class Attributes
      *
      * @param array<string, null|TAttributeValue> $values
      */
-    public static function create(array $values = []) : self
+    public static function create(array $values = []): self
     {
         return new self($values);
     }
@@ -52,7 +52,7 @@ final readonly class Attributes
     /**
      * Create empty Attributes.
      */
-    public static function empty() : self
+    public static function empty(): self
     {
         return new self();
     }
@@ -62,7 +62,7 @@ final readonly class Attributes
      *
      * @param array<string, null|TAttributeValue> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self($data);
     }
@@ -70,7 +70,7 @@ final readonly class Attributes
     /**
      * Get attribute count.
      */
-    public function count() : int
+    public function count(): int
     {
         return \count($this->values);
     }
@@ -80,7 +80,7 @@ final readonly class Attributes
      *
      * @return null|TAttributeValue
      */
-    public function get(string $key) : string|int|float|bool|\DateTimeInterface|\Throwable|array|null
+    public function get(string $key): string|int|float|bool|\DateTimeInterface|\Throwable|array|null
     {
         return $this->values[$key] ?? null;
     }
@@ -88,7 +88,7 @@ final readonly class Attributes
     /**
      * Check if attribute exists.
      */
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return \array_key_exists($key, $this->values);
     }
@@ -101,7 +101,7 @@ final readonly class Attributes
      *
      * Returns empty string for empty attributes.
      */
-    public function id() : string
+    public function id(): string
     {
         if (\count($this->values) === 0) {
             return '';
@@ -137,7 +137,7 @@ final readonly class Attributes
     /**
      * Check if empty.
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return \count($this->values) === 0;
     }
@@ -148,7 +148,7 @@ final readonly class Attributes
      * The other instance's attributes take precedence over this instance's
      * attributes when keys overlap.
      */
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
         return new self(\array_merge($this->values, $other->values));
     }
@@ -162,7 +162,7 @@ final readonly class Attributes
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         $result = [];
 
@@ -184,7 +184,7 @@ final readonly class Attributes
      *
      * @param TAttributeValue $value
      */
-    public function with(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : self
+    public function with(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value): self
     {
         return new self(\array_merge($this->values, [$key => $value]));
     }
@@ -196,7 +196,7 @@ final readonly class Attributes
      *
      * @return array<bool|float|int|string>|bool|float|int|string
      */
-    private function normalizeValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : string|int|float|bool|array
+    private function normalizeValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value): string|int|float|bool|array
     {
         if ($value instanceof \DateTimeInterface) {
             return $value->format('c');
@@ -211,10 +211,8 @@ final readonly class Attributes
         }
 
         if (\is_array($value)) {
-            /** @var array<bool|float|int|string> $result */
-            $result = \array_map(fn ($v) => $this->normalizeValue($v), $value);
-
-            return $result;
+            /** @phpstan-ignore return.type */
+            return \array_map(fn($v) => $this->normalizeValue($v), $value);
         }
 
         return $value;

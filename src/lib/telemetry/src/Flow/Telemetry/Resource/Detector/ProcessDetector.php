@@ -31,7 +31,7 @@ use Flow\Telemetry\Resource\ResourceDetector;
  */
 final readonly class ProcessDetector implements ResourceDetector
 {
-    public function detect() : Resource
+    public function detect(): Resource
     {
         $attributes = [];
 
@@ -68,7 +68,7 @@ final readonly class ProcessDetector implements ResourceDetector
         return Resource::create($attributes);
     }
 
-    private function detectCommand() : ?string
+    private function detectCommand(): ?string
     {
         if (isset($_SERVER['SCRIPT_FILENAME']) && \is_string($_SERVER['SCRIPT_FILENAME'])) {
             return $_SERVER['SCRIPT_FILENAME'];
@@ -86,7 +86,7 @@ final readonly class ProcessDetector implements ResourceDetector
     /**
      * @return null|array<string>
      */
-    private function detectCommandArgs() : ?array
+    private function detectCommandArgs(): ?array
     {
         global $argv;
 
@@ -100,7 +100,7 @@ final readonly class ProcessDetector implements ResourceDetector
         return \count($result) > 0 ? $result : null;
     }
 
-    private function detectOwner() : ?string
+    private function detectOwner(): ?string
     {
         if (!\function_exists('posix_getuid') || !\function_exists('posix_getpwuid')) {
             return null;

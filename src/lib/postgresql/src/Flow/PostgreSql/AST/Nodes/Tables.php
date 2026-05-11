@@ -14,28 +14,27 @@ final readonly class Tables implements \Countable, \IteratorAggregate
      */
     public function __construct(
         private array $tables,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, Table>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->tables;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->tables);
     }
 
-    public function first() : ?Table
+    public function first(): ?Table
     {
         return $this->tables[0] ?? null;
     }
 
-    public function get(int $index) : ?Table
+    public function get(int $index): ?Table
     {
         return $this->tables[$index] ?? null;
     }
@@ -43,7 +42,7 @@ final readonly class Tables implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<int, Table>
      */
-    public function getIterator() : \Traversable
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->tables);
     }
@@ -52,7 +51,7 @@ final readonly class Tables implements \Countable, \IteratorAggregate
      * @phpstan-assert-if-false Table $this->first()
      * @phpstan-assert-if-false Table $this->last()
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return \count($this->tables) === 0;
     }
@@ -61,12 +60,12 @@ final readonly class Tables implements \Countable, \IteratorAggregate
      * @phpstan-assert-if-true Table $this->first()
      * @phpstan-assert-if-true Table $this->last()
      */
-    public function isSingle() : bool
+    public function isSingle(): bool
     {
         return \count($this->tables) === 1;
     }
 
-    public function last() : ?Table
+    public function last(): ?Table
     {
         if (\count($this->tables) === 0) {
             return null;

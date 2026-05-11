@@ -23,7 +23,7 @@ interface Transport
      *
      * @throws TransportException On transport failure
      */
-    public function send(Signals $signal) : void;
+    public function send(Signals $signal): void;
 
     /**
      * Shutdown the transport, releasing any resources.
@@ -31,5 +31,5 @@ interface Transport
      * Should complete any pending sends before shutting down.
      * This method is idempotent - calling it multiple times is safe.
      */
-    public function shutdown() : void;
+    public function shutdown(): void;
 }

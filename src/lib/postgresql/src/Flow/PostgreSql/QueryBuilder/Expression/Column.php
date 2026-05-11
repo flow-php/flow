@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{ColumnRef, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 /**
  * Represents a column reference in SQL (e.g., "name", "table.column", "schema.table.column").
@@ -29,7 +32,7 @@ final readonly class Column implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $columnRef = $node->getColumnRef();
 
@@ -61,7 +64,7 @@ final readonly class Column implements Expression
     /**
      * @param list<string> $parts
      */
-    public static function fromParts(array $parts) : self
+    public static function fromParts(array $parts): self
     {
         return new self($parts);
     }
@@ -69,7 +72,7 @@ final readonly class Column implements Expression
     /**
      * Create a column reference from a simple column name.
      */
-    public static function name(string $name) : self
+    public static function name(string $name): self
     {
         return new self([$name]);
     }
@@ -77,7 +80,7 @@ final readonly class Column implements Expression
     /**
      * Create a column reference from schema, table, and column name.
      */
-    public static function schemaTableColumn(string $schema, string $table, string $column) : self
+    public static function schemaTableColumn(string $schema, string $table, string $column): self
     {
         return new self([$schema, $table, $column]);
     }
@@ -85,17 +88,17 @@ final readonly class Column implements Expression
     /**
      * Create a column reference from table and column name.
      */
-    public static function tableColumn(string $table, string $column) : self
+    public static function tableColumn(string $table, string $column): self
     {
         return new self([$table, $column]);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return AliasedExpression::create($this, $alias);
     }
 
-    public function columnName() : string
+    public function columnName(): string
     {
         return $this->parts[\count($this->parts) - 1];
     }
@@ -103,12 +106,12 @@ final readonly class Column implements Expression
     /**
      * @return list<string>
      */
-    public function parts() : array
+    public function parts(): array
     {
         return $this->parts;
     }
 
-    public function schemaName() : ?string
+    public function schemaName(): ?string
     {
         if (\count($this->parts) < 3) {
             return null;
@@ -117,7 +120,7 @@ final readonly class Column implements Expression
         return $this->parts[0];
     }
 
-    public function tableName() : ?string
+    public function tableName(): ?string
     {
         if (\count($this->parts) < 2) {
             return null;
@@ -126,7 +129,7 @@ final readonly class Column implements Expression
         return $this->parts[\count($this->parts) - 2];
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $columnRef = new ColumnRef();
         $fields = [];

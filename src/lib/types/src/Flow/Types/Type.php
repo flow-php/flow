@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 
 /**
  * @template-covariant T
@@ -23,7 +24,7 @@ interface Type
      *
      * @phpstan-assert T $value
      */
-    public function assert(mixed $value) : mixed;
+    public function assert(mixed $value): mixed;
 
     /**
      * Takes a value and when necessary casts it to the type of this object.
@@ -34,7 +35,7 @@ interface Type
      *
      * @return T
      */
-    public function cast(mixed $value) : mixed;
+    public function cast(mixed $value): mixed;
 
     /**
      * Checks if the value is of the type of this object.
@@ -42,12 +43,12 @@ interface Type
      *
      * @phpstan-assert-if-true T $value
      */
-    public function isValid(mixed $value) : bool;
+    public function isValid(mixed $value): bool;
 
     /**
      * @return array<string, string>
      */
-    public function normalize() : array;
+    public function normalize(): array;
 
     /**
      * Returns a string representation of the type.
@@ -56,5 +57,5 @@ interface Type
      * - int - for type_int()
      * - ?float - for type_optional(type_float())
      */
-    public function toString() : string;
+    public function toString(): string;
 }

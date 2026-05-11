@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{config, first, flow_context, int_entry, ref, str_entry, string_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\first;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\string_entry;
 
 final class FirstTest extends FlowTestCase
 {
-    public function test_aggregation_firs_value() : void
+    public function test_aggregation_firs_value(): void
     {
         $aggregator = first(ref('int'));
 
@@ -20,19 +27,16 @@ final class FirstTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
         $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
 
-        self::assertSame(
-            '10',
-            $aggregator->result(flow_context(config())->entryFactory())->value()
-        );
+        static::assertSame('10', $aggregator->result(flow_context(config())->entryFactory())->value());
     }
 
-    public function test_aggregation_firs_value_when_nothing_aggregated() : void
+    public function test_aggregation_firs_value_when_nothing_aggregated(): void
     {
         $aggregator = first(ref('int'));
 
-        self::assertEquals(
+        static::assertEquals(
             string_entry('int_first', null),
-            $aggregator->result(flow_context(config())->entryFactory())
+            $aggregator->result(flow_context(config())->entryFactory()),
         );
     }
 }

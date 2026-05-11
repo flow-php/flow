@@ -8,5 +8,5 @@ use Psr\Http\Message\RequestInterface;
 
 interface AuthorizationFactory
 {
-    public function for(RequestInterface $request) : string;
+    public function for(RequestInterface $request): string;
 }

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_bool_nullable, option_string_nullable};
-use function Flow\ETL\Adapter\CSV\from_csv;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_bool_nullable;
+use function Flow\CLI\option_string_nullable;
+use function Flow\ETL\Adapter\CSV\from_csv;
 
 final readonly class CSVExtractorFactory
 {
@@ -19,10 +21,9 @@ final readonly class CSVExtractorFactory
         private string $separatorOption = 'input-csv-separator',
         private string $enclosureOption = 'input-csv-enclosure',
         private string $escapeOption = 'input-csv-escape',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : CSVExtractor
+    public function get(InputInterface $input): CSVExtractor
     {
         $extractor = from_csv($this->path);
 

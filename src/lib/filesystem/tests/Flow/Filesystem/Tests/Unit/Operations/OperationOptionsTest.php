@@ -4,29 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Operations;
 
-use function Flow\Filesystem\DSL\operation_options;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Operations\OperationOptions;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Filesystem\DSL\operation_options;
+
 final class OperationOptionsTest extends TestCase
 {
-    public function test_custom_chunk_size_is_accepted() : void
+    public function test_custom_chunk_size_is_accepted(): void
     {
-        self::assertSame(65536, operation_options(65536)->chunkSize);
+        static::assertSame(65536, operation_options(65536)->chunkSize);
     }
 
-    public function test_default_chunk_size_is_8192() : void
+    public function test_default_chunk_size_is_8192(): void
     {
-        self::assertSame(8192, operation_options()->chunkSize);
+        static::assertSame(8192, operation_options()->chunkSize);
     }
 
-    public function test_dsl_returns_operation_options_instance() : void
+    public function test_dsl_returns_operation_options_instance(): void
     {
-        self::assertInstanceOf(OperationOptions::class, operation_options());
+        static::assertInstanceOf(OperationOptions::class, operation_options());
     }
 
-    public function test_negative_chunk_size_throws() : void
+    public function test_negative_chunk_size_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Chunk size must be greater than zero, got -1.');
@@ -34,7 +35,7 @@ final class OperationOptionsTest extends TestCase
         operation_options(-1);
     }
 
-    public function test_zero_chunk_size_throws() : void
+    public function test_zero_chunk_size_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Chunk size must be greater than zero, got 0.');

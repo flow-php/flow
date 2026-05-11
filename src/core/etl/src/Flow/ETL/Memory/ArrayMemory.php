@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Memory;
 
-use function array_values;
 use Flow\ETL\Exception\InvalidArgumentException;
+
+use function array_values;
 
 final class ArrayMemory implements \Countable, Memory
 {
@@ -14,15 +15,16 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private array $memory = [])
-    {
+    public function __construct(
+        private array $memory = [],
+    ) {
         $this->assertMemoryStructure($memory);
     }
 
     /**
      * @return array<self>
      */
-    public function chunks(int $size) : array
+    public function chunks(int $size): array
     {
         if ($size < 1) {
             throw InvalidArgumentException::because('Chunk size must be greater than 0');
@@ -37,7 +39,7 @@ final class ArrayMemory implements \Countable, Memory
         return $chunks;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->memory);
     }
@@ -47,7 +49,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @return array<array<string, mixed>>
      */
-    public function dump() : array
+    public function dump(): array
     {
         return $this->memory;
     }
@@ -60,7 +62,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @return array<mixed>
      */
-    public function flatValues() : array
+    public function flatValues(): array
     {
         $data = [];
 
@@ -76,7 +78,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @return array<mixed>
      */
-    public function map(callable $callback) : array
+    public function map(callable $callback): array
     {
         $data = [];
 
@@ -90,7 +92,7 @@ final class ArrayMemory implements \Countable, Memory
     /**
      * @param array<array<string, mixed>> $data
      */
-    public function save(array $data) : void
+    public function save(array $data): void
     {
         $this->assertMemoryStructure($data);
 
@@ -102,7 +104,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @throws InvalidArgumentException
      */
-    private function assertMemoryStructure(array $memory) : void
+    private function assertMemoryStructure(array $memory): void
     {
         foreach ($memory as $entry) {
             if (!\is_array($entry)) {

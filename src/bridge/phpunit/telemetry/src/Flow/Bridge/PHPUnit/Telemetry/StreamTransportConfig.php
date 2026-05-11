@@ -10,6 +10,5 @@ final readonly class StreamTransportConfig
         public string $destination,
         public int $filePermissions,
         public bool $createDirectories,
-    ) {
-    }
+    ) {}
 }

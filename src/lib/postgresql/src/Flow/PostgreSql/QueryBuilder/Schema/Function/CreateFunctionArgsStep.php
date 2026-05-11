@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 interface CreateFunctionArgsStep extends CreateFunctionReturnsStep
 {
-    public function arguments(FunctionArgument ...$args) : CreateFunctionReturnsStep;
+    public function arguments(FunctionArgument ...$args): CreateFunctionReturnsStep;
 
-    public function orReplace() : self;
+    public function orReplace(): self;
 }

@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\DropSequence;
 
 interface DropSequenceNameStep
 {
-    public function sequence(string ...$names) : DropSequenceFinalStep;
+    public function sequence(string ...$names): DropSequenceFinalStep;
 }

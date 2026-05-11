@@ -20,36 +20,30 @@ final readonly class Flow
         $this->config = $config ?: Config::default();
     }
 
-    public static function setUp(ConfigBuilder|Config $config) : self
+    public static function setUp(ConfigBuilder|Config $config): self
     {
         return new self($config instanceof ConfigBuilder ? $config->build() : $config);
     }
 
-    public function extract(Extractor $extractor) : DataFrame
+    public function extract(Extractor $extractor): DataFrame
     {
-        return new DataFrame(
-            new Pipeline($extractor),
-            $this->config
-        );
+        return new DataFrame(new Pipeline($extractor), $this->config);
     }
 
-    public function from(Extractor $extractor) : DataFrame
+    public function from(Extractor $extractor): DataFrame
     {
         return $this->read($extractor);
     }
 
-    public function process(Rows ...$rows) : DataFrame
+    public function process(Rows ...$rows): DataFrame
     {
-        return new DataFrame(
-            new Pipeline(new RowsExtractor(...$rows)),
-            $this->config
-        );
+        return new DataFrame(new Pipeline(new RowsExtractor(...$rows)), $this->config);
     }
 
     /**
      * Alias for Flow::extract function.
      */
-    public function read(Extractor $extractor) : DataFrame
+    public function read(Extractor $extractor): DataFrame
     {
         return $this->extract($extractor);
     }

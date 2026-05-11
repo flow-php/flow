@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Copy;
 
-use Flow\PostgreSql\{ParsedQuery, Parser};
-use Flow\PostgreSql\Protobuf\AST\{CopyStmt, Node, RawStmt};
-use Flow\PostgreSql\QueryBuilder\Copy\{CopyFormat, CopyToBuilder};
+use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Protobuf\AST\CopyStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyToBuilder;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
@@ -15,150 +19,130 @@ use PHPUnit\Framework\TestCase;
 
 final class CopyToBuilderTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_builder_steps_allow_fluent_interface() : void
+    public function test_builder_steps_allow_fluent_interface(): void
     {
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->withHeader();
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->withHeader();
 
         $ast = $query->toAst();
-        self::assertInstanceOf(CopyStmt::class, $ast);
+        static::assertInstanceOf(CopyStmt::class, $ast);
     }
 
-    public function test_copy_to_basic_table() : void
+    public function test_copy_to_basic_table(): void
     {
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv');
 
         $ast = $query->toAst();
 
-        self::assertFalse($ast->getIsFrom());
-        self::assertFalse($ast->getIsProgram());
-        self::assertSame('/tmp/users.csv', $ast->getFilename());
+        static::assertFalse($ast->getIsFrom());
+        static::assertFalse($ast->getIsProgram());
+        static::assertSame('/tmp/users.csv', $ast->getFilename());
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
     }
 
-    public function test_copy_to_deparsed_basic_table() : void
+    public function test_copy_to_deparsed_basic_table(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv'", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv'", $deparsed);
     }
 
-    public function test_copy_to_deparsed_binary_format() : void
+    public function test_copy_to_deparsed_binary_format(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.bin')
-            ->format(CopyFormat::BINARY);
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.bin')->format(CopyFormat::BINARY);
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.bin' WITH (FORMAT BINARY)", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.bin' WITH (FORMAT BINARY)", $deparsed);
     }
 
-    public function test_copy_to_deparsed_from_query() : void
+    public function test_copy_to_deparsed_from_query(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $selectQuery = SelectBuilder::create()
             ->select(Column::name('id'), Column::name('name'))
             ->from(new Table('users'));
 
-        $query = CopyToBuilder::create()
-            ->query($selectQuery)
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->query($selectQuery)->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY (SELECT id, name FROM users) TO '/tmp/users.csv'", $deparsed);
+        static::assertSame("COPY (SELECT id, name FROM users) TO '/tmp/users.csv'", $deparsed);
     }
 
-    public function test_copy_to_deparsed_to_program() : void
+    public function test_copy_to_deparsed_to_program(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->program('gzip > /tmp/users.csv.gz');
+        $query = CopyToBuilder::create()->table('users')->program('gzip > /tmp/users.csv.gz');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO PROGRAM 'gzip > /tmp/users.csv.gz'", $deparsed);
+        static::assertSame("COPY users TO PROGRAM 'gzip > /tmp/users.csv.gz'", $deparsed);
     }
 
-    public function test_copy_to_deparsed_to_stdout() : void
+    public function test_copy_to_deparsed_to_stdout(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->stdout();
+        $query = CopyToBuilder::create()->table('users')->stdout();
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame('COPY users TO STDOUT', $deparsed);
+        static::assertSame('COPY users TO STDOUT', $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_columns() : void
+    public function test_copy_to_deparsed_with_columns(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users', 'id', 'name', 'email')
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->table('users', 'id', 'name', 'email')->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users(id, name, email) TO '/tmp/users.csv'", $deparsed);
+        static::assertSame("COPY users(id, name, email) TO '/tmp/users.csv'", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_csv_format() : void
+    public function test_copy_to_deparsed_with_csv_format(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV);
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->format(CopyFormat::CSV);
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' CSV", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' CSV", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_delimiter() : void
+    public function test_copy_to_deparsed_with_delimiter(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $query = CopyToBuilder::create()
@@ -168,44 +152,37 @@ final class CopyToBuilderTest extends TestCase
             ->delimiter(';');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, DELIMITER ';')", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, DELIMITER ';')", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_encoding() : void
+    public function test_copy_to_deparsed_with_encoding(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->encoding('UTF8');
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->encoding('UTF8');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (ENCODING 'UTF8')", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (ENCODING 'UTF8')", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_escape() : void
+    public function test_copy_to_deparsed_with_escape(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->escape('\\');
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->escape('\\');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, ESCAPE E'\\\\')", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, ESCAPE E'\\\\')", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_force_quote_all() : void
+    public function test_copy_to_deparsed_with_force_quote_all(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $query = CopyToBuilder::create()
@@ -215,13 +192,13 @@ final class CopyToBuilderTest extends TestCase
             ->forceQuoteAll();
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, FORCE_QUOTE *)", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, FORCE_QUOTE *)", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_force_quote_columns() : void
+    public function test_copy_to_deparsed_with_force_quote_columns(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $query = CopyToBuilder::create()
@@ -231,143 +208,120 @@ final class CopyToBuilderTest extends TestCase
             ->forceQuote('name', 'email');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' CSV FORCE QUOTE name, email", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' CSV FORCE QUOTE name, email", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_header() : void
+    public function test_copy_to_deparsed_with_header(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->withHeader();
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->withHeader();
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, HEADER true)", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, HEADER true)", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_null_string() : void
+    public function test_copy_to_deparsed_with_null_string(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->nullAs('\\N');
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->nullAs('\\N');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (NULL E'\\\\N')", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (NULL E'\\\\N')", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_quote() : void
+    public function test_copy_to_deparsed_with_quote(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('users')
-            ->file('/tmp/users.csv')
-            ->format(CopyFormat::CSV)
-            ->quote("'");
+        $query = CopyToBuilder::create()->table('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)->quote("'");
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, QUOTE '''')", $deparsed);
+        static::assertSame("COPY users TO '/tmp/users.csv' WITH (FORMAT CSV, QUOTE '''')", $deparsed);
     }
 
-    public function test_copy_to_deparsed_with_schema() : void
+    public function test_copy_to_deparsed_with_schema(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $query = CopyToBuilder::create()
-            ->table('myschema.users')
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->table('myschema.users')->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("COPY myschema.users TO '/tmp/users.csv'", $deparsed);
+        static::assertSame("COPY myschema.users TO '/tmp/users.csv'", $deparsed);
     }
 
-    public function test_copy_to_parses_schema_and_table() : void
+    public function test_copy_to_parses_schema_and_table(): void
     {
-        $query = CopyToBuilder::create()
-            ->table('myschema.users')
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->table('myschema.users')->file('/tmp/users.csv');
 
         $ast = $query->toAst();
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
-        self::assertSame('myschema', $relation->getSchemaname());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        static::assertSame('myschema', $relation->getSchemaname());
     }
 
-    public function test_copy_to_with_query_has_no_relation() : void
+    public function test_copy_to_with_query_has_no_relation(): void
     {
-        $selectQuery = SelectBuilder::create()
-            ->select(Column::name('id'))
-            ->from(new Table('users'));
+        $selectQuery = SelectBuilder::create()->select(Column::name('id'))->from(new Table('users'));
 
-        $query = CopyToBuilder::create()
-            ->query($selectQuery)
-            ->file('/tmp/users.csv');
+        $query = CopyToBuilder::create()->query($selectQuery)->file('/tmp/users.csv');
 
         $ast = $query->toAst();
 
-        self::assertFalse($ast->hasRelation());
-        self::assertTrue($ast->hasQuery());
+        static::assertFalse($ast->hasRelation());
+        static::assertTrue($ast->hasQuery());
     }
 
-    public function test_immutability_destination() : void
+    public function test_immutability_destination(): void
     {
         $original = CopyToBuilder::create()->table('users');
         $modified = $original->file('/tmp/users.csv');
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_immutability_options() : void
+    public function test_immutability_options(): void
     {
         $original = CopyToBuilder::create()->table('users')->file('/tmp/users.csv');
         $modified = $original->format(CopyFormat::CSV);
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_immutability_table() : void
+    public function test_immutability_table(): void
     {
         $original = CopyToBuilder::create();
         $modified = $original->table('users');
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_to_ast_without_destination_throws_exception() : void
+    public function test_to_ast_without_destination_throws_exception(): void
     {
         $this->expectException(InvalidExpressionException::class);
 
-        CopyToBuilder::create()
-            ->table('users')
-            ->toAst();
+        CopyToBuilder::create()->table('users')->toAst();
     }
 
-    public function test_to_ast_without_table_or_query_throws_exception() : void
+    public function test_to_ast_without_table_or_query_throws_exception(): void
     {
         $this->expectException(InvalidExpressionException::class);
 
-        CopyToBuilder::create()
-            ->file('/tmp/users.csv')
-            ->toAst();
+        CopyToBuilder::create()->file('/tmp/users.csv')->toAst();
     }
 
-    private function deparse(CopyStmt $copyStmt) : string
+    private function deparse(CopyStmt $copyStmt): string
     {
         $parser = new Parser();
         $node = new Node();

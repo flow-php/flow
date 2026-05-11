@@ -10,10 +10,9 @@ final readonly class FunctionCall
 {
     public function __construct(
         private FuncCall $funcCall,
-    ) {
-    }
+    ) {}
 
-    public function name() : ?string
+    public function name(): ?string
     {
         $funcname = $this->funcCall->getFuncname();
 
@@ -32,12 +31,12 @@ final readonly class FunctionCall
         return null;
     }
 
-    public function raw() : FuncCall
+    public function raw(): FuncCall
     {
         return $this->funcCall;
     }
 
-    public function schema() : ?string
+    public function schema(): ?string
     {
         $funcname = $this->funcCall->getFuncname();
 

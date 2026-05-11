@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\Data;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
 
 final readonly class DeltaBinaryPackedDecoder
 {
@@ -19,15 +20,15 @@ final readonly class DeltaBinaryPackedDecoder
         private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
         private ZigZag $zigzag = new ZigZag(),
     ) {
-        if ($this->blockSize % 128 !== 0) {
+        if (($this->blockSize % 128) !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
         }
 
-        if ($this->miniblockSize % 32 !== 0) {
+        if (($this->miniblockSize % 32) !== 0) {
             throw new InvalidArgumentException('Miniblock size must be a multiple of 32');
         }
 
-        if ($this->blockSize % $this->miniblockSize !== 0) {
+        if (($this->blockSize % $this->miniblockSize) !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of miniblock size');
         }
     }
@@ -35,7 +36,7 @@ final readonly class DeltaBinaryPackedDecoder
     /**
      * @return array<int>
      */
-    public function decode(string $data, int $valueCount) : array
+    public function decode(string $data, int $valueCount): array
     {
         if ($valueCount === 0) {
             return [];
@@ -57,14 +58,14 @@ final readonly class DeltaBinaryPackedDecoder
 
         return $this->reconstructValues(
             $header->firstValue,
-            $this->readBlocks($reader, $valueCount - 1, $header->blockSize)
+            $this->readBlocks($reader, $valueCount - 1, $header->blockSize),
         );
     }
 
     /**
      * @return array<int>
      */
-    private function readBlock(BinaryBufferReader $reader, int $blockDeltaCount) : array
+    private function readBlock(BinaryBufferReader $reader, int $blockDeltaCount): array
     {
         $minDelta = $this->readSignedLEB128($reader);
 
@@ -79,7 +80,11 @@ final readonly class DeltaBinaryPackedDecoder
         $deltas = [];
         $deltasRead = 0;
 
-        for ($miniblockIndex = 0; $miniblockIndex < $miniblockCount && $deltasRead < $blockDeltaCount; $miniblockIndex++) {
+        for (
+            $miniblockIndex = 0;
+            $miniblockIndex < $miniblockCount && $deltasRead < $blockDeltaCount;
+            $miniblockIndex++
+        ) {
             $bitWidth = $bitWidths[$miniblockIndex];
             $miniblockSize = $this->miniblockSize;
 
@@ -94,29 +99,32 @@ final readonly class DeltaBinaryPackedDecoder
                 $miniblockDeltas = $this->unpackMiniblockFromString($packedRaw, $bitWidth, $valuesToRead);
             }
 
-            $actualDeltas = array_map(static function ($delta) use ($minDelta) {
-                $result = $delta + $minDelta;
+            $actualDeltas = array_map(
+                static function ($delta) use ($minDelta) {
+                    $result = $delta + $minDelta;
 
-                // Handle float overflow precisely using BCMath
-                // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
-                if (\is_float($result)) {
-                    // Use BCMath for precise integer arithmetic
-                    $preciseResult = \bcadd((string) $delta, (string) $minDelta, 0);
+                    // Handle float overflow precisely using BCMath
+                    // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
+                    if (\is_float($result)) {
+                        // Use BCMath for precise integer arithmetic
+                        $preciseResult = \bcadd((string) $delta, (string) $minDelta, 0);
 
-                    // Apply 2's complement wrapping for 64-bit integers
-                    if (PHP_INT_SIZE === 8) {
-                        if (\bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
-                            $preciseResult = \bcsub($preciseResult, '18446744073709551616', 0);
-                        } elseif (\bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
-                            $preciseResult = \bcadd($preciseResult, '18446744073709551616', 0);
+                        // Apply 2's complement wrapping for 64-bit integers
+                        if (PHP_INT_SIZE === 8) {
+                            if (\bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
+                                $preciseResult = \bcsub($preciseResult, '18446744073709551616', 0);
+                            } elseif (\bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
+                                $preciseResult = \bcadd($preciseResult, '18446744073709551616', 0);
+                            }
                         }
+
+                        return (int) $preciseResult;
                     }
 
-                    return (int) $preciseResult;
-                }
-
-                return $result;
-            }, $miniblockDeltas);
+                    return $result;
+                },
+                $miniblockDeltas,
+            );
             $deltas = array_merge($deltas, $actualDeltas);
             $deltasRead += count($actualDeltas);
         }
@@ -127,7 +135,7 @@ final readonly class DeltaBinaryPackedDecoder
     /**
      * @return array<int>
      */
-    private function readBlocks(BinaryBufferReader $reader, int $deltaCount, int $blockSize) : array
+    private function readBlocks(BinaryBufferReader $reader, int $deltaCount, int $blockSize): array
     {
         $deltas = [];
         $deltasRead = 0;
@@ -144,7 +152,7 @@ final readonly class DeltaBinaryPackedDecoder
         return $deltas;
     }
 
-    private function readHeader(BinaryBufferReader $reader) : DeltaHeader
+    private function readHeader(BinaryBufferReader $reader): DeltaHeader
     {
         $blockSize = $this->readULEB128($reader);
         $miniblockCount = $this->readULEB128($reader);
@@ -159,12 +167,12 @@ final readonly class DeltaBinaryPackedDecoder
         );
     }
 
-    private function readSignedLEB128(BinaryBufferReader $reader) : int
+    private function readSignedLEB128(BinaryBufferReader $reader): int
     {
         return $this->zigzag->decode($reader->readVarInt());
     }
 
-    private function readULEB128(BinaryBufferReader $reader) : int
+    private function readULEB128(BinaryBufferReader $reader): int
     {
         return $reader->readVarInt();
     }
@@ -174,7 +182,7 @@ final readonly class DeltaBinaryPackedDecoder
      *
      * @return array<int>
      */
-    private function reconstructValues(int $firstValue, array $deltas) : array
+    private function reconstructValues(int $firstValue, array $deltas): array
     {
         return $this->deltaCalculator->reconstructValues($firstValue, $deltas);
     }
@@ -182,7 +190,7 @@ final readonly class DeltaBinaryPackedDecoder
     /**
      * @return array<int>
      */
-    private function unpackMiniblockFromString(string $packedData, int $bitWidth, int $valuesToRead) : array
+    private function unpackMiniblockFromString(string $packedData, int $bitWidth, int $valuesToRead): array
     {
         if ($bitWidth >= 62) {
             return $this->unpackMiniblockFromStringSafe($packedData, $bitWidth, $valuesToRead);
@@ -205,7 +213,7 @@ final readonly class DeltaBinaryPackedDecoder
 
                 $byte = \ord($packedData[$byteIndex]);
                 $bitValue = ($byte >> $bitIndex) & 1;
-                $value |= ($bitValue << $bit);
+                $value |= $bitValue << $bit;
                 $bitOffset++;
             }
 
@@ -218,7 +226,7 @@ final readonly class DeltaBinaryPackedDecoder
     /**
      * @return array<int>
      */
-    private function unpackMiniblockFromStringSafe(string $packedData, int $bitWidth, int $valuesToRead) : array
+    private function unpackMiniblockFromStringSafe(string $packedData, int $bitWidth, int $valuesToRead): array
     {
         $values = [];
         $dataLen = \strlen($packedData);
@@ -236,7 +244,7 @@ final readonly class DeltaBinaryPackedDecoder
                     $bitValue = ($byte >> $bitIndex) & 1;
 
                     if ($bitValue) {
-                        $value |= (1 << $bit);
+                        $value |= 1 << $bit;
                     }
                 }
 

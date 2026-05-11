@@ -4,15 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\PostgreSql\Client;
-use Flow\PostgreSql\Client\{ConnectionParameters, Context, TypedValue};
-use Flow\PostgreSql\Client\{DsnParser, RowMapper};
+use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\Context;
+use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Exception\ConnectionException;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
-use Flow\PostgreSql\Client\RowMapper\{ConstructorMapper, StaticFactoryMapper, TypeMapper};
-use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableClient};
-use Flow\PostgreSql\Client\Types\{ValueConverters, ValueType};
+use Flow\PostgreSql\Client\RowMapper;
+use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
+use Flow\PostgreSql\Client\RowMapper\StaticFactoryMapper;
+use Flow\PostgreSql\Client\RowMapper\TypeMapper;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
+use Flow\PostgreSql\Client\Telemetry\TraceableClient;
+use Flow\PostgreSql\Client\TypedValue;
+use Flow\PostgreSql\Client\Types\ValueConverters;
+use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\Telemetry\Telemetry;
 use Flow\Types\Type as FlowType;
@@ -30,7 +40,7 @@ use Psr\Clock\ClockInterface;
  * $params = pgsql_connection('postgresql://user:pass@localhost/mydb');
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pgsql_connection(#[\SensitiveParameter] string $connectionString) : ConnectionParameters
+function pgsql_connection(#[\SensitiveParameter] string $connectionString): ConnectionParameters
 {
     return ConnectionParameters::fromString($connectionString);
 }
@@ -52,7 +62,7 @@ function pgsql_connection(#[\SensitiveParameter] string $connectionString) : Con
  * $params = pgsql_connection_dsn(getenv('DATABASE_URL'));
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pgsql_connection_dsn(#[\SensitiveParameter] string $dsn) : ConnectionParameters
+function pgsql_connection_dsn(#[\SensitiveParameter] string $dsn): ConnectionParameters
 {
     return (new DsnParser())->parse($dsn);
 }
@@ -84,9 +94,10 @@ function pgsql_connection_params(
     string $host = 'localhost',
     int $port = 5432,
     ?string $user = null,
+    #[\SensitiveParameter]
     ?string $password = null,
     array $options = [],
-) : ConnectionParameters {
+): ConnectionParameters {
     return ConnectionParameters::fromParams(
         database: $database,
         host: $host,
@@ -113,7 +124,7 @@ function pgsql_client(
     ConnectionParameters $params,
     ?ValueConverters $valueConverters = null,
     ?Context $context = null,
-) : Client\Client {
+): Client\Client {
     return PgSqlClient::connect($params, $valueConverters, $context);
 }
 
@@ -126,7 +137,7 @@ function pgsql_client(
  * @param array<string, mixed> $data User-supplied key/value pairs
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function postgresql_context(array $data = [], ?Catalog $catalog = null) : Context
+function postgresql_context(array $data = [], ?Catalog $catalog = null): Context
 {
     return new Context(catalog: $catalog, data: $data);
 }
@@ -168,7 +179,7 @@ function postgresql_telemetry_options(
     bool $includeParameters = false,
     ?int $maxParameters = 10,
     ?int $maxParameterLength = 100,
-) : PostgreSqlTelemetryOptions {
+): PostgreSqlTelemetryOptions {
     return new PostgreSqlTelemetryOptions(
         traceQueries: $traceQueries,
         traceTransactions: $traceTransactions,
@@ -201,7 +212,7 @@ function postgresql_telemetry_config(
     Telemetry $telemetry,
     ClockInterface $clock,
     ?PostgreSqlTelemetryOptions $options = null,
-) : PostgreSqlTelemetryConfig {
+): PostgreSqlTelemetryConfig {
     return new PostgreSqlTelemetryConfig(
         telemetry: $telemetry,
         clock: $clock,
@@ -243,10 +254,8 @@ function postgresql_telemetry_config(
  * });
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function traceable_postgresql_client(
-    Client\Client $client,
-    PostgreSqlTelemetryConfig $telemetryConfig,
-) : TraceableClient {
+function traceable_postgresql_client(Client\Client $client, PostgreSqlTelemetryConfig $telemetryConfig): TraceableClient
+{
     return new TraceableClient($client, $telemetryConfig);
 }
 
@@ -285,7 +294,7 @@ function traceable_postgresql_client(
  * @return ConstructorMapper<T>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function constructor_mapper(string $class) : ConstructorMapper
+function constructor_mapper(string $class): ConstructorMapper
 {
     return new ConstructorMapper($class);
 }
@@ -300,7 +309,7 @@ function constructor_mapper(string $class) : ConstructorMapper
  * @return TypeMapper<TType, TNext>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function type_mapper(FlowType $type, ?RowMapper $next = null) : TypeMapper
+function type_mapper(FlowType $type, ?RowMapper $next = null): TypeMapper
 {
     return new TypeMapper($type, $next);
 }
@@ -320,7 +329,7 @@ function type_mapper(FlowType $type, ?RowMapper $next = null) : TypeMapper
  * @return StaticFactoryMapper<T>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function static_factory_mapper(string $class, string $method) : StaticFactoryMapper
+function static_factory_mapper(string $class, string $method): StaticFactoryMapper
 {
     return new StaticFactoryMapper($class, $method);
 }
@@ -349,7 +358,7 @@ function static_factory_mapper(string $class, string $method) : StaticFactoryMap
  * );
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function typed(mixed $value, ValueType $targetType) : TypedValue
+function typed(mixed $value, ValueType $targetType): TypedValue
 {
     return new TypedValue($value, $targetType);
 }

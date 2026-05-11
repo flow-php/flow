@@ -6,7 +6,7 @@ namespace Flow\ETL\Time;
 
 final class SystemSleep implements Sleep
 {
-    public function for(Duration $duration) : void
+    public function for(Duration $duration): void
     {
         \usleep($duration->microseconds());
     }

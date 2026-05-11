@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Double;
 
-use Flow\PostgreSql\Migrations\Executor\{ExecutionResult, MigrationExecutor};
-use Flow\PostgreSql\Migrations\{MigrationContext, MigrationPlan};
+use Flow\PostgreSql\Migrations\Executor\ExecutionResult;
+use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
+use Flow\PostgreSql\Migrations\MigrationContext;
+use Flow\PostgreSql\Migrations\MigrationPlan;
 
 final class SpyMigrationExecutor implements MigrationExecutor
 {
@@ -14,7 +16,7 @@ final class SpyMigrationExecutor implements MigrationExecutor
      */
     public array $executedPlans = [];
 
-    public function execute(MigrationPlan $plan, MigrationContext $context) : ExecutionResult
+    public function execute(MigrationPlan $plan, MigrationContext $context): ExecutionResult
     {
         $this->executedPlans[] = $plan;
 

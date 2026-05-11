@@ -9,5 +9,5 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface ListenFinalStep extends Sql
 {
-    public function toAst() : ListenStmt;
+    public function toAst(): ListenStmt;
 }

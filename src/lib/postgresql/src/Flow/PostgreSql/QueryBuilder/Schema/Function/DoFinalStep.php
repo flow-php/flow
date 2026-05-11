@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface DoFinalStep extends Sql
 {
-    public function language(string $language) : self;
+    public function language(string $language): self;
 
-    public function toAst() : DoStmt;
+    public function toAst(): DoStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

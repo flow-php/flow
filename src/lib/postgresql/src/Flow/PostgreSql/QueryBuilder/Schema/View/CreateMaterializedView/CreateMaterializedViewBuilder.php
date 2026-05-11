@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\CreateMaterializedView;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateTableAsStmt, IntoClause, Node, ObjectType, PBString, RangeVar};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CreateTableAsStmt;
+use Flow\PostgreSql\Protobuf\AST\IntoClause;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
-final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsStep, CreateMatViewDataStep, CreateMatViewFinalStep, CreateMatViewOptionsStep
+final readonly class CreateMaterializedViewBuilder implements
+    CreateMatViewAsStep,
+    CreateMatViewDataStep,
+    CreateMatViewFinalStep,
+    CreateMatViewOptionsStep
 {
     use AstToSql;
 
@@ -25,10 +35,9 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         private ?string $accessMethod = null,
         private ?string $tablespace = null,
         private ?bool $skipData = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name, ?string $schema = null) : CreateMatViewOptionsStep
+    public static function create(string $name, ?string $schema = null): CreateMatViewOptionsStep
     {
         if ($schema !== null) {
             return new self($name, $schema);
@@ -39,7 +48,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function as(SelectFinalStep $query) : CreateMatViewDataStep
+    public function as(SelectFinalStep $query): CreateMatViewDataStep
     {
         return new self(
             $this->name,
@@ -53,7 +62,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         );
     }
 
-    public function columns(string ...$columns) : CreateMatViewAsStep
+    public function columns(string ...$columns): CreateMatViewAsStep
     {
         return new self(
             $this->name,
@@ -67,7 +76,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         );
     }
 
-    public function ifNotExists() : CreateMatViewOptionsStep
+    public function ifNotExists(): CreateMatViewOptionsStep
     {
         return new self(
             $this->name,
@@ -81,7 +90,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         );
     }
 
-    public function tablespace(string $tablespace) : CreateMatViewDataStep
+    public function tablespace(string $tablespace): CreateMatViewDataStep
     {
         return new self(
             $this->name,
@@ -95,7 +104,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         );
     }
 
-    public function toAst() : CreateTableAsStmt
+    public function toAst(): CreateTableAsStmt
     {
         if ($this->name === null || $this->name === '') {
             throw InvalidExpressionException::invalidValue('materialized view name', 'null or empty');
@@ -161,7 +170,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         return $stmt;
     }
 
-    public function using(string $method) : CreateMatViewOptionsStep
+    public function using(string $method): CreateMatViewOptionsStep
     {
         return new self(
             $this->name,
@@ -175,7 +184,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         );
     }
 
-    public function withData() : CreateMatViewFinalStep
+    public function withData(): CreateMatViewFinalStep
     {
         return new self(
             $this->name,
@@ -189,7 +198,7 @@ final readonly class CreateMaterializedViewBuilder implements CreateMatViewAsSte
         );
     }
 
-    public function withNoData() : CreateMatViewFinalStep
+    public function withNoData(): CreateMatViewFinalStep
     {
         return new self(
             $this->name,

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class TimeConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'integer' => [12345];
         yield 'array' => [['array']];
@@ -22,7 +22,7 @@ final class TimeConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'datetime with microseconds' => [new \DateTimeImmutable('14:30:45.123456'), '14:30:45.123456'];
         yield 'datetime morning' => [new \DateTimeImmutable('2024-01-15 09:00:00.000000'), '09:00:00.000000'];
@@ -40,32 +40,32 @@ final class TimeConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new TimeConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new TimeConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new TimeConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::TIME, $types);
-        self::assertContains(ValueType::TIMETZ, $types);
+        static::assertContains(ValueType::TIME, $types);
+        static::assertContains(ValueType::TIMETZ, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(\DateTimeInterface|\DateInterval|string $input, string $expected) : void
+    public function test_to_database(\DateTimeInterface|\DateInterval|string $input, string $expected): void
     {
         $converter = new TimeConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

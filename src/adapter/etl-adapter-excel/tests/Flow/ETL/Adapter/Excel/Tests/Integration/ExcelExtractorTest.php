@@ -4,22 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
-use function Flow\ETL\Adapter\Excel\DSL\{from_excel, is_valid_excel_sheet_name};
-use function Flow\ETL\DSL\{config, df, flow_context, from_rows, int_schema, ref, row, rows, schema, string_entry, string_schema};
-use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor\Signal, Rows};
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\Adapter\Excel\DSL\from_excel;
+use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\Filesystem\DSL\path_real;
 
 final class ExcelExtractorTest extends FlowTestCase
 {
     /**
      * @return iterable<string, array<string>>
      */
-    public static function provide_fixtures() : iterable
+    public static function provide_fixtures(): iterable
     {
         yield 'ods' => [__DIR__ . '/../Fixtures/fixture.ods'];
         yield 'xlsx' => [__DIR__ . '/../Fixtures/fixture.xlsx'];
@@ -30,219 +43,169 @@ final class ExcelExtractorTest extends FlowTestCase
     /**
      * @return iterable<string, array<string>>
      */
-    public static function provide_nullable_fixtures() : iterable
+    public static function provide_nullable_fixtures(): iterable
     {
         yield 'ods' => [__DIR__ . '/../Fixtures/nullable_fixture.ods'];
         yield 'xlsx' => [__DIR__ . '/../Fixtures/nullable_fixture.xlsx'];
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file(string $fixtureName) : void
+    public function test_extract_excel_file(string $fixtureName): void
     {
-        $rows = df()
-            ->extract(from_excel($fixtureName))
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract(from_excel($fixtureName))->fetch()->toArray();
 
-        self::assertCount(10, $rows);
-        self::assertNull($rows[9]['email']);
+        static::assertCount(10, $rows);
+        static::assertNull($rows[9]['email']);
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_with_empty_cells(string $fixtureName) : void
+    public function test_extract_excel_file_with_empty_cells(string $fixtureName): void
     {
-        $rows = df()
-            ->extract(
-                from_excel($fixtureName)
-                    ->withConvertEmptyToNull(false)
-            )
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract(from_excel($fixtureName)->withConvertEmptyToNull(false))->fetch()->toArray();
 
-        self::assertCount(10, $rows);
-        self::assertEmpty($rows[9]['email']);
+        static::assertCount(10, $rows);
+        static::assertEmpty($rows[9]['email']);
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_with_limit(string $fixtureName) : void
+    public function test_extract_excel_file_with_limit(string $fixtureName): void
     {
         $extractor = from_excel($fixtureName);
         $extractor->changeLimit(5);
 
-        $rows = df()
-            ->extract($extractor)
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract($extractor)->fetch()->toArray();
 
-        self::assertCount(5, $rows);
+        static::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame(['id', 'name', 'email'], \array_keys($row));
-            self::assertCount(3, $row);
+            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertCount(3, $row);
         }
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_with_offset(string $fixtureName) : void
+    public function test_extract_excel_file_with_offset(string $fixtureName): void
     {
         $extractor = from_excel($fixtureName);
         $extractor->withOffset(5);
 
-        $rows = df()
-            ->extract($extractor)
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract($extractor)->fetch()->toArray();
 
-        self::assertCount(7, $rows);
+        static::assertCount(7, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame(['id', 'name', 'email'], \array_keys($row));
-            self::assertCount(3, $row);
+            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertCount(3, $row);
         }
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_with_offset_without_header(string $fixtureName) : void
+    public function test_extract_excel_file_with_offset_without_header(string $fixtureName): void
     {
         $extractor = from_excel($fixtureName);
         $extractor->withHeader(false);
         $extractor->withOffset(5);
 
-        $rows = df()
-            ->extract($extractor)
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract($extractor)->fetch()->toArray();
 
-        self::assertCount(7, $rows);
+        static::assertCount(7, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
-            self::assertCount(3, $row);
+            static::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
+            static::assertCount(3, $row);
         }
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_with_selected_sheet_name(string $fixtureName) : void
+    public function test_extract_excel_file_with_selected_sheet_name(string $fixtureName): void
     {
-        $rows = df()
-            ->extract(
-                from_excel($fixtureName)
-                    ->withSheetName('Sheet2')
-            )
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract(from_excel($fixtureName)->withSheetName('Sheet2'))->fetch()->toArray();
 
-        self::assertCount(5, $rows);
+        static::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame(['id', 'name', 'email'], \array_keys($row));
-            self::assertCount(3, $row);
+            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertCount(3, $row);
         }
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_with_unknown_sheet_name(string $fixtureName) : void
+    public function test_extract_excel_file_with_unknown_sheet_name(string $fixtureName): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Sheet with name: 'unknown' not found.");
 
-        df()
-            ->extract(
-                from_excel($fixtureName)
-                    ->withSheetName('unknown')
-            )
-            ->fetch()
-            ->toArray();
+        df()->extract(from_excel($fixtureName)->withSheetName('unknown'))->fetch()->toArray();
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_file_without_header(string $fixtureName) : void
+    public function test_extract_excel_file_without_header(string $fixtureName): void
     {
-        $rows = df()
-            ->extract(
-                from_excel($fixtureName)
-                    ->withHeader(false)
-            )
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract(from_excel($fixtureName)->withHeader(false))->fetch()->toArray();
 
-        self::assertCount(11, $rows);
+        static::assertCount(11, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
-            self::assertCount(3, $row);
+            static::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
+            static::assertCount(3, $row);
         }
     }
 
     #[DataProvider('provide_nullable_fixtures')]
-    public function test_extract_excel_nullable_file(string $fixtureName) : void
+    public function test_extract_excel_nullable_file(string $fixtureName): void
     {
-        $rows = df()
-            ->extract(from_excel($fixtureName))
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract(from_excel($fixtureName))->fetch()->toArray();
 
-        self::assertCount(5, $rows);
+        static::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            self::assertSame(['id', 'name', 'email'], \array_keys($row));
-            self::assertCount(3, $row);
+            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertCount(3, $row);
         }
     }
 
     #[DataProvider('provide_fixtures')]
-    public function test_extract_excel_puts_null_in_not_matching_schema_rows(string $fixtureName) : void
+    public function test_extract_excel_puts_null_in_not_matching_schema_rows(string $fixtureName): void
     {
         $rows = df()
-            ->extract(
-                from_excel($fixtureName)
-                    ->withSchema(
-                        schema(
-                            int_schema('id'),
-                            string_schema('name'),
-                            string_schema('email'),
-                            string_schema('missing'),
-                        )
-                    )
-            )
+            ->extract(from_excel($fixtureName)->withSchema(schema(
+                int_schema('id'),
+                string_schema('name'),
+                string_schema('email'),
+                string_schema('missing'),
+            )))
             ->fetch()
             ->toArray();
 
         foreach ($rows as $row) {
-            self::assertNotSame([], $row);
-            self::assertNull($row['missing']);
+            static::assertNotSame([], $row);
+            static::assertNull($row['missing']);
         }
     }
 
-    public function test_extract_with_explicit_ods_reader() : void
+    public function test_extract_with_explicit_ods_reader(): void
     {
         $rows = df()
-            ->extract(
-                from_excel(__DIR__ . '/../Fixtures/fixture.ods')
-                    ->withReader(ExcelReader::ODS)
-            )
+            ->extract(from_excel(__DIR__ . '/../Fixtures/fixture.ods')->withReader(ExcelReader::ODS))
             ->fetch()
             ->toArray();
 
-        self::assertCount(10, $rows);
-        self::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
+        static::assertCount(10, $rows);
+        static::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
     }
 
-    public function test_extract_with_explicit_xlsx_reader() : void
+    public function test_extract_with_explicit_xlsx_reader(): void
     {
         $rows = df()
-            ->extract(
-                from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')
-                    ->withReader(ExcelReader::XLSX)
-            )
+            ->extract(from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')->withReader(ExcelReader::XLSX))
             ->fetch()
             ->toArray();
 
-        self::assertCount(10, $rows);
-        self::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
+        static::assertCount(10, $rows);
+        static::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
     }
 
-    public function test_extract_with_unknown_file() : void
+    public function test_extract_with_unknown_file(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unsupported file format: n/a');
@@ -253,69 +216,58 @@ final class ExcelExtractorTest extends FlowTestCase
             ->toArray();
     }
 
-    public function test_extract_with_wrongly_selected_reader() : void
+    public function test_extract_with_wrongly_selected_reader(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Failed to open file: Could not open');
 
         df()
-            ->extract(
-                from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')
-                    ->withReader(ExcelReader::ODS)
-            )
+            ->extract(from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')->withReader(ExcelReader::ODS))
             ->fetch()
             ->toArray();
     }
 
-    public function test_is_valid_excel_sheet_name_function() : void
+    public function test_is_valid_excel_sheet_name_function(): void
     {
         $result = df()
-            ->read(from_rows(
-                rows(
-                    row(string_entry('sheet', 'ValidSheet')),
-                    row(string_entry('sheet', 'Invalid/Sheet')),
-                    row(string_entry('sheet', 'Sheet*Name')),
-                    row(string_entry('sheet', 'This is a very long sheet name that exceeds the 31 character limit')),
-                    row(string_entry('sheet', 'Normal')),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(string_entry('sheet', 'ValidSheet')),
+                row(string_entry('sheet', 'Invalid/Sheet')),
+                row(string_entry('sheet', 'Sheet*Name')),
+                row(string_entry('sheet', 'This is a very long sheet name that exceeds the 31 character limit')),
+                row(string_entry('sheet', 'Normal')),
+            )))
             ->withEntry('is_valid', is_valid_excel_sheet_name(ref('sheet')))
             ->fetch()
             ->toArray();
 
-        self::assertTrue($result[0]['is_valid']);
-        self::assertFalse($result[1]['is_valid']);
-        self::assertFalse($result[2]['is_valid']);
-        self::assertFalse($result[3]['is_valid']);
-        self::assertTrue($result[4]['is_valid']);
+        static::assertTrue($result[0]['is_valid']);
+        static::assertFalse($result[1]['is_valid']);
+        static::assertFalse($result[2]['is_valid']);
+        static::assertFalse($result[3]['is_valid']);
+        static::assertTrue($result[4]['is_valid']);
     }
 
-    public function test_loading_data_from_all_partitions() : void
+    public function test_loading_data_from_all_partitions(): void
     {
-        df()
-            ->read(from_excel(__DIR__ . '/../Fixtures/partitioned/group=*/*.xlsx'))
-            ->run(function (Rows $rows) : void {
-                $this->assertSame(
-                    ['group'],
-                    \array_map(
-                        static fn (Partition $p) => $p->name,
-                        $rows->partitions()->toArray()
-                    )
-                );
-            });
+        df()->read(from_excel(__DIR__ . '/../Fixtures/partitioned/group=*/*.xlsx'))->run(function (Rows $rows): void {
+            $this->assertSame(
+                ['group'],
+                \array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
+            );
+        });
     }
 
-    public function test_signal_stop() : void
+    public function test_signal_stop(): void
     {
-        $generator = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))
-            ->extract(flow_context(config()));
+        $generator = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))->extract(flow_context(config()));
 
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        self::assertFalse($generator->valid());
+        static::assertFalse($generator->valid());
     }
 }

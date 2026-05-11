@@ -4,18 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
-use function Flow\Filesystem\DSL\{native_local_filesystem, path};
-use function Flow\PostgreSql\DSL\{sql_deparse_options, sql_format};
-use function Flow\Types\DSL\{type_boolean, type_integer, type_string};
 use Flow\Bridge\Symfony\PostgreSqlBundle\Sql\SqlFileFinder;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\PostgreSql\DeparseOptions;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'flow:sql:format', description: 'Format SQL using the flow-php/postgresql parser. Accepts a raw SQL string or a --path with glob support.')]
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function Flow\PostgreSql\DSL\sql_deparse_options;
+use function Flow\PostgreSql\DSL\sql_format;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+
+#[AsCommand(
+    name: 'flow:sql:format',
+    description: 'Format SQL using the flow-php/postgresql parser. Accepts a raw SQL string or a --path with glob support.',
+)]
 final class FormatSqlCommand extends Command
 {
     private readonly NativeLocalFilesystem $filesystem;
@@ -26,21 +36,51 @@ final class FormatSqlCommand extends Command
         $this->filesystem = native_local_filesystem();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('sql', InputArgument::OPTIONAL, 'Raw SQL string to format. Ignored when --path is used.')
-            ->addOption('path', 'p', InputOption::VALUE_REQUIRED, 'Path, directory or glob pattern (only files with .sql extension are processed)')
-            ->addOption('write', 'w', InputOption::VALUE_NONE, 'Write formatted SQL back to source files instead of printing to stdout')
-            ->addOption('check', null, InputOption::VALUE_NONE, 'Exit with non-zero status when any input is not already formatted (does not modify files)')
+            ->addOption(
+                'path',
+                'p',
+                InputOption::VALUE_REQUIRED,
+                'Path, directory or glob pattern (only files with .sql extension are processed)',
+            )
+            ->addOption(
+                'write',
+                'w',
+                InputOption::VALUE_NONE,
+                'Write formatted SQL back to source files instead of printing to stdout',
+            )
+            ->addOption(
+                'check',
+                null,
+                InputOption::VALUE_NONE,
+                'Exit with non-zero status when any input is not already formatted (does not modify files)',
+            )
             ->addOption('indent-size', null, InputOption::VALUE_REQUIRED, 'Number of spaces used for indentation', 4)
             ->addOption('max-line-length', null, InputOption::VALUE_REQUIRED, 'Maximum line length before wrapping', 80)
-            ->addOption('no-pretty-print', null, InputOption::VALUE_NONE, 'Disable pretty-printing (output single-line SQL)')
-            ->addOption('commas-start-of-line', null, InputOption::VALUE_NONE, 'Place commas at the start of the line instead of the end')
-            ->addOption('trailing-newline', null, InputOption::VALUE_NONE, 'Append a trailing newline to formatted SQL');
+            ->addOption(
+                'no-pretty-print',
+                null,
+                InputOption::VALUE_NONE,
+                'Disable pretty-printing (output single-line SQL)',
+            )
+            ->addOption(
+                'commas-start-of-line',
+                null,
+                InputOption::VALUE_NONE,
+                'Place commas at the start of the line instead of the end',
+            )
+            ->addOption(
+                'trailing-newline',
+                null,
+                InputOption::VALUE_NONE,
+                'Append a trailing newline to formatted SQL',
+            );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $pathOption = $input->getOption('path');
         $sqlArgument = $input->getArgument('sql');
@@ -79,7 +119,7 @@ final class FormatSqlCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function buildDeparseOptions(InputInterface $input) : DeparseOptions
+    private function buildDeparseOptions(InputInterface $input): DeparseOptions
     {
         return sql_deparse_options()
             ->indentSize(type_integer()->cast($input->getOption('indent-size')))
@@ -89,8 +129,13 @@ final class FormatSqlCommand extends Command
             ->trailingNewline(type_boolean()->cast($input->getOption('trailing-newline')));
     }
 
-    private function formatPath(string $pathString, bool $write, bool $check, OutputInterface $output, DeparseOptions $options) : int
-    {
+    private function formatPath(
+        string $pathString,
+        bool $write,
+        bool $check,
+        OutputInterface $output,
+        DeparseOptions $options,
+    ): int {
         $files = (new SqlFileFinder(native_local_filesystem()))->find(path($pathString));
 
         if ($files === []) {
@@ -152,7 +197,11 @@ final class FormatSqlCommand extends Command
         }
 
         if ($write) {
-            $output->writeln(\sprintf('<info>%d file(s) reformatted, %d unchanged.</info>', $formattedCount, \count($files) - $formattedCount));
+            $output->writeln(\sprintf(
+                '<info>%d file(s) reformatted, %d unchanged.</info>',
+                $formattedCount,
+                \count($files) - $formattedCount,
+            ));
         }
 
         return Command::SUCCESS;

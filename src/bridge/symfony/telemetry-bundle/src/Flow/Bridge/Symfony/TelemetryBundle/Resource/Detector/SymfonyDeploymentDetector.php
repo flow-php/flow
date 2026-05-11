@@ -17,10 +17,9 @@ final readonly class SymfonyDeploymentDetector implements ResourceDetector
 {
     public function __construct(
         private string $kernelEnvironment,
-    ) {
-    }
+    ) {}
 
-    public function detect() : Resource
+    public function detect(): Resource
     {
         return Resource::create([
             DeploymentAttribute::ENVIRONMENT_NAME->value => $this->kernelEnvironment,

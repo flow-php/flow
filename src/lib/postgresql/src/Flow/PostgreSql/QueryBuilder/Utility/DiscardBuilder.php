@@ -13,15 +13,14 @@ final readonly class DiscardBuilder implements DiscardFinalStep
 
     private function __construct(
         private DiscardType $type,
-    ) {
-    }
+    ) {}
 
-    public static function create(DiscardType $type) : DiscardFinalStep
+    public static function create(DiscardType $type): DiscardFinalStep
     {
         return new self($type);
     }
 
-    public function toAst() : DiscardStmt
+    public function toAst(): DiscardStmt
     {
         $stmt = new DiscardStmt();
         $stmt->setTarget($this->type->value);

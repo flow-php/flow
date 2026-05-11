@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{CaseWhen, Node};
+use Flow\PostgreSql\Protobuf\AST\CaseWhen;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class WhenClause
@@ -12,10 +13,9 @@ final readonly class WhenClause
     public function __construct(
         private Expression $condition,
         private Expression $result,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $caseWhen = $node->getCaseWhen();
 
@@ -41,17 +41,17 @@ final readonly class WhenClause
         return new self($condition, $result);
     }
 
-    public function getCondition() : Expression
+    public function getCondition(): Expression
     {
         return $this->condition;
     }
 
-    public function getResult() : Expression
+    public function getResult(): Expression
     {
         return $this->result;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $caseWhen = new CaseWhen();
         $caseWhen->setExpr($this->condition->toAst());

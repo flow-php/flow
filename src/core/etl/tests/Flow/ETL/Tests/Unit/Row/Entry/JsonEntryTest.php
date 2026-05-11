@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\{integer_entry, json_entry};
-use function Flow\Types\DSL\type_array;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\JsonEntry;
@@ -14,9 +12,13 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\Types\DSL\type_array;
+
 final class JsonEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider(): \Generator
     {
         yield 'equal names and equal simple integer arrays with the same order' => [
             true,
@@ -65,13 +67,29 @@ final class JsonEntryTest extends FlowTestCase
         ];
         yield 'equal names and equal multi dimensional array with object same entries' => [
             true,
-            json_entry('name', ['foo' => 1, 'bar' => ['foo' => $date = new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'], 'baz']),
-            json_entry('name', ['foo' => 1, 'bar' => ['foo' => $date = new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'], 'baz']),
+            json_entry('name', [
+                'foo' => 1,
+                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'baz',
+            ]),
+            json_entry('name', [
+                'foo' => 1,
+                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'baz',
+            ]),
         ];
         yield 'equal names and equal multi dimensional array with object different entries' => [
             false,
-            json_entry('name', ['foo' => 1, 'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'], 'baz']),
-            json_entry('name', ['foo' => 1, 'bar' => ['foo' => new \DateTimeImmutable('2020-01-05 00:00:00'), 'bar' => 'bar'], 'baz']),
+            json_entry('name', [
+                'foo' => 1,
+                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'baz',
+            ]),
+            json_entry('name', [
+                'foo' => 1,
+                'bar' => ['foo' => new \DateTimeImmutable('2020-01-05 00:00:00'), 'bar' => 'bar'],
+                'baz',
+            ]),
         ];
         yield 'equal names and equal multi dimensional array with equals different entries' => [
             true,
@@ -85,48 +103,48 @@ final class JsonEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_create_entry_from_json_string() : void
+    public function test_create_entry_from_json_string(): void
     {
         $entry = json_entry('name', '{"key":"value"}');
 
-        self::assertInstanceOf(Json::class, $entry->value());
-        self::assertSame(['key' => 'value'], $entry->value()->toArray());
+        static::assertInstanceOf(Json::class, $entry->value());
+        static::assertSame(['key' => 'value'], $entry->value()->toArray());
     }
 
-    public function test_create_entry_from_json_value_object() : void
+    public function test_create_entry_from_json_value_object(): void
     {
         $json = new Json('{"key":"value"}');
         $entry = json_entry('name', $json);
 
-        self::assertInstanceOf(Json::class, $entry->value());
-        self::assertSame(['key' => 'value'], $entry->value()->toArray());
-        self::assertTrue($json->isEqual($entry->value()));
+        static::assertInstanceOf(Json::class, $entry->value());
+        static::assertSame(['key' => 'value'], $entry->value()->toArray());
+        static::assertTrue($json->isEqual($entry->value()));
     }
 
-    public function test_duplicating_entry() : void
+    public function test_duplicating_entry(): void
     {
         $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
         $duplicated = $entry->duplicate();
 
-        self::assertNotSame($entry, $duplicated);
-        self::assertEquals($entry, $duplicated);
+        static::assertNotSame($entry, $duplicated);
+        static::assertEquals($entry, $duplicated);
     }
 
-    public function test_empty_entry() : void
+    public function test_empty_entry(): void
     {
         $jsonEntry = json_entry('empty', []);
         $jsonObjectEntry = JsonEntry::object('empty', []);
 
-        self::assertEquals([], $jsonEntry->value()?->toArray());
-        self::assertEquals([], $jsonObjectEntry->value()?->toArray());
+        static::assertEquals([], $jsonEntry->value()?->toArray());
+        static::assertEquals([], $jsonObjectEntry->value()?->toArray());
     }
 
-    public function test_entry_name_can_be_zero() : void
+    public function test_entry_name_can_be_zero(): void
     {
-        self::assertSame('0', (json_entry('0', [1]))->name());
+        static::assertSame('0', json_entry('0', [1])->name());
     }
 
-    public function test_invalid_json() : void
+    public function test_invalid_json(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid value given: 'random string', reason: Invalid JSON: 'random string'");
@@ -135,22 +153,28 @@ final class JsonEntryTest extends FlowTestCase
     }
 
     #[DataProvider('is_equal_data_provider')]
-    public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
+    public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry): void
     {
-        self::assertSame($equals, $entry->isEqual($nextEntry));
+        static::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
-    public function test_map() : void
+    public function test_map(): void
     {
         $items = [
-            ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => "NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA\t\t\t\t\t\t\t\t\t\t \t\t\t\t\t\t\t\t\t\t"]],
+            [
+                'item-id' => 1,
+                'name' => 'one',
+                'address' => [
+                    'line1' => "NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA\t\t\t\t\t\t\t\t\t\t \t\t\t\t\t\t\t\t\t\t",
+                ],
+            ],
             ['item-id' => 2, 'name' => 'two'],
             ['item-id' => 3, 'name' => 'three'],
         ];
-        $entry = (json_entry('items', $items))->map(static function (?Json $json) : array {
+        $entry = json_entry('items', $items)->map(static function (?Json $json): array {
             $value = $json?->toArray();
             type_array()->assert($value);
-            \array_walk_recursive($value, static function (&$v) : void {
+            \array_walk_recursive($value, static function (&$v): void {
                 if (\is_string($v)) {
                     $v = \trim($v);
                 }
@@ -159,17 +183,23 @@ final class JsonEntryTest extends FlowTestCase
             return $value;
         });
 
-        self::assertEquals(
-            $items = [
-                ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => 'NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA']],
+        static::assertEquals(
+            [
+                [
+                    'item-id' => 1,
+                    'name' => 'one',
+                    'address' => [
+                        'line1' => 'NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA',
+                    ],
+                ],
                 ['item-id' => 2, 'name' => 'two'],
                 ['item-id' => 3, 'name' => 'three'],
             ],
-            $entry->value()?->toArray()
+            $entry->value()?->toArray(),
         );
     }
 
-    public function test_prevent_from_creating_object_with_integers_as_keys_in_entry() : void
+    public function test_prevent_from_creating_object_with_integers_as_keys_in_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('All keys for JsonEntry object must be strings');
@@ -177,7 +207,7 @@ final class JsonEntryTest extends FlowTestCase
         JsonEntry::object('entry-name', [1 => 'one', 'id' => 1, 'name' => 'one']);
     }
 
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    public function test_prevents_from_creating_entry_with_empty_entry_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
@@ -185,28 +215,28 @@ final class JsonEntryTest extends FlowTestCase
         json_entry('', [1, 2, 3]);
     }
 
-    public function test_rename_preserves_metadata() : void
+    public function test_rename_preserves_metadata(): void
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = json_entry('old_name', ['id' => 1, 'name' => 'one'], $metadata);
 
         $renamedEntry = $entry->rename('new_name');
 
-        self::assertSame('new_name', $renamedEntry->name());
-        self::assertEquals($entry->value()?->toArray(), $renamedEntry->value()?->toArray());
-        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
+        static::assertSame('new_name', $renamedEntry->name());
+        static::assertEquals($entry->value()?->toArray(), $renamedEntry->value()?->toArray());
+        static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
-    public function test_renames_entry() : void
+    public function test_renames_entry(): void
     {
         $entry = json_entry('entry-name', ['id' => 1, 'name' => 'one']);
         $newEntry = $entry->rename('new-entry-name');
 
-        self::assertEquals('new-entry-name', $newEntry->name());
-        self::assertEquals($entry->value(), $newEntry->value());
+        static::assertEquals('new-entry-name', $newEntry->name());
+        static::assertEquals($entry->value(), $newEntry->value());
     }
 
-    public function test_returns_json_as_value() : void
+    public function test_returns_json_as_value(): void
     {
         $items = [
             ['item-id' => 1, 'name' => 'one'],
@@ -215,10 +245,10 @@ final class JsonEntryTest extends FlowTestCase
         ];
         $entry = json_entry('items', $items);
 
-        self::assertEquals(\json_encode($items), $entry->toString());
+        static::assertEquals(\json_encode($items), $entry->toString());
     }
 
-    public function test_serialization() : void
+    public function test_serialization(): void
     {
         $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
 
@@ -226,10 +256,10 @@ final class JsonEntryTest extends FlowTestCase
         $unserialized = \unserialize($serialized);
 
         \assert($unserialized instanceof Entry);
-        self::assertTrue($entry->isEqual($unserialized));
+        static::assertTrue($entry->isEqual($unserialized));
     }
 
-    public function test_serialization_of_json_objects() : void
+    public function test_serialization_of_json_objects(): void
     {
         $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
 
@@ -237,23 +267,23 @@ final class JsonEntryTest extends FlowTestCase
         $unserialized = \unserialize($serialized);
 
         \assert($unserialized instanceof Entry);
-        self::assertTrue($entry->isEqual($unserialized));
+        static::assertTrue($entry->isEqual($unserialized));
     }
 
-    public function test_value_method_returns_json_value_object() : void
+    public function test_value_method_returns_json_value_object(): void
     {
         $entry = json_entry('name', ['foo' => 'bar']);
 
         $json = $entry->value();
 
-        self::assertInstanceOf(Json::class, $json);
-        self::assertSame('{"foo":"bar"}', $json->toString());
+        static::assertInstanceOf(Json::class, $json);
+        static::assertSame('{"foo":"bar"}', $json->toString());
     }
 
-    public function test_value_method_returns_null_for_null_entry() : void
+    public function test_value_method_returns_null_for_null_entry(): void
     {
         $entry = json_entry('name', null);
 
-        self::assertNull($entry->value());
+        static::assertNull($entry->value());
     }
 }

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
-use Flow\Bridge\Telemetry\OTLP\Transport\{StreamTransport, TransportException};
+use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\TransportException;
 use Flow\Telemetry\Logger\Severity;
-use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tests\Mother\{LogEntryMother, MetricMother, SpanMother};
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
+use Flow\Telemetry\Tests\Mother\LogEntryMother;
+use Flow\Telemetry\Tests\Mother\MetricMother;
+use Flow\Telemetry\Tests\Mother\SpanMother;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -18,14 +22,14 @@ final class StreamTransportTest extends TestCase
     #[TestWith(['php://memory'])]
     #[TestWith(['php://temp'])]
     #[TestWith(['php://temp/maxmemory:1024'])]
-    public function test_accepts_php_stream_wrappers(string $uri) : void
+    public function test_accepts_php_stream_wrappers(string $uri): void
     {
         $transport = new StreamTransport($uri);
 
-        self::assertIsResource($transport->stream());
+        static::assertIsResource($transport->stream());
     }
 
-    public function test_appends_multiple_batches_as_separate_lines() : void
+    public function test_appends_multiple_batches_as_separate_lines(): void
     {
         $transport = new StreamTransport('php://memory');
 
@@ -34,21 +38,21 @@ final class StreamTransportTest extends TestCase
 
         \rewind($transport->stream());
         $contents = (string) \stream_get_contents($transport->stream());
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn (string $l) : bool => $l !== ''));
+        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $l): bool => $l !== ''));
 
-        self::assertCount(2, $lines);
+        static::assertCount(2, $lines);
     }
 
-    public function test_constructor_sets_stream_chunk_size() : void
+    public function test_constructor_sets_stream_chunk_size(): void
     {
         $transport = new StreamTransport('php://memory');
 
         $previous = \stream_set_chunk_size($transport->stream(), 8192);
 
-        self::assertSame(StreamTransport::STREAM_CHUNK_SIZE, $previous);
+        static::assertSame(StreamTransport::STREAM_CHUNK_SIZE, $previous);
     }
 
-    public function test_empty_destination_throws() : void
+    public function test_empty_destination_throws(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('non-empty');
@@ -56,7 +60,7 @@ final class StreamTransportTest extends TestCase
         new StreamTransport('');
     }
 
-    public function test_empty_signal_does_not_write() : void
+    public function test_empty_signal_does_not_write(): void
     {
         $transport = new StreamTransport('php://memory');
 
@@ -65,10 +69,10 @@ final class StreamTransportTest extends TestCase
         $transport->send(Signals::traces([]));
 
         \rewind($transport->stream());
-        self::assertSame('', (string) \stream_get_contents($transport->stream()));
+        static::assertSame('', (string) \stream_get_contents($transport->stream()));
     }
 
-    public function test_failed_write_throws() : void
+    public function test_failed_write_throws(): void
     {
         \stream_wrapper_register('flow-failwrite', FailingWriteStreamWrapper::class);
 
@@ -86,7 +90,7 @@ final class StreamTransportTest extends TestCase
 
     #[TestWith([-1])]
     #[TestWith([01000])]
-    public function test_out_of_range_file_permissions_throw(int $perm) : void
+    public function test_out_of_range_file_permissions_throw(int $perm): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('between 0 and 0777');
@@ -94,7 +98,7 @@ final class StreamTransportTest extends TestCase
         new StreamTransport('php://memory', filePermissions: $perm);
     }
 
-    public function test_partial_write_throws() : void
+    public function test_partial_write_throws(): void
     {
         \stream_wrapper_register('flow-partial', PartialWriteStreamWrapper::class);
 
@@ -102,7 +106,9 @@ final class StreamTransportTest extends TestCase
             $transport = new StreamTransport('flow-partial://buf');
 
             $this->expectException(TransportException::class);
-            $this->expectExceptionMessageMatches('/Partial write to OTLP stream "flow-partial:\\/\\/buf": wrote \\d+ of \\d+ bytes/');
+            $this->expectExceptionMessageMatches(
+                '/Partial write to OTLP stream "flow-partial:\\/\\/buf": wrote \\d+ of \\d+ bytes/',
+            );
 
             $transport->send(Signals::logs([LogEntryMother::deterministic('hello', Severity::INFO)]));
         } finally {
@@ -110,7 +116,7 @@ final class StreamTransportTest extends TestCase
         }
     }
 
-    public function test_send_after_shutdown_throws() : void
+    public function test_send_after_shutdown_throws(): void
     {
         $transport = new StreamTransport('php://memory');
 
@@ -122,7 +128,7 @@ final class StreamTransportTest extends TestCase
         $transport->send(Signals::logs([LogEntryMother::deterministic('hello', Severity::INFO)]));
     }
 
-    public function test_shutdown_is_idempotent() : void
+    public function test_shutdown_is_idempotent(): void
     {
         $transport = new StreamTransport('php://memory');
 
@@ -136,8 +142,10 @@ final class StreamTransportTest extends TestCase
     #[TestWith([SignalType::LOGS, 'resourceLogs'])]
     #[TestWith([SignalType::METRICS, 'resourceMetrics'])]
     #[TestWith([SignalType::TRACES, 'resourceSpans'])]
-    public function test_writes_each_signal_type_as_single_line_with_trailing_newline(SignalType $type, string $expectedKey) : void
-    {
+    public function test_writes_each_signal_type_as_single_line_with_trailing_newline(
+        SignalType $type,
+        string $expectedKey,
+    ): void {
         $transport = new StreamTransport('php://memory');
 
         $transport->send(match ($type) {
@@ -149,12 +157,12 @@ final class StreamTransportTest extends TestCase
         \rewind($transport->stream());
         $contents = (string) \stream_get_contents($transport->stream());
 
-        self::assertStringEndsWith("\n", $contents);
-        self::assertSame(1, \substr_count($contents, "\n"));
+        static::assertStringEndsWith("\n", $contents);
+        static::assertSame(1, \substr_count($contents, "\n"));
 
         /** @var array<string, mixed> $decoded */
         $decoded = \json_decode(\rtrim($contents, "\n"), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertArrayHasKey($expectedKey, $decoded);
+        static::assertArrayHasKey($expectedKey, $decoded);
     }
 }
 
@@ -163,31 +171,29 @@ final class PartialWriteStreamWrapper
     /** @var resource */
     public $context;
 
-    public function stream_close() : void
-    {
-    }
+    public function stream_close(): void {}
 
-    public function stream_eof() : bool
+    public function stream_eof(): bool
     {
         return true;
     }
 
-    public function stream_flush() : bool
+    public function stream_flush(): bool
     {
         return true;
     }
 
-    public function stream_lock(int $operation) : bool
+    public function stream_lock(int $operation): bool
     {
         return true;
     }
 
-    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath) : bool
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
     {
         return true;
     }
 
-    public function stream_set_option(int $option, int $arg1, ?int $arg2) : bool
+    public function stream_set_option(int $option, int $arg1, ?int $arg2): bool
     {
         return true;
     }
@@ -195,17 +201,17 @@ final class PartialWriteStreamWrapper
     /**
      * @return array<int|string, int>
      */
-    public function stream_stat() : array
+    public function stream_stat(): array
     {
         return [];
     }
 
-    public function stream_write(string $data) : int
+    public function stream_write(string $data): int
     {
         return (int) \floor(\strlen($data) / 2);
     }
 
-    public function url_stat(string $path, int $flags) : false
+    public function url_stat(string $path, int $flags): false
     {
         return false;
     }
@@ -216,31 +222,29 @@ final class FailingWriteStreamWrapper
     /** @var resource */
     public $context;
 
-    public function stream_close() : void
-    {
-    }
+    public function stream_close(): void {}
 
-    public function stream_eof() : bool
+    public function stream_eof(): bool
     {
         return true;
     }
 
-    public function stream_flush() : bool
+    public function stream_flush(): bool
     {
         return true;
     }
 
-    public function stream_lock(int $operation) : bool
+    public function stream_lock(int $operation): bool
     {
         return true;
     }
 
-    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath) : bool
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
     {
         return true;
     }
 
-    public function stream_set_option(int $option, int $arg1, ?int $arg2) : bool
+    public function stream_set_option(int $option, int $arg1, ?int $arg2): bool
     {
         return true;
     }
@@ -248,17 +252,17 @@ final class FailingWriteStreamWrapper
     /**
      * @return array<int|string, int>
      */
-    public function stream_stat() : array
+    public function stream_stat(): array
     {
         return [];
     }
 
-    public function stream_write(string $data) : false
+    public function stream_write(string $data): false
     {
         return false;
     }
 
-    public function url_stat(string $path, int $flags) : false
+    public function url_stat(string $path, int $flags): false
     {
         return false;
     }

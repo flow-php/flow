@@ -9,12 +9,11 @@ use Flow\ETL\Time\Duration;
 
 final readonly class FixedMilliseconds implements DelayFactory
 {
-    public function __construct(private int $milliseconds)
-    {
+    public function __construct(
+        private int $milliseconds,
+    ) {}
 
-    }
-
-    public function delay(int $attempt) : Duration
+    public function delay(int $attempt): Duration
     {
         return Duration::fromMilliseconds($this->milliseconds);
     }

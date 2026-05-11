@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Context;
 
-use Psr\Log\{AbstractLogger, LoggerAwareInterface, LoggerAwareTrait, NullLogger};
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 
 final class ProxyLogger extends AbstractLogger implements LoggerAwareInterface
 {
@@ -17,7 +20,7 @@ final class ProxyLogger extends AbstractLogger implements LoggerAwareInterface
         $this->logger = new NullLogger();
     }
 
-    public function log($level, $message, array $context = []) : void
+    public function log($level, $message, array $context = []): void
     {
         if (!isset($context['sql'])) {
             return;

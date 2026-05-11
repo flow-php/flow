@@ -17,10 +17,14 @@ final readonly class OnExceptionTypes implements RetryStrategy
     /**
      * @param array<class-string<\Throwable>> $exceptionTypes
      */
-    public function __construct(array $exceptionTypes, private int $limit)
-    {
+    public function __construct(
+        array $exceptionTypes,
+        private int $limit,
+    ) {
         if ($exceptionTypes === []) {
-            throw new InvalidArgumentException('Exception types cannot be empty. Use AnyThrowable strategy to retry on any throwable.');
+            throw new InvalidArgumentException(
+                'Exception types cannot be empty. Use AnyThrowable strategy to retry on any throwable.',
+            );
         }
 
         if ($limit <= 0) {
@@ -28,7 +32,7 @@ final readonly class OnExceptionTypes implements RetryStrategy
         }
 
         foreach ($exceptionTypes as $exceptionType) {
-            if (!\is_string($exceptionType) || (!\class_exists($exceptionType) && !\interface_exists($exceptionType))) {
+            if (!\is_string($exceptionType) || !\class_exists($exceptionType) && !\interface_exists($exceptionType)) {
                 throw new InvalidArgumentException("Class '{$exceptionType}' does not exist");
             }
 
@@ -40,7 +44,7 @@ final readonly class OnExceptionTypes implements RetryStrategy
         $this->exceptionTypes = $exceptionTypes;
     }
 
-    public function shouldRetry(\Throwable $exception, int $attemptNumber) : bool
+    public function shouldRetry(\Throwable $exception, int $attemptNumber): bool
     {
         if ($attemptNumber > $this->limit) {
             return false;

@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, AlterFunctionStmt, DefElem, Integer, Node, ObjectType, ObjectWithArgs, PBString, RenameStmt};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\AlterFunctionStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RenameStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 
@@ -21,35 +29,24 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         private array $arguments = [],
         private array $actions = [],
         private ?string $renameTo = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : AlterProcedureArgsStep
+    public static function create(string $name): AlterProcedureArgsStep
     {
         return new self($name);
     }
 
-    public function arguments(FunctionArgument ...$args) : AlterProcedureFinalStep
+    public function arguments(FunctionArgument ...$args): AlterProcedureFinalStep
     {
-        return new self(
-            $this->name,
-            \array_values($args),
-            $this->actions,
-            $this->renameTo,
-        );
+        return new self($this->name, \array_values($args), $this->actions, $this->renameTo);
     }
 
-    public function renameTo(string $newName) : AlterProcedureFinalStep
+    public function renameTo(string $newName): AlterProcedureFinalStep
     {
-        return new self(
-            $this->name,
-            $this->arguments,
-            $this->actions,
-            $newName,
-        );
+        return new self($this->name, $this->arguments, $this->actions, $newName);
     }
 
-    public function reset(string $parameter) : AlterProcedureFinalStep
+    public function reset(string $parameter): AlterProcedureFinalStep
     {
         $defElem = new DefElem();
         $defElem->setDefname($parameter);
@@ -60,12 +57,12 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $this->withAction('reset', $node);
     }
 
-    public function resetAll() : AlterProcedureFinalStep
+    public function resetAll(): AlterProcedureFinalStep
     {
         return $this->withAction('resetall', null);
     }
 
-    public function securityDefiner() : AlterProcedureFinalStep
+    public function securityDefiner(): AlterProcedureFinalStep
     {
         $integer = new Integer();
         $integer->setIval(1);
@@ -87,7 +84,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $this->withAction('security_definer', $node);
     }
 
-    public function securityInvoker() : AlterProcedureFinalStep
+    public function securityInvoker(): AlterProcedureFinalStep
     {
         $integer = new Integer();
         $integer->setIval(0);
@@ -109,7 +106,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $this->withAction('security_definer', $node);
     }
 
-    public function set(string $parameter, string $value) : AlterProcedureFinalStep
+    public function set(string $parameter, string $value): AlterProcedureFinalStep
     {
         $defElem = new DefElem();
         $defElem->setDefname($parameter);
@@ -131,7 +128,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $this->withAction('set', $node);
     }
 
-    public function toAst() : AlterFunctionStmt|RenameStmt
+    public function toAst(): AlterFunctionStmt|RenameStmt
     {
         if ($this->renameTo !== null && $this->actions !== []) {
             throw InvalidBuilderStateException::mutuallyExclusiveOptions('RENAME TO', 'other alterations');
@@ -144,7 +141,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $this->buildAlterAst();
     }
 
-    private function buildAlterAst() : AlterFunctionStmt
+    private function buildAlterAst(): AlterFunctionStmt
     {
         $stmt = new AlterFunctionStmt();
         $stmt->setObjtype(ObjectType::OBJECT_PROCEDURE);
@@ -197,7 +194,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $stmt;
     }
 
-    private function buildRenameAst() : RenameStmt
+    private function buildRenameAst(): RenameStmt
     {
         $stmt = new RenameStmt();
         $stmt->setRenameType(ObjectType::OBJECT_PROCEDURE);
@@ -237,16 +234,11 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $stmt;
     }
 
-    private function withAction(string $name, ?Node $arg) : self
+    private function withAction(string $name, ?Node $arg): self
     {
         $newActions = $this->actions;
         $newActions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->arguments,
-            $newActions,
-            $this->renameTo,
-        );
+        return new self($this->name, $this->arguments, $newActions, $this->renameTo);
     }
 }

@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Exception;
 
-final class DataConversionException extends RuntimeException
-{
-}
+final class DataConversionException extends RuntimeException {}

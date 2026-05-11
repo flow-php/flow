@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 
-use function Flow\Filesystem\DSL\{path, path_real};
 use Flow\Filesystem\Tests\OperatingSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\path_real;
 
 final class RealpathTest extends TestCase
 {
     use OperatingSystem;
 
-    public static function double_dots_paths() : \Generator
+    public static function double_dots_paths(): \Generator
     {
         yield ['/path/../file.txt', '/file.txt'];
         yield ['/path/./file.txt', '/path/file.txt'];
@@ -21,7 +23,7 @@ final class RealpathTest extends TestCase
         yield ['/path/more/nested/..//../file.txt', '/path/file.txt'];
     }
 
-    protected function setup() : void
+    protected function setup(): void
     {
         parent::setUp();
 
@@ -31,8 +33,8 @@ final class RealpathTest extends TestCase
     }
 
     #[DataProvider('double_dots_paths')]
-    public function test_double_dots_in_path(string $relative, string $absolute) : void
+    public function test_double_dots_in_path(string $relative, string $absolute): void
     {
-        self::assertEquals(path($absolute), path_real($relative));
+        static::assertEquals(path($absolute), path_real($relative));
     }
 }

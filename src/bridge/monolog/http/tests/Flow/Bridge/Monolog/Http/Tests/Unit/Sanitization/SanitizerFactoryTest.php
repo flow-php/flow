@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\Bridge\Monolog\Http\Tests\Unit\Sanitization;
 
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
-use Flow\Bridge\Monolog\Http\Sanitization\{Mask, SanitizerFactory};
+use Flow\Bridge\Monolog\Http\Sanitization\Mask;
+use Flow\Bridge\Monolog\Http\Sanitization\SanitizerFactory;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidTypeException;
 
 final class SanitizerFactoryTest extends FlowTestCase
 {
-    public function test_creating_mask_sanitizer_from_array() : void
+    public function test_creating_mask_sanitizer_from_array(): void
     {
         $sanitizer = SanitizerFactory::fromArray([
             'type' => 'mask',
@@ -19,34 +20,36 @@ final class SanitizerFactoryTest extends FlowTestCase
             'offset' => 2,
         ]);
 
-        self::assertInstanceOf(Mask::class, $sanitizer);
-        self::assertEquals('ab###', $sanitizer->sanitize('abcde'));
+        static::assertInstanceOf(Mask::class, $sanitizer);
+        static::assertEquals('ab###', $sanitizer->sanitize('abcde'));
     }
 
-    public function test_creating_mask_sanitizer_with_default_values() : void
+    public function test_creating_mask_sanitizer_with_default_values(): void
     {
         $sanitizer = SanitizerFactory::fromArray([
             'type' => 'mask',
         ]);
 
-        self::assertInstanceOf(Mask::class, $sanitizer);
-        self::assertEquals('*****', $sanitizer->sanitize('abcde'));
+        static::assertInstanceOf(Mask::class, $sanitizer);
+        static::assertEquals('*****', $sanitizer->sanitize('abcde'));
     }
 
-    public function test_roundtrip_conversion() : void
+    public function test_roundtrip_conversion(): void
     {
         $original = new Mask('#', 2);
         $normalized = $original->normalize();
         $reconstructed = SanitizerFactory::fromArray($normalized);
 
-        self::assertEquals($original->normalize(), $reconstructed->normalize());
-        self::assertEquals('ab###', $reconstructed->sanitize('abcde'));
+        static::assertEquals($original->normalize(), $reconstructed->normalize());
+        static::assertEquals('ab###', $reconstructed->sanitize('abcde'));
     }
 
-    public function test_throws_exception_when_character_is_not_a_string() : void
+    public function test_throws_exception_when_character_is_not_a_string(): void
     {
         $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"');
+        $this->expectExceptionMessage(
+            'Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"',
+        );
 
         SanitizerFactory::fromArray([
             'type' => 'mask',
@@ -54,10 +57,12 @@ final class SanitizerFactoryTest extends FlowTestCase
         ]);
     }
 
-    public function test_throws_exception_when_offset_is_not_an_integer() : void
+    public function test_throws_exception_when_offset_is_not_an_integer(): void
     {
         $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"');
+        $this->expectExceptionMessage(
+            'Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"',
+        );
 
         SanitizerFactory::fromArray([
             'type' => 'mask',
@@ -66,7 +71,7 @@ final class SanitizerFactoryTest extends FlowTestCase
         ]);
     }
 
-    public function test_throws_exception_when_type_is_missing() : void
+    public function test_throws_exception_when_type_is_missing(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Sanitizer type is required');
@@ -74,7 +79,7 @@ final class SanitizerFactoryTest extends FlowTestCase
         SanitizerFactory::fromArray([]);
     }
 
-    public function test_throws_exception_when_type_is_unsupported() : void
+    public function test_throws_exception_when_type_is_unsupported(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unsupported sanitizer type: unknown');

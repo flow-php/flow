@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter\Instrument;
 
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, ExemplarReservoir, SimpleFixedSizeExemplarReservoir, TraceBasedExemplarFilter};
-use Flow\Telemetry\Meter\{Metric, MetricLimits, MetricType};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\ExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\SimpleFixedSizeExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
@@ -63,7 +69,7 @@ final class Gauge implements Instrument
         $this->overflowKey = Attributes::create([MetricLimits::OVERFLOW_ATTRIBUTE => true])->id();
     }
 
-    public function collect() : array
+    public function collect(): array
     {
         $metrics = [];
 
@@ -89,12 +95,12 @@ final class Gauge implements Instrument
         return $metrics;
     }
 
-    public function description() : ?string
+    public function description(): ?string
     {
         return $this->description;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
@@ -106,11 +112,11 @@ final class Gauge implements Instrument
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
-    public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null) : void
+    public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
         $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
@@ -135,16 +141,11 @@ final class Gauge implements Instrument
         }
 
         if ($context !== null && $this->exemplarFilter->shouldSample($context, $value, $attrs)) {
-            $this->aggregations[$key]['reservoir']->offer(
-                $value,
-                $attrs,
-                $context,
-                $this->clock->now(),
-            );
+            $this->aggregations[$key]['reservoir']->offer($value, $attrs, $context, $this->clock->now());
         }
     }
 
-    public function unit() : ?string
+    public function unit(): ?string
     {
         return $this->unit;
     }

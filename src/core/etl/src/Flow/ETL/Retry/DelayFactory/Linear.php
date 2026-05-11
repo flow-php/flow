@@ -12,13 +12,12 @@ final readonly class Linear implements DelayFactory
     public function __construct(
         private Duration $baseDuration,
         private Duration $increment,
-    ) {
-    }
+    ) {}
 
-    public function delay(int $attempt) : Duration
+    public function delay(int $attempt): Duration
     {
         return Duration::fromMicroseconds(
-            $this->baseDuration->microseconds() + ($this->increment->microseconds() * ($attempt - 1))
+            $this->baseDuration->microseconds() + ($this->increment->microseconds() * ($attempt - 1)),
         );
     }
 }

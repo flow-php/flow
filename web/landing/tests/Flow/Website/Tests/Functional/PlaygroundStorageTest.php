@@ -6,20 +6,20 @@ namespace Flow\Website\Tests\Functional;
 
 final class PlaygroundStorageTest extends EndToEndTestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->clearStorageBeforeTest();
     }
 
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         $this->clearStorageBeforeTest();
         parent::tearDown();
     }
 
-    public function test_clearing_storage_removes_saved_code() : void
+    public function test_clearing_storage_removes_saved_code(): void
     {
         $client = self::navigateWithRetry('/playground');
 
@@ -27,21 +27,21 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
         $this->setPlaygroundCode($client, "<?php\necho 'Will be cleared';");
 
-        self::assertNotNull($this->getFromLocalStorage($client, 'flow-playground-code'));
+        static::assertNotNull($this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $this->clearLocalStorage($client);
 
-        self::assertNull($this->getFromLocalStorage($client, 'flow-playground-code'));
+        static::assertNull($this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $client->request('GET', '/playground');
 
         $this->waitForWasmReady($client);
 
-        self::assertStringNotContainsString('Will be cleared', $this->getPlaygroundCode($client));
-        self::assertStringContainsString('from_csv', $this->getPlaygroundCode($client));
+        static::assertStringNotContainsString('Will be cleared', $this->getPlaygroundCode($client));
+        static::assertStringContainsString('from_csv', $this->getPlaygroundCode($client));
     }
 
-    public function test_reset_button_clears_storage() : void
+    public function test_reset_button_clears_storage(): void
     {
         $client = self::navigateWithRetry('/playground');
 
@@ -49,7 +49,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
         $this->setPlaygroundCode($client, "<?php\necho 'Reset Test';");
 
-        self::assertStringContainsString('Reset Test', $this->getFromLocalStorage($client, 'flow-playground-code'));
+        static::assertStringContainsString('Reset Test', $this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $this->clearLocalStorage($client);
 
@@ -57,10 +57,10 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
         $this->waitForWasmReady($client);
 
-        self::assertStringNotContainsString('Reset Test', $this->getPlaygroundCode($client));
+        static::assertStringNotContainsString('Reset Test', $this->getPlaygroundCode($client));
     }
 
-    private function clearStorageBeforeTest() : void
+    private function clearStorageBeforeTest(): void
     {
         try {
             $client = self::navigateWithRetry('/playground');

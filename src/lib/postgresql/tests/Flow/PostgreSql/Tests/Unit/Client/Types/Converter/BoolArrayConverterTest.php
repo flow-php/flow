@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BoolArrayConverterTest extends TestCase
 {
-    public static function provide_non_array_values() : \Generator
+    public static function provide_non_array_values(): \Generator
     {
         yield 'string' => ['not an array', '{}'];
         yield 'integer' => [12345, '{}'];
@@ -22,7 +22,7 @@ final class BoolArrayConverterTest extends TestCase
         yield 'object' => [new \stdClass(), '{}'];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'boolean array' => [[true, false, true], '{t,f,t}'];
         yield 'empty array' => [[], '{}'];
@@ -36,7 +36,7 @@ final class BoolArrayConverterTest extends TestCase
         yield 'large array' => [array_fill(0, 10, true), '{t,t,t,t,t,t,t,t,t,t}'];
     }
 
-    public function test_invalid_element_throws_exception() : void
+    public function test_invalid_element_throws_exception(): void
     {
         $converter = new BoolArrayConverter();
         $this->expectException(ValueConversionException::class);
@@ -44,31 +44,31 @@ final class BoolArrayConverterTest extends TestCase
     }
 
     #[DataProvider('provide_non_array_values')]
-    public function test_non_array_returns_empty_braces(mixed $input, string $expected) : void
+    public function test_non_array_returns_empty_braces(mixed $input, string $expected): void
     {
         $converter = new BoolArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new BoolArrayConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new BoolArrayConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::BOOL_ARRAY, $types);
-        self::assertCount(1, $types);
+        static::assertContains(ValueType::BOOL_ARRAY, $types);
+        static::assertCount(1, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(array $input, string $expected) : void
+    public function test_to_database(array $input, string $expected): void
     {
         $converter = new BoolArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

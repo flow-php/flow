@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_instance_of};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_instance_of;
+
 final class InstanceOfTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid DateTimeImmutable for DateTimeImmutable class' => [
             'value' => new \DateTimeImmutable(),
@@ -62,7 +64,7 @@ final class InstanceOfTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'stdClass object' => [
             'value' => (object) ['foo' => 'bar'],
@@ -72,7 +74,7 @@ final class InstanceOfTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid stdClass for stdClass class' => [
             'value' => new \stdClass(),
@@ -103,13 +105,13 @@ final class InstanceOfTypeTest extends TestCase
      * @param class-string $class
      */
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, string $class, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, string $class, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_instance_of($class)->assert($value);
         } else {
-            self::assertInstanceOf($class, type_instance_of($class)->assert($value));
+            static::assertInstanceOf($class, type_instance_of($class)->assert($value));
         }
     }
 
@@ -117,15 +119,15 @@ final class InstanceOfTypeTest extends TestCase
      * @param class-string $class
      */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_instance_of($class)->cast($value);
         } else {
             $result = type_instance_of($class)->cast($value);
-            self::assertEquals($expected, $result);
-            self::assertInstanceOf($class, $result);
+            static::assertEquals($expected, $result);
+            static::assertInstanceOf($class, $result);
         }
     }
 
@@ -133,25 +135,22 @@ final class InstanceOfTypeTest extends TestCase
      * @param class-string $class
      */
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, string $class, bool $expected) : void
+    public function test_is_valid(mixed $value, string $class, bool $expected): void
     {
-        self::assertSame($expected, type_instance_of($class)->isValid($value));
+        static::assertSame($expected, type_instance_of($class)->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_instance_of(\DateTimeImmutable::class);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'object<DateTimeImmutable>',
-            type_instance_of(\DateTimeImmutable::class)->toString()
-        );
+        static::assertSame('object<DateTimeImmutable>', type_instance_of(\DateTimeImmutable::class)->toString());
     }
 }

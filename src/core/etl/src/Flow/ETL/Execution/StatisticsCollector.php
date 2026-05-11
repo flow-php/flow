@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Execution;
 
-use Flow\ETL\{Analyze, FlowContext, Rows, Schema};
+use Flow\ETL\Analyze;
 use Flow\ETL\Dataset\Memory\Consumption;
-use Flow\ETL\Dataset\{Report, Statistics};
-use Flow\ETL\Dataset\Statistics\{Columns, ExecutionTime, HighResolutionTime};
+use Flow\ETL\Dataset\Report;
+use Flow\ETL\Dataset\Statistics;
+use Flow\ETL\Dataset\Statistics\Columns;
+use Flow\ETL\Dataset\Statistics\ExecutionTime;
+use Flow\ETL\Dataset\Statistics\HighResolutionTime;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 
 /**
  * @template T of Analyze|bool|null
@@ -52,7 +58,7 @@ final class StatisticsCollector
         $this->startTime = HighResolutionTime::now();
     }
 
-    public function capture(Rows $rows) : void
+    public function capture(Rows $rows): void
     {
         $this->totalRows += $rows->count();
 
@@ -77,7 +83,7 @@ final class StatisticsCollector
         }
     }
 
-    public function end(?\Throwable $exception = null) : void
+    public function end(?\Throwable $exception = null): void
     {
         if ($exception !== null) {
             $this->context->telemetry()->dataFrameFailed($this->context, $exception);
@@ -89,7 +95,7 @@ final class StatisticsCollector
     /**
      * @return (T is Analyze|true ? Report : null)
      */
-    public function report() : ?Report
+    public function report(): ?Report
     {
         if ($this->analyze === null) {
             return null;
@@ -104,8 +110,8 @@ final class StatisticsCollector
                 $this->totalRows,
                 new ExecutionTime($this->startedAt, $endedAt, $this->startTime->diff($endTime)),
                 $this->memory,
-                $this->columnStatistics
-            )
+                $this->columnStatistics,
+            ),
         );
     }
 }

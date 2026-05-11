@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Exception;
 
-use Flow\PostgreSql\Client\Exception\{DataAccessException, NoResultException};
+use Flow\PostgreSql\Client\Exception\DataAccessException;
+use Flow\PostgreSql\Client\Exception\NoResultException;
 use PHPUnit\Framework\TestCase;
 
 final class NoResultExceptionTest extends TestCase
 {
-    public function test_default_message() : void
+    public function test_default_message(): void
     {
-        self::assertSame(
+        static::assertSame(
             'Expected at least one row, but none were returned',
             (new NoResultException())->getMessage(),
         );
     }
 
-    public function test_extends_data_access_exception() : void
+    public function test_extends_data_access_exception(): void
     {
-        self::assertInstanceOf(DataAccessException::class, new NoResultException());
+        static::assertInstanceOf(DataAccessException::class, new NoResultException());
     }
 }

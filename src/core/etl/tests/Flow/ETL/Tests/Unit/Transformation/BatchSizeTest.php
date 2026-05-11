@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformation;
 
-use function Flow\ETL\DSL\{df, from_array};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation\BatchSize;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+
 final class BatchSizeTest extends FlowTestCase
 {
-    public function test_batch_size_transformation() : void
+    public function test_batch_size_transformation(): void
     {
         $rowsIterator = df()
             ->read(from_array([
@@ -23,7 +25,7 @@ final class BatchSizeTest extends FlowTestCase
             ->get();
 
         foreach ($rowsIterator as $rows) {
-            self::assertCount(2, $rows);
+            static::assertCount(2, $rows);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Flow\Telemetry;
 
 final class ObjectExtractor
 {
-    public static function shortName(object $object) : string
+    public static function shortName(object $object): string
     {
         if (str_contains($object::class, '@anonymous')) {
             return 'class@anonymous';

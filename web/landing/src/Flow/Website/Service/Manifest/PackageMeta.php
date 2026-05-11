@@ -52,11 +52,11 @@ final readonly class PackageMeta
         'extension' => 'Extension',
     ];
 
-    public function __construct(private Manifest $manifest)
-    {
-    }
+    public function __construct(
+        private Manifest $manifest,
+    ) {}
 
-    public function forDslModule(string $module) : ?string
+    public function forDslModule(string $module): ?string
     {
         return self::DSL_MODULE_COMPONENT[strtolower($module)] ?? null;
     }
@@ -64,7 +64,7 @@ final readonly class PackageMeta
     /**
      * @return null|array{type: string, component: string}
      */
-    public function forPackage(string $packageName) : ?array
+    public function forPackage(string $packageName): ?array
     {
         $entry = $this->manifest->byName($packageName);
 
@@ -84,7 +84,7 @@ final readonly class PackageMeta
         ];
     }
 
-    private function componentLabel(string $packageName) : string
+    private function componentLabel(string $packageName): string
     {
         if (isset(self::NAME_OVERRIDE[$packageName])) {
             return self::NAME_OVERRIDE[$packageName];

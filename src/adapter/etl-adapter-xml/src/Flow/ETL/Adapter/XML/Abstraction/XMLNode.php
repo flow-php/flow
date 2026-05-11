@@ -27,17 +27,17 @@ final readonly class XMLNode
         }
     }
 
-    public static function flatNode(string $name, ?string $value) : self
+    public static function flatNode(string $name, ?string $value): self
     {
         return new self($name, $value, XMLNodeType::FLAT);
     }
 
-    public static function nestedNode(string $name) : self
+    public static function nestedNode(string $name): self
     {
         return new self($name, null, XMLNodeType::NESTED);
     }
 
-    public function append(self|XMLAttribute $element) : self
+    public function append(self|XMLAttribute $element): self
     {
         if ($element instanceof XMLAttribute) {
             return $this->appendAttribute($element);
@@ -46,38 +46,26 @@ final readonly class XMLNode
         return $this->appendChild($element);
     }
 
-    public function appendAttribute(XMLAttribute $attribute) : self
+    public function appendAttribute(XMLAttribute $attribute): self
     {
-        return new self(
-            $this->name,
-            $this->value,
-            $this->type,
-            [...$this->attributes, $attribute],
-            $this->children
-        );
+        return new self($this->name, $this->value, $this->type, [...$this->attributes, $attribute], $this->children);
     }
 
-    public function appendChild(self $child) : self
+    public function appendChild(self $child): self
     {
         if ($this->type === XMLNodeType::FLAT) {
             throw new InvalidArgumentException('XMLNode can not have children if it has value');
         }
 
-        return new self(
-            $this->name,
-            $this->value,
-            $this->type,
-            $this->attributes,
-            [...$this->children, $child]
-        );
+        return new self($this->name, $this->value, $this->type, $this->attributes, [...$this->children, $child]);
     }
 
-    public function hasChildren() : bool
+    public function hasChildren(): bool
     {
         return \count($this->children) > 0;
     }
 
-    public function hasValue() : bool
+    public function hasValue(): bool
     {
         return $this->value !== null;
     }

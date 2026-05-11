@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use Flow\PostgreSql\Schema\{Column, Table};
+use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
+use Flow\PostgreSql\Schema\Table;
 
 final readonly class TableStructureComparator
 {
     public function __construct(
         private RenameStrategy $renameStrategy,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<Table> $added
@@ -20,7 +20,7 @@ final readonly class TableStructureComparator
      *
      * @return ChangeSet<Table, mixed>
      */
-    public function detectTableRenames(array $added, array $removed) : ChangeSet
+    public function detectTableRenames(array $added, array $removed): ChangeSet
     {
         $addedMap = [];
 
@@ -58,15 +58,17 @@ final readonly class TableStructureComparator
         );
     }
 
-    public function haveEqualStructure(Table $a, Table $b) : bool
+    public function haveEqualStructure(Table $a, Table $b): bool
     {
         if ($a->schema !== $b->schema) {
             return false;
         }
 
-        if ($a->unlogged !== $b->unlogged
+        if (
+            $a->unlogged !== $b->unlogged
             || $a->partitionStrategy !== $b->partitionStrategy
-            || $a->tablespace !== $b->tablespace) {
+            || $a->tablespace !== $b->tablespace
+        ) {
             return false;
         }
 
@@ -96,19 +98,34 @@ final readonly class TableStructureComparator
             return false;
         }
 
-        return $this->listsStructurallyEqual($a->indexes, $b->indexes, static fn ($x, $y) => $x->isEqualStructure($y))
-            && $this->listsStructurallyEqual($a->foreignKeys, $b->foreignKeys, static fn ($x, $y) => $x->isEqualStructure($y))
-            && $this->listsStructurallyEqual($a->uniqueConstraints, $b->uniqueConstraints, static fn ($x, $y) => $x->isEqualStructure($y))
-            && $this->listsStructurallyEqual($a->checkConstraints, $b->checkConstraints, static fn ($x, $y) => $x->isEqualStructure($y))
-            && $this->listsStructurallyEqual($a->excludeConstraints, $b->excludeConstraints, static fn ($x, $y) => $x->isEqualStructure($y))
-            && $this->listsStructurallyEqual($a->triggers, $b->triggers, static fn ($x, $y) => $x->isEqualStructure($y));
+        return $this->listsStructurallyEqual($a->indexes, $b->indexes, static fn($x, $y) => $x->isEqualStructure(
+            $y,
+        )) && $this->listsStructurallyEqual($a->foreignKeys, $b->foreignKeys, static fn($x, $y) => $x->isEqualStructure(
+            $y,
+        )) && $this->listsStructurallyEqual($a->uniqueConstraints, $b->uniqueConstraints, static fn(
+            $x,
+            $y,
+        ) => $x->isEqualStructure(
+            $y,
+        )) && $this->listsStructurallyEqual($a->checkConstraints, $b->checkConstraints, static fn(
+            $x,
+            $y,
+        ) => $x->isEqualStructure(
+            $y,
+        )) && $this->listsStructurallyEqual($a->excludeConstraints, $b->excludeConstraints, static fn(
+            $x,
+            $y,
+        ) => $x->isEqualStructure($y)) && $this->listsStructurallyEqual($a->triggers, $b->triggers, static fn(
+            $x,
+            $y,
+        ) => $x->isEqualStructure($y));
     }
 
     /**
      * @param list<Column> $a
      * @param list<Column> $b
      */
-    private function columnListsEqual(array $a, array $b) : bool
+    private function columnListsEqual(array $a, array $b): bool
     {
         if (\count($a) !== \count($b)) {
             return false;
@@ -150,7 +167,7 @@ final readonly class TableStructureComparator
      * @param list<T> $b
      * @param callable(T, T): bool $equalsFn
      */
-    private function listsStructurallyEqual(array $a, array $b, callable $equalsFn) : bool
+    private function listsStructurallyEqual(array $a, array $b, callable $equalsFn): bool
     {
         if (\count($a) !== \count($b)) {
             return false;
@@ -173,7 +190,7 @@ final readonly class TableStructureComparator
         return true;
     }
 
-    private function primaryKeysStructurallyEqual(?PrimaryKey $a, ?PrimaryKey $b) : bool
+    private function primaryKeysStructurallyEqual(?PrimaryKey $a, ?PrimaryKey $b): bool
     {
         if ($a === null && $b === null) {
             return true;

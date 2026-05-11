@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformation;
 
-use function Flow\ETL\DSL\{data_frame, from_array};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation\Limit;
 
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+
 final class LimitTest extends FlowTestCase
 {
-    public function test_limit_transformation() : void
+    public function test_limit_transformation(): void
     {
         $rows = data_frame()
             ->read(from_array([
@@ -22,6 +24,6 @@ final class LimitTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(2, $rows);
+        static::assertCount(2, $rows);
     }
 }

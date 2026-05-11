@@ -4,56 +4,64 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Unit;
 
-use Flow\PostgreSql\Migrations\{Direction, Migration, MigrationContext, MigrationPlan, MigrationPlanList, Version};
+use Flow\PostgreSql\Migrations\Direction;
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
+use Flow\PostgreSql\Migrations\MigrationPlan;
+use Flow\PostgreSql\Migrations\MigrationPlanList;
+use Flow\PostgreSql\Migrations\Version;
 use PHPUnit\Framework\TestCase;
 
 final class MigrationPlanListTest extends TestCase
 {
-    public function stubMigration() : Migration
+    public function stubMigration(): Migration
     {
         return new class implements Migration {
-            public function migrate(MigrationContext $context) : void
-            {
-            }
+            public function migrate(MigrationContext $context): void {}
 
-            public function transactional() : bool
+            public function transactional(): bool
             {
                 return true;
             }
         };
     }
 
-    public function test_count() : void
+    public function test_count(): void
     {
         $list = new MigrationPlanList(
             new MigrationPlan(Version::fromString('20260401120000'), $this->stubMigration(), null, Direction::UP),
             new MigrationPlan(Version::fromString('20260402120000'), $this->stubMigration(), null, Direction::UP),
         );
 
-        self::assertCount(2, $list);
+        static::assertCount(2, $list);
     }
 
-    public function test_empty_list() : void
+    public function test_empty_list(): void
     {
         $list = new MigrationPlanList();
 
-        self::assertCount(0, $list);
-        self::assertTrue($list->isEmpty());
+        static::assertCount(0, $list);
+        static::assertTrue($list->isEmpty());
     }
 
-    public function test_is_not_empty() : void
+    public function test_is_not_empty(): void
     {
         $list = new MigrationPlanList(
             new MigrationPlan(Version::fromString('20260401120000'), $this->stubMigration(), null, Direction::UP),
         );
 
-        self::assertFalse($list->isEmpty());
+        static::assertFalse($list->isEmpty());
     }
 
-    public function test_iteration() : void
+    public function test_iteration(): void
     {
         $plan1 = new MigrationPlan(Version::fromString('20260401120000'), $this->stubMigration(), null, Direction::UP);
-        $plan2 = new MigrationPlan(Version::fromString('20260402120000'), $this->stubMigration(), null, Direction::DOWN);
+        $plan2 = new MigrationPlan(
+            Version::fromString('20260402120000'),
+            $this->stubMigration(),
+            null,
+            Direction::DOWN,
+        );
 
         $list = new MigrationPlanList($plan1, $plan2);
 
@@ -63,6 +71,6 @@ final class MigrationPlanListTest extends TestCase
             $items[] = $plan;
         }
 
-        self::assertSame([$plan1, $plan2], $items);
+        static::assertSame([$plan1, $plan2], $items);
     }
 }

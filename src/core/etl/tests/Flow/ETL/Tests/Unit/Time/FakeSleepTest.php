@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Time;
 
-use Flow\ETL\Time\{Duration, FakeSleep};
+use Flow\ETL\Time\Duration;
+use Flow\ETL\Time\FakeSleep;
 use PHPUnit\Framework\TestCase;
 
 final class FakeSleepTest extends TestCase
 {
-    public function test_no_actual_delay_occurs() : void
+    public function test_no_actual_delay_occurs(): void
     {
         $sleep = new FakeSleep();
 
@@ -19,10 +20,10 @@ final class FakeSleepTest extends TestCase
 
         $actualElapsed = $endTime - $startTime;
 
-        self::assertLessThan(0.1, $actualElapsed);
+        static::assertLessThan(0.1, $actualElapsed);
     }
 
-    public function test_records_all_sleep_durations() : void
+    public function test_records_all_sleep_durations(): void
     {
         $sleep = new FakeSleep();
 
@@ -36,49 +37,49 @@ final class FakeSleepTest extends TestCase
 
         $sleepDurations = $sleep->sleepDurations();
 
-        self::assertCount(3, $sleepDurations);
-        self::assertSame(100, $sleepDurations[0]->milliseconds());
-        self::assertSame(2000, $sleepDurations[1]->milliseconds());
-        self::assertSame(60000, $sleepDurations[2]->milliseconds());
+        static::assertCount(3, $sleepDurations);
+        static::assertSame(100, $sleepDurations[0]->milliseconds());
+        static::assertSame(2000, $sleepDurations[1]->milliseconds());
+        static::assertSame(60000, $sleepDurations[2]->milliseconds());
     }
 
-    public function test_reset() : void
+    public function test_reset(): void
     {
         $sleep = new FakeSleep();
 
         $sleep->for(Duration::fromSeconds(5));
         $sleep->for(Duration::fromSeconds(10));
 
-        self::assertSame(15_000_000, $sleep->totalMicroseconds());
-        self::assertCount(2, $sleep->sleepDurations());
-        self::assertSame(2, $sleep->sleepCount());
+        static::assertSame(15_000_000, $sleep->totalMicroseconds());
+        static::assertCount(2, $sleep->sleepDurations());
+        static::assertSame(2, $sleep->sleepCount());
 
         $sleep->reset();
 
-        self::assertSame(0, $sleep->totalMicroseconds());
-        self::assertSame(0, $sleep->totalMilliseconds());
-        self::assertSame(0, $sleep->totalSeconds());
-        self::assertCount(0, $sleep->sleepDurations());
-        self::assertSame(0, $sleep->sleepCount());
+        static::assertSame(0, $sleep->totalMicroseconds());
+        static::assertSame(0, $sleep->totalMilliseconds());
+        static::assertSame(0, $sleep->totalSeconds());
+        static::assertCount(0, $sleep->sleepDurations());
+        static::assertSame(0, $sleep->sleepCount());
     }
 
-    public function test_sleep_count() : void
+    public function test_sleep_count(): void
     {
         $sleep = new FakeSleep();
 
-        self::assertSame(0, $sleep->sleepCount());
+        static::assertSame(0, $sleep->sleepCount());
 
         $sleep->for(Duration::fromMilliseconds(100));
-        self::assertSame(1, $sleep->sleepCount());
+        static::assertSame(1, $sleep->sleepCount());
 
         $sleep->for(Duration::fromMilliseconds(200));
-        self::assertSame(2, $sleep->sleepCount());
+        static::assertSame(2, $sleep->sleepCount());
 
         $sleep->for(Duration::fromMilliseconds(300));
-        self::assertSame(3, $sleep->sleepCount());
+        static::assertSame(3, $sleep->sleepCount());
     }
 
-    public function test_tracks_total_sleep_time() : void
+    public function test_tracks_total_sleep_time(): void
     {
         $sleep = new FakeSleep();
 
@@ -86,8 +87,8 @@ final class FakeSleepTest extends TestCase
         $sleep->for(Duration::fromMilliseconds(200));
         $sleep->for(Duration::fromSeconds(1));
 
-        self::assertSame(1_300_000, $sleep->totalMicroseconds());
-        self::assertSame(1300, $sleep->totalMilliseconds());
-        self::assertSame(1, $sleep->totalSeconds());
+        static::assertSame(1_300_000, $sleep->totalMicroseconds());
+        static::assertSame(1300, $sleep->totalMilliseconds());
+        static::assertSame(1, $sleep->totalSeconds());
     }
 }

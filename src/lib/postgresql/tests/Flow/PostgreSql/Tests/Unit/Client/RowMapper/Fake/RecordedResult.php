@@ -9,7 +9,7 @@ final readonly class RecordedResult
     /**
      * @param array<string, mixed> $row
      */
-    public function __construct(public array $row)
-    {
-    }
+    public function __construct(
+        public array $row,
+    ) {}
 }

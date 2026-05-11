@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{Extractor, FlowContext, Rows, Sort\ExternalSort\Bucket, Sort\ExternalSort\BucketsCache};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
+use Flow\ETL\Sort\ExternalSort\Bucket;
+use Flow\ETL\Sort\ExternalSort\BucketsCache;
 
 /**
  * @internal created and used by ExternalSort algorithm
@@ -18,14 +22,12 @@ final readonly class SortBucketsExtractor implements Extractor
         private array $sortBuckets,
         private int $batchSize,
         private BucketsCache $cache,
-    ) {
-
-    }
+    ) {}
 
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($this->sortBuckets as $bucket) {
             $rows = new Rows();

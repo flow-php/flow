@@ -4,32 +4,38 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
-use function Flow\Filesystem\DSL\path_real;
-use Flow\ETL\Adapter\ChartJS\Chart\{BarChart, LineChart, PieChart};
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
-use Flow\ETL\Row\{EntryReference, References};
+use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
+use Flow\ETL\Adapter\ChartJS\Chart\LineChart;
+use Flow\ETL\Adapter\ChartJS\Chart\PieChart;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\References;
 use Flow\Filesystem\Path;
 
+use function Flow\Filesystem\DSL\path_real;
+
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
-function bar_chart(EntryReference $label, References $datasets) : BarChart
+function bar_chart(EntryReference $label, References $datasets): BarChart
 {
     return new BarChart($label, $datasets);
 }
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
-function line_chart(EntryReference $label, References $datasets) : LineChart
+function line_chart(EntryReference $label, References $datasets): LineChart
 {
     return new LineChart($label, $datasets);
 }
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
-function pie_chart(EntryReference $label, References $datasets) : PieChart
+function pie_chart(EntryReference $label, References $datasets): PieChart
 {
     return new PieChart($label, $datasets);
 }
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::LOADER)]
-function to_chartjs(Chart $type) : ChartJSLoader
+function to_chartjs(Chart $type): ChartJSLoader
 {
     return new ChartJSLoader($type);
 }
@@ -40,7 +46,7 @@ function to_chartjs(Chart $type) : ChartJSLoader
  * @param null|Path|string $template - @deprecated use $loader->withTemplate() instead
  */
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::LOADER)]
-function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null) : ChartJSLoader
+function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null): ChartJSLoader
 {
     if (\is_string($output)) {
         $output = path_real($output);
@@ -68,7 +74,7 @@ function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|stri
  * @param array<array-key, mixed> $output - @deprecated use $loader->withOutputVar() instead
  */
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::LOADER)]
-function to_chartjs_var(Chart $type, array &$output) : ChartJSLoader
+function to_chartjs_var(Chart $type, array &$output): ChartJSLoader
 {
     return (new ChartJSLoader($type))->withOutputVar($output);
 }

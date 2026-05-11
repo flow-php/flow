@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Merge;
 
 use Flow\PostgreSql\Protobuf\AST\CmdType;
 
-enum MergeActionType : int
+enum MergeActionType: int
 {
     case DELETE = CmdType::CMD_DELETE;
     case DO_NOTHING = CmdType::CMD_NOTHING;

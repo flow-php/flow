@@ -4,19 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
-use function Flow\PostgreSql\DSL\{pgsql_connection_params, postgresql_telemetry_config, postgresql_telemetry_options, traceable_postgresql_client};
-use function Flow\Telemetry\DSL\{logger_provider, memory_context_storage, memory_log_processor, memory_metric_processor, memory_span_processor, meter_provider, resource, telemetry, tracer_provider, void_exporter};
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor};
-use Flow\PostgreSql\Client\Telemetry\{PostgreSqlTelemetryAttributes, PostgreSqlTelemetryConfig, PostgreSqlTelemetryOptions, TraceableCursor};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\Cursor;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
+use Flow\PostgreSql\Client\Telemetry\TraceableCursor;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\pgsql_connection_params;
+use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
+use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
+use function Flow\PostgreSql\DSL\traceable_postgresql_client;
+use function Flow\Telemetry\DSL\logger_provider;
+use function Flow\Telemetry\DSL\memory_context_storage;
+use function Flow\Telemetry\DSL\memory_log_processor;
+use function Flow\Telemetry\DSL\memory_metric_processor;
+use function Flow\Telemetry\DSL\memory_span_processor;
+use function Flow\Telemetry\DSL\meter_provider;
+use function Flow\Telemetry\DSL\resource;
+use function Flow\Telemetry\DSL\telemetry;
+use function Flow\Telemetry\DSL\tracer_provider;
+use function Flow\Telemetry\DSL\void_exporter;
+
 final class TraceableClientTest extends TestCase
 {
-    public function test_all_telemetry_disabled_does_not_wrap_cursor() : void
+    public function test_all_telemetry_disabled_does_not_wrap_cursor(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
@@ -32,11 +50,11 @@ final class TraceableClientTest extends TestCase
         $client = traceable_postgresql_client($mockClient, $config);
         $cursor = $client->cursor('SELECT * FROM users');
 
-        self::assertSame($mockCursor, $cursor);
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertSame($mockCursor, $cursor);
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_close_delegates_to_underlying_client() : void
+    public function test_close_delegates_to_underlying_client(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -48,7 +66,7 @@ final class TraceableClientTest extends TestCase
         $client->close();
     }
 
-    public function test_converters_delegates_to_underlying_client() : void
+    public function test_converters_delegates_to_underlying_client(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -59,15 +77,13 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        self::assertSame($converters, $client->converters());
+        static::assertSame($converters, $client->converters());
     }
 
-    public function test_cursor_returns_traceable_cursor_when_tracing_enabled() : void
+    public function test_cursor_returns_traceable_cursor_when_tracing_enabled(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
-            traceQueries: true,
-        ));
+        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(traceQueries: true));
 
         $mockCursor = $this->createMock(Cursor::class);
         $mockClient = $this->createMockClient();
@@ -76,10 +92,10 @@ final class TraceableClientTest extends TestCase
         $client = traceable_postgresql_client($mockClient, $config);
         $cursor = $client->cursor('SELECT * FROM users');
 
-        self::assertInstanceOf(TraceableCursor::class, $cursor);
+        static::assertInstanceOf(TraceableCursor::class, $cursor);
     }
 
-    public function test_default_port_is_not_included_in_attributes() : void
+    public function test_default_port_is_not_included_in_attributes(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -91,11 +107,11 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET active = true');
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::SERVER_PORT, $spans[0]->attributes());
+        static::assertCount(1, $spans);
+        static::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::SERVER_PORT, $spans[0]->attributes());
     }
 
-    public function test_execute_creates_span_with_correct_attributes() : void
+    public function test_execute_creates_span_with_correct_attributes(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -106,22 +122,22 @@ final class TraceableClientTest extends TestCase
         $client = traceable_postgresql_client($mockClient, $config);
         $result = $client->execute('UPDATE users SET active = $1 WHERE id = $2', [true, 123]);
 
-        self::assertSame(5, $result);
+        static::assertSame(5, $result);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('UPDATE users', $span->name());
-        self::assertSame('postgresql', $span->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
-        self::assertSame('testdb', $span->attributes()[PostgreSqlTelemetryAttributes::DB_NAMESPACE]);
-        self::assertSame('localhost', $span->attributes()[PostgreSqlTelemetryAttributes::SERVER_ADDRESS]);
-        self::assertSame('UPDATE', $span->attributes()[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME]);
-        self::assertSame('users', $span->attributes()[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME]);
-        self::assertSame(5, $span->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertSame('UPDATE users', $span->name());
+        static::assertSame('postgresql', $span->attributes()[PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME]);
+        static::assertSame('testdb', $span->attributes()[PostgreSqlTelemetryAttributes::DB_NAMESPACE]);
+        static::assertSame('localhost', $span->attributes()[PostgreSqlTelemetryAttributes::SERVER_ADDRESS]);
+        static::assertSame('UPDATE', $span->attributes()[PostgreSqlTelemetryAttributes::DB_OPERATION_NAME]);
+        static::assertSame('users', $span->attributes()[PostgreSqlTelemetryAttributes::DB_COLLECTION_NAME]);
+        static::assertSame(5, $span->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
-    public function test_execute_rethrows_exception_and_records_error() : void
+    public function test_execute_rethrows_exception_and_records_error(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -139,36 +155,38 @@ final class TraceableClientTest extends TestCase
             $client->execute('UPDATE users SET active = $1', [true]);
         } finally {
             $spans = $spanProcessor->endedSpans();
-            self::assertCount(1, $spans);
-            self::assertNotNull($spans[0]->status());
-            self::assertTrue($spans[0]->status()->isError());
+            static::assertCount(1, $spans);
+            static::assertNotNull($spans[0]->status());
+            static::assertTrue($spans[0]->status()->isError());
         }
     }
 
-    public function test_fetch_all_creates_span_with_row_count() : void
+    public function test_fetch_all_creates_span_with_row_count(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
         $mockClient = $this->createMockClient();
-        $mockClient->method('fetchAll')->willReturn([
-            ['id' => 1, 'name' => 'User 1'],
-            ['id' => 2, 'name' => 'User 2'],
-            ['id' => 3, 'name' => 'User 3'],
-        ]);
+        $mockClient
+            ->method('fetchAll')
+            ->willReturn([
+                ['id' => 1, 'name' => 'User 1'],
+                ['id' => 2, 'name' => 'User 2'],
+                ['id' => 3, 'name' => 'User 3'],
+            ]);
 
         $client = traceable_postgresql_client($mockClient, $config);
         $result = $client->fetchAll('SELECT * FROM users');
 
-        self::assertCount(3, $result);
+        static::assertCount(3, $result);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('SELECT users', $spans[0]->name());
-        self::assertSame(3, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertCount(1, $spans);
+        static::assertSame('SELECT users', $spans[0]->name());
+        static::assertSame(3, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
-    public function test_fetch_creates_span_with_row_count() : void
+    public function test_fetch_creates_span_with_row_count(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -179,14 +197,14 @@ final class TraceableClientTest extends TestCase
         $client = traceable_postgresql_client($mockClient, $config);
         $result = $client->fetch('SELECT * FROM users WHERE id = $1', [1]);
 
-        self::assertSame(['id' => 1, 'name' => 'Test'], $result);
+        static::assertSame(['id' => 1, 'name' => 'Test'], $result);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertCount(1, $spans);
+        static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
-    public function test_fetch_null_result_records_zero_rows() : void
+    public function test_fetch_null_result_records_zero_rows(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -197,14 +215,14 @@ final class TraceableClientTest extends TestCase
         $client = traceable_postgresql_client($mockClient, $config);
         $result = $client->fetch('SELECT * FROM users WHERE id = $1', [999]);
 
-        self::assertNull($result);
+        static::assertNull($result);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame(0, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
+        static::assertCount(1, $spans);
+        static::assertSame(0, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
-    public function test_get_transaction_nesting_level_delegates() : void
+    public function test_get_transaction_nesting_level_delegates(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -214,10 +232,10 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        self::assertSame(2, $client->getTransactionNestingLevel());
+        static::assertSame(2, $client->getTransactionNestingLevel());
     }
 
-    public function test_is_auto_commit_delegates() : void
+    public function test_is_auto_commit_delegates(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -227,10 +245,10 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        self::assertTrue($client->isAutoCommit());
+        static::assertTrue($client->isAutoCommit());
     }
 
-    public function test_is_connected_delegates() : void
+    public function test_is_connected_delegates(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -240,10 +258,10 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        self::assertTrue($client->isConnected());
+        static::assertTrue($client->isConnected());
     }
 
-    public function test_last_insert_id_delegates() : void
+    public function test_last_insert_id_delegates(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -253,10 +271,10 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        self::assertSame(42, $client->lastInsertId('users_id_seq'));
+        static::assertSame(42, $client->lastInsertId('users_id_seq'));
     }
 
-    public function test_non_default_port_is_included_in_attributes() : void
+    public function test_non_default_port_is_included_in_attributes(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -269,16 +287,14 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET active = true');
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame(5433, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::SERVER_PORT]);
+        static::assertCount(1, $spans);
+        static::assertSame(5433, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::SERVER_PORT]);
     }
 
-    public function test_parameter_count_is_limited_by_default() : void
+    public function test_parameter_count_is_limited_by_default(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
-            includeParameters: true,
-        ));
+        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(includeParameters: true));
 
         $mockClient = $this->createMockClient();
         $mockClient->method('execute')->willReturn(1);
@@ -289,18 +305,24 @@ final class TraceableClientTest extends TestCase
         $client->execute('SELECT * FROM users WHERE id IN ($1, $2, ...)', $parameters);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         for ($i = 1; $i <= 10; $i++) {
-            self::assertArrayHasKey(PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
+            static::assertArrayHasKey(
+                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
+                $spans[0]->attributes(),
+            );
         }
 
         for ($i = 11; $i <= 20; $i++) {
-            self::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
+            static::assertArrayNotHasKey(
+                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
+                $spans[0]->attributes(),
+            );
         }
     }
 
-    public function test_parameter_count_unlimited_when_null() : void
+    public function test_parameter_count_unlimited_when_null(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
@@ -317,14 +339,17 @@ final class TraceableClientTest extends TestCase
         $client->execute('SELECT * FROM users WHERE id IN ($1, $2, ...)', $parameters);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         for ($i = 1; $i <= 20; $i++) {
-            self::assertArrayHasKey(PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i, $spans[0]->attributes());
+            static::assertArrayHasKey(
+                PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . $i,
+                $spans[0]->attributes(),
+            );
         }
     }
 
-    public function test_parameter_limits_ignored_when_include_parameters_false() : void
+    public function test_parameter_limits_ignored_when_include_parameters_false(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
@@ -340,17 +365,21 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET name = $1 WHERE id = $2', ['John', 123]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1', $spans[0]->attributes());
-        self::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '2', $spans[0]->attributes());
+        static::assertCount(1, $spans);
+        static::assertArrayNotHasKey(
+            PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1',
+            $spans[0]->attributes(),
+        );
+        static::assertArrayNotHasKey(
+            PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '2',
+            $spans[0]->attributes(),
+        );
     }
 
-    public function test_parameter_values_are_truncated_by_default() : void
+    public function test_parameter_values_are_truncated_by_default(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
-            includeParameters: true,
-        ));
+        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(includeParameters: true));
 
         $mockClient = $this->createMockClient();
         $mockClient->method('execute')->willReturn(1);
@@ -361,14 +390,14 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET name = $1', [$longValue]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
-        self::assertSame(103, \strlen($paramValue));
-        self::assertStringEndsWith('...', $paramValue);
+        static::assertSame(103, \strlen($paramValue));
+        static::assertStringEndsWith('...', $paramValue);
     }
 
-    public function test_parameter_values_unlimited_when_null() : void
+    public function test_parameter_values_unlimited_when_null(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
@@ -385,19 +414,17 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET name = $1', [$longValue]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
-        self::assertSame(200, \strlen($paramValue));
-        self::assertSame($longValue, $paramValue);
+        static::assertSame(200, \strlen($paramValue));
+        static::assertSame($longValue, $paramValue);
     }
 
-    public function test_parameters_are_included_when_enabled() : void
+    public function test_parameters_are_included_when_enabled(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
-            includeParameters: true,
-        ));
+        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(includeParameters: true));
 
         $mockClient = $this->createMockClient();
         $mockClient->method('execute')->willReturn(1);
@@ -406,12 +433,18 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET name = $1 WHERE id = $2', ['John', 123]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('John', $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1']);
-        self::assertSame('123', $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '2']);
+        static::assertCount(1, $spans);
+        static::assertSame(
+            'John',
+            $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'],
+        );
+        static::assertSame(
+            '123',
+            $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '2'],
+        );
     }
 
-    public function test_parameters_are_not_included_by_default() : void
+    public function test_parameters_are_not_included_by_default(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -423,16 +456,17 @@ final class TraceableClientTest extends TestCase
         $client->execute('UPDATE users SET name = $1 WHERE id = $2', ['John', 123]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertArrayNotHasKey(PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1', $spans[0]->attributes());
+        static::assertCount(1, $spans);
+        static::assertArrayNotHasKey(
+            PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1',
+            $spans[0]->attributes(),
+        );
     }
 
-    public function test_query_text_is_not_truncated_when_max_length_null() : void
+    public function test_query_text_is_not_truncated_when_max_length_null(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
-            maxQueryLength: null,
-        ));
+        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(maxQueryLength: null));
 
         $longQuery = 'SELECT * FROM users WHERE ' . \str_repeat('id = 1 AND ', 100) . 'active = true';
         $mockClient = $this->createMockClient();
@@ -442,16 +476,14 @@ final class TraceableClientTest extends TestCase
         $client->execute($longQuery);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame($longQuery, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT]);
+        static::assertCount(1, $spans);
+        static::assertSame($longQuery, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT]);
     }
 
-    public function test_query_text_is_truncated_when_max_length_set() : void
+    public function test_query_text_is_truncated_when_max_length_set(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(
-            maxQueryLength: 20,
-        ));
+        $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(maxQueryLength: 20));
 
         $mockClient = $this->createMockClient();
         $mockClient->method('execute')->willReturn(1);
@@ -460,11 +492,14 @@ final class TraceableClientTest extends TestCase
         $client->execute('SELECT * FROM users WHERE id = 123 AND active = true');
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('SELECT * FROM users ...', $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT]);
+        static::assertCount(1, $spans);
+        static::assertSame(
+            'SELECT * FROM users ...',
+            $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT],
+        );
     }
 
-    public function test_set_auto_commit_delegates() : void
+    public function test_set_auto_commit_delegates(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
@@ -476,8 +511,10 @@ final class TraceableClientTest extends TestCase
         $client->setAutoCommit(false);
     }
 
-    private function createConfig(MemorySpanProcessor $spanProcessor, ?PostgreSqlTelemetryOptions $options = null) : PostgreSqlTelemetryConfig
-    {
+    private function createConfig(
+        MemorySpanProcessor $spanProcessor,
+        ?PostgreSqlTelemetryOptions $options = null,
+    ): PostgreSqlTelemetryConfig {
         $clock = new SystemClock();
         $contextStorage = memory_context_storage();
 
@@ -494,12 +531,12 @@ final class TraceableClientTest extends TestCase
     /**
      * @return Client&MockObject
      */
-    private function createMockClient(?ConnectionParameters $connectionParams = null) : Client
+    private function createMockClient(?ConnectionParameters $connectionParams = null): Client
     {
         $mockClient = $this->createMock(Client::class);
-        $mockClient->method('parameters')->willReturn(
-            $connectionParams ?? pgsql_connection_params('testdb', 'localhost', 5432, 'user')
-        );
+        $mockClient
+            ->method('parameters')
+            ->willReturn($connectionParams ?? pgsql_connection_params('testdb', 'localhost', 5432, 'user'));
 
         return $mockClient;
     }

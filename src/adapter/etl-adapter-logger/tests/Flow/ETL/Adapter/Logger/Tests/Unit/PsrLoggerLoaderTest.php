@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Logger\Tests\Unit;
 
-use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{int_entry, string_entry};
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
 use Flow\ETL\Tests\FlowTestCase;
 use Psr\Log\LogLevel;
 use Psr\Log\Test\TestLogger;
 
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\string_entry;
+
 final class PsrLoggerLoaderTest extends FlowTestCase
 {
-    public function test_psr_logger_loader() : void
+    public function test_psr_logger_loader(): void
     {
         $logger = new TestLogger();
 
@@ -21,7 +26,7 @@ final class PsrLoggerLoaderTest extends FlowTestCase
 
         $loader->load(rows(row(int_entry('id', 12345), string_entry('name', 'Norbert'))), flow_context(config()));
 
-        self::assertTrue($logger->hasErrorRecords());
-        self::assertTrue($logger->hasError('row log'));
+        static::assertTrue($logger->hasErrorRecords());
+        static::assertTrue($logger->hasError('row log'));
     }
 }

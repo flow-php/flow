@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
-use Flow\ETL\Adapter\GoogleSheet\{Columns, SheetRange};
+use Flow\ETL\Adapter\GoogleSheet\Columns;
+use Flow\ETL\Adapter\GoogleSheet\SheetRange;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class SheetRangeTest extends FlowTestCase
 {
-    public static function example_string_ranges() : \Generator
+    public static function example_string_ranges(): \Generator
     {
         yield 'one cell' => [
             new SheetRange(new Columns('Sheet2', 'B', 'B'), 2, 2, 10),
@@ -35,7 +36,7 @@ final class SheetRangeTest extends FlowTestCase
         ];
     }
 
-    public static function invalid_cases() : \Generator
+    public static function invalid_cases(): \Generator
     {
         yield 'start row under 0' => [
             0,
@@ -64,35 +65,31 @@ final class SheetRangeTest extends FlowTestCase
     }
 
     #[DataProvider('invalid_cases')]
-    public function test_assertions(
-        int $startRow,
-        int $endRow,
-        int $maxRows,
-        string $expectedExceptionMessage,
-    ) : void {
+    public function test_assertions(int $startRow, int $endRow, int $maxRows, string $expectedExceptionMessage): void
+    {
         $this->expectExceptionMessage($expectedExceptionMessage);
         $this->expectException(InvalidArgumentException::class);
 
         new SheetRange(new Columns('Sheet2', 'A', 'B'), $startRow, $endRow, $maxRows);
     }
 
-    public function test_next_rows_range() : void
+    public function test_next_rows_range(): void
     {
         $range = new SheetRange(new Columns('Sheet2', 'A', 'B'), 1, 10, 100);
-        self::assertSame('Sheet2!A11:B20', $range->nextRows(10)->toString());
-        self::assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
+        static::assertSame('Sheet2!A11:B20', $range->nextRows(10)->toString());
+        static::assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
     }
 
-    public function test_next_rows_range_with_amount_greater_than_max_rows() : void
+    public function test_next_rows_range_with_amount_greater_than_max_rows(): void
     {
         $range = new SheetRange(new Columns('Sheet2', 'A', 'B'), 1, 10, 99);
-        self::assertSame('Sheet2!A11:B60', $range->nextRows(50)->toString());
-        self::assertSame('Sheet2!A11:B99', $range->nextRows(100)->toString());
+        static::assertSame('Sheet2!A11:B60', $range->nextRows(50)->toString());
+        static::assertSame('Sheet2!A11:B99', $range->nextRows(100)->toString());
     }
 
     #[DataProvider('example_string_ranges')]
-    public function test_range_to_string(SheetRange $range, string $expectedStringRange) : void
+    public function test_range_to_string(SheetRange $range, string $expectedStringRange): void
     {
-        self::assertSame($expectedStringRange, $range->toString());
+        static::assertSame($expectedStringRange, $range->toString());
     }
 }

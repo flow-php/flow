@@ -9,7 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class LatestCommandTest extends CommandTestCase
 {
-    public function test_shows_latest_available_version() : void
+    public function test_shows_latest_available_version(): void
     {
         $version = $this->context->generateDiffMigration();
 
@@ -18,7 +18,7 @@ final class LatestCommandTest extends CommandTestCase
         $tester = new CommandTester($command);
         $tester->execute([]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString($version, $tester->getDisplay());
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString($version, $tester->getDisplay());
     }
 }

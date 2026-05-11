@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 
 interface SelectOffsetStep extends SelectLockingStep
 {
-    public function offset(int $offset) : SelectLockingStep;
+    public function offset(int $offset): SelectLockingStep;
 }

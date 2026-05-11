@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateRoleStmt, DefElem, Integer, Node, PBString, RoleSpec, RoleSpecType, RoleStmtType};
+use Flow\PostgreSql\Protobuf\AST\CreateRoleStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
+use Flow\PostgreSql\Protobuf\AST\RoleStmtType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRoleOptionsStep
@@ -20,99 +27,94 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
         private string $name,
         private array $options = [],
         private array $inRoles = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateRoleOptionsStep
+    public static function create(string $name): CreateRoleOptionsStep
     {
         return new self($name);
     }
 
-    public function bypassRls() : CreateRoleOptionsStep
+    public function bypassRls(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::BYPASSRLS->value, true);
     }
 
-    public function connectionLimit(int $limit) : CreateRoleOptionsStep
+    public function connectionLimit(int $limit): CreateRoleOptionsStep
     {
         return $this->withIntegerOption('connectionlimit', $limit);
     }
 
-    public function createDb() : CreateRoleOptionsStep
+    public function createDb(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::CREATEDB->value, true);
     }
 
-    public function createRole() : CreateRoleOptionsStep
+    public function createRole(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::CREATEROLE->value, true);
     }
 
-    public function inherit() : CreateRoleOptionsStep
+    public function inherit(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::INHERIT->value, true);
     }
 
-    public function inRole(string ...$roles) : CreateRoleOptionsStep
+    public function inRole(string ...$roles): CreateRoleOptionsStep
     {
-        return new self(
-            $this->name,
-            $this->options,
-            \array_values($roles),
-        );
+        return new self($this->name, $this->options, \array_values($roles));
     }
 
-    public function login() : CreateRoleOptionsStep
+    public function login(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::LOGIN->value, true);
     }
 
-    public function noBypassRls() : CreateRoleOptionsStep
+    public function noBypassRls(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::BYPASSRLS->value, false);
     }
 
-    public function noCreateDb() : CreateRoleOptionsStep
+    public function noCreateDb(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::CREATEDB->value, false);
     }
 
-    public function noCreateRole() : CreateRoleOptionsStep
+    public function noCreateRole(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::CREATEROLE->value, false);
     }
 
-    public function noInherit() : CreateRoleOptionsStep
+    public function noInherit(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::INHERIT->value, false);
     }
 
-    public function noLogin() : CreateRoleOptionsStep
+    public function noLogin(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::LOGIN->value, false);
     }
 
-    public function noReplication() : CreateRoleOptionsStep
+    public function noReplication(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::REPLICATION->value, false);
     }
 
-    public function noSuperuser() : CreateRoleOptionsStep
+    public function noSuperuser(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::SUPERUSER->value, false);
     }
 
-    public function replication() : CreateRoleOptionsStep
+    public function replication(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::REPLICATION->value, true);
     }
 
-    public function superuser() : CreateRoleOptionsStep
+    public function superuser(): CreateRoleOptionsStep
     {
         return $this->withBooleanOption(RoleOption::SUPERUSER->value, true);
     }
 
-    public function toAst() : CreateRoleStmt
+    public function toAst(): CreateRoleStmt
     {
         $stmt = new CreateRoleStmt();
         $stmt->setStmtType(RoleStmtType::ROLESTMT_ROLE);
@@ -167,17 +169,17 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
         return $stmt;
     }
 
-    public function validUntil(string $timestamp) : CreateRoleOptionsStep
+    public function validUntil(string $timestamp): CreateRoleOptionsStep
     {
         return $this->withStringOption('validUntil', $timestamp);
     }
 
-    public function withPassword(string $password) : CreateRoleOptionsStep
+    public function withPassword(#[\SensitiveParameter] string $password): CreateRoleOptionsStep
     {
         return $this->withStringOption('password', $password);
     }
 
-    private function withBooleanOption(string $name, bool $value) : self
+    private function withBooleanOption(string $name, bool $value): self
     {
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
@@ -189,7 +191,7 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
         return $this->withOption($name, $argNode);
     }
 
-    private function withIntegerOption(string $name, int $value) : self
+    private function withIntegerOption(string $name, int $value): self
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -201,19 +203,15 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $newOptions,
-            $this->inRoles,
-        );
+        return new self($this->name, $newOptions, $this->inRoles);
     }
 
-    private function withStringOption(string $name, string $value) : self
+    private function withStringOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);

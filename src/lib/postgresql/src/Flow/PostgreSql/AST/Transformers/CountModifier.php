@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier};
-use Flow\PostgreSql\Protobuf\AST\{
-    Alias,
-    ColumnRef,
-    FuncCall,
-    Node,
-    PBString,
-    RangeSubselect,
-    ResTarget,
-    SelectStmt
-};
+use Flow\PostgreSql\AST\ModificationContext;
+use Flow\PostgreSql\AST\NodeModifier;
 use Flow\PostgreSql\Protobuf\AST\A_Star;
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 
 /**
  * Transforms SELECT queries into COUNT queries for pagination.
@@ -26,13 +25,13 @@ use Flow\PostgreSql\Protobuf\AST\A_Star;
  */
 final readonly class CountModifier implements NodeModifier
 {
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [SelectStmt::class];
     }
 
     /** @phpstan-ignore return.unusedType (interface requires full signature) */
-    public function modify(object $node, ModificationContext $context) : int|object|null
+    public function modify(object $node, ModificationContext $context): int|object|null
     {
         /** @var SelectStmt $node */
         if (!$context->isTopLevel()) {
@@ -45,7 +44,7 @@ final readonly class CountModifier implements NodeModifier
         return $this->wrapWithCount($node);
     }
 
-    private function createCountFunctionCall() : Node
+    private function createCountFunctionCall(): Node
     {
         $aStar = new A_Star();
         $aStarNode = new Node();
@@ -73,18 +72,18 @@ final readonly class CountModifier implements NodeModifier
         return $funcCallNode;
     }
 
-    private function removeLimitOffset(SelectStmt $stmt) : void
+    private function removeLimitOffset(SelectStmt $stmt): void
     {
         $stmt->clearLimitCount();
         $stmt->clearLimitOffset();
     }
 
-    private function removeOrderBy(SelectStmt $stmt) : void
+    private function removeOrderBy(SelectStmt $stmt): void
     {
         $stmt->setSortClause([]);
     }
 
-    private function wrapWithCount(SelectStmt $stmt) : Node
+    private function wrapWithCount(SelectStmt $stmt): Node
     {
         $innerNode = new Node();
         $innerNode->setSelectStmt($stmt);

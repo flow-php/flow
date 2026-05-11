@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{type_array, type_integer, type_list, type_map, type_null, type_string, type_structure};
-use Flow\Types\Type\{ArrayContentDetector, Types};
+use Flow\Types\Type\ArrayContentDetector;
+use Flow\Types\Type\Types;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 final class ArrayContentDetectorTest extends TestCase
 {
-    public static function provide_list_data() : \Generator
+    public static function provide_list_data(): \Generator
     {
         yield 'simple list' => [
             [
@@ -87,7 +95,7 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
-    public static function provide_map_data() : \Generator
+    public static function provide_map_data(): \Generator
     {
         yield 'string string' => [
             [
@@ -152,7 +160,7 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
-    public static function provide_structure_data() : \Generator
+    public static function provide_structure_data(): \Generator
     {
         yield 'simple list' => [
             [
@@ -242,29 +250,29 @@ final class ArrayContentDetectorTest extends TestCase
     }
 
     #[DataProvider('provide_list_data')]
-    public function test_list_data(array $keys, array $values, bool $isList, bool $expected) : void
+    public function test_list_data(array $keys, array $values, bool $isList, bool $expected): void
     {
-        self::assertSame(
+        static::assertSame(
             $expected,
-            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isList()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isList(),
         );
     }
 
     #[DataProvider('provide_map_data')]
-    public function test_map_data(array $keys, array $values, bool $isList, bool $expected) : void
+    public function test_map_data(array $keys, array $values, bool $isList, bool $expected): void
     {
-        self::assertSame(
+        static::assertSame(
             $expected,
-            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isMap()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isMap(),
         );
     }
 
     #[DataProvider('provide_structure_data')]
-    public function test_structure_data(array $keys, array $values, bool $isList, bool $expected) : void
+    public function test_structure_data(array $keys, array $values, bool $isList, bool $expected): void
     {
-        self::assertSame(
+        static::assertSame(
             $expected,
-            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isStructure()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isStructure(),
         );
     }
 }

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Operations;
 
-use Flow\Filesystem\{FilesystemTable, Path};
+use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Path;
 
 final readonly class Copy
 {
     public function __construct(
         private FilesystemTable $table,
         private OperationOptions $options = new OperationOptions(),
-    ) {
-    }
+    ) {}
 
-    public function execute(Path $from, Path $to) : bool
+    public function execute(Path $from, Path $to): bool
     {
         $source = $this->table->for($from)->readFrom($from);
         $dest = $this->table->for($to)->writeTo($to);

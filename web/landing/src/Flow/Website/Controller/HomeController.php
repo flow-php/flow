@@ -13,11 +13,10 @@ final class HomeController extends AbstractController
 {
     public function __construct(
         private readonly Examples $examples,
-    ) {
-    }
+    ) {}
 
     #[Route('/', name: 'home', options: ['sitemap' => true])]
-    public function home() : Response
+    public function home(): Response
     {
         return $this->render('main/index.html.twig', [
             'topicsNavigation' => $this->examples->topicsNavigation(),
@@ -25,7 +24,7 @@ final class HomeController extends AbstractController
     }
 
     #[Route('/sponsor', name: 'sponsor', options: ['sitemap' => false])]
-    public function sponsor() : Response
+    public function sponsor(): Response
     {
         return $this->render('main/sponsor.html.twig', []);
     }

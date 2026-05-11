@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\PostgreSQL;
 
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\Context;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 
@@ -17,11 +19,9 @@ final class StaticClient
 
     private static bool $transactionActive = false;
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
-    public static function beginTransaction() : void
+    public static function beginTransaction(): void
     {
         self::$transactionActive = true;
 
@@ -36,7 +36,7 @@ final class StaticClient
         }
     }
 
-    public static function closeAll() : void
+    public static function closeAll(): void
     {
         foreach (self::$clients as $client) {
             if ($client->isConnected()) {
@@ -51,13 +51,22 @@ final class StaticClient
         self::$clients = [];
     }
 
-    public static function connect(ConnectionParameters $params, ?ValueConverters $converters = null, ?Context $context = null) : Client
-    {
+    public static function connect(
+        ConnectionParameters $params,
+        ?ValueConverters $converters = null,
+        ?Context $context = null,
+    ): Client {
         if (!self::$enabled) {
             return PgSqlClient::connect($params, $converters, $context);
         }
 
-        $key = \sha1(\sprintf('%s:%d:%s:%s', $params->host(), $params->port(), $params->database(), $params->user() ?? ''));
+        $key = \sha1(\sprintf(
+            '%s:%d:%s:%s',
+            $params->host(),
+            $params->port(),
+            $params->database(),
+            $params->user() ?? '',
+        ));
 
         if (!\array_key_exists($key, self::$clients) || !self::$clients[$key]->isConnected()) {
             self::$clients[$key] = PgSqlClient::connect($params, $converters, $context);
@@ -70,29 +79,29 @@ final class StaticClient
         return self::$clients[$key];
     }
 
-    public static function disable() : void
+    public static function disable(): void
     {
         self::$enabled = false;
     }
 
-    public static function enable() : void
+    public static function enable(): void
     {
         self::$enabled = true;
     }
 
-    public static function isEnabled() : bool
+    public static function isEnabled(): bool
     {
         return self::$enabled;
     }
 
-    public static function reset() : void
+    public static function reset(): void
     {
         self::$clients = [];
         self::$enabled = false;
         self::$transactionActive = false;
     }
 
-    public static function rollBack() : void
+    public static function rollBack(): void
     {
         self::$transactionActive = false;
 

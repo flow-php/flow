@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 final class MetricExportIntegrationTest extends IntegrationTestCase
 {
     #[DataProvider('transportProvider')]
-    public function test_exports_counter(TransportConfiguration $config) : void
+    public function test_exports_counter(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -22,15 +22,15 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received counter metric'
+            'Collector should have received counter metric',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_counter_with_attributes(TransportConfiguration $config) : void
+    public function test_exports_counter_with_attributes(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -44,15 +44,15 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received counter with attributes'
+            'Collector should have received counter with attributes',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_gauge(TransportConfiguration $config) : void
+    public function test_exports_gauge(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -63,15 +63,15 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received gauge metric'
+            'Collector should have received gauge metric',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_histogram(TransportConfiguration $config) : void
+    public function test_exports_histogram(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -82,38 +82,34 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received histogram metric'
+            'Collector should have received histogram metric',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_metric_with_description(TransportConfiguration $config) : void
+    public function test_exports_metric_with_description(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
         $telemetry = $this->otelContext->createTelemetry($config);
         $meter = $telemetry->meter('test-meter');
 
-        $meter->createCounter(
-            'test.described.metric',
-            'requests',
-            'Total number of HTTP requests',
-        )->add(1);
+        $meter->createCounter('test.described.metric', 'requests', 'Total number of HTTP requests')->add(1);
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received metric with description'
+            'Collector should have received metric with description',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_metric_with_resource_attributes(TransportConfiguration $config) : void
+    public function test_exports_metric_with_resource_attributes(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -127,15 +123,15 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received metric with resource'
+            'Collector should have received metric with resource',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_multiple_metrics(TransportConfiguration $config) : void
+    public function test_exports_multiple_metrics(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -148,15 +144,15 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThanOrEqual(
+        static::assertGreaterThanOrEqual(
             $metricsBefore + 3,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore + 2),
-            'Collector should have received 3 metrics'
+            'Collector should have received 3 metrics',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_up_down_counter(TransportConfiguration $config) : void
+    public function test_exports_up_down_counter(TransportConfiguration $config): void
     {
         $metricsBefore = $this->otelContext->collectorMetrics()->getAcceptedMetricPoints();
 
@@ -169,10 +165,10 @@ final class MetricExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $metricsBefore,
             $this->otelContext->collectorMetrics()->waitForMetricPoints($metricsBefore),
-            'Collector should have received up-down counter metric'
+            'Collector should have received up-down counter metric',
         );
     }
 }

@@ -32,13 +32,12 @@ final readonly class LogRecordLimits
     public function __construct(
         public int $attributeCountLimit = self::DEFAULT_ATTRIBUTE_COUNT_LIMIT,
         public ?int $attributeValueLengthLimit = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Create LogRecordLimits with default values.
      */
-    public static function default() : self
+    public static function default(): self
     {
         return new self();
     }
@@ -46,11 +45,8 @@ final readonly class LogRecordLimits
     /**
      * Create LogRecordLimits with unlimited values (for development/debugging).
      */
-    public static function unlimited() : self
+    public static function unlimited(): self
     {
-        return new self(
-            attributeCountLimit: PHP_INT_MAX,
-            attributeValueLengthLimit: null,
-        );
+        return new self(attributeCountLimit: PHP_INT_MAX, attributeValueLengthLimit: null);
     }
 }

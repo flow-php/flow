@@ -4,21 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
-use function Flow\PostgreSql\DSL\{chain_catalog_provider, manual_catalog_provider, schema, schema_column_integer, schema_column_text, schema_column_varchar, schema_table};
-
-use Flow\PostgreSql\Schema\{Catalog, ChainCatalogProvider};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\ChainCatalogProvider;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\chain_catalog_provider;
+use function Flow\PostgreSql\DSL\manual_catalog_provider;
+use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_column_varchar;
+use function Flow\PostgreSql\DSL\schema_table;
 
 final class ChainCatalogProviderTest extends TestCase
 {
-    public function test_empty_chain_returns_empty_catalog() : void
+    public function test_empty_chain_returns_empty_catalog(): void
     {
         $provider = new ChainCatalogProvider();
 
-        self::assertSame([], $provider->get()->all());
+        static::assertSame([], $provider->get()->all());
     }
 
-    public function test_single_provider_returns_its_catalog_unchanged() : void
+    public function test_single_provider_returns_its_catalog_unchanged(): void
     {
         $catalog = new Catalog([schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
@@ -27,11 +34,11 @@ final class ChainCatalogProviderTest extends TestCase
         $provider = chain_catalog_provider(manual_catalog_provider($catalog));
 
         $result = $provider->get();
-        self::assertSame(['public'], $result->names());
-        self::assertTrue($result->get('public')->hasTable('users'));
+        static::assertSame(['public'], $result->names());
+        static::assertTrue($result->get('public')->hasTable('users'));
     }
 
-    public function test_three_providers_merged_in_order() : void
+    public function test_three_providers_merged_in_order(): void
     {
         $first = new Catalog([schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
@@ -50,13 +57,13 @@ final class ChainCatalogProviderTest extends TestCase
         );
 
         $result = $provider->get();
-        self::assertTrue($result->get('public')->hasTable('users'));
-        self::assertTrue($result->get('public')->hasTable('posts'));
-        self::assertCount(1, $result->get('public')->table('users')->columns);
-        self::assertSame('name', $result->get('public')->table('users')->columns[0]->name);
+        static::assertTrue($result->get('public')->hasTable('users'));
+        static::assertTrue($result->get('public')->hasTable('posts'));
+        static::assertCount(1, $result->get('public')->table('users')->columns);
+        static::assertSame('name', $result->get('public')->table('users')->columns[0]->name);
     }
 
-    public function test_two_providers_with_distinct_schemas_are_combined() : void
+    public function test_two_providers_with_distinct_schemas_are_combined(): void
     {
         $first = new Catalog([schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
@@ -65,18 +72,15 @@ final class ChainCatalogProviderTest extends TestCase
             schema_table('logs', [schema_column_integer('id', nullable: false)]),
         ])]);
 
-        $provider = chain_catalog_provider(
-            manual_catalog_provider($first),
-            manual_catalog_provider($second),
-        );
+        $provider = chain_catalog_provider(manual_catalog_provider($first), manual_catalog_provider($second));
 
         $result = $provider->get();
-        self::assertSame(['public', 'audit'], $result->names());
-        self::assertTrue($result->get('public')->hasTable('users'));
-        self::assertTrue($result->get('audit')->hasTable('logs'));
+        static::assertSame(['public', 'audit'], $result->names());
+        static::assertTrue($result->get('public')->hasTable('users'));
+        static::assertTrue($result->get('audit')->hasTable('logs'));
     }
 
-    public function test_two_providers_with_overlapping_table_later_wins() : void
+    public function test_two_providers_with_overlapping_table_later_wins(): void
     {
         $first = new Catalog([schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
@@ -88,12 +92,9 @@ final class ChainCatalogProviderTest extends TestCase
             ]),
         ])]);
 
-        $provider = chain_catalog_provider(
-            manual_catalog_provider($first),
-            manual_catalog_provider($second),
-        );
+        $provider = chain_catalog_provider(manual_catalog_provider($first), manual_catalog_provider($second));
 
         $result = $provider->get();
-        self::assertCount(2, $result->get('public')->table('users')->columns);
+        static::assertCount(2, $result->get('public')->table('users')->columns);
     }
 }

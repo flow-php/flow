@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{CaseExpr, Node};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\Protobuf\AST\CaseExpr;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 final readonly class CaseExpression implements Expression
 {
@@ -24,7 +26,7 @@ final readonly class CaseExpression implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $caseExpr = $node->getCaseExpr();
 
@@ -57,17 +59,17 @@ final readonly class CaseExpression implements Expression
         return new self($arg, $whenClauses, $elseResult);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function getArg() : ?Expression
+    public function getArg(): ?Expression
     {
         return $this->arg;
     }
 
-    public function getElseResult() : ?Expression
+    public function getElseResult(): ?Expression
     {
         return $this->elseResult;
     }
@@ -75,12 +77,12 @@ final readonly class CaseExpression implements Expression
     /**
      * @return non-empty-list<WhenClause>
      */
-    public function getWhenClauses() : array
+    public function getWhenClauses(): array
     {
         return $this->whenClauses;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $caseExpr = new CaseExpr();
 
@@ -106,12 +108,12 @@ final readonly class CaseExpression implements Expression
         return $node;
     }
 
-    public function withElse(Expression $elseResult) : self
+    public function withElse(Expression $elseResult): self
     {
         return new self($this->arg, $this->whenClauses, $elseResult);
     }
 
-    public function withWhen(WhenClause ...$whenClauses) : self
+    public function withWhen(WhenClause ...$whenClauses): self
     {
         $clauses = \array_values($whenClauses);
 

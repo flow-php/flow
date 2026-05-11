@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_list};
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_list;
 
 final readonly class ParametersModel
 {
@@ -13,22 +14,19 @@ final readonly class ParametersModel
      */
     public function __construct(
         public array $arguments,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<array<string, mixed>> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         type_list(type_array())->assert($data);
 
-        return new self(
-            array_map(static fn (array $argument) => ParameterModel::fromArray($argument), $data),
-        );
+        return new self(array_map(static fn(array $argument) => ParameterModel::fromArray($argument), $data));
     }
 
-    public static function fromFunctionReflection(\ReflectionFunction $reflectionFunction) : self
+    public static function fromFunctionReflection(\ReflectionFunction $reflectionFunction): self
     {
         $arguments = [];
 
@@ -39,7 +37,7 @@ final readonly class ParametersModel
         return new self($arguments);
     }
 
-    public static function fromMethodReflection(\ReflectionMethod $reflectionMethod) : self
+    public static function fromMethodReflection(\ReflectionMethod $reflectionMethod): self
     {
         $arguments = [];
 
@@ -53,8 +51,8 @@ final readonly class ParametersModel
     /**
      * @return array<array<string, mixed>>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
-        return array_map(static fn (ParameterModel $argument) => $argument->normalize(), $this->arguments);
+        return array_map(static fn(ParameterModel $argument) => $argument->normalize(), $this->arguments);
     }
 }

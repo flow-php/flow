@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class FlowFilesystemBundleTest extends TestCase
 {
-    public function test_build_registers_as_filesystem_factory_attribute_for_autoconfiguration() : void
+    public function test_build_registers_as_filesystem_factory_attribute_for_autoconfiguration(): void
     {
         $container = new ContainerBuilder();
         (new FlowFilesystemBundle())->build($container);
@@ -23,25 +23,27 @@ final class FlowFilesystemBundleTest extends TestCase
 
         $container->compile();
 
-        self::assertSame(
+        static::assertSame(
             [['type' => 'file']],
-            $container->getDefinition(AutoconfiguredStubFilesystemFactory::class)->getTag(RegisterFilesystemFactoriesPass::TAG),
+            $container
+                ->getDefinition(AutoconfiguredStubFilesystemFactory::class)
+                ->getTag(RegisterFilesystemFactoriesPass::TAG),
         );
     }
 
-    public function test_bundle_alias_resolves_to_flow_filesystem() : void
+    public function test_bundle_alias_resolves_to_flow_filesystem(): void
     {
         $extension = (new FlowFilesystemBundle())->getContainerExtension();
 
-        self::assertNotNull($extension);
-        self::assertSame('flow_filesystem', $extension->getAlias());
+        static::assertNotNull($extension);
+        static::assertSame('flow_filesystem', $extension->getAlias());
     }
 
-    public function test_load_extension_compiles_with_empty_config() : void
+    public function test_load_extension_compiles_with_empty_config(): void
     {
         $bundle = new FlowFilesystemBundle();
         $extension = $bundle->getContainerExtension();
-        self::assertNotNull($extension);
+        static::assertNotNull($extension);
 
         $container = new ContainerBuilder();
         $container->setParameter('kernel.debug', false);
@@ -59,6 +61,6 @@ final class FlowFilesystemBundleTest extends TestCase
         ]);
         $container->compile();
 
-        self::assertTrue($container->hasExtension('flow_filesystem'));
+        static::assertTrue($container->hasExtension('flow_filesystem'));
     }
 }

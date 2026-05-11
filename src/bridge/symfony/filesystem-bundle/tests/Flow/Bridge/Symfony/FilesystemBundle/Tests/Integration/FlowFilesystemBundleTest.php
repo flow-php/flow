@@ -9,10 +9,10 @@ use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
 
 final class FlowFilesystemBundleTest extends KernelTestCase
 {
-    public function test_kernel_boots_with_filesystem_bundle_registered() : void
+    public function test_kernel_boots_with_filesystem_bundle_registered(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_filesystem', [
                     'fstabs' => [
                         'default' => [
@@ -25,10 +25,10 @@ final class FlowFilesystemBundleTest extends KernelTestCase
             },
         ]);
 
-        self::assertTrue($this->getContainer()->hasParameter('kernel.secret'));
+        static::assertTrue($this->getContainer()->hasParameter('kernel.secret'));
 
         $bundles = $kernel->getBundles();
-        self::assertArrayHasKey('FlowFilesystemBundle', $bundles);
-        self::assertInstanceOf(FlowFilesystemBundle::class, $bundles['FlowFilesystemBundle']);
+        static::assertArrayHasKey('FlowFilesystemBundle', $bundles);
+        static::assertInstanceOf(FlowFilesystemBundle::class, $bundles['FlowFilesystemBundle']);
     }
 }

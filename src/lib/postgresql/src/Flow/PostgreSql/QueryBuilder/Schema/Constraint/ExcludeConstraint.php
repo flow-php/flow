@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, IndexElem, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
-use Flow\PostgreSql\QueryBuilder\Expression\{Column, Expression};
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 final readonly class ExcludeConstraint implements TableConstraint
 {
@@ -21,15 +26,14 @@ final readonly class ExcludeConstraint implements TableConstraint
         private ?Condition $whereCondition = null,
         private bool $deferrable = false,
         private bool $initiallyDeferred = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $accessMethod = 'gist') : self
+    public static function create(string $accessMethod = 'gist'): self
     {
         return new self($accessMethod);
     }
 
-    public function deferrable(bool $initiallyDeferred = false) : self
+    public function deferrable(bool $initiallyDeferred = false): self
     {
         return new self(
             $this->accessMethod,
@@ -41,7 +45,7 @@ final readonly class ExcludeConstraint implements TableConstraint
         );
     }
 
-    public function element(Expression $element, string $operator) : self
+    public function element(Expression $element, string $operator): self
     {
         return new self(
             $this->accessMethod,
@@ -53,7 +57,7 @@ final readonly class ExcludeConstraint implements TableConstraint
         );
     }
 
-    public function name(string $name) : self
+    public function name(string $name): self
     {
         return new self(
             $this->accessMethod,
@@ -65,7 +69,7 @@ final readonly class ExcludeConstraint implements TableConstraint
         );
     }
 
-    public function toAst() : Constraint
+    public function toAst(): Constraint
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_EXCLUSION);
@@ -109,7 +113,7 @@ final readonly class ExcludeConstraint implements TableConstraint
         return $constraint;
     }
 
-    public function where(Condition $condition) : self
+    public function where(Condition $condition): self
     {
         return new self(
             $this->accessMethod,
@@ -121,7 +125,7 @@ final readonly class ExcludeConstraint implements TableConstraint
         );
     }
 
-    private function createIndexElem(Expression $expression) : IndexElem
+    private function createIndexElem(Expression $expression): IndexElem
     {
         $indexElem = new IndexElem();
 
@@ -136,7 +140,7 @@ final readonly class ExcludeConstraint implements TableConstraint
         return $indexElem;
     }
 
-    private function createOperatorNode(string $operator) : Node
+    private function createOperatorNode(string $operator): Node
     {
         $operatorList = new PBList();
         $operatorItems = [];

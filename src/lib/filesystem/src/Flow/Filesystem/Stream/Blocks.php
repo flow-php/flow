@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Stream;
 
 use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\Stream\Block\{BlockVoidLifecycle, NativeLocalFileBlocksFactory};
+use Flow\Filesystem\Stream\Block\BlockVoidLifecycle;
+use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 
 /**
  * Blocks is a collection of blocks that are filled with data.
@@ -43,12 +44,12 @@ final class Blocks
     /**
      * @return array<Block>
      */
-    public function all() : array
+    public function all(): array
     {
         return \array_merge($this->blocks, [$this->currentBlock]);
     }
 
-    public function append(string $data) : void
+    public function append(string $data): void
     {
         /**
          * @phpstan-ignore-next-line
@@ -70,7 +71,7 @@ final class Blocks
     /**
      * @return Block - current block that might not be filled yet
      */
-    public function block() : Block
+    public function block(): Block
     {
         if ($this->currentBlock->spaceLeft() === 0) {
             $this->blocks[] = $this->currentBlock;
@@ -81,12 +82,12 @@ final class Blocks
         return $this->currentBlock;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->blocks) + 1;
     }
 
-    public function done() : void
+    public function done(): void
     {
         if ($this->currentBlock->size() === 0) {
             return;
@@ -99,10 +100,12 @@ final class Blocks
     /**
      * @param resource $resource
      */
-    public function fromResource($resource) : void
+    public function fromResource($resource): void
     {
         if (!\is_resource($resource)) {
-            throw new InvalidArgumentException('DestinationStream::fromResource expects resource type, given: ' . \gettype($resource));
+            throw new InvalidArgumentException(
+                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+            );
         }
 
         // use Block::fromStream and simply move offset after each block
@@ -119,7 +122,7 @@ final class Blocks
         }
     }
 
-    public function size() : int
+    public function size(): int
     {
         return $this->size;
     }

@@ -17,6 +17,5 @@ final readonly class Insight
         public string $description,
         public PlanNode $node,
         public array $metrics = [],
-    ) {
-    }
+    ) {}
 }

@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Flow\ETL\DataFrame;
+use Flow\ETL\DataFrameFactory;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+
 use function Flow\ETL\DSL\df;
-use Doctrine\DBAL\{Connection, DriverManager};
-use Flow\ETL\{DataFrame, DataFrameFactory, Rows, Schema};
 
 final class DbalDataFrameFactory implements DataFrameFactory
 {
@@ -35,7 +40,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
         $this->parameters = $parameters;
     }
 
-    public static function fromConnection(Connection $connection, string $query, QueryParameter ...$parameters) : self
+    public static function fromConnection(Connection $connection, string $query, QueryParameter ...$parameters): self
     {
         $factory = new self($connection->getParams(), $query, ...$parameters);
         $factory->connection = $connection;
@@ -43,7 +48,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
         return $factory;
     }
 
-    public function from(Rows $rows) : DataFrame
+    public function from(Rows $rows): DataFrame
     {
         $parameters = [];
         $types = [];
@@ -77,14 +82,14 @@ final class DbalDataFrameFactory implements DataFrameFactory
     /**
      * @param Schema $schema
      */
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    private function connection() : Connection
+    private function connection(): Connection
     {
         if ($this->connection === null) {
             /** @phpstan-ignore-next-line */

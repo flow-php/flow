@@ -18,12 +18,12 @@ final readonly class ExecutionTime
         }
     }
 
-    public function duration() : \DateInterval
+    public function duration(): \DateInterval
     {
         return $this->startedAt->diff($this->finishedAt);
     }
 
-    public function inSeconds() : int
+    public function inSeconds(): int
     {
         return $this->finishedAt->getTimestamp() - $this->startedAt->getTimestamp();
     }

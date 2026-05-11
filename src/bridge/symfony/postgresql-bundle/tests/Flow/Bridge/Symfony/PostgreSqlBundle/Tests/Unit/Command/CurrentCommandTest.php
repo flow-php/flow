@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Container;
 
 final class CurrentCommandTest extends TestCase
 {
-    public function test_no_migrations_message() : void
+    public function test_no_migrations_message(): void
     {
         $container = new Container();
         $container->set('flow.postgresql.default.migrations.store', new FakeMigrationStore());
@@ -21,10 +21,10 @@ final class CurrentCommandTest extends TestCase
         $tester = new CommandTester(new CurrentCommand($container, 'default'));
         $tester->execute([]);
 
-        self::assertStringContainsString('No migrations have been executed yet.', $tester->getDisplay());
+        static::assertStringContainsString('No migrations have been executed yet.', $tester->getDisplay());
     }
 
-    public function test_shows_latest_version() : void
+    public function test_shows_latest_version(): void
     {
         $store = new FakeMigrationStore();
         $store->initialize();
@@ -37,6 +37,6 @@ final class CurrentCommandTest extends TestCase
         $tester = new CommandTester(new CurrentCommand($container, 'default'));
         $tester->execute([]);
 
-        self::assertStringContainsString('20260402100000', $tester->getDisplay());
+        static::assertStringContainsString('20260402100000', $tester->getDisplay());
     }
 }

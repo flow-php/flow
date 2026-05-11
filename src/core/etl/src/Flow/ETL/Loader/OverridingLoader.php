@@ -17,5 +17,5 @@ interface OverridingLoader
     /**
      * @return array<Loader>
      */
-    public function loaders() : array;
+    public function loaders(): array;
 }

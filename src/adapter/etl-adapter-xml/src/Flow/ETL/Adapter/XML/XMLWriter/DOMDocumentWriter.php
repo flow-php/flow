@@ -10,7 +10,7 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class DOMDocumentWriter implements XMLWriter
 {
-    public function write(XMLNode $node) : string
+    public function write(XMLNode $node): string
     {
         $dom = new \DOMDocument();
         $element = $this->createDOMElement($dom, $node);
@@ -25,7 +25,7 @@ final class DOMDocumentWriter implements XMLWriter
         return $output;
     }
 
-    private function createDOMElement(\DOMDocument $dom, XMLNode $node) : \DOMElement
+    private function createDOMElement(\DOMDocument $dom, XMLNode $node): \DOMElement
     {
         $element = $dom->createElement($node->name);
 

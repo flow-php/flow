@@ -16,6 +16,5 @@ final readonly class ListPlan
         public bool $isRequired,
         public FlatPlan|StructPlan|self|MapPlan $element,
         public ?Column $elementColumn = null,
-    ) {
-    }
+    ) {}
 }

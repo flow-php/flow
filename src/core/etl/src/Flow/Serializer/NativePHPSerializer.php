@@ -8,16 +8,14 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class NativePHPSerializer implements Serializer
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    public function serialize(object $serializable) : string
+    public function serialize(object $serializable): string
     {
         return \serialize($serializable);
     }
 
-    public function unserialize(string $serialized, array $classes) : object
+    public function unserialize(string $serialized, array $classes): object
     {
         $value = \unserialize($serialized, ['allowed_classes' => true]);
 
@@ -27,6 +25,10 @@ final class NativePHPSerializer implements Serializer
             }
         }
 
-        throw new RuntimeException(\sprintf('NativePHPSerializer::unserialize must return instance of {%s}, got: %s', \implode(', ', $classes), get_debug_type($value)));
+        throw new RuntimeException(\sprintf(
+            'NativePHPSerializer::unserialize must return instance of {%s}, got: %s',
+            \implode(', ', $classes),
+            get_debug_type($value),
+        ));
     }
 }

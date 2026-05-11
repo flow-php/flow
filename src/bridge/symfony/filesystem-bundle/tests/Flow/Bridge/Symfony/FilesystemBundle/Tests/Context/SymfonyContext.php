@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Context;
 
-use function Flow\Types\DSL\type_instance_of;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class SymfonyContext
 {
@@ -16,7 +17,7 @@ final class SymfonyContext
     /**
      * @param array{config?: callable(TestKernel): void} $options
      */
-    public function bootKernel(array $options = []) : TestKernel
+    public function bootKernel(array $options = []): TestKernel
     {
         if ($this->kernel !== null) {
             $this->shutdown();
@@ -33,7 +34,7 @@ final class SymfonyContext
         return $this->kernel;
     }
 
-    public function getContainer() : ContainerInterface
+    public function getContainer(): ContainerInterface
     {
         if ($this->kernel === null) {
             throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
@@ -42,7 +43,7 @@ final class SymfonyContext
         return $this->kernel->getContainer();
     }
 
-    public function getKernel() : TestKernel
+    public function getKernel(): TestKernel
     {
         if ($this->kernel === null) {
             throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
@@ -58,12 +59,12 @@ final class SymfonyContext
      *
      * @return T
      */
-    public function getService(string $serviceId, string $typeClass) : object
+    public function getService(string $serviceId, string $typeClass): object
     {
         return type_instance_of($typeClass)->assert($this->getContainer()->get($serviceId));
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->kernel === null) {
             return;

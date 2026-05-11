@@ -28,13 +28,12 @@ final readonly class TraceFlags implements \Stringable
 
     private function __construct(
         private int $flags,
-    ) {
-    }
+    ) {}
 
     /**
      * Create TraceFlags with default values (no flags set).
      */
-    public static function default() : self
+    public static function default(): self
     {
         return new self(0);
     }
@@ -44,7 +43,7 @@ final readonly class TraceFlags implements \Stringable
      *
      * @param array{byte: int} $data Normalized TraceFlags data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return self::fromByte($data['byte']);
     }
@@ -56,13 +55,10 @@ final readonly class TraceFlags implements \Stringable
      *
      * @throws \InvalidArgumentException if the byte is out of range
      */
-    public static function fromByte(int $byte) : self
+    public static function fromByte(int $byte): self
     {
         if ($byte < 0 || $byte > 255) {
-            throw new \InvalidArgumentException(\sprintf(
-                'TraceFlags byte must be between 0 and 255, got %d',
-                $byte
-            ));
+            throw new \InvalidArgumentException(\sprintf('TraceFlags byte must be between 0 and 255, got %d', $byte));
         }
 
         return new self($byte);
@@ -75,12 +71,12 @@ final readonly class TraceFlags implements \Stringable
      *
      * @throws \InvalidArgumentException if the hex string is invalid
      */
-    public static function fromHex(string $hex) : self
+    public static function fromHex(string $hex): self
     {
         if (\strlen($hex) !== 2) {
             throw new \InvalidArgumentException(\sprintf(
                 'TraceFlags hex string must be exactly 2 characters, got %d',
-                \strlen($hex)
+                \strlen($hex),
             ));
         }
 
@@ -94,12 +90,12 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Create TraceFlags with SAMPLED flag set.
      */
-    public static function sampled() : self
+    public static function sampled(): self
     {
         return new self(self::SAMPLED);
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toHex();
     }
@@ -107,7 +103,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Check if this TraceFlags equals another TraceFlags.
      */
-    public function equals(self $other) : bool
+    public function equals(self $other): bool
     {
         return $this->flags === $other->flags;
     }
@@ -115,7 +111,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Check if the RANDOM flag is set.
      */
-    public function isRandom() : bool
+    public function isRandom(): bool
     {
         return ($this->flags & self::RANDOM) === self::RANDOM;
     }
@@ -123,7 +119,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Check if the SAMPLED flag is set.
      */
-    public function isSampled() : bool
+    public function isSampled(): bool
     {
         return ($this->flags & self::SAMPLED) === self::SAMPLED;
     }
@@ -133,7 +129,7 @@ final readonly class TraceFlags implements \Stringable
      *
      * @return array{byte: int}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return ['byte' => $this->flags];
     }
@@ -141,7 +137,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Get the flags as a byte value.
      */
-    public function toByte() : int
+    public function toByte(): int
     {
         return $this->flags;
     }
@@ -149,7 +145,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Get the flags as a 2-character lowercase hexadecimal string.
      */
-    public function toHex() : string
+    public function toHex(): string
     {
         return \str_pad(\dechex($this->flags), 2, '0', STR_PAD_LEFT);
     }
@@ -157,7 +153,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Create a new TraceFlags with the RANDOM flag set or unset.
      */
-    public function withRandom(bool $random = true) : self
+    public function withRandom(bool $random = true): self
     {
         if ($random) {
             return new self($this->flags | self::RANDOM);
@@ -169,7 +165,7 @@ final readonly class TraceFlags implements \Stringable
     /**
      * Create a new TraceFlags with the SAMPLED flag set or unset.
      */
-    public function withSampled(bool $sampled = true) : self
+    public function withSampled(bool $sampled = true): self
     {
         if ($sampled) {
             return new self($this->flags | self::SAMPLED);

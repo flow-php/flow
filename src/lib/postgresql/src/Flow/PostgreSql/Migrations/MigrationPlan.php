@@ -11,6 +11,5 @@ final readonly class MigrationPlan
         public Migration $migration,
         public ?Rollback $rollback,
         public Direction $direction,
-    ) {
-    }
+    ) {}
 }

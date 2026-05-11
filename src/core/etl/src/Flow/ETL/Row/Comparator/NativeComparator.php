@@ -9,7 +9,7 @@ use Flow\ETL\Row\Comparator;
 
 final class NativeComparator implements Comparator
 {
-    public function equals(Row $row, Row $nextRow) : bool
+    public function equals(Row $row, Row $nextRow): bool
     {
         return $row->isEqual($nextRow);
     }

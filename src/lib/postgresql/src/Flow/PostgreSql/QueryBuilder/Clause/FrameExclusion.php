@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Clause;
 /**
  * Window frame exclusion enum.
  */
-enum FrameExclusion : string
+enum FrameExclusion: string
 {
     case CURRENT_ROW = 'CURRENT ROW';
     case GROUP = 'GROUP';

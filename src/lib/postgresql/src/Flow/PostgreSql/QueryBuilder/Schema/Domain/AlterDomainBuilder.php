@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Domain;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterDomainStmt, ConstrType, Constraint, DropBehavior, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\AlterDomainStmt;
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterDomainFinalStep
 {
@@ -21,30 +27,21 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         private ?Expression $expression = null,
         private int $behavior = DropBehavior::DROP_RESTRICT,
         private bool $missingOk = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : AlterDomainActionStep
+    public static function create(string $name): AlterDomainActionStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function addConstraint(string $name, Condition $condition) : AlterDomainFinalStep
+    public function addConstraint(string $name, Condition $condition): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'C',
-            $name,
-            $condition,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'C', $name, $condition, $this->behavior, $this->missingOk);
     }
 
-    public function cascade() : AlterDomainFinalStep
+    public function cascade(): AlterDomainFinalStep
     {
         return new self(
             $this->name,
@@ -57,46 +54,22 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         );
     }
 
-    public function dropConstraint(string $name) : AlterDomainFinalStep
+    public function dropConstraint(string $name): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'X',
-            $name,
-            null,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'X', $name, null, $this->behavior, $this->missingOk);
     }
 
-    public function dropDefault() : AlterDomainFinalStep
+    public function dropDefault(): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'T',
-            null,
-            null,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'T', null, null, $this->behavior, $this->missingOk);
     }
 
-    public function dropNotNull() : AlterDomainFinalStep
+    public function dropNotNull(): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'N',
-            null,
-            null,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'N', null, null, $this->behavior, $this->missingOk);
     }
 
-    public function ifExists() : AlterDomainFinalStep
+    public function ifExists(): AlterDomainFinalStep
     {
         return new self(
             $this->name,
@@ -109,7 +82,7 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         );
     }
 
-    public function restrict() : AlterDomainFinalStep
+    public function restrict(): AlterDomainFinalStep
     {
         return new self(
             $this->name,
@@ -122,33 +95,17 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         );
     }
 
-    public function setDefault(Expression $expression) : AlterDomainFinalStep
+    public function setDefault(Expression $expression): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'T',
-            null,
-            $expression,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'T', null, $expression, $this->behavior, $this->missingOk);
     }
 
-    public function setNotNull() : AlterDomainFinalStep
+    public function setNotNull(): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'O',
-            null,
-            null,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'O', null, null, $this->behavior, $this->missingOk);
     }
 
-    public function toAst() : AlterDomainStmt
+    public function toAst(): AlterDomainStmt
     {
         $stmt = new AlterDomainStmt();
         $stmt->setSubtype($this->subtype);
@@ -197,16 +154,8 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         return $stmt;
     }
 
-    public function validateConstraint(string $name) : AlterDomainFinalStep
+    public function validateConstraint(string $name): AlterDomainFinalStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            'V',
-            $name,
-            null,
-            $this->behavior,
-            $this->missingOk,
-        );
+        return new self($this->name, $this->schema, 'V', $name, null, $this->behavior, $this->missingOk);
     }
 }

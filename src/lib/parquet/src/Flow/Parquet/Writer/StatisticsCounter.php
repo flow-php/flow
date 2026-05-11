@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer;
 
-use function Flow\Parquet\array_flatten;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\Dremel\Statistics\Comparator;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Statistics;
+
+use function Flow\Parquet\array_flatten;
 
 final class StatisticsCounter
 {
@@ -27,8 +29,9 @@ final class StatisticsCounter
 
     private int $valuesCount;
 
-    public function __construct(private readonly FlatColumn $column)
-    {
+    public function __construct(
+        private readonly FlatColumn $column,
+    ) {
         $this->nullCount = 0;
         $this->valuesCount = 0;
         $this->min = null;
@@ -40,7 +43,7 @@ final class StatisticsCounter
     /**
      * @param null|array<null|bool|float|int|object|string>|bool|float|int|object|string $value
      */
-    public function add(string|int|float|array|bool|object|null $value) : void
+    public function add(string|int|float|array|bool|object|null $value): void
     {
         if (\is_array($value)) {
             $value = array_flatten($value);
@@ -61,7 +64,6 @@ final class StatisticsCounter
 
         if (\is_array($value)) {
             foreach ($value as $val) {
-
                 if ($this->comparator->isLessThan($val, $this->min)) {
                     $this->min = $val;
                 }
@@ -84,7 +86,7 @@ final class StatisticsCounter
     /**
      * @param array<null|bool|float|int|object|string> $values
      */
-    public function addBatch(array $values) : void
+    public function addBatch(array $values): void
     {
         $this->valuesCount += \count($values);
 
@@ -105,7 +107,7 @@ final class StatisticsCounter
         }
     }
 
-    public function addNulls(int $count) : void
+    public function addNulls(int $count): void
     {
         if ($count < 0) {
             throw new InvalidArgumentException('Null count cannot be negative.');
@@ -115,12 +117,12 @@ final class StatisticsCounter
         $this->valuesCount += $count;
     }
 
-    public function max() : mixed
+    public function max(): mixed
     {
         return $this->max;
     }
 
-    public function merge(self $statistics) : self
+    public function merge(self $statistics): self
     {
         if ($this->column !== $statistics->column) {
             throw new InvalidArgumentException('Cannot merge statistics for different columns.');
@@ -130,28 +132,32 @@ final class StatisticsCounter
 
         $newStatistics->nullCount = $this->nullCount + $statistics->nullCount;
         $newStatistics->valuesCount = $this->valuesCount + $statistics->valuesCount;
-        $newStatistics->min = $this->comparator->isLessThan($this->min, $statistics->min) ? $this->min : $statistics->min;
-        $newStatistics->max = $this->comparator->isGreaterThan($this->max, $statistics->max) ? $this->max : $statistics->max;
+        $newStatistics->min = $this->comparator->isLessThan($this->min, $statistics->min)
+            ? $this->min
+            : $statistics->min;
+        $newStatistics->max = $this->comparator->isGreaterThan($this->max, $statistics->max)
+            ? $this->max
+            : $statistics->max;
 
         return $newStatistics;
     }
 
-    public function min() : mixed
+    public function min(): mixed
     {
         return $this->min;
     }
 
-    public function notNullCount() : int
+    public function notNullCount(): int
     {
         return $this->valuesCount - $this->nullCount;
     }
 
-    public function nullCount() : int
+    public function nullCount(): int
     {
         return $this->nullCount;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->nullCount = 0;
         $this->valuesCount = 0;
@@ -159,7 +165,7 @@ final class StatisticsCounter
         $this->max = null;
     }
 
-    public function toStatistics() : Statistics
+    public function toStatistics(): Statistics
     {
         $minBuffer = '';
         $maxBuffer = '';
@@ -171,7 +177,10 @@ final class StatisticsCounter
             if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($min)) {
                 (new BinaryBufferWriter($minBuffer))->append($min);
             } else {
-                (new PlainValuesPacker(new BinaryBufferWriter($minBuffer), $this->byteOrder))->packValues($this->column, [$min]);
+                (new PlainValuesPacker(new BinaryBufferWriter($minBuffer), $this->byteOrder))->packValues(
+                    $this->column,
+                    [$min],
+                );
             }
         }
 
@@ -179,7 +188,10 @@ final class StatisticsCounter
             if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($max)) {
                 (new BinaryBufferWriter($maxBuffer))->append($max);
             } else {
-                (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->byteOrder))->packValues($this->column, [$max]);
+                (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->byteOrder))->packValues(
+                    $this->column,
+                    [$max],
+                );
             }
         }
 
@@ -195,7 +207,7 @@ final class StatisticsCounter
         );
     }
 
-    public function valuesCount() : int
+    public function valuesCount(): int
     {
         return $this->valuesCount;
     }

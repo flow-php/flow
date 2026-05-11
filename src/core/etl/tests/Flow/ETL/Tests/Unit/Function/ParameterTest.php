@@ -4,20 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, lit, ref, row, str_entry};
-use function Flow\Types\DSL\{type_boolean, type_integer, type_null, type_string};
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Type\Native\{BooleanType, IntegerType, StringType};
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
 
 final class ParameterTest extends FlowTestCase
 {
-    public static function boolean_data_provider() : \Generator
+    public static function boolean_data_provider(): \Generator
     {
         yield 'string true' => ['true', true];
         yield 'string false' => ['false', true];
@@ -36,7 +47,7 @@ final class ParameterTest extends FlowTestCase
         yield 'null non-scalar' => [null, false];
     }
 
-    public static function float_data_provider() : \Generator
+    public static function float_data_provider(): \Generator
     {
         yield 'valid float' => [3.14, 3.14];
         yield 'zero float' => [0.0, 0.0];
@@ -48,7 +59,7 @@ final class ParameterTest extends FlowTestCase
         yield 'null not float' => [null, null];
     }
 
-    public static function int_data_provider() : \Generator
+    public static function int_data_provider(): \Generator
     {
         yield 'valid integer' => [42, null, 42];
         yield 'zero integer' => [0, null, 0];
@@ -60,7 +71,7 @@ final class ParameterTest extends FlowTestCase
         yield 'float not integer without default' => [3.14, null, null];
     }
 
-    public static function number_data_provider() : \Generator
+    public static function number_data_provider(): \Generator
     {
         yield 'integer' => [42, null, 42];
         yield 'float' => [3.14, null, 3.14];
@@ -79,7 +90,7 @@ final class ParameterTest extends FlowTestCase
         yield 'string without default' => ['not numeric', null, null];
     }
 
-    public static function string_data_provider() : \Generator
+    public static function string_data_provider(): \Generator
     {
         yield 'valid string' => ['hello', null, 'hello'];
         yield 'empty string' => ['', null, ''];
@@ -92,305 +103,318 @@ final class ParameterTest extends FlowTestCase
         yield 'integer without default' => [42, null, null];
     }
 
-    public function test_as_array_with_empty_array() : void
+    public function test_as_array_with_empty_array(): void
     {
         $parameter = new Parameter(lit([]));
-        self::assertSame([], $parameter->asArray(row(), flow_context()));
+        static::assertSame([], $parameter->asArray(row(), flow_context()));
     }
 
-    public function test_as_array_with_non_array() : void
+    public function test_as_array_with_non_array(): void
     {
         $parameter = new Parameter(lit('not an array'));
-        self::assertNull($parameter->asArray(row(), flow_context()));
+        static::assertNull($parameter->asArray(row(), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        self::assertNull($parameter->asArray(row(), flow_context()));
+        static::assertNull($parameter->asArray(row(), flow_context()));
 
         $parameter = new Parameter(lit(true));
-        self::assertNull($parameter->asArray(row(), flow_context()));
+        static::assertNull($parameter->asArray(row(), flow_context()));
     }
 
-    public function test_as_array_with_valid_array() : void
+    public function test_as_array_with_valid_array(): void
     {
         $parameter = new Parameter(lit(['key' => 'value', 'number' => 42]));
         $result = $parameter->asArray(row(), flow_context());
 
-        self::assertSame(['key' => 'value', 'number' => 42], $result);
+        static::assertSame(['key' => 'value', 'number' => 42], $result);
     }
 
     #[DataProvider('boolean_data_provider')]
-    public function test_as_boolean(mixed $input, bool $expected) : void
+    public function test_as_boolean(mixed $input, bool $expected): void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asBoolean(row(), flow_context()));
+        static::assertSame($expected, $parameter->asBoolean(row(), flow_context()));
     }
 
-    public function test_as_entry_with_literal() : void
+    public function test_as_entry_with_literal(): void
     {
         $parameter = new Parameter(lit('literal_value'));
-        self::assertNull($parameter->asEntry(row()));
+        static::assertNull($parameter->asEntry(row()));
     }
 
-    public function test_as_entry_with_missing_reference() : void
+    public function test_as_entry_with_missing_reference(): void
     {
         $parameter = new Parameter(ref('missing_column'));
         $row = row(str_entry('other_column', 'test_value'));
 
-        self::assertNull($parameter->asEntry($row));
+        static::assertNull($parameter->asEntry($row));
     }
 
-    public function test_as_entry_with_reference() : void
+    public function test_as_entry_with_reference(): void
     {
         $parameter = new Parameter(ref('test_column'));
         $row = row(str_entry('test_column', 'test_value'));
 
         $entry = $parameter->asEntry($row);
-        self::assertNotNull($entry);
-        self::assertSame('test_value', $entry->value());
+        static::assertNotNull($entry);
+        static::assertSame('test_value', $entry->value());
     }
 
-    public function test_as_enum_with_invalid_type() : void
+    public function test_as_enum_with_invalid_type(): void
     {
         $parameter = new Parameter(lit('not an enum'));
-        self::assertNull($parameter->asEnum(row(), flow_context(), SQLParametersStyle::class));
+        static::assertNull($parameter->asEnum(row(), flow_context(), SQLParametersStyle::class));
 
         $parameter = new Parameter(lit(42));
-        self::assertNull($parameter->asEnum(row(), flow_context(), SQLParametersStyle::class));
+        static::assertNull($parameter->asEnum(row(), flow_context(), SQLParametersStyle::class));
     }
 
-    public function test_as_enum_with_valid_enum() : void
+    public function test_as_enum_with_valid_enum(): void
     {
         $parameter = new Parameter(lit(SQLParametersStyle::NAMED));
         $result = $parameter->asEnum(row(), flow_context(), SQLParametersStyle::class);
 
-        self::assertSame(SQLParametersStyle::NAMED, $result);
+        static::assertSame(SQLParametersStyle::NAMED, $result);
     }
 
-    public function test_as_enum_with_wrong_enum_class() : void
+    public function test_as_enum_with_wrong_enum_class(): void
     {
         $parameter = new Parameter(lit(SQLParametersStyle::NAMED));
-        self::assertNull($parameter->asEnum(row(), flow_context(), StringStyles::class));
+        static::assertNull($parameter->asEnum(row(), flow_context(), StringStyles::class));
     }
 
     #[DataProvider('float_data_provider')]
-    public function test_as_float(mixed $input, ?float $expected) : void
+    public function test_as_float(mixed $input, ?float $expected): void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asFloat(row(), flow_context()));
+        static::assertSame($expected, $parameter->asFloat(row(), flow_context()));
     }
 
-    public function test_as_instance_of_with_invalid_type() : void
+    public function test_as_instance_of_with_invalid_type(): void
     {
         $parameter = new Parameter(lit('not an object'));
-        self::assertNull($parameter->asInstanceOf(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asInstanceOf(row(), flow_context(), \DateTimeImmutable::class));
 
         $dateTime = new \DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit($dateTime));
-        self::assertNull($parameter->asInstanceOf(row(), flow_context(), \stdClass::class));
+        static::assertNull($parameter->asInstanceOf(row(), flow_context(), \stdClass::class));
     }
 
-    public function test_as_instance_of_with_valid_object() : void
+    public function test_as_instance_of_with_valid_object(): void
     {
         $dateTime = new \DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit($dateTime));
 
         $result = $parameter->asInstanceOf(row(), flow_context(), \DateTimeImmutable::class);
-        self::assertSame($dateTime, $result);
+        static::assertSame($dateTime, $result);
 
         $result = $parameter->asInstanceOf(row(), flow_context(), \DateTimeInterface::class);
-        self::assertSame($dateTime, $result);
+        static::assertSame($dateTime, $result);
     }
 
     #[DataProvider('int_data_provider')]
-    public function test_as_int(mixed $input, ?int $default, ?int $expected) : void
+    public function test_as_int(mixed $input, ?int $default, ?int $expected): void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asInt(row(), flow_context(), $default));
+        static::assertSame($expected, $parameter->asInt(row(), flow_context(), $default));
     }
 
-    public function test_as_list_of_objects_with_empty_array() : void
+    public function test_as_list_of_objects_with_empty_array(): void
     {
         $parameter = new Parameter(lit([]));
         $result = $parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class);
 
-        self::assertSame([], $result);
+        static::assertSame([], $result);
     }
 
-    public function test_as_list_of_objects_with_mixed_types() : void
+    public function test_as_list_of_objects_with_mixed_types(): void
     {
         $date = new \DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit([$date, 'not an object']));
 
-        self::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
     }
 
-    public function test_as_list_of_objects_with_non_array() : void
+    public function test_as_list_of_objects_with_non_array(): void
     {
         $parameter = new Parameter(lit('not an array'));
-        self::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
     }
 
-    public function test_as_list_of_objects_with_valid_array() : void
+    public function test_as_list_of_objects_with_valid_array(): void
     {
         $date1 = new \DateTimeImmutable('2023-01-01');
         $date2 = new \DateTimeImmutable('2023-01-02');
         $parameter = new Parameter(lit([$date1, $date2]));
 
         $result = $parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class);
-        self::assertSame([$date1, $date2], $result);
+        static::assertSame([$date1, $date2], $result);
     }
 
-    public function test_as_list_of_objects_with_wrong_object_type() : void
+    public function test_as_list_of_objects_with_wrong_object_type(): void
     {
         $date = new \DateTimeImmutable('2023-01-01');
         $std = new \stdClass();
         $parameter = new Parameter(lit([$date, $std]));
 
-        self::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
     }
 
     #[DataProvider('number_data_provider')]
-    public function test_as_number(mixed $input, int|float|null $default, int|float|null $expected) : void
+    public function test_as_number(mixed $input, int|float|null $default, int|float|null $expected): void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asNumber(row(), flow_context(), $default));
+        static::assertSame($expected, $parameter->asNumber(row(), flow_context(), $default));
     }
 
-    public function test_as_object_with_non_object() : void
+    public function test_as_object_with_non_object(): void
     {
         $parameter = new Parameter(lit('not an object'));
-        self::assertNull($parameter->asObject(row(), flow_context()));
+        static::assertNull($parameter->asObject(row(), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        self::assertNull($parameter->asObject(row(), flow_context()));
+        static::assertNull($parameter->asObject(row(), flow_context()));
 
         $parameter = new Parameter(lit([]));
-        self::assertNull($parameter->asObject(row(), flow_context()));
+        static::assertNull($parameter->asObject(row(), flow_context()));
     }
 
-    public function test_as_object_with_valid_object() : void
+    public function test_as_object_with_valid_object(): void
     {
         $object = new \stdClass();
         $object->property = 'value';
         $parameter = new Parameter(lit($object));
 
-        self::assertSame($object, $parameter->asObject(row(), flow_context()));
+        static::assertSame($object, $parameter->asObject(row(), flow_context()));
     }
 
-    public function test_as_one_of() : void
+    public function test_as_one_of(): void
     {
         $parameter = new Parameter(ref('value'));
 
-        self::assertNull($parameter->as(row(str_entry('value', '42')), flow_context(), type_integer(), type_boolean()));
-        self::assertSame('42', $parameter->as(row(str_entry('value', '42')), flow_context(), type_string(), type_integer()));
+        static::assertNull($parameter->as(
+            row(str_entry('value', '42')),
+            flow_context(),
+            type_integer(),
+            type_boolean(),
+        ));
+        static::assertSame('42', $parameter->as(
+            row(str_entry('value', '42')),
+            flow_context(),
+            type_string(),
+            type_integer(),
+        ));
     }
 
-    public function test_as_one_of_on_scalar_result() : void
+    public function test_as_one_of_on_scalar_result(): void
     {
         $parameter = new Parameter(lit(ScalarResult::from('42')));
 
-        self::assertSame('42', $parameter->as(row(), flow_context(), type_string(), type_integer()));
-        self::assertNull($parameter->as(row(), flow_context(), type_boolean()));
+        static::assertSame('42', $parameter->as(row(), flow_context(), type_string(), type_integer()));
+        static::assertNull($parameter->as(row(), flow_context(), type_boolean()));
     }
 
-    public function test_as_scalar() : void
+    public function test_as_scalar(): void
     {
         $parameter = new Parameter(ref('value'));
 
-        self::assertNull($parameter->as(row(str_entry('value', '42')), flow_context(), type_integer()));
-        self::assertSame('42', $parameter->as(row(str_entry('value', '42')), flow_context(), type_string()));
+        static::assertNull($parameter->as(row(str_entry('value', '42')), flow_context(), type_integer()));
+        static::assertSame('42', $parameter->as(row(str_entry('value', '42')), flow_context(), type_string()));
     }
 
-    public function test_as_scalar_on_scalar_result() : void
+    public function test_as_scalar_on_scalar_result(): void
     {
         $parameter = new Parameter(lit(ScalarResult::from('test')));
 
-        self::assertNull($parameter->as(row(), flow_context(), type_integer()));
-        self::assertSame('test', $parameter->as(row(), flow_context(), type_string()));
+        static::assertNull($parameter->as(row(), flow_context(), type_integer()));
+        static::assertSame('test', $parameter->as(row(), flow_context(), type_string()));
     }
 
     #[DataProvider('string_data_provider')]
-    public function test_as_string(mixed $input, ?string $default, ?string $expected) : void
+    public function test_as_string(mixed $input, ?string $default, ?string $expected): void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asString(row(), flow_context(), $default));
+        static::assertSame($expected, $parameter->asString(row(), flow_context(), $default));
     }
 
-    public function test_as_type_when_handling_string_entry_created_from_null() : void
+    public function test_as_type_when_handling_string_entry_created_from_null(): void
     {
         $parameter = new Parameter(ref('value'));
 
-        self::assertEquals(type_null(), $parameter->asType(row(StringEntry::fromNull('value')), flow_context()));
+        static::assertEquals(type_null(), $parameter->asType(row(StringEntry::fromNull('value')), flow_context()));
     }
 
-    public function test_as_type_with_literal_value() : void
+    public function test_as_type_with_literal_value(): void
     {
         $parameter = new Parameter(lit('string_value'));
-        self::assertInstanceOf(StringType::class, $parameter->asType(row(), flow_context()));
+        static::assertInstanceOf(StringType::class, $parameter->asType(row(), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        self::assertInstanceOf(IntegerType::class, $parameter->asType(row(), flow_context()));
+        static::assertInstanceOf(IntegerType::class, $parameter->asType(row(), flow_context()));
 
         $parameter = new Parameter(lit(true));
-        self::assertInstanceOf(BooleanType::class, $parameter->asType(row(), flow_context()));
+        static::assertInstanceOf(BooleanType::class, $parameter->asType(row(), flow_context()));
     }
 
-    public function test_as_type_with_reference() : void
+    public function test_as_type_with_reference(): void
     {
         $parameter = new Parameter(ref('value'));
-        self::assertInstanceOf(StringType::class, $parameter->asType(row(str_entry('value', 'test')), flow_context()));
-        self::assertInstanceOf(IntegerType::class, $parameter->asType(row(int_entry('value', 42)), flow_context()));
+        static::assertInstanceOf(StringType::class, $parameter->asType(
+            row(str_entry('value', 'test')),
+            flow_context(),
+        ));
+        static::assertInstanceOf(IntegerType::class, $parameter->asType(row(int_entry('value', 42)), flow_context()));
     }
 
-    public function test_as_type_with_scalar_result() : void
+    public function test_as_type_with_scalar_result(): void
     {
         $parameter = new Parameter(lit(ScalarResult::from('test')));
-        self::assertInstanceOf(StringType::class, $parameter->asType(row(), flow_context()));
+        static::assertInstanceOf(StringType::class, $parameter->asType(row(), flow_context()));
 
         $parameter = new Parameter(lit(ScalarResult::from(123)));
-        self::assertInstanceOf(IntegerType::class, $parameter->asType(row(), flow_context()));
+        static::assertInstanceOf(IntegerType::class, $parameter->asType(row(), flow_context()));
     }
 
-    public function test_constructor_with_mixed_value() : void
+    public function test_constructor_with_mixed_value(): void
     {
         $parameter = new Parameter('direct_string');
-        self::assertSame('direct_string', $parameter->eval(row(), flow_context()));
+        static::assertSame('direct_string', $parameter->eval(row(), flow_context()));
 
         $parameter = new Parameter(123);
-        self::assertSame(123, $parameter->eval(row(), flow_context()));
+        static::assertSame(123, $parameter->eval(row(), flow_context()));
 
         $parameter = new Parameter(true);
-        self::assertTrue($parameter->eval(row(), flow_context()));
+        static::assertTrue($parameter->eval(row(), flow_context()));
     }
 
-    public function test_constructor_with_scalar_function() : void
+    public function test_constructor_with_scalar_function(): void
     {
         $scalarFunction = lit('test');
         $parameter = new Parameter($scalarFunction);
 
-        self::assertSame('test', $parameter->eval(row(), flow_context()));
+        static::assertSame('test', $parameter->eval(row(), flow_context()));
     }
 
-    public function test_eval_with_direct_value() : void
+    public function test_eval_with_direct_value(): void
     {
         $parameter = new Parameter(lit('direct_value'));
-        self::assertSame('direct_value', $parameter->eval(row(), flow_context()));
+        static::assertSame('direct_value', $parameter->eval(row(), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        self::assertSame(42, $parameter->eval(row(), flow_context()));
+        static::assertSame(42, $parameter->eval(row(), flow_context()));
     }
 
-    public function test_eval_with_reference() : void
+    public function test_eval_with_reference(): void
     {
         $parameter = new Parameter(ref('column'));
         $result = $parameter->eval(row(str_entry('column', 'ref_value')), flow_context());
 
-        self::assertSame('ref_value', $result);
+        static::assertSame('ref_value', $result);
     }
 
-    public function test_eval_with_scalar_result() : void
+    public function test_eval_with_scalar_result(): void
     {
         $parameter = new Parameter(lit(ScalarResult::from('test_value')));
-        self::assertSame('test_value', $parameter->eval(row(), flow_context()));
+        static::assertSame('test_value', $parameter->eval(row(), flow_context()));
     }
 }

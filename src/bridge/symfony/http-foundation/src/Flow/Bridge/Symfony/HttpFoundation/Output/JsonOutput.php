@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
-use function Flow\ETL\Adapter\JSON\to_json;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 use Flow\Filesystem\Path;
 
+use function Flow\ETL\Adapter\JSON\to_json;
+
 if (!function_exists('Flow\ETL\Adapter\JSON\to_json')) {
-    throw new \RuntimeException('Flow\ETL\Adapter\JSON\to_json function is not available. Make sure that composer require flow-php/etl-adapter-json dependency is present in your composer.json.');
+    throw new \RuntimeException(
+        'Flow\ETL\Adapter\JSON\to_json function is not available. Make sure that composer require flow-php/etl-adapter-json dependency is present in your composer.json.',
+    );
 }
 
 final readonly class JsonOutput implements Output
@@ -19,11 +22,9 @@ final readonly class JsonOutput implements Output
         private int $flags = JSON_THROW_ON_ERROR,
         private string $dateTimeFormat = \DateTimeInterface::ATOM,
         private bool $putRowsInNewLines = false,
-    ) {
+    ) {}
 
-    }
-
-    public function loader(Path $path) : Loader
+    public function loader(Path $path): Loader
     {
         return to_json($path)
             ->withFlags($this->flags)
@@ -31,7 +32,7 @@ final readonly class JsonOutput implements Output
             ->withRowsInNewLines($this->putRowsInNewLines);
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return Type::JSON;
     }

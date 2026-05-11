@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
-use function Flow\Filesystem\DSL\path_real;
 use Flow\Filesystem\Tests\OperatingSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Filesystem\DSL\path_real;
 
 final class RealpathTest extends TestCase
 {
     use OperatingSystem;
 
-    public static function windows_backslash_normalization() : \Generator
+    public static function windows_backslash_normalization(): \Generator
     {
         yield ['C:\\path\\to\\file.txt', 'C:/path/to/file.txt'];
         yield ['C:\\Windows\\System32', 'C:/Windows/System32'];
         yield ['D:\\Documents\\Projects', 'D:/Documents/Projects'];
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -30,50 +31,50 @@ final class RealpathTest extends TestCase
     }
 
     #[DataProvider('windows_backslash_normalization')]
-    public function test_windows_backslash_to_forward_slash(string $windowsPath, string $normalizedPath) : void
+    public function test_windows_backslash_to_forward_slash(string $windowsPath, string $normalizedPath): void
     {
         $path = path_real($windowsPath);
-        self::assertEquals($normalizedPath, $path->path());
+        static::assertEquals($normalizedPath, $path->path());
     }
 
-    public function test_windows_drive_letter_case_handling() : void
+    public function test_windows_drive_letter_case_handling(): void
     {
         // Test that Windows drive letters are handled consistently
         $pathLower = path_real('c:/path/file.txt');
         $pathUpper = path_real('C:/path/file.txt');
 
         // Drive letters preserve their original case
-        self::assertEquals('C:/path/file.txt', $pathUpper->path());
-        self::assertEquals('c:/path/file.txt', $pathLower->path());
+        static::assertEquals('C:/path/file.txt', $pathUpper->path());
+        static::assertEquals('c:/path/file.txt', $pathLower->path());
 
         // But both represent the same logical path on Windows
-        self::assertStringContainsString(':/path/file.txt', $pathLower->path());
-        self::assertStringContainsString(':/path/file.txt', $pathUpper->path());
+        static::assertStringContainsString(':/path/file.txt', $pathLower->path());
+        static::assertStringContainsString(':/path/file.txt', $pathUpper->path());
     }
 
-    public function test_windows_home_directory_expansion() : void
+    public function test_windows_home_directory_expansion(): void
     {
         if (!\getenv('USERPROFILE')) {
-            self::markTestSkipped('USERPROFILE environment variable not available');
+            static::markTestSkipped('USERPROFILE environment variable not available');
         }
 
         $homePath = path_real('~/test_file.txt');
 
         // Should expand to user profile directory with forward slashes
-        self::assertStringContainsString('test_file.txt', $homePath->path());
-        self::assertMatchesRegularExpression('/^[a-zA-Z]:\//', $homePath->path());
-        self::assertStringNotContainsString('~', $homePath->path());
+        static::assertStringContainsString('test_file.txt', $homePath->path());
+        static::assertMatchesRegularExpression('/^[a-zA-Z]:\//', $homePath->path());
+        static::assertStringNotContainsString('~', $homePath->path());
     }
 
-    public function test_windows_relative_to_absolute_path() : void
+    public function test_windows_relative_to_absolute_path(): void
     {
         $currentDir = \getcwd();
-        self::assertIsString($currentDir);
+        static::assertIsString($currentDir);
         $cwd = \str_replace('\\', '/', $currentDir);
 
         $relativePath = path_real('./test_file.txt');
 
-        self::assertStringStartsWith($cwd, $relativePath->path());
-        self::assertStringEndsWith('test_file.txt', $relativePath->path());
+        static::assertStringStartsWith($cwd, $relativePath->path());
+        static::assertStringEndsWith('test_file.txt', $relativePath->path());
     }
 }

@@ -5,27 +5,32 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Protobuf\AST\{FuncCall, Node, PBString, RawStmt};
-use Flow\PostgreSql\QueryBuilder\Clause\{NullsPosition, OrderBy, SortDirection};
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\QueryBuilder\Clause\NullsPosition;
+use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
+use Flow\PostgreSql\QueryBuilder\Clause\SortDirection;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
-use Flow\PostgreSql\QueryBuilder\Expression\{AggregateCall, Column, Literal};
+use Flow\PostgreSql\QueryBuilder\Expression\AggregateCall;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
 final class AggregateCallTest extends TestCase
 {
-    public function test_aggregate_count_star_deparsed_output() : void
+    public function test_aggregate_count_star_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $agg = new AggregateCall(['count'], [], true, false);
 
-        $select = SelectBuilder::create()
-            ->select($agg)
-            ->from(new Table('users'));
+        $select = SelectBuilder::create()->select($agg)->from(new Table('users'));
 
         $parser = new Parser();
         $ast = $select->toAst();
@@ -37,20 +42,18 @@ final class AggregateCallTest extends TestCase
 
         $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
 
-        self::assertSame('SELECT count(*) FROM users', $deparsed);
+        static::assertSame('SELECT count(*) FROM users', $deparsed);
     }
 
-    public function test_aggregate_sum_deparsed_output() : void
+    public function test_aggregate_sum_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $agg = new AggregateCall(['sum'], [Column::name('amount')], false, false);
 
-        $select = SelectBuilder::create()
-            ->select($agg)
-            ->from(new Table('orders'));
+        $select = SelectBuilder::create()->select($agg)->from(new Table('orders'));
 
         $parser = new Parser();
         $ast = $select->toAst();
@@ -62,20 +65,18 @@ final class AggregateCallTest extends TestCase
 
         $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
 
-        self::assertSame('SELECT sum(amount) FROM orders', $deparsed);
+        static::assertSame('SELECT sum(amount) FROM orders', $deparsed);
     }
 
-    public function test_aggregate_with_distinct_deparsed_output() : void
+    public function test_aggregate_with_distinct_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $agg = new AggregateCall(['count'], [Column::name('user_id')], false, true);
 
-        $select = SelectBuilder::create()
-            ->select($agg)
-            ->from(new Table('sessions'));
+        $select = SelectBuilder::create()->select($agg)->from(new Table('sessions'));
 
         $parser = new Parser();
         $ast = $select->toAst();
@@ -87,10 +88,10 @@ final class AggregateCallTest extends TestCase
 
         $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
 
-        self::assertSame('SELECT count(DISTINCT user_id) FROM sessions', $deparsed);
+        static::assertSame('SELECT count(DISTINCT user_id) FROM sessions', $deparsed);
     }
 
-    public function test_converts_aggregate_with_filter_to_ast() : void
+    public function test_converts_aggregate_with_filter_to_ast(): void
     {
         $arg = Column::name('amount');
         $filter = Literal::bool(true);
@@ -99,11 +100,11 @@ final class AggregateCallTest extends TestCase
         $node = $agg->toAst();
         $funcCall = $node->getFuncCall();
 
-        self::assertNotNull($funcCall);
-        self::assertNotNull($funcCall->getAggFilter());
+        static::assertNotNull($funcCall);
+        static::assertNotNull($funcCall->getAggFilter());
     }
 
-    public function test_converts_aggregate_with_order_by_to_ast() : void
+    public function test_converts_aggregate_with_order_by_to_ast(): void
     {
         $arg = Column::name('value');
         $orderBy = new OrderBy(Column::name('sort_col'));
@@ -112,25 +113,25 @@ final class AggregateCallTest extends TestCase
         $node = $agg->toAst();
         $funcCall = $node->getFuncCall();
 
-        self::assertNotNull($funcCall);
+        static::assertNotNull($funcCall);
         $orderByNodes = $funcCall->getAggOrder();
-        self::assertNotNull($orderByNodes);
-        self::assertCount(1, $orderByNodes);
+        static::assertNotNull($orderByNodes);
+        static::assertCount(1, $orderByNodes);
     }
 
-    public function test_converts_count_star_to_ast() : void
+    public function test_converts_count_star_to_ast(): void
     {
         $agg = new AggregateCall(['count'], [], true);
 
         $node = $agg->toAst();
         $funcCall = $node->getFuncCall();
 
-        self::assertNotNull($funcCall);
-        self::assertTrue($funcCall->getAggStar());
-        self::assertFalse($funcCall->getAggDistinct());
+        static::assertNotNull($funcCall);
+        static::assertTrue($funcCall->getAggStar());
+        static::assertFalse($funcCall->getAggDistinct());
     }
 
-    public function test_converts_distinct_aggregate_to_ast() : void
+    public function test_converts_distinct_aggregate_to_ast(): void
     {
         $arg = Column::name('value');
         $agg = new AggregateCall(['count'], [$arg], false, true);
@@ -138,66 +139,66 @@ final class AggregateCallTest extends TestCase
         $node = $agg->toAst();
         $funcCall = $node->getFuncCall();
 
-        self::assertNotNull($funcCall);
-        self::assertTrue($funcCall->getAggDistinct());
-        self::assertFalse($funcCall->getAggStar());
+        static::assertNotNull($funcCall);
+        static::assertTrue($funcCall->getAggDistinct());
+        static::assertFalse($funcCall->getAggStar());
     }
 
-    public function test_creates_aggregate_with_distinct() : void
+    public function test_creates_aggregate_with_distinct(): void
     {
         $arg = Column::name('value');
         $agg = new AggregateCall(['count'], [$arg], false, true);
 
-        self::assertTrue($agg->isDistinct());
+        static::assertTrue($agg->isDistinct());
     }
 
-    public function test_creates_aggregate_with_filter() : void
+    public function test_creates_aggregate_with_filter(): void
     {
         $arg = Column::name('amount');
         $filter = Column::name('status');
         $agg = new AggregateCall(['sum'], [$arg], false, false, [], $filter);
 
-        self::assertNotNull($agg->getFilter());
+        static::assertNotNull($agg->getFilter());
     }
 
-    public function test_creates_aggregate_with_order_by() : void
+    public function test_creates_aggregate_with_order_by(): void
     {
         $arg = Column::name('value');
         $orderBy = new OrderBy(Column::name('sort_col'), SortDirection::DESC);
         $agg = new AggregateCall(['array_agg'], [$arg], false, false, [$orderBy]);
 
-        self::assertCount(1, $agg->getOrderBy());
+        static::assertCount(1, $agg->getOrderBy());
     }
 
-    public function test_creates_aliased_expression() : void
+    public function test_creates_aliased_expression(): void
     {
         $agg = new AggregateCall(['count'], [], true);
         $aliased = $agg->as('total');
 
-        self::assertSame('total', $aliased->getAlias());
-        self::assertSame($agg, $aliased->getExpression());
+        static::assertSame('total', $aliased->getAlias());
+        static::assertSame($agg, $aliased->getExpression());
     }
 
-    public function test_creates_count_star_aggregate() : void
+    public function test_creates_count_star_aggregate(): void
     {
         $agg = new AggregateCall(['count'], [], true);
 
-        self::assertSame(['count'], $agg->getFuncName());
-        self::assertTrue($agg->isStar());
-        self::assertSame([], $agg->getArgs());
+        static::assertSame(['count'], $agg->getFuncName());
+        static::assertTrue($agg->isStar());
+        static::assertSame([], $agg->getArgs());
     }
 
-    public function test_creates_sum_aggregate() : void
+    public function test_creates_sum_aggregate(): void
     {
         $arg = Column::name('amount');
         $agg = new AggregateCall(['sum'], [$arg]);
 
-        self::assertSame(['sum'], $agg->getFuncName());
-        self::assertFalse($agg->isStar());
-        self::assertCount(1, $agg->getArgs());
+        static::assertSame(['sum'], $agg->getFuncName());
+        static::assertFalse($agg->isStar());
+        static::assertCount(1, $agg->getArgs());
     }
 
-    public function test_recreates_count_star_from_ast() : void
+    public function test_recreates_count_star_from_ast(): void
     {
         $stringNode = new PBString();
         $stringNode->setSval('count');
@@ -214,11 +215,11 @@ final class AggregateCallTest extends TestCase
 
         $agg = AggregateCall::fromAst($node);
 
-        self::assertSame(['count'], $agg->getFuncName());
-        self::assertTrue($agg->isStar());
+        static::assertSame(['count'], $agg->getFuncName());
+        static::assertTrue($agg->isStar());
     }
 
-    public function test_recreates_distinct_aggregate_from_ast() : void
+    public function test_recreates_distinct_aggregate_from_ast(): void
     {
         $stringNode = new PBString();
         $stringNode->setSval('count');
@@ -236,10 +237,10 @@ final class AggregateCallTest extends TestCase
 
         $agg = AggregateCall::fromAst($node);
 
-        self::assertTrue($agg->isDistinct());
+        static::assertTrue($agg->isDistinct());
     }
 
-    public function test_round_trip_conversion_with_all_features() : void
+    public function test_round_trip_conversion_with_all_features(): void
     {
         $arg = Column::name('value');
         $orderBy = new OrderBy(Column::name('sort_col'), SortDirection::DESC, NullsPosition::LAST);
@@ -249,13 +250,13 @@ final class AggregateCallTest extends TestCase
         $node = $agg->toAst();
         $restored = AggregateCall::fromAst($node);
 
-        self::assertSame($agg->getFuncName(), $restored->getFuncName());
-        self::assertTrue($restored->isDistinct());
-        self::assertCount(1, $restored->getOrderBy());
-        self::assertNotNull($restored->getFilter());
+        static::assertSame($agg->getFuncName(), $restored->getFuncName());
+        static::assertTrue($restored->isDistinct());
+        static::assertCount(1, $restored->getOrderBy());
+        static::assertNotNull($restored->getFilter());
     }
 
-    public function test_throws_exception_for_empty_function_name() : void
+    public function test_throws_exception_for_empty_function_name(): void
     {
         $this->expectException(InvalidExpressionException::class);
 
@@ -263,7 +264,7 @@ final class AggregateCallTest extends TestCase
         new AggregateCall([], []);
     }
 
-    public function test_throws_exception_for_star_with_arguments() : void
+    public function test_throws_exception_for_star_with_arguments(): void
     {
         $this->expectException(InvalidExpressionException::class);
 
@@ -271,19 +272,19 @@ final class AggregateCallTest extends TestCase
         new AggregateCall(['count'], [$arg], true);
     }
 
-    public function test_with_distinct_creates_new_instance() : void
+    public function test_with_distinct_creates_new_instance(): void
     {
         $arg = Column::name('value');
         $agg = new AggregateCall(['count'], [$arg], false, false);
 
         $newAgg = $agg->withDistinct();
 
-        self::assertNotSame($agg, $newAgg);
-        self::assertFalse($agg->isDistinct());
-        self::assertTrue($newAgg->isDistinct());
+        static::assertNotSame($agg, $newAgg);
+        static::assertFalse($agg->isDistinct());
+        static::assertTrue($newAgg->isDistinct());
     }
 
-    public function test_with_filter_creates_new_instance() : void
+    public function test_with_filter_creates_new_instance(): void
     {
         $arg = Column::name('value');
         $agg = new AggregateCall(['count'], [$arg]);
@@ -291,12 +292,12 @@ final class AggregateCallTest extends TestCase
         $filter = Literal::bool(true);
         $newAgg = $agg->withFilter($filter);
 
-        self::assertNotSame($agg, $newAgg);
-        self::assertNull($agg->getFilter());
-        self::assertNotNull($newAgg->getFilter());
+        static::assertNotSame($agg, $newAgg);
+        static::assertNull($agg->getFilter());
+        static::assertNotNull($newAgg->getFilter());
     }
 
-    public function test_with_order_by_creates_new_instance() : void
+    public function test_with_order_by_creates_new_instance(): void
     {
         $arg = Column::name('value');
         $agg = new AggregateCall(['array_agg'], [$arg]);
@@ -304,8 +305,8 @@ final class AggregateCallTest extends TestCase
         $orderBy = new OrderBy(Column::name('sort_col'));
         $newAgg = $agg->withOrderBy($orderBy);
 
-        self::assertNotSame($agg, $newAgg);
-        self::assertSame([], $agg->getOrderBy());
-        self::assertCount(1, $newAgg->getOrderBy());
+        static::assertNotSame($agg, $newAgg);
+        static::assertSame([], $agg->getOrderBy());
+        static::assertCount(1, $newAgg->getOrderBy());
     }
 }

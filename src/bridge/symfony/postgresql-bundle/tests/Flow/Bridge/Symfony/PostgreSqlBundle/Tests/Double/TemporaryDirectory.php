@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double;
 
-use function Flow\Filesystem\DSL\path_real;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+
+use function Flow\Filesystem\DSL\path_real;
 
 final readonly class TemporaryDirectory
 {
@@ -18,7 +19,7 @@ final readonly class TemporaryDirectory
         \mkdir($this->path, 0755, true);
     }
 
-    public function cleanUp() : void
+    public function cleanUp(): void
     {
         (new NativeLocalFilesystem())->rm(path_real($this->path));
     }

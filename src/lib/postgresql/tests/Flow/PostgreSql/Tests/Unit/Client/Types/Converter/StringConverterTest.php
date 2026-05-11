@@ -12,13 +12,13 @@ use PHPUnit\Framework\TestCase;
 
 final class StringConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'array' => [['array']];
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'string' => ['hello world', 'hello world'];
         yield 'empty string' => ['', ''];
@@ -46,46 +46,46 @@ final class StringConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new StringConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new StringConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_stringable_object_conversion() : void
+    public function test_stringable_object_conversion(): void
     {
         $converter = new StringConverter();
         $stringable = new class {
-            public function __toString() : string
+            public function __toString(): string
             {
                 return 'stringable';
             }
         };
-        self::assertSame('stringable', $converter->toDatabase($stringable));
+        static::assertSame('stringable', $converter->toDatabase($stringable));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new StringConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::TEXT, $types);
-        self::assertContains(ValueType::VARCHAR, $types);
-        self::assertContains(ValueType::CHAR, $types);
-        self::assertContains(ValueType::BPCHAR, $types);
+        static::assertContains(ValueType::TEXT, $types);
+        static::assertContains(ValueType::VARCHAR, $types);
+        static::assertContains(ValueType::CHAR, $types);
+        static::assertContains(ValueType::BPCHAR, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(mixed $input, string $expected) : void
+    public function test_to_database(mixed $input, string $expected): void
     {
         $converter = new StringConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

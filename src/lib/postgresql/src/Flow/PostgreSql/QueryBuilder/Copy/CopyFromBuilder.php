@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Copy;
 
-use Flow\PostgreSql\Protobuf\AST\{CopyStmt, DefElem, Node, PBList, PBString, RangeVar};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CopyStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 /**
  * Builder for COPY FROM statements (data import).
@@ -37,15 +43,14 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         private array $forceNullColumns = [],
         private ?string $encoding = null,
         private ?CopyOnError $onError = null,
-    ) {
-    }
+    ) {}
 
-    public static function create() : CopyFromTableStep
+    public static function create(): CopyFromTableStep
     {
         return new self();
     }
 
-    public function columns(string ...$columns) : CopyFromSourceStep
+    public function columns(string ...$columns): CopyFromSourceStep
     {
         return new self(
             $this->table,
@@ -67,7 +72,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function delimiter(string $delimiter) : CopyFromOptionsStep
+    public function delimiter(string $delimiter): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -89,7 +94,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function encoding(string $encoding) : CopyFromOptionsStep
+    public function encoding(string $encoding): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -111,7 +116,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function escape(string $escape) : CopyFromOptionsStep
+    public function escape(string $escape): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -133,7 +138,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function file(string $filename) : CopyFromOptionsStep
+    public function file(string $filename): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -155,7 +160,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function forceNotNull(string ...$columns) : CopyFromOptionsStep
+    public function forceNotNull(string ...$columns): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -177,7 +182,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function forceNull(string ...$columns) : CopyFromOptionsStep
+    public function forceNull(string ...$columns): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -199,7 +204,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function format(CopyFormat $format) : CopyFromOptionsStep
+    public function format(CopyFormat $format): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -221,7 +226,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function nullAs(string $nullString) : CopyFromOptionsStep
+    public function nullAs(string $nullString): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -243,7 +248,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function onError(CopyOnError $behavior) : CopyFromOptionsStep
+    public function onError(CopyOnError $behavior): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -265,7 +270,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function program(string $command) : CopyFromOptionsStep
+    public function program(string $command): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -287,7 +292,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function quote(string $quote) : CopyFromOptionsStep
+    public function quote(string $quote): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -309,7 +314,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function stdin() : CopyFromOptionsStep
+    public function stdin(): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -331,7 +336,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function table(string $table, string ...$columns) : CopyFromSourceStep
+    public function table(string $table, string ...$columns): CopyFromSourceStep
     {
         $identifier = QualifiedIdentifier::parse($table);
 
@@ -355,7 +360,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function toAst() : CopyStmt
+    public function toAst(): CopyStmt
     {
         if ($this->table === null || $this->table === '') {
             throw InvalidExpressionException::invalidValue('table', 'null or empty');
@@ -409,7 +414,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         return $copyStmt;
     }
 
-    public function withHeader(bool $header = true) : CopyFromOptionsStep
+    public function withHeader(bool $header = true): CopyFromOptionsStep
     {
         return new self(
             $this->table,
@@ -434,7 +439,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
     /**
      * @return list<Node>
      */
-    private function buildOptions() : array
+    private function buildOptions(): array
     {
         $options = [];
 
@@ -481,7 +486,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         return $options;
     }
 
-    private function createBoolOption(string $name, bool $value) : Node
+    private function createBoolOption(string $name, bool $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -501,7 +506,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
     /**
      * @param list<string> $columns
      */
-    private function createColumnListOption(string $name, array $columns) : Node
+    private function createColumnListOption(string $name, array $columns): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -526,7 +531,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         return $node;
     }
 
-    private function createStringOption(string $name, string $value) : Node
+    private function createStringOption(string $name, string $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);

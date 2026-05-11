@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\Writer\ColumnChunkBuilder;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\{Compressions, Encodings};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 {
-    public function test_delta_encoding_with_negative_values() : void
+    public function test_delta_encoding_with_negative_values(): void
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('negative_col', PhysicalType::INT32);
@@ -27,15 +30,15 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertCount(1, $containers);
-        self::assertEquals(0, $builder->uncompressedSize());
+        static::assertCount(1, $containers);
+        static::assertEquals(0, $builder->uncompressedSize());
 
         $container = $containers[0];
-        self::assertNotEmpty($container->binaryBuffer);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertNotEmpty($container->binaryBuffer);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
     }
 
-    public function test_delta_encoding_with_sequential_values() : void
+    public function test_delta_encoding_with_sequential_values(): void
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('sequential_col', PhysicalType::INT32);
@@ -49,15 +52,15 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertCount(1, $containers);
-        self::assertEquals(0, $builder->uncompressedSize());
+        static::assertCount(1, $containers);
+        static::assertEquals(0, $builder->uncompressedSize());
 
         $container = $containers[0];
-        self::assertNotEmpty($container->binaryBuffer);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertNotEmpty($container->binaryBuffer);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
     }
 
-    public function test_delta_encoding_with_timestamp_sequence() : void
+    public function test_delta_encoding_with_timestamp_sequence(): void
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('timestamp_col', PhysicalType::INT64);
@@ -72,15 +75,15 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertCount(1, $containers);
-        self::assertEquals(0, $builder->uncompressedSize());
+        static::assertCount(1, $containers);
+        static::assertEquals(0, $builder->uncompressedSize());
 
         $container = $containers[0];
-        self::assertNotEmpty($container->binaryBuffer);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertNotEmpty($container->binaryBuffer);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
     }
 
-    public function test_delta_encoding_workflow() : void
+    public function test_delta_encoding_workflow(): void
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('workflow_col', PhysicalType::INT32);
@@ -92,21 +95,21 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
         }
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
 
         $containers = $builder->flush(0);
-        self::assertCount(1, $containers);
+        static::assertCount(1, $containers);
 
         $uncompressedSize = $builder->uncompressedSize();
-        self::assertEquals(0, $uncompressedSize);
+        static::assertEquals(0, $uncompressedSize);
 
         $container = $containers[0];
-        self::assertNotEmpty($container->binaryBuffer);
-        self::assertNotNull($container->columnChunk);
-        self::assertSame($column->type(), $container->columnChunk->type());
+        static::assertNotEmpty($container->binaryBuffer);
+        static::assertNotNull($container->columnChunk);
+        static::assertSame($column->type(), $container->columnChunk->type());
     }
 
-    public function test_round_trip_int32_sequential_values() : void
+    public function test_round_trip_int32_sequential_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
@@ -121,15 +124,15 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
         $container = $containers[0];
 
-        self::assertNotNull($container);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
-        self::assertSame($column->type(), $container->columnChunk->type());
+        static::assertNotNull($container);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertSame($column->type(), $container->columnChunk->type());
 
         $encodings = $container->columnChunk->encodings();
-        self::assertContains(Encodings::DELTA_BINARY_PACKED, $encodings);
+        static::assertContains(Encodings::DELTA_BINARY_PACKED, $encodings);
     }
 
-    public function test_round_trip_int64_timestamp_sequence() : void
+    public function test_round_trip_int64_timestamp_sequence(): void
     {
         $column = new FlatColumn('timestamp_col', PhysicalType::INT64);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
@@ -149,12 +152,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
         $container = $containers[0];
 
-        self::assertNotNull($container);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
-        self::assertSame($column->type(), $container->columnChunk->type());
+        static::assertNotNull($container);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertSame($column->type(), $container->columnChunk->type());
     }
 
-    public function test_round_trip_negative_values() : void
+    public function test_round_trip_negative_values(): void
     {
         $column = new FlatColumn('negative_col', PhysicalType::INT32);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
@@ -169,12 +172,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
         $container = $containers[0];
 
-        self::assertNotNull($container);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
-        self::assertSame($column->type(), $container->columnChunk->type());
+        static::assertNotNull($container);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertSame($column->type(), $container->columnChunk->type());
     }
 
-    public function test_round_trip_with_different_compression() : void
+    public function test_round_trip_with_different_compression(): void
     {
         $column = new FlatColumn('compressed_col', PhysicalType::INT32);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
@@ -189,8 +192,8 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
         $container = $containers[0];
 
-        self::assertNotNull($container);
-        self::assertGreaterThan(0, strlen($container->binaryBuffer));
-        self::assertSame($column->type(), $container->columnChunk->type());
+        static::assertNotNull($container);
+        static::assertGreaterThan(0, strlen($container->binaryBuffer));
+        static::assertSame($column->type(), $container->columnChunk->type());
     }
 }

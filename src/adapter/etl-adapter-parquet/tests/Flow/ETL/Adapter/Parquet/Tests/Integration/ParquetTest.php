@@ -4,19 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
-use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
-use function Flow\ETL\DSL\{config, from_array, json_schema, overwrite, schema, str_schema};
-use function Flow\ETL\DSL\data_frame;
-use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Tests\Double\FakeRandomOrdersExtractor, Tests\FlowTestCase};
+use Flow\ETL\Tests\Double\FakeRandomOrdersExtractor;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\SizeUnits;
-use Flow\Parquet\{Option, Options};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
 use Ramsey\Uuid\Uuid;
+
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\path;
 
 final class ParquetTest extends FlowTestCase
 {
-    public function test_writing_and_reading_into_parquet() : void
+    public function test_writing_and_reading_into_parquet(): void
     {
         $path = path('memory://var/file.snappy.parquet');
 
@@ -27,80 +36,79 @@ final class ParquetTest extends FlowTestCase
             ->write(to_parquet($path))
             ->run();
 
-        self::assertEquals(
-            10,
-            (data_frame($config))
-                ->read(from_parquet($path))
-                ->count()
-        );
+        static::assertEquals(10, data_frame($config)->read(from_parquet($path))->count());
     }
 
-    public function test_writing_and_reading_parquet_orders() : void
+    public function test_writing_and_reading_parquet_orders(): void
     {
         $path = path(__DIR__ . '/var/orders.snappy.parquet');
         $config = config();
         data_frame($config)
             ->read(new FakeRandomOrdersExtractor(1000))
             ->mode(overwrite())
-            ->write(
-                to_parquet($path)
-                    ->withOptions(
-                        Options::default()
-                            ->set(Option::ROW_GROUP_SIZE_CHECK_INTERVAL, 500)
-                            ->set(Option::ROW_GROUP_SIZE_BYTES, SizeUnits::MiB_SIZE)
-                            ->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 10)
-                    )
-            )
+            ->write(to_parquet($path)->withOptions(Options::default()->set(
+                Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+                500,
+            )->set(Option::ROW_GROUP_SIZE_BYTES, SizeUnits::MiB_SIZE)->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 10)))
             ->run();
 
-        self::assertEquals(
-            1000,
-            (data_frame($config))
-                ->read(from_parquet($path))
-                ->count()
-        );
+        static::assertEquals(1000, data_frame($config)->read(from_parquet($path))->count());
     }
 
-    public function test_writing_with_provided_schema() : void
+    public function test_writing_with_provided_schema(): void
     {
         $path = path('memory://var/file_schema.snappy.parquet');
         $config = config();
         data_frame($config)
             ->read(from_array([
-                ['id' => 1, 'name' => 'test', 'uuid' => Uuid::fromString('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
-                ['id' => 2, 'name' => 'test', 'uuid' => Uuid::fromString('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
+                [
+                    'id' => 1,
+                    'name' => 'test',
+                    'uuid' => Uuid::fromString('26fd21b0-6080-4d6c-bdb4-1214f1feffef'),
+                    'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]',
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'test',
+                    'uuid' => Uuid::fromString('26fd21b0-6080-4d6c-bdb4-1214f1feffef'),
+                    'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]',
+                ],
             ]))
-            ->write(
-                to_parquet($path, schema: schema(
-                    str_schema('id'),
-                    str_schema('name'),
-                    str_schema('uuid'),
-                    json_schema('json'),
-                ))
-            )
+            ->write(to_parquet($path, schema: schema(
+                str_schema('id'),
+                str_schema('name'),
+                str_schema('uuid'),
+                json_schema('json'),
+            )))
             ->run();
 
-        self::assertEquals(
+        static::assertEquals(
             [
-                ['id' => '1', 'name' => 'test', 'uuid' => '26fd21b0-6080-4d6c-bdb4-1214f1feffef', 'json' => [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]],
-                ['id' => '2', 'name' => 'test', 'uuid' => '26fd21b0-6080-4d6c-bdb4-1214f1feffef', 'json' => [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]],
+                [
+                    'id' => '1',
+                    'name' => 'test',
+                    'uuid' => '26fd21b0-6080-4d6c-bdb4-1214f1feffef',
+                    'json' => [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']],
+                ],
+                [
+                    'id' => '2',
+                    'name' => 'test',
+                    'uuid' => '26fd21b0-6080-4d6c-bdb4-1214f1feffef',
+                    'json' => [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']],
+                ],
             ],
-            data_frame($config)
-                ->read(from_parquet($path))
-                ->fetch()
-                ->toArray()
+            data_frame($config)->read(from_parquet($path))->fetch()->toArray(),
         );
 
-        self::assertTrue($config->fstab()->for($path)->status($path)?->isFile());
+        static::assertTrue($config->fstab()->for($path)->status($path)?->isFile());
     }
 
     /**
      * @param string $path
      */
-    private function cleanDirectory(string $path) : void
+    private function cleanDirectory(string $path): void
     {
         if (\file_exists($path) && \is_dir($path)) {
-
             $files = \array_diff(\scandir($path), ['..', '.']);
 
             foreach ($files as $file) {
@@ -118,7 +126,7 @@ final class ParquetTest extends FlowTestCase
     /**
      * @param string $path
      */
-    private function removeFile(string $path) : void
+    private function removeFile(string $path): void
     {
         if (\file_exists($path)) {
             if (\is_dir($path)) {

@@ -17,58 +17,54 @@ final readonly class WindowFrame implements AstConvertible
         private FrameBound $startBound,
         private ?FrameBound $endBound = null,
         private FrameExclusion $exclusion = FrameExclusion::NO_OTHERS,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
-        return new self(
-            FrameMode::ROWS,
-            FrameBound::currentRow()
-        );
+        return new self(FrameMode::ROWS, FrameBound::currentRow());
     }
 
-    public static function groups(FrameBound $start, ?FrameBound $end = null) : self
+    public static function groups(FrameBound $start, ?FrameBound $end = null): self
     {
         return new self(FrameMode::GROUPS, $start, $end);
     }
 
-    public static function range(FrameBound $start, ?FrameBound $end = null) : self
+    public static function range(FrameBound $start, ?FrameBound $end = null): self
     {
         return new self(FrameMode::RANGE, $start, $end);
     }
 
-    public static function rows(FrameBound $start, ?FrameBound $end = null) : self
+    public static function rows(FrameBound $start, ?FrameBound $end = null): self
     {
         return new self(FrameMode::ROWS, $start, $end);
     }
 
-    public function endBound() : ?FrameBound
+    public function endBound(): ?FrameBound
     {
         return $this->endBound;
     }
 
-    public function exclusion() : FrameExclusion
+    public function exclusion(): FrameExclusion
     {
         return $this->exclusion;
     }
 
-    public function mode() : FrameMode
+    public function mode(): FrameMode
     {
         return $this->mode;
     }
 
-    public function startBound() : FrameBound
+    public function startBound(): FrameBound
     {
         return $this->startBound;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         return new Node();
     }
 
-    public function withExclusion(FrameExclusion $exclusion) : self
+    public function withExclusion(FrameExclusion $exclusion): self
     {
         return new self($this->mode, $this->startBound, $this->endBound, $exclusion);
     }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
-use Flow\Telemetry\Meter\{Metric, MetricType};
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
 
 /**
  * Serializes Metric to OTLP JSON format.
@@ -20,15 +21,14 @@ final readonly class MetricSerializer
 
     public function __construct(
         private AttributeSerializer $attributeSerializer = new AttributeSerializer(),
-    ) {
-    }
+    ) {}
 
     /**
      * Serialize a Metric to OTLP format.
      *
      * @return array<string, mixed>
      */
-    public function serialize(Metric $metric) : array
+    public function serialize(Metric $metric): array
     {
         $result = [
             'name' => $metric->name,
@@ -78,7 +78,7 @@ final readonly class MetricSerializer
      *
      * @return array<string, mixed>
      */
-    private function createDataPoint(Metric $metric) : array
+    private function createDataPoint(Metric $metric): array
     {
         $timestamp = $this->toNanoseconds($metric->timestamp);
 
@@ -102,7 +102,7 @@ final readonly class MetricSerializer
      *
      * @return array<string, mixed>
      */
-    private function createHistogramDataPoint(Metric $metric) : array
+    private function createHistogramDataPoint(Metric $metric): array
     {
         $timestamp = $this->toNanoseconds($metric->timestamp);
 
@@ -120,7 +120,7 @@ final readonly class MetricSerializer
     /**
      * Convert DateTimeImmutable to nanoseconds since Unix epoch as string.
      */
-    private function toNanoseconds(\DateTimeImmutable $dateTime) : string
+    private function toNanoseconds(\DateTimeImmutable $dateTime): string
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Adapter\Doctrine\Pagination\Key;
-use Flow\ETL\{Adapter\Doctrine\Pagination\KeySet, Extractor, FlowContext, Schema};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 /**
  * Extractor implementing keyset pagination for Doctrine DBAL queries.
@@ -37,11 +42,14 @@ final class DbalKeySetExtractor implements Extractor
     ) {
         $qb = clone $this->queryBuilder;
 
-        /** @phpstan-ignore-next-line */
-        $cleanQuery = \method_exists($qb, 'resetOrderBy') ? (clone $this->queryBuilder)->resetOrderBy() : (clone $qb)->resetQueryPart('orderBy');
+        $cleanQuery = \method_exists($qb, 'resetOrderBy')
+            ? (clone $this->queryBuilder)->resetOrderBy()
+            : (clone $qb)->resetQueryPart('orderBy');
 
         if ($cleanQuery->getSQL() !== $this->queryBuilder->getSQL()) {
-            throw new InvalidArgumentException('Keyset pagination cannot be used with an ORDER BY clause, please remove OrderBy from Query Builder');
+            throw new InvalidArgumentException(
+                'Keyset pagination cannot be used with an ORDER BY clause, please remove OrderBy from Query Builder',
+            );
         }
 
         if (empty($this->keySet->keys)) {
@@ -49,7 +57,7 @@ final class DbalKeySetExtractor implements Extractor
         }
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $totalFetched = 0;
         $lastRow = null;
@@ -72,13 +80,19 @@ final class DbalKeySetExtractor implements Extractor
                     $keyAlias = $this->keyAlias($key);
 
                     if (!\array_key_exists($keyAlias, $lastRow)) {
-                        throw new RuntimeException(sprintf('Column "%s" not found in last row for keyset pagination', $key->column));
+                        throw new RuntimeException(sprintf(
+                            'Column "%s" not found in last row for keyset pagination',
+                            $key->column,
+                        ));
                     }
 
                     $lastValue = $lastRow[$keyAlias];
 
                     if ($lastValue === null) {
-                        throw new RuntimeException(sprintf('NULL value found in column "%s" for keyset pagination; key columns must be non-null', $key->column));
+                        throw new RuntimeException(sprintf(
+                            'NULL value found in column "%s" for keyset pagination; key columns must be non-null',
+                            $key->column,
+                        ));
                     }
 
                     $parameters[$keyAlias] = $lastValue;
@@ -107,11 +121,7 @@ final class DbalKeySetExtractor implements Extractor
                 }
             }
 
-            $stmt = $this->connection->executeQuery(
-                $qb->getSQL(),
-                $qb->getParameters(),
-                $qb->getParameterTypes()
-            );
+            $stmt = $this->connection->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes());
 
             $hasRows = false;
 
@@ -146,7 +156,7 @@ final class DbalKeySetExtractor implements Extractor
         }
     }
 
-    public function withKeyAliasSuffix(string $keyAliasSuffix) : self
+    public function withKeyAliasSuffix(string $keyAliasSuffix): self
     {
         $this->keyAliasSuffix = $keyAliasSuffix;
 
@@ -162,7 +172,7 @@ final class DbalKeySetExtractor implements Extractor
      *
      * @return $this
      */
-    public function withMaximum(int $maximum) : self
+    public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
             throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
@@ -182,7 +192,7 @@ final class DbalKeySetExtractor implements Extractor
      *
      * @return $this
      */
-    public function withPageSize(int $pageSize) : self
+    public function withPageSize(int $pageSize): self
     {
         if ($pageSize <= 0) {
             throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
@@ -200,15 +210,20 @@ final class DbalKeySetExtractor implements Extractor
      *
      * @return $this
      */
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    private function keyAlias(Key $key) : string
+    private function keyAlias(Key $key): string
     {
-        return 'key_' . \sha1((string) preg_replace('/[^a-zA-Z0-9_]/', '_', str_replace('.', '_', $key->column . $this->keyAliasSuffix)));
+        return 'key_'
+        . \sha1((string) preg_replace(
+            '/[^a-zA-Z0-9_]/',
+            '_',
+            str_replace('.', '_', $key->column . $this->keyAliasSuffix),
+        ));
     }
 }

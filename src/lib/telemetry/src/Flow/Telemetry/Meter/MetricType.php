@@ -10,7 +10,7 @@ namespace Flow\Telemetry\Meter;
  * Each type has different semantics for how values are recorded
  * and aggregated over time.
  */
-enum MetricType : string
+enum MetricType: string
 {
     /**
      * Monotonically increasing counter.

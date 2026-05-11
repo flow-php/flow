@@ -10,7 +10,5 @@ final readonly class DocumentationDSL
     public function __construct(
         public Module $module,
         public Type $type,
-    ) {
-
-    }
+    ) {}
 }

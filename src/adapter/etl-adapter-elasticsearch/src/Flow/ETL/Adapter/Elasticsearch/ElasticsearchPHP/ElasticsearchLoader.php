@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
-use Elasticsearch\{Client, ClientBuilder};
+use Elasticsearch\Client;
+use Elasticsearch\ClientBuilder;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Rows;
 
 final class ElasticsearchLoader implements Loader
 {
@@ -47,7 +51,7 @@ final class ElasticsearchLoader implements Loader
      *  includePortInHostHeader?: bool
      * } $clientConfig
      */
-    public static function update(array $clientConfig, string $index, IdFactory $idFactory) : self
+    public static function update(array $clientConfig, string $index, IdFactory $idFactory): self
     {
         $loader = new self($clientConfig, $index, $idFactory);
         $loader->method = 'update';
@@ -55,7 +59,7 @@ final class ElasticsearchLoader implements Loader
         return $loader;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if (!$rows->count()) {
             return;
@@ -71,9 +75,9 @@ final class ElasticsearchLoader implements Loader
             /**
              * @var array<int, array{body:array<string, mixed>,id:string}> $dataCollection
              */
-            $dataCollection = $rows->map(static fn (Row $row) : Row => Row::create(
+            $dataCollection = $rows->map(static fn(Row $row): Row => Row::create(
                 $factory->create($row),
-                new JsonEntry('body', $row->toArray())
+                new JsonEntry('body', $row->toArray()),
             ))->toArray();
 
             foreach ($dataCollection as $data) {
@@ -107,7 +111,7 @@ final class ElasticsearchLoader implements Loader
     /**
      * @param array<array-key, mixed> $parameters
      */
-    public function withParameters(array $parameters) : self
+    public function withParameters(array $parameters): self
     {
         $this->parameters = $parameters;
 
@@ -117,7 +121,7 @@ final class ElasticsearchLoader implements Loader
     /**
      * @phpstan-ignore-next-line
      */
-    private function client() : Client|\Elastic\Elasticsearch\Client
+    private function client(): Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
             if (\class_exists("Elasticsearch\ClientBuilder")) {

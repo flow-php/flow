@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_time};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_time;
+
 final class TimeTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid DateInterval' => [
             'value' => new \DateInterval('PT10S'),
@@ -59,7 +61,7 @@ final class TimeTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'string to time' => [
             'value' => 'PT1S',
@@ -86,7 +88,7 @@ final class TimeTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid DateInterval' => [
             'value' => new \DateInterval('PT10S'),
@@ -105,47 +107,44 @@ final class TimeTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_time()->assert($value);
         } else {
-            self::assertInstanceOf(\DateInterval::class, type_time()->assert($value));
+            static::assertInstanceOf(\DateInterval::class, type_time()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_time()->cast($value);
         } else {
-            self::assertEquals($expected, type_time()->cast($value));
+            static::assertEquals($expected, type_time()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_time()->isValid($value));
+        static::assertSame($expected, type_time()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_time();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'time',
-            type_time()->toString()
-        );
+        static::assertSame('time', type_time()->toString());
     }
 }

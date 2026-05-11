@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
-use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_exporter;
-use function Flow\Telemetry\DSL\{batching_log_processor, batching_metric_processor, batching_span_processor, logger_provider, meter_provider, resource, telemetry, tracer_provider};
 use Flow\Bridge\Telemetry\OTLP\Tests\Integration\CollectorMetrics;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\{RequestFactoryInterface, StreamFactoryInterface};
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Symfony\Component\HttpClient\Psr18Client;
+
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_exporter;
+use function Flow\Telemetry\DSL\batching_log_processor;
+use function Flow\Telemetry\DSL\batching_metric_processor;
+use function Flow\Telemetry\DSL\batching_span_processor;
+use function Flow\Telemetry\DSL\logger_provider;
+use function Flow\Telemetry\DSL\meter_provider;
+use function Flow\Telemetry\DSL\resource;
+use function Flow\Telemetry\DSL\telemetry;
+use function Flow\Telemetry\DSL\tracer_provider;
 
 /**
  * Test context for OTLP integration tests.
@@ -59,14 +69,10 @@ final class OtelContext
         $this->httpEndpoint = $httpEndpoint;
         $this->grpcEndpoint = $grpcEndpoint;
 
-        $this->collectorMetrics = new CollectorMetrics(
-            $this->httpClient,
-            $this->psr17Factory,
-            $metricsEndpoint,
-        );
+        $this->collectorMetrics = new CollectorMetrics($this->httpClient, $this->psr17Factory, $metricsEndpoint);
     }
 
-    public static function instance() : self
+    public static function instance(): self
     {
         if (self::$instance === null) {
             self::$instance = new self();
@@ -80,12 +86,12 @@ final class OtelContext
      *
      * @return list<TransportConfiguration>
      */
-    public function availableTransports() : array
+    public function availableTransports(): array
     {
         return TransportConfiguration::available();
     }
 
-    public function collectorMetrics() : CollectorMetrics
+    public function collectorMetrics(): CollectorMetrics
     {
         return $this->collectorMetrics;
     }
@@ -95,7 +101,7 @@ final class OtelContext
      *
      * Creates separate transport instances for each exporter to avoid shutdown race conditions.
      */
-    public function createTelemetry(TransportConfiguration $config, ?Resource $resource = null) : Telemetry
+    public function createTelemetry(TransportConfiguration $config, ?Resource $resource = null): Telemetry
     {
         $resource ??= resource([
             'service.name' => 'flow-php-otlp-bridge-tests',
@@ -117,27 +123,27 @@ final class OtelContext
         return telemetry($resource, $tracerProvider, $meterProvider, $loggerProvider);
     }
 
-    public function grpcEndpoint() : string
+    public function grpcEndpoint(): string
     {
         return $this->grpcEndpoint;
     }
 
-    public function httpClient() : ClientInterface
+    public function httpClient(): ClientInterface
     {
         return $this->httpClient;
     }
 
-    public function httpEndpoint() : string
+    public function httpEndpoint(): string
     {
         return $this->httpEndpoint;
     }
 
-    public function requestFactory() : RequestFactoryInterface
+    public function requestFactory(): RequestFactoryInterface
     {
         return $this->psr17Factory;
     }
 
-    public function streamFactory() : StreamFactoryInterface
+    public function streamFactory(): StreamFactoryInterface
     {
         return $this->psr17Factory;
     }

@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_html};
 use Dom\HTMLDocument;
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
-use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_html;
 
 #[RequiresPhp('>= 8.4')]
 final class HTMLTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid HTMLDocument' => [
             'value' => HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body></body></html>'),
@@ -71,36 +75,40 @@ final class HTMLTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'valid HTMLDocument' => [
-            'value' => HTMLDocument::createFromString($html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
+            'value' => HTMLDocument::createFromString(
+                $html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            ),
             'expected' => $html,
             'exceptionClass' => null,
         ];
 
         yield 'valid HTML string' => [
-            'value' => $validHtml = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            'value' =>
+                $validHtml = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             'expected' => $validHtml,
             'exceptionClass' => null,
         ];
 
         yield 'valid HTML with spaces' => [
-            'value' => $htmlWithSpaces = '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
+            'value' =>
+                $htmlWithSpaces = '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
             'expected' => $htmlWithSpaces,
             'exceptionClass' => null,
         ];
 
         yield 'valid HTML with new lines' => [
             'value' => $htmlWithNewLines = <<<'HTML'
-<!DOCTYPE html>
-<html>
-    <head><title></title></head>
-    <body>
-        <p> invalid</p>
-    </body>
-</html>
-HTML,
+                <!DOCTYPE html>
+                <html>
+                    <head><title></title></head>
+                    <body>
+                        <p> invalid</p>
+                    </body>
+                </html>
+                HTML,
             'expected' => $htmlWithNewLines,
             'exceptionClass' => null,
         ];
@@ -125,10 +133,12 @@ HTML,
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid HTMLDocument' => [
-            'value' => HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
+            'value' => HTMLDocument::createFromString(
+                '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            ),
             'expected' => true,
         ];
 
@@ -144,18 +154,18 @@ HTML,
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_html()->assert($value);
         } else {
-            self::assertInstanceOf(HTMLDocument::class, type_html()->assert($value));
+            static::assertInstanceOf(HTMLDocument::class, type_html()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass = null) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -166,32 +176,26 @@ HTML,
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_html()->isValid($value));
+        static::assertSame($expected, type_html()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_html();
         $normalized = $type->normalize();
 
-        self::assertEquals($type, type_from_array($normalized));
+        static::assertEquals($type, type_from_array($normalized));
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'html',
-            type_html()->toString()
-        );
+        static::assertSame('html', type_html()->toString());
     }
 
-    private function assertHtmlEquals(string $expected, string $html) : void
+    private function assertHtmlEquals(string $expected, string $html): void
     {
-        self::assertEquals(
-            \preg_replace('/\s*/', '', $expected),
-            \preg_replace('/\s*/', '', $html),
-        );
+        self::assertEquals(\preg_replace('/\s*/', '', $expected), \preg_replace('/\s*/', '', $html));
     }
 }

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Cursor;
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Protobuf\AST\{DeclareCursorStmt, Node};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, Sql};
+use Flow\PostgreSql\Protobuf\AST\DeclareCursorStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
+use Flow\PostgreSql\QueryBuilder\Sql;
 
 final class DeclareCursorBuilder implements DeclareCursorOptionsStep
 {
@@ -18,10 +20,9 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
     private function __construct(
         private readonly string $cursorName,
         private readonly Node $queryNode,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $cursorName, SelectFinalStep $query) : DeclareCursorOptionsStep
+    public static function create(string $cursorName, SelectFinalStep $query): DeclareCursorOptionsStep
     {
         $node = new Node();
         $node->setSelectStmt($query->toAst());
@@ -29,7 +30,7 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return new self($cursorName, $node);
     }
 
-    public static function createFromSql(string $cursorName, string|Sql $query) : DeclareCursorOptionsStep
+    public static function createFromSql(string $cursorName, string|Sql $query): DeclareCursorOptionsStep
     {
         $sql = $query instanceof Sql ? $query->toSql() : $query;
         $parser = new Parser();
@@ -50,14 +51,14 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return new self($cursorName, $stmtNode);
     }
 
-    public function binary() : DeclareCursorOptionsStep
+    public function binary(): DeclareCursorOptionsStep
     {
         $this->options |= CursorOption::BINARY;
 
         return $this;
     }
 
-    public function noScroll() : DeclareCursorOptionsStep
+    public function noScroll(): DeclareCursorOptionsStep
     {
         $this->options |= CursorOption::NO_SCROLL;
         $this->options &= ~CursorOption::SCROLL;
@@ -65,7 +66,7 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return $this;
     }
 
-    public function scroll() : DeclareCursorOptionsStep
+    public function scroll(): DeclareCursorOptionsStep
     {
         $this->options |= CursorOption::SCROLL;
         $this->options &= ~CursorOption::NO_SCROLL;
@@ -73,7 +74,7 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return $this;
     }
 
-    public function toAst() : DeclareCursorStmt
+    public function toAst(): DeclareCursorStmt
     {
         $stmt = new DeclareCursorStmt();
         $stmt->setPortalname($this->cursorName);
@@ -83,7 +84,7 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return $stmt;
     }
 
-    public function withHold() : DeclareCursorOptionsStep
+    public function withHold(): DeclareCursorOptionsStep
     {
         $this->options |= CursorOption::HOLD;
 

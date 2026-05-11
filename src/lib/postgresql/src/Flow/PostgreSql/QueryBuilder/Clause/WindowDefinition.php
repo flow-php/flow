@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, WindowDef};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\WindowDef;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 /**
  * Represents a named window definition for WINDOW clause.
@@ -24,10 +26,9 @@ final readonly class WindowDefinition implements AstConvertible
         private array $orderBy = [],
         private ?WindowFrame $frame = null,
         private ?string $refName = null,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $windowDef = $node->getWindowDef();
 
@@ -73,12 +74,12 @@ final readonly class WindowDefinition implements AstConvertible
         return new self($name, $partitionBy, $orderBy, $frame, $refName);
     }
 
-    public function frame() : ?WindowFrame
+    public function frame(): ?WindowFrame
     {
         return $this->frame;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
@@ -86,7 +87,7 @@ final readonly class WindowDefinition implements AstConvertible
     /**
      * @return list<OrderBy>
      */
-    public function orderBy() : array
+    public function orderBy(): array
     {
         return $this->orderBy;
     }
@@ -94,17 +95,17 @@ final readonly class WindowDefinition implements AstConvertible
     /**
      * @return list<Expression>
      */
-    public function partitionBy() : array
+    public function partitionBy(): array
     {
         return $this->partitionBy;
     }
 
-    public function refName() : ?string
+    public function refName(): ?string
     {
         return $this->refName;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $windowDef = new WindowDef();
         $windowDef->setName($this->name);
@@ -151,7 +152,7 @@ final readonly class WindowDefinition implements AstConvertible
         return $node;
     }
 
-    public function withFrame(?WindowFrame $frame) : self
+    public function withFrame(?WindowFrame $frame): self
     {
         return new self($this->name, $this->partitionBy, $this->orderBy, $frame, $this->refName);
     }
@@ -159,7 +160,7 @@ final readonly class WindowDefinition implements AstConvertible
     /**
      * @param list<OrderBy> $orderBy
      */
-    public function withOrderBy(array $orderBy) : self
+    public function withOrderBy(array $orderBy): self
     {
         return new self($this->name, $this->partitionBy, $orderBy, $this->frame, $this->refName);
     }
@@ -167,7 +168,7 @@ final readonly class WindowDefinition implements AstConvertible
     /**
      * @param list<Expression> $partitionBy
      */
-    public function withPartitionBy(array $partitionBy) : self
+    public function withPartitionBy(array $partitionBy): self
     {
         return new self($this->name, $partitionBy, $this->orderBy, $this->frame, $this->refName);
     }

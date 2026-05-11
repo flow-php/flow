@@ -24,9 +24,8 @@ final class Repetitions implements \Countable, \Stringable
      */
     private array $repetitions;
 
-    public function __construct(
-        Repetition ...$repetitions,
-    ) {
+    public function __construct(Repetition ...$repetitions)
+    {
         if (!\count($repetitions)) {
             throw new InvalidArgumentException('Repetitions cannot be empty');
         }
@@ -47,36 +46,40 @@ final class Repetitions implements \Countable, \Stringable
         $this->repeatedCount = $repeatedCount;
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->id;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->repetitions);
     }
 
-    public function first() : Repetition
+    public function first(): Repetition
     {
         return $this->repetitions[0];
     }
 
-    public function get(int $index) : Repetition
+    public function get(int $index): Repetition
     {
         if (!\array_key_exists($index, $this->repetitions)) {
-            throw new InvalidArgumentException(\sprintf('Repetition index %d does not exist: %s', $index, $this->__toString()));
+            throw new InvalidArgumentException(\sprintf(
+                'Repetition index %d does not exist: %s',
+                $index,
+                $this->__toString(),
+            ));
         }
 
         return $this->repetitions[$index];
     }
 
-    public function last() : Repetition
+    public function last(): Repetition
     {
         return $this->repetitions[\count($this->repetitions) - 1];
     }
 
-    public function left(int $index) : self
+    public function left(int $index): self
     {
         $repetitions = [];
 
@@ -97,7 +100,7 @@ final class Repetitions implements \Countable, \Stringable
         return new self(...$repetitions);
     }
 
-    public function maxDefinitionLevel() : int
+    public function maxDefinitionLevel(): int
     {
         if ($this->maxDefinitionLevel !== null) {
             return $this->maxDefinitionLevel;
@@ -116,7 +119,7 @@ final class Repetitions implements \Countable, \Stringable
         return $this->maxDefinitionLevel;
     }
 
-    public function maxRepetitionLevel() : int
+    public function maxRepetitionLevel(): int
     {
         if ($this->maxRepetitionLevel !== null) {
             return $this->maxRepetitionLevel;
@@ -135,7 +138,7 @@ final class Repetitions implements \Countable, \Stringable
         return $this->maxRepetitionLevel;
     }
 
-    public function repeatedCount() : int
+    public function repeatedCount(): int
     {
         return $this->repeatedCount;
     }
@@ -143,7 +146,7 @@ final class Repetitions implements \Countable, \Stringable
     /**
      * @return array<Repetition> $repetitions
      */
-    public function toArray() : array
+    public function toArray(): array
     {
         return $this->repetitions;
     }

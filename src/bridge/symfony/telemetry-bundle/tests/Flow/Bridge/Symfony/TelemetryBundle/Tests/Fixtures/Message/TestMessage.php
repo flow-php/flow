@@ -8,6 +8,5 @@ final readonly class TestMessage
 {
     public function __construct(
         public string $content,
-    ) {
-    }
+    ) {}
 }

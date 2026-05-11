@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-enum Compressions : int
+enum Compressions: int
 {
     case BROTLI = 4;
     case GZIP = 2;

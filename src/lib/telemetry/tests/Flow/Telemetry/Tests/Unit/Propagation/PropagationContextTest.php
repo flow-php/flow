@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Propagation;
 
-use Flow\Telemetry\Context\{Baggage, SpanId, TraceId};
+use Flow\Telemetry\Context\Baggage;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 
 final class PropagationContextTest extends TestCase
 {
-    public function test_constructor_with_both_values() : void
+    public function test_constructor_with_both_values(): void
     {
         $spanContext = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -21,29 +23,29 @@ final class PropagationContextTest extends TestCase
 
         $ctx = new PropagationContext($spanContext, $baggage);
 
-        self::assertSame($spanContext, $ctx->spanContext);
-        self::assertSame($baggage, $ctx->baggage);
+        static::assertSame($spanContext, $ctx->spanContext);
+        static::assertSame($baggage, $ctx->baggage);
     }
 
-    public function test_constructor_with_defaults() : void
+    public function test_constructor_with_defaults(): void
     {
         $ctx = new PropagationContext();
 
-        self::assertNull($ctx->spanContext);
-        self::assertNull($ctx->baggage);
+        static::assertNull($ctx->spanContext);
+        static::assertNull($ctx->baggage);
     }
 
-    public function test_constructor_with_only_baggage() : void
+    public function test_constructor_with_only_baggage(): void
     {
         $baggage = new Baggage(['key' => 'value']);
 
         $ctx = new PropagationContext(baggage: $baggage);
 
-        self::assertNull($ctx->spanContext);
-        self::assertSame($baggage, $ctx->baggage);
+        static::assertNull($ctx->spanContext);
+        static::assertSame($baggage, $ctx->baggage);
     }
 
-    public function test_constructor_with_only_span_context() : void
+    public function test_constructor_with_only_span_context(): void
     {
         $spanContext = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -52,11 +54,11 @@ final class PropagationContextTest extends TestCase
 
         $ctx = new PropagationContext($spanContext);
 
-        self::assertSame($spanContext, $ctx->spanContext);
-        self::assertNull($ctx->baggage);
+        static::assertSame($spanContext, $ctx->spanContext);
+        static::assertNull($ctx->baggage);
     }
 
-    public function test_merge_overwrites_null_baggage() : void
+    public function test_merge_overwrites_null_baggage(): void
     {
         $baggage = new Baggage(['key' => 'value']);
         $ctx1 = new PropagationContext();
@@ -64,10 +66,10 @@ final class PropagationContextTest extends TestCase
 
         $merged = $ctx1->merge($ctx2);
 
-        self::assertSame($baggage, $merged->baggage);
+        static::assertSame($baggage, $merged->baggage);
     }
 
-    public function test_merge_overwrites_null_span_context() : void
+    public function test_merge_overwrites_null_span_context(): void
     {
         $spanContext = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -78,10 +80,10 @@ final class PropagationContextTest extends TestCase
 
         $merged = $ctx1->merge($ctx2);
 
-        self::assertSame($spanContext, $merged->spanContext);
+        static::assertSame($spanContext, $merged->spanContext);
     }
 
-    public function test_merge_preserves_existing_when_other_is_null() : void
+    public function test_merge_preserves_existing_when_other_is_null(): void
     {
         $spanContext = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -93,11 +95,11 @@ final class PropagationContextTest extends TestCase
 
         $merged = $ctx1->merge($ctx2);
 
-        self::assertSame($spanContext, $merged->spanContext);
-        self::assertSame($baggage, $merged->baggage);
+        static::assertSame($spanContext, $merged->spanContext);
+        static::assertSame($baggage, $merged->baggage);
     }
 
-    public function test_merge_replaces_existing_with_other_values() : void
+    public function test_merge_replaces_existing_with_other_values(): void
     {
         $spanContext1 = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -115,11 +117,11 @@ final class PropagationContextTest extends TestCase
 
         $merged = $ctx1->merge($ctx2);
 
-        self::assertSame($spanContext2, $merged->spanContext);
-        self::assertSame($baggage2, $merged->baggage);
+        static::assertSame($spanContext2, $merged->spanContext);
+        static::assertSame($baggage2, $merged->baggage);
     }
 
-    public function test_with_baggage_creates_new_instance() : void
+    public function test_with_baggage_creates_new_instance(): void
     {
         $spanContext = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -131,23 +133,23 @@ final class PropagationContextTest extends TestCase
         $ctx = new PropagationContext($spanContext, $baggage1);
         $newCtx = $ctx->withBaggage($baggage2);
 
-        self::assertNotSame($ctx, $newCtx);
-        self::assertSame($baggage1, $ctx->baggage);
-        self::assertSame($baggage2, $newCtx->baggage);
-        self::assertSame($spanContext, $newCtx->spanContext);
+        static::assertNotSame($ctx, $newCtx);
+        static::assertSame($baggage1, $ctx->baggage);
+        static::assertSame($baggage2, $newCtx->baggage);
+        static::assertSame($spanContext, $newCtx->spanContext);
     }
 
-    public function test_with_baggage_null() : void
+    public function test_with_baggage_null(): void
     {
         $baggage = new Baggage(['key' => 'value']);
         $ctx = new PropagationContext(baggage: $baggage);
 
         $newCtx = $ctx->withBaggage(null);
 
-        self::assertNull($newCtx->baggage);
+        static::assertNull($newCtx->baggage);
     }
 
-    public function test_with_span_context_creates_new_instance() : void
+    public function test_with_span_context_creates_new_instance(): void
     {
         $spanContext1 = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -162,13 +164,13 @@ final class PropagationContextTest extends TestCase
         $ctx = new PropagationContext($spanContext1, $baggage);
         $newCtx = $ctx->withSpanContext($spanContext2);
 
-        self::assertNotSame($ctx, $newCtx);
-        self::assertSame($spanContext1, $ctx->spanContext);
-        self::assertSame($spanContext2, $newCtx->spanContext);
-        self::assertSame($baggage, $newCtx->baggage);
+        static::assertNotSame($ctx, $newCtx);
+        static::assertSame($spanContext1, $ctx->spanContext);
+        static::assertSame($spanContext2, $newCtx->spanContext);
+        static::assertSame($baggage, $newCtx->baggage);
     }
 
-    public function test_with_span_context_null() : void
+    public function test_with_span_context_null(): void
     {
         $spanContext = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -178,6 +180,6 @@ final class PropagationContextTest extends TestCase
 
         $newCtx = $ctx->withSpanContext(null);
 
-        self::assertNull($newCtx->spanContext);
+        static::assertNull($newCtx->spanContext);
     }
 }

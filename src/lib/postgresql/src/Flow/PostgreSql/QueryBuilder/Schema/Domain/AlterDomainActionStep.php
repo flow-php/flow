@@ -9,17 +9,17 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 interface AlterDomainActionStep
 {
-    public function addConstraint(string $name, Condition $condition) : AlterDomainFinalStep;
+    public function addConstraint(string $name, Condition $condition): AlterDomainFinalStep;
 
-    public function dropConstraint(string $name) : AlterDomainFinalStep;
+    public function dropConstraint(string $name): AlterDomainFinalStep;
 
-    public function dropDefault() : AlterDomainFinalStep;
+    public function dropDefault(): AlterDomainFinalStep;
 
-    public function dropNotNull() : AlterDomainFinalStep;
+    public function dropNotNull(): AlterDomainFinalStep;
 
-    public function setDefault(Expression $expression) : AlterDomainFinalStep;
+    public function setDefault(Expression $expression): AlterDomainFinalStep;
 
-    public function setNotNull() : AlterDomainFinalStep;
+    public function setNotNull(): AlterDomainFinalStep;
 
-    public function validateConstraint(string $name) : AlterDomainFinalStep;
+    public function validateConstraint(string $name): AlterDomainFinalStep;
 }

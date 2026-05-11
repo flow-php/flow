@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
 
 /**
  * @implements Entry<?\DOMDocument>
@@ -42,7 +47,7 @@ final class XMLEntry implements Entry
         $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
-    public function __serialize() : array
+    public function __serialize(): array
     {
         return [
             'name' => $this->name,
@@ -51,7 +56,7 @@ final class XMLEntry implements Entry
         ];
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         if ($this->value === null) {
             return '';
@@ -63,7 +68,7 @@ final class XMLEntry implements Entry
     /**
      * @param array<array-key, mixed> $data
      */
-    public function __unserialize(array $data) : void
+    public function __unserialize(array $data): void
     {
         type_string()->assert($data['name']);
 
@@ -89,17 +94,17 @@ final class XMLEntry implements Entry
         $this->definition = new XMLDefinition($this->name, false, Metadata::empty());
     }
 
-    public function definition() : XMLDefinition
+    public function definition(): XMLDefinition
     {
         return $this->definition;
     }
 
-    public function duplicate() : static
+    public function duplicate(): static
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
-    public function is(Reference|string $name) : bool
+    public function is(Reference|string $name): bool
     {
         if ($name instanceof Reference) {
             return $this->name === $name->name();
@@ -108,7 +113,7 @@ final class XMLEntry implements Entry
         return $this->name === $name;
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function isEqual(Entry $entry): bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
             return false;
@@ -125,7 +130,7 @@ final class XMLEntry implements Entry
         return $entry->value()?->C14N() === $this->value?->C14N();
     }
 
-    public function map(callable $mapper) : static
+    public function map(callable $mapper): static
     {
         $mappedValue = $mapper($this->value());
         $mappedValue = type_optional(type_instance_of(\DOMDocument::class))->assert($mappedValue);
@@ -133,17 +138,17 @@ final class XMLEntry implements Entry
         return new self($this->name, $mappedValue);
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function rename(string $name) : static
+    public function rename(string $name): static
     {
         return new self($name, $this->value, $this->definition->metadata());
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         if ($this->value === null) {
             return '';
@@ -153,17 +158,17 @@ final class XMLEntry implements Entry
         return $this->value->saveXML($this->value->documentElement);
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->definition->type();
     }
 
-    public function value() : ?\DOMDocument
+    public function value(): ?\DOMDocument
     {
         return $this->value;
     }
 
-    public function withValue(mixed $value) : static
+    public function withValue(mixed $value): static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }

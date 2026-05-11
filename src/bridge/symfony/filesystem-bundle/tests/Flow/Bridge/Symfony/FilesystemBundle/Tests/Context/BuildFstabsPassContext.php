@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Context;
 
-use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\{MemoryFilesystemFactory, NativeLocalFilesystemFactory};
+use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\MemoryFilesystemFactory;
+use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\NativeLocalFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactoryRegistry;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 
 final class BuildFstabsPassContext
 {
     /**
      * @param array<string, mixed> $config
      */
-    public function containerWithConfig(array $config) : ContainerBuilder
+    public function containerWithConfig(array $config): ContainerBuilder
     {
         $container = new ContainerBuilder();
         $container->setParameter('flow.filesystem.config', $config);

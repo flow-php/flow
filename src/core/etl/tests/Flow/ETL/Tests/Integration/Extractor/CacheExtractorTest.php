@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
-use function Flow\ETL\DSL\{array_to_rows, config, config_builder, flow_context, from_array, from_cache};
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_cache;
+
 final class CacheExtractorTest extends FlowIntegrationTestCase
 {
-    public function test_extracting_rows_from_cache() : void
+    public function test_extracting_rows_from_cache(): void
     {
         $cache = new InMemoryCache();
 
@@ -30,14 +36,14 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
-        self::assertCount(3, $rows);
-        self::assertTrue($cache->has('rows_01'));
-        self::assertTrue($cache->has('rows_02'));
-        self::assertTrue($cache->has('rows_03'));
-        self::assertTrue($cache->has('key'));
+        static::assertCount(3, $rows);
+        static::assertTrue($cache->has('rows_01'));
+        static::assertTrue($cache->has('rows_02'));
+        static::assertTrue($cache->has('rows_03'));
+        static::assertTrue($cache->has('key'));
     }
 
-    public function test_extracting_rows_from_cache_with_clearing_cache_afterwards() : void
+    public function test_extracting_rows_from_cache_with_clearing_cache_afterwards(): void
     {
         $cache = new InMemoryCache();
 
@@ -52,22 +58,22 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $cache->set('key', $index);
 
-        $extractor = (from_cache($cacheKey))->withClearOnFinish(true);
+        $extractor = from_cache($cacheKey)->withClearOnFinish(true);
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
-        self::assertCount(3, $rows);
-        self::assertFalse($cache->has('rows_01'));
-        self::assertFalse($cache->has('rows_02'));
-        self::assertFalse($cache->has('rows_03'));
-        self::assertFalse($cache->has('key'));
+        static::assertCount(3, $rows);
+        static::assertFalse($cache->has('rows_01'));
+        static::assertFalse($cache->has('rows_02'));
+        static::assertFalse($cache->has('rows_03'));
+        static::assertFalse($cache->has('key'));
     }
 
-    public function test_fallback_extractor() : void
+    public function test_fallback_extractor(): void
     {
         $cache = new InMemoryCache();
 
-        $extractor = (from_cache('non_existing_cache_key'))
+        $extractor = from_cache('non_existing_cache_key')
             ->withClearOnFinish(true)
             ->withFallbackExtractor(from_array([
                 ['id' => 1],
@@ -77,14 +83,14 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
-        self::assertCount(3, $rows);
-        self::assertEquals(
+        static::assertCount(3, $rows);
+        static::assertEquals(
             [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
             ],
-            \array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray())
+            \array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
         );
     }
 }

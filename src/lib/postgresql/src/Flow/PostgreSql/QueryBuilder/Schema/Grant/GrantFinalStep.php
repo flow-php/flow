@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface GrantFinalStep extends Sql
 {
-    public function toAst() : GrantStmt;
+    public function toAst(): GrantStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function withGrantOption() : self;
+    public function withGrantOption(): self;
 }

@@ -27,7 +27,7 @@ final class PageContainers
         }
     }
 
-    public function add(PageContainer $container) : void
+    public function add(PageContainer $container): void
     {
         if ($container->pageHeader->type() === Type::DICTIONARY_PAGE) {
             if ($this->dictionaryPageContainer !== null) {
@@ -42,7 +42,7 @@ final class PageContainers
         $this->dataPageContainers[] = $container;
     }
 
-    public function buffer() : string
+    public function buffer(): string
     {
         $buffer = '';
 
@@ -59,7 +59,7 @@ final class PageContainers
         return $buffer;
     }
 
-    public function compressedSize() : int
+    public function compressedSize(): int
     {
         $size = 0;
 
@@ -77,12 +77,12 @@ final class PageContainers
     /**
      * @return array<PageContainer>
      */
-    public function dataPageContainers() : array
+    public function dataPageContainers(): array
     {
         return $this->dataPageContainers;
     }
 
-    public function dictionaryPageContainer() : ?PageContainer
+    public function dictionaryPageContainer(): ?PageContainer
     {
         return $this->dictionaryPageContainer;
     }
@@ -90,7 +90,7 @@ final class PageContainers
     /**
      * @return array<Encodings>
      */
-    public function encodings() : array
+    public function encodings(): array
     {
         $encodings = [];
 
@@ -112,10 +112,10 @@ final class PageContainers
 
         $encodings = \array_unique($encodings);
 
-        return \array_map(static fn (int $encoding) => Encodings::from($encoding), $encodings);
+        return \array_map(static fn(int $encoding) => Encodings::from($encoding), $encodings);
     }
 
-    public function uncompressedSize() : int
+    public function uncompressedSize(): int
     {
         $size = 0;
 
@@ -130,7 +130,7 @@ final class PageContainers
         return $size;
     }
 
-    public function valuesCount() : int
+    public function valuesCount(): int
     {
         $count = 0;
 

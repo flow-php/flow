@@ -22,15 +22,17 @@ final class Stack
     /**
      * @return array<array-key, mixed>
      */
-    public function dump() : array
+    public function dump(): array
     {
         return $this->stack;
     }
 
-    public function push(int $level, mixed $value) : void
+    public function push(int $level, mixed $value): void
     {
         if ($level > $this->maxRepetitionLevel) {
-            throw new InvalidArgumentException('Given level "' . $level . '"  is greater than max level, "' . $this->maxRepetitionLevel . '"');
+            throw new InvalidArgumentException(
+                'Given level "' . $level . '"  is greater than max level, "' . $this->maxRepetitionLevel . '"',
+            );
         }
 
         if ($this->maxRepetitionLevel === 0 || $level === 0) {
@@ -45,7 +47,10 @@ final class Stack
         for ($l = 1; $l < $level; $l++) {
             if ($valueNode === null) {
                 if (!\is_array($value)) {
-                    throw new InvalidArgumentException(\sprintf('Expected array for value, got %s', \get_debug_type($value)));
+                    throw new InvalidArgumentException(\sprintf(
+                        'Expected array for value, got %s',
+                        \get_debug_type($value),
+                    ));
                 }
 
                 if (!\count($value)) {
@@ -54,7 +59,10 @@ final class Stack
                 $valueNode = &$value[\count($value) - 1];
             } else {
                 if (!\is_array($valueNode)) {
-                    throw new InvalidArgumentException(\sprintf('Expected array for value node, got %s', \get_debug_type($valueNode)));
+                    throw new InvalidArgumentException(\sprintf(
+                        'Expected array for value node, got %s',
+                        \get_debug_type($valueNode),
+                    ));
                 }
 
                 if (!\count($valueNode)) {
@@ -64,7 +72,10 @@ final class Stack
             }
 
             if (!\is_array($lastStackNode)) {
-                throw new InvalidArgumentException(\sprintf('Expected array for last stack node, got %s', \get_debug_type($lastStackNode)));
+                throw new InvalidArgumentException(\sprintf(
+                    'Expected array for last stack node, got %s',
+                    \get_debug_type($lastStackNode),
+                ));
             }
 
             if (!\count($lastStackNode)) {
@@ -75,11 +86,17 @@ final class Stack
         $valueNode ??= $value;
 
         if (!\is_array($lastStackNode)) {
-            throw new InvalidArgumentException(\sprintf('Expected array for last stack node, got %s', \get_debug_type($lastStackNode)));
+            throw new InvalidArgumentException(\sprintf(
+                'Expected array for last stack node, got %s',
+                \get_debug_type($lastStackNode),
+            ));
         }
 
         if (!\is_array($valueNode)) {
-            throw new InvalidArgumentException(\sprintf('Expected array for value node, got %s', \get_debug_type($valueNode)));
+            throw new InvalidArgumentException(\sprintf(
+                'Expected array for value node, got %s',
+                \get_debug_type($valueNode),
+            ));
         }
         $lastStackNode = \array_merge($lastStackNode, $valueNode);
 

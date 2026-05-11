@@ -9,11 +9,11 @@ use Flow\Filesystem\DestinationStream;
 
 final readonly class DestinationStreamAdapter implements OutputStream
 {
-    public function __construct(private DestinationStream $stream)
-    {
-    }
+    public function __construct(
+        private DestinationStream $stream,
+    ) {}
 
-    public function append(string $data) : self
+    public function append(string $data): self
     {
         $this->stream->append($data);
 

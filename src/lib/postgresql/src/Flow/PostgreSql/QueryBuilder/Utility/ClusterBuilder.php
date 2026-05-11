@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-use Flow\PostgreSql\Protobuf\AST\{ClusterStmt, DefElem, Node, RangeVar};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\ClusterStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class ClusterBuilder implements ClusterFinalStep
 {
@@ -15,25 +19,24 @@ final readonly class ClusterBuilder implements ClusterFinalStep
         private ?string $table = null,
         private ?string $index = null,
         private bool $verbose = false,
-    ) {
-    }
+    ) {}
 
-    public static function all() : ClusterFinalStep
+    public static function all(): ClusterFinalStep
     {
         return new self();
     }
 
-    public static function create() : ClusterFinalStep
+    public static function create(): ClusterFinalStep
     {
         return new self();
     }
 
-    public function table(string $table) : ClusterFinalStep
+    public function table(string $table): ClusterFinalStep
     {
         return new self($table, $this->index, $this->verbose);
     }
 
-    public function toAst() : ClusterStmt
+    public function toAst(): ClusterStmt
     {
         $stmt = new ClusterStmt();
 
@@ -71,12 +74,12 @@ final readonly class ClusterBuilder implements ClusterFinalStep
         return $stmt;
     }
 
-    public function using(string $index) : ClusterFinalStep
+    public function using(string $index): ClusterFinalStep
     {
         return new self($this->table, $index, $this->verbose);
     }
 
-    public function verbose() : ClusterFinalStep
+    public function verbose(): ClusterFinalStep
     {
         return new self($this->table, $this->index, true);
     }

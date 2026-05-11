@@ -4,40 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-use Flow\Filesystem\{DestinationStream, Path, SourceStream};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 
 final readonly class VoidStream implements DestinationStream, SourceStream
 {
-    public function __construct(private Path $path)
-    {
+    public function __construct(
+        private Path $path,
+    ) {}
 
-    }
-
-    public function append(string $data) : self
+    public function append(string $data): self
     {
         return $this;
     }
 
-    public function close() : void
-    {
-    }
+    public function close(): void {}
 
-    public function content() : string
+    public function content(): string
     {
         return '';
     }
 
-    public function fromResource($resource) : self
+    public function fromResource($resource): self
     {
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return true;
     }
 
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         /** @phpstan-ignore-next-line */
         foreach ([] as $char) {
@@ -45,17 +44,17 @@ final readonly class VoidStream implements DestinationStream, SourceStream
         }
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }
 
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         return '';
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         /** @phpstan-ignore-next-line */
         foreach ([] as $char) {
@@ -63,7 +62,7 @@ final readonly class VoidStream implements DestinationStream, SourceStream
         }
     }
 
-    public function size() : int
+    public function size(): int
     {
         return 0;
     }

@@ -12,7 +12,7 @@ namespace Flow\Telemetry\Resource\Attribute;
  *
  * @see https://opentelemetry.io/docs/specs/semconv/resource/container/
  */
-enum ContainerAttribute : string
+enum ContainerAttribute: string
 {
     /**
      * The command used to run the container.

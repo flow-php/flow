@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
+
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final class ArrayExtractor implements Extractor
 {
@@ -14,11 +17,11 @@ final class ArrayExtractor implements Extractor
     /**
      * @param iterable<array<mixed>> $dataset
      */
-    public function __construct(private readonly iterable $dataset)
-    {
-    }
+    public function __construct(
+        private readonly iterable $dataset,
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($this->dataset as $row) {
             $signal = yield array_to_rows([$row], $context->entryFactory(), [], $this->schema);
@@ -29,7 +32,7 @@ final class ArrayExtractor implements Extractor
         }
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 

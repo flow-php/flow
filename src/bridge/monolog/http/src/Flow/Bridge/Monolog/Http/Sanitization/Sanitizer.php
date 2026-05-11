@@ -11,10 +11,10 @@ interface Sanitizer
      *
      * @return array<string, mixed>
      */
-    public function normalize() : array;
+    public function normalize(): array;
 
     /**
      * Sanitize a string value.
      */
-    public function sanitize(string $value) : string;
+    public function sanitize(string $value): string;
 }

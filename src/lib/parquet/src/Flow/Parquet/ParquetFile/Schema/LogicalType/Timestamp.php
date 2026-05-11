@@ -13,35 +13,34 @@ final readonly class Timestamp
         private bool $millis,
         private bool $micros,
         private bool $nanos,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(TimestampType $timestamp) : self
+    public static function fromThrift(TimestampType $timestamp): self
     {
         return new self(
             $timestamp->isAdjustedToUTC,
             $timestamp->unit->MILLIS !== null,
             $timestamp->unit->MICROS !== null,
-            $timestamp->unit->NANOS !== null
+            $timestamp->unit->NANOS !== null,
         );
     }
 
-    public function isAdjustedToUTC() : bool
+    public function isAdjustedToUTC(): bool
     {
         return $this->isAdjustedToUTC;
     }
 
-    public function micros() : bool
+    public function micros(): bool
     {
         return $this->micros;
     }
 
-    public function millis() : bool
+    public function millis(): bool
     {
         return $this->millis;
     }
 
-    public function nanos() : bool
+    public function nanos(): bool
     {
         return $this->nanos;
     }

@@ -9,20 +9,20 @@ use Flow\ETL\Rows;
 
 interface Chart
 {
-    public function collect(Rows $rows) : void;
+    public function collect(Rows $rows): void;
 
     /**
      * @return array<array-key, mixed>
      */
-    public function data() : array;
+    public function data(): array;
 
     /**
      * @param array<array-key, mixed> $options
      */
-    public function setDatasetOptions(EntryReference $dataset, array $options) : self;
+    public function setDatasetOptions(EntryReference $dataset, array $options): self;
 
     /**
      * @param array<array-key, mixed> $options
      */
-    public function setOptions(array $options) : self;
+    public function setOptions(array $options): self;
 }

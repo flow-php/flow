@@ -25,10 +25,9 @@ class FakeSerializer implements SerializerInterface
     public function __construct(
         public string $encodedBody = 'encoded-body',
         public array $encodedHeaders = ['type' => 'App\\Message'],
-    ) {
-    }
+    ) {}
 
-    public function decode(array $encodedEnvelope) : Envelope
+    public function decode(array $encodedEnvelope): Envelope
     {
         $this->decodeCalls[] = $encodedEnvelope;
 
@@ -38,7 +37,7 @@ class FakeSerializer implements SerializerInterface
         ]);
     }
 
-    public function encode(Envelope $envelope) : array
+    public function encode(Envelope $envelope): array
     {
         $this->encodeCalls[] = $envelope;
 

@@ -4,26 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Tracer;
 
-use function Flow\Telemetry\DSL\context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, TracerProvider};
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+
+use function Flow\Telemetry\DSL\context;
 
 final class TracingIntegrationTest extends TestCase
 {
     private Resource $resource;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->resource = ResourceMother::default();
     }
 
-    public function test_complete_tracing_workflow() : void
+    public function test_complete_tracing_workflow(): void
     {
         $processor = $this->createProcessor();
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
@@ -43,21 +46,21 @@ final class TracingIntegrationTest extends TestCase
         $rootSpan->setStatus(SpanStatus::ok());
         $tracer->complete($rootSpan);
 
-        self::assertCount(2, $processor->endedSpans());
+        static::assertCount(2, $processor->endedSpans());
 
         $endedDbSpan = $processor->endedSpans()[0];
-        self::assertSame('database-query', $endedDbSpan->name());
-        self::assertSame(SpanKind::CLIENT, $endedDbSpan->kind());
-        self::assertNotNull($endedDbSpan->context()->parentSpanId);
-        self::assertTrue($endedDbSpan->context()->parentSpanId->equals($rootSpan->context()->spanId));
+        static::assertSame('database-query', $endedDbSpan->name());
+        static::assertSame(SpanKind::CLIENT, $endedDbSpan->kind());
+        static::assertNotNull($endedDbSpan->context()->parentSpanId);
+        static::assertTrue($endedDbSpan->context()->parentSpanId->equals($rootSpan->context()->spanId));
 
         $endedRootSpan = $processor->endedSpans()[1];
-        self::assertSame('handle-request', $endedRootSpan->name());
-        self::assertSame(SpanKind::SERVER, $endedRootSpan->kind());
-        self::assertTrue($endedRootSpan->context()->isRoot());
+        static::assertSame('handle-request', $endedRootSpan->name());
+        static::assertSame(SpanKind::SERVER, $endedRootSpan->kind());
+        static::assertTrue($endedRootSpan->context()->isRoot());
     }
 
-    public function test_deeply_nested_spans() : void
+    public function test_deeply_nested_spans(): void
     {
         $processor = $this->createProcessor();
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
@@ -73,18 +76,18 @@ final class TracingIntegrationTest extends TestCase
         $tracer->complete($level2);
         $tracer->complete($level1);
 
-        self::assertCount(4, $processor->endedSpans());
+        static::assertCount(4, $processor->endedSpans());
 
-        self::assertNotNull($level4->context()->parentSpanId);
-        self::assertNotNull($level3->context()->parentSpanId);
-        self::assertNotNull($level2->context()->parentSpanId);
-        self::assertTrue($level4->context()->parentSpanId->equals($level3->context()->spanId));
-        self::assertTrue($level3->context()->parentSpanId->equals($level2->context()->spanId));
-        self::assertTrue($level2->context()->parentSpanId->equals($level1->context()->spanId));
-        self::assertNull($level1->context()->parentSpanId);
+        static::assertNotNull($level4->context()->parentSpanId);
+        static::assertNotNull($level3->context()->parentSpanId);
+        static::assertNotNull($level2->context()->parentSpanId);
+        static::assertTrue($level4->context()->parentSpanId->equals($level3->context()->spanId));
+        static::assertTrue($level3->context()->parentSpanId->equals($level2->context()->spanId));
+        static::assertTrue($level2->context()->parentSpanId->equals($level1->context()->spanId));
+        static::assertNull($level1->context()->parentSpanId);
     }
 
-    public function test_exception_handling_in_trace() : void
+    public function test_exception_handling_in_trace(): void
     {
         $processor = $this->createProcessor();
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
@@ -93,27 +96,27 @@ final class TracingIntegrationTest extends TestCase
         $exception = new \RuntimeException('Database connection failed');
 
         try {
-            $tracer->trace('database-operation', static function () use ($exception) : void {
+            $tracer->trace('database-operation', static function () use ($exception): void {
                 throw $exception;
             });
         } catch (\RuntimeException) {
         }
 
-        self::assertCount(1, $processor->endedSpans());
+        static::assertCount(1, $processor->endedSpans());
 
         $span = $processor->endedSpans()[0];
-        self::assertTrue($span->isEnded());
-        self::assertNotNull($span->status());
-        self::assertTrue($span->status()->isError());
-        self::assertSame('Database connection failed', $span->status()->description);
+        static::assertTrue($span->isEnded());
+        static::assertNotNull($span->status());
+        static::assertTrue($span->status()->isError());
+        static::assertSame('Database connection failed', $span->status()->description);
 
-        self::assertCount(1, $span->events());
+        static::assertCount(1, $span->events());
         $event = $span->events()[0];
-        self::assertSame('exception', $event->name());
-        self::assertSame(\RuntimeException::class, $event->attributes()['exception.type']);
+        static::assertSame('exception', $event->name());
+        static::assertSame(\RuntimeException::class, $event->attributes()['exception.type']);
     }
 
-    public function test_multiple_tracers_completing_spans_independently_preserve_context() : void
+    public function test_multiple_tracers_completing_spans_independently_preserve_context(): void
     {
         $storage = new MemoryContextStorage();
         $processor = $this->createProcessor();
@@ -124,23 +127,23 @@ final class TracingIntegrationTest extends TestCase
 
         $spanA = $tracerA->span('span-a');
 
-        self::assertNotNull($storage->current()->activeSpanId());
-        self::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
+        static::assertNotNull($storage->current()->activeSpanId());
+        static::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
 
         $spanB = $tracerB->span('span-b');
-        self::assertTrue($spanB->context()->spanId->equals($storage->current()->activeSpanId()));
+        static::assertTrue($spanB->context()->spanId->equals($storage->current()->activeSpanId()));
 
         $tracerB->complete($spanB);
 
-        self::assertNotNull($storage->current()->activeSpanId());
-        self::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
+        static::assertNotNull($storage->current()->activeSpanId());
+        static::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
 
         $tracerA->complete($spanA);
 
-        self::assertNull($storage->current()->activeSpanId());
+        static::assertNull($storage->current()->activeSpanId());
     }
 
-    public function test_multiple_tracers_share_trace_id() : void
+    public function test_multiple_tracers_share_trace_id(): void
     {
         $ctx = context();
         $storage = new MemoryContextStorage($ctx);
@@ -153,14 +156,14 @@ final class TracingIntegrationTest extends TestCase
         $httpSpan = $httpTracer->span('http-request');
         $dbSpan = $dbTracer->span('db-query');
 
-        self::assertTrue($httpSpan->context()->traceId->equals($ctx->traceId));
-        self::assertTrue($dbSpan->context()->traceId->equals($ctx->traceId));
+        static::assertTrue($httpSpan->context()->traceId->equals($ctx->traceId));
+        static::assertTrue($dbSpan->context()->traceId->equals($ctx->traceId));
 
         $httpTracer->complete($httpSpan);
         $dbTracer->complete($dbSpan);
     }
 
-    public function test_provider_creates_new_tracer_each_time() : void
+    public function test_provider_creates_new_tracer_each_time(): void
     {
         $processor = $this->createProcessor();
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
@@ -168,12 +171,12 @@ final class TracingIntegrationTest extends TestCase
         $tracer1 = $provider->tracer($this->resource, 'my-lib', '1.0.0');
         $tracer2 = $provider->tracer($this->resource, 'my-lib', '1.0.0');
 
-        self::assertNotSame($tracer1, $tracer2);
-        self::assertSame($tracer1->name(), $tracer2->name());
-        self::assertSame($tracer1->version(), $tracer2->version());
+        static::assertNotSame($tracer1, $tracer2);
+        static::assertSame($tracer1->name(), $tracer2->name());
+        static::assertSame($tracer1->version(), $tracer2->version());
     }
 
-    public function test_provider_flush() : void
+    public function test_provider_flush(): void
     {
         $processor = $this->createProcessor();
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
@@ -182,28 +185,28 @@ final class TracingIntegrationTest extends TestCase
         $span = $tracer->span('operation');
         $tracer->complete($span);
 
-        self::assertTrue($processor->flush());
+        static::assertTrue($processor->flush());
     }
 
-    public function test_trace_helper_completes_span_on_success() : void
+    public function test_trace_helper_completes_span_on_success(): void
     {
         $processor = $this->createProcessor();
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
         $tracer = $provider->tracer($this->resource, 'test');
 
-        $result = $tracer->trace('calculate', static fn () => 42);
+        $result = $tracer->trace('calculate', static fn() => 42);
 
-        self::assertSame(42, $result);
-        self::assertCount(1, $processor->endedSpans());
+        static::assertSame(42, $result);
+        static::assertCount(1, $processor->endedSpans());
 
         $span = $processor->endedSpans()[0];
-        self::assertSame('calculate', $span->name());
-        self::assertTrue($span->isEnded());
-        self::assertNotNull($span->status());
-        self::assertTrue($span->status()->isOk());
+        static::assertSame('calculate', $span->name());
+        static::assertTrue($span->isEnded());
+        static::assertNotNull($span->status());
+        static::assertTrue($span->status()->isOk());
     }
 
-    private function clock() : ClockInterface
+    private function clock(): ClockInterface
     {
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable());
@@ -211,7 +214,7 @@ final class TracingIntegrationTest extends TestCase
         return $clock;
     }
 
-    private function createProcessor() : MemorySpanProcessor
+    private function createProcessor(): MemorySpanProcessor
     {
         return new MemorySpanProcessor(new VoidExporter());
     }

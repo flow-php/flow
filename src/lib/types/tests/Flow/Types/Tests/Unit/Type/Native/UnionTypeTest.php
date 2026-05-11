@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_boolean,
-    type_float,
-    type_from_array,
-    type_integer,
-    type_mixed,
-    type_null,
-    type_optional,
-    type_string,
-    type_union,
-    types};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Native\UnionType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function Flow\Types\DSL\types;
+
 final class UnionTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid string' => [
             'type' => type_union(type_integer(), type_string()),
@@ -90,7 +91,7 @@ final class UnionTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'string to integer' => [
             'type' => type_union(type_integer(), type_string()),
@@ -121,7 +122,7 @@ final class UnionTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid string' => [
             'type' => type_union(type_integer(), type_string()),
@@ -161,98 +162,93 @@ final class UnionTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(UnionType $type, mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(UnionType $type, mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             $type->assert($value);
         } else {
-            self::assertSame($value, $type->assert($value));
+            static::assertSame($value, $type->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(UnionType $type, mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(UnionType $type, mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             $type->cast($value);
         } else {
-            self::assertEquals($expected, $type->cast($value));
+            static::assertEquals($expected, $type->cast($value));
         }
     }
 
-    public function test_is_optional_type() : void
+    public function test_is_optional_type(): void
     {
-        self::assertTrue(type_union(type_integer(), type_null())->isOptionalType());
-        self::assertFalse(type_union(type_null(), type_null())->isOptionalType());
-        self::assertFalse(type_union(type_integer(), type_null(), type_optional(type_string()))->isOptionalType());
+        static::assertTrue(type_union(type_integer(), type_null())->isOptionalType());
+        static::assertFalse(type_union(type_null(), type_null())->isOptionalType());
+        static::assertFalse(type_union(type_integer(), type_null(), type_optional(type_string()))->isOptionalType());
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(UnionType $type, mixed $value, bool $expected) : void
+    public function test_is_valid(UnionType $type, mixed $value, bool $expected): void
     {
-        self::assertSame($expected, $type->isValid($value));
+        static::assertSame($expected, $type->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_union(type_integer(), type_string());
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'integer|string',
-            type_union(type_integer(), type_string())->toString()
-        );
-        self::assertSame(
-            'integer|null',
-            type_union(type_integer(), type_null())->toString()
-        );
-        self::assertSame(
+        static::assertSame('integer|string', type_union(type_integer(), type_string())->toString());
+        static::assertSame('integer|null', type_union(type_integer(), type_null())->toString());
+        static::assertSame('integer|null|string', type_union(type_integer(), type_string(), type_null())->toString());
+        static::assertSame(
             'integer|null|string',
-            type_union(type_integer(), type_string(), type_null())->toString()
+            type_union(type_integer(), type_string(), type_null(), type_optional(type_integer()))->toString(),
         );
-        self::assertSame(
-            'integer|null|string',
-            type_union(type_integer(), type_string(), type_null(), type_optional(type_integer()))->toString()
-        );
-        self::assertSame(
+        static::assertSame(
             'integer|string',
-            type_union(type_integer(), type_integer(), type_integer(), type_union(type_integer(), type_string()))->toString()
+            type_union(
+                type_integer(),
+                type_integer(),
+                type_integer(),
+                type_union(type_integer(), type_string()),
+            )->toString(),
         );
     }
 
-    public function test_types() : void
+    public function test_types(): void
     {
-        self::assertEquals(
-            types(type_integer(), type_string()),
-            type_union(type_integer(), type_string())->types()
-        );
-        self::assertEquals(
+        static::assertEquals(types(type_integer(), type_string()), type_union(type_integer(), type_string())->types());
+        static::assertEquals(
             types(type_integer(), type_string(), type_null()),
-            type_union(type_integer(), type_string(), type_null())->types()
+            type_union(type_integer(), type_string(), type_null())->types(),
         );
-        self::assertEquals(
+        static::assertEquals(
             types(type_integer(), type_string(), type_optional(type_string())),
-            type_union(type_integer(), type_string(), type_optional(type_string()))->types()
+            type_union(type_integer(), type_string(), type_optional(type_string()))->types(),
         );
-        self::assertEquals(
+        static::assertEquals(
             types(type_integer(), type_string(), type_float(), type_boolean()),
-            type_union(type_integer(), type_string(), type_union(type_float(), type_boolean()))->types()
+            type_union(type_integer(), type_string(), type_union(type_float(), type_boolean()))->types(),
         );
-        self::assertEquals(
+        static::assertEquals(
             types(type_integer(), type_float(), type_boolean()),
-            type_union(type_integer(), type_integer(), type_union(type_float(), type_boolean()))->types()->deduplicate()
+            type_union(type_integer(), type_integer(), type_union(type_float(), type_boolean()))
+                ->types()
+                ->deduplicate(),
         );
     }
 
-    public function test_union_with_mixed_type() : void
+    public function test_union_with_mixed_type(): void
     {
         $this->expectException(InvalidTypeException::class);
         $this->expectExceptionMessage('UnionType cannot be mixed with MixedType, mixed is a standalone type');

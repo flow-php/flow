@@ -15,6 +15,5 @@ final readonly class GrpcTransportConfig
         public bool $insecure,
         public int $timeoutMs,
         public int $shutdownTimeoutMs,
-    ) {
-    }
+    ) {}
 }

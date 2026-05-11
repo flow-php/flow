@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
-use Doctrine\DBAL\{Connection, DriverManager};
-use Doctrine\DBAL\Schema\{Column, Table};
-use Doctrine\DBAL\Types\{Type, Types};
-use Flow\Doctrine\Bulk\{TableDefinition, TableDefinitions};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
+use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\TableDefinitions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TableDefinitionsTest extends TestCase
 {
-    public static function provide_table_names() : \Generator
+    public static function provide_table_names(): \Generator
     {
         yield 'simple name' => ['users'];
         yield 'with underscore' => ['user_profiles'];
@@ -29,7 +33,7 @@ final class TableDefinitionsTest extends TestCase
      * but the key in the array is also the name. This makes the search inefficient
      * and potentially problematic if the same name is used with different connections.
      */
-    public function test_caching_logic_inefficiency() : void
+    public function test_caching_logic_inefficiency(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection1 = $this->createConnectionWithTable('users');
@@ -42,13 +46,13 @@ final class TableDefinitionsTest extends TestCase
         // TableDefinition instance even with different connections, which might not
         // be the intended behavior since the TableDefinition holds a reference to
         // the specific connection.
-        self::assertSame($definition1, $definition2);
+        static::assertSame($definition1, $definition2);
 
         // The cached definition will still use the first connection
-        self::assertSame($connection1->getDatabasePlatform(), $definition1->platform());
+        static::assertSame($connection1->getDatabasePlatform(), $definition1->platform());
     }
 
-    public function test_construct_creates_empty_table_definitions() : void
+    public function test_construct_creates_empty_table_definitions(): void
     {
         $tableDefinitions = new TableDefinitions();
 
@@ -57,11 +61,11 @@ final class TableDefinitionsTest extends TestCase
         $connection = $this->createConnectionWithTable('test_table');
         $tableDefinition = $tableDefinitions->get('test_table', $connection);
 
-        self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-        self::assertSame('test_table', $tableDefinition->name());
+        static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+        static::assertSame('test_table', $tableDefinition->name());
     }
 
-    public function test_get_caches_multiple_table_definitions() : void
+    public function test_get_caches_multiple_table_definitions(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createSQLiteConnection();
@@ -78,17 +82,17 @@ final class TableDefinitionsTest extends TestCase
         $productsDefinition2 = $tableDefinitions->get('products', $connection);
         $ordersDefinition2 = $tableDefinitions->get('orders', $connection);
 
-        self::assertSame($usersDefinition1, $usersDefinition2);
-        self::assertSame($productsDefinition1, $productsDefinition2);
-        self::assertSame($ordersDefinition1, $ordersDefinition2);
+        static::assertSame($usersDefinition1, $usersDefinition2);
+        static::assertSame($productsDefinition1, $productsDefinition2);
+        static::assertSame($ordersDefinition1, $ordersDefinition2);
 
         // Verify they are different instances
-        self::assertNotSame($usersDefinition1, $productsDefinition1);
-        self::assertNotSame($usersDefinition1, $ordersDefinition1);
-        self::assertNotSame($productsDefinition1, $ordersDefinition1);
+        static::assertNotSame($usersDefinition1, $productsDefinition1);
+        static::assertNotSame($usersDefinition1, $ordersDefinition1);
+        static::assertNotSame($productsDefinition1, $ordersDefinition1);
     }
 
-    public function test_get_creates_different_table_definitions_for_different_names() : void
+    public function test_get_creates_different_table_definitions_for_different_names(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createSQLiteConnection();
@@ -98,23 +102,23 @@ final class TableDefinitionsTest extends TestCase
         $usersDefinition = $tableDefinitions->get('users', $connection);
         $productsDefinition = $tableDefinitions->get('products', $connection);
 
-        self::assertNotSame($usersDefinition, $productsDefinition);
-        self::assertSame('users', $usersDefinition->name());
-        self::assertSame('products', $productsDefinition->name());
+        static::assertNotSame($usersDefinition, $productsDefinition);
+        static::assertSame('users', $usersDefinition->name());
+        static::assertSame('products', $productsDefinition->name());
     }
 
-    public function test_get_creates_new_table_definition_for_first_time() : void
+    public function test_get_creates_new_table_definition_for_first_time(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createConnectionWithTable('users');
 
         $tableDefinition = $tableDefinitions->get('users', $connection);
 
-        self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-        self::assertSame('users', $tableDefinition->name());
+        static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+        static::assertSame('users', $tableDefinition->name());
     }
 
-    public function test_get_performance_with_repeated_calls() : void
+    public function test_get_performance_with_repeated_calls(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createConnectionWithTable('users');
@@ -124,11 +128,11 @@ final class TableDefinitionsTest extends TestCase
         // Multiple calls should return the same instance (cached)
         for ($i = 0; $i < 10; $i++) {
             $tableDefinition = $tableDefinitions->get('users', $connection);
-            self::assertSame($tableDefinition1, $tableDefinition);
+            static::assertSame($tableDefinition1, $tableDefinition);
         }
     }
 
-    public function test_get_preserves_connection_in_table_definition() : void
+    public function test_get_preserves_connection_in_table_definition(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createConnectionWithTable('users');
@@ -137,10 +141,10 @@ final class TableDefinitionsTest extends TestCase
 
         // Verify the connection is preserved by testing platform access
         $platform = $tableDefinition->platform();
-        self::assertSame($connection->getDatabasePlatform(), $platform);
+        static::assertSame($connection->getDatabasePlatform(), $platform);
     }
 
-    public function test_get_returns_cached_table_definition_for_same_name() : void
+    public function test_get_returns_cached_table_definition_for_same_name(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createConnectionWithTable('users');
@@ -148,10 +152,10 @@ final class TableDefinitionsTest extends TestCase
         $tableDefinition1 = $tableDefinitions->get('users', $connection);
         $tableDefinition2 = $tableDefinitions->get('users', $connection);
 
-        self::assertSame($tableDefinition1, $tableDefinition2);
+        static::assertSame($tableDefinition1, $tableDefinition2);
     }
 
-    public function test_get_returns_working_table_definition() : void
+    public function test_get_returns_working_table_definition(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createConnectionWithTable('users');
@@ -159,16 +163,16 @@ final class TableDefinitionsTest extends TestCase
         $tableDefinition = $tableDefinitions->get('users', $connection);
 
         // Verify the returned TableDefinition is functional
-        self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-        self::assertSame('users', $tableDefinition->name());
+        static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+        static::assertSame('users', $tableDefinition->name());
 
         // Test that it can access database metadata
         $column = $tableDefinition->dbalColumn('id');
-        self::assertInstanceOf(Column::class, $column);
-        self::assertSame('id', $column->getName());
+        static::assertInstanceOf(Column::class, $column);
+        static::assertSame('id', $column->getName());
     }
 
-    public function test_get_with_different_connections_for_same_name() : void
+    public function test_get_with_different_connections_for_same_name(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection1 = $this->createConnectionWithTable('users');
@@ -180,10 +184,10 @@ final class TableDefinitionsTest extends TestCase
         // NOTE: This reveals a potential issue - the caching logic only checks by name,
         // not by connection. This means the same TableDefinition instance will be reused
         // even with different connections, which might not be the intended behavior.
-        self::assertSame($tableDefinition1, $tableDefinition2);
+        static::assertSame($tableDefinition1, $tableDefinition2);
     }
 
-    public function test_get_with_different_table_names_maintains_separate_cache() : void
+    public function test_get_with_different_table_names_maintains_separate_cache(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createSQLiteConnection();
@@ -196,14 +200,14 @@ final class TableDefinitionsTest extends TestCase
         $definitionB2 = $tableDefinitions->get('table_b', $connection);
 
         // Same names should return same instances
-        self::assertSame($definitionA1, $definitionA2);
-        self::assertSame($definitionB1, $definitionB2);
+        static::assertSame($definitionA1, $definitionA2);
+        static::assertSame($definitionB1, $definitionB2);
 
         // Different names should return different instances
-        self::assertNotSame($definitionA1, $definitionB1);
+        static::assertNotSame($definitionA1, $definitionB1);
     }
 
-    public function test_get_with_empty_table_name() : void
+    public function test_get_with_empty_table_name(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createSQLiteConnection();
@@ -212,11 +216,11 @@ final class TableDefinitionsTest extends TestCase
         // when trying to query the actual database table
         $tableDefinition = $tableDefinitions->get('', $connection);
 
-        self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-        self::assertSame('', $tableDefinition->name());
+        static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+        static::assertSame('', $tableDefinition->name());
     }
 
-    public function test_get_with_non_existent_table() : void
+    public function test_get_with_non_existent_table(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createSQLiteConnection();
@@ -225,11 +229,11 @@ final class TableDefinitionsTest extends TestCase
         // The error will occur when trying to use the TableDefinition
         $tableDefinition = $tableDefinitions->get('non_existent_table', $connection);
 
-        self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-        self::assertSame('non_existent_table', $tableDefinition->name());
+        static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+        static::assertSame('non_existent_table', $tableDefinition->name());
     }
 
-    public function test_get_with_special_character_table_names() : void
+    public function test_get_with_special_character_table_names(): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createSQLiteConnection();
@@ -240,24 +244,24 @@ final class TableDefinitionsTest extends TestCase
         foreach ($specialNames as $name) {
             $tableDefinition = $tableDefinitions->get($name, $connection);
 
-            self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-            self::assertSame($name, $tableDefinition->name());
+            static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+            static::assertSame($name, $tableDefinition->name());
         }
     }
 
     #[DataProvider('provide_table_names')]
-    public function test_get_with_various_table_names(string $tableName) : void
+    public function test_get_with_various_table_names(string $tableName): void
     {
         $tableDefinitions = new TableDefinitions();
         $connection = $this->createConnectionWithTable($tableName);
 
         $tableDefinition = $tableDefinitions->get($tableName, $connection);
 
-        self::assertInstanceOf(TableDefinition::class, $tableDefinition);
-        self::assertSame($tableName, $tableDefinition->name());
+        static::assertInstanceOf(TableDefinition::class, $tableDefinition);
+        static::assertSame($tableName, $tableDefinition->name());
     }
 
-    public function test_multiple_table_definitions_instances_work_independently() : void
+    public function test_multiple_table_definitions_instances_work_independently(): void
     {
         $tableDefinitions1 = new TableDefinitions();
         $tableDefinitions2 = new TableDefinitions();
@@ -267,12 +271,12 @@ final class TableDefinitionsTest extends TestCase
         $definition2 = $tableDefinitions2->get('users', $connection);
 
         // Different TableDefinitions instances should create separate caches
-        self::assertNotSame($definition1, $definition2);
-        self::assertSame('users', $definition1->name());
-        self::assertSame('users', $definition2->name());
+        static::assertNotSame($definition1, $definition2);
+        static::assertSame('users', $definition1->name());
+        static::assertSame('users', $definition2->name());
     }
 
-    private function createConnectionWithTable(string $tableName) : Connection
+    private function createConnectionWithTable(string $tableName): Connection
     {
         $connection = $this->createSQLiteConnection();
         $this->createTestTable($connection, $tableName);
@@ -280,7 +284,7 @@ final class TableDefinitionsTest extends TestCase
         return $connection;
     }
 
-    private function createSQLiteConnection() : Connection
+    private function createSQLiteConnection(): Connection
     {
         return DriverManager::getConnection([
             'driver' => 'sqlite3',
@@ -288,15 +292,12 @@ final class TableDefinitionsTest extends TestCase
         ]);
     }
 
-    private function createTestTable(Connection $connection, string $tableName) : void
+    private function createTestTable(Connection $connection, string $tableName): void
     {
-        $table = new Table(
-            $tableName,
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            ]
-        );
+        $table = new Table($tableName, [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+        ]);
 
         $connection->createSchemaManager()->createTable($table);
     }

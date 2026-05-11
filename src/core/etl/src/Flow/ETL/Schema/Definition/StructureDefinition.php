@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureType;
+
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\{Entry, EntryReference, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\Types\Type\Logical\{OptionalType, StructureType};
 
 /**
  * @template TElement
@@ -38,19 +43,19 @@ final class StructureDefinition implements Definition
     /**
      * @param array<array-key, mixed> $value
      */
-    public function addMetadata(string $key, int|string|bool|float|array $value) : static
+    public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
         $this->metadata = $this->metadata->add($key, $value);
 
         return $this;
     }
 
-    public function entry() : Reference
+    public function entry(): Reference
     {
         return $this->ref;
     }
 
-    public function isCompatible(Definition $definition) : bool
+    public function isCompatible(Definition $definition): bool
     {
         if (!$this->ref->is($definition->entry())) {
             return false;
@@ -91,8 +96,16 @@ final class StructureDefinition implements Definition
                 $definitionElementNullable = true;
             }
 
-            $thisElementDef = definition_from_type($this->ref->name() . '.' . $name, $thisElement, $thisElementNullable);
-            $definitionElementDef = definition_from_type($definition->ref->name() . '.' . $name, $definitionElement, $definitionElementNullable);
+            $thisElementDef = definition_from_type(
+                $this->ref->name() . '.' . $name,
+                $thisElement,
+                $thisElementNullable,
+            );
+            $definitionElementDef = definition_from_type(
+                $definition->ref->name() . '.' . $name,
+                $definitionElement,
+                $definitionElementNullable,
+            );
 
             if (!$thisElementDef->isCompatible($definitionElementDef)) {
                 return false;
@@ -102,12 +115,12 @@ final class StructureDefinition implements Definition
         return true;
     }
 
-    public function isNullable() : bool
+    public function isNullable(): bool
     {
         return $this->nullable;
     }
 
-    public function isSame(Definition $definition) : bool
+    public function isSame(Definition $definition): bool
     {
         if ($this->nullable !== $definition->isNullable()) {
             return false;
@@ -120,12 +133,12 @@ final class StructureDefinition implements Definition
         return $this->metadata->isEqual($definition->metadata());
     }
 
-    public function makeNullable(bool $nullable = true) : static
+    public function makeNullable(bool $nullable = true): static
     {
         return new self($this->ref, $this->type, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry) : bool
+    public function matches(Entry $entry): bool
     {
         if ($this->isNullable() && $entry->is($this->ref)) {
             return true;
@@ -138,13 +151,13 @@ final class StructureDefinition implements Definition
         return $entry->type() instanceof StructureType;
     }
 
-    public function merge(Definition $definition) : Definition
+    public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
             throw new RuntimeException(\sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
-                $definition->entry()->name()
+                $definition->entry()->name(),
             ));
         }
 
@@ -152,20 +165,25 @@ final class StructureDefinition implements Definition
         $defFromNull = $definition->metadata()->has(Metadata::FROM_NULL);
 
         if ($thisFromNull && $defFromNull) {
-            return $this->makeNullable()->setMetadata(
-                $this->metadata->merge($definition->metadata())
-            );
+            return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
         }
 
         if ($thisFromNull) {
-            return $definition->makeNullable()->setMetadata(
-                $definition->metadata()->remove(Metadata::FROM_NULL)->merge($this->metadata->remove(Metadata::FROM_NULL))
-            );
+            return $definition
+                ->makeNullable()
+                ->setMetadata(
+                    $definition
+                        ->metadata()
+                        ->remove(Metadata::FROM_NULL)
+                        ->merge($this->metadata->remove(Metadata::FROM_NULL)),
+                );
         }
 
         if ($defFromNull) {
             return $this->makeNullable()->setMetadata(
-                $this->metadata->remove(Metadata::FROM_NULL)->merge($definition->metadata()->remove(Metadata::FROM_NULL))
+                $this->metadata
+                    ->remove(Metadata::FROM_NULL)
+                    ->merge($definition->metadata()->remove(Metadata::FROM_NULL)),
             );
         }
 
@@ -175,14 +193,14 @@ final class StructureDefinition implements Definition
                     $this->ref,
                     $this->type,
                     $this->nullable || $definition->nullable,
-                    $this->metadata->merge($definition->metadata)
+                    $this->metadata->merge($definition->metadata),
                 );
             }
 
             return new JsonDefinition(
                 $this->ref,
                 $this->nullable || $definition->nullable,
-                $this->metadata->merge($definition->metadata)
+                $this->metadata->merge($definition->metadata),
             );
         }
 
@@ -190,18 +208,14 @@ final class StructureDefinition implements Definition
             return new StringDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata())
+                $this->metadata->merge($definition->metadata()),
             );
         }
 
-        throw new RuntimeException(\sprintf(
-            'Cannot merge %s with %s',
-            self::class,
-            $definition::class
-        ));
+        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
-    public function metadata() : Metadata
+    public function metadata(): Metadata
     {
         return $this->metadata;
     }
@@ -209,7 +223,7 @@ final class StructureDefinition implements Definition
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'ref' => $this->ref->name(),
@@ -219,12 +233,12 @@ final class StructureDefinition implements Definition
         ];
     }
 
-    public function rename(string $newName) : static
+    public function rename(string $newName): static
     {
         return new self($newName, $this->type, $this->nullable, $this->metadata);
     }
 
-    public function setMetadata(Metadata $metadata) : static
+    public function setMetadata(Metadata $metadata): static
     {
         $this->metadata = $metadata;
 
@@ -234,7 +248,7 @@ final class StructureDefinition implements Definition
     /**
      * @return StructureType<TElement>
      */
-    public function type() : StructureType
+    public function type(): StructureType
     {
         return $this->type;
     }

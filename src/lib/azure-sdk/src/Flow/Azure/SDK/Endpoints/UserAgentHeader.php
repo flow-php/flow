@@ -8,12 +8,12 @@ trait UserAgentHeader
 {
     private string $userAgentHeader = 'flow-php/azure-sdk';
 
-    public function userAgentHeader() : string
+    public function userAgentHeader(): string
     {
         return $this->userAgentHeader;
     }
 
-    public function withUserAgent(string $userAgentHeader) : void
+    public function withUserAgent(string $userAgentHeader): void
     {
         $this->userAgentHeader = $userAgentHeader;
     }

@@ -15,24 +15,23 @@ final readonly class Metadata
         private int $rowsNumber,
         private int $version,
         private ?string $createdBy,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(FileMetaData $thrift) : self
+    public static function fromThrift(FileMetaData $thrift): self
     {
         return new self(
             Schema::fromThrift($thrift->schema),
             RowGroups::fromThrift($thrift->row_groups),
             (int) $thrift->num_rows,
             (int) $thrift->version,
-            $thrift->created_by
+            $thrift->created_by,
         );
     }
 
     /**
      * @return array<ColumnChunk>
      */
-    public function columnChunks() : array
+    public function columnChunks(): array
     {
         $chunks = [];
 
@@ -45,27 +44,27 @@ final readonly class Metadata
         return $chunks;
     }
 
-    public function createdBy() : ?string
+    public function createdBy(): ?string
     {
         return $this->createdBy;
     }
 
-    public function rowGroups() : RowGroups
+    public function rowGroups(): RowGroups
     {
         return $this->rowGroups;
     }
 
-    public function rowsNumber() : int
+    public function rowsNumber(): int
     {
         return $this->rowsNumber;
     }
 
-    public function schema() : Schema
+    public function schema(): Schema
     {
         return $this->schema;
     }
 
-    public function toThrift() : FileMetaData
+    public function toThrift(): FileMetaData
     {
         return new FileMetaData([
             'version' => $this->version,
@@ -76,7 +75,7 @@ final readonly class Metadata
         ]);
     }
 
-    public function version() : int
+    public function version(): int
     {
         return $this->version;
     }

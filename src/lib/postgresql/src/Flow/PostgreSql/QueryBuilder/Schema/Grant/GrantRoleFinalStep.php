@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface GrantRoleFinalStep extends Sql
 {
-    public function toAst() : GrantRoleStmt;
+    public function toAst(): GrantRoleStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function withAdminOption() : self;
+    public function withAdminOption(): self;
 }

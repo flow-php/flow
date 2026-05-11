@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Merge;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, MergeStmt, MergeWhenClause, Node, RangeSubselect, RangeVar, ResTarget};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\MergeStmt;
+use Flow\PostgreSql\Protobuf\AST\MergeWhenClause;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 /**
@@ -32,20 +39,19 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         private ?string $sourceAlias = null,
         private ?Condition $joinCondition = null,
         private array $whenClauses = [],
-    ) {
-    }
+    ) {}
 
-    public static function create() : MergeIntoStep
+    public static function create(): MergeIntoStep
     {
         return new self();
     }
 
-    public static function with(WithClause $with) : MergeIntoStep
+    public static function with(WithClause $with): MergeIntoStep
     {
         return new self(with: $with);
     }
 
-    public function addWhenClause(MergeWhenClauseData $clause) : MergeWhenStep
+    public function addWhenClause(MergeWhenClauseData $clause): MergeWhenStep
     {
         return new self(
             $this->with,
@@ -61,7 +67,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         );
     }
 
-    public function into(string $table, ?string $alias = null) : MergeUsingStep
+    public function into(string $table, ?string $alias = null): MergeUsingStep
     {
         $identifier = QualifiedIdentifier::parse($table);
 
@@ -79,7 +85,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         );
     }
 
-    public function on(Condition $condition) : MergeWhenStep
+    public function on(Condition $condition): MergeWhenStep
     {
         return new self(
             $this->with,
@@ -95,7 +101,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         );
     }
 
-    public function toAst() : MergeStmt
+    public function toAst(): MergeStmt
     {
         if ($this->table === null || $this->table === '') {
             throw InvalidExpressionException::invalidValue('table', 'null or empty');
@@ -187,7 +193,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         return $mergeStmt;
     }
 
-    public function using(string|SelectFinalStep $source, string $alias) : MergeOnStep
+    public function using(string|SelectFinalStep $source, string $alias): MergeOnStep
     {
         if ($source instanceof SelectFinalStep) {
             return new self(
@@ -220,37 +226,37 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
         );
     }
 
-    public function whenMatched() : MergeWhenMatched
+    public function whenMatched(): MergeWhenMatched
     {
         return MergeWhenMatched::create($this, MergeMatchKind::MATCHED);
     }
 
-    public function whenMatchedAnd(Condition $condition) : MergeWhenMatched
+    public function whenMatchedAnd(Condition $condition): MergeWhenMatched
     {
         return MergeWhenMatched::create($this, MergeMatchKind::MATCHED, $condition);
     }
 
-    public function whenNotMatched() : MergeWhenNotMatched
+    public function whenNotMatched(): MergeWhenNotMatched
     {
         return MergeWhenNotMatched::create($this);
     }
 
-    public function whenNotMatchedAnd(Condition $condition) : MergeWhenNotMatched
+    public function whenNotMatchedAnd(Condition $condition): MergeWhenNotMatched
     {
         return MergeWhenNotMatched::create($this, $condition);
     }
 
-    public function whenNotMatchedBySource() : MergeWhenMatched
+    public function whenNotMatchedBySource(): MergeWhenMatched
     {
         return MergeWhenMatched::create($this, MergeMatchKind::NOT_MATCHED_BY_SOURCE);
     }
 
-    public function whenNotMatchedBySourceAnd(Condition $condition) : MergeWhenMatched
+    public function whenNotMatchedBySourceAnd(Condition $condition): MergeWhenMatched
     {
         return MergeWhenMatched::create($this, MergeMatchKind::NOT_MATCHED_BY_SOURCE, $condition);
     }
 
-    private function buildWhenClauseNode(MergeWhenClauseData $clause) : Node
+    private function buildWhenClauseNode(MergeWhenClauseData $clause): Node
     {
         $whenClause = new MergeWhenClause();
 

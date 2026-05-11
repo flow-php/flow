@@ -7,9 +7,11 @@ namespace Flow\ETL;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Function\{ExecutionMode, Functions};
+use Flow\ETL\Function\ExecutionMode;
+use Flow\ETL\Function\Functions;
 use Flow\ETL\Row\EntryFactory;
-use Flow\Filesystem\{Filesystem, Path};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
 
 /**
  * Mutable Flow execution context.
@@ -23,50 +25,51 @@ final class FlowContext
 
     private ?TelemetryContext $telemetryContext = null;
 
-    public function __construct(public readonly Config $config)
-    {
+    public function __construct(
+        public readonly Config $config,
+    ) {
         $this->errorHandler = new ThrowError();
         $this->functions = new Functions(ExecutionMode::LENIENT);
     }
 
-    public function cache() : Cache
+    public function cache(): Cache
     {
         return $this->config->cache->cache;
     }
 
-    public function entryFactory() : EntryFactory
+    public function entryFactory(): EntryFactory
     {
         return $this->config->entryFactory();
     }
 
-    public function errorHandler() : ErrorHandler
+    public function errorHandler(): ErrorHandler
     {
         return $this->errorHandler;
     }
 
-    public function filesystem(Path|string $path) : Filesystem
+    public function filesystem(Path|string $path): Filesystem
     {
         return $this->config->fstab()->for($path);
     }
 
-    public function functions() : Functions
+    public function functions(): Functions
     {
         return $this->functions;
     }
 
-    public function setErrorHandler(ErrorHandler $handler) : self
+    public function setErrorHandler(ErrorHandler $handler): self
     {
         $this->errorHandler = $handler;
 
         return $this;
     }
 
-    public function streams() : FilesystemStreams
+    public function streams(): FilesystemStreams
     {
         return $this->config->filesystemStreams();
     }
 
-    public function telemetry() : TelemetryContext
+    public function telemetry(): TelemetryContext
     {
         return $this->telemetryContext ??= new TelemetryContext(
             $this->config->telemetry->telemetry->logger('flow_php_dataframe', $this->config->version()),

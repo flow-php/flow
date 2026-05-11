@@ -5,24 +5,26 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure;
 
 use Flow\Azure\SDK\BlobServiceInterface;
-use Flow\Filesystem\{DestinationStream,
-    Exception\InvalidSchemeException,
-    Exception\RuntimeException,
-    FileStatus,
-    Filesystem,
-    Mount,
-    Path,
-    SourceStream};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidSchemeException;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Mount;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Flow\Filesystem\SourceStream;
 
 final readonly class AzureBlobFilesystem implements Filesystem
 {
-    public function __construct(private Mount $mount, private BlobServiceInterface $blobService, private Options $options)
-    {
-    }
+    public function __construct(
+        private Mount $mount,
+        private BlobServiceInterface $blobService,
+        private Options $options,
+    ) {}
 
-    public function appendTo(Path $path) : DestinationStream
+    public function appendTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             throw new RuntimeException('Cannot write to system tmp directory');
@@ -34,32 +36,29 @@ final readonly class AzureBlobFilesystem implements Filesystem
             $this->blobService,
             $path,
             $this->options->blockFactory(),
-            $this->options->blockSize()
+            $this->options->blockSize(),
         );
     }
 
-    public function getSystemTmpDir() : Path
+    public function getSystemTmpDir(): Path
     {
         return $this->options->tmpDir();
     }
 
-    public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
-        if (!$path->isPattern()
+        if (
+            !$path->isPattern()
             && $this->options->fileFastPath()
             && $path->extension() !== false
-            && !\str_ends_with($path->path(), DIRECTORY_SEPARATOR)) {
+            && !\str_ends_with($path->path(), DIRECTORY_SEPARATOR)
+        ) {
             $blobProperties = $this->blobService->getBlobProperties(\ltrim($path->path(), DIRECTORY_SEPARATOR));
 
             if ($blobProperties !== null) {
-                $fileStatus = new FileStatus(
-                    $path,
-                    true,
-                    $blobProperties->size(),
-                    $blobProperties->lastModifiedAt(),
-                );
+                $fileStatus = new FileStatus($path, true, $blobProperties->size(), $blobProperties->lastModifiedAt());
 
                 if ($pathFilter->accept($fileStatus)) {
                     yield $fileStatus;
@@ -82,7 +81,10 @@ final readonly class AzureBlobFilesystem implements Filesystem
         }
 
         foreach ($this->blobService->listBlobs($options) as $blob) {
-            $blobPath = \Flow\Filesystem\DSL\path($path->protocol() . '://' . DIRECTORY_SEPARATOR . \ltrim($blob->name(), DIRECTORY_SEPARATOR), $path->options());
+            $blobPath = \Flow\Filesystem\DSL\path(
+                $path->protocol() . '://' . DIRECTORY_SEPARATOR . \ltrim($blob->name(), DIRECTORY_SEPARATOR),
+                $path->options(),
+            );
             $blobFileStatus = new FileStatus(
                 $blobPath,
                 (bool) $blobPath->extension(),
@@ -100,12 +102,12 @@ final readonly class AzureBlobFilesystem implements Filesystem
         }
     }
 
-    public function mount() : Mount
+    public function mount(): Mount
     {
         return $this->mount;
     }
 
-    public function mv(Path $from, Path $to) : bool
+    public function mv(Path $from, Path $to): bool
     {
         $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
         $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
@@ -116,14 +118,14 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return true;
     }
 
-    public function readFrom(Path $path) : SourceStream
+    public function readFrom(Path $path): SourceStream
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
         return new AzureBlobSourceStream($path, $this->blobService);
     }
 
-    public function rm(Path $path) : bool
+    public function rm(Path $path): bool
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             return false;
@@ -152,7 +154,10 @@ final readonly class AzureBlobFilesystem implements Filesystem
              * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally
              * not delete files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
              */
-            $folderPath = \Flow\Filesystem\DSL\path(\trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+            $folderPath = \Flow\Filesystem\DSL\path(
+                \trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR,
+                $path->options(),
+            );
             $blobProperties = $this->blobService->getBlobProperties($folderPath->path());
 
             if ($blobProperties === null) {
@@ -170,7 +175,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
         }
     }
 
-    public function status(Path $path) : ?FileStatus
+    public function status(Path $path): ?FileStatus
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             return new FileStatus($path, false);
@@ -191,7 +196,10 @@ final readonly class AzureBlobFilesystem implements Filesystem
                  * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally
                  * not match files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
                  */
-                $folderPath = \Flow\Filesystem\DSL\path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+                $folderPath = \Flow\Filesystem\DSL\path(
+                    trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR,
+                    $path->options(),
+                );
 
                 foreach ($this->list($folderPath) as $fileStatus) {
                     return new FileStatus($folderPath, false);
@@ -210,7 +218,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return null;
     }
 
-    public function writeTo(Path $path) : DestinationStream
+    public function writeTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             throw new RuntimeException('Cannot write to system tmp directory');
@@ -222,7 +230,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
             $this->blobService,
             $path,
             $this->options->blockFactory(),
-            $this->options->blockSize()
+            $this->options->blockSize(),
         );
     }
 }

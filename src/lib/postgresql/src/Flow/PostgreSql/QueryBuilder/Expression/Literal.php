@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, Boolean, Integer, Node, PBFloat, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBFloat;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -14,20 +19,19 @@ final readonly class Literal implements Expression
 {
     private function __construct(
         private string|int|float|bool|null $value,
-    ) {
-    }
+    ) {}
 
-    public static function bool(bool $value) : self
+    public static function bool(bool $value): self
     {
         return new self($value);
     }
 
-    public static function float(float $value) : self
+    public static function float(float $value): self
     {
         return new self($value);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aConst = $node->getAConst();
 
@@ -71,52 +75,52 @@ final readonly class Literal implements Expression
         throw InvalidAstException::missingRequiredField('value', 'A_Const');
     }
 
-    public static function int(int $value) : self
+    public static function int(int $value): self
     {
         return new self($value);
     }
 
-    public static function null() : self
+    public static function null(): self
     {
         return new self(null);
     }
 
-    public static function string(string $value) : self
+    public static function string(string $value): self
     {
         return new self($value);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return AliasedExpression::create($this, $alias);
     }
 
-    public function isBool() : bool
+    public function isBool(): bool
     {
         return \is_bool($this->value);
     }
 
-    public function isFloat() : bool
+    public function isFloat(): bool
     {
         return \is_float($this->value);
     }
 
-    public function isInt() : bool
+    public function isInt(): bool
     {
         return \is_int($this->value);
     }
 
-    public function isNull() : bool
+    public function isNull(): bool
     {
         return $this->value === null;
     }
 
-    public function isString() : bool
+    public function isString(): bool
     {
         return \is_string($this->value);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $aConst = new A_Const();
 
@@ -150,7 +154,7 @@ final readonly class Literal implements Expression
         return $node;
     }
 
-    public function value() : string|int|float|bool|null
+    public function value(): string|int|float|bool|null
     {
         return $this->value;
     }

@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Documentation;
 
-use Flow\Website\Model\Documentation\{DSLDefinition, Module, Type};
+use Flow\Website\Model\Documentation\DSLDefinition;
+use Flow\Website\Model\Documentation\Module;
+use Flow\Website\Model\Documentation\Type;
 
 final readonly class DSLDefinitions
 {
     /**
      * @param array<DSLDefinition> $definitions
      */
-    private function __construct(private array $definitions)
-    {
-    }
+    private function __construct(
+        private array $definitions,
+    ) {}
 
-    public static function fromJson(string $definitionsPath) : self
+    public static function fromJson(string $definitionsPath): self
     {
         return new self(\json_decode(\file_get_contents($definitionsPath), true, 512, JSON_THROW_ON_ERROR));
     }
@@ -23,24 +25,21 @@ final readonly class DSLDefinitions
     /**
      * @return array<DSLDefinition>
      */
-    public function all() : array
+    public function all(): array
     {
-        $definitions = \array_map(
-            static fn (array $data) => new DSLDefinition($data),
-            $this->definitions
-        );
+        $definitions = \array_map(static fn(array $data) => new DSLDefinition($data), $this->definitions);
 
-        \usort($definitions, static fn (DSLDefinition $a, DSLDefinition $b) => \strnatcasecmp($a->name(), $b->name()));
+        \usort($definitions, static fn(DSLDefinition $a, DSLDefinition $b) => \strnatcasecmp($a->name(), $b->name()));
 
         return $definitions;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->definitions);
     }
 
-    public function fromModule(Module $module) : self
+    public function fromModule(Module $module): self
     {
         $definitions = [];
 
@@ -57,7 +56,7 @@ final readonly class DSLDefinitions
         return new self($definitions);
     }
 
-    public function get(string $slug) : ?DSLDefinition
+    public function get(string $slug): ?DSLDefinition
     {
         foreach ($this->all() as $definition) {
             if ($definition->slug() === $slug) {
@@ -71,7 +70,7 @@ final readonly class DSLDefinitions
     /**
      * @return array<Module>
      */
-    public function modules() : array
+    public function modules(): array
     {
         $modules = [];
 
@@ -83,12 +82,12 @@ final readonly class DSLDefinitions
             }
         }
 
-        uasort($modules, static fn (Module $a, Module $b) => $a->priority() <=> $b->priority());
+        uasort($modules, static fn(Module $a, Module $b) => $a->priority() <=> $b->priority());
 
         return $modules;
     }
 
-    public function onlyType(?Type $type) : self
+    public function onlyType(?Type $type): self
     {
         $definitions = [];
 
@@ -101,7 +100,7 @@ final readonly class DSLDefinitions
         return new self($definitions);
     }
 
-    public function types() : array
+    public function types(): array
     {
         $types = [];
 
@@ -113,7 +112,7 @@ final readonly class DSLDefinitions
             }
         }
 
-        uasort($types, static fn (Type $a, Type $b) => $a->priority() <=> $b->priority());
+        uasort($types, static fn(Type $a, Type $b) => $a->priority() <=> $b->priority());
 
         return $types;
     }

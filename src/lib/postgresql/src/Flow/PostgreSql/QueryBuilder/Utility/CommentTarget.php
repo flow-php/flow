@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 
-enum CommentTarget : int
+enum CommentTarget: int
 {
     case COLUMN = ObjectType::OBJECT_COLUMN;
     case DATABASE = ObjectType::OBJECT_DATABASE;

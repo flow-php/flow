@@ -9,12 +9,12 @@ use Flow\PostgreSql\Protobuf\AST\OnConflictAction;
 /**
  * ON CONFLICT action enum.
  */
-enum ConflictAction : string
+enum ConflictAction: string
 {
     case NOTHING = 'NOTHING';
     case UPDATE = 'UPDATE';
 
-    public static function fromProtobuf(int $action) : self
+    public static function fromProtobuf(int $action): self
     {
         return match ($action) {
             OnConflictAction::ONCONFLICT_UPDATE => self::UPDATE,
@@ -22,7 +22,7 @@ enum ConflictAction : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::NOTHING => OnConflictAction::ONCONFLICT_NOTHING,

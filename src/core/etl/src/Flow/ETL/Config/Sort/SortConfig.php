@@ -15,6 +15,5 @@ final readonly class SortConfig
         public SortAlgorithms $algorithm,
         public Unit $memoryLimit,
         public string $filesystemProtocol = 'file',
-    ) {
-    }
+    ) {}
 }

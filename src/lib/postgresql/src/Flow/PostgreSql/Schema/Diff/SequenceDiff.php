@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\alter;
-
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Sequence;
+
+use function Flow\PostgreSql\DSL\alter;
 
 final readonly class SequenceDiff implements Diff
 {
     public function __construct(
         public Sequence $source,
         public Sequence $target,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $builder = alter()->sequence($this->target->name);
         $hasChanges = false;
@@ -64,7 +63,10 @@ final readonly class SequenceDiff implements Diff
             $hasChanges = true;
         }
 
-        if ($this->target->ownedByTable !== $this->source->ownedByTable || $this->target->ownedByColumn !== $this->source->ownedByColumn) {
+        if (
+            $this->target->ownedByTable !== $this->source->ownedByTable
+            || $this->target->ownedByColumn !== $this->source->ownedByColumn
+        ) {
             if ($this->target->ownedByTable !== null && $this->target->ownedByColumn !== null) {
                 $builder = $builder->ownedBy($this->target->ownedByTable, $this->target->ownedByColumn);
             } else {

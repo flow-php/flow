@@ -4,34 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
 final class UnicodeLengthTest extends FlowTestCase
 {
-    public function test_unicode_length() : void
+    public function test_unicode_length(): void
     {
-        (data_frame())
-            ->read(
-                from_array(
-                    [
-                        ['text' => 'hello'],
-                        ['text' => 'world🚀'],
-                        ['text' => 'café'],
-                        ['text' => 'नमस्ते'],
-                        ['text' => ''],
-                        ['text' => null],
-                        ['text' => 'a'],
-                        ['text' => str_repeat('x', 100)],
-                        ['text' => 'é'],
-                        ['text' => "e\u{0301}"],
-                        ['text' => '👋🏻'],
-                        ['text' => '👨‍👩‍👧‍👦'],
-                    ]
-                )
-            )
+        data_frame()
+            ->read(from_array([
+                ['text' => 'hello'],
+                ['text' => 'world🚀'],
+                ['text' => 'café'],
+                ['text' => 'नमस्ते'],
+                ['text' => ''],
+                ['text' => null],
+                ['text' => 'a'],
+                ['text' => str_repeat('x', 100)],
+                ['text' => 'é'],
+                ['text' => "e\u{0301}"],
+                ['text' => '👋🏻'],
+                ['text' => '👨‍👩‍👧‍👦'],
+            ]))
             ->withEntry('unicode_length', ref('text')->unicodeLength())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -51,6 +50,6 @@ final class UnicodeLengthTest extends FlowTestCase
             ['text' => '👨‍👩‍👧‍👦', 'unicode_length' => 1],
         ];
 
-        self::assertSame($expected, $memory->dump());
+        static::assertSame($expected, $memory->dump());
     }
 }

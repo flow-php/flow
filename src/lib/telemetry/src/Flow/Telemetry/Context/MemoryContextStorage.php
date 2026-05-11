@@ -13,7 +13,7 @@ final class MemoryContextStorage implements ContextStorage
         $this->context = $context ?? Context::create();
     }
 
-    public function attach(Context $context) : Scope
+    public function attach(Context $context): Scope
     {
         $previous = $this->context;
         $this->context = $context;
@@ -21,7 +21,7 @@ final class MemoryContextStorage implements ContextStorage
         return new ContextScope($previous, $this);
     }
 
-    public function current() : Context
+    public function current(): Context
     {
         return $this->context;
     }
@@ -31,7 +31,7 @@ final class MemoryContextStorage implements ContextStorage
      *
      * @internal
      */
-    public function store(Context $context) : void
+    public function store(Context $context): void
     {
         $this->context = $context;
     }

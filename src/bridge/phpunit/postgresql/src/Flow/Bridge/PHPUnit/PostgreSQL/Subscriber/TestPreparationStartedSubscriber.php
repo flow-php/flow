@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\PostgreSQL\Subscriber;
 
-use Flow\Bridge\PHPUnit\PostgreSQL\{SkipTransactionRollback, StaticClient};
-use PHPUnit\Event\Code\{Test, TestMethod};
-use PHPUnit\Event\Test\{PreparationStarted, PreparationStartedSubscriber};
+use Flow\Bridge\PHPUnit\PostgreSQL\SkipTransactionRollback;
+use Flow\Bridge\PHPUnit\PostgreSQL\StaticClient;
+use PHPUnit\Event\Code\Test;
+use PHPUnit\Event\Code\TestMethod;
+use PHPUnit\Event\Test\PreparationStarted;
+use PHPUnit\Event\Test\PreparationStartedSubscriber;
 use PHPUnit\Framework\TestCase;
 
 final readonly class TestPreparationStartedSubscriber implements PreparationStartedSubscriber
 {
-    public function notify(PreparationStarted $event) : void
+    public function notify(PreparationStarted $event): void
     {
         StaticClient::rollBack();
 
@@ -25,7 +28,7 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
         StaticClient::beginTransaction();
     }
 
-    private static function hasSkipAttribute(Test $test) : bool
+    private static function hasSkipAttribute(Test $test): bool
     {
         if (!$test instanceof TestMethod) {
             return false;
@@ -37,15 +40,14 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
             return true;
         }
 
-        if ($reflectionClass->hasMethod($test->methodName())
+        if (
+            $reflectionClass->hasMethod($test->methodName())
             && $reflectionClass->getMethod($test->methodName())->getAttributes(SkipTransactionRollback::class)
         ) {
             return true;
         }
 
-        while (($reflectionClass = $reflectionClass->getParentClass())
-            && $reflectionClass->name !== TestCase::class
-        ) {
+        while (($reflectionClass = $reflectionClass->getParentClass()) && $reflectionClass->name !== TestCase::class) {
             if ($reflectionClass->getAttributes(SkipTransactionRollback::class)) {
                 return true;
             }

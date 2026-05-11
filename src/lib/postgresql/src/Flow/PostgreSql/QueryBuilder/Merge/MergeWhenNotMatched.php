@@ -16,22 +16,21 @@ final readonly class MergeWhenNotMatched
     private function __construct(
         private MergeBuilder $builder,
         private ?Condition $condition,
-    ) {
-    }
+    ) {}
 
-    public static function create(MergeBuilder $builder, ?Condition $condition = null) : self
+    public static function create(MergeBuilder $builder, ?Condition $condition = null): self
     {
         return new self($builder, $condition);
     }
 
-    public function thenDoNothing() : MergeWhenStep
+    public function thenDoNothing(): MergeWhenStep
     {
         return $this->builder->addWhenClause(
             new MergeWhenClauseData(
                 MergeMatchKind::NOT_MATCHED_BY_TARGET,
                 MergeActionType::DO_NOTHING,
                 $this->condition,
-            )
+            ),
         );
     }
 
@@ -41,7 +40,7 @@ final readonly class MergeWhenNotMatched
      * @param list<string> $columns Column names
      * @param list<Expression> $values Values to insert
      */
-    public function thenInsert(array $columns, array $values) : MergeWhenStep
+    public function thenInsert(array $columns, array $values): MergeWhenStep
     {
         return $this->builder->addWhenClause(
             new MergeWhenClauseData(
@@ -51,7 +50,7 @@ final readonly class MergeWhenNotMatched
                 [],
                 $columns,
                 $values,
-            )
+            ),
         );
     }
 
@@ -60,7 +59,7 @@ final readonly class MergeWhenNotMatched
      *
      * @param array<string, Expression> $columnValuePairs
      */
-    public function thenInsertValues(array $columnValuePairs) : MergeWhenStep
+    public function thenInsertValues(array $columnValuePairs): MergeWhenStep
     {
         return $this->builder->addWhenClause(
             new MergeWhenClauseData(
@@ -70,7 +69,7 @@ final readonly class MergeWhenNotMatched
                 [],
                 \array_keys($columnValuePairs),
                 \array_values($columnValuePairs),
-            )
+            ),
         );
     }
 }

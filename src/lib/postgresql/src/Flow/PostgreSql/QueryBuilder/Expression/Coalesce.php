@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{CoalesceExpr, Node};
+use Flow\PostgreSql\Protobuf\AST\CoalesceExpr;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -23,7 +24,7 @@ final readonly class Coalesce implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $coalesceExpr = $node->getCoalesceExpr();
 
@@ -46,7 +47,7 @@ final readonly class Coalesce implements Expression
         return new self($expressions);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
@@ -54,12 +55,12 @@ final readonly class Coalesce implements Expression
     /**
      * @return array<Expression>
      */
-    public function expressions() : array
+    public function expressions(): array
     {
         return $this->expressions;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $args = [];
 

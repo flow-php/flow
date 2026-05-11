@@ -6,5 +6,5 @@ namespace Flow\Azure\SDK;
 
 interface Serializer
 {
-    public function serialize(mixed $data) : string;
+    public function serialize(mixed $data): string;
 }

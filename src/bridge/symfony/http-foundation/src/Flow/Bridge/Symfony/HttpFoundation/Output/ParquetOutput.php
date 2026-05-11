@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
-use function Flow\ETL\Adapter\Parquet\to_parquet;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\{Loader, Schema};
+use Flow\ETL\Loader;
+use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+
 if (!function_exists('Flow\ETL\Adapter\Parquet\to_parquet')) {
-    throw new \RuntimeException('Flow\ETL\Adapter\Parquet\to_parquet function is not available. Make sure that composer require flow-php/etl-adapter-parquet dependency is present in your composer.json.');
+    throw new \RuntimeException(
+        'Flow\ETL\Adapter\Parquet\to_parquet function is not available. Make sure that composer require flow-php/etl-adapter-parquet dependency is present in your composer.json.',
+    );
 }
 
 final readonly class ParquetOutput implements Output
@@ -21,13 +25,11 @@ final readonly class ParquetOutput implements Output
         private ?Options $options = null,
         private Compressions $compressions = Compressions::SNAPPY,
         private ?Schema $schema = null,
-    ) {
-    }
+    ) {}
 
-    public function loader(Path $path) : Loader
+    public function loader(Path $path): Loader
     {
-        $loader = to_parquet($path)
-            ->withCompressions($this->compressions);
+        $loader = to_parquet($path)->withCompressions($this->compressions);
 
         if ($this->options !== null) {
             $loader->withOptions($this->options);
@@ -40,7 +42,7 @@ final readonly class ParquetOutput implements Output
         return $loader;
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return Type::PARQUET;
     }

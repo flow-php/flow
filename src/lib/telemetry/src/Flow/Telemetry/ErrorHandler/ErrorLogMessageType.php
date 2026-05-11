@@ -7,7 +7,7 @@ namespace Flow\Telemetry\ErrorHandler;
 /**
  * Backed counterpart of PHP's error_log() $message_type argument.
  */
-enum ErrorLogMessageType : int
+enum ErrorLogMessageType: int
 {
     case Email = 1;
     case File = 3;

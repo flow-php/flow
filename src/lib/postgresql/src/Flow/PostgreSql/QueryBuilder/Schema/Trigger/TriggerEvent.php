@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
-enum TriggerEvent : int
+enum TriggerEvent: int
 {
     case DELETE = 8;
     case INSERT = 4;

@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 interface SelectGroupByStep extends SelectHavingStep
 {
-    public function groupBy(string|Expression ...$expressions) : SelectHavingStep;
+    public function groupBy(string|Expression ...$expressions): SelectHavingStep;
 }

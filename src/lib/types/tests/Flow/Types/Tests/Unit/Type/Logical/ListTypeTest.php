@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_boolean, type_float, type_from_array, type_integer, type_list, type_map, type_string};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Logical\ListType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+
 final class ListTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid list of strings' => [
             'value' => ['a', 'b'],
@@ -75,7 +82,7 @@ final class ListTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'list of ints to list of floats' => [
             'value' => [1, 2, 3],
@@ -92,7 +99,7 @@ final class ListTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid list of booleans' => [
             'value' => [true, false],
@@ -144,47 +151,44 @@ final class ListTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ListType $listType, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ListType $listType, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             $listType->assert($value);
         } else {
-            self::assertIsArray($listType->assert($value));
+            static::assertIsArray($listType->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, ListType $listType, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, ListType $listType, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             $listType->cast($value);
         } else {
-            self::assertSame($expected, $listType->cast($value));
+            static::assertSame($expected, $listType->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, ListType $listType, bool $expected) : void
+    public function test_is_valid(mixed $value, ListType $listType, bool $expected): void
     {
-        self::assertSame($expected, $listType->isValid($value));
+        static::assertSame($expected, $listType->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_list(type_string());
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'list<boolean>',
-            (type_list(type_boolean()))->toString()
-        );
+        static::assertSame('list<boolean>', type_list(type_boolean())->toString());
     }
 }

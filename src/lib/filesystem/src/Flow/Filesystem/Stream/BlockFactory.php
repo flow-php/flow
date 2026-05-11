@@ -6,5 +6,5 @@ namespace Flow\Filesystem\Stream;
 
 interface BlockFactory
 {
-    public function create(int $size) : Block;
+    public function create(int $size): Block;
 }

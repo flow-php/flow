@@ -10,6 +10,5 @@ final readonly class Notification
         public string $channel,
         public string $payload,
         public int $pid,
-    ) {
-    }
+    ) {}
 }

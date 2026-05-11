@@ -12,12 +12,10 @@ use Flow\Telemetry\Signal\Signals;
  */
 final readonly class VoidExporter implements Exporter
 {
-    public function export(Signals $signal) : bool
+    public function export(Signals $signal): bool
     {
         return true;
     }
 
-    public function shutdown() : void
-    {
-    }
+    public function shutdown(): void {}
 }

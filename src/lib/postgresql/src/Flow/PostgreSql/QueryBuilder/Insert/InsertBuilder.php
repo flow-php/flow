@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Insert;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, PBList};
-use Flow\PostgreSql\Protobuf\AST\{InsertStmt, Node, RangeVar, ResTarget, SelectStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
-use Flow\PostgreSql\QueryBuilder\Clause\{ConflictTarget, OnConflictClause, WithClause};
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\InsertStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
+use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
+use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory, Star};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\Star;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 
@@ -35,15 +45,14 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         private ?OnConflictClause $onConflict = null,
         private array $returning = [],
         private bool $returningAll = false,
-    ) {
-    }
+    ) {}
 
-    public static function create() : InsertIntoStep
+    public static function create(): InsertIntoStep
     {
         return new self();
     }
 
-    public static function fromAst(InsertStmt $insertStmt) : static
+    public static function fromAst(InsertStmt $insertStmt): static
     {
         $relation = $insertStmt->getRelation();
 
@@ -129,11 +138,11 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                         $selectQuery = new readonly class($selectStmt) implements SelectFinalStep {
                             use AstToSql;
 
-                            public function __construct(private SelectStmt $stmt)
-                            {
-                            }
+                            public function __construct(
+                                private SelectStmt $stmt,
+                            ) {}
 
-                            public static function fromAst(Node $node) : static
+                            public static function fromAst(Node $node): static
                             {
                                 $selectStmt = $node->getSelectStmt();
 
@@ -144,7 +153,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                                 return new self($selectStmt);
                             }
 
-                            public function toAst() : SelectStmt
+                            public function toAst(): SelectStmt
                             {
                                 return $this->stmt;
                             }
@@ -212,12 +221,12 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public static function with(WithClause $with) : InsertIntoStep
+    public static function with(WithClause $with): InsertIntoStep
     {
         return new self(with: $with);
     }
 
-    public function columns(string ...$columns) : InsertValuesStep
+    public function columns(string ...$columns): InsertValuesStep
     {
         return new self(
             $this->with,
@@ -234,7 +243,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function defaultValues() : InsertOnConflictStep
+    public function defaultValues(): InsertOnConflictStep
     {
         return new self(
             $this->with,
@@ -251,7 +260,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function into(string|Table $table, ?string $alias = null) : InsertColumnsStep
+    public function into(string|Table $table, ?string $alias = null): InsertColumnsStep
     {
         if ($table instanceof Table) {
             $name = $table->name;
@@ -277,7 +286,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function onConflict(OnConflictClause $clause) : InsertReturningStep
+    public function onConflict(OnConflictClause $clause): InsertReturningStep
     {
         return new self(
             $this->with,
@@ -294,12 +303,12 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function onConflictDoNothing(?ConflictTarget $target = null) : InsertReturningStep
+    public function onConflictDoNothing(?ConflictTarget $target = null): InsertReturningStep
     {
         return $this->onConflict(OnConflictClause::doNothing($target));
     }
 
-    public function onConflictDoUpdate(ConflictTarget $target, array $updates) : InsertDoUpdateStep
+    public function onConflictDoUpdate(ConflictTarget $target, array $updates): InsertDoUpdateStep
     {
         return new self(
             $this->with,
@@ -316,7 +325,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function returning(Expression ...$expressions) : InsertFinalStep
+    public function returning(Expression ...$expressions): InsertFinalStep
     {
         return new self(
             $this->with,
@@ -333,7 +342,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function returningAll() : InsertFinalStep
+    public function returningAll(): InsertFinalStep
     {
         return new self(
             $this->with,
@@ -350,7 +359,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function select(SelectFinalStep $select) : InsertOnConflictStep
+    public function select(SelectFinalStep $select): InsertOnConflictStep
     {
         return new self(
             $this->with,
@@ -367,7 +376,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function toAst() : InsertStmt
+    public function toAst(): InsertStmt
     {
         $insertStmt = new InsertStmt();
 
@@ -482,7 +491,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         return $insertStmt;
     }
 
-    public function values(Expression ...$values) : InsertValuesStep
+    public function values(Expression ...$values): InsertValuesStep
     {
         return new self(
             $this->with,
@@ -499,7 +508,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         );
     }
 
-    public function where(Condition $condition) : InsertReturningStep
+    public function where(Condition $condition): InsertReturningStep
     {
         if ($this->onConflict === null) {
             return $this;

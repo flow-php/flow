@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{Exception\InvalidArgumentException,
-    FlowContext,
-    Row,
-    Row\References,
-    Rows,
-    Sort\ExternalSort\Bucket,
-    Sort\ExternalSort\Buckets,
-    Sort\ExternalSort\BucketsCache};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\References;
+use Flow\ETL\Rows;
+use Flow\ETL\Sort\ExternalSort\Bucket;
+use Flow\ETL\Sort\ExternalSort\Buckets;
+use Flow\ETL\Sort\ExternalSort\BucketsCache;
 
 /**
  * External sorting is explained here:.
@@ -36,7 +36,7 @@ final class ExternalSort implements SortingAlgorithm
         }
     }
 
-    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs) : \Generator
+    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs): \Generator
     {
         $sortedBuckets = [];
 
@@ -52,7 +52,7 @@ final class ExternalSort implements SortingAlgorithm
      *
      * @return \Generator<int, Buckets>
      */
-    private function createBucketsFromGenerator(\Generator $generator, References $refs) : \Generator
+    private function createBucketsFromGenerator(\Generator $generator, References $refs): \Generator
     {
         /** @var array<Bucket> $buckets */
         $buckets = [];
@@ -102,7 +102,7 @@ final class ExternalSort implements SortingAlgorithm
      *
      * @return \Generator<Rows>
      */
-    private function extractSortedBuckets(array $sortBuckets) : \Generator
+    private function extractSortedBuckets(array $sortBuckets): \Generator
     {
         $outputBatchSize = \max(1, \abs($this->batchSize));
 
@@ -131,7 +131,7 @@ final class ExternalSort implements SortingAlgorithm
      *
      * @return array<Bucket>
      */
-    private function mergeBuckets(array $buckets, References $refs) : array
+    private function mergeBuckets(array $buckets, References $refs): array
     {
         $bucketChunks = \array_chunk($buckets, $this->bucketsCount, true);
 
@@ -148,7 +148,7 @@ final class ExternalSort implements SortingAlgorithm
         return $buckets;
     }
 
-    private function sortBuckets(Buckets $sortBuckets, References $refs) : Bucket
+    private function sortBuckets(Buckets $sortBuckets, References $refs): Bucket
     {
         $this->bucketsCache->set($nextBucketId = \bin2hex(\random_bytes(16)), $sortBuckets->sort(...$refs->all()));
 

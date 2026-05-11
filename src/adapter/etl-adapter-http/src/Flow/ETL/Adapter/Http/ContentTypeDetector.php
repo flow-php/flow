@@ -8,7 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 
 final class ContentTypeDetector
 {
-    public static function detectFromResponse(ResponseInterface $response) : ResponseType
+    public static function detectFromResponse(ResponseInterface $response): ResponseType
     {
         foreach ($response->getHeader('Content-Type') as $header) {
             if (\str_contains($header, 'application/json')) {

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Logger;
 
 use Flow\Telemetry\Logger\Severity;
-use PHPUnit\Framework\Attributes\{CoversClass, DataProvider};
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Severity::class)]
@@ -14,7 +15,7 @@ final class SeverityTest extends TestCase
     /**
      * @return \Generator<string, array{Severity, Severity, bool}>
      */
-    public static function isAtLeastProvider() : \Generator
+    public static function isAtLeastProvider(): \Generator
     {
         yield 'TRACE is at least TRACE' => [Severity::TRACE, Severity::TRACE, true];
         yield 'TRACE is not at least DEBUG' => [Severity::TRACE, Severity::DEBUG, false];
@@ -38,7 +39,7 @@ final class SeverityTest extends TestCase
     /**
      * @return \Generator<string, array{Severity, string}>
      */
-    public static function nameProvider() : \Generator
+    public static function nameProvider(): \Generator
     {
         yield 'TRACE' => [Severity::TRACE, 'TRACE'];
         yield 'DEBUG' => [Severity::DEBUG, 'DEBUG'];
@@ -49,14 +50,14 @@ final class SeverityTest extends TestCase
     }
 
     #[DataProvider('isAtLeastProvider')]
-    public function test_is_at_least_compares_correctly(Severity $severity, Severity $other, bool $expected) : void
+    public function test_is_at_least_compares_correctly(Severity $severity, Severity $other, bool $expected): void
     {
-        self::assertSame($expected, $severity->isAtLeast($other));
+        static::assertSame($expected, $severity->isAtLeast($other));
     }
 
     #[DataProvider('nameProvider')]
-    public function test_name_returns_correct_string(Severity $severity, string $expectedName) : void
+    public function test_name_returns_correct_string(Severity $severity, string $expectedName): void
     {
-        self::assertSame($expectedName, $severity->name());
+        static::assertSame($expectedName, $severity->name());
     }
 }

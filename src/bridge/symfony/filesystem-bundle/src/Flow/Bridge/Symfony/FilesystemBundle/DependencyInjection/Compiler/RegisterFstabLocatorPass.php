@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference, ServiceLocator};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
 final class RegisterFstabLocatorPass implements CompilerPassInterface
 {
@@ -13,7 +16,7 @@ final class RegisterFstabLocatorPass implements CompilerPassInterface
 
     public const string LOCATOR_SERVICE_ID = 'flow.filesystem.fstab_locator';
 
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter(BuildFstabsPass::CONFIG_PARAMETER)) {
             return;

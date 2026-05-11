@@ -9,17 +9,17 @@ use PHPUnit\Framework\TestCase;
 
 final class AsFilesystemFactoryTest extends TestCase
 {
-    public function test_attribute_targets_class_only() : void
+    public function test_attribute_targets_class_only(): void
     {
         $reflection = new \ReflectionClass(AsFilesystemFactory::class);
         $attributes = $reflection->getAttributes(\Attribute::class);
 
-        self::assertCount(1, $attributes);
-        self::assertSame(\Attribute::TARGET_CLASS, $attributes[0]->newInstance()->flags);
+        static::assertCount(1, $attributes);
+        static::assertSame(\Attribute::TARGET_CLASS, $attributes[0]->newInstance()->flags);
     }
 
-    public function test_exposes_type_as_public_readonly() : void
+    public function test_exposes_type_as_public_readonly(): void
     {
-        self::assertSame('file', (new AsFilesystemFactory(type: 'file'))->type);
+        static::assertSame('file', (new AsFilesystemFactory(type: 'file'))->type);
     }
 }

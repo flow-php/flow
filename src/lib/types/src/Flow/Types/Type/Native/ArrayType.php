@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\XML\XMLConverter;
 
@@ -16,7 +17,7 @@ final readonly class ArrayType implements Type
     /**
      * @return array<array-key, mixed>
      */
-    public function assert(mixed $value) : array
+    public function assert(mixed $value): array
     {
         if ($this->isValid($value)) {
             return $value;
@@ -28,7 +29,7 @@ final readonly class ArrayType implements Type
     /**
      * @return array<array-key, mixed>
      */
-    public function cast(mixed $value) : array
+    public function cast(mixed $value): array
     {
         if ($this->isValid($value)) {
             return $value;
@@ -57,7 +58,7 @@ final readonly class ArrayType implements Type
         }
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if (!\is_array($value)) {
             return false;
@@ -66,14 +67,14 @@ final readonly class ArrayType implements Type
         return true;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'array',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'array<mixed>';
     }

@@ -12,15 +12,14 @@ final readonly class ConsoleSpanOptions
         public bool $showLinks = true,
         public bool $showStatusDescription = true,
         public bool $showDroppedCounts = false,
-    ) {
-    }
+    ) {}
 
-    public static function default() : self
+    public static function default(): self
     {
         return new self();
     }
 
-    public static function minimal() : self
+    public static function minimal(): self
     {
         return new self(
             showResourceAttributes: false,
@@ -31,28 +30,58 @@ final readonly class ConsoleSpanOptions
         );
     }
 
-    public function withDroppedCounts(bool $show = true) : self
+    public function withDroppedCounts(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $this->showLinks, $this->showStatusDescription, $show);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $this->showLinks,
+            $this->showStatusDescription,
+            $show,
+        );
     }
 
-    public function withInstrumentationScope(bool $show = true) : self
+    public function withInstrumentationScope(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $show, $this->showLinks, $this->showStatusDescription, $this->showDroppedCounts);
+        return new self(
+            $this->showResourceAttributes,
+            $show,
+            $this->showLinks,
+            $this->showStatusDescription,
+            $this->showDroppedCounts,
+        );
     }
 
-    public function withLinks(bool $show = true) : self
+    public function withLinks(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $show, $this->showStatusDescription, $this->showDroppedCounts);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $show,
+            $this->showStatusDescription,
+            $this->showDroppedCounts,
+        );
     }
 
-    public function withResourceAttributes(bool $show = true) : self
+    public function withResourceAttributes(bool $show = true): self
     {
-        return new self($show, $this->showInstrumentationScope, $this->showLinks, $this->showStatusDescription, $this->showDroppedCounts);
+        return new self(
+            $show,
+            $this->showInstrumentationScope,
+            $this->showLinks,
+            $this->showStatusDescription,
+            $this->showDroppedCounts,
+        );
     }
 
-    public function withStatusDescription(bool $show = true) : self
+    public function withStatusDescription(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $this->showLinks, $show, $this->showDroppedCounts);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $this->showLinks,
+            $show,
+            $this->showDroppedCounts,
+        );
     }
 }

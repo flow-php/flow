@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\{TagAwareTraceableCacheAdapter, TraceableCacheAdapter};
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TagAwareTraceableCacheAdapter;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TraceableCacheAdapter;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class CacheTelemetryPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter('flow.telemetry.cache.enabled')) {
             return;
@@ -29,7 +32,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
 
         $taggedServices = $container->findTaggedServiceIds('cache.pool');
 
-        foreach ($taggedServices as $serviceId => $tags) {
+        foreach ($taggedServices as $serviceId => $_tags) {
             if ($this->isExcluded($serviceId, $excludePools)) {
                 continue;
             }
@@ -51,9 +54,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
 
             $isTagAware = \is_a($serviceClass, TagAwareAdapterInterface::class, true);
 
-            $adapterClass = $isTagAware
-                ? TagAwareTraceableCacheAdapter::class
-                : TraceableCacheAdapter::class;
+            $adapterClass = $isTagAware ? TagAwareTraceableCacheAdapter::class : TraceableCacheAdapter::class;
 
             $definition = new Definition($adapterClass);
             $definition->setDecoratedService($serviceId);
@@ -68,7 +69,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
     /**
      * @param array<string> $patterns
      */
-    private function isExcluded(string $serviceId, array $patterns) : bool
+    private function isExcluded(string $serviceId, array $patterns): bool
     {
         foreach ($patterns as $pattern) {
             if ($this->matchesPattern($serviceId, $pattern)) {
@@ -79,7 +80,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
         return false;
     }
 
-    private function matchesPattern(string $serviceId, string $pattern) : bool
+    private function matchesPattern(string $serviceId, string $pattern): bool
     {
         $result = @\preg_match($pattern, $serviceId);
 

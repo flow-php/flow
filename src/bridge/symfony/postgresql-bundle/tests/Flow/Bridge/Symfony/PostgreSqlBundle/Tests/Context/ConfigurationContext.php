@@ -16,7 +16,7 @@ final readonly class ConfigurationContext
      *
      * @return array<mixed>
      */
-    public function processConfig(array $config) : array
+    public function processConfig(array $config): array
     {
         $extension = (new FlowPostgreSqlBundle())->getContainerExtension();
 

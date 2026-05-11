@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
-use Flow\Doctrine\Bulk\{BulkData, InsertOptions, TableDefinition, UpdateOptions};
+use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\UpdateOptions;
 
 interface Dialect
 {
@@ -14,7 +17,7 @@ interface Dialect
      *
      * @return string
      */
-    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string;
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData): string;
 
     /**
      * @param TableDefinition $table
@@ -23,7 +26,7 @@ interface Dialect
      *
      * @return string
      */
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string;
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null): string;
 
     /**
      * @param TableDefinition $table
@@ -32,5 +35,5 @@ interface Dialect
      *
      * @return string
      */
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string;
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null): string;
 }

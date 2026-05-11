@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Calculator;
 
-use Brick\Math\{BigDecimal, BigInteger, Exception\RoundingNecessaryException, RoundingMode};
+use Brick\Math\BigDecimal;
+use Brick\Math\BigInteger;
 use Brick\Math\Exception\DivisionByZeroException;
-use Flow\Calculator\Exception\{InvalidScaleException, NonNumericValueException};
+use Brick\Math\Exception\RoundingNecessaryException;
+use Brick\Math\RoundingMode;
+use Flow\Calculator\Exception\InvalidScaleException;
+use Flow\Calculator\Exception\NonNumericValueException;
 
 final class Calculator
 {
@@ -17,7 +21,7 @@ final class Calculator
      * @throws NonNumericValueException
      * @throws InvalidScaleException
      */
-    public function add(int|float|string $a, int|float|string $b) : int|float
+    public function add(int|float|string $a, int|float|string $b): int|float
     {
         $result = BigDecimal::of((string) $a)->plus(BigDecimal::of((string) $b));
 
@@ -35,8 +39,12 @@ final class Calculator
      * @throws Exception\RoundingNecessaryException
      * @throws \DivisionByZeroError
      */
-    public function divide(int|float|string $a, int|float|string $b, ?int $scale = null, ?Rounding $rounding = null) : int|float
-    {
+    public function divide(
+        int|float|string $a,
+        int|float|string $b,
+        ?int $scale = null,
+        ?Rounding $rounding = null,
+    ): int|float {
         try {
             $aDecimal = BigDecimal::of((string) $a);
             $effectiveScale = $scale ?? $aDecimal->getScale();
@@ -74,7 +82,7 @@ final class Calculator
      * @param int|numeric-string $a
      * @param int|numeric-string $b
      */
-    public function modulus(int|string $a, int|string $b) : int
+    public function modulus(int|string $a, int|string $b): int
     {
         return BigInteger::of($a)->mod(BigInteger::of($b))->toInt();
     }
@@ -83,7 +91,7 @@ final class Calculator
      * @param float|int|numeric-string $a
      * @param float|int|numeric-string $b
      */
-    public function multiply(int|float|string $a, int|float|string $b) : int|float
+    public function multiply(int|float|string $a, int|float|string $b): int|float
     {
         $result = BigDecimal::of((string) $a)->multipliedBy(BigDecimal::of((string) $b));
 
@@ -98,7 +106,7 @@ final class Calculator
      * @param float|int|numeric-string $a
      * @param int|numeric-string $b
      */
-    public function power(int|float|string $a, int|string $b) : int|float
+    public function power(int|float|string $a, int|string $b): int|float
     {
         $result = BigDecimal::of((string) $a)->power(BigInteger::of((string) $b)->toInt());
 
@@ -113,7 +121,7 @@ final class Calculator
      * @param float|int|numeric-string $a
      * @param float|int|numeric-string $b
      */
-    public function subtract(int|float|string $a, int|float|string $b) : int|float
+    public function subtract(int|float|string $a, int|float|string $b): int|float
     {
         $result = BigDecimal::of((string) $a)->minus(BigDecimal::of((string) $b));
 
@@ -124,7 +132,7 @@ final class Calculator
         return $result->toFloat();
     }
 
-    private static function hasNonZeroFractionalPart(BigDecimal $result) : bool
+    private static function hasNonZeroFractionalPart(BigDecimal $result): bool
     {
         if (\method_exists($result, 'hasNonZeroFractionalPart')) {
             return $result->hasNonZeroFractionalPart();

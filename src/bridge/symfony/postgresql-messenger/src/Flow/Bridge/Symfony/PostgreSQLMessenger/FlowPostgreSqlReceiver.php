@@ -6,20 +6,25 @@ namespace Flow\Bridge\Symfony\PostgreSQLMessenger;
 
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\{LogicException, MessageDecodingFailedException};
+use Symfony\Component\Messenger\Exception\LogicException;
+use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
-use Symfony\Component\Messenger\Transport\Receiver\{KeepaliveReceiverInterface, ListableReceiverInterface, MessageCountAwareInterface};
+use Symfony\Component\Messenger\Transport\Receiver\KeepaliveReceiverInterface;
+use Symfony\Component\Messenger\Transport\Receiver\ListableReceiverInterface;
+use Symfony\Component\Messenger\Transport\Receiver\MessageCountAwareInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
-final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterface, ListableReceiverInterface, MessageCountAwareInterface
+final readonly class FlowPostgreSqlReceiver implements
+    KeepaliveReceiverInterface,
+    ListableReceiverInterface,
+    MessageCountAwareInterface
 {
     public function __construct(
         private Connection $connection,
         private SerializerInterface $serializer,
-    ) {
-    }
+    ) {}
 
-    public function ack(Envelope $envelope) : void
+    public function ack(Envelope $envelope): void
     {
         try {
             $this->connection->ack($this->findTransportMessageId($envelope));
@@ -31,7 +36,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
     /**
      * @return iterable<Envelope>
      */
-    public function all(?int $limit = null) : iterable
+    public function all(?int $limit = null): iterable
     {
         try {
             $rows = $this->connection->findAll($limit);
@@ -44,7 +49,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
         }
     }
 
-    public function find(mixed $id) : ?Envelope
+    public function find(mixed $id): ?Envelope
     {
         if (!\is_int($id) && !\is_string($id)) {
             throw TransportException::unexpectedRowShape('id', \get_debug_type($id));
@@ -62,7 +67,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
     /**
      * @return iterable<Envelope>
      */
-    public function get() : iterable
+    public function get(): iterable
     {
         try {
             $row = $this->connection->get();
@@ -77,7 +82,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
         return [$this->toEnvelope($row)];
     }
 
-    public function getMessageCount() : int
+    public function getMessageCount(): int
     {
         try {
             return $this->connection->getMessageCount();
@@ -86,7 +91,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
         }
     }
 
-    public function keepalive(Envelope $envelope, ?int $seconds = null) : void
+    public function keepalive(Envelope $envelope, ?int $seconds = null): void
     {
         try {
             $this->connection->keepalive($this->findTransportMessageId($envelope), $seconds);
@@ -95,7 +100,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
         }
     }
 
-    public function reject(Envelope $envelope) : void
+    public function reject(Envelope $envelope): void
     {
         try {
             $this->connection->reject($this->findTransportMessageId($envelope));
@@ -104,7 +109,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
         }
     }
 
-    private function findTransportMessageId(Envelope $envelope) : string
+    private function findTransportMessageId(Envelope $envelope): string
     {
         $stamp = $envelope->last(TransportMessageIdStamp::class);
 
@@ -121,7 +126,7 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
     /**
      * @param array<string, mixed> $row
      */
-    private function toEnvelope(array $row) : Envelope
+    private function toEnvelope(array $row): Envelope
     {
         $body = $row['body'] ?? null;
         $headersRaw = $row['headers'] ?? null;
@@ -142,7 +147,11 @@ final readonly class FlowPostgreSqlReceiver implements KeepaliveReceiverInterfac
         try {
             $headers = \json_decode($headersRaw, true, 512, \JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new MessageDecodingFailedException(\sprintf('Could not decode message headers: %s', $e->getMessage()), 0, $e);
+            throw new MessageDecodingFailedException(
+                \sprintf('Could not decode message headers: %s', $e->getMessage()),
+                0,
+                $e,
+            );
         }
 
         if (!\is_array($headers)) {

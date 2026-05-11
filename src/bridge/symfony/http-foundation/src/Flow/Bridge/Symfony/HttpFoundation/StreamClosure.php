@@ -12,5 +12,5 @@ use Flow\ETL\Dataset\Report;
  */
 interface StreamClosure
 {
-    public function onComplete(?Report $report) : void;
+    public function onComplete(?Report $report): void;
 }

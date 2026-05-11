@@ -9,7 +9,7 @@ use Flow\Parquet\Writer\PageBuilder\Dictionary;
 
 final class ObjectDictionaryBuilder
 {
-    public function build(WriteFlatColumnValues $data) : Dictionary
+    public function build(WriteFlatColumnValues $data): Dictionary
     {
         $dictionary = [];
         $indices = [];

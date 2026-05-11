@@ -6,14 +6,14 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 final class ObjectToString
 {
-    public static function toString(object $object) : string
+    public static function toString(object $object): string
     {
         if ($object instanceof \Stringable) {
             return (string) $object;
         }
 
         if ($object instanceof \DateTimeInterface) {
-            return ((string) $object->getTimestamp()) . '.' . $object->format('u') . ' ' . $object->getOffset();
+            return (string) $object->getTimestamp() . '.' . $object->format('u') . ' ' . $object->getOffset();
         }
 
         if ($object instanceof \DateInterval) {

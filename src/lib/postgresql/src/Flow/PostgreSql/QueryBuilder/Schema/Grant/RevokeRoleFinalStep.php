@@ -9,11 +9,11 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface RevokeRoleFinalStep extends Sql
 {
-    public function cascade() : self;
+    public function cascade(): self;
 
-    public function restrict() : self;
+    public function restrict(): self;
 
-    public function toAst() : GrantRoleStmt;
+    public function toAst(): GrantRoleStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

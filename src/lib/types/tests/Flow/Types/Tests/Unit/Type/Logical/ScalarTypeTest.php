@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_scalar;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\TypeFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_scalar;
+
 final class ScalarTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid string' => [
             'value' => 'string',
@@ -55,7 +56,7 @@ final class ScalarTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'string' => [
             'value' => 'string',
@@ -100,7 +101,7 @@ final class ScalarTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid string' => [
             'value' => 'string',
@@ -144,47 +145,44 @@ final class ScalarTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_scalar()->assert($value);
         } else {
-            self::assertSame($value, type_scalar()->assert($value));
+            static::assertSame($value, type_scalar()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_scalar()->cast($value);
         } else {
-            self::assertSame($expected, type_scalar()->cast($value));
+            static::assertSame($expected, type_scalar()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_scalar()->isValid($value));
+        static::assertSame($expected, type_scalar()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_scalar();
         $normalized = $type->normalize();
         $recreated = TypeFactory::fromArray($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'scalar',
-            type_scalar()->toString()
-        );
+        static::assertSame('scalar', type_scalar()->toString());
     }
 }

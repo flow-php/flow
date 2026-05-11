@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\AlterTableCmd;
+use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
+use Flow\PostgreSql\Protobuf\AST\AlterTableType;
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterTableLoggingBuilder implements AlterTableLoggingFinalStep
@@ -16,20 +22,19 @@ final readonly class AlterTableLoggingBuilder implements AlterTableLoggingFinalS
         private ?string $schema,
         private bool $logged,
         private bool $ifExists,
-    ) {
-    }
+    ) {}
 
-    public static function createLogged(string $table, ?string $schema, bool $ifExists) : self
+    public static function createLogged(string $table, ?string $schema, bool $ifExists): self
     {
         return new self($table, $schema, true, $ifExists);
     }
 
-    public static function createUnlogged(string $table, ?string $schema, bool $ifExists) : self
+    public static function createUnlogged(string $table, ?string $schema, bool $ifExists): self
     {
         return new self($table, $schema, false, $ifExists);
     }
 
-    public function toAst() : AlterTableStmt
+    public function toAst(): AlterTableStmt
     {
         $stmt = new AlterTableStmt();
         $stmt->setObjtype(ObjectType::OBJECT_TABLE);

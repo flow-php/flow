@@ -7,23 +7,23 @@ namespace Flow\ETL\Adapter\Excel\RowsNormalizer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{BooleanEntry,
-    DateEntry,
-    DateTimeEntry,
-    EnumEntry,
-    FloatEntry,
-    HTMLElementEntry,
-    HTMLEntry,
-    IntegerEntry,
-    JsonEntry,
-    ListEntry,
-    MapEntry,
-    StringEntry,
-    StructureEntry,
-    TimeEntry,
-    UuidEntry,
-    XMLElementEntry,
-    XMLEntry};
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\DateEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\HTMLElementEntry;
+use Flow\ETL\Row\Entry\HTMLEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 
 final readonly class ExcelRowsNormalizer
 {
@@ -31,13 +31,12 @@ final readonly class ExcelRowsNormalizer
         private string $dateFormat = 'Y-m-d',
         private string $dateTimeFormat = 'Y-m-d H:i:s',
         private string $timeFormat = 'H:i:s',
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, string>
      */
-    public function headers(Row $row) : array
+    public function headers(Row $row): array
     {
         $headers = [];
 
@@ -51,7 +50,7 @@ final readonly class ExcelRowsNormalizer
     /**
      * @return array<int, null|bool|float|int|string>
      */
-    public function normalize(Row $row) : array
+    public function normalize(Row $row): array
     {
         $values = [];
 
@@ -65,31 +64,28 @@ final readonly class ExcelRowsNormalizer
     /**
      * @param Entry<mixed> $entry
      */
-    private function normalizeEntry(Entry $entry) : bool|float|int|string|null
+    private function normalizeEntry(Entry $entry): bool|float|int|string|null
     {
         return match ($entry::class) {
-            BooleanEntry::class,
-            IntegerEntry::class,
-            FloatEntry::class,
-            StringEntry::class => $entry->value(),
+            BooleanEntry::class, IntegerEntry::class, FloatEntry::class, StringEntry::class => $entry->value(),
             DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value()?->format($this->timeFormat),
             EnumEntry::class => $this->normalizeEnumEntry($entry),
-            JsonEntry::class,
-            ListEntry::class,
-            MapEntry::class,
-            StructureEntry::class => $this->normalizeToJson($entry->value()),
+            JsonEntry::class, ListEntry::class, MapEntry::class, StructureEntry::class => $this->normalizeToJson(
+                $entry->value(),
+            ),
             UuidEntry::class,
             XMLEntry::class,
             XMLElementEntry::class,
             HTMLEntry::class,
-            HTMLElementEntry::class => $entry->toString(),
+            HTMLElementEntry::class,
+                => $entry->toString(),
             default => throw new InvalidArgumentException('Unknown entry type: ' . $entry::class),
         };
     }
 
-    private function normalizeEnumEntry(EnumEntry $entry) : ?string
+    private function normalizeEnumEntry(EnumEntry $entry): ?string
     {
         $value = $entry->value();
 
@@ -100,7 +96,7 @@ final readonly class ExcelRowsNormalizer
         return $value?->name;
     }
 
-    private function normalizeToJson(mixed $value) : ?string
+    private function normalizeToJson(mixed $value): ?string
     {
         return $value !== null ? \json_encode($value, JSON_THROW_ON_ERROR) : null;
     }

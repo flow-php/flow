@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Sanitization;
 
-use function Flow\Types\DSL\{type_integer, type_literal, type_string, type_structure};
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_literal;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class Mask implements Sanitizer
 {
@@ -15,23 +18,19 @@ final readonly class Mask implements Sanitizer
     public function __construct(
         private string $character = '*',
         private int $offset = 0,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a Mask sanitizer from an array representation.
      *
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        $data = type_structure(
-            ['type' => type_literal('mask')],
-            [
-                'character' => type_string(),
-                'offset' => type_integer(),
-            ]
-        )->assert($data);
+        $data = type_structure(['type' => type_literal('mask')], [
+            'character' => type_string(),
+            'offset' => type_integer(),
+        ])->assert($data);
 
         return new self($data['character'] ?? '*', $data['offset'] ?? 0);
     }
@@ -39,7 +38,7 @@ final readonly class Mask implements Sanitizer
     /**
      * {@inheritdoc}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'mask',
@@ -48,7 +47,7 @@ final readonly class Mask implements Sanitizer
         ];
     }
 
-    public function sanitize(string $value) : string
+    public function sanitize(string $value): string
     {
         if ($value === '') {
             return '';

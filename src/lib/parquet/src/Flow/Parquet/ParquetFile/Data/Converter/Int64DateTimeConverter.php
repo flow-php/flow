@@ -6,17 +6,19 @@ namespace Flow\Parquet\ParquetFile\Data\Converter;
 
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 final class Int64DateTimeConverter implements Converter
 {
-    public function fromParquetType(mixed $data) : \DateTimeImmutable
+    public function fromParquetType(mixed $data): \DateTimeImmutable
     {
         /** @var int $data */
         return new \DateTimeImmutable('@' . \number_format($data / 1_000_000, 6, '.', ''));
     }
 
-    public function isFor(FlatColumn $column, Options $options) : bool
+    public function isFor(FlatColumn $column, Options $options): bool
     {
         if ($column->type() === PhysicalType::INT64 && $column->logicalType()?->name() === LogicalType::TIMESTAMP) {
             return true;
@@ -25,9 +27,9 @@ final class Int64DateTimeConverter implements Converter
         return false;
     }
 
-    public function toParquetType(mixed $data) : int
+    public function toParquetType(mixed $data): int
     {
         /** @var \DateTimeInterface $data */
-        return $data->getTimestamp() * 1_000_000 + (int) $data->format('u');
+        return ($data->getTimestamp() * 1_000_000) + (int) $data->format('u');
     }
 }

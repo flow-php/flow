@@ -9,13 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\LockWaitPolicy as ProtobufLockWaitPolicy;
 /**
  * Lock wait policy enum.
  */
-enum LockWaitPolicy : string
+enum LockWaitPolicy: string
 {
     case DEFAULT = 'DEFAULT';
     case NOWAIT = 'NOWAIT';
     case SKIP_LOCKED = 'SKIP LOCKED';
 
-    public static function fromProtobuf(int $policy) : self
+    public static function fromProtobuf(int $policy): self
     {
         return match ($policy) {
             ProtobufLockWaitPolicy::LockWaitError => self::NOWAIT,
@@ -24,7 +24,7 @@ enum LockWaitPolicy : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::DEFAULT => ProtobufLockWaitPolicy::LockWaitBlock,

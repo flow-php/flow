@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_positive_integer};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_positive_integer;
+
 final class PositiveIntegerTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid positive integer 1' => [
             'value' => 1,
@@ -34,7 +37,7 @@ final class PositiveIntegerTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'valid positive integer 1' => [
             'value' => 1,
@@ -61,7 +64,7 @@ final class PositiveIntegerTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid positive integer 1' => [
             'value' => 1,
@@ -85,49 +88,46 @@ final class PositiveIntegerTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_positive_integer()->assert($value);
         } else {
             $result = type_positive_integer()->assert($value);
-            self::assertIsInt($result);
-            self::assertSame($value, $result);
+            static::assertIsInt($result);
+            static::assertSame($value, $result);
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_positive_integer()->cast($value);
         } else {
-            self::assertSame($expected, type_positive_integer()->cast($value));
+            static::assertSame($expected, type_positive_integer()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_positive_integer()->isValid($value));
+        static::assertSame($expected, type_positive_integer()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_positive_integer();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'positive_integer',
-            type_positive_integer()->toString()
-        );
+        static::assertSame('positive_integer', type_positive_integer()->toString());
     }
 }

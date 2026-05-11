@@ -10,14 +10,15 @@ use Flow\ETL\Rows;
 
 final readonly class RowsNormalizer
 {
-    public function __construct(private EntryNormalizer $entryNormalizer, private string $rowNodeName = 'row')
-    {
-    }
+    public function __construct(
+        private EntryNormalizer $entryNormalizer,
+        private string $rowNodeName = 'row',
+    ) {}
 
     /**
      * @return \Generator<XMLNode>
      */
-    public function normalize(Rows $rows) : \Generator
+    public function normalize(Rows $rows): \Generator
     {
         foreach ($rows as $row) {
             $node = XMLNode::nestedNode($this->rowNodeName);

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration;
 
-use function Flow\PostgreSql\DSL\{drop, pgsql_client, pgsql_connection_dsn};
-
 use Flow\PostgreSql\Client\Client;
+
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\pgsql_client;
+use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 
 final class PostgreSqlContext
 {
@@ -38,7 +40,7 @@ final class PostgreSqlContext
     /**
      * @return list<string>
      */
-    public function backgroundStderrContents() : array
+    public function backgroundStderrContents(): array
     {
         $out = [];
 
@@ -51,12 +53,12 @@ final class PostgreSqlContext
         return $out;
     }
 
-    public function client() : Client
+    public function client(): Client
     {
         return $this->client;
     }
 
-    public function close() : void
+    public function close(): void
     {
         foreach ($this->backgroundProcesses as $process) {
             \proc_close($process);
@@ -78,52 +80,52 @@ final class PostgreSqlContext
         $this->client->close();
     }
 
-    public function dropDomainIfExists(string $domain) : void
+    public function dropDomainIfExists(string $domain): void
     {
         $this->client->execute(drop()->domain($domain)->ifExists()->cascade()->toSql());
     }
 
-    public function dropFunctionIfExists(string $function) : void
+    public function dropFunctionIfExists(string $function): void
     {
         $this->client->execute(drop()->function($function)->ifExists()->cascade()->toSql());
     }
 
-    public function dropIndexIfExists(string $index) : void
+    public function dropIndexIfExists(string $index): void
     {
         $this->client->execute(drop()->index($index)->ifExists()->cascade()->toSql());
     }
 
-    public function dropMaterializedViewIfExists(string $view) : void
+    public function dropMaterializedViewIfExists(string $view): void
     {
         $this->client->execute(drop()->materializedView($view)->ifExists()->cascade()->toSql());
     }
 
-    public function dropSchemaIfExists(string $schema) : void
+    public function dropSchemaIfExists(string $schema): void
     {
         $this->client->execute(drop()->schema($schema)->ifExists()->cascade()->toSql());
     }
 
-    public function dropSequenceIfExists(string $sequence) : void
+    public function dropSequenceIfExists(string $sequence): void
     {
         $this->client->execute(drop()->sequence($sequence)->ifExists()->cascade()->toSql());
     }
 
-    public function dropTableIfExists(string $table) : void
+    public function dropTableIfExists(string $table): void
     {
         $this->client->execute(drop()->table($table)->ifExists()->cascade()->toSql());
     }
 
-    public function dropTriggerIfExists(string $trigger, string $table) : void
+    public function dropTriggerIfExists(string $trigger, string $table): void
     {
         $this->client->execute(drop()->trigger($trigger)->on($table)->ifExists()->cascade()->toSql());
     }
 
-    public function dropTypeIfExists(string $type) : void
+    public function dropTypeIfExists(string $type): void
     {
         $this->client->execute(drop()->type($type)->ifExists()->cascade()->toSql());
     }
 
-    public function dropViewIfExists(string $view) : void
+    public function dropViewIfExists(string $view): void
     {
         $this->client->execute(drop()->view($view)->ifExists()->cascade()->toSql());
     }
@@ -134,7 +136,7 @@ final class PostgreSqlContext
      * separate connections). The context owns the returned client and closes
      * it during tearDown.
      */
-    public function newClient() : Client
+    public function newClient(): Client
     {
         $client = pgsql_client(pgsql_connection_dsn($this->dsn));
         $this->secondaryClients[] = $client;
@@ -149,7 +151,7 @@ final class PostgreSqlContext
      * during close(). Used for integration tests that need to exercise the
      * blocking wait path of waitForNotification().
      */
-    public function spawnBackgroundNotifier(string $channel, string $payload, int $delayMs) : void
+    public function spawnBackgroundNotifier(string $channel, string $payload, int $delayMs): void
     {
         $autoload = \getcwd() . '/vendor/autoload.php';
 

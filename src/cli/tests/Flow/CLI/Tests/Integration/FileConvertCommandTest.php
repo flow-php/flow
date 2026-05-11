@@ -34,7 +34,7 @@ final class FileConvertCommandTest extends TestCase
      * @param string $outputFormat
      * @param array<string, mixed> $options
      */
-    public function test_convert(string $inputFormat, string $outputFormat, array $options = []) : void
+    public function test_convert(string $inputFormat, string $outputFormat, array $options = []): void
     {
         /** @var array<string, mixed> $options */
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.' . $outputFormat;
@@ -45,25 +45,20 @@ final class FileConvertCommandTest extends TestCase
 
         $tester = new CommandTester(new FileConvertCommand('convert'));
 
-        $tester->execute(
-            array_merge(
-                [
-                    'input-file' => __DIR__ . '/Fixtures/orders.' . $inputFormat,
-                    'output-file' => $output,
-                    '--input-file-limit' => 5,
-                    '--schema-auto-cast' => true,
-                ],
-                $options
-            )
-        );
+        $tester->execute(array_merge([
+            'input-file' => __DIR__ . '/Fixtures/orders.' . $inputFormat,
+            'output-file' => $output,
+            '--input-file-limit' => 5,
+            '--schema-auto-cast' => true,
+        ], $options));
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertFileExists($output);
+        static::assertFileExists($output);
         unlink($output);
     }
 
-    public function test_convert_with_offset() : void
+    public function test_convert_with_offset(): void
     {
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json';
 
@@ -83,21 +78,21 @@ final class FileConvertCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertFileExists($output);
+        static::assertFileExists($output);
 
         // Read the converted file to verify offset was applied
         $content = file_get_contents($output);
-        self::assertNotFalse($content);
+        static::assertNotFalse($content);
 
         // Should contain the third row (after offset of 2) but not the first two rows
-        self::assertStringContainsString('6315f9e2-86bf-3321-a', $content); // Third row
-        self::assertStringNotContainsString('e13d7098-5a78-3389-9', $content); // First row should not be there
-        self::assertStringNotContainsString('947df050-3abb-3f5a-9', $content); // Second row should not be there
+        static::assertStringContainsString('6315f9e2-86bf-3321-a', $content); // Third row
+        static::assertStringNotContainsString('e13d7098-5a78-3389-9', $content); // First row should not be there
+        static::assertStringNotContainsString('947df050-3abb-3f5a-9', $content); // Second row should not be there
 
         unlink($output);
     }
 
-    public function test_convert_with_offset_and_limit() : void
+    public function test_convert_with_offset_and_limit(): void
     {
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json';
 
@@ -117,16 +112,16 @@ final class FileConvertCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertFileExists($output);
+        static::assertFileExists($output);
 
         // Read the converted file to verify offset + limit was applied
         $content = file_get_contents($output);
-        self::assertNotFalse($content);
+        static::assertNotFalse($content);
 
         // Should contain second and third rows (offset 1, limit 3 gives us 2 rows after offset)
-        self::assertStringContainsString('947df050-3abb-3f5a-9', $content); // Second row
-        self::assertStringContainsString('6315f9e2-86bf-3321-a', $content); // Third row
-        self::assertStringNotContainsString('e13d7098-5a78-3389-9', $content); // First row should not be there
+        static::assertStringContainsString('947df050-3abb-3f5a-9', $content); // Second row
+        static::assertStringContainsString('6315f9e2-86bf-3321-a', $content); // Third row
+        static::assertStringNotContainsString('e13d7098-5a78-3389-9', $content); // First row should not be there
 
         unlink($output);
     }

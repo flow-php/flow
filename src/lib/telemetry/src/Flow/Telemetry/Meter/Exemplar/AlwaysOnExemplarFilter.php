@@ -16,12 +16,12 @@ use Flow\Telemetry\Tracer\SpanContext;
  */
 final readonly class AlwaysOnExemplarFilter implements ExemplarFilter
 {
-    public function __toString() : string
+    public function __toString(): string
     {
         return 'AlwaysOnExemplarFilter';
     }
 
-    public function shouldSample(?SpanContext $context, int|float $value, array $attributes) : bool
+    public function shouldSample(?SpanContext $context, int|float $value, array $attributes): bool
     {
         return $context !== null;
     }

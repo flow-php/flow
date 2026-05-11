@@ -13,14 +13,14 @@ abstract class CommandTestCase extends TestCase
 
     protected FilesystemContext $fs;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->context = new CommandTestContext();
         $this->context->bootWithMigrations();
         $this->fs = new FilesystemContext();
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         $this->fs->cleanup();
         $this->context->shutdown();

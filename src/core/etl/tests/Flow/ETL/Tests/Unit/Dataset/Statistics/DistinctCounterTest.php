@@ -9,7 +9,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class DistinctCounterTest extends FlowTestCase
 {
-    public function test_distinc_counter_on_date_time() : void
+    public function test_distinc_counter_on_date_time(): void
     {
         $counter = new DistinctCounter();
 
@@ -19,10 +19,10 @@ final class DistinctCounterTest extends FlowTestCase
         $counter->add(new \DateTimeImmutable('2023-01-02 00:00:01 Europe/Warsaw'));
         $counter->add(new \DateTimeImmutable('2023-01-01 00:00:01+00:00')); // duplicate
 
-        self::assertEquals(3, $counter->count());
+        static::assertEquals(3, $counter->count());
     }
 
-    public function test_distinct_counter() : void
+    public function test_distinct_counter(): void
     {
         $counter = new DistinctCounter();
 
@@ -35,6 +35,6 @@ final class DistinctCounterTest extends FlowTestCase
         $counter->add(1); // Duplicate
         $counter->add(1.5);
 
-        self::assertEquals(6, $counter->count());
+        static::assertEquals(6, $counter->count());
     }
 }

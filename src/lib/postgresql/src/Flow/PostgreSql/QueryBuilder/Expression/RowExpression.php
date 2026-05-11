@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{CoercionForm, Node, RowExpr};
+use Flow\PostgreSql\Protobuf\AST\CoercionForm;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RowExpr;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -25,7 +27,7 @@ final readonly class RowExpression implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rowExpr = $node->getRowExpr();
 
@@ -54,22 +56,22 @@ final readonly class RowExpression implements Expression
     /**
      * @return array<Expression>
      */
-    public function args() : array
+    public function args(): array
     {
         return $this->args;
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function isExplicitRow() : bool
+    public function isExplicitRow(): bool
     {
         return $this->explicitRow;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $argNodes = [];
 
@@ -80,7 +82,7 @@ final readonly class RowExpression implements Expression
         $rowExpr = new RowExpr();
         $rowExpr->setArgs($argNodes);
         $rowExpr->setRowFormat(
-            $this->explicitRow ? CoercionForm::COERCE_EXPLICIT_CALL : CoercionForm::COERCE_IMPLICIT_CAST
+            $this->explicitRow ? CoercionForm::COERCE_EXPLICIT_CALL : CoercionForm::COERCE_IMPLICIT_CAST,
         );
         $rowExpr->setRowTypeid(0);
         $rowExpr->setLocation(-1);
@@ -91,7 +93,7 @@ final readonly class RowExpression implements Expression
         return $node;
     }
 
-    private static function expressionFromNode(Node $node) : Expression
+    private static function expressionFromNode(Node $node): Expression
     {
         return ExpressionFactory::fromAst($node);
     }

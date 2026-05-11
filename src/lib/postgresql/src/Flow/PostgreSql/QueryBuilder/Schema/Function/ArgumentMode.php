@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
 use Flow\PostgreSql\Protobuf\AST\FunctionParameterMode;
 
-enum ArgumentMode : int
+enum ArgumentMode: int
 {
     case IN = FunctionParameterMode::FUNC_PARAM_IN;
     case INOUT = FunctionParameterMode::FUNC_PARAM_INOUT;

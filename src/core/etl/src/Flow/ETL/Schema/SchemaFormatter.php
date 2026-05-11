@@ -8,5 +8,5 @@ use Flow\ETL\Schema;
 
 interface SchemaFormatter
 {
-    public function format(Schema $schema) : string;
+    public function format(Schema $schema): string;
 }

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CidrConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'integer' => [12345];
         yield 'array' => [['array']];
@@ -22,7 +22,7 @@ final class CidrConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'IPv4 network /8' => ['10.0.0.0/8', '10.0.0.0/8'];
         yield 'IPv4 network /16' => ['172.16.0.0/16', '172.16.0.0/16'];
@@ -43,29 +43,29 @@ final class CidrConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new CidrConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new CidrConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new CidrConverter();
-        self::assertContains(ValueType::CIDR, $converter->supportedTypes());
+        static::assertContains(ValueType::CIDR, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(string $input, string $expected) : void
+    public function test_to_database(string $input, string $expected): void
     {
         $converter = new CidrConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

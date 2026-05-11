@@ -7,22 +7,27 @@ namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, NestedColumn, PhysicalType};
-use Flow\Parquet\Writer\ColumnChunkBuilder\{NestedColumnChunkBuilder, PlainFlatColumnChunkBuilder};
-use Flow\Parquet\Writer\{ColumnChunkBuilder, ColumnChunkContainer};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\Writer\ColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\NestedColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NestedColumnChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider() : \Generator
+    public static function compression_types_provider(): \Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function nested_column_structures_provider() : \Generator
+    public static function nested_column_structures_provider(): \Generator
     {
         yield 'single child' => [
             [new FlatColumn('child1', PhysicalType::INT32)],
@@ -48,7 +53,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         ];
     }
 
-    public function test_add_multiple_rows() : void
+    public function test_add_multiple_rows(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -62,11 +67,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
             $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [$i * 10]));
         }
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_finds_correct_child_builder_by_flat_path() : void
+    public function test_add_row_finds_correct_child_builder_by_flat_path(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -82,10 +87,10 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['middle_child']));
 
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_empty_data() : void
+    public function test_add_row_with_empty_data(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -97,11 +102,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [], [], []));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_multiple_children_data() : void
+    public function test_add_row_with_multiple_children_data(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -116,11 +121,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
         $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['hello']));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_null_values() : void
+    public function test_add_row_with_null_values(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -132,11 +137,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [0], []));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_partial_child_data() : void
+    public function test_add_row_with_partial_child_data(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -150,11 +155,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_single_child_data() : void
+    public function test_add_row_with_single_child_data(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -166,22 +171,22 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_empty_children() : void
+    public function test_close_page_with_empty_children(): void
     {
         $nestedColumn = NestedColumn::create('nested', []);
         $builder = new NestedColumnChunkBuilder($nestedColumn, []);
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_multiple_children() : void
+    public function test_close_page_with_multiple_children(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -198,11 +203,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_single_child() : void
+    public function test_close_page_with_single_child(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -216,11 +221,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_column_returns_correct_nested_column() : void
+    public function test_column_returns_correct_nested_column(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -232,11 +237,11 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $result = $builder->column();
 
-        self::assertSame($nestedColumn, $result);
-        self::assertInstanceOf(NestedColumn::class, $result);
+        static::assertSame($nestedColumn, $result);
+        static::assertInstanceOf(NestedColumn::class, $result);
     }
 
-    public function test_constructor_initializes_correctly() : void
+    public function test_constructor_initializes_correctly(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -248,17 +253,17 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, $childrenBuilders);
 
-        self::assertInstanceOf(NestedColumnChunkBuilder::class, $builder);
-        self::assertSame($nestedColumn, $builder->column());
-        self::assertFalse($builder->isFull());
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertInstanceOf(NestedColumnChunkBuilder::class, $builder);
+        static::assertSame($nestedColumn, $builder->column());
+        static::assertFalse($builder->isFull());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
     /**
      * @param array<FlatColumn> $children
      */
     #[DataProvider('nested_column_structures_provider')]
-    public function test_constructor_with_different_nested_structures(array $children, string $description) : void
+    public function test_constructor_with_different_nested_structures(array $children, string $description): void
     {
         $nestedColumn = NestedColumn::create('nested', $children);
         $options = new Options();
@@ -272,25 +277,25 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, $childrenBuilders);
 
-        self::assertInstanceOf(NestedColumnChunkBuilder::class, $builder);
-        self::assertSame($nestedColumn, $builder->column());
-        self::assertCount(count($children), $childrenBuilders);
+        static::assertInstanceOf(NestedColumnChunkBuilder::class, $builder);
+        static::assertSame($nestedColumn, $builder->column());
+        static::assertCount(count($children), $childrenBuilders);
     }
 
-    public function test_constructor_with_empty_children() : void
+    public function test_constructor_with_empty_children(): void
     {
         $nestedColumn = NestedColumn::create('nested', []);
         $childrenBuilders = [];
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, $childrenBuilders);
 
-        self::assertInstanceOf(NestedColumnChunkBuilder::class, $builder);
-        self::assertSame($nestedColumn, $builder->column());
-        self::assertFalse($builder->isFull());
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertInstanceOf(NestedColumnChunkBuilder::class, $builder);
+        static::assertSame($nestedColumn, $builder->column());
+        static::assertFalse($builder->isFull());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_edge_case_mixed_null_and_non_null_across_children() : void
+    public function test_edge_case_mixed_null_and_non_null_across_children(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -307,13 +312,13 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
-        self::assertSame(1, $containers[1]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertSame(1, $containers[1]->columnChunk->valuesCount());
     }
 
-    public function test_edge_case_no_matching_flat_path() : void
+    public function test_edge_case_no_matching_flat_path(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -329,13 +334,13 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
-        self::assertSame(0, $containers[1]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertSame(0, $containers[1]->columnChunk->valuesCount());
     }
 
-    public function test_flush_automatically_closes_pages_when_data_exists() : void
+    public function test_flush_automatically_closes_pages_when_data_exists(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -349,13 +354,13 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_flush_calculates_correct_file_offsets() : void
+    public function test_flush_calculates_correct_file_offsets(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -375,25 +380,25 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(1000);
 
-        self::assertIsArray($containers);
-        self::assertCount(3, $containers);
+        static::assertIsArray($containers);
+        static::assertCount(3, $containers);
 
         $firstOffset = $containers[0]->columnChunk->fileOffset();
         $secondOffset = $containers[1]->columnChunk->fileOffset();
         $thirdOffset = $containers[2]->columnChunk->fileOffset();
 
-        self::assertSame(1000, $firstOffset);
-        self::assertGreaterThan($firstOffset, $secondOffset);
-        self::assertGreaterThan($secondOffset, $thirdOffset);
+        static::assertSame(1000, $firstOffset);
+        static::assertGreaterThan($firstOffset, $secondOffset);
+        static::assertGreaterThan($secondOffset, $thirdOffset);
 
         $expectedSecondOffset = $firstOffset + strlen($containers[0]->binaryBuffer);
         $expectedThirdOffset = $secondOffset + strlen($containers[1]->binaryBuffer);
 
-        self::assertSame($expectedSecondOffset, $secondOffset);
-        self::assertSame($expectedThirdOffset, $thirdOffset);
+        static::assertSame($expectedSecondOffset, $secondOffset);
+        static::assertSame($expectedThirdOffset, $thirdOffset);
     }
 
-    public function test_flush_cleans_up_child_builder_state() : void
+    public function test_flush_cleans_up_child_builder_state(): void
     {
         $compression = Compressions::UNCOMPRESSED;
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
@@ -405,22 +410,22 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0, 0], [1, 1], [42, 84]));
 
-        self::assertFalse($childBuilder->isEmpty());
-        self::assertGreaterThan(0, $childBuilder->uncompressedSize());
+        static::assertFalse($childBuilder->isEmpty());
+        static::assertGreaterThan(0, $childBuilder->uncompressedSize());
 
         $containers = $builder->flush(0);
-        self::assertCount(1, $containers);
+        static::assertCount(1, $containers);
 
-        self::assertTrue($childBuilder->isEmpty());
-        self::assertEquals(0, $childBuilder->uncompressedSize());
+        static::assertTrue($childBuilder->isEmpty());
+        static::assertEquals(0, $childBuilder->uncompressedSize());
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [126]));
 
-        self::assertFalse($childBuilder->isEmpty());
-        self::assertGreaterThan(0, $childBuilder->uncompressedSize());
+        static::assertFalse($childBuilder->isEmpty());
+        static::assertGreaterThan(0, $childBuilder->uncompressedSize());
     }
 
-    public function test_flush_with_different_file_offsets() : void
+    public function test_flush_with_different_file_offsets(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -435,24 +440,24 @@ final class NestedColumnChunkBuilderTest extends TestCase
         foreach ($offsets as $offset) {
             $containers = $builder->flush($offset);
 
-            self::assertIsArray($containers);
-            self::assertCount(1, $containers);
-            self::assertSame($offset, $containers[0]->columnChunk->fileOffset());
+            static::assertIsArray($containers);
+            static::assertCount(1, $containers);
+            static::assertSame($offset, $containers[0]->columnChunk->fileOffset());
         }
     }
 
-    public function test_flush_with_empty_children() : void
+    public function test_flush_with_empty_children(): void
     {
         $nestedColumn = NestedColumn::create('nested', []);
         $builder = new NestedColumnChunkBuilder($nestedColumn, []);
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertEmpty($containers);
+        static::assertIsArray($containers);
+        static::assertEmpty($containers);
     }
 
-    public function test_flush_with_multiple_children() : void
+    public function test_flush_with_multiple_children(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -469,15 +474,15 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(100);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
-        self::assertSame(100, $containers[0]->columnChunk->fileOffset());
-        self::assertGreaterThan(100, $containers[1]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
+        static::assertSame(100, $containers[0]->columnChunk->fileOffset());
+        static::assertGreaterThan(100, $containers[1]->columnChunk->fileOffset());
     }
 
-    public function test_flush_with_single_child() : void
+    public function test_flush_with_single_child(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -491,13 +496,13 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(100);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(100, $containers[0]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(100, $containers[0]->columnChunk->fileOffset());
     }
 
-    public function test_is_full_initially_false() : void
+    public function test_is_full_initially_false(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -507,10 +512,10 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
     }
 
-    public function test_is_full_returns_false_when_no_child_is_full() : void
+    public function test_is_full_returns_false_when_no_child_is_full(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -522,10 +527,10 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
     }
 
-    public function test_is_full_returns_true_when_any_child_is_full() : void
+    public function test_is_full_returns_true_when_any_child_is_full(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -541,18 +546,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$mockFullChildBuilder, $childBuilder2]);
 
-        self::assertTrue($builder->isFull());
+        static::assertTrue($builder->isFull());
     }
 
-    public function test_is_full_with_empty_children() : void
+    public function test_is_full_with_empty_children(): void
     {
         $nestedColumn = NestedColumn::create('nested', []);
         $builder = new NestedColumnChunkBuilder($nestedColumn, []);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
     }
 
-    public function test_multiple_close_page_calls() : void
+    public function test_multiple_close_page_calls(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -568,10 +573,10 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $builder->closePage();
         $builder->closePage();
 
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_uncompressed_size_initially_zero() : void
+    public function test_uncompressed_size_initially_zero(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -581,10 +586,10 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_uncompressed_size_sums_children_sizes() : void
+    public function test_uncompressed_size_sums_children_sizes(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -604,19 +609,19 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $child1Size = $childBuilder1->uncompressedSize();
         $child2Size = $childBuilder2->uncompressedSize();
 
-        self::assertSame($child1Size + $child2Size, $totalSize);
-        self::assertGreaterThan(0, $totalSize);
+        static::assertSame($child1Size + $child2Size, $totalSize);
+        static::assertGreaterThan(0, $totalSize);
     }
 
-    public function test_uncompressed_size_with_empty_children() : void
+    public function test_uncompressed_size_with_empty_children(): void
     {
         $nestedColumn = NestedColumn::create('nested', []);
         $builder = new NestedColumnChunkBuilder($nestedColumn, []);
 
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_uncompressed_size_with_mock_children() : void
+    public function test_uncompressed_size_with_mock_children(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -632,10 +637,10 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$mockChild1, $mockChild2]);
 
-        self::assertSame(300, $builder->uncompressedSize());
+        static::assertSame(300, $builder->uncompressedSize());
     }
 
-    public function test_workflow_complete_add_close_flush_cycle() : void
+    public function test_workflow_complete_add_close_flush_cycle(): void
     {
         $childColumn1 = new FlatColumn('child1', PhysicalType::INT32);
         $childColumn2 = new FlatColumn('child2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -655,15 +660,15 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $builder->closePage();
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(2, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
-        self::assertSame(3, $containers[0]->columnChunk->valuesCount());
-        self::assertSame(3, $containers[1]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(2, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[1]);
+        static::assertSame(3, $containers[0]->columnChunk->valuesCount());
+        static::assertSame(3, $containers[1]->columnChunk->valuesCount());
     }
 
-    public function test_workflow_multiple_cycles() : void
+    public function test_workflow_multiple_cycles(): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -680,14 +685,14 @@ final class NestedColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(3, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(3, $containers[0]->columnChunk->valuesCount());
     }
 
     #[DataProvider('compression_types_provider')]
-    public function test_workflow_with_different_compressions(Compressions $compression) : void
+    public function test_workflow_with_different_compressions(Compressions $compression): void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
@@ -701,8 +706,8 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $builder->closePage();
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 }

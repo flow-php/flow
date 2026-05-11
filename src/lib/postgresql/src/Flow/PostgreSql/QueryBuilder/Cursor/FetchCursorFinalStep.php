@@ -6,6 +6,4 @@ namespace Flow\PostgreSql\QueryBuilder\Cursor;
 
 use Flow\PostgreSql\QueryBuilder\Sql;
 
-interface FetchCursorFinalStep extends Sql
-{
-}
+interface FetchCursorFinalStep extends Sql {}

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayComparisonTest extends TestCase
 {
-    public static function equal_arrays() : \Generator
+    public static function equal_arrays(): \Generator
     {
         yield 'simple arrays' => [
             ['id' => 1, 'name' => 'one', 'color' => 'red'],
@@ -96,7 +96,7 @@ final class ArrayComparisonTest extends TestCase
         ];
     }
 
-    public static function not_equal_arrays() : \Generator
+    public static function not_equal_arrays(): \Generator
     {
         yield 'simple arrays' => [
             ['id' => 1, 'name' => 'one', 'color' => 'red'],
@@ -136,12 +136,9 @@ final class ArrayComparisonTest extends TestCase
         ];
     }
 
-    public function test_compare_arrays() : void
+    public function test_compare_arrays(): void
     {
-        self::assertSame(
-            -1,
-            (new ArrayComparison())->compare([1, 2, 3], [4, 5, 6])
-        );
+        static::assertSame(-1, (new ArrayComparison())->compare([1, 2, 3], [4, 5, 6]));
     }
 
     /**
@@ -149,9 +146,9 @@ final class ArrayComparisonTest extends TestCase
      * @param array<array-key, mixed> $b
      */
     #[DataProvider('equal_arrays')]
-    public function test_equals(array $a, array $b) : void
+    public function test_equals(array $a, array $b): void
     {
-        self::assertTrue((new ArrayComparison())->equals($a, $b));
+        static::assertTrue((new ArrayComparison())->equals($a, $b));
     }
 
     /**
@@ -159,8 +156,8 @@ final class ArrayComparisonTest extends TestCase
      * @param array<array-key, mixed> $b
      */
     #[DataProvider('not_equal_arrays')]
-    public function test_not_equals(array $a, array $b) : void
+    public function test_not_equals(array $a, array $b): void
     {
-        self::assertFalse((new ArrayComparison())->equals($a, $b));
+        static::assertFalse((new ArrayComparison())->equals($a, $b));
     }
 }

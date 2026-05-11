@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\ListBlobs;
 
-use Flow\Azure\SDK\{BlobService, EndpointOptions, Endpoints\UserAgentHeader};
+use Flow\Azure\SDK\BlobService;
+use Flow\Azure\SDK\EndpointOptions;
+use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class ListBlobOptions implements EndpointOptions
 {
@@ -31,14 +33,12 @@ final class ListBlobOptions implements EndpointOptions
 
     private string $version = BlobService::VERSION;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @return array<string, string>
      */
-    public function toHeaders() : array
+    public function toHeaders(): array
     {
         $headers = [];
 
@@ -55,7 +55,7 @@ final class ListBlobOptions implements EndpointOptions
     /**
      * @return array<string, array<string>|int|string>
      */
-    public function toURIParameters() : array
+    public function toURIParameters(): array
     {
         $uriParameters = [];
 
@@ -76,7 +76,10 @@ final class ListBlobOptions implements EndpointOptions
         }
 
         if ($this->include !== null) {
-            $uriParameters['include'] = \array_map(static fn (OptionInclude $include) => $include->value, $this->include);
+            $uriParameters['include'] = \array_map(
+                static fn(OptionInclude $include) => $include->value,
+                $this->include,
+            );
         }
 
         if ($this->showOnly !== null) {
@@ -90,63 +93,63 @@ final class ListBlobOptions implements EndpointOptions
         return $uriParameters;
     }
 
-    public function withDelimiter(string $delimiter) : self
+    public function withDelimiter(string $delimiter): self
     {
         $this->delimiter = $delimiter;
 
         return $this;
     }
 
-    public function withInclude(OptionInclude ...$include) : self
+    public function withInclude(OptionInclude ...$include): self
     {
         $this->include = $include;
 
         return $this;
     }
 
-    public function withMarker(string $marker) : self
+    public function withMarker(string $marker): self
     {
         $this->marker = $marker;
 
         return $this;
     }
 
-    public function withMaxResults(int $maxResults) : self
+    public function withMaxResults(int $maxResults): self
     {
         $this->maxResults = $maxResults;
 
         return $this;
     }
 
-    public function withPrefix(string $prefix) : self
+    public function withPrefix(string $prefix): self
     {
         $this->prefix = $prefix;
 
         return $this;
     }
 
-    public function withRequestId(string $requestId) : self
+    public function withRequestId(string $requestId): self
     {
         $this->requestId = $requestId;
 
         return $this;
     }
 
-    public function withShowOnly(OptionShowOnly $showOnly) : self
+    public function withShowOnly(OptionShowOnly $showOnly): self
     {
         $this->showOnly = $showOnly;
 
         return $this;
     }
 
-    public function withTimeoutSeconds(int $timeoutSeconds) : self
+    public function withTimeoutSeconds(int $timeoutSeconds): self
     {
         $this->timeoutSeconds = $timeoutSeconds;
 
         return $this;
     }
 
-    public function withVersion(string $version) : self
+    public function withVersion(string $version): self
     {
         $this->version = $version;
 

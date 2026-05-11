@@ -10,14 +10,11 @@ final readonly class MockResponse implements ResponseInterface
 {
     public function __construct(
         private int $statusCode = 200,
-    ) {
-    }
+    ) {}
 
-    public function cancel() : void
-    {
-    }
+    public function cancel(): void {}
 
-    public function getContent(bool $throw = true) : string
+    public function getContent(bool $throw = true): string
     {
         return '';
     }
@@ -25,7 +22,7 @@ final readonly class MockResponse implements ResponseInterface
     /**
      * @return array<string, array<string>>
      */
-    public function getHeaders(bool $throw = true) : array
+    public function getHeaders(bool $throw = true): array
     {
         return [];
     }
@@ -33,12 +30,12 @@ final readonly class MockResponse implements ResponseInterface
     /**
      * @return array<string, mixed>
      */
-    public function getInfo(?string $type = null) : mixed
+    public function getInfo(?string $type = null): mixed
     {
         return [];
     }
 
-    public function getStatusCode() : int
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
@@ -46,7 +43,7 @@ final readonly class MockResponse implements ResponseInterface
     /**
      * @return array<string, mixed>
      */
-    public function toArray(bool $throw = true) : array
+    public function toArray(bool $throw = true): array
     {
         return [];
     }

@@ -4,19 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 
-use function Flow\PostgreSql\DSL\type_mapper;
-use function Flow\Types\DSL\{type_boolean, type_datetime, type_integer, type_list, type_optional, type_string, type_structure, type_uuid};
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Tests\Mother\MapperContextMother;
-use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\{RecordedResult, SpyRowMapper};
+use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\RecordedResult;
+use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Types\Type;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\UuidV7;
 
+use function Flow\PostgreSql\DSL\type_mapper;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_uuid;
+
 final class TypeMapperTest extends TestCase
 {
-    public static function provide_invalid_mappings() : \Generator
+    public static function provide_invalid_mappings(): \Generator
     {
         yield 'map scalars' => [
             ['id' => UuidV7::generate(), 'name' => 'Alice', 'last_name' => null],
@@ -57,7 +66,7 @@ final class TypeMapperTest extends TestCase
         ];
     }
 
-    public static function provide_valid_mappings() : \Generator
+    public static function provide_valid_mappings(): \Generator
     {
         yield 'map scalars' => [
             ['id' => '019d92a8-54e1-70a9-bc8f-85ef98592dd4', 'name' => 'Alice', 'last_name' => null],
@@ -82,7 +91,11 @@ final class TypeMapperTest extends TestCase
                 'name' => type_string(),
                 'last_name' => type_optional(type_string()),
             ]),
-            ['id' => new \Flow\Types\Value\Uuid('019d9293-793d-7036-918a-f19abffd545c'), 'name' => 'Alice', 'last_name' => null],
+            [
+                'id' => new \Flow\Types\Value\Uuid('019d9293-793d-7036-918a-f19abffd545c'),
+                'name' => 'Alice',
+                'last_name' => null,
+            ],
         ];
 
         yield 'map jsons to strings' => [
@@ -134,10 +147,12 @@ final class TypeMapperTest extends TestCase
                     'country' => type_string(),
                 ])),
             ]),
-            ['addresses' => [
-                ['city' => 'Warsaw', 'country' => 'PL'],
-                ['city' => 'Berlin', 'country' => 'DE'],
-            ]],
+            [
+                'addresses' => [
+                    ['city' => 'Warsaw', 'country' => 'PL'],
+                    ['city' => 'Berlin', 'country' => 'DE'],
+                ],
+            ],
         ];
 
         yield 'map mixed scalar and jsonb row with datetime and uuid' => [
@@ -170,10 +185,7 @@ final class TypeMapperTest extends TestCase
         yield 'map jsonb with optional element present' => [
             ['profile' => '{"name":"Alice","nickname":"Ali"}'],
             type_structure([
-                'profile' => type_structure(
-                    ['name' => type_string()],
-                    ['nickname' => type_string()],
-                ),
+                'profile' => type_structure(['name' => type_string()], ['nickname' => type_string()]),
             ]),
             ['profile' => ['name' => 'Alice', 'nickname' => 'Ali']],
         ];
@@ -181,66 +193,54 @@ final class TypeMapperTest extends TestCase
         yield 'map jsonb with optional element absent' => [
             ['profile' => '{"name":"Alice"}'],
             type_structure([
-                'profile' => type_structure(
-                    ['name' => type_string()],
-                    ['nickname' => type_string()],
-                ),
+                'profile' => type_structure(['name' => type_string()], ['nickname' => type_string()]),
             ]),
             ['profile' => ['name' => 'Alice']],
         ];
     }
 
-    public function test_chaining_forwards_jsonb_decoded_payload_to_next() : void
+    public function test_chaining_forwards_jsonb_decoded_payload_to_next(): void
     {
         $spy = new SpyRowMapper();
 
-        $result = type_mapper(
-            type_structure([
-                'metadata' => type_structure([
-                    'theme' => type_string(),
-                ]),
+        $result = type_mapper(type_structure([
+            'metadata' => type_structure([
+                'theme' => type_string(),
             ]),
-            $spy,
-        )->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any());
+        ]), $spy)->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any());
 
-        self::assertInstanceOf(RecordedResult::class, $result);
-        self::assertSame(['metadata' => ['theme' => 'dark']], $result->row);
+        static::assertInstanceOf(RecordedResult::class, $result);
+        static::assertSame(['metadata' => ['theme' => 'dark']], $result->row);
     }
 
-    public function test_chaining_forwards_same_context_to_next() : void
+    public function test_chaining_forwards_same_context_to_next(): void
     {
         $spy = new SpyRowMapper();
         $context = MapperContextMother::any();
 
-        type_mapper(
-            type_structure([
-                'metadata' => type_structure([
-                    'theme' => type_string(),
-                ]),
+        type_mapper(type_structure([
+            'metadata' => type_structure([
+                'theme' => type_string(),
             ]),
-            $spy,
-        )->map(['metadata' => '{"theme":"dark"}'], $context);
+        ]), $spy)->map(['metadata' => '{"theme":"dark"}'], $context);
 
-        self::assertCount(1, $spy->receivedContexts);
-        self::assertSame($context, $spy->receivedContexts[0]);
+        static::assertCount(1, $spy->receivedContexts);
+        static::assertSame($context, $spy->receivedContexts[0]);
     }
 
-    public function test_chaining_is_skipped_when_cast_fails() : void
+    public function test_chaining_is_skipped_when_cast_fails(): void
     {
         $spy = new SpyRowMapper();
 
         try {
-            type_mapper(
-                type_structure([
-                    'metadata' => type_structure([
-                        'theme' => type_string(),
-                    ]),
+            type_mapper(type_structure([
+                'metadata' => type_structure([
+                    'theme' => type_string(),
                 ]),
-                $spy,
-            )->map(['metadata' => '{not valid json}'], MapperContextMother::any());
-            self::fail('Expected MappingException was not thrown');
+            ]), $spy)->map(['metadata' => '{not valid json}'], MapperContextMother::any());
+            static::fail('Expected MappingException was not thrown');
         } catch (MappingException) {
-            self::assertSame([], $spy->receivedRows);
+            static::assertSame([], $spy->receivedRows);
         }
     }
 
@@ -249,7 +249,7 @@ final class TypeMapperTest extends TestCase
      * @param Type<mixed> $type
      */
     #[DataProvider('provide_invalid_mappings')]
-    public function test_invalid_mapping(array $data, Type $type) : void
+    public function test_invalid_mapping(array $data, Type $type): void
     {
         $this->expectException(MappingException::class);
         $this->expectExceptionMessage('Failed to map database row to type:');
@@ -261,35 +261,32 @@ final class TypeMapperTest extends TestCase
      * @param Type<mixed> $type
      */
     #[DataProvider('provide_valid_mappings')]
-    public function test_valid_mapping(array $data, Type $type, mixed $output) : void
+    public function test_valid_mapping(array $data, Type $type, mixed $output): void
     {
-        self::assertEquals($output, type_mapper($type)->map($data, MapperContextMother::any()));
+        static::assertEquals($output, type_mapper($type)->map($data, MapperContextMother::any()));
     }
 
-    public function test_when_next_is_null_returns_cast_result_directly() : void
+    public function test_when_next_is_null_returns_cast_result_directly(): void
     {
         $result = type_mapper(type_structure([
             'id' => type_string(),
             'name' => type_string(),
         ]))->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
 
-        self::assertSame(['id' => 'abc', 'name' => 'Alice'], $result);
+        static::assertSame(['id' => 'abc', 'name' => 'Alice'], $result);
     }
 
-    public function test_when_next_is_provided_cast_result_is_forwarded_to_next() : void
+    public function test_when_next_is_provided_cast_result_is_forwarded_to_next(): void
     {
         $spy = new SpyRowMapper();
 
-        $result = type_mapper(
-            type_structure([
-                'id' => type_string(),
-                'name' => type_string(),
-            ]),
-            $spy,
-        )->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
+        $result = type_mapper(type_structure([
+            'id' => type_string(),
+            'name' => type_string(),
+        ]), $spy)->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
 
-        self::assertInstanceOf(RecordedResult::class, $result);
-        self::assertSame(['id' => 'abc', 'name' => 'Alice'], $result->row);
-        self::assertSame([['id' => 'abc', 'name' => 'Alice']], $spy->receivedRows);
+        static::assertInstanceOf(RecordedResult::class, $result);
+        static::assertSame(['id' => 'abc', 'name' => 'Alice'], $result->row);
+        static::assertSame([['id' => 'abc', 'name' => 'Alice']], $spy->receivedRows);
     }
 }

@@ -12,7 +12,7 @@ trait Limitable
 
     private int $yieldedRows = 0;
 
-    public function changeLimit(int $limit) : void
+    public function changeLimit(int $limit): void
     {
         if ($limit <= 0) {
             throw new InvalidArgumentException('Limit must be greater than 0');
@@ -21,22 +21,22 @@ trait Limitable
         $this->limit = $limit;
     }
 
-    public function incrementReturnedRows() : void
+    public function incrementReturnedRows(): void
     {
         $this->yieldedRows++;
     }
 
-    public function isLimited() : bool
+    public function isLimited(): bool
     {
         return $this->limit !== null;
     }
 
-    public function limit() : ?int
+    public function limit(): ?int
     {
         return $this->limit;
     }
 
-    public function reachedLimit() : bool
+    public function reachedLimit(): bool
     {
         if ($this->limit === null) {
             return false;
@@ -45,7 +45,7 @@ trait Limitable
         return $this->yieldedRows >= $this->limit;
     }
 
-    public function resetLimit() : void
+    public function resetLimit(): void
     {
         $this->limit = null;
         $this->yieldedRows = 0;

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor\HashJoin;
 
 use Flow\ETL\Hash\Algorithm;
+use Flow\ETL\Row;
 use Flow\ETL\Row\References;
-use Flow\ETL\{Row, Rows};
+use Flow\ETL\Rows;
 
 final class HashTable
 {
@@ -20,13 +21,14 @@ final class HashTable
      */
     private array $bucketsMatches;
 
-    public function __construct(private readonly Algorithm $hashAlgorithm)
-    {
+    public function __construct(
+        private readonly Algorithm $hashAlgorithm,
+    ) {
         $this->buckets = [];
         $this->bucketsMatches = [];
     }
 
-    public function add(Row $row, References $hashBy) : void
+    public function add(Row $row, References $hashBy): void
     {
         $hash = $this->hash($hashBy, $row);
 
@@ -38,7 +40,7 @@ final class HashTable
         $this->buckets[$hash]->add($row);
     }
 
-    public function bucketFor(Row $row, References $hashBy) : ?Bucket
+    public function bucketFor(Row $row, References $hashBy): ?Bucket
     {
         $hash = $this->hash($hashBy, $row);
 
@@ -51,7 +53,7 @@ final class HashTable
         return $this->buckets[$hash];
     }
 
-    public function unmatchedRows() : Rows
+    public function unmatchedRows(): Rows
     {
         $rows = [];
 
@@ -64,7 +66,7 @@ final class HashTable
         return new Rows(...$rows);
     }
 
-    private function hash(References $hashBy, Row $row) : string
+    private function hash(References $hashBy, Row $row): string
     {
         $value = '';
 

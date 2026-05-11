@@ -4,49 +4,40 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, lit, regex_match};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\regex_match;
+use function Flow\ETL\DSL\row;
 
 final class RegexMatchTest extends FlowTestCase
 {
-    public function test_regex_match_expression_on_invalid_pattern() : void
+    public function test_regex_match_expression_on_invalid_pattern(): void
     {
-        $pregMatch = regex_match(
-            lit(1),
-            lit('12 apples and 45 oranges')
-        );
+        $pregMatch = regex_match(lit(1), lit('12 apples and 45 oranges'));
 
-        self::assertNull($pregMatch->eval(row(), flow_context()));
+        static::assertNull($pregMatch->eval(row(), flow_context()));
     }
 
-    public function test_regex_match_expression_on_invalid_subject() : void
+    public function test_regex_match_expression_on_invalid_subject(): void
     {
-        $pregMatch = regex_match(
-            lit('/\d+/'),
-            lit(2)
-        );
+        $pregMatch = regex_match(lit('/\d+/'), lit(2));
 
-        self::assertNull($pregMatch->eval(row(), flow_context()));
+        static::assertNull($pregMatch->eval(row(), flow_context()));
     }
 
-    public function test_regex_match_expression_on_no_match() : void
+    public function test_regex_match_expression_on_no_match(): void
     {
-        $pregMatch = regex_match(
-            lit('/\d+/'),
-            lit('apples and oranges')
-        );
+        $pregMatch = regex_match(lit('/\d+/'), lit('apples and oranges'));
 
-        self::assertFalse($pregMatch->eval(row(), flow_context()));
+        static::assertFalse($pregMatch->eval(row(), flow_context()));
     }
 
-    public function test_regex_match_expression_on_valid_strings() : void
+    public function test_regex_match_expression_on_valid_strings(): void
     {
-        $pregMatch = regex_match(
-            lit('/\d+/'),
-            lit('12 apples and 45 oranges')
-        );
+        $pregMatch = regex_match(lit('/\d+/'), lit('12 apples and 45 oranges'));
 
-        self::assertTrue($pregMatch->eval(row(), flow_context()));
+        static::assertTrue($pregMatch->eval(row(), flow_context()));
     }
 }

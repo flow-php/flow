@@ -24,15 +24,13 @@ final readonly class Index
         public bool $primary = false,
         ?string $predicate = null,
     ) {
-        $this->predicate = $predicate !== null
-            ? (new ExpressionParser())->normalize($predicate)
-            : null;
+        $this->predicate = $predicate !== null ? (new ExpressionParser())->normalize($predicate) : null;
     }
 
     /**
      * @param IndexShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -44,24 +42,26 @@ final readonly class Index
         );
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
     }
 
-    public function isEqualStructure(self $other) : bool
+    public function isEqualStructure(self $other): bool
     {
-        return $this->columns === $other->columns
+        return (
+            $this->columns === $other->columns
             && $this->unique === $other->unique
             && $this->method === $other->method
             && $this->primary === $other->primary
-            && $this->predicate === $other->predicate;
+            && $this->predicate === $other->predicate
+        );
     }
 
     /**
      * @return IndexShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,

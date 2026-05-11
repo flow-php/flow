@@ -4,34 +4,43 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\RowsNormalizer;
 
-use function Flow\ETL\DSL\date_interval_to_microseconds;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{DateEntry, DateTimeEntry, EnumEntry, JsonEntry, ListEntry, MapEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\DateEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
+
+use function Flow\ETL\DSL\date_interval_to_microseconds;
 
 final readonly class EntryNormalizer
 {
     public function __construct(
         private string $dateTimeFormat = \DateTimeInterface::ATOM,
         private string $dateFormat = 'Y-m-d',
-    ) {
-    }
+    ) {}
 
     /**
      * @param Entry<mixed> $entry
      */
-    public function normalize(Entry $entry) : string|float|int|bool|null
+    public function normalize(Entry $entry): string|float|int|bool|null
     {
         $value = match ($entry::class) {
-            UuidEntry::class,
-            XMLElementEntry::class,
-            XMLEntry::class => $entry->toString(),
+            UuidEntry::class, XMLElementEntry::class, XMLEntry::class => $entry->toString(),
             DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
             EnumEntry::class => $entry->value()?->name,
-            ListEntry::class,
-            MapEntry::class,
-            StructureEntry::class => \json_encode($entry->value(), \JSON_THROW_ON_ERROR),
+            ListEntry::class, MapEntry::class, StructureEntry::class => \json_encode(
+                $entry->value(),
+                \JSON_THROW_ON_ERROR,
+            ),
             JsonEntry::class => $entry->toString(),
             default => $entry->value(),
         };

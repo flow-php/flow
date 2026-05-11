@@ -17,8 +17,7 @@ final readonly class PostgreSqlError
         public ?string $column,
         public ?string $constraint,
         public ?int $position,
-    ) {
-    }
+    ) {}
 
     public static function fromDiagnostics(
         string $sqlState,
@@ -30,7 +29,7 @@ final readonly class PostgreSqlError
         ?string $column = null,
         ?string $constraint = null,
         ?int $position = null,
-    ) : self {
+    ): self {
         return new self(
             $sqlState,
             PostgreSqlErrorCategory::fromSqlState($sqlState),
@@ -45,88 +44,77 @@ final readonly class PostgreSqlError
         );
     }
 
-    public static function unknown(string $message = 'Unknown error') : self
+    public static function unknown(string $message = 'Unknown error'): self
     {
-        return new self(
-            '00000',
-            PostgreSqlErrorCategory::UNKNOWN,
-            $message,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-        );
+        return new self('00000', PostgreSqlErrorCategory::UNKNOWN, $message, null, null, null, null, null, null, null);
     }
 
-    public function fullMessage() : string
+    public function fullMessage(): string
     {
         return $this->message;
     }
 
-    public function isCheckViolation() : bool
+    public function isCheckViolation(): bool
     {
         return $this->sqlState === '23514';
     }
 
-    public function isConnectionError() : bool
+    public function isConnectionError(): bool
     {
         return $this->category === PostgreSqlErrorCategory::CONNECTION_EXCEPTION;
     }
 
-    public function isDataError() : bool
+    public function isDataError(): bool
     {
         return $this->category === PostgreSqlErrorCategory::DATA_EXCEPTION;
     }
 
-    public function isDeadlockDetected() : bool
+    public function isDeadlockDetected(): bool
     {
         return $this->sqlState === '40P01';
     }
 
-    public function isExclusionViolation() : bool
+    public function isExclusionViolation(): bool
     {
         return $this->sqlState === '23P01';
     }
 
-    public function isForeignKeyViolation() : bool
+    public function isForeignKeyViolation(): bool
     {
         return $this->sqlState === '23503';
     }
 
-    public function isIntegrityViolation() : bool
+    public function isIntegrityViolation(): bool
     {
         return $this->category === PostgreSqlErrorCategory::INTEGRITY_CONSTRAINT_VIOLATION;
     }
 
-    public function isNotNullViolation() : bool
+    public function isNotNullViolation(): bool
     {
         return $this->sqlState === '23502';
     }
 
-    public function isSerializationFailure() : bool
+    public function isSerializationFailure(): bool
     {
         return $this->sqlState === '40001';
     }
 
-    public function isSyntaxError() : bool
+    public function isSyntaxError(): bool
     {
         return $this->category === PostgreSqlErrorCategory::SYNTAX_ERROR_OR_ACCESS_RULE_VIOLATION;
     }
 
-    public function isTransactionRollback() : bool
+    public function isTransactionRollback(): bool
     {
         return $this->category === PostgreSqlErrorCategory::TRANSACTION_ROLLBACK;
     }
 
-    public function isUniqueViolation() : bool
+    public function isUniqueViolation(): bool
     {
         return $this->sqlState === '23505';
     }
 
-    public function safeMessage() : string
+    public function safeMessage(): string
     {
         return $this->category->safeMessage();
     }

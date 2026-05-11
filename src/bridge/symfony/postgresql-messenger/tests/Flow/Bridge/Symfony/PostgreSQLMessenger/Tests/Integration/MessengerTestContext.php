@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Integration;
 
-use function Flow\PostgreSql\DSL\{drop, pgsql_client, pgsql_connection_dsn};
-
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\PostgreSql\Client\Client;
+
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\pgsql_client;
+use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 
 final readonly class MessengerTestContext
 {
@@ -24,12 +26,12 @@ final readonly class MessengerTestContext
         $this->client = pgsql_client(pgsql_connection_dsn($dsn));
     }
 
-    public function close() : void
+    public function close(): void
     {
         $this->client->close();
     }
 
-    public function createMessengerTable(string $tableName = 'messenger_messages', string $schemaName = 'public') : void
+    public function createMessengerTable(string $tableName = 'messenger_messages', string $schemaName = 'public'): void
     {
         $provider = new MessengerCatalogProvider($tableName, $schemaName);
         $table = $provider->get()->get($schemaName)->tables[0];
@@ -39,7 +41,7 @@ final readonly class MessengerTestContext
         }
     }
 
-    public function dropMessengerTable(string $tableName = 'messenger_messages') : void
+    public function dropMessengerTable(string $tableName = 'messenger_messages'): void
     {
         $this->client->execute(drop()->table($tableName)->ifExists()->cascade());
     }

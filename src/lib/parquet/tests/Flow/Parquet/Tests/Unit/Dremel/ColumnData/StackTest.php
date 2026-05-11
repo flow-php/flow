@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class StackTest extends TestCase
 {
-    public function test_max_repetition_0() : void
+    public function test_max_repetition_0(): void
     {
         $stack = new Stack(0);
 
@@ -17,13 +17,10 @@ final class StackTest extends TestCase
         $stack->push(0, 2);
         $stack->push(0, 3);
 
-        self::assertEquals(
-            [1, 2, 3],
-            $stack->dump()
-        );
+        static::assertEquals([1, 2, 3], $stack->dump());
     }
 
-    public function test_pushing_value_on_a_level_1() : void
+    public function test_pushing_value_on_a_level_1(): void
     {
         $stack = new Stack(1);
 
@@ -31,15 +28,15 @@ final class StackTest extends TestCase
         $stack->push(1, [2]);
         $stack->push(1, [3]);
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [1, 2, 3],
             ],
-            $stack->dump()
+            $stack->dump(),
         );
     }
 
-    public function test_pushing_value_on_a_level_higher_than_max_level() : void
+    public function test_pushing_value_on_a_level_higher_than_max_level(): void
     {
         $stack = new Stack(0);
 
@@ -47,7 +44,7 @@ final class StackTest extends TestCase
         $stack->push(1, 1);
     }
 
-    public function test_pushing_value_on_different_lists_on_level_1() : void
+    public function test_pushing_value_on_different_lists_on_level_1(): void
     {
         $stack = new Stack(1);
 
@@ -58,15 +55,17 @@ final class StackTest extends TestCase
         $stack->push(1, [5]);
         $stack->push(0, [6]);
 
-        self::assertEquals(
+        static::assertEquals(
             [
-                [1, 2], [3, 4, 5], [6],
+                [1, 2],
+                [3, 4, 5],
+                [6],
             ],
-            $stack->dump()
+            $stack->dump(),
         );
     }
 
-    public function test_pushing_value_on_different_lists_on_level_2() : void
+    public function test_pushing_value_on_different_lists_on_level_2(): void
     {
         $stack = new Stack(2);
 
@@ -80,7 +79,7 @@ final class StackTest extends TestCase
         $stack->push(1, [[8]]);
         $stack->push(2, [[9]]);
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     [1, 2, 3],
@@ -91,11 +90,11 @@ final class StackTest extends TestCase
                     [8, 9],
                 ],
             ],
-            $stack->dump()
+            $stack->dump(),
         );
     }
 
-    public function test_pushing_value_on_different_lists_on_level_2_01() : void
+    public function test_pushing_value_on_different_lists_on_level_2_01(): void
     {
         $stack = new Stack(2);
 
@@ -106,7 +105,7 @@ final class StackTest extends TestCase
         $stack->push(1, [[2]]);
         $stack->push(2, [[3]]);
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     [1],
@@ -117,11 +116,11 @@ final class StackTest extends TestCase
                     [2, 3],
                 ],
             ],
-            $stack->dump()
+            $stack->dump(),
         );
     }
 
-    public function test_pushing_value_on_different_lists_on_level_3() : void
+    public function test_pushing_value_on_different_lists_on_level_3(): void
     {
         $stack = new Stack(3);
 
@@ -129,7 +128,7 @@ final class StackTest extends TestCase
         $stack->push(1, [[[2]]]);
         $stack->push(1, [[[3]]]);
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     [
@@ -143,18 +142,18 @@ final class StackTest extends TestCase
                     ],
                 ],
             ],
-            $stack->dump()
+            $stack->dump(),
         );
     }
 
-    public function test_pushing_value_on_different_lists_on_level_4() : void
+    public function test_pushing_value_on_different_lists_on_level_4(): void
     {
         $stack = new Stack(4);
 
         $stack->push(0, [[[[1]]]]);
         $stack->push(2, [[[[2]]]]);
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     [
@@ -167,7 +166,7 @@ final class StackTest extends TestCase
                     ],
                 ],
             ],
-            $stack->dump()
+            $stack->dump(),
         );
     }
 }

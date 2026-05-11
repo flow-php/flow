@@ -30,8 +30,7 @@ final readonly class SpanId implements \Stringable
 
     private function __construct(
         private string $bytes,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a SpanId from a normalized array representation.
@@ -40,7 +39,7 @@ final readonly class SpanId implements \Stringable
      *
      * @throws \InvalidArgumentException if the data is invalid
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return self::fromHex($data['hex']);
     }
@@ -52,13 +51,13 @@ final readonly class SpanId implements \Stringable
      *
      * @throws \InvalidArgumentException if the byte string is not exactly 8 bytes
      */
-    public static function fromBytes(string $bytes) : self
+    public static function fromBytes(string $bytes): self
     {
         if (\strlen($bytes) !== self::BYTE_LENGTH) {
             throw new \InvalidArgumentException(\sprintf(
                 'SpanId must be exactly %d bytes, got %d',
                 self::BYTE_LENGTH,
-                \strlen($bytes)
+                \strlen($bytes),
             ));
         }
 
@@ -72,13 +71,13 @@ final readonly class SpanId implements \Stringable
      *
      * @throws \InvalidArgumentException if the hex string is invalid
      */
-    public static function fromHex(string $hex) : self
+    public static function fromHex(string $hex): self
     {
         if (\strlen($hex) !== self::HEX_LENGTH) {
             throw new \InvalidArgumentException(\sprintf(
                 'SpanId hex string must be exactly %d characters, got %d',
                 self::HEX_LENGTH,
-                \strlen($hex)
+                \strlen($hex),
             ));
         }
 
@@ -98,7 +97,7 @@ final readonly class SpanId implements \Stringable
     /**
      * Generate a new random SpanId.
      */
-    public static function generate() : self
+    public static function generate(): self
     {
         return new self(\random_bytes(self::BYTE_LENGTH));
     }
@@ -108,12 +107,12 @@ final readonly class SpanId implements \Stringable
      *
      * Invalid SpanIds indicate no active span context.
      */
-    public static function invalid() : self
+    public static function invalid(): self
     {
         return new self(\str_repeat("\0", self::BYTE_LENGTH));
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toHex();
     }
@@ -121,7 +120,7 @@ final readonly class SpanId implements \Stringable
     /**
      * Check if this SpanId equals another SpanId.
      */
-    public function equals(self $other) : bool
+    public function equals(self $other): bool
     {
         return $this->bytes === $other->bytes;
     }
@@ -131,7 +130,7 @@ final readonly class SpanId implements \Stringable
      *
      * An all-zero SpanId indicates no active span context.
      */
-    public function isValid() : bool
+    public function isValid(): bool
     {
         return $this->bytes !== \str_repeat("\0", self::BYTE_LENGTH);
     }
@@ -141,7 +140,7 @@ final readonly class SpanId implements \Stringable
      *
      * @return array{hex: string}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return ['hex' => $this->toHex()];
     }
@@ -149,7 +148,7 @@ final readonly class SpanId implements \Stringable
     /**
      * Get the SpanId as 8 raw bytes.
      */
-    public function toBytes() : string
+    public function toBytes(): string
     {
         return $this->bytes;
     }
@@ -157,7 +156,7 @@ final readonly class SpanId implements \Stringable
     /**
      * Get the SpanId as a 16-character lowercase hexadecimal string.
      */
-    public function toHex() : string
+    public function toHex(): string
     {
         return \bin2hex($this->bytes);
     }

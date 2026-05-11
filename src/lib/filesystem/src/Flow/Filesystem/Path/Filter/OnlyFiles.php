@@ -9,7 +9,7 @@ use Flow\Filesystem\Path\Filter;
 
 final class OnlyFiles implements Filter
 {
-    public function accept(FileStatus $status) : bool
+    public function accept(FileStatus $status): bool
     {
         return $status->isFile();
     }

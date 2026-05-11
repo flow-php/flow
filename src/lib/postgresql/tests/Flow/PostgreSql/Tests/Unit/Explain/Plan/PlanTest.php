@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Explain\Plan;
 
-use Flow\PostgreSql\Explain\Plan\{Cost, Plan, PlanNode, PlanNodeType, Timing};
+use Flow\PostgreSql\Explain\Plan\Cost;
+use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\Explain\Plan\PlanNode;
+use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use Flow\PostgreSql\Explain\Plan\Timing;
 use PHPUnit\Framework\TestCase;
 
 final class PlanTest extends TestCase
 {
-    public function test_from_array_and_normalize_are_inverse() : void
+    public function test_from_array_and_normalize_are_inverse(): void
     {
         $rootNode = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -33,10 +37,10 @@ final class PlanTest extends TestCase
         $normalized = $original->normalize();
         $restored = Plan::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
+        static::assertEquals($original, $restored);
     }
 
-    public function test_from_array_and_normalize_with_nested_plan() : void
+    public function test_from_array_and_normalize_with_nested_plan(): void
     {
         $childNode = new PlanNode(
             nodeType: PlanNodeType::INDEX_SCAN,
@@ -55,20 +59,16 @@ final class PlanTest extends TestCase
             joinType: 'Inner',
         );
 
-        $original = new Plan(
-            rootNode: $rootNode,
-            planningTime: 1.0,
-            executionTime: 50.0,
-        );
+        $original = new Plan(rootNode: $rootNode, planningTime: 1.0, executionTime: 50.0);
 
         $normalized = $original->normalize();
         $restored = Plan::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
-        self::assertCount(1, $restored->rootNode()->children());
+        static::assertEquals($original, $restored);
+        static::assertCount(1, $restored->rootNode()->children());
     }
 
-    public function test_from_array_creates_instance() : void
+    public function test_from_array_creates_instance(): void
     {
         $data = [
             'root_node' => [
@@ -107,14 +107,14 @@ final class PlanTest extends TestCase
 
         $plan = Plan::fromArray($data);
 
-        self::assertEquals(PlanNodeType::SEQ_SCAN, $plan->rootNode()->nodeType());
-        self::assertSame(0.5, $plan->planningTime());
-        self::assertSame(25.0, $plan->executionTime());
-        self::assertSame(1024, $plan->memoryUsed());
-        self::assertSame(2048, $plan->memoryPeak());
+        static::assertEquals(PlanNodeType::SEQ_SCAN, $plan->rootNode()->nodeType());
+        static::assertSame(0.5, $plan->planningTime());
+        static::assertSame(25.0, $plan->executionTime());
+        static::assertSame(1024, $plan->memoryUsed());
+        static::assertSame(2048, $plan->memoryPeak());
     }
 
-    public function test_normalize_returns_all_fields() : void
+    public function test_normalize_returns_all_fields(): void
     {
         $rootNode = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -133,14 +133,14 @@ final class PlanTest extends TestCase
 
         $normalized = $plan->normalize();
 
-        self::assertIsArray($normalized['root_node']);
-        self::assertSame(0.5, $normalized['planning_time']);
-        self::assertSame(25.0, $normalized['execution_time']);
-        self::assertSame(1024, $normalized['memory_used']);
-        self::assertSame(2048, $normalized['memory_peak']);
+        static::assertIsArray($normalized['root_node']);
+        static::assertSame(0.5, $normalized['planning_time']);
+        static::assertSame(25.0, $normalized['execution_time']);
+        static::assertSame(1024, $normalized['memory_used']);
+        static::assertSame(2048, $normalized['memory_peak']);
     }
 
-    public function test_normalize_returns_expected_keys() : void
+    public function test_normalize_returns_expected_keys(): void
     {
         $rootNode = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -149,9 +149,7 @@ final class PlanTest extends TestCase
             rowWidth: 64,
         );
 
-        $plan = new Plan(
-            rootNode: $rootNode,
-        );
+        $plan = new Plan(rootNode: $rootNode);
 
         $normalized = $plan->normalize();
 
@@ -163,10 +161,10 @@ final class PlanTest extends TestCase
             'memory_peak',
         ];
 
-        self::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, \array_keys($normalized));
     }
 
-    public function test_normalize_with_null_values() : void
+    public function test_normalize_with_null_values(): void
     {
         $rootNode = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -175,16 +173,14 @@ final class PlanTest extends TestCase
             rowWidth: 64,
         );
 
-        $plan = new Plan(
-            rootNode: $rootNode,
-        );
+        $plan = new Plan(rootNode: $rootNode);
 
         $normalized = $plan->normalize();
 
-        self::assertIsArray($normalized['root_node']);
-        self::assertNull($normalized['planning_time']);
-        self::assertNull($normalized['execution_time']);
-        self::assertNull($normalized['memory_used']);
-        self::assertNull($normalized['memory_peak']);
+        static::assertIsArray($normalized['root_node']);
+        static::assertNull($normalized['planning_time']);
+        static::assertNull($normalized['execution_time']);
+        static::assertNull($normalized['memory_used']);
+        static::assertNull($normalized['memory_peak']);
     }
 }

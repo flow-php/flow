@@ -6,8 +6,13 @@ namespace Flow\Website\Service\Markdown;
 
 use Flow\Website\Service\Manifest\Manifest;
 use League\CommonMark\Event\DocumentParsedEvent;
-use League\CommonMark\Extension\CommonMark\Node\Inline\{Image, Link, Strong};
-use League\CommonMark\Extension\Table\{Table, TableCell, TableRow, TableSection};
+use League\CommonMark\Extension\CommonMark\Node\Inline\Image;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Strong;
+use League\CommonMark\Extension\Table\Table;
+use League\CommonMark\Extension\Table\TableCell;
+use League\CommonMark\Extension\Table\TableRow;
+use League\CommonMark\Extension\Table\TableSection;
 use League\CommonMark\Node\Block\Paragraph;
 use League\CommonMark\Node\Inline\Text;
 
@@ -29,11 +34,11 @@ final readonly class FlowManifestRenderer
         'extension' => ['label' => 'Extensions', 'order' => 5],
     ];
 
-    public function __construct(private Manifest $manifest)
-    {
-    }
+    public function __construct(
+        private Manifest $manifest,
+    ) {}
 
-    public function __invoke(DocumentParsedEvent $event) : void
+    public function __invoke(DocumentParsedEvent $event): void
     {
         $document = $event->getDocument();
         $walker = $document->walker();
@@ -70,7 +75,7 @@ final readonly class FlowManifestRenderer
         }
     }
 
-    private function buildBadgeCell(string $badgeUrl, string $badgeAlt, string $packagistUrl) : TableCell
+    private function buildBadgeCell(string $badgeUrl, string $badgeAlt, string $packagistUrl): TableCell
     {
         $cell = new TableCell(TableCell::TYPE_DATA);
         $link = new Link($packagistUrl);
@@ -80,7 +85,7 @@ final readonly class FlowManifestRenderer
         return $cell;
     }
 
-    private function buildBody() : TableSection
+    private function buildBody(): TableSection
     {
         $body = new TableSection(TableSection::TYPE_BODY);
 
@@ -98,7 +103,7 @@ final readonly class FlowManifestRenderer
             $body->appendChild($this->buildGroupHeadingRow(self::TYPE_GROUPS[$type]['label']));
 
             $items = $grouped[$type];
-            \usort($items, static fn (array $a, array $b) : int => \strcmp($a['name'], $b['name']));
+            \usort($items, static fn(array $a, array $b): int => \strcmp($a['name'], $b['name']));
 
             foreach ($items as $package) {
                 $body->appendChild($this->buildPackageRow($package));
@@ -108,7 +113,7 @@ final readonly class FlowManifestRenderer
         return $body;
     }
 
-    private function buildGroupHeadingRow(string $label) : TableRow
+    private function buildGroupHeadingRow(string $label): TableRow
     {
         $row = new TableRow();
 
@@ -125,7 +130,7 @@ final readonly class FlowManifestRenderer
         return $row;
     }
 
-    private function buildHeader() : TableSection
+    private function buildHeader(): TableSection
     {
         $header = new TableSection(TableSection::TYPE_HEAD);
         $row = new TableRow();
@@ -144,7 +149,7 @@ final readonly class FlowManifestRenderer
     /**
      * @param array{name: string, slug: string, type: string} $package
      */
-    private function buildPackageRow(array $package) : TableRow
+    private function buildPackageRow(array $package): TableRow
     {
         $row = new TableRow();
 
@@ -172,7 +177,7 @@ final readonly class FlowManifestRenderer
         return $row;
     }
 
-    private function buildTable() : Table
+    private function buildTable(): Table
     {
         $table = new Table();
 
@@ -185,7 +190,7 @@ final readonly class FlowManifestRenderer
     /**
      * @return list<array{name: string, slug: string, type: string}>
      */
-    private function packages() : array
+    private function packages(): array
     {
         $packages = [];
 
@@ -211,7 +216,7 @@ final readonly class FlowManifestRenderer
         return $packages;
     }
 
-    private static function slug(string $composerName) : string
+    private static function slug(string $composerName): string
     {
         $slash = \strrpos($composerName, '/');
 

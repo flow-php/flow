@@ -20,6 +20,5 @@ final readonly class KeysetPaginationConfig
         public int $limit,
         public array $columns,
         public ?array $cursor = null,
-    ) {
-    }
+    ) {}
 }

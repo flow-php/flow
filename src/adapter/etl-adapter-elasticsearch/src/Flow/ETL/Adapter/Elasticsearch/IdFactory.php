@@ -12,5 +12,5 @@ interface IdFactory
     /**
      * @return Entry<mixed>
      */
-    public function create(Row $row) : Entry;
+    public function create(Row $row): Entry;
 }

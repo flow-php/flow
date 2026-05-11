@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
+use Flow\ETL\Row;
 use Flow\Types\Type;
 
 final class CallUserFunc extends ScalarFunctionChain
@@ -21,17 +22,22 @@ final class CallUserFunc extends ScalarFunctionChain
      * @param array<mixed> $parameters
      * @param null|Type<mixed> $returnType
      */
-    public function __construct(ScalarFunction|callable $callable, private readonly array $parameters, private readonly ?Type $returnType = null)
-    {
+    public function __construct(
+        ScalarFunction|callable $callable,
+        private readonly array $parameters,
+        private readonly ?Type $returnType = null,
+    ) {
         $this->callable = $callable;
     }
 
-    public function eval(Row $row, FlowContext $context) : mixed
+    public function eval(Row $row, FlowContext $context): mixed
     {
         $callable = (new Parameter($this->callable))->eval($row, $context);
 
         if (!\is_callable($callable)) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('CallUserFunc requires a valid callable'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('CallUserFunc requires a valid callable'));
         }
 
         $parameters = [];
@@ -41,10 +47,7 @@ final class CallUserFunc extends ScalarFunctionChain
         }
 
         if ($this->returnType) {
-            return new ScalarResult(
-                \call_user_func($callable, ...$parameters),
-                $this->returnType
-            );
+            return new ScalarResult(\call_user_func($callable, ...$parameters), $this->returnType);
         }
 
         return \call_user_func($callable, ...$parameters);

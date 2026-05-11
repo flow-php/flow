@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types;
 
-enum PostgreSqlVersion : int
+enum PostgreSqlVersion: int
 {
     case V12 = 120000;
     case V13 = 130000;
@@ -16,7 +16,7 @@ enum PostgreSqlVersion : int
     /**
      * Create version from server_version_num.
      */
-    public static function fromVersionNum(int $versionNum) : self
+    public static function fromVersionNum(int $versionNum): self
     {
         return match (true) {
             $versionNum >= 170000 => self::V17,
@@ -28,17 +28,17 @@ enum PostgreSqlVersion : int
         };
     }
 
-    public function supportsJsonb() : bool
+    public function supportsJsonb(): bool
     {
         return true;
     }
 
-    public function supportsJsonPath() : bool
+    public function supportsJsonPath(): bool
     {
         return $this->value >= self::V12->value; // Added in PostgreSQL 12
     }
 
-    public function supportsMultirange() : bool
+    public function supportsMultirange(): bool
     {
         return $this->value >= self::V14->value; // Added in PostgreSQL 14
     }

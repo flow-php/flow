@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 
 interface CreateRuleWhereStep extends CreateRuleDoStep
 {
-    public function where(Condition $condition) : CreateRuleDoStep;
+    public function where(Condition $condition): CreateRuleDoStep;
 }

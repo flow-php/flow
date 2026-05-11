@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests;
 
-use Flow\Doctrine\Bulk\Tests\Context\{DatabaseContext, ProxyLogger};
+use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
+use Flow\Doctrine\Bulk\Tests\Context\ProxyLogger;
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase
@@ -20,12 +21,12 @@ abstract class IntegrationTestCase extends TestCase
         parent::__construct($name);
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         $this->databaseContext->dropAllTables();
     }
 
-    public function executedQueriesCount() : int
+    public function executedQueriesCount(): int
     {
         return $this->logger->count;
     }

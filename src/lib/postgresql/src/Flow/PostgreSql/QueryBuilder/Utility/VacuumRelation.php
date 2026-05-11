@@ -12,6 +12,5 @@ final readonly class VacuumRelation
     public function __construct(
         public string $table,
         public array $columns = [],
-    ) {
-    }
+    ) {}
 }

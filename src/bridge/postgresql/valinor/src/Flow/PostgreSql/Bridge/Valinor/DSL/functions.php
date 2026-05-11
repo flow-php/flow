@@ -6,7 +6,8 @@ namespace Flow\PostgreSql\Bridge\Valinor\DSL;
 
 use CuyZ\Valinor\Mapper\TreeMapper;
 use CuyZ\Valinor\MapperBuilder;
-use Flow\PostgreSql\Bridge\Valinor\{ValinorBuilderMapper, ValinorTreeMapper};
+use Flow\PostgreSql\Bridge\Valinor\ValinorBuilderMapper;
+use Flow\PostgreSql\Bridge\Valinor\ValinorTreeMapper;
 
 /**
  * @template T of object
@@ -15,7 +16,7 @@ use Flow\PostgreSql\Bridge\Valinor\{ValinorBuilderMapper, ValinorTreeMapper};
  *
  * @return ValinorTreeMapper<T>
  */
-function valinor_tree_mapper(TreeMapper $mapper, string $class) : ValinorTreeMapper
+function valinor_tree_mapper(TreeMapper $mapper, string $class): ValinorTreeMapper
 {
     return new ValinorTreeMapper($mapper, $class);
 }
@@ -27,7 +28,7 @@ function valinor_tree_mapper(TreeMapper $mapper, string $class) : ValinorTreeMap
  *
  * @return ValinorBuilderMapper<T>
  */
-function valinor_builder_mapper(MapperBuilder $builder, string $class) : ValinorBuilderMapper
+function valinor_builder_mapper(MapperBuilder $builder, string $class): ValinorBuilderMapper
 {
     return new ValinorBuilderMapper($builder, $class);
 }

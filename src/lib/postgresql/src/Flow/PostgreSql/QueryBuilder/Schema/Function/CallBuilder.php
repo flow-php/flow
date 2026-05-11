@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, Boolean, CallStmt, FuncCall, Integer, Node, PBFloat, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\CallStmt;
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBFloat;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class CallBuilder implements CallFinalStep
@@ -17,15 +24,14 @@ final readonly class CallBuilder implements CallFinalStep
     private function __construct(
         private string $procedure,
         private array $arguments = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $procedure) : CallFinalStep
+    public static function create(string $procedure): CallFinalStep
     {
         return new self($procedure);
     }
 
-    public function toAst() : CallStmt
+    public function toAst(): CallStmt
     {
         $stmt = new CallStmt();
 
@@ -48,7 +54,7 @@ final readonly class CallBuilder implements CallFinalStep
         return $stmt;
     }
 
-    public function with(mixed ...$args) : CallFinalStep
+    public function with(mixed ...$args): CallFinalStep
     {
         $argNodes = [];
 
@@ -68,13 +74,10 @@ final readonly class CallBuilder implements CallFinalStep
             }
         }
 
-        return new self(
-            $this->procedure,
-            \array_merge($this->arguments, $argNodes),
-        );
+        return new self($this->procedure, \array_merge($this->arguments, $argNodes));
     }
 
-    private function createBoolNode(bool $value) : Node
+    private function createBoolNode(bool $value): Node
     {
         $boolean = new Boolean();
         $boolean->setBoolval($value);
@@ -89,7 +92,7 @@ final readonly class CallBuilder implements CallFinalStep
         return $node;
     }
 
-    private function createFloatNode(float $value) : Node
+    private function createFloatNode(float $value): Node
     {
         $float = new PBFloat();
         $float->setFval((string) $value);
@@ -103,7 +106,7 @@ final readonly class CallBuilder implements CallFinalStep
         return $node;
     }
 
-    private function createIntegerNode(int $value) : Node
+    private function createIntegerNode(int $value): Node
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -118,7 +121,7 @@ final readonly class CallBuilder implements CallFinalStep
         return $node;
     }
 
-    private function createNullNode() : Node
+    private function createNullNode(): Node
     {
         $aConst = new A_Const();
         $aConst->setIsnull(true);
@@ -129,7 +132,7 @@ final readonly class CallBuilder implements CallFinalStep
         return $node;
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);

@@ -29,15 +29,14 @@ final readonly class Resource
 {
     public function __construct(
         public Attributes $attributes = new Attributes(),
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new Resource with the given attributes.
      *
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
      */
-    public static function create(Attributes|array $attributes = []) : self
+    public static function create(Attributes|array $attributes = []): self
     {
         return new self($attributes instanceof Attributes ? $attributes : Attributes::create($attributes));
     }
@@ -45,7 +44,7 @@ final readonly class Resource
     /**
      * Create an empty Resource with no attributes.
      */
-    public static function empty() : self
+    public static function empty(): self
     {
         return new self();
     }
@@ -55,7 +54,7 @@ final readonly class Resource
      *
      * @param array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized Resource data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(Attributes::fromArray($data['attributes']));
     }
@@ -65,7 +64,7 @@ final readonly class Resource
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->attributes->normalize();
     }
@@ -73,7 +72,7 @@ final readonly class Resource
     /**
      * Get the number of attributes.
      */
-    public function count() : int
+    public function count(): int
     {
         return $this->attributes->count();
     }
@@ -85,7 +84,7 @@ final readonly class Resource
      *
      * @return null|array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable The attribute value, or null if not found
      */
-    public function get(string $key) : string|int|float|bool|\DateTimeInterface|\Throwable|array|null
+    public function get(string $key): string|int|float|bool|\DateTimeInterface|\Throwable|array|null
     {
         return $this->attributes->get($key);
     }
@@ -95,7 +94,7 @@ final readonly class Resource
      *
      * @param string $key Attribute key
      */
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return $this->attributes->has($key);
     }
@@ -103,7 +102,7 @@ final readonly class Resource
     /**
      * Check if the resource has no attributes.
      */
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->attributes->isEmpty();
     }
@@ -115,7 +114,7 @@ final readonly class Resource
      *
      * @return self New Resource with merged attributes
      */
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
         return new self($this->attributes->merge($other->attributes));
     }
@@ -125,7 +124,7 @@ final readonly class Resource
      *
      * @return array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'attributes' => $this->attributes->normalize(),
@@ -142,7 +141,7 @@ final readonly class Resource
      *
      * @return self New Resource with the added attribute
      */
-    public function with(string $key, string|int|float|bool|array $value) : self
+    public function with(string $key, string|int|float|bool|array $value): self
     {
         return new self($this->attributes->with($key, $value));
     }

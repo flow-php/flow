@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Explain;
 
 use Flow\PostgreSql\Exception\ExplainParseException;
-use Flow\PostgreSql\Explain\Plan\{Buffers, Cost, Plan, PlanNode, PlanNodeType, Timing};
+use Flow\PostgreSql\Explain\Plan\Buffers;
+use Flow\PostgreSql\Explain\Plan\Cost;
+use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\Explain\Plan\PlanNode;
+use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use Flow\PostgreSql\Explain\Plan\Timing;
 
 final readonly class ExplainParser
 {
-    public function parse(string $jsonOutput) : Plan
+    public function parse(string $jsonOutput): Plan
     {
         $data = \json_decode($jsonOutput, true);
 
@@ -38,19 +43,28 @@ final readonly class ExplainParser
 
         return new Plan(
             $rootNode,
-            \array_key_exists('Planning Time', $result) && \is_numeric($result['Planning Time']) ? (float) $result['Planning Time'] : null,
-            \array_key_exists('Execution Time', $result) && \is_numeric($result['Execution Time']) ? (float) $result['Execution Time'] : null,
-            \array_key_exists('Memory Used', $result) && \is_numeric($result['Memory Used']) ? (int) $result['Memory Used'] : null,
-            \array_key_exists('Memory Peak', $result) && \is_numeric($result['Memory Peak']) ? (int) $result['Memory Peak'] : null,
+            \array_key_exists('Planning Time', $result) && \is_numeric($result['Planning Time'])
+                ? (float) $result['Planning Time']
+                : null,
+            \array_key_exists('Execution Time', $result) && \is_numeric($result['Execution Time'])
+                ? (float) $result['Execution Time']
+                : null,
+            \array_key_exists('Memory Used', $result) && \is_numeric($result['Memory Used'])
+                ? (int) $result['Memory Used']
+                : null,
+            \array_key_exists('Memory Peak', $result) && \is_numeric($result['Memory Peak'])
+                ? (int) $result['Memory Peak']
+                : null,
         );
     }
 
     /**
      * @param array<string, mixed> $nodeData
      */
-    private function parseBuffers(array $nodeData) : ?Buffers
+    private function parseBuffers(array $nodeData): ?Buffers
     {
-        $hasBuffers = \array_key_exists('Shared Hit Blocks', $nodeData)
+        $hasBuffers =
+            \array_key_exists('Shared Hit Blocks', $nodeData)
             || \array_key_exists('Shared Read Blocks', $nodeData)
             || \array_key_exists('Local Hit Blocks', $nodeData)
             || \array_key_exists('Local Read Blocks', $nodeData)
@@ -78,7 +92,7 @@ final readonly class ExplainParser
     /**
      * @param array<string, mixed> $nodeData
      */
-    private function parseCost(array $nodeData) : Cost
+    private function parseCost(array $nodeData): Cost
     {
         return new Cost(
             $this->toFloat($nodeData['Startup Cost'] ?? 0.0),
@@ -89,7 +103,7 @@ final readonly class ExplainParser
     /**
      * @param array<string, mixed> $nodeData
      */
-    private function parseNode(array $nodeData) : PlanNode
+    private function parseNode(array $nodeData): PlanNode
     {
         $nodeType = PlanNodeType::fromString($this->toString($nodeData['Node Type'] ?? 'Unknown'));
 
@@ -126,9 +140,15 @@ final readonly class ExplainParser
             $this->parseBuffers($nodeData),
             \array_key_exists('Actual Rows', $nodeData) ? $this->toInt($nodeData['Actual Rows']) : null,
             \array_key_exists('Actual Loops', $nodeData) ? $this->toInt($nodeData['Actual Loops']) : null,
-            \array_key_exists('Rows Removed by Filter', $nodeData) ? $this->toInt($nodeData['Rows Removed by Filter']) : null,
-            \array_key_exists('Rows Removed by Index Recheck', $nodeData) ? $this->toInt($nodeData['Rows Removed by Index Recheck']) : null,
-            \array_key_exists('Parent Relationship', $nodeData) ? $this->toString($nodeData['Parent Relationship']) : null,
+            \array_key_exists('Rows Removed by Filter', $nodeData)
+                ? $this->toInt($nodeData['Rows Removed by Filter'])
+                : null,
+            \array_key_exists('Rows Removed by Index Recheck', $nodeData)
+                ? $this->toInt($nodeData['Rows Removed by Index Recheck'])
+                : null,
+            \array_key_exists('Parent Relationship', $nodeData)
+                ? $this->toString($nodeData['Parent Relationship'])
+                : null,
             \array_key_exists('Scan Direction', $nodeData) ? $this->toString($nodeData['Scan Direction']) : null,
             \array_key_exists('Join Type', $nodeData) ? $this->toString($nodeData['Join Type']) : null,
             \array_key_exists('Hash Cond', $nodeData) ? $this->toString($nodeData['Hash Cond']) : null,
@@ -143,9 +163,11 @@ final readonly class ExplainParser
     /**
      * @param array<string, mixed> $nodeData
      */
-    private function parseTiming(array $nodeData) : ?Timing
+    private function parseTiming(array $nodeData): ?Timing
     {
-        if (!\array_key_exists('Actual Startup Time', $nodeData) && !\array_key_exists('Actual Total Time', $nodeData)) {
+        if (
+            !\array_key_exists('Actual Startup Time', $nodeData) && !\array_key_exists('Actual Total Time', $nodeData)
+        ) {
             return null;
         }
 
@@ -156,17 +178,17 @@ final readonly class ExplainParser
         );
     }
 
-    private function toFloat(mixed $value) : float
+    private function toFloat(mixed $value): float
     {
         return \is_numeric($value) ? (float) $value : 0.0;
     }
 
-    private function toInt(mixed $value) : int
+    private function toInt(mixed $value): int
     {
         return \is_numeric($value) ? (int) $value : 0;
     }
 
-    private function toString(mixed $value) : string
+    private function toString(mixed $value): string
     {
         return \is_scalar($value) ? (string) $value : '';
     }

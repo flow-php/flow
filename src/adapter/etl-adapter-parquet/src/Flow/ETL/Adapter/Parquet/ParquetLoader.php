@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows};
-use Flow\ETL\Loader\{Closure, FileLoader};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Flow\Parquet\{Options, Writer};
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\Writer;
 
 final class ParquetLoader implements Closure, FileLoader, Loader
 {
@@ -43,7 +47,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
     }
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         if (\count($this->writers)) {
             foreach ($this->writers as $writer) {
@@ -55,14 +59,16 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         $this->writers = [];
     }
 
-    public function destination() : Path
+    public function destination(): Path
     {
         return $this->path;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
-        $context->telemetry()->loadingStarted($this, [TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri()]);
+        $context->telemetry()->loadingStarted($this, [
+            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
+        ]);
 
         try {
             if ($this->schema === null && $this->inferredSchema === null) {
@@ -72,32 +78,43 @@ final class ParquetLoader implements Closure, FileLoader, Loader
             $streams = $context->streams();
 
             if ($rows->partitions()->count()) {
-
                 $stream = $streams->writeTo($this->path, $rows->partitions()->toArray());
 
                 if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
-                        options: $this->options
+                        options: $this->options,
                     );
 
-                    $this->writers[$stream->path()->uri()]->openForStream($stream, $this->converter->toParquet($this->schema()));
+                    $this->writers[$stream->path()->uri()]->openForStream(
+                        $stream,
+                        $this->converter->toParquet($this->schema()),
+                    );
                 }
 
-                $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
+                $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize(
+                    $rows,
+                    $this->schema(),
+                ));
             } else {
                 $stream = $streams->writeTo($this->path);
 
                 if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
-                        options: $this->options
+                        options: $this->options,
                     );
 
-                    $this->writers[$stream->path()->uri()]->openForStream($stream, $this->converter->toParquet($this->schema()));
+                    $this->writers[$stream->path()->uri()]->openForStream(
+                        $stream,
+                        $this->converter->toParquet($this->schema()),
+                    );
                 }
 
-                $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
+                $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize(
+                    $rows,
+                    $this->schema(),
+                ));
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -108,28 +125,28 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         }
     }
 
-    public function withCompressions(Compressions $compressions) : self
+    public function withCompressions(Compressions $compressions): self
     {
         $this->compressions = $compressions;
 
         return $this;
     }
 
-    public function withOptions(Options $options) : self
+    public function withOptions(Options $options): self
     {
         $this->options = $options;
 
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    private function inferSchema(Rows $rows) : void
+    private function inferSchema(Rows $rows): void
     {
         if ($this->inferredSchema === null) {
             $this->inferredSchema = $rows->schema()->makeNullable();
@@ -138,7 +155,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         }
     }
 
-    private function schema() : Schema
+    private function schema(): Schema
     {
         /** @phpstan-ignore-next-line  */
         return $this->schema ?? $this->inferredSchema;

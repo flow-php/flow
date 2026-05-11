@@ -4,23 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\PostgreSql\AST\Transformers\{CountModifier, ExplainConfig, ExplainModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
-use Flow\PostgreSql\{DeparseOptions, ParsedQuery, Parser};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
+use Flow\PostgreSql\AST\Transformers\CountModifier;
+use Flow\PostgreSql\AST\Transformers\ExplainConfig;
+use Flow\PostgreSql\AST\Transformers\ExplainModifier;
+use Flow\PostgreSql\AST\Transformers\KeysetColumn;
+use Flow\PostgreSql\AST\Transformers\KeysetPaginationConfig;
+use Flow\PostgreSql\AST\Transformers\KeysetPaginationModifier;
+use Flow\PostgreSql\AST\Transformers\PaginationConfig;
+use Flow\PostgreSql\AST\Transformers\PaginationModifier;
+use Flow\PostgreSql\AST\Transformers\SortOrder;
+use Flow\PostgreSql\DeparseOptions;
 use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
-use Flow\PostgreSql\Extractors\{Columns, Functions, OrderBy as OrderByExtractor, QueryDepth, Tables};
+use Flow\PostgreSql\Extractors\Columns;
+use Flow\PostgreSql\Extractors\Functions;
+use Flow\PostgreSql\Extractors\OrderBy as OrderByExtractor;
+use Flow\PostgreSql\Extractors\QueryDepth;
+use Flow\PostgreSql\Extractors\Tables;
+use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_parser() : Parser
+function sql_parser(): Parser
 {
     return new Parser();
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_parse(string $sql) : ParsedQuery
+function sql_parse(string $sql): ParsedQuery
 {
     return (new Parser())->parse($sql);
 }
@@ -30,7 +46,7 @@ function sql_parse(string $sql) : ParsedQuery
  * Literal values are normalized so they won't affect the fingerprint.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_fingerprint(string $sql) : ?string
+function sql_fingerprint(string $sql): ?string
 {
     return (new Parser())->fingerprint($sql);
 }
@@ -41,7 +57,7 @@ function sql_fingerprint(string $sql) : ?string
  * WHERE id = 1 will be changed into WHERE id = $1.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_normalize(string $sql) : ?string
+function sql_normalize(string $sql): ?string
 {
     return (new Parser())->normalize($sql);
 }
@@ -51,7 +67,7 @@ function sql_normalize(string $sql) : ?string
  * This handles DDL statements differently from pg_normalize() which is optimized for DML.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_normalize_utility(string $sql) : ?string
+function sql_normalize_utility(string $sql): ?string
 {
     return (new Parser())->normalizeUtility($sql);
 }
@@ -62,7 +78,7 @@ function sql_normalize_utility(string $sql) : ?string
  * @return array<string>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_split(string $sql) : array
+function sql_split(string $sql): array
 {
     return (new Parser())->split($sql);
 }
@@ -71,7 +87,7 @@ function sql_split(string $sql) : array
  * Create DeparseOptions for configuring SQL formatting.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_deparse_options() : DeparseOptions
+function sql_deparse_options(): DeparseOptions
 {
     return DeparseOptions::new();
 }
@@ -85,7 +101,7 @@ function sql_deparse_options() : DeparseOptions
  * @throws \RuntimeException if deparsing fails
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_deparse(ParsedQuery $query, ?DeparseOptions $options = null) : string
+function sql_deparse(ParsedQuery $query, ?DeparseOptions $options = null): string
 {
     return $query->deparse($options);
 }
@@ -101,9 +117,11 @@ function sql_deparse(ParsedQuery $query, ?DeparseOptions $options = null) : stri
  * @throws \RuntimeException if parsing or deparsing fails
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_format(string $sql, ?DeparseOptions $options = null) : string
+function sql_format(string $sql, ?DeparseOptions $options = null): string
 {
-    return (new Parser())->parse($sql)->deparse($options ?? DeparseOptions::new());
+    return (new Parser())
+        ->parse($sql)
+        ->deparse($options ?? DeparseOptions::new());
 }
 
 /**
@@ -111,7 +129,7 @@ function sql_format(string $sql, ?DeparseOptions $options = null) : string
  * Useful for query monitoring and logging without full AST overhead.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_summary(string $sql, int $options = 0, int $truncateLimit = 0) : string
+function sql_summary(string $sql, int $options = 0, int $truncateLimit = 0): string
 {
     return (new Parser())->summary($sql, $options, $truncateLimit);
 }
@@ -126,7 +144,7 @@ function sql_summary(string $sql, int $options = 0, int $truncateLimit = 0) : st
  * @return string The paginated SQL query
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_to_paginated_query(string $sql, int $limit, int $offset = 0) : string
+function sql_to_paginated_query(string $sql, int $limit, int $offset = 0): string
 {
     $query = (new Parser())->parse($sql);
     $query->traverse(new PaginationModifier(new PaginationConfig($limit, $offset)));
@@ -143,7 +161,7 @@ function sql_to_paginated_query(string $sql, int $limit, int $offset = 0) : stri
  * @return string The limited SQL query
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_to_limited_query(string $sql, int $limit) : string
+function sql_to_limited_query(string $sql, int $limit): string
 {
     $query = (new Parser())->parse($sql);
     $query->traverse(new PaginationModifier(new PaginationConfig($limit)));
@@ -162,7 +180,7 @@ function sql_to_limited_query(string $sql, int $limit) : string
  * @return string The COUNT query
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_to_count_query(string $sql) : string
+function sql_to_count_query(string $sql): string
 {
     $query = (new Parser())->parse($sql);
     $query->traverse(new CountModifier());
@@ -184,7 +202,7 @@ function sql_to_count_query(string $sql) : string
  * @return string The paginated SQL query
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_to_keyset_query(string $sql, int $limit, array $columns, ?array $cursor = null) : string
+function sql_to_keyset_query(string $sql, int $limit, array $columns, ?array $cursor = null): string
 {
     $query = (new Parser())->parse($sql);
     $query->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig($limit, $columns, $cursor)));
@@ -199,7 +217,7 @@ function sql_to_keyset_query(string $sql, int $limit, array $columns, ?array $cu
  * @param SortOrder $order Sort order (ASC or DESC)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_keyset_column(string $column, SortOrder $order = SortOrder::ASC) : KeysetColumn
+function sql_keyset_column(string $column, SortOrder $order = SortOrder::ASC): KeysetColumn
 {
     return new KeysetColumn($column, $order);
 }
@@ -208,7 +226,7 @@ function sql_keyset_column(string $column, SortOrder $order = SortOrder::ASC) : 
  * Extract columns from a parsed SQL query.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_query_columns(ParsedQuery $query) : Columns
+function sql_query_columns(ParsedQuery $query): Columns
 {
     return new Columns($query);
 }
@@ -217,7 +235,7 @@ function sql_query_columns(ParsedQuery $query) : Columns
  * Extract tables from a parsed SQL query.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_query_tables(ParsedQuery $query) : Tables
+function sql_query_tables(ParsedQuery $query): Tables
 {
     return new Tables($query);
 }
@@ -226,7 +244,7 @@ function sql_query_tables(ParsedQuery $query) : Tables
  * Extract functions from a parsed SQL query.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_query_functions(ParsedQuery $query) : Functions
+function sql_query_functions(ParsedQuery $query): Functions
 {
     return new Functions($query);
 }
@@ -235,7 +253,7 @@ function sql_query_functions(ParsedQuery $query) : Functions
  * Extract ORDER BY clauses from a parsed SQL query.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_query_order_by(ParsedQuery $query) : OrderByExtractor
+function sql_query_order_by(ParsedQuery $query): OrderByExtractor
 {
     return new OrderByExtractor($query);
 }
@@ -249,7 +267,7 @@ function sql_query_order_by(ParsedQuery $query) : OrderByExtractor
  * - "SELECT * FROM (SELECT * FROM (SELECT * FROM t))" => 3
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_query_depth(string $sql) : int
+function sql_query_depth(string $sql): int
 {
     return (new QueryDepth(sql_parse($sql)))->depth();
 }
@@ -266,7 +284,7 @@ function sql_query_depth(string $sql) : int
  * @return string The EXPLAIN query
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_to_explain(string $sql, ?ExplainConfig $config = null) : string
+function sql_to_explain(string $sql, ?ExplainConfig $config = null): string
 {
     $config ??= ExplainConfig::forAnalysis();
     $query = (new Parser())->parse($sql);
@@ -293,7 +311,7 @@ function sql_explain_config(
     bool $buffers = true,
     bool $timing = true,
     ExplainFormat $format = ExplainFormat::JSON,
-) : ExplainConfig {
+): ExplainConfig {
     return new ExplainConfig(
         analyze: $analyze,
         verbose: $verbose,
@@ -308,7 +326,7 @@ function sql_explain_config(
  * Create an ExplainModifier for transforming queries into EXPLAIN queries.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_explain_modifier(ExplainConfig $config) : ExplainModifier
+function sql_explain_modifier(ExplainConfig $config): ExplainModifier
 {
     return new ExplainModifier($config);
 }
@@ -321,7 +339,7 @@ function sql_explain_modifier(ExplainConfig $config) : ExplainModifier
  * @return Plan The parsed execution plan
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_explain_parse(string $jsonOutput) : Plan
+function sql_explain_parse(string $jsonOutput): Plan
 {
     return (new ExplainParser())->parse($jsonOutput);
 }
@@ -334,7 +352,7 @@ function sql_explain_parse(string $jsonOutput) : Plan
  * @return PlanAnalyzer The analyzer for extracting insights
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sql_analyze(Plan $plan) : PlanAnalyzer
+function sql_analyze(Plan $plan): PlanAnalyzer
 {
     return new PlanAnalyzer($plan);
 }

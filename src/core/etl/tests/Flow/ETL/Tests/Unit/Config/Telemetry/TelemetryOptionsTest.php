@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class TelemetryOptionsTest extends TestCase
 {
-    public function test_builder_methods_preserve_other_flags() : void
+    public function test_builder_methods_preserve_other_flags(): void
     {
         $filesystemOptions = new FilesystemTelemetryOptions(traceStreams: true, collectMetrics: true);
         $options = new TelemetryOptions(
@@ -22,63 +22,63 @@ final class TelemetryOptionsTest extends TestCase
 
         $newOptions = $options->traceLoading(false);
 
-        self::assertFalse($newOptions->traceLoading);
-        self::assertTrue($newOptions->traceTransformations);
-        self::assertTrue($newOptions->collectMetrics);
-        self::assertSame($filesystemOptions, $newOptions->filesystem);
+        static::assertFalse($newOptions->traceLoading);
+        static::assertTrue($newOptions->traceTransformations);
+        static::assertTrue($newOptions->collectMetrics);
+        static::assertSame($filesystemOptions, $newOptions->filesystem);
     }
 
-    public function test_collect_metrics_returns_new_instance_with_flag_enabled() : void
+    public function test_collect_metrics_returns_new_instance_with_flag_enabled(): void
     {
         $options = new TelemetryOptions();
 
         $newOptions = $options->collectMetrics();
 
-        self::assertNotSame($options, $newOptions);
-        self::assertTrue($newOptions->collectMetrics);
-        self::assertFalse($options->collectMetrics);
+        static::assertNotSame($options, $newOptions);
+        static::assertTrue($newOptions->collectMetrics);
+        static::assertFalse($options->collectMetrics);
     }
 
-    public function test_default_options_have_all_flags_disabled() : void
+    public function test_default_options_have_all_flags_disabled(): void
     {
         $options = new TelemetryOptions();
 
-        self::assertFalse($options->traceLoading);
-        self::assertFalse($options->traceTransformations);
-        self::assertFalse($options->collectMetrics);
-        self::assertInstanceOf(FilesystemTelemetryOptions::class, $options->filesystem);
+        static::assertFalse($options->traceLoading);
+        static::assertFalse($options->traceTransformations);
+        static::assertFalse($options->collectMetrics);
+        static::assertInstanceOf(FilesystemTelemetryOptions::class, $options->filesystem);
     }
 
-    public function test_filesystem_returns_new_instance_with_options() : void
+    public function test_filesystem_returns_new_instance_with_options(): void
     {
         $options = new TelemetryOptions();
         $filesystemOptions = new FilesystemTelemetryOptions(traceStreams: true, collectMetrics: true);
 
         $newOptions = $options->filesystem($filesystemOptions);
 
-        self::assertNotSame($options, $newOptions);
-        self::assertSame($filesystemOptions, $newOptions->filesystem);
+        static::assertNotSame($options, $newOptions);
+        static::assertSame($filesystemOptions, $newOptions->filesystem);
     }
 
-    public function test_trace_loading_returns_new_instance_with_flag_enabled() : void
+    public function test_trace_loading_returns_new_instance_with_flag_enabled(): void
     {
         $options = new TelemetryOptions();
 
         $newOptions = $options->traceLoading();
 
-        self::assertNotSame($options, $newOptions);
-        self::assertTrue($newOptions->traceLoading);
-        self::assertFalse($options->traceLoading);
+        static::assertNotSame($options, $newOptions);
+        static::assertTrue($newOptions->traceLoading);
+        static::assertFalse($options->traceLoading);
     }
 
-    public function test_trace_transformations_returns_new_instance_with_flag_enabled() : void
+    public function test_trace_transformations_returns_new_instance_with_flag_enabled(): void
     {
         $options = new TelemetryOptions();
 
         $newOptions = $options->traceTransformations();
 
-        self::assertNotSame($options, $newOptions);
-        self::assertTrue($newOptions->traceTransformations);
-        self::assertFalse($options->traceTransformations);
+        static::assertNotSame($options, $newOptions);
+        static::assertTrue($newOptions->traceTransformations);
+        static::assertFalse($options->traceTransformations);
     }
 }

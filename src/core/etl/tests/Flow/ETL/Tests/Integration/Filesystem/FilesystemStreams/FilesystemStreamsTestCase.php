@@ -9,10 +9,10 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 abstract class FilesystemStreamsTestCase extends FlowIntegrationTestCase
 {
-    protected function filesDirectory() : string
+    protected function filesDirectory(): string
     {
         return __DIR__ . '/tmp';
     }
 
-    abstract protected function streams() : FilesystemStreams;
+    abstract protected function streams(): FilesystemStreams;
 }

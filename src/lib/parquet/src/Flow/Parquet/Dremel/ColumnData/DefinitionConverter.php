@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\Dremel\ColumnData;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{Repetition, Repetitions};
+use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\ParquetFile\Schema\Repetitions;
 
 /**
  * Converts definition levels to actual values.
@@ -29,7 +30,7 @@ final class DefinitionConverter
      */
     private array $templates = [];
 
-    public function toValue(Repetitions $repetitions, int $definitionLevel, mixed $value) : mixed
+    public function toValue(Repetitions $repetitions, int $definitionLevel, mixed $value): mixed
     {
         if (!\array_key_exists($repetitions->id, $this->templates)) {
             $this->generateTemplates($repetitions, $repetitions->maxDefinitionLevel());
@@ -62,12 +63,12 @@ final class DefinitionConverter
         return $this->templates[$repetitions->id]['templates'][$definitionLevel];
     }
 
-    private function generateForLevel(Repetitions $repetitions, int $level, int $maxDefinitionLevel) : array|NullLevel
+    private function generateForLevel(Repetitions $repetitions, int $level, int $maxDefinitionLevel): array|NullLevel
     {
         if ($level === $maxDefinitionLevel) {
             $node = [];
 
-            for ($i = 0; $i < $repetitions->repeatedCount() - 1; $i++) {
+            for ($i = 0; $i < ($repetitions->repeatedCount() - 1); $i++) {
                 $node = [$node];
             }
 
@@ -83,7 +84,6 @@ final class DefinitionConverter
         };
 
         foreach ($repetitionsBranch->toArray() as $repetition) {
-
             if ($repetition->isRepeated()) {
                 $partialValue = [$partialValue];
             }
@@ -105,7 +105,7 @@ final class DefinitionConverter
      * By definition column type is irrelevant here, as if two different column types would have the same
      * repetitions, the templates would be the same.
      */
-    private function generateTemplates(Repetitions $repetitions, int $maxDefinitionLevel) : void
+    private function generateTemplates(Repetitions $repetitions, int $maxDefinitionLevel): void
     {
         if (\array_key_exists($repetitions->id, $this->templates)) {
             return;
@@ -120,11 +120,15 @@ final class DefinitionConverter
         ];
 
         for ($d = 0; $d <= $maxDefinitionLevel; $d++) {
-            $this->templates[$repetitions->id]['templates'][$d] = $this->generateForLevel($repetitions, $d, $maxDefinitionLevel);
+            $this->templates[$repetitions->id]['templates'][$d] = $this->generateForLevel(
+                $repetitions,
+                $d,
+                $maxDefinitionLevel,
+            );
         }
     }
 
-    private function pushValueToLevel(array $template, mixed $value) : array
+    private function pushValueToLevel(array $template, mixed $value): array
     {
         $nested = $template;
         $current = &$nested;
@@ -141,18 +145,36 @@ final class DefinitionConverter
         return $nested;
     }
 
-    private function validate(mixed $value, int $definitionLevel, int $maxDefinitionLevel) : void
+    private function validate(mixed $value, int $definitionLevel, int $maxDefinitionLevel): void
     {
         if ($value === null && $definitionLevel === $maxDefinitionLevel) {
-            throw new InvalidArgumentException('Value cannot be null for level "' . $definitionLevel . '" and max definition level "' . $maxDefinitionLevel . '"');
+            throw new InvalidArgumentException(
+                'Value cannot be null for level "'
+                . $definitionLevel
+                . '" and max definition level "'
+                . $maxDefinitionLevel
+                . '"',
+            );
         }
 
         if ($value !== null && $definitionLevel < $maxDefinitionLevel) {
-            throw new InvalidArgumentException('Value cannot be not null for level "' . $definitionLevel . '" and max definition level "' . $maxDefinitionLevel . '"');
+            throw new InvalidArgumentException(
+                'Value cannot be not null for level "'
+                . $definitionLevel
+                . '" and max definition level "'
+                . $maxDefinitionLevel
+                . '"',
+            );
         }
 
         if ($definitionLevel > $maxDefinitionLevel) {
-            throw new InvalidArgumentException('Given definition level "' . $definitionLevel . '"  is greater than max level, "' . $maxDefinitionLevel . '"');
+            throw new InvalidArgumentException(
+                'Given definition level "'
+                . $definitionLevel
+                . '"  is greater than max level, "'
+                . $maxDefinitionLevel
+                . '"',
+            );
         }
     }
 }

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader, Writer};
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, Repetition};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Reader;
+use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\file_exists(__DIR__ . '/var')) {
             \mkdir(__DIR__ . '/var');
@@ -19,13 +22,11 @@ class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_and_writing_fixed_len_byte_array_without_logical_type(ParquetEngine $engine) : void
+    public function test_reading_and_writing_fixed_len_byte_array_without_logical_type(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/var/parquet_fixed_len_byte_array_' . \uniqid() . '.parquet';
 
-        $schema = Schema::with(
-            FlatColumn::fixedSizeByteArray('raw_bytes', 8, Repetition::REQUIRED),
-        );
+        $schema = Schema::with(FlatColumn::fixedSizeByteArray('raw_bytes', 8, Repetition::REQUIRED));
 
         $writer = new Writer(engine: $engine);
 
@@ -58,13 +59,11 @@ class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_fixed_len_byte_array_returns_raw_string(ParquetEngine $engine) : void
+    public function test_reading_fixed_len_byte_array_returns_raw_string(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/var/parquet_fixed_len_byte_array_bytes_' . \uniqid() . '.parquet';
 
-        $schema = Schema::with(
-            FlatColumn::fixedSizeByteArray('data', 16, Repetition::REQUIRED),
-        );
+        $schema = Schema::with(FlatColumn::fixedSizeByteArray('data', 16, Repetition::REQUIRED));
 
         $writer = new Writer(engine: $engine);
 

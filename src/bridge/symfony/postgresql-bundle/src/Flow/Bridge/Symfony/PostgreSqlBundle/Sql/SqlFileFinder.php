@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Sql;
 
-use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
+use function Flow\Filesystem\DSL\path;
+
 final readonly class SqlFileFinder
 {
-    public function __construct(private NativeLocalFilesystem $filesystem)
-    {
-    }
+    public function __construct(
+        private NativeLocalFilesystem $filesystem,
+    ) {}
 
     /**
      * Resolves a Path (file, directory, or glob) into a list of `.sql` files.
@@ -20,7 +21,7 @@ final readonly class SqlFileFinder
      *
      * @return list<Path>
      */
-    public function find(Path $path) : array
+    public function find(Path $path): array
     {
         $status = $this->filesystem->status($path);
 

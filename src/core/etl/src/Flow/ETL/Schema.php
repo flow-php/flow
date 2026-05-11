@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{definition_from_array, schema};
-use Flow\ETL\Exception\{InvalidArgumentException,
-    SchemaDefinitionNotFoundException,
-    SchemaDefinitionNotUniqueException};
-use Flow\ETL\{Row\EntryReference, Row\Reference, Row\References, Schema\Metadata};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
+
+use function Flow\ETL\DSL\definition_from_array;
+use function Flow\ETL\DSL\schema;
 
 final class Schema implements \Countable
 {
@@ -29,7 +34,7 @@ final class Schema implements \Countable
     /**
      * @param array<array-key, mixed> $definitions
      */
-    public static function fromArray(array $definitions) : self
+    public static function fromArray(array $definitions): self
     {
         $schema = [];
 
@@ -56,7 +61,7 @@ final class Schema implements \Countable
      * Whenever it's possible, it's recommended to define schema upfront and pass it to the extractor.
      * This way, whatever process would need to use this method, will do just one iteration.
      */
-    public static function fromPipeline(Pipeline $pipeline, FlowContext $context, int $maxRows = 1000) : self
+    public static function fromPipeline(Pipeline $pipeline, FlowContext $context, int $maxRows = 1000): self
     {
         if ($maxRows <= 0) {
             throw new InvalidArgumentException('Total numbers of rows to scan must be a positive number');
@@ -99,7 +104,7 @@ final class Schema implements \Countable
      *
      * @return Schema
      */
-    public function add(Definition ...$definitions) : self
+    public function add(Definition ...$definitions): self
     {
         $this->setDefinitions(...\array_merge(\array_values($this->definitions), $definitions));
 
@@ -115,14 +120,14 @@ final class Schema implements \Countable
      *
      * @return Schema
      */
-    public function addMetadata(string $definition, string $name, int|string|bool|float|array $value) : self
+    public function addMetadata(string $definition, string $name, int|string|bool|float|array $value): self
     {
         $this->get($definition)->addMetadata($name, $value);
 
         return $this;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->definitions);
     }
@@ -130,7 +135,7 @@ final class Schema implements \Countable
     /**
      * @return array<string, Definition<mixed>>
      */
-    public function definitions() : array
+    public function definitions(): array
     {
         return $this->definitions;
     }
@@ -138,7 +143,7 @@ final class Schema implements \Countable
     /**
      * @return null|Definition<mixed>
      */
-    public function findDefinition(string|Reference $ref) : ?Definition
+    public function findDefinition(string|Reference $ref): ?Definition
     {
         if ($ref instanceof Reference) {
             if (!\array_key_exists($ref->name(), $this->definitions)) {
@@ -160,7 +165,7 @@ final class Schema implements \Countable
      *
      * @return Definition<mixed>
      */
-    public function get(string|Reference $ref) : Definition
+    public function get(string|Reference $ref): Definition
     {
         return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
     }
@@ -168,7 +173,7 @@ final class Schema implements \Countable
     /**
      * Gracefully remove entries from schema without throwing an exception if entry does not exist.
      */
-    public function gracefulRemove(string|Reference ...$entries) : self
+    public function gracefulRemove(string|Reference ...$entries): self
     {
         $refs = References::init(...$entries);
 
@@ -185,7 +190,7 @@ final class Schema implements \Countable
         return $this;
     }
 
-    public function isSame(self $schema) : bool
+    public function isSame(self $schema): bool
     {
         if (\count($this->definitions) !== \count($schema->definitions)) {
             return false;
@@ -207,7 +212,7 @@ final class Schema implements \Countable
     /**
      * @return Schema
      */
-    public function keep(string|Reference ...$entries) : self
+    public function keep(string|Reference ...$entries): self
     {
         $refs = References::init(...$entries);
 
@@ -233,7 +238,7 @@ final class Schema implements \Countable
     /**
      * Makes all schema definitions nullable.
      */
-    public function makeNullable() : self
+    public function makeNullable(): self
     {
         $definitions = [];
 
@@ -250,7 +255,7 @@ final class Schema implements \Countable
         return $this;
     }
 
-    public function merge(self $schema) : self
+    public function merge(self $schema): self
     {
         if (!$this->count()) {
             return $schema;
@@ -288,7 +293,7 @@ final class Schema implements \Countable
     /**
      * @return array<array-key, array<mixed>>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         $definitions = [];
 
@@ -299,7 +304,7 @@ final class Schema implements \Countable
         return $definitions;
     }
 
-    public function references() : References
+    public function references(): References
     {
         $refs = [];
 
@@ -313,7 +318,7 @@ final class Schema implements \Countable
     /**
      * @return Schema
      */
-    public function remove(string|Reference ...$entries) : self
+    public function remove(string|Reference ...$entries): self
     {
         $refs = References::init(...$entries);
 
@@ -339,7 +344,7 @@ final class Schema implements \Countable
     /**
      * @return Schema
      */
-    public function rename(string|Reference $entry, string $newName) : self
+    public function rename(string|Reference $entry, string $newName): self
     {
         $definitions = [];
 
@@ -365,7 +370,7 @@ final class Schema implements \Countable
      *
      * @return Schema
      */
-    public function replace(string|Reference $entry, Definition $definition) : self
+    public function replace(string|Reference $entry, Definition $definition): self
     {
         $definitions = [];
 
@@ -393,7 +398,7 @@ final class Schema implements \Countable
      *
      * @return Schema
      */
-    public function setMetadata(string $definition, Metadata $metadata) : self
+    public function setMetadata(string $definition, Metadata $metadata): self
     {
         $this->get($definition)->setMetadata($metadata);
 
@@ -403,7 +408,7 @@ final class Schema implements \Countable
     /**
      * @param Definition<mixed> ...$definitions
      */
-    private function setDefinitions(Definition ...$definitions) : void
+    private function setDefinitions(Definition ...$definitions): void
     {
         $uniqueDefinitions = [];
         $duplicatedDefinitions = [];
@@ -416,11 +421,10 @@ final class Schema implements \Countable
         }
 
         if (\count($uniqueDefinitions) !== \count($definitions)) {
-
             throw new SchemaDefinitionNotUniqueException(\sprintf(
                 'Entry definitions must be unique, duplicated entries: [%s], all: [%s]',
                 \implode(', ', $duplicatedDefinitions),
-                \implode(', ', \array_map(static fn (Definition $d) => $d->entry()->name(), $definitions)),
+                \implode(', ', \array_map(static fn(Definition $d) => $d->entry()->name(), $definitions)),
             ));
         }
 

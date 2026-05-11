@@ -12,19 +12,19 @@ use Symfony\Component\DependencyInjection\Container;
 
 final class DropDatabaseCommandTest extends TestCase
 {
-    public function test_has_correct_command_name() : void
+    public function test_has_correct_command_name(): void
     {
         $command = new DropDatabaseCommand(new Container(), 'default');
 
-        self::assertSame('flow:database:drop', $command->getName());
+        static::assertSame('flow:database:drop', $command->getName());
     }
 
-    public function test_requires_force_flag() : void
+    public function test_requires_force_flag(): void
     {
         $tester = new CommandTester(new DropDatabaseCommand(new Container(), 'default'));
         $tester->execute([]);
 
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('Use --force to proceed', $tester->getDisplay());
+        static::assertSame(Command::FAILURE, $tester->getStatusCode());
+        static::assertStringContainsString('Use --force to proceed', $tester->getDisplay());
     }
 }

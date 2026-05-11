@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 final class ColumnPrimitiveType
 {
-    public static function isString(FlatColumn $column) : bool
+    public static function isString(FlatColumn $column): bool
     {
         $logicalType = $column->logicalType();
 
@@ -18,6 +18,10 @@ final class ColumnPrimitiveType
             return false;
         }
 
-        return \in_array($logicalType->name(), [LogicalType::STRING, LogicalType::UUID, LogicalType::ENUM, LogicalType::JSON], true);
+        return \in_array(
+            $logicalType->name(),
+            [LogicalType::STRING, LogicalType::UUID, LogicalType::ENUM, LogicalType::JSON],
+            true,
+        );
     }
 }

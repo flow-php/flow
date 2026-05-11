@@ -23,7 +23,7 @@ interface Exporter
      *
      * @return bool True on success, false on failure
      */
-    public function export(Signals $signal) : bool;
+    public function export(Signals $signal): bool;
 
     /**
      * Shutdown the exporter and any owned transports.
@@ -31,5 +31,5 @@ interface Exporter
      * Implementations MUST be idempotent and MUST NOT throw - runtime errors
      * are routed through the configured error handler instead.
      */
-    public function shutdown() : void;
+    public function shutdown(): void;
 }

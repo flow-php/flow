@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Clause;
 /**
  * Frame bound type enum for window frame specifications.
  */
-enum FrameBoundType : string
+enum FrameBoundType: string
 {
     case CURRENT_ROW = 'CURRENT ROW';
     case FOLLOWING = 'FOLLOWING';

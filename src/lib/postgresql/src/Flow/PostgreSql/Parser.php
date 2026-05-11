@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql;
 
-use Flow\PostgreSql\Exception\{ExtensionNotLoadedException, ParserException};
+use Flow\PostgreSql\Exception\ExtensionNotLoadedException;
+use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 
 final class Parser
@@ -16,22 +17,22 @@ final class Parser
         }
     }
 
-    public function fingerprint(string $sql) : ?string
+    public function fingerprint(string $sql): ?string
     {
         return pg_query_fingerprint($sql) ?: null;
     }
 
-    public function normalize(string $sql) : ?string
+    public function normalize(string $sql): ?string
     {
         return pg_query_normalize((new NamedParameterNormalizer())->normalize($sql)) ?: null;
     }
 
-    public function normalizeUtility(string $sql) : ?string
+    public function normalizeUtility(string $sql): ?string
     {
         return pg_query_normalize_utility($sql) ?: null;
     }
 
-    public function parse(string $sql) : ParsedQuery
+    public function parse(string $sql): ParsedQuery
     {
         try {
             $json = pg_query_parse($sql);
@@ -48,12 +49,12 @@ final class Parser
     /**
      * @return array<string>
      */
-    public function split(string $sql) : array
+    public function split(string $sql): array
     {
         return pg_query_split($sql);
     }
 
-    public function summary(string $sql, int $options = 0, int $truncateLimit = 0) : string
+    public function summary(string $sql, int $options = 0, int $truncateLimit = 0): string
     {
         try {
             return pg_query_summary($sql, $options, $truncateLimit);

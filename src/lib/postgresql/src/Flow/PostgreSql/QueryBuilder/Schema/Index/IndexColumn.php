@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index;
 
-use Flow\PostgreSql\Protobuf\AST\{IndexElem, Node, PBString, SortByDir, SortByNulls};
+use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\SortByDir;
+use Flow\PostgreSql\Protobuf\AST\SortByNulls;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 final readonly class IndexColumn
@@ -16,10 +20,9 @@ final readonly class IndexColumn
         private int $ordering,
         private int $nullsOrdering,
         private ?string $collation,
-    ) {
-    }
+    ) {}
 
-    public static function column(string $name) : self
+    public static function column(string $name): self
     {
         return new self(
             $name,
@@ -31,7 +34,7 @@ final readonly class IndexColumn
         );
     }
 
-    public static function expression(Expression $expression) : self
+    public static function expression(Expression $expression): self
     {
         return new self(
             null,
@@ -43,7 +46,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function asc() : self
+    public function asc(): self
     {
         return new self(
             $this->name,
@@ -55,7 +58,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function collate(string $collation) : self
+    public function collate(string $collation): self
     {
         return new self(
             $this->name,
@@ -67,7 +70,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function desc() : self
+    public function desc(): self
     {
         return new self(
             $this->name,
@@ -79,7 +82,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function nullsFirst() : self
+    public function nullsFirst(): self
     {
         return new self(
             $this->name,
@@ -91,7 +94,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function nullsLast() : self
+    public function nullsLast(): self
     {
         return new self(
             $this->name,
@@ -103,7 +106,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function opclass(string $opclass) : self
+    public function opclass(string $opclass): self
     {
         return new self(
             $this->name,
@@ -115,7 +118,7 @@ final readonly class IndexColumn
         );
     }
 
-    public function toAst() : IndexElem
+    public function toAst(): IndexElem
     {
         $elem = new IndexElem();
 

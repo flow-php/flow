@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Flow\Parquet\ThriftModel;
 
 /**
@@ -10,7 +11,7 @@ namespace Flow\Parquet\ThriftModel;
  *
  *  @generated
  */
-use Thrift\Type\{TType};
+use Thrift\Type\TType;
 
 /**
  * Embedded BSON logical type annotation.
@@ -19,14 +20,11 @@ use Thrift\Type\{TType};
  */
 class BsonType
 {
-    public static $_TSPEC = [
-    ];
+    public static $_TSPEC = [];
 
     public static $isValidate = false;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function getName()
     {

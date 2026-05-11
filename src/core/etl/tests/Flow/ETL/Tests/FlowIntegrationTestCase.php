@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
-use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Config\Cache\CacheConfig;
-use Flow\Filesystem\{Filesystem, Path};
-use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem, Local\StdOutFilesystem};
-use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Local\StdOutFilesystem;
+use Flow\Filesystem\Path;
+use Flow\Serializer\Base64Serializer;
+use Flow\Serializer\NativePHPSerializer;
+use Flow\Serializer\Serializer;
+
+use function Flow\Filesystem\DSL\path_real;
 
 /**
  * Test case for integration tests.
@@ -25,9 +31,9 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     private string $baseMemoryLimit;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
-        $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
+        $this->baseMemoryLimit = \ini_get('memory_limit') ?: '-1';
 
         $cacheDirEnv = \getenv(CacheConfig::CACHE_DIR_ENV);
         $this->cacheDir = path_real($cacheDirEnv ?: '');
@@ -39,7 +45,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         \mkdir($this->cacheDir->path(), recursive: true);
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         if (\ini_get('memory_limit') !== $this->baseMemoryLimit) {
             \ini_set('memory_limit', $this->baseMemoryLimit);
@@ -49,7 +55,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         \mkdir($this->cacheDir->path(), recursive: true);
     }
 
-    protected function cleanFiles() : void
+    protected function cleanFiles(): void
     {
         $files = \scandir($this->filesDirectory());
 
@@ -66,27 +72,29 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         }
     }
 
-    protected function filesDirectory() : string
+    protected function filesDirectory(): string
     {
-        throw new \RuntimeException('You need to implement filesDirectory method to point to your test files directory.');
+        throw new \RuntimeException(
+            'You need to implement filesDirectory method to point to your test files directory.',
+        );
     }
 
-    protected function fs() : Filesystem
+    protected function fs(): Filesystem
     {
         return $this->fs;
     }
 
-    protected function fstab() : FilesystemTable
+    protected function fstab(): FilesystemTable
     {
         return $this->fstab;
     }
 
-    protected function getPath(string $relativePath) : Path
+    protected function getPath(string $relativePath): Path
     {
         return \Flow\Filesystem\DSL\path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
     }
 
-    protected function serializer() : Serializer
+    protected function serializer(): Serializer
     {
         return $this->serializer;
     }
@@ -94,11 +102,14 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
     /**
      * @param array<string, array<string, mixed>|string> $datasets
      */
-    protected function setupFiles(array $datasets, string $path = '') : void
+    protected function setupFiles(array $datasets, string $path = ''): void
     {
         foreach ($datasets as $name => $content) {
             if (\is_string($content)) {
-                $result = \file_put_contents($this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name, $content);
+                $result = \file_put_contents(
+                    $this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name,
+                    $content,
+                );
 
                 if ($result === false) {
                     throw new \RuntimeException('Could not create file . ' . $name);
@@ -107,7 +118,10 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
                 continue;
             }
 
-            \mkdir($this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name, recursive: true);
+            \mkdir(
+                $this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name,
+                recursive: true,
+            );
 
             if (\count($content)) {
                 /** @var array<string,string> $content */
@@ -116,7 +130,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         }
     }
 
-    private function cleanupCacheDir(Path $path) : void
+    private function cleanupCacheDir(Path $path): void
     {
         $this->fs()->rm($path);
     }

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\{Option, Options};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -15,21 +18,21 @@ use PHPUnit\Framework\TestCase;
 
 final class PlainFlatColumnChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider() : \Generator
+    public static function compression_types_provider(): \Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function page_size_provider() : \Generator
+    public static function page_size_provider(): \Generator
     {
         yield 'small page' => [1024];
         yield 'medium page' => [8192];
         yield 'large page' => [65536];
     }
 
-    public static function physical_types_provider() : \Generator
+    public static function physical_types_provider(): \Generator
     {
         yield 'int32' => [PhysicalType::INT32, 42];
         yield 'int64' => [PhysicalType::INT64, 1234567890123];
@@ -39,13 +42,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         yield 'byte_array' => [PhysicalType::BYTE_ARRAY, 'test_string'];
     }
 
-    public static function writer_version_provider() : \Generator
+    public static function writer_version_provider(): \Generator
     {
         yield 'version 1' => [1];
         yield 'version 2' => [2];
     }
 
-    public function test_add_multiple_rows() : void
+    public function test_add_multiple_rows(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -56,11 +59,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$i * 10]));
         }
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_boolean_values() : void
+    public function test_add_row_with_boolean_values(): void
     {
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
@@ -69,11 +72,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [true, false]));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_empty_data() : void
+    public function test_add_row_with_empty_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -82,11 +85,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [], [], []));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_extreme_values() : void
+    public function test_add_row_with_extreme_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT64);
         $options = new Options();
@@ -97,12 +100,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(2, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(2, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_add_row_with_multiple_values() : void
+    public function test_add_row_with_multiple_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -111,11 +114,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 1, 0], [42, 100]));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_null_values() : void
+    public function test_add_row_with_null_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -124,11 +127,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [0], []));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_repetition_levels() : void
+    public function test_add_row_with_repetition_levels(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -139,12 +142,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(2, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(2, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_add_row_with_single_value() : void
+    public function test_add_row_with_single_value(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -153,11 +156,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_string_values() : void
+    public function test_add_row_with_string_values(): void
     {
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -166,11 +169,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], ['hello', 'world']));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_very_large_definition_levels() : void
+    public function test_add_row_with_very_large_definition_levels(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -181,12 +184,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_close_page_resets_internal_state() : void
+    public function test_close_page_resets_internal_state(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -199,10 +202,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $builder->closePage();
         $afterSize = $builder->uncompressedSize();
 
-        self::assertGreaterThan($beforeSize, $afterSize);
+        static::assertGreaterThan($beforeSize, $afterSize);
     }
 
-    public function test_close_page_with_data() : void
+    public function test_close_page_with_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -213,12 +216,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
     #[DataProvider('writer_version_provider')]
-    public function test_close_page_with_different_writer_versions(int $writerVersion) : void
+    public function test_close_page_with_different_writer_versions(int $writerVersion): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -230,10 +233,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_empty_data() : void
+    public function test_close_page_with_empty_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -242,11 +245,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_unsupported_writer_version_throws_exception() : void
+    public function test_close_page_with_unsupported_writer_version_throws_exception(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -257,12 +260,14 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: 3');
+        $this->expectExceptionMessage(
+            'Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: 3',
+        );
 
         $builder->closePage();
     }
 
-    public function test_column_returns_correct_column() : void
+    public function test_column_returns_correct_column(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -271,10 +276,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $result = $builder->column();
 
-        self::assertSame($column, $result);
+        static::assertSame($column, $result);
     }
 
-    public function test_constructor_initializes_correctly() : void
+    public function test_constructor_initializes_correctly(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -282,13 +287,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
-        self::assertSame($column, $builder->column());
-        self::assertFalse($builder->isFull());
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertSame($column, $builder->column());
+        static::assertFalse($builder->isFull());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_constructor_with_boolean_column_uses_boolean_storage() : void
+    public function test_constructor_with_boolean_column_uses_boolean_storage(): void
     {
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
@@ -296,11 +301,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
-        self::assertSame($column, $builder->column());
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertSame($column, $builder->column());
     }
 
-    public function test_constructor_with_byte_array_logical_type() : void
+    public function test_constructor_with_byte_array_logical_type(): void
     {
         $column = new FlatColumn('binary_col', PhysicalType::BYTE_ARRAY);
         $options = new Options();
@@ -308,23 +313,23 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
-        self::assertSame($column, $builder->column());
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertSame($column, $builder->column());
     }
 
     #[DataProvider('compression_types_provider')]
-    public function test_constructor_with_different_compressions(Compressions $compression) : void
+    public function test_constructor_with_different_compressions(Compressions $compression): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
 
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
 
     #[DataProvider('physical_types_provider')]
-    public function test_constructor_with_different_physical_types(PhysicalType $physicalType, mixed $sampleValue) : void
+    public function test_constructor_with_different_physical_types(PhysicalType $physicalType, mixed $sampleValue): void
     {
         $column = new FlatColumn('test_col', $physicalType);
         $options = new Options();
@@ -332,11 +337,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
-        self::assertSame($column, $builder->column());
+        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertSame($column, $builder->column());
     }
 
-    public function test_edge_case_boolean_false_value() : void
+    public function test_edge_case_boolean_false_value(): void
     {
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
@@ -347,12 +352,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_edge_case_empty_string_value() : void
+    public function test_edge_case_empty_string_value(): void
     {
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -363,12 +368,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_edge_case_large_string_value() : void
+    public function test_edge_case_large_string_value(): void
     {
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -380,12 +385,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_edge_case_zero_values() : void
+    public function test_edge_case_zero_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -396,12 +401,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_flush_automatically_closes_page_when_data_exists() : void
+    public function test_flush_automatically_closes_page_when_data_exists(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -412,13 +417,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_flush_cleans_up_builder_state() : void
+    public function test_flush_cleans_up_builder_state(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -427,22 +432,22 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [42, 84]));
 
-        self::assertFalse($builder->isEmpty());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isEmpty());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
 
         $containers = $builder->flush(0);
-        self::assertCount(1, $containers);
+        static::assertCount(1, $containers);
 
-        self::assertTrue($builder->isEmpty());
-        self::assertEquals(0, $builder->uncompressedSize());
+        static::assertTrue($builder->isEmpty());
+        static::assertEquals(0, $builder->uncompressedSize());
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [126]));
 
-        self::assertFalse($builder->isEmpty());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isEmpty());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_flush_preserves_column_chunk_metadata() : void
+    public function test_flush_preserves_column_chunk_metadata(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -454,13 +459,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         $columnChunk = $containers[0]->columnChunk;
-        self::assertSame($column->type(), $columnChunk->type());
-        self::assertSame($compression, $columnChunk->codec());
-        self::assertSame($column->flatPath(), $columnChunk->flatPath());
-        self::assertNotNull($columnChunk->statistics());
+        static::assertSame($column->type(), $columnChunk->type());
+        static::assertSame($compression, $columnChunk->codec());
+        static::assertSame($column->flatPath(), $columnChunk->flatPath());
+        static::assertNotNull($columnChunk->statistics());
     }
 
-    public function test_flush_with_data() : void
+    public function test_flush_with_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -471,14 +476,14 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(100);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(100, $containers[0]->columnChunk->fileOffset());
-        self::assertGreaterThan(0, strlen($containers[0]->binaryBuffer));
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(100, $containers[0]->columnChunk->fileOffset());
+        static::assertGreaterThan(0, strlen($containers[0]->binaryBuffer));
     }
 
-    public function test_flush_with_different_file_offsets() : void
+    public function test_flush_with_different_file_offsets(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -490,13 +495,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         foreach ($offsets as $offset) {
             $containers = $builder->flush($offset);
 
-            self::assertIsArray($containers);
-            self::assertCount(1, $containers);
-            self::assertSame($offset, $containers[0]->columnChunk->fileOffset());
+            static::assertIsArray($containers);
+            static::assertCount(1, $containers);
+            static::assertSame($offset, $containers[0]->columnChunk->fileOffset());
         }
     }
 
-    public function test_flush_with_empty_data() : void
+    public function test_flush_with_empty_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -505,13 +510,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(0, $containers[0]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(0, $containers[0]->columnChunk->fileOffset());
     }
 
-    public function test_flush_with_negative_file_offset() : void
+    public function test_flush_with_negative_file_offset(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -520,23 +525,23 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(-100);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(-100, $containers[0]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(-100, $containers[0]->columnChunk->fileOffset());
     }
 
-    public function test_is_full_initially_false() : void
+    public function test_is_full_initially_false(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
     }
 
     #[DataProvider('page_size_provider')]
-    public function test_is_full_respects_page_size_option(int $pageSize) : void
+    public function test_is_full_respects_page_size_option(int $pageSize): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -544,7 +549,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $compression = Compressions::UNCOMPRESSED;
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
 
         for ($i = 0; $i < 1000; $i++) {
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$i]));
@@ -554,10 +559,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
             }
         }
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_is_full_with_zero_page_size() : void
+    public function test_is_full_with_zero_page_size(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -567,10 +572,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
 
-        self::assertTrue($builder->isFull());
+        static::assertTrue($builder->isFull());
     }
 
-    public function test_mixed_null_and_non_null_values() : void
+    public function test_mixed_null_and_non_null_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -581,12 +586,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(3, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(3, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_multiple_close_page_calls() : void
+    public function test_multiple_close_page_calls(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -599,10 +604,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $builder->closePage();
         $builder->closePage();
 
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_multiple_flush_calls_maintain_consistency() : void
+    public function test_multiple_flush_calls_maintain_consistency(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -613,16 +618,16 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $containers2 = $builder->flush(100);
         $containers3 = $builder->flush(200);
 
-        self::assertCount(1, $containers1);
-        self::assertCount(1, $containers2);
-        self::assertCount(1, $containers3);
+        static::assertCount(1, $containers1);
+        static::assertCount(1, $containers2);
+        static::assertCount(1, $containers3);
 
-        self::assertSame(0, $containers1[0]->columnChunk->fileOffset());
-        self::assertSame(100, $containers2[0]->columnChunk->fileOffset());
-        self::assertSame(200, $containers3[0]->columnChunk->fileOffset());
+        static::assertSame(0, $containers1[0]->columnChunk->fileOffset());
+        static::assertSame(100, $containers2[0]->columnChunk->fileOffset());
+        static::assertSame(200, $containers3[0]->columnChunk->fileOffset());
     }
 
-    public function test_statistics_are_generated() : void
+    public function test_statistics_are_generated(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -634,10 +639,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         $statistics = $containers[0]->columnChunk->statistics();
-        self::assertNotNull($statistics);
+        static::assertNotNull($statistics);
     }
 
-    public function test_statistics_track_null_count_for_all_null_chunk() : void
+    public function test_statistics_track_null_count_for_all_null_chunk(): void
     {
         $column = FlatColumn::string('all_null');
         $options = new Options();
@@ -648,13 +653,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $statistics = $builder->flush(0)[0]->columnChunk->statistics();
 
-        self::assertNotNull($statistics);
-        self::assertSame(3, $statistics->nullCount());
-        self::assertNull($statistics->min($column));
-        self::assertNull($statistics->max($column));
+        static::assertNotNull($statistics);
+        static::assertSame(3, $statistics->nullCount());
+        static::assertNull($statistics->min($column));
+        static::assertNull($statistics->max($column));
     }
 
-    public function test_statistics_track_null_count_for_mixed_chunk() : void
+    public function test_statistics_track_null_count_for_mixed_chunk(): void
     {
         $column = FlatColumn::string('mixed');
         $options = new Options();
@@ -665,13 +670,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $statistics = $builder->flush(0)[0]->columnChunk->statistics();
 
-        self::assertNotNull($statistics);
-        self::assertSame(1, $statistics->nullCount());
-        self::assertSame('x', $statistics->min($column));
-        self::assertSame('z', $statistics->max($column));
+        static::assertNotNull($statistics);
+        static::assertSame(1, $statistics->nullCount());
+        static::assertSame('x', $statistics->min($column));
+        static::assertSame('z', $statistics->max($column));
     }
 
-    public function test_uncompressed_size_accumulates_multiple_pages() : void
+    public function test_uncompressed_size_accumulates_multiple_pages(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -687,11 +692,11 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
             $sizes[] = $builder->uncompressedSize();
         }
 
-        self::assertGreaterThan($sizes[0], $sizes[1]);
-        self::assertGreaterThan($sizes[1], $sizes[2]);
+        static::assertGreaterThan($sizes[0], $sizes[1]);
+        static::assertGreaterThan($sizes[1], $sizes[2]);
     }
 
-    public function test_uncompressed_size_increases_with_pages() : void
+    public function test_uncompressed_size_increases_with_pages(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -705,20 +710,20 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $finalSize = $builder->uncompressedSize();
 
-        self::assertGreaterThan($initialSize, $finalSize);
+        static::assertGreaterThan($initialSize, $finalSize);
     }
 
-    public function test_uncompressed_size_initially_zero() : void
+    public function test_uncompressed_size_initially_zero(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
 
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_uncompressed_size_with_large_data() : void
+    public function test_uncompressed_size_with_large_data(): void
     {
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -731,10 +736,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $size = $builder->uncompressedSize();
 
-        self::assertGreaterThan(50000, $size);
+        static::assertGreaterThan(50000, $size);
     }
 
-    public function test_workflow_add_close_flush() : void
+    public function test_workflow_add_close_flush(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -747,12 +752,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_workflow_multiple_add_single_close_flush() : void
+    public function test_workflow_multiple_add_single_close_flush(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -767,13 +772,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(5, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(5, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_workflow_multiple_cycles() : void
+    public function test_workflow_multiple_cycles(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -787,13 +792,13 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(3, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(3, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_workflow_with_all_null_values() : void
+    public function test_workflow_with_all_null_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -806,8 +811,8 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(5, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(5, $containers[0]->columnChunk->valuesCount());
     }
 }

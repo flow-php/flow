@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use function Flow\ETL\DSL\{df, from_rows};
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows, Transformation};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_rows;
 
 final class BranchingLoader implements Closure, Loader, OverridingLoader
 {
@@ -17,17 +22,16 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
     public function __construct(
         private readonly ScalarFunction $condition,
         private readonly Loader $loader,
-    ) {
-    }
+    ) {}
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         if ($this->loader instanceof Closure) {
             $this->loader->closure($context);
         }
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this);
 
@@ -35,16 +39,10 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
             $rows = (new ScalarFunctionFilterTransformer($this->condition))->transform($rows, $context);
 
             if ($this->transformation) {
-                $rows = df($context->config)
-                    ->read(from_rows($rows))
-                    ->with($this->transformation)
-                    ->fetch();
+                $rows = df($context->config)->read(from_rows($rows))->with($this->transformation)->fetch();
             }
 
-            $this->loader->load(
-                $rows,
-                $context
-            );
+            $this->loader->load($rows, $context);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (\Throwable $e) {
@@ -54,14 +52,14 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
         }
     }
 
-    public function loaders() : array
+    public function loaders(): array
     {
         return [
             $this->loader,
         ];
     }
 
-    public function withTransformation(Transformation $transformation) : self
+    public function withTransformation(Transformation $transformation): self
     {
         $this->transformation = $transformation;
 

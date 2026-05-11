@@ -6,19 +6,19 @@ namespace Flow\Parquet;
 
 interface BinaryWriter
 {
-    public function append(string $buffer) : void;
+    public function append(string $buffer): void;
 
-    public function length() : DataSize;
+    public function length(): DataSize;
 
     /**
      * @param array<int> $bits
      */
-    public function writeBits(array $bits) : void;
+    public function writeBits(array $bits): void;
 
     /**
      * @param array<int> $bytes
      */
-    public function writeBytes(array $bytes) : void;
+    public function writeBytes(array $bytes): void;
 
     /**
      * Write values using variable-length encoding (VarInt/ULEB128).
@@ -30,5 +30,5 @@ interface BinaryWriter
      *
      * @param array<int> $values
      */
-    public function writeVarInts(array $values) : void;
+    public function writeVarInts(array $values): void;
 }

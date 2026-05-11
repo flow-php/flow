@@ -6,24 +6,26 @@ namespace Flow\Parquet\Dremel;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Dremel\Validator\DisabledValidator;
-use Flow\Parquet\ParquetFile\Data\{Converter, DataConverter};
+use Flow\Parquet\ParquetFile\Data\Converter;
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
 final readonly class DremelShredder
 {
     public function __construct(
         private Validator $validator,
         private DataConverter $dataConverter,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<array<string, mixed>> $rows
      *
      * @return array<string, WriteFlatColumnValues> keyed by flatPath
      */
-    public function shred(Schema $schema, array $rows) : array
+    public function shred(Schema $schema, array $rows): array
     {
         /** @var array<string, WriteFlatColumnValues> $targets */
         $targets = [];
@@ -98,18 +100,16 @@ final readonly class DremelShredder
      * @param array<string, bool> $columnRequired
      * @param array<string, ?Converter> $columnConverters
      */
-    private function buildPlan(Column $column, array $targets, array $columnRequired, array $columnConverters) : FlatPlan|StructPlan|ListPlan|MapPlan
-    {
+    private function buildPlan(
+        Column $column,
+        array $targets,
+        array $columnRequired,
+        array $columnConverters,
+    ): FlatPlan|StructPlan|ListPlan|MapPlan {
         if ($column instanceof FlatColumn) {
             $fp = $column->flatPath();
 
-            return new FlatPlan(
-                $fp,
-                $column->name(),
-                $columnRequired[$fp],
-                $columnConverters[$fp],
-                $targets[$fp],
-            );
+            return new FlatPlan($fp, $column->name(), $columnRequired[$fp], $columnConverters[$fp], $targets[$fp]);
         }
 
         /** @var NestedColumn $column */
@@ -141,7 +141,9 @@ final readonly class DremelShredder
                     $columnConverters[$keyFp],
                     $targets[$keyFp],
                 ),
-                $valueColumn !== null ? $this->buildPlan($valueColumn, $targets, $columnRequired, $columnConverters) : null,
+                $valueColumn !== null
+                    ? $this->buildPlan($valueColumn, $targets, $columnRequired, $columnConverters)
+                    : null,
                 [
                     'flatPath' => $keyFp,
                     'isRequired' => $columnRequired[$keyFp],
@@ -168,20 +170,22 @@ final readonly class DremelShredder
             }
         }
 
-        return new StructPlan(
-            $column->name(),
-            $isRequired,
-            $children,
-            $nullFlatChildren,
-        );
+        return new StructPlan($column->name(), $isRequired, $children, $nullFlatChildren);
     }
 
     /**
      * @param null|array<mixed> $listValue
      * @param array<string, bool> $rowFirstWrite
      */
-    private function execList(ListPlan $plan, ?array $listValue, int $definitionLevel, int $repetitionLevel, int $depth, bool $shouldValidate, array &$rowFirstWrite) : void
-    {
+    private function execList(
+        ListPlan $plan,
+        ?array $listValue,
+        int $definitionLevel,
+        int $repetitionLevel,
+        int $depth,
+        bool $shouldValidate,
+        array &$rowFirstWrite,
+    ): void {
         $repetitionLevel++;
         $depth++;
         $element = $plan->element;
@@ -253,7 +257,15 @@ final readonly class DremelShredder
 
         if ($element instanceof ListPlan) {
             if ($listValue === null) {
-                $this->execList($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $element,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -266,7 +278,15 @@ final readonly class DremelShredder
                 if ($shouldValidate && $plan->elementColumn !== null) {
                     $this->validator->validate($plan->elementColumn, null);
                 }
-                $this->execList($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $element,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -274,8 +294,15 @@ final readonly class DremelShredder
             $definitionLevel++;
 
             foreach ($listValue as $i => $value) {
-                /** @phpstan-ignore-next-line */
-                $this->execList($element, $value, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $element,
+                    $value,
+                    $definitionLevel,
+                    $i === 0 ? $repetitionLevel - 1 : $depth,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
             }
 
             return;
@@ -283,7 +310,15 @@ final readonly class DremelShredder
 
         if ($element instanceof MapPlan) {
             if ($listValue === null) {
-                $this->execMap($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $element,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -296,7 +331,15 @@ final readonly class DremelShredder
                 if ($shouldValidate && $plan->elementColumn !== null) {
                     $this->validator->validate($plan->elementColumn, null);
                 }
-                $this->execMap($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $element,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -304,8 +347,15 @@ final readonly class DremelShredder
             $definitionLevel++;
 
             foreach ($listValue as $i => $mapValue) {
-                /** @phpstan-ignore-next-line */
-                $this->execMap($element, $mapValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $element,
+                    $mapValue,
+                    $definitionLevel,
+                    $i === 0 ? $repetitionLevel - 1 : $depth,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
             }
 
             return;
@@ -313,7 +363,15 @@ final readonly class DremelShredder
 
         /** @var StructPlan $element */
         if ($listValue === null) {
-            $this->execStruct($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $element,
+                null,
+                $definitionLevel,
+                $repetitionLevel - 1,
+                $depth,
+                $shouldValidate,
+                $rowFirstWrite,
+            );
 
             return;
         }
@@ -326,7 +384,15 @@ final readonly class DremelShredder
             if ($shouldValidate && $plan->elementColumn !== null) {
                 $this->validator->validate($plan->elementColumn, null);
             }
-            $this->execStruct($element, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $element,
+                null,
+                $definitionLevel,
+                $repetitionLevel - 1,
+                $depth,
+                $shouldValidate,
+                $rowFirstWrite,
+            );
 
             return;
         }
@@ -334,7 +400,15 @@ final readonly class DremelShredder
         $definitionLevel++;
 
         foreach ($listValue as $i => $listElementValue) {
-            $this->execStruct($element, $listElementValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $element,
+                $listElementValue,
+                $definitionLevel,
+                $i === 0 ? $repetitionLevel - 1 : $depth,
+                $depth,
+                $shouldValidate,
+                $rowFirstWrite,
+            );
         }
     }
 
@@ -342,8 +416,15 @@ final readonly class DremelShredder
      * @param null|array<mixed> $mapValue
      * @param array<string, bool> $rowFirstWrite
      */
-    private function execMap(MapPlan $plan, ?array $mapValue, int $definitionLevel, int $repetitionLevel, int $depth, bool $shouldValidate, array &$rowFirstWrite) : void
-    {
+    private function execMap(
+        MapPlan $plan,
+        ?array $mapValue,
+        int $definitionLevel,
+        int $repetitionLevel,
+        int $depth,
+        bool $shouldValidate,
+        array &$rowFirstWrite,
+    ): void {
         $repetitionLevel++;
         $depth++;
         $keyPlan = $plan->keyPlan;
@@ -376,7 +457,7 @@ final readonly class DremelShredder
             $index = 0;
 
             foreach ($mapValue as $key => $value) {
-                $repLvl = $index === 0 ? ($repetitionLevel - 1) : $repetitionLevel;
+                $repLvl = $index === 0 ? $repetitionLevel - 1 : $repetitionLevel;
 
                 if (!isset($rowFirstWrite[$keyFp])) {
                     $repLvl = 0;
@@ -527,7 +608,15 @@ final readonly class DremelShredder
 
                 $optKeyTarget->repetitionLevels[] = $repLvl;
                 $optKeyTarget->definitionLevels[] = $definitionLevel;
-                $this->execList($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $valuePlan,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -550,7 +639,15 @@ final readonly class DremelShredder
 
                 $optKeyTarget->repetitionLevels[] = $repLvl;
                 $optKeyTarget->definitionLevels[] = $definitionLevel;
-                $this->execList($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $valuePlan,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -582,8 +679,15 @@ final readonly class DremelShredder
                 $keyTarget->definitionLevels[] = $defLvl;
                 /** @phpstan-ignore assign.propertyType */
                 $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
-                /** @phpstan-ignore-next-line */
-                $this->execList($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $valuePlan,
+                    $value,
+                    $definitionLevel,
+                    $repLevel,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
                 $index++;
             }
 
@@ -601,7 +705,15 @@ final readonly class DremelShredder
 
                 $optKeyTarget->repetitionLevels[] = $repLvl;
                 $optKeyTarget->definitionLevels[] = $definitionLevel;
-                $this->execMap($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $valuePlan,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -624,7 +736,15 @@ final readonly class DremelShredder
 
                 $optKeyTarget->repetitionLevels[] = $repLvl;
                 $optKeyTarget->definitionLevels[] = $definitionLevel;
-                $this->execMap($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $valuePlan,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel - 1,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 return;
             }
@@ -656,8 +776,15 @@ final readonly class DremelShredder
                 $keyTarget->definitionLevels[] = $defLvl;
                 /** @phpstan-ignore assign.propertyType */
                 $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
-                /** @phpstan-ignore-next-line */
-                $this->execMap($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $valuePlan,
+                    $value,
+                    $definitionLevel,
+                    $repLevel,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
                 $index++;
             }
 
@@ -675,7 +802,15 @@ final readonly class DremelShredder
 
             $optKeyTarget->repetitionLevels[] = $repLvl;
             $optKeyTarget->definitionLevels[] = $definitionLevel;
-            $this->execStruct($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $valuePlan,
+                null,
+                $definitionLevel,
+                $repetitionLevel - 1,
+                $depth,
+                $shouldValidate,
+                $rowFirstWrite,
+            );
 
             return;
         }
@@ -698,7 +833,15 @@ final readonly class DremelShredder
 
             $optKeyTarget->repetitionLevels[] = $repLvl;
             $optKeyTarget->definitionLevels[] = $definitionLevel;
-            $this->execStruct($valuePlan, null, $definitionLevel, $repetitionLevel - 1, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $valuePlan,
+                null,
+                $definitionLevel,
+                $repetitionLevel - 1,
+                $depth,
+                $shouldValidate,
+                $rowFirstWrite,
+            );
 
             return;
         }
@@ -738,8 +881,15 @@ final readonly class DremelShredder
     /**
      * @param array<string, bool> $rowFirstWrite
      */
-    private function execStruct(StructPlan $plan, mixed $structureData, int $definitionLevel, int $repetitionLevel, int $depth, bool $shouldValidate, array &$rowFirstWrite) : void
-    {
+    private function execStruct(
+        StructPlan $plan,
+        mixed $structureData,
+        int $definitionLevel,
+        int $repetitionLevel,
+        int $depth,
+        bool $shouldValidate,
+        array &$rowFirstWrite,
+    ): void {
         if ($structureData === null) {
             foreach ($plan->children as $child) {
                 if ($child instanceof FlatPlan) {
@@ -760,19 +910,43 @@ final readonly class DremelShredder
                 }
 
                 if ($child instanceof ListPlan) {
-                    $this->execList($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                    $this->execList(
+                        $child,
+                        null,
+                        $definitionLevel,
+                        $repetitionLevel,
+                        $depth,
+                        $shouldValidate,
+                        $rowFirstWrite,
+                    );
 
                     continue;
                 }
 
                 if ($child instanceof MapPlan) {
-                    $this->execMap($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                    $this->execMap(
+                        $child,
+                        null,
+                        $definitionLevel,
+                        $repetitionLevel,
+                        $depth,
+                        $shouldValidate,
+                        $rowFirstWrite,
+                    );
 
                     continue;
                 }
 
                 /** @var StructPlan $child */
-                $this->execStruct($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execStruct(
+                    $child,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
             }
 
             return;
@@ -802,19 +976,43 @@ final readonly class DremelShredder
                 }
 
                 if ($child instanceof ListPlan) {
-                    $this->execList($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                    $this->execList(
+                        $child,
+                        null,
+                        $definitionLevel,
+                        $repetitionLevel,
+                        $depth,
+                        $shouldValidate,
+                        $rowFirstWrite,
+                    );
 
                     continue;
                 }
 
                 if ($child instanceof MapPlan) {
-                    $this->execMap($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                    $this->execMap(
+                        $child,
+                        null,
+                        $definitionLevel,
+                        $repetitionLevel,
+                        $depth,
+                        $shouldValidate,
+                        $rowFirstWrite,
+                    );
 
                     continue;
                 }
 
                 /** @var StructPlan $child */
-                $this->execStruct($child, null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execStruct(
+                    $child,
+                    null,
+                    $definitionLevel,
+                    $repetitionLevel,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
             }
 
             return;
@@ -850,19 +1048,43 @@ final readonly class DremelShredder
             }
 
             if ($child instanceof ListPlan) {
-                $this->execList($child, $structureData[$child->childName] ?? null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execList(
+                    $child,
+                    $structureData[$child->childName] ?? null,
+                    $definitionLevel,
+                    $repetitionLevel,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 continue;
             }
 
             if ($child instanceof MapPlan) {
-                $this->execMap($child, $structureData[$child->childName] ?? null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+                $this->execMap(
+                    $child,
+                    $structureData[$child->childName] ?? null,
+                    $definitionLevel,
+                    $repetitionLevel,
+                    $depth,
+                    $shouldValidate,
+                    $rowFirstWrite,
+                );
 
                 continue;
             }
 
             /** @var StructPlan $child */
-            $this->execStruct($child, $structureData[$child->childName] ?? null, $definitionLevel, $repetitionLevel, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $child,
+                $structureData[$child->childName] ?? null,
+                $definitionLevel,
+                $repetitionLevel,
+                $depth,
+                $shouldValidate,
+                $rowFirstWrite,
+            );
         }
     }
 }

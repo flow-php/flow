@@ -8,8 +8,8 @@ use PHPUnit\Framework\TestCase;
 
 final class DremelTest extends TestCase
 {
-    public function test_dremel_exception() : void
+    public function test_dremel_exception(): void
     {
-        self::markTestSkipped('Dremel is not yet available as a standalone package');
+        static::markTestSkipped('Dremel is not yet available as a standalone package');
     }
 }

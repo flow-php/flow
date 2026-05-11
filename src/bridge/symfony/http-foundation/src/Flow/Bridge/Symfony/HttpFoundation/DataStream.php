@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation;
 
-use Flow\Bridge\Symfony\HttpFoundation\Response\{FlowBufferedResponse, FlowStreamedResponse};
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowBufferedResponse;
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
+use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\{Config, Extractor, Transformation, Transformations};
-use Symfony\Component\HttpFoundation\{HeaderUtils, Response};
+use Flow\ETL\Extractor;
+use Flow\ETL\Transformation;
+use Flow\ETL\Transformations;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * FlowStreamedResponse builder.
@@ -34,11 +39,11 @@ final class DataStream
      */
     private array $transformations = [];
 
-    public function __construct(private readonly Extractor $extractor)
-    {
-    }
+    public function __construct(
+        private readonly Extractor $extractor,
+    ) {}
 
-    public static function open(Extractor $extractor) : self
+    public static function open(Extractor $extractor): self
     {
         return new self($extractor);
     }
@@ -48,11 +53,11 @@ final class DataStream
      * If the attachment flag is set to true, the response will be treated as an attachment meaning that
      * the browser will prompt the user to download the file.
      */
-    public function as(string $name, bool $attachment = true) : self
+    public function as(string $name, bool $attachment = true): self
     {
         $this->headers['Content-Disposition'] = HeaderUtils::makeDisposition(
             $attachment ? HeaderUtils::DISPOSITION_ATTACHMENT : HeaderUtils::DISPOSITION_INLINE,
-            $name
+            $name,
         );
 
         return $this;
@@ -62,7 +67,7 @@ final class DataStream
      * Set the Config for the DataFrame execution.
      * Use this to configure Analyze for enabling Report generation.
      */
-    public function config(Config|ConfigBuilder $config) : self
+    public function config(Config|ConfigBuilder $config): self
     {
         $this->config = $config;
 
@@ -75,7 +80,7 @@ final class DataStream
      *
      * @param array<string, string> $headers
      */
-    public function headers(array $headers) : self
+    public function headers(array $headers): self
     {
         $this->headers = array_merge($this->headers, $headers);
 
@@ -87,7 +92,7 @@ final class DataStream
      * The closure receives the Report from DataFrame execution.
      * Note: Report will be null unless Analyze is configured via config().
      */
-    public function onComplete(StreamClosure $streamClosure) : self
+    public function onComplete(StreamClosure $streamClosure): self
     {
         $this->streamClosure = $streamClosure;
 
@@ -99,7 +104,7 @@ final class DataStream
      * It's highly recommended to use limit transformation to avoid loading entire dataset into the memory.
      * Some extractors like Parquet/Elasticsearch/Doctrine allows also for setting offset directly on the extractor.
      */
-    public function response(Output $output) : FlowBufferedResponse
+    public function response(Output $output): FlowBufferedResponse
     {
         $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
 
@@ -116,7 +121,7 @@ final class DataStream
     /**
      * Set the HTTP status code. Default is 200.
      */
-    public function status(int $status) : self
+    public function status(int $status): self
     {
         $this->status = $status;
 
@@ -126,7 +131,7 @@ final class DataStream
     /**
      * Send the data stream to the output.
      */
-    public function streamedResponse(Output $output) : FlowStreamedResponse
+    public function streamedResponse(Output $output): FlowStreamedResponse
     {
         $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
 
@@ -148,7 +153,7 @@ final class DataStream
      * that any resource expensive transformations like for example aggregations or sorting
      * might significantly slow down the streaming process or even cause out of memory errors.
      */
-    public function transform(Transformation ...$transformations) : self
+    public function transform(Transformation ...$transformations): self
     {
         $this->transformations = $transformations;
 
@@ -159,7 +164,7 @@ final class DataStream
      * Remove a specific header if it exists.
      * If the header does not exist, nothing happens.
      */
-    public function withoutHeader(string $name) : self
+    public function withoutHeader(string $name): self
     {
         if (\array_key_exists($name, $this->headers)) {
             unset($this->headers[$name]);

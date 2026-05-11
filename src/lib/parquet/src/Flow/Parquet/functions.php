@@ -12,7 +12,7 @@ use Flow\Parquet\Dremel\ColumnData\NullLevel;
  *
  * @return array<array-key, mixed>
  */
-function array_merge_recursive(array $array1, array $array2) : array
+function array_merge_recursive(array $array1, array $array2): array
 {
     $merged = $array1;
 
@@ -33,7 +33,7 @@ function array_merge_recursive(array $array1, array $array2) : array
  *
  * @return array<array-key, mixed>
  */
-function dremel_array_combine_recursive(array $keys, array $values) : array
+function dremel_array_combine_recursive(array $keys, array $values): array
 {
     $result = [];
 
@@ -76,7 +76,7 @@ function dremel_array_combine_recursive(array $keys, array $values) : array
  *
  * @param array<array-key, mixed> $array
  */
-function array_iterate_at_level(array &$array, int $targetLevel, callable $callback, int $currentLevel = 1) : void
+function array_iterate_at_level(array &$array, int $targetLevel, callable $callback, int $currentLevel = 1): void
 {
     if ($currentLevel === $targetLevel) {
         foreach ($array as &$value) {
@@ -96,11 +96,11 @@ function array_iterate_at_level(array &$array, int $targetLevel, callable $callb
  *
  * @return array<mixed>
  */
-function array_flatten(array $array) : array
+function array_flatten(array $array): array
 {
     $result = [];
 
-    $flatten = static function (array $arr) use (&$result, &$flatten) : void {
+    $flatten = static function (array $arr) use (&$result, &$flatten): void {
         foreach ($arr as $item) {
             if (\is_array($item)) {
                 $flatten($item);

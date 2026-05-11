@@ -19,7 +19,7 @@ final class SimpleXMLNormalizer implements Normalizer
     /**
      * @return array<array-key, mixed>
      */
-    public function toArray(string $data) : array
+    public function toArray(string $data): array
     {
         return $this->normalize(new \SimpleXMLElement($data));
     }
@@ -29,12 +29,14 @@ final class SimpleXMLNormalizer implements Normalizer
      *
      * @return array<array-key, mixed>
      */
-    private function normalize(\SimpleXMLElement|array $xml) : array
+    private function normalize(\SimpleXMLElement|array $xml): array
     {
         $normalized = [];
 
         foreach ((array) $xml as $key => $value) {
-            $normalizedValue = ($value instanceof \SimpleXMLElement) || is_array($value) ? $this->normalize($value) : $value;
+            $normalizedValue = $value instanceof \SimpleXMLElement || is_array($value)
+                ? $this->normalize($value)
+                : $value;
 
             $normalized[$key] = \is_array($normalizedValue) && !\count($normalizedValue) ? null : $normalizedValue;
         }

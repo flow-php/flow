@@ -12,17 +12,16 @@ final class LayoutController extends AbstractController
 {
     public function __construct(
         private readonly Github $github,
-    ) {
-    }
+    ) {}
 
-    public function contributors() : Response
+    public function contributors(): Response
     {
         return $this->render('main/_contributors.html.twig', [
             'contributors' => $this->github->contributors(),
         ]);
     }
 
-    public function hero() : Response
+    public function hero(): Response
     {
         return $this->render('main/_hero.html.twig');
     }

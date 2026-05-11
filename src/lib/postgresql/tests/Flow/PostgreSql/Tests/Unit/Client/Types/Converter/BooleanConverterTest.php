@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BooleanConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'integer 1' => [1];
         yield 'integer 0' => [0];
@@ -21,7 +21,7 @@ final class BooleanConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'true' => [true, 't'];
         yield 'false' => [false, 'f'];
@@ -36,29 +36,29 @@ final class BooleanConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new BooleanConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new BooleanConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new BooleanConverter();
-        self::assertContains(ValueType::BOOL, $converter->supportedTypes());
+        static::assertContains(ValueType::BOOL, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(mixed $input, string $expected) : void
+    public function test_to_database(mixed $input, string $expected): void
     {
         $converter = new BooleanConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

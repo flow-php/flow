@@ -4,114 +4,151 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\DSL;
 
-use function Flow\Telemetry\DSL\{baggage, context, instrumentation_scope, log_record_limits, logger_provider, memory_exporter, meter_provider, metric_limits, resource, span_context, span_event, span_id, span_limits, span_link, trace_id, tracer_provider, void_log_processor, void_metric_processor, void_span_processor};
-use Flow\Telemetry\Context\{Baggage, Context, MemoryContextStorage, SpanId, TraceId};
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Logger\{LogRecordLimits, LoggerProvider, Severity};
-use Flow\Telemetry\Meter\{MeterProvider, MetricLimits};
-use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidExporter, VoidLogProcessor, VoidMetricProcessor, VoidSpanProcessor};
+use Flow\Telemetry\Context\Baggage;
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\LogRecordLimits;
+use Flow\Telemetry\Logger\Severity;
+use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Provider\Memory\MemoryExporter;
+use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
+use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Provider\Void\VoidExporter;
+use Flow\Telemetry\Provider\Void\VoidLogProcessor;
+use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
+use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
-use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanLimits, SpanLink, TracerProvider};
+use Flow\Telemetry\Tracer\GenericEvent;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanLimits;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+
+use function Flow\Telemetry\DSL\baggage;
+use function Flow\Telemetry\DSL\context;
+use function Flow\Telemetry\DSL\instrumentation_scope;
+use function Flow\Telemetry\DSL\log_record_limits;
+use function Flow\Telemetry\DSL\logger_provider;
+use function Flow\Telemetry\DSL\memory_exporter;
+use function Flow\Telemetry\DSL\meter_provider;
+use function Flow\Telemetry\DSL\metric_limits;
+use function Flow\Telemetry\DSL\resource;
+use function Flow\Telemetry\DSL\span_context;
+use function Flow\Telemetry\DSL\span_event;
+use function Flow\Telemetry\DSL\span_id;
+use function Flow\Telemetry\DSL\span_limits;
+use function Flow\Telemetry\DSL\span_link;
+use function Flow\Telemetry\DSL\trace_id;
+use function Flow\Telemetry\DSL\tracer_provider;
+use function Flow\Telemetry\DSL\void_log_processor;
+use function Flow\Telemetry\DSL\void_metric_processor;
+use function Flow\Telemetry\DSL\void_span_processor;
 
 final class FunctionsTest extends TestCase
 {
     private Resource $testResource;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->testResource = ResourceMother::default();
     }
 
-    public function test_baggage_creates_empty_baggage() : void
+    public function test_baggage_creates_empty_baggage(): void
     {
         $bag = baggage();
 
-        self::assertInstanceOf(Baggage::class, $bag);
-        self::assertTrue($bag->isEmpty());
+        static::assertInstanceOf(Baggage::class, $bag);
+        static::assertTrue($bag->isEmpty());
     }
 
-    public function test_baggage_creates_with_entries() : void
+    public function test_baggage_creates_with_entries(): void
     {
         $entries = ['user.id' => '12345', 'request.id' => 'abc'];
         $bag = baggage($entries);
 
-        self::assertInstanceOf(Baggage::class, $bag);
-        self::assertSame('12345', $bag->get('user.id'));
-        self::assertSame('abc', $bag->get('request.id'));
+        static::assertInstanceOf(Baggage::class, $bag);
+        static::assertSame('12345', $bag->get('user.id'));
+        static::assertSame('abc', $bag->get('request.id'));
     }
 
-    public function test_context_creates_new_context() : void
+    public function test_context_creates_new_context(): void
     {
         $ctx = context();
 
-        self::assertInstanceOf(Context::class, $ctx);
-        self::assertSame(32, \strlen($ctx->traceId->toHex()));
-        self::assertTrue($ctx->baggage->isEmpty());
+        static::assertInstanceOf(Context::class, $ctx);
+        static::assertSame(32, \strlen($ctx->traceId->toHex()));
+        static::assertTrue($ctx->baggage->isEmpty());
     }
 
-    public function test_context_with_baggage() : void
+    public function test_context_with_baggage(): void
     {
         $bag = baggage(['key' => 'value']);
         $ctx = context(null, $bag);
 
-        self::assertSame('value', $ctx->baggage->get('key'));
+        static::assertSame('value', $ctx->baggage->get('key'));
     }
 
-    public function test_context_with_trace_id() : void
+    public function test_context_with_trace_id(): void
     {
         $traceId = trace_id();
         $ctx = context($traceId);
 
-        self::assertTrue($ctx->traceId->equals($traceId));
+        static::assertTrue($ctx->traceId->equals($traceId));
     }
 
-    public function test_context_with_trace_id_and_baggage() : void
+    public function test_context_with_trace_id_and_baggage(): void
     {
         $traceId = trace_id();
         $bag = baggage(['key' => 'value']);
         $ctx = context($traceId, $bag);
 
-        self::assertTrue($ctx->traceId->equals($traceId));
-        self::assertSame('value', $ctx->baggage->get('key'));
+        static::assertTrue($ctx->traceId->equals($traceId));
+        static::assertSame('value', $ctx->baggage->get('key'));
     }
 
-    public function test_instrumentation_scope_creates() : void
+    public function test_instrumentation_scope_creates(): void
     {
         $scope = instrumentation_scope('my-lib');
 
-        self::assertInstanceOf(InstrumentationScope::class, $scope);
-        self::assertSame('my-lib', $scope->name);
-        self::assertSame('unknown', $scope->version);
+        static::assertInstanceOf(InstrumentationScope::class, $scope);
+        static::assertSame('my-lib', $scope->name);
+        static::assertSame('unknown', $scope->version);
     }
 
-    public function test_instrumentation_scope_with_version_and_schema() : void
+    public function test_instrumentation_scope_with_version_and_schema(): void
     {
         $scope = instrumentation_scope('my-lib', '1.0.0', 'https://schema.url');
 
-        self::assertSame('1.0.0', $scope->version);
-        self::assertSame('https://schema.url', $scope->schemaUrl);
+        static::assertSame('1.0.0', $scope->version);
+        static::assertSame('https://schema.url', $scope->schemaUrl);
     }
 
-    public function test_log_record_limits_creates_custom_limits() : void
+    public function test_log_record_limits_creates_custom_limits(): void
     {
         $limits = log_record_limits(attributeCountLimit: 64, attributeValueLengthLimit: 100);
 
-        self::assertSame(64, $limits->attributeCountLimit);
-        self::assertSame(100, $limits->attributeValueLengthLimit);
+        static::assertSame(64, $limits->attributeCountLimit);
+        static::assertSame(100, $limits->attributeValueLengthLimit);
     }
 
-    public function test_log_record_limits_creates_default_limits() : void
+    public function test_log_record_limits_creates_default_limits(): void
     {
         $limits = log_record_limits();
 
-        self::assertInstanceOf(LogRecordLimits::class, $limits);
-        self::assertSame(128, $limits->attributeCountLimit);
+        static::assertInstanceOf(LogRecordLimits::class, $limits);
+        static::assertSame(128, $limits->attributeCountLimit);
     }
 
-    public function test_logger_provider_creates_provider() : void
+    public function test_logger_provider_creates_provider(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $processor = $this->createLogProcessor();
@@ -119,10 +156,10 @@ final class FunctionsTest extends TestCase
 
         $provider = logger_provider($processor, $clock, $contextStorage);
 
-        self::assertInstanceOf(LoggerProvider::class, $provider);
+        static::assertInstanceOf(LoggerProvider::class, $provider);
     }
 
-    public function test_logger_provider_works_correctly() : void
+    public function test_logger_provider_works_correctly(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable());
@@ -133,26 +170,26 @@ final class FunctionsTest extends TestCase
         $logger = $provider->logger($this->testResource, 'test');
         $logger->info('test message');
 
-        self::assertCount(1, $processor->entries());
-        self::assertSame(Severity::INFO, $processor->entries()[0]->record->severity);
+        static::assertCount(1, $processor->entries());
+        static::assertSame(Severity::INFO, $processor->entries()[0]->record->severity);
     }
 
-    public function test_memory_exporter_creates_instance() : void
+    public function test_memory_exporter_creates_instance(): void
     {
-        self::assertInstanceOf(MemoryExporter::class, memory_exporter());
+        static::assertInstanceOf(MemoryExporter::class, memory_exporter());
     }
 
-    public function test_meter_provider_creates_provider() : void
+    public function test_meter_provider_creates_provider(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $processor = $this->createMetricProcessor();
 
         $provider = meter_provider($processor, $clock);
 
-        self::assertInstanceOf(MeterProvider::class, $provider);
+        static::assertInstanceOf(MeterProvider::class, $provider);
     }
 
-    public function test_meter_provider_with_limits() : void
+    public function test_meter_provider_with_limits(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable());
@@ -169,35 +206,35 @@ final class FunctionsTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(6, $metrics);
-        $overflowMetrics = \array_filter($metrics, static fn ($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE));
-        self::assertCount(1, $overflowMetrics);
+        static::assertCount(6, $metrics);
+        $overflowMetrics = \array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE));
+        static::assertCount(1, $overflowMetrics);
     }
 
-    public function test_metric_limits_creates_custom_limits() : void
+    public function test_metric_limits_creates_custom_limits(): void
     {
         $limits = metric_limits(cardinalityLimit: 500);
 
-        self::assertSame(500, $limits->cardinalityLimit);
+        static::assertSame(500, $limits->cardinalityLimit);
     }
 
-    public function test_metric_limits_creates_default_limits() : void
+    public function test_metric_limits_creates_default_limits(): void
     {
         $limits = metric_limits();
 
-        self::assertInstanceOf(MetricLimits::class, $limits);
-        self::assertSame(2000, $limits->cardinalityLimit);
+        static::assertInstanceOf(MetricLimits::class, $limits);
+        static::assertSame(2000, $limits->cardinalityLimit);
     }
 
-    public function test_resource_creates_empty_resource() : void
+    public function test_resource_creates_empty_resource(): void
     {
         $res = resource();
 
-        self::assertInstanceOf(Resource::class, $res);
-        self::assertTrue($res->isEmpty());
+        static::assertInstanceOf(Resource::class, $res);
+        static::assertTrue($res->isEmpty());
     }
 
-    public function test_resource_creates_with_attributes() : void
+    public function test_resource_creates_with_attributes(): void
     {
         $attributes = [
             'service.name' => 'my-service',
@@ -205,25 +242,25 @@ final class FunctionsTest extends TestCase
         ];
         $res = resource($attributes);
 
-        self::assertInstanceOf(Resource::class, $res);
-        self::assertSame('my-service', $res->get('service.name'));
-        self::assertSame('1.0.0', $res->get('service.version'));
+        static::assertInstanceOf(Resource::class, $res);
+        static::assertSame('my-service', $res->get('service.name'));
+        static::assertSame('1.0.0', $res->get('service.version'));
     }
 
-    public function test_span_context_creates_context() : void
+    public function test_span_context_creates_context(): void
     {
         $traceId = trace_id();
         $spanId = span_id();
 
         $context = span_context($traceId, $spanId);
 
-        self::assertInstanceOf(SpanContext::class, $context);
-        self::assertTrue($context->traceId->equals($traceId));
-        self::assertTrue($context->spanId->equals($spanId));
-        self::assertNull($context->parentSpanId);
+        static::assertInstanceOf(SpanContext::class, $context);
+        static::assertTrue($context->traceId->equals($traceId));
+        static::assertTrue($context->spanId->equals($spanId));
+        static::assertNull($context->parentSpanId);
     }
 
-    public function test_span_context_with_parent() : void
+    public function test_span_context_with_parent(): void
     {
         $traceId = trace_id();
         $spanId = span_id();
@@ -231,107 +268,103 @@ final class FunctionsTest extends TestCase
 
         $context = span_context($traceId, $spanId, $parentSpanId);
 
-        self::assertNotNull($context->parentSpanId);
-        self::assertTrue($context->parentSpanId->equals($parentSpanId));
+        static::assertNotNull($context->parentSpanId);
+        static::assertTrue($context->parentSpanId->equals($parentSpanId));
     }
 
-    public function test_span_event_creates_event() : void
+    public function test_span_event_creates_event(): void
     {
         $timestamp = new \DateTimeImmutable();
         $event = span_event('test.event', $timestamp);
 
-        self::assertInstanceOf(GenericEvent::class, $event);
-        self::assertSame('test.event', $event->name());
-        self::assertSame($timestamp, $event->timestamp());
-        self::assertSame([], $event->attributes());
+        static::assertInstanceOf(GenericEvent::class, $event);
+        static::assertSame('test.event', $event->name());
+        static::assertSame($timestamp, $event->timestamp());
+        static::assertSame([], $event->attributes());
     }
 
-    public function test_span_event_with_attributes() : void
+    public function test_span_event_with_attributes(): void
     {
         $timestamp = new \DateTimeImmutable();
         $event = span_event('test.event', $timestamp, ['key' => 'value']);
 
-        self::assertSame(['key' => 'value'], $event->attributes());
+        static::assertSame(['key' => 'value'], $event->attributes());
     }
 
-    public function test_span_id_from_hex() : void
+    public function test_span_id_from_hex(): void
     {
         $hex = '00f067aa0ba902b7';
         $spanId = span_id($hex);
 
-        self::assertInstanceOf(SpanId::class, $spanId);
-        self::assertSame($hex, $spanId->toHex());
+        static::assertInstanceOf(SpanId::class, $spanId);
+        static::assertSame($hex, $spanId->toHex());
     }
 
-    public function test_span_id_generates_new_span_id() : void
+    public function test_span_id_generates_new_span_id(): void
     {
         $spanId = span_id();
 
-        self::assertInstanceOf(SpanId::class, $spanId);
-        self::assertSame(16, \strlen($spanId->toHex()));
+        static::assertInstanceOf(SpanId::class, $spanId);
+        static::assertSame(16, \strlen($spanId->toHex()));
     }
 
-    public function test_span_limits_creates_custom_limits() : void
+    public function test_span_limits_creates_custom_limits(): void
     {
-        $limits = span_limits(
-            attributeCountLimit: 64,
-            eventCountLimit: 32,
-            linkCountLimit: 16,
-        );
+        $limits = span_limits(attributeCountLimit: 64, eventCountLimit: 32, linkCountLimit: 16);
 
-        self::assertSame(64, $limits->attributeCountLimit);
-        self::assertSame(32, $limits->eventCountLimit);
-        self::assertSame(16, $limits->linkCountLimit);
+        static::assertSame(64, $limits->attributeCountLimit);
+        static::assertSame(32, $limits->eventCountLimit);
+        static::assertSame(16, $limits->linkCountLimit);
     }
 
-    public function test_span_limits_creates_default_limits() : void
+    public function test_span_limits_creates_default_limits(): void
     {
         $limits = span_limits();
 
-        self::assertInstanceOf(SpanLimits::class, $limits);
-        self::assertSame(128, $limits->attributeCountLimit);
-        self::assertSame(128, $limits->eventCountLimit);
-        self::assertSame(128, $limits->linkCountLimit);
+        static::assertInstanceOf(SpanLimits::class, $limits);
+        static::assertSame(128, $limits->attributeCountLimit);
+        static::assertSame(128, $limits->eventCountLimit);
+        static::assertSame(128, $limits->linkCountLimit);
     }
 
-    public function test_span_link_creates_link() : void
+    public function test_span_link_creates_link(): void
     {
         $context = span_context(trace_id(), span_id());
 
         $link = span_link($context);
 
-        self::assertInstanceOf(SpanLink::class, $link);
-        self::assertSame($context, $link->context);
-        self::assertSame([], $link->attributes->normalize());
+        static::assertInstanceOf(SpanLink::class, $link);
+        static::assertSame($context, $link->context);
+        static::assertSame([], $link->attributes->normalize());
     }
 
-    public function test_span_link_with_attributes() : void
+    public function test_span_link_with_attributes(): void
     {
         $context = span_context(trace_id(), span_id());
 
         $link = span_link($context, ['reason' => 'batch']);
 
-        self::assertSame(['reason' => 'batch'], $link->attributes->normalize());
+        static::assertSame(['reason' => 'batch'], $link->attributes->normalize());
     }
 
-    public function test_trace_id_from_hex() : void
+    public function test_trace_id_from_hex(): void
     {
         $hex = '0af7651916cd43dd8448eb211c80319c';
         $traceId = trace_id($hex);
 
-        self::assertInstanceOf(TraceId::class, $traceId);
-        self::assertSame($hex, $traceId->toHex());
+        static::assertInstanceOf(TraceId::class, $traceId);
+        static::assertSame($hex, $traceId->toHex());
     }
 
-    public function test_trace_id_generates_new_trace_id() : void
+    public function test_trace_id_generates_new_trace_id(): void
     {
         $traceId = trace_id();
 
-        self::assertInstanceOf(TraceId::class, $traceId);
-        self::assertSame(32, \strlen($traceId->toHex()));
+        static::assertInstanceOf(TraceId::class, $traceId);
+        static::assertSame(32, \strlen($traceId->toHex()));
     }
 
-    public function test_tracer_provider_creates_provider() : void
+    public function test_tracer_provider_creates_provider(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $processor = $this->createSpanProcessor();
@@ -339,10 +372,10 @@ final class FunctionsTest extends TestCase
 
         $provider = tracer_provider($processor, $clock, $contextStorage);
 
-        self::assertInstanceOf(TracerProvider::class, $provider);
+        static::assertInstanceOf(TracerProvider::class, $provider);
     }
 
-    public function test_tracer_provider_with_context_storage() : void
+    public function test_tracer_provider_with_context_storage(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable());
@@ -353,45 +386,45 @@ final class FunctionsTest extends TestCase
         $provider = tracer_provider($processor, $clock, $storage);
         $tracer = $provider->tracer($this->testResource, 'test');
 
-        self::assertSame($ctx->traceId->toHex(), $tracer->context()->traceId->toHex());
+        static::assertSame($ctx->traceId->toHex(), $tracer->context()->traceId->toHex());
     }
 
-    public function test_tracer_provider_with_void_processor() : void
+    public function test_tracer_provider_with_void_processor(): void
     {
         $clock = $this->createMock(ClockInterface::class);
         $contextStorage = new MemoryContextStorage();
 
         $provider = tracer_provider(new VoidSpanProcessor(), $clock, $contextStorage);
 
-        self::assertInstanceOf(TracerProvider::class, $provider);
+        static::assertInstanceOf(TracerProvider::class, $provider);
     }
 
-    public function test_void_log_processor_creates_instance() : void
+    public function test_void_log_processor_creates_instance(): void
     {
-        self::assertInstanceOf(VoidLogProcessor::class, void_log_processor());
+        static::assertInstanceOf(VoidLogProcessor::class, void_log_processor());
     }
 
-    public function test_void_metric_processor_creates_instance() : void
+    public function test_void_metric_processor_creates_instance(): void
     {
-        self::assertInstanceOf(VoidMetricProcessor::class, void_metric_processor());
+        static::assertInstanceOf(VoidMetricProcessor::class, void_metric_processor());
     }
 
-    public function test_void_span_processor_creates_instance() : void
+    public function test_void_span_processor_creates_instance(): void
     {
-        self::assertInstanceOf(VoidSpanProcessor::class, void_span_processor());
+        static::assertInstanceOf(VoidSpanProcessor::class, void_span_processor());
     }
 
-    private function createLogProcessor() : MemoryLogProcessor
+    private function createLogProcessor(): MemoryLogProcessor
     {
         return new MemoryLogProcessor(new VoidExporter());
     }
 
-    private function createMetricProcessor() : MemoryMetricProcessor
+    private function createMetricProcessor(): MemoryMetricProcessor
     {
         return new MemoryMetricProcessor(new VoidExporter());
     }
 
-    private function createSpanProcessor() : MemorySpanProcessor
+    private function createSpanProcessor(): MemorySpanProcessor
     {
         return new MemorySpanProcessor(new VoidExporter());
     }

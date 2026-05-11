@@ -6,5 +6,5 @@ namespace Flow\ETL;
 
 interface DataFrameFactory
 {
-    public function from(Rows $rows) : DataFrame;
+    public function from(Rows $rows): DataFrame;
 }

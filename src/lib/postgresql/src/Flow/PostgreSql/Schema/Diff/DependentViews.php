@@ -13,15 +13,14 @@ final readonly class DependentViews
     public function __construct(
         public array $toDrop,
         public array $toCreate,
-    ) {
-    }
+    ) {}
 
-    public static function empty() : self
+    public static function empty(): self
     {
         return new self([], []);
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->toDrop === [] && $this->toCreate === [];
     }

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\LogProcessor;
 
 /**
  * Forwards log records to multiple processors.
@@ -23,10 +25,9 @@ final readonly class CompositeLogProcessor implements LogProcessor
     public function __construct(
         private array $processors,
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
-    public function flush() : bool
+    public function flush(): bool
     {
         $success = true;
 
@@ -44,7 +45,7 @@ final readonly class CompositeLogProcessor implements LogProcessor
         return $success;
     }
 
-    public function process(LogEntry $entry) : void
+    public function process(LogEntry $entry): void
     {
         foreach ($this->processors as $processor) {
             try {
@@ -60,12 +61,12 @@ final readonly class CompositeLogProcessor implements LogProcessor
      *
      * @return array<LogProcessor>
      */
-    public function processors() : array
+    public function processors(): array
     {
         return $this->processors;
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         foreach ($this->processors as $processor) {
             try {

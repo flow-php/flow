@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use function Flow\PostgreSql\DSL\{create, parsed_select};
-
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\parsed_select;
 
 /**
  * @phpstan-type ViewShape = array{name: string, definition: string, is_updatable: bool}
@@ -17,13 +18,12 @@ final readonly class View
         public string $name,
         public string $definition,
         public bool $isUpdatable = false,
-    ) {
-    }
+    ) {}
 
     /**
      * @param ViewShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -35,7 +35,7 @@ final readonly class View
     /**
      * @return ViewShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -44,7 +44,7 @@ final readonly class View
         ];
     }
 
-    public function toSql() : Sql
+    public function toSql(): Sql
     {
         return create()->view($this->name)->as(parsed_select($this->definition));
     }

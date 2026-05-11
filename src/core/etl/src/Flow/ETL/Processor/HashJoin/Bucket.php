@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor\HashJoin;
 
-use function Flow\ETL\DSL\rows;
 use Flow\ETL\Join\Expression;
-use Flow\ETL\{Row, Rows};
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+
+use function Flow\ETL\DSL\rows;
 
 final class Bucket implements \Countable
 {
@@ -25,25 +27,26 @@ final class Bucket implements \Countable
     /**
      * @param string $hash - hash of the bucket calculated from join expression columns and row
      */
-    public function __construct(public readonly string $hash)
-    {
+    public function __construct(
+        public readonly string $hash,
+    ) {
         $this->rowsArray = [];
         $this->rows = null;
     }
 
-    public function add(Row $row) : void
+    public function add(Row $row): void
     {
         $this->rowsArray[$rowHash = $row->hash()] = $row;
         $this->rowsMatches[$rowHash] = 0;
         $this->rows = null;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->rowsArray);
     }
 
-    public function findMatch(Row $row, Expression $expression) : ?Row
+    public function findMatch(Row $row, Expression $expression): ?Row
     {
         foreach ($this->rowsArray as $hash => $bucketRow) {
             if ($expression->meet($row, $bucketRow)) {
@@ -56,7 +59,7 @@ final class Bucket implements \Countable
         return null;
     }
 
-    public function rows() : Rows
+    public function rows(): Rows
     {
         if ($this->rows === null) {
             $this->rows = rows(...$this->rowsArray);
@@ -68,7 +71,7 @@ final class Bucket implements \Countable
     /**
      * @return array<Row>
      */
-    public function unmatchedRows() : array
+    public function unmatchedRows(): array
     {
         $unmatchedRows = [];
 

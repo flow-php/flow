@@ -4,35 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Utility;
 
-use function Flow\PostgreSql\DSL\{star, table};
-
 use Flow\PostgreSql\Protobuf\AST\ExplainStmt;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
-use Flow\PostgreSql\QueryBuilder\Utility\{ExplainBuilder, ExplainFormat};
+use Flow\PostgreSql\QueryBuilder\Utility\ExplainBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\star;
+use function Flow\PostgreSql\DSL\table;
 
 final class ExplainBuilderTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
 
-    public function test_basic_explain() : void
+    public function test_basic_explain(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query);
 
         $ast = $builder->toAst();
 
-        self::assertInstanceOf(ExplainStmt::class, $ast);
-        self::assertNotNull($ast->getQuery());
-        self::assertCount(0, $ast->getOptions());
+        static::assertInstanceOf(ExplainStmt::class, $ast);
+        static::assertNotNull($ast->getQuery());
+        static::assertCount(0, $ast->getOptions());
     }
 
-    public function test_explain_analyze_option() : void
+    public function test_explain_analyze_option(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->analyze();
@@ -40,16 +42,16 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $optionNames = [];
 
         foreach ($options as $opt) {
             $optionNames[] = $opt->getDefElem()?->getDefname();
         }
-        self::assertContains('analyze', $optionNames);
+        static::assertContains('analyze', $optionNames);
     }
 
-    public function test_explain_buffers_option() : void
+    public function test_explain_buffers_option(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->buffers(true);
@@ -57,7 +59,7 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $buffersFound = false;
 
         foreach ($options as $opt) {
@@ -66,13 +68,13 @@ final class ExplainBuilderTest extends TestCase
             if ($defElem?->getDefname() === 'buffers') {
                 $buffersFound = true;
                 /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                self::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
             }
         }
-        self::assertTrue($buffersFound);
+        static::assertTrue($buffersFound);
     }
 
-    public function test_explain_costs_option() : void
+    public function test_explain_costs_option(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->costs(true);
@@ -80,7 +82,7 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $costsFound = false;
 
         foreach ($options as $opt) {
@@ -89,13 +91,13 @@ final class ExplainBuilderTest extends TestCase
             if ($defElem?->getDefname() === 'costs') {
                 $costsFound = true;
                 /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                self::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
             }
         }
-        self::assertTrue($costsFound);
+        static::assertTrue($costsFound);
     }
 
-    public function test_explain_format_json() : void
+    public function test_explain_format_json(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->format(ExplainFormat::JSON);
@@ -103,7 +105,7 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $formatFound = false;
 
         foreach ($options as $opt) {
@@ -111,13 +113,13 @@ final class ExplainBuilderTest extends TestCase
 
             if ($defElem?->getDefname() === 'format') {
                 $formatFound = true;
-                self::assertSame('json', $defElem->getArg()?->getString()?->getSval());
+                static::assertSame('json', $defElem->getArg()?->getString()?->getSval());
             }
         }
-        self::assertTrue($formatFound);
+        static::assertTrue($formatFound);
     }
 
-    public function test_explain_format_yaml() : void
+    public function test_explain_format_yaml(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->format(ExplainFormat::YAML);
@@ -125,7 +127,7 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $formatFound = false;
 
         foreach ($options as $opt) {
@@ -133,13 +135,13 @@ final class ExplainBuilderTest extends TestCase
 
             if ($defElem?->getDefname() === 'format') {
                 $formatFound = true;
-                self::assertSame('yaml', $defElem->getArg()?->getString()?->getSval());
+                static::assertSame('yaml', $defElem->getArg()?->getString()?->getSval());
             }
         }
-        self::assertTrue($formatFound);
+        static::assertTrue($formatFound);
     }
 
-    public function test_explain_timing_option() : void
+    public function test_explain_timing_option(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->timing(true);
@@ -147,7 +149,7 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $timingFound = false;
 
         foreach ($options as $opt) {
@@ -156,13 +158,13 @@ final class ExplainBuilderTest extends TestCase
             if ($defElem?->getDefname() === 'timing') {
                 $timingFound = true;
                 /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                self::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
             }
         }
-        self::assertTrue($timingFound);
+        static::assertTrue($timingFound);
     }
 
-    public function test_explain_verbose_option() : void
+    public function test_explain_verbose_option(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $builder = ExplainBuilder::create($query)->verbose();
@@ -170,16 +172,16 @@ final class ExplainBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         $options = $ast->getOptions();
-        self::assertNotEmpty($options);
+        static::assertNotEmpty($options);
         $optionNames = [];
 
         foreach ($options as $opt) {
             $optionNames[] = $opt->getDefElem()?->getDefname();
         }
-        self::assertContains('verbose', $optionNames);
+        static::assertContains('verbose', $optionNames);
     }
 
-    public function test_immutability() : void
+    public function test_immutability(): void
     {
         $query = SelectBuilder::create()->select(star())->from(table('users'));
         $original = ExplainBuilder::create($query);
@@ -188,7 +190,7 @@ final class ExplainBuilderTest extends TestCase
         $originalAst = $original->toAst();
         $modifiedAst = $modified->toAst();
 
-        self::assertCount(0, $originalAst->getOptions());
-        self::assertCount(1, $modifiedAst->getOptions());
+        static::assertCount(0, $originalAst->getOptions());
+        static::assertCount(1, $modifiedAst->getOptions());
     }
 }

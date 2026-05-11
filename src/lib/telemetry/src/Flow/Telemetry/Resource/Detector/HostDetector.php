@@ -25,7 +25,7 @@ use Flow\Telemetry\Resource\ResourceDetector;
  */
 final readonly class HostDetector implements ResourceDetector
 {
-    public function detect() : Resource
+    public function detect(): Resource
     {
         $attributes = [];
 
@@ -50,7 +50,7 @@ final readonly class HostDetector implements ResourceDetector
         return Resource::create($attributes);
     }
 
-    private function detectArchitecture() : ?string
+    private function detectArchitecture(): ?string
     {
         $machine = \strtolower(\php_uname('m'));
 
@@ -67,7 +67,7 @@ final readonly class HostDetector implements ResourceDetector
         };
     }
 
-    private function detectMachineId() : ?string
+    private function detectMachineId(): ?string
     {
         if (PHP_OS_FAMILY === 'Linux') {
             return $this->readLinuxMachineId();
@@ -80,7 +80,7 @@ final readonly class HostDetector implements ResourceDetector
         return null;
     }
 
-    private function readDarwinMachineId() : ?string
+    private function readDarwinMachineId(): ?string
     {
         $output = @\shell_exec('ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null');
 
@@ -95,7 +95,7 @@ final readonly class HostDetector implements ResourceDetector
         return null;
     }
 
-    private function readLinuxMachineId() : ?string
+    private function readLinuxMachineId(): ?string
     {
         $paths = [
             '/etc/machine-id',

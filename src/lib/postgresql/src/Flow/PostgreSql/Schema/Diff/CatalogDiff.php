@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\{create, drop, parsed_select};
 use Flow\PostgreSql\Parser;
-
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\{Catalog, ExecutionOrderStrategy, ForeignKeyDependencyOrder, IndexMethod, MaterializedView, MaterializedViewDependencyOrder, Schema, View, ViewDependencyOrder};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
+use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
+use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
+use Flow\PostgreSql\Schema\Schema;
 use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\View;
+use Flow\PostgreSql\Schema\ViewDependencyOrder;
+
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\parsed_select;
 
 final readonly class CatalogDiff implements Diff
 {
@@ -31,20 +41,28 @@ final readonly class CatalogDiff implements Diff
         private ViewDependencyResolver $viewDependencyResolver = new NoopViewDependencyResolver(),
         private ExecutionOrderStrategy $tableOrderStrategy = new ForeignKeyDependencyOrder(),
         private ExecutionOrderStrategy $viewOrderStrategy = new ViewDependencyOrder(new Parser()),
-        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(new Parser()),
-    ) {
-    }
+        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
+            new Parser(),
+        ),
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $sqls = [];
 
         foreach ($this->addedSchemas as $schema) {
             $sqls[] = create()->schema($schema->name)->ifNotExists();
-            $sqls = [...$sqls, ...$schema->toSql($this->tableOrderStrategy, $this->viewOrderStrategy, $this->materializedViewOrderStrategy)];
+            $sqls = [
+                ...$sqls,
+                ...$schema->toSql(
+                    $this->tableOrderStrategy,
+                    $this->viewOrderStrategy,
+                    $this->materializedViewOrderStrategy,
+                ),
+            ];
         }
 
         $dependentViews = $this->resolveDependentViews();
@@ -61,7 +79,10 @@ final readonly class CatalogDiff implements Diff
 
         foreach ($dependentViews->toCreate as $dv) {
             if ($dv->view instanceof MaterializedView) {
-                $sqls[] = create()->materializedView($dv->view->name, $dv->schema)->as(parsed_select($dv->view->definition));
+                $sqls[] = create()->materializedView(
+                    $dv->view->name,
+                    $dv->schema,
+                )->as(parsed_select($dv->view->definition));
 
                 foreach ($dv->view->indexes as $idx) {
                     $builder = create()->index($idx->name);
@@ -90,17 +111,15 @@ final readonly class CatalogDiff implements Diff
         return $sqls;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
-        return $this->addedSchemas === []
-            && $this->removedSchemas === []
-            && $this->modifiedSchemas === [];
+        return $this->addedSchemas === [] && $this->removedSchemas === [] && $this->modifiedSchemas === [];
     }
 
     /**
      * @return list<string>
      */
-    private function collectModifiedTableNames() : array
+    private function collectModifiedTableNames(): array
     {
         $names = [];
 
@@ -115,7 +134,7 @@ final readonly class CatalogDiff implements Diff
         return $names;
     }
 
-    private function resolveDependentViews() : DependentViews
+    private function resolveDependentViews(): DependentViews
     {
         $modifiedTableNames = $this->collectModifiedTableNames();
 
@@ -134,15 +153,21 @@ final readonly class CatalogDiff implements Diff
         $excludeSet = \array_flip($excludedNames);
 
         return new DependentViews(
-            \array_values(\array_filter($resolved->toDrop, static fn (DependentView $dv) : bool => !\array_key_exists($dv->qualifiedName(), $excludeSet))),
-            \array_values(\array_filter($resolved->toCreate, static fn (DependentView $dv) : bool => !\array_key_exists($dv->qualifiedName(), $excludeSet))),
+            \array_values(\array_filter(
+                $resolved->toDrop,
+                static fn(DependentView $dv): bool => !\array_key_exists($dv->qualifiedName(), $excludeSet),
+            )),
+            \array_values(\array_filter(
+                $resolved->toCreate,
+                static fn(DependentView $dv): bool => !\array_key_exists($dv->qualifiedName(), $excludeSet),
+            )),
         );
     }
 
     /**
      * @return list<string>
      */
-    private function viewNamesAlreadyHandledByDiff() : array
+    private function viewNamesAlreadyHandledByDiff(): array
     {
         $names = [];
 

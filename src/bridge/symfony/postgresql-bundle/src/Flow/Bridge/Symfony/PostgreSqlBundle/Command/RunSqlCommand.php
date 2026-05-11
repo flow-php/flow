@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
-use function Flow\Types\DSL\{type_instance_of, type_string};
 use Flow\PostgreSql\Client\Client;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
-
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
 
 #[AsCommand(name: 'flow:sql:run', description: 'Execute SQL directly on the database')]
 final class RunSqlCommand extends Command
@@ -23,17 +26,21 @@ final class RunSqlCommand extends Command
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
-        $this
-            ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)
-            ->addArgument('sql', InputArgument::REQUIRED, 'The SQL statement to execute');
+        $this->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)->addArgument(
+            'sql',
+            InputArgument::REQUIRED,
+            'The SQL statement to execute',
+        );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
-        $client = type_instance_of(Client::class)->assert($this->container->get("flow.postgresql.{$connection}.client"));
+        $client = type_instance_of(Client::class)->assert($this->container->get(
+            "flow.postgresql.{$connection}.client",
+        ));
         $sql = type_string()->assert($input->getArgument('sql'));
 
         if (\str_starts_with(\strtoupper(\trim($sql)), 'SELECT')) {
@@ -51,7 +58,7 @@ final class RunSqlCommand extends Command
 
             foreach ($rows as $row) {
                 /** @var array<string, null|scalar> $row */
-                $output->writeln(\implode("\t", \array_map(static fn ($v) => $v === null ? 'NULL' : \strval($v), $row)));
+                $output->writeln(\implode("\t", \array_map(static fn($v) => $v === null ? 'NULL' : \strval($v), $row)));
             }
 
             $output->writeln('');

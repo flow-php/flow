@@ -9,5 +9,5 @@ interface Extractor
     /**
      * @return \Generator<Rows>
      */
-    public function extract(FlowContext $context) : \Generator;
+    public function extract(FlowContext $context): \Generator;
 }

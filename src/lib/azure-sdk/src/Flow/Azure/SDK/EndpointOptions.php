@@ -9,10 +9,10 @@ interface EndpointOptions
     /**
      * @return array<string, string>
      */
-    public function toHeaders() : array;
+    public function toHeaders(): array;
 
     /**
      * @return array<string, string>
      */
-    public function toURIParameters() : array;
+    public function toURIParameters(): array;
 }

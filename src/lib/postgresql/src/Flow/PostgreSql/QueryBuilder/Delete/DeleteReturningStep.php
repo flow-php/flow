@@ -16,10 +16,10 @@ interface DeleteReturningStep extends DeleteFinalStep
      *
      * @param Expression ...$expressions Expressions to return (columns, functions, etc.)
      */
-    public function returning(Expression ...$expressions) : DeleteFinalStep;
+    public function returning(Expression ...$expressions): DeleteFinalStep;
 
     /**
      * Add a RETURNING * clause to return all columns.
      */
-    public function returningAll() : DeleteFinalStep;
+    public function returningAll(): DeleteFinalStep;
 }

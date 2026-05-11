@@ -8,10 +8,9 @@ final readonly class LevenshteinStrategy implements SimilarityStrategy
 {
     public function __construct(
         private float $threshold = 50.0,
-    ) {
-    }
+    ) {}
 
-    public function similarity(string $a, string $b) : float
+    public function similarity(string $a, string $b): float
     {
         $maxLen = \max(\strlen($a), \strlen($b));
 
@@ -19,10 +18,10 @@ final readonly class LevenshteinStrategy implements SimilarityStrategy
             return 100.0;
         }
 
-        return (1.0 - \levenshtein($a, $b) / $maxLen) * 100.0;
+        return (1.0 - (\levenshtein($a, $b) / $maxLen)) * 100.0;
     }
 
-    public function threshold() : float
+    public function threshold(): float
     {
         return $this->threshold;
     }

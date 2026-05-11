@@ -12,5 +12,5 @@ interface Validator
     /**
      * @throws ValidationException
      */
-    public function validate(Column $column, mixed $data) : void;
+    public function validate(Column $column, mixed $data): void;
 }

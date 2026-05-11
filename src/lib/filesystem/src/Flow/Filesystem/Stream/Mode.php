@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-enum Mode : string
+enum Mode: string
 {
     case APPEND_READ_WRITE = 'a+';
 
